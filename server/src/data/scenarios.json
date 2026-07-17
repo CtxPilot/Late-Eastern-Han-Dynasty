@@ -1,0 +1,367 @@
+[
+  {
+    "id": 1,
+    "name": "群雄割据（0-A）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "初平元年前后，曹操、刘备、孙权、吕布四方并立的最小验证剧本。",
+    "startYear": 190,
+    "endYear": 220,
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 190,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "6": 1,
+        "7": 1,
+        "8": 1,
+        "9": 4,
+        "10": 3,
+        "11": 4,
+        "12": 1,
+        "13": 1,
+        "14": 2,
+        "15": 2,
+        "16": 3,
+        "17": 3,
+        "18": 3,
+        "19": 2,
+        "20": 2,
+        "21": 2,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "25": 1,
+        "26": 1,
+        "27": 1,
+        "28": 1,
+        "29": 3,
+        "30": 3
+      },
+      "officerPositions": [
+        {
+          "officerId": 1,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 8,
+          "cityId": 1,
+          "factionId": 1,
+          "civilPosition": "chancellor",
+          "loyalty": 95
+        },
+        {
+          "officerId": 9,
+          "cityId": 2,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 12,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "colonel",
+          "loyalty": 80
+        },
+        {
+          "officerId": 13,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 100
+        },
+        {
+          "officerId": 2,
+          "cityId": 19,
+          "factionId": 2,
+          "nobilityRank": "prince",
+          "loyalty": 100
+        },
+        {
+          "officerId": 4,
+          "cityId": 20,
+          "factionId": 2,
+          "civilPosition": "chancellor",
+          "loyalty": 100
+        },
+        {
+          "officerId": 6,
+          "cityId": 15,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 7,
+          "cityId": 14,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 10,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "colonel",
+          "loyalty": 100
+        },
+        {
+          "officerId": 14,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 90
+        },
+        {
+          "officerId": 3,
+          "cityId": 17,
+          "factionId": 3,
+          "nobilityRank": "prince",
+          "loyalty": 100
+        },
+        {
+          "officerId": 11,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 15,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "colonel",
+          "loyalty": 90
+        },
+        {
+          "officerId": 5,
+          "cityId": 9,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 100,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 70
+        },
+        {
+          "officerId": 101,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 71
+        },
+        {
+          "officerId": 102,
+          "cityId": 19,
+          "factionId": 2,
+          "loyalty": 72
+        },
+        {
+          "officerId": 103,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 73
+        },
+        {
+          "officerId": 104,
+          "cityId": 9,
+          "factionId": 4,
+          "loyalty": 74
+        },
+        {
+          "officerId": 105,
+          "cityId": 2,
+          "factionId": 1,
+          "loyalty": 75
+        },
+        {
+          "officerId": 106,
+          "cityId": 14,
+          "factionId": 2,
+          "loyalty": 76
+        },
+        {
+          "officerId": 107,
+          "cityId": 16,
+          "factionId": 3,
+          "loyalty": 77
+        },
+        {
+          "officerId": 108,
+          "cityId": 22,
+          "factionId": 1,
+          "loyalty": 78
+        },
+        {
+          "officerId": 109,
+          "cityId": 24,
+          "factionId": 1,
+          "loyalty": 79
+        },
+        {
+          "officerId": 110,
+          "cityId": 26,
+          "factionId": 1,
+          "loyalty": 80
+        },
+        {
+          "officerId": 111,
+          "cityId": 29,
+          "factionId": 3,
+          "loyalty": 81
+        },
+        {
+          "officerId": 112,
+          "cityId": 3,
+          "factionId": 1,
+          "loyalty": 82
+        },
+        {
+          "officerId": 113,
+          "cityId": 11,
+          "factionId": 4,
+          "loyalty": 83
+        },
+        {
+          "officerId": 114,
+          "cityId": 7,
+          "factionId": 1,
+          "loyalty": 84
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 201,
+          "cityId": 19,
+          "status": "married",
+          "husbandId": 4,
+          "factionId": 2
+        },
+        {
+          "femaleId": 202,
+          "cityId": 1,
+          "status": "single"
+        },
+        {
+          "femaleId": 203,
+          "cityId": 17,
+          "status": "single",
+          "factionId": 3
+        },
+        {
+          "femaleId": 204,
+          "cityId": 1,
+          "status": "widow",
+          "factionId": 1
+        },
+        {
+          "femaleId": 205,
+          "cityId": 17,
+          "status": "married",
+          "factionId": 3
+        },
+        {
+          "femaleId": 206,
+          "cityId": 17,
+          "status": "married",
+          "husbandId": 11,
+          "factionId": 3
+        },
+        {
+          "femaleId": 207,
+          "cityId": 5,
+          "status": "married",
+          "husbandId": 1,
+          "factionId": 1
+        },
+        {
+          "femaleId": 208,
+          "cityId": 17,
+          "status": "married",
+          "husbandId": 3,
+          "factionId": 3
+        },
+        {
+          "femaleId": 209,
+          "cityId": 21,
+          "status": "married"
+        },
+        {
+          "femaleId": 210,
+          "cityId": 14,
+          "status": "married",
+          "husbandId": 2,
+          "factionId": 2
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "friendly",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "hostile",
+          "favorability": -20
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  }
+]

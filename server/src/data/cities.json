@@ -1,0 +1,1058 @@
+[
+  {
+    "id": 1,
+    "name": "洛阳",
+    "adminName": "河南尹",
+    "province": "司隶",
+    "x": 4085,
+    "y": 2430,
+    "maxPopulation": 50000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 5,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 400,
+      "commerce": 500,
+      "wall": 300
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 2,
+    "name": "长安",
+    "adminName": "京兆尹",
+    "province": "司隶",
+    "x": 3263,
+    "y": 2495,
+    "maxPopulation": 40000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": "丝绸",
+    "tier": 4,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 350,
+      "commerce": 400,
+      "wall": 280
+    },
+    "specialties": [
+      "丝绸"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 3,
+    "name": "阳翟",
+    "adminName": "颍川郡",
+    "province": "豫州",
+    "x": 4303,
+    "y": 2480,
+    "maxPopulation": 35000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 320,
+      "commerce": 300,
+      "wall": 200
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 4,
+    "name": "平舆",
+    "adminName": "汝南郡",
+    "province": "豫州",
+    "x": 4593,
+    "y": 2818,
+    "maxPopulation": 30000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 300,
+      "commerce": 250,
+      "wall": 180
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 5,
+    "name": "邺",
+    "adminName": "魏郡",
+    "province": "冀州",
+    "x": 4559,
+    "y": 2028,
+    "maxPopulation": 38000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 4,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 340,
+      "commerce": 360,
+      "wall": 260
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  },
+  {
+    "id": 6,
+    "name": "真定",
+    "adminName": "常山国",
+    "province": "冀州",
+    "x": 4580,
+    "y": 1604,
+    "maxPopulation": 22000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 250,
+      "commerce": 200,
+      "wall": 160
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 7,
+    "name": "陈留",
+    "adminName": "陈留郡",
+    "province": "兖州",
+    "x": 4529,
+    "y": 2388,
+    "maxPopulation": 28000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 280,
+      "commerce": 270,
+      "wall": 190
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 8,
+    "name": "濮阳",
+    "adminName": "东郡",
+    "province": "兖州",
+    "x": 4688,
+    "y": 2163,
+    "maxPopulation": 24000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 260,
+      "commerce": 220,
+      "wall": 170
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 9,
+    "name": "下邳",
+    "adminName": "下邳国",
+    "province": "徐州",
+    "x": 5191,
+    "y": 2514,
+    "maxPopulation": 26000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 250,
+      "commerce": 240,
+      "wall": 220
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 10,
+    "name": "广陵",
+    "adminName": "广陵郡",
+    "province": "徐州",
+    "x": 5716,
+    "y": 2951,
+    "maxPopulation": 22000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 230,
+      "commerce": 260,
+      "wall": 150
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  },
+  {
+    "id": 11,
+    "name": "平原",
+    "adminName": "平原郡",
+    "province": "青州",
+    "x": 5016,
+    "y": 1834,
+    "maxPopulation": 24000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 270,
+      "commerce": 210,
+      "wall": 160
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 12,
+    "name": "剧县",
+    "adminName": "北海国",
+    "province": "青州",
+    "x": 5641,
+    "y": 1938,
+    "maxPopulation": 20000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 2,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 220,
+      "commerce": 200,
+      "wall": 140
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 13,
+    "name": "宛",
+    "adminName": "南阳郡",
+    "province": "荆州",
+    "x": 4103,
+    "y": 2811,
+    "maxPopulation": 32000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": "铁",
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 300,
+      "commerce": 280,
+      "wall": 200
+    },
+    "specialties": [
+      "铁"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 14,
+    "name": "江陵",
+    "adminName": "南郡",
+    "province": "荆州",
+    "x": 4023,
+    "y": 3429,
+    "maxPopulation": 30000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 4,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 310,
+      "commerce": 300,
+      "wall": 240
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 15,
+    "name": "襄阳",
+    "adminName": "襄阳",
+    "province": "荆州",
+    "x": 4008,
+    "y": 3041,
+    "maxPopulation": 28000,
+    "isCapital": false,
+    "isPass": true,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 280,
+      "commerce": 290,
+      "wall": 300
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  },
+  {
+    "id": 16,
+    "name": "吴",
+    "adminName": "吴郡",
+    "province": "扬州",
+    "x": 5997,
+    "y": 3207,
+    "maxPopulation": 30000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": "丝绸",
+    "tier": 3,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 290,
+      "commerce": 350,
+      "wall": 180
+    },
+    "specialties": [
+      "丝绸"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 17,
+    "name": "建业",
+    "adminName": "丹阳郡",
+    "province": "扬州",
+    "x": 5566,
+    "y": 3034,
+    "maxPopulation": 35000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 4,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 300,
+      "commerce": 340,
+      "wall": 220
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 18,
+    "name": "寿春",
+    "adminName": "九江郡",
+    "province": "扬州",
+    "x": 5098,
+    "y": 2910,
+    "maxPopulation": 25000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 260,
+      "commerce": 250,
+      "wall": 170
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 19,
+    "name": "成都",
+    "adminName": "蜀郡",
+    "province": "益州",
+    "x": 2122,
+    "y": 3357,
+    "maxPopulation": 45000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": "蜀锦",
+    "tier": 5,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 380,
+      "commerce": 420,
+      "wall": 280
+    },
+    "specialties": [
+      "蜀锦"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 20,
+    "name": "汉中",
+    "adminName": "汉中郡",
+    "province": "益州",
+    "x": 2816,
+    "y": 2793,
+    "maxPopulation": 22000,
+    "isCapital": false,
+    "isPass": true,
+    "specialProduct": "药材",
+    "tier": 3,
+    "latitudeIndex": 3,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "initialStats": {
+      "farm": 240,
+      "commerce": 180,
+      "wall": 260
+    },
+    "specialties": [
+      "药材"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  },
+  {
+    "id": 21,
+    "name": "江州",
+    "adminName": "巴郡",
+    "province": "益州",
+    "x": 2704,
+    "y": 3613,
+    "maxPopulation": 20000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 2,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 250,
+      "commerce": 200,
+      "wall": 150
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 22,
+    "name": "冀县",
+    "adminName": "汉阳郡",
+    "province": "凉州",
+    "x": 2509,
+    "y": 2439,
+    "maxPopulation": 18000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": "良马",
+    "tier": 3,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 180,
+      "commerce": 160,
+      "wall": 200
+    },
+    "specialties": [
+      "良马"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 23,
+    "name": "姑臧",
+    "adminName": "武威郡",
+    "province": "凉州",
+    "x": 1788,
+    "y": 1655,
+    "maxPopulation": 15000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": "良马",
+    "tier": 2,
+    "latitudeIndex": 5,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 150,
+      "commerce": 140,
+      "wall": 180
+    },
+    "specialties": [
+      "良马"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 24,
+    "name": "晋阳",
+    "adminName": "太原郡",
+    "province": "并州",
+    "x": 4107,
+    "y": 1669,
+    "maxPopulation": 22000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 5,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 220,
+      "commerce": 180,
+      "wall": 190
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 25,
+    "name": "壶关",
+    "adminName": "上党郡",
+    "province": "并州",
+    "x": 4241,
+    "y": 2061,
+    "maxPopulation": 16000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 2,
+    "latitudeIndex": 4,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 180,
+      "commerce": 150,
+      "wall": 170
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  },
+  {
+    "id": 26,
+    "name": "涿",
+    "adminName": "涿郡",
+    "province": "幽州",
+    "x": 4909,
+    "y": 1291,
+    "maxPopulation": 20000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 5,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 210,
+      "commerce": 170,
+      "wall": 150
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 4
+  },
+  {
+    "id": 27,
+    "name": "蓟",
+    "adminName": "广阳郡",
+    "province": "幽州",
+    "x": 5010,
+    "y": 1193,
+    "maxPopulation": 18000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 3,
+    "latitudeIndex": 5,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 190,
+      "commerce": 180,
+      "wall": 160
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 5
+  },
+  {
+    "id": 28,
+    "name": "襄平",
+    "adminName": "辽东郡",
+    "province": "幽州",
+    "x": 6654,
+    "y": 749,
+    "maxPopulation": 14000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 2,
+    "latitudeIndex": 5,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 140,
+      "commerce": 120,
+      "wall": 140
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 6
+  },
+  {
+    "id": 29,
+    "name": "番禺",
+    "adminName": "南海郡",
+    "province": "交州",
+    "x": 4275,
+    "y": 5119,
+    "maxPopulation": 16000,
+    "isCapital": true,
+    "isPass": false,
+    "specialProduct": "珍珠",
+    "tier": 3,
+    "latitudeIndex": 1,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 170,
+      "commerce": 200,
+      "wall": 120
+    },
+    "specialties": [
+      "珍珠"
+    ],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 7
+  },
+  {
+    "id": 30,
+    "name": "龙编",
+    "adminName": "交趾郡",
+    "province": "交州",
+    "x": 2540,
+    "y": 5611,
+    "maxPopulation": 14000,
+    "isCapital": false,
+    "isPass": false,
+    "specialProduct": null,
+    "tier": 2,
+    "latitudeIndex": 1,
+    "recruitableUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "initialStats": {
+      "farm": 150,
+      "commerce": 160,
+      "wall": 100
+    },
+    "specialties": [],
+    "facilities": [],
+    "policy": null,
+    "developmentProgress": {
+      "farm": 0,
+      "commerce": 0,
+      "wall": 0
+    },
+    "countyCount": 3
+  }
+]

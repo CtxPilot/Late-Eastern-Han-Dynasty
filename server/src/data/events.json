@@ -1,0 +1,222 @@
+[
+  {
+    "id": 100,
+    "name": "三顾茅庐",
+    "description": "刘备三访隆中，请诸葛亮出山。",
+    "category": "historical",
+    "conditions": [
+      {
+        "type": "year",
+        "field": "currentYear",
+        "operator": "gte",
+        "value": 207
+      },
+      {
+        "type": "officer",
+        "field": "faction",
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 2,
+        "speakerName": "刘备",
+        "text": "备闻先生大名，特来拜访。"
+      },
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "将军既不弃，愿效犬马之劳。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "诚心相请",
+        "effects": [
+          {
+            "type": "recruit",
+            "target": "officer",
+            "targetId": 4,
+            "field": "faction",
+            "value": 2
+          },
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 4,
+            "field": "loyalty",
+            "value": 100
+          }
+        ]
+      }
+    ],
+    "autoChoice": 0
+  },
+  {
+    "id": 101,
+    "name": "连环计",
+    "description": "王允以貂蝉离间董卓吕布。",
+    "category": "historical",
+    "conditions": [
+      {
+        "type": "year",
+        "field": "currentYear",
+        "operator": "lte",
+        "value": 192
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerName": "王允",
+        "text": "董贼可除，全仗此计。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "施行",
+        "effects": [
+          {
+            "type": "relation",
+            "target": "global",
+            "field": "favorability",
+            "value": -20
+          }
+        ]
+      },
+      {
+        "label": "作罢",
+        "effects": []
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "name": "赤壁风云",
+    "description": "孙刘联军火攻曹操。",
+    "category": "historical",
+    "conditions": [
+      {
+        "type": "year",
+        "field": "currentYear",
+        "operator": "equals",
+        "value": 208
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 11,
+        "speakerName": "周瑜",
+        "text": "万事俱备，只欠东风。"
+      },
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "可借东风。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "火攻",
+        "effects": [
+          {
+            "type": "battle_bonus",
+            "target": "faction",
+            "targetId": 3,
+            "field": "fire",
+            "value": 30
+          }
+        ]
+      }
+    ],
+    "autoChoice": 0
+  },
+  {
+    "id": 103,
+    "name": "屯田令",
+    "description": "曹操推行屯田，以足军粮。",
+    "category": "historical",
+    "conditions": [
+      {
+        "type": "year",
+        "field": "currentYear",
+        "operator": "gte",
+        "value": 196
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "定国之术，在于强兵足食。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "推行屯田",
+        "effects": [
+          {
+            "type": "develop",
+            "target": "city",
+            "targetId": 1,
+            "field": "farm",
+            "value": 50
+          }
+        ]
+      }
+    ],
+    "autoChoice": 0
+  },
+  {
+    "id": 104,
+    "name": "夷陵战前",
+    "description": "刘备为关羽报仇，兴兵伐吴。",
+    "category": "historical",
+    "conditions": [
+      {
+        "type": "year",
+        "field": "currentYear",
+        "operator": "gte",
+        "value": 221
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 2,
+        "speakerName": "刘备",
+        "text": "云长之仇，不共戴天！"
+      },
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "主公且慎。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "兴兵",
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 3,
+            "field": "relation",
+            "value": "war"
+          }
+        ]
+      },
+      {
+        "label": "隐忍",
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 2,
+            "field": "loyalty",
+            "value": -5
+          }
+        ]
+      }
+    ]
+  }
+]

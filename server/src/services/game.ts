@@ -1,0 +1,895 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 CtxPilot
+
+import {
+  CivilPosition,
+  LocalPosition,
+  MilitaryPosition,
+  NobilityRank,
+  OfficerStatus,
+  Season,
+  TerrainType,
+  beautySeekLeftFromFemales,
+  calcStaminaMax,
+  emptyIntel,
+  maskGameStateForPlayer,
+  splitDemographics,
+  type BattleState,
+  type City,
+  type FemaleCharacter,
+  type Faction,
+  type GameState,
+  type Officer,
+  type ScenarioStatic,
+} from '@leh/shared';
+import { staticData } from '../data/loader.js';
+import { advanceTurn } from '../engine/turn.js';
+import { catchUpChildren } from '../engine/child.js';
+import {
+  conscript,
+  developCity,
+  developFarm,
+  relief,
+  trainTroops,
+  type DevelopKind,
+} from '../engine/civil.js';
+import {
+  lootBeautyOnCapture,
+  rewardBeautyStock,
+  seekBeauty,
+} from '../engine/beauty.js';
+import {
+  attackUnit,
+  castAbility,
+  castFireTactic,
+  challengeDuel,
+  createBattle,
+  finishPlayerAction,
+  getMoveRange,
+  getUsableAbilities,
+  moveUnit,
+  runEnemyPhase,
+  skipBattleDuel,
+  stepBattleDuel,
+} from '../engine/battle.js';
+import {
+  advisorAction as campaignAdvisorAction,
+  assault as campaignAssaultEngine,
+  buildCampaignNodes,
+  buildStructure as campaignBuildStructure,
+  getCampaignNodes,
+  orderMarch as campaignOrderMarch,
+  retreatArmy as campaignRetreatArmy,
+  startCampaign as campaignStartCampaign,
+  tickCampaignGarrison,
+  tickCampaignMarch,
+  trySiegeSurrender as campaignTrySiegeSurrender,
+  type AdvisorAction,
+} from '../engine/campaign.js';
+import {
+  isMarchTargetReachable,
+  markBattleSettled,
+  pickDefaultFromCity,
+  prepareMarch,
+  settleBattle,
+} from '../engine/march.js';
+import {
+  giftBeauty,
+  marryFemale,
+  recruitOfficer,
+  searchTalent,
+} from '../engine/personnel.js';
+import { grantBattleIntel } from '../engine/intel.js';
+import { formAlliance, giftBeautyStock, tributeGold } from '../engine/diplomacy.js';
+import { launchPlot } from '../engine/plot.js';
+import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
+import {
+  dispatchMission,
+  recruitSpies,
+  resolveCaptive,
+  stationCounter,
+  trainFemaleSpy,
+  plantFemaleFromGift,
+  unstationCounter,
+} from '../engine/spy.js';
+import { syncFactionResources } from '../engine/economy.js';
+import { resolveEventChoice } from '../engine/event.js';
+import { appointOfficer } from '../engine/appoint.js';
+import { broadcast } from '../ws/broadcast.js';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type PositionTrack, type StructureType } from '@leh/shared';
+
+let currentGame: GameState | null = null;
+let currentBattle: BattleState | null = null;
+// Sec-6: 简单请求锁，防止并发操作导致状态不一致
+let isProcessing = false;
+
+/** 串行化所有写操作：取锁 → 执行 → 释放。若锁占用则抛错。 */
+function withLock<T>(fn: () => T): T {
+  if (isProcessing) throw new Error('操作处理中，请稍候（避免并发冲突）');
+  isProcessing = true;
+  try {
+    return fn();
+  } finally {
+    isProcessing = false;
+  }
+}
+
+const FACTION_META: Record<number, { name: string; color: string; rulerId: number; capital: number }> = {
+  1: { name: '曹操军', color: '#4a6fa5', rulerId: 1, capital: 1 },
+  2: { name: '刘备军', color: '#3d8b5a', rulerId: 2, capital: 19 },
+  3: { name: '孙权军', color: '#c44b4b', rulerId: 3, capital: 17 },
+  4: { name: '吕布军', color: '#8b5a9e', rulerId: 5, capital: 9 },
+};
+
+export function createGame(scenarioId: number, playerFactionId: number): GameState {
+  return withLock(() => {
+    const scenario = staticData.scenarios.find((s) => s.id === scenarioId);
+    if (!scenario) throw new Error('剧本不存在');
+
+    let state = buildGameState(scenario, playerFactionId);
+
+    // S18 跟随引擎验证：释放占位武将12(id=111, compat=65, ideal=benevolence)为在野
+    // 与刘备(compat=75, ideal=benevolence) 相性差=10<20 且理想一致 → 可触发投奔
+    // 放在宛(13)——与刘备的襄阳(15)道路邻接
+    const freeOfficer = state.officers[111];
+    if (freeOfficer && freeOfficer.faction != null) {
+      state = releaseOfficer(state, 111);
+      state = {
+        ...state,
+        officers: {
+          ...state.officers,
+          111: { ...state.officers[111], location: 13, status: OfficerStatus.FREE },
+        },
+      };
+      state = pushLogState(state, 'follow_setup', `${freeOfficer.name}流落在野，待明主投奔`);
+    }
+
+    currentGame = state;
+    currentBattle = null;
+    return getClientGame();
+  });
+}
+
+function pushLogState(state: GameState, type: string, message: string): GameState {
+  return {
+    ...state,
+    actionLog: [
+      { year: state.currentYear, month: state.currentMonth, type, message },
+      ...state.actionLog,
+    ].slice(0, 80),
+  };
+}
+
+function buildGameState(scenario: ScenarioStatic, playerFactionId: number): GameState {
+  const { startState } = scenario;
+  const officers: Record<number, Officer> = {};
+  for (const o of staticData.officers) {
+    const pos = startState.officerPositions.find((p) => p.officerId === o.id);
+    officers[o.id] = {
+      ...o,
+      skills: o.skills.map((s) => ({ ...s, useCount: 0 })),
+      faction: pos?.factionId ?? null,
+      location: pos?.cityId ?? null,
+      loyalty: pos?.loyalty ?? 50,
+      experience: 0,
+      status: pos ? OfficerStatus.ACTIVE : OfficerStatus.FREE,
+      civilPosition: (pos?.civilPosition as CivilPosition) ?? CivilPosition.NONE,
+      localPosition: (pos?.localPosition as LocalPosition) ?? LocalPosition.NONE,
+      militaryPosition: (pos?.militaryPosition as MilitaryPosition) ?? MilitaryPosition.NONE,
+      nobilityRank: (pos?.nobilityRank as NobilityRank) ?? NobilityRank.NONE,
+      merit: pos?.merit ?? 0,
+      stamina: calcStaminaMax(o, pos?.merit ?? 0, scenario.noLifespan ? 40 : (startState.year - o.birthYear)),
+      wifeId: null,
+      beauties: [],
+    };
+  }
+
+  const cities: Record<number, City> = {};
+  for (const c of staticData.cities) {
+    const ruler = startState.cityOwnership[String(c.id)] ?? null;
+    const cityOfficers = startState.officerPositions
+      .filter((p) => p.cityId === c.id)
+      .map((p) => p.officerId);
+    const population = Math.floor(c.maxPopulation * 0.7);
+    const demographics = splitDemographics(population);
+    cities[c.id] = {
+      ...c,
+      terrain: TerrainType.PLAIN,
+      stats: {
+        farm: c.initialStats.farm,
+        commerce: c.initialStats.commerce,
+        wall: c.initialStats.wall,
+        morale: 70,
+      },
+      gold: 2000 + c.initialStats.commerce,
+      food: 3000 + c.initialStats.farm,
+      population,
+      demographics,
+      beautySeekLeft: beautySeekLeftFromFemales(demographics.adultFemale),
+      troops: 5000,
+      troopsMorale: 70,
+      officers: cityOfficers,
+      ruler,
+      facilities: c.facilities ?? [],
+      policy: c.policy ?? null,
+      developmentProgress: c.developmentProgress ?? { farm: 0, commerce: 0, wall: 0 },
+    };
+  }
+
+  const factions: Record<number, Faction> = {};
+  for (const fid of startState.activeFactionIds) {
+    const meta = FACTION_META[fid];
+    const cityIds = Object.entries(startState.cityOwnership)
+      .filter(([, v]) => v === fid)
+      .map(([k]) => Number(k));
+    const officerIds = startState.officerPositions
+      .filter((p) => p.factionId === fid)
+      .map((p) => p.officerId);
+    factions[fid] = {
+      id: fid,
+      name: meta?.name ?? `势力${fid}`,
+      color: meta?.color ?? '#888',
+      rulerId: meta?.rulerId ?? officerIds[0] ?? 0,
+      capitalCityId: meta?.capital ?? cityIds[0] ?? 1,
+      gold: 5000,
+      food: 8000,
+      beautyStock: 0,
+      cityIds,
+      officerIds,
+      isPlayer: fid === playerFactionId,
+      isAlive: true,
+    };
+  }
+
+  const females: Record<number, FemaleCharacter> = {};
+  for (const f of staticData.females) {
+    const pos = startState.femalePositions.find((p) => p.femaleId === f.id);
+    const husbandId = pos?.husbandId ?? f.initialHusbandId;
+    females[f.id] = {
+      ...f,
+      status: pos?.status ?? f.initialStatus,
+      husbandId,
+      factionId: pos?.factionId ?? f.factionId,
+      locationId: pos?.cityId ?? f.locationId,
+      giftedToOfficerId: null,
+    };
+    // 开局已婚：回写武将 wifeId
+    if (husbandId != null && officers[husbandId]) {
+      officers[husbandId] = {
+        ...officers[husbandId],
+        wifeId: f.id,
+      };
+    }
+  }
+
+  // 初始化季节（与 turn.monthToSeason 一致）
+  const season = Math.floor((startState.month - 1) / 3) as Season;
+
+  const draft: GameState = {
+    scenarioId: scenario.id,
+    currentYear: startState.year,
+    currentMonth: startState.month,
+    season,
+    playerFactionId,
+    officers,
+    cities,
+    factions,
+    females,
+    armys: [],
+    campaignArmies: [],
+    campaignNodes: [], // 在 syncFactionResources 之后用 buildCampaignNodes 填充
+    grandStrategists: [],
+    activeBattles: [],
+    diplomacy: startState.initialDiplomacy,
+    intel: emptyIntel(),
+    plots: [],
+    completedEvents: [...startState.completedEvents],
+    pendingEvents: [],
+    actionLog: [
+      {
+        year: startState.year,
+        month: startState.month,
+        type: 'game_start',
+        message: `开始剧本「${scenario.name}」，扮演 ${factions[playerFactionId]?.name}`,
+      },
+    ],
+  };
+  // 子女补登：appearYear ≤ 开局年则直接入库（0-A 起 190 年通常无人）
+  const withChildren = catchUpChildren(draft);
+  // 城池金粮为真源，开局即同步 faction 缓存
+  const synced = syncFactionResources(withChildren);
+  // 战役节点：基于同步后的城池状态生成
+  return { ...synced, campaignNodes: buildCampaignNodes(synced) };
+}
+
+/** 服务端真源（全量，勿直接下发客户端） */
+export function getGame(): GameState {
+  if (!currentGame) throw new Error('尚无进行中的游戏');
+  return currentGame;
+}
+
+/** S06：下发客户端的脱敏投影 */
+export function getClientGame(): GameState {
+  return maskGameStateForPlayer(getGame());
+}
+
+/** P1-08 别名 → 客户端投影 */
+export function getGameState(): GameState {
+  return getClientGame();
+}
+
+export function endTurn(): GameState {
+  return withLock(() => {
+    const before = getGame();
+    if ((before.pendingEvents ?? []).length > 0) {
+      throw new Error('请先处理待决事件');
+    }
+    broadcast({ type: 'turn_progress', phase: 'ai', message: '回合结算中…', progress: 10 });
+    let next = advanceTurn(before);
+    // 战役层：行军推进 + 驻守恢复（0-A 最小切片，玩家 Army 与 AI Army 同步推进）
+    next = tickCampaignMarch(next);
+    next = tickCampaignGarrison(next);
+    next = { ...next, campaignNodes: getCampaignNodes(next) };
+    currentGame = next;
+    const g = getClientGame();
+    broadcast({
+      type: 'turn_complete',
+      message: `${g.currentYear}年${g.currentMonth}月 — 回合结束`,
+    });
+    if ((g.pendingEvents ?? []).length > 0) {
+      broadcast({
+        type: 'event_triggered',
+        name: 'event',
+        message: `待决事件 ${g.pendingEvents.length} 件`,
+        payload: { pendingEvents: g.pendingEvents },
+      });
+    } else {
+      const lastEvent = g.actionLog.find((l) => l.type === 'event');
+      if (lastEvent) {
+        broadcast({ type: 'event_triggered', name: 'event', message: lastEvent.message });
+      }
+    }
+    return g;
+  });
+}
+
+/** S14 玩家选择事件选项 */
+export function doEventChoice(eventId: number, choiceIndex: number): GameState {
+  return withLock(() => {
+    currentGame = resolveEventChoice(getGame(), eventId, choiceIndex);
+    return getClientGame();
+  });
+}
+
+export function doDevelopFarm(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = developFarm(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doDevelop(cityId: number, kind: DevelopKind): GameState {
+  return withLock(() => {
+    currentGame = developCity(getGame(), cityId, kind);
+    return getClientGame();
+  });
+}
+
+export function doConscript(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = conscript(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doRelief(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = relief(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doTrain(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = trainTroops(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doSeekBeauty(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = seekBeauty(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doRewardBeautyStock(officerId: number, amount?: number): GameState {
+  return withLock(() => {
+    currentGame = rewardBeautyStock(getGame(), officerId, amount);
+    return getClientGame();
+  });
+}
+
+/** 占城抢夺美女（内部） */
+export function applyLootBeauty(cityId: number, attackerFactionId: number): void {
+  withLock(() => {
+    currentGame = lootBeautyOnCapture(getGame(), cityId, attackerFactionId);
+  });
+}
+
+export function doMarry(femaleId: number, officerId: number): GameState {
+  return withLock(() => {
+    currentGame = marryFemale(getGame(), femaleId, officerId);
+    return getClientGame();
+  });
+}
+
+export function doGiftBeauty(femaleId: number, officerId: number): GameState {
+  return withLock(() => {
+    currentGame = giftBeauty(getGame(), femaleId, officerId);
+    return getClientGame();
+  });
+}
+
+export function doSearchTalent(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = searchTalent(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doRecruitOfficer(officerId: number, recruiterId?: number): GameState {
+  return withLock(() => {
+    currentGame = recruitOfficer(
+      getGame(),
+      officerId,
+      recruiterId != null ? recruiterId : undefined,
+    );
+    return getClientGame();
+  });
+}
+
+/** S11/S12 任命三轨官职 */
+export function doAppoint(
+  officerId: number,
+  track: PositionTrack,
+  position: string,
+  cityId?: number,
+): GameState {
+  return withLock(() => {
+    currentGame = appointOfficer(
+      getGame(),
+      officerId,
+      track,
+      position,
+      cityId != null ? cityId : undefined,
+    );
+    return getClientGame();
+  });
+}
+
+export function doTribute(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = tributeGold(getGame(), targetFactionId);
+    return getClientGame();
+  });
+}
+
+export function doGiftBeautyDip(targetFactionId: number, amount?: number): GameState {
+  return withLock(() => {
+    currentGame = giftBeautyStock(
+      getGame(),
+      targetFactionId,
+      amount != null ? amount : 1,
+    );
+    return getClientGame();
+  });
+}
+
+export function doAlliance(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = formAlliance(getGame(), targetFactionId);
+    return getClientGame();
+  });
+}
+
+export function doRecruitSpies(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = recruitSpies(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doTrainFemaleSpy(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = trainFemaleSpy(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+/** 献美→点化女间谍 */
+export function doPlantFemale(targetFactionId: number, homeCityId?: number): GameState {
+  return withLock(() => {
+    currentGame = plantFemaleFromGift(getGame(), targetFactionId, homeCityId);
+    return getClientGame();
+  });
+}
+
+export function doSpyMission(
+  agentId: string,
+  type: string,
+  targetCityId: number,
+  targetOfficerId?: number,
+): GameState {
+  return withLock(() => {
+    currentGame = dispatchMission(getGame(), {
+      agentId,
+      type: type as SpyMissionType,
+      targetCityId,
+      targetOfficerId,
+    });
+    return getClientGame();
+  });
+}
+
+export function doStationCounter(agentId: string, cityId: number): GameState {
+  return withLock(() => {
+    currentGame = stationCounter(getGame(), agentId, cityId);
+    return getClientGame();
+  });
+}
+
+export function doUnstationCounter(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = unstationCounter(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doResolveCaptive(agentId: string, action: string): GameState {
+  return withLock(() => {
+    currentGame = resolveCaptive(
+      getGame(),
+      agentId,
+      action as SpyCaptiveAction,
+    );
+    return getClientGame();
+  });
+}
+
+export function doLaunchPlot(
+  type: string,
+  targetFactionId: number | undefined,
+  targetCityId: number | undefined,
+  targetOfficerId: number | undefined,
+  agentId: string | undefined,
+): GameState {
+  return withLock(() => {
+    currentGame = launchPlot(getGame(), {
+      type: type as PlotType,
+      targetFactionId,
+      targetCityId,
+      targetOfficerId,
+      agentId: agentId || undefined,
+    });
+    return getClientGame();
+  });
+}
+
+export function doJoinFaction(officerId: number, factionId: number, cityId?: number): GameState {
+  return withLock(() => {
+    const state = getGame();
+    // Sec-2: 仅允许将**在野**武将加入**玩家自己势力**，防止越权注入他方势力
+    const officer = state.officers[officerId];
+    if (!officer) throw new Error('武将不存在');
+    if (officer.faction != null) throw new Error('该武将已有势力，不可直接加入');
+    if (factionId !== state.playerFactionId) {
+      throw new Error('仅可招募武将加入己方势力');
+    }
+    currentGame = joinFaction(state, officerId, factionId, cityId);
+    return getClientGame();
+  });
+}
+
+export function doReleaseOfficer(officerId: number): GameState {
+  return withLock(() => {
+    const state = getGame();
+    // Sec-1: 仅允许释放**己方势力**武将，防止越权瓦解他方
+    const officer = state.officers[officerId];
+    if (!officer) throw new Error('武将不存在');
+    if (officer.faction !== state.playerFactionId) {
+      throw new Error('仅可释放己方势力武将');
+    }
+    currentGame = releaseOfficer(state, officerId);
+    return getClientGame();
+  });
+}
+
+export function doFollowCheck(): GameState {
+  return withLock(() => {
+    currentGame = tickFollowCheck(getGame());
+    return getClientGame();
+  });
+}
+
+export function canMarchTo(targetCityId: number): boolean {
+  return isMarchTargetReachable(getGame(), targetCityId);
+}
+
+/**
+ * 兼容旧路径：无 fromCity 时自动选最近己方城出征；
+ * 若仍无可用城则回退为纯演示战（不扣兵、不占城）。
+ */
+export function startBattle(cityId: number, fromCityId?: number): BattleState {
+  return withLock(() => {
+    const state = getGame();
+    const from = fromCityId ?? pickDefaultFromCity(state, cityId);
+    if (from != null) {
+      const result = prepareMarch(state, { fromCityId: from, targetCityId: cityId });
+      currentGame = result.state;
+      currentBattle = result.battle;
+      return currentBattle;
+    }
+    currentBattle = createBattle(state, cityId);
+    return currentBattle;
+  });
+}
+
+/** Demo 出征：明确出发城 + 可选兵力 */
+export function startMarch(
+  targetCityId: number,
+  fromCityId?: number,
+  troopCount?: number,
+): { game: GameState; battle: BattleState } {
+  return withLock(() => {
+    const state = getGame();
+    const from = fromCityId ?? pickDefaultFromCity(state, targetCityId);
+    if (from == null) throw new Error('没有可出征的己方城（需至少 1000 兵）');
+    const result = prepareMarch(state, {
+      fromCityId: from,
+      targetCityId,
+      troopCount,
+    });
+    // 出征即获表面战地情报
+    currentGame = grantBattleIntel(result.state, targetCityId);
+    currentBattle = result.battle;
+    return { game: getClientGame(), battle: currentBattle };
+  });
+}
+
+export function getBattle(): BattleState | null {
+  return currentBattle;
+}
+
+export function battleMove(unitId: string, q: number, r: number): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = moveUnit(currentBattle, unitId, q, r);
+    return currentBattle;
+  });
+}
+
+export function battleAttack(attackerId: string, defenderId: string): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = attackUnit(currentBattle, attackerId, defenderId, getGame());
+    return currentBattle;
+  });
+}
+
+export function battleFire(attackerId: string, targetId: string): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = castFireTactic(currentBattle, attackerId, targetId, getGame());
+    return currentBattle;
+  });
+}
+
+/** S10 战法施放 */
+export function battleAbility(attackerId: string, targetId: string, abilityId: string): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = castAbility(currentBattle, attackerId, targetId, abilityId, getGame());
+    return currentBattle;
+  });
+}
+
+/** S10 查询可用战法列表 */
+export function battleUsableAbilities(unitId: string): { id: string; name: string; level: number; energyCost: number; power: number; specialEffect: string; minRange: number; maxRange: number }[] {
+  if (!currentBattle) return [];
+  const abilities = getUsableAbilities(getGame(), currentBattle, unitId);
+  return abilities.map(({ ability, level, levelData }) => ({
+    id: ability.id,
+    name: ability.name,
+    level,
+    energyCost: levelData.energyCost,
+    power: levelData.power,
+    specialEffect: ability.specialEffect,
+    minRange: ability.minRange,
+    maxRange: ability.maxRange,
+  }));
+}
+
+export function battleFinishPlayer(): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = finishPlayerAction(currentBattle);
+    return currentBattle;
+  });
+}
+
+/** S10 §8 玩家发起单挑 */
+export function battleChallengeDuel(challengerUnitId: string, targetUnitId: string): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    const { battle, accepted } = challengeDuel(currentBattle, challengerUnitId, targetUnitId, getGame());
+    currentBattle = battle;
+    if (!accepted) return currentBattle;
+    // 接受后立即自动推进首回合 (全自动结算)
+    return battleDuelStep();
+  });
+}
+
+/** S10 §8 推进单挑一回合 (观看演出) */
+export function battleDuelStep(): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = stepBattleDuel(currentBattle, getGame());
+    return currentBattle;
+  });
+}
+
+/** S10 §8 跳过单挑动画直接结算 */
+export function battleDuelSkip(): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = skipBattleDuel(currentBattle, getGame());
+    return currentBattle;
+  });
+}
+
+export function battleEnemyPhase(): BattleState {
+  return withLock(() => {
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = runEnemyPhase(currentBattle, getGame());
+    return currentBattle;
+  });
+}
+
+export function battleMoveRange(unitId: string): string[] {
+  if (!currentBattle) return [];
+  return getMoveRange(currentBattle, unitId);
+}
+
+/** 退出战场并结算占城/残兵回流，返回最新 GameState */
+export function exitBattle(): GameState {
+  return withLock(() => {
+    const state = getGame();
+    if (!currentBattle) return getClientGame();
+    if (!currentBattle.settled && currentBattle.fromCityId != null) {
+      currentGame = settleBattle(state, currentBattle);
+      currentBattle = markBattleSettled(currentBattle);
+    } else if (!currentBattle.settled && currentBattle.cityId != null && currentBattle.phase === 'over') {
+      // 无出发城的旧演示战：胜也不占城，仅记日志
+      if (currentBattle.winner === 'attacker') {
+        currentGame = {
+          ...state,
+          actionLog: [
+            {
+              year: state.currentYear,
+              month: state.currentMonth,
+              type: 'battle_demo',
+              message: `演示战胜利（未关联出征，未改城池归属）`,
+            },
+            ...state.actionLog,
+          ].slice(0, 80),
+        };
+      }
+    }
+    currentBattle = null;
+    return getClientGame();
+  });
+}
+
+export function suggestFromCity(targetCityId: number): number | null {
+  return pickDefaultFromCity(getGame(), targetCityId);
+}
+
+export function listStatic() {
+  return {
+    officers: staticData.officers.length,
+    cities: staticData.cities,
+    units: staticData.units,
+    formations: staticData.formations,
+    children: staticData.children.map((c) => ({
+      childId: c.childId,
+      childName: c.childName,
+      fatherId: c.fatherId,
+      motherId: c.motherId,
+      birthYear: c.birthYear,
+      appearYear: c.appearYear,
+      source: c.source,
+    })),
+    /** 事件目录（不含 effects，防剧透；效果仅服务端应用） */
+    events: staticData.events.map((e) => ({
+      id: e.id,
+      name: e.name,
+      description: e.description,
+      category: e.category,
+      dialogues: e.dialogues,
+      choices: e.choices.map((c) => ({ label: c.label })),
+    })),
+    scenarios: staticData.scenarios.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      playableFactions: s.playableFactions,
+    })),
+  };
+}
+
+// ====== 战役层 service（05 §十二~§十七） ======
+
+/** 战役：编成出征 */
+export function campaignStart(opts: CampaignFormationOptions): { game: GameState; army: CampaignArmy } {
+  return withLock(() => {
+    const result = campaignStartCampaign(getGame(), opts);
+    currentGame = result.state;
+    return { game: getClientGame(), army: result.army };
+  });
+}
+
+/** 战役：行军指令 */
+export function campaignMarch(armyId: string, targetNodeId: number): GameState {
+  return withLock(() => {
+    currentGame = campaignOrderMarch(getGame(), armyId, targetNodeId);
+    return getClientGame();
+  });
+}
+
+/** 战役：建造设施 */
+export function campaignBuild(armyId: string, structureType: StructureType): GameState {
+  return withLock(() => {
+    currentGame = campaignBuildStructure(getGame(), armyId, structureType);
+    return getClientGame();
+  });
+}
+
+/** 战役：强攻（自动战斗结算） */
+export function doCampaignAssault(armyId: string): { game: GameState; result: import('@leh/shared').AutoBattleResult } {
+  return withLock(() => {
+    const result = campaignAssaultEngine(getGame(), armyId);
+    currentGame = result.state;
+    return { game: getClientGame(), result: result.result };
+  });
+}
+
+/** 战役：劝降 */
+export function campaignSiegeSurrender(armyId: string): { game: GameState; success: boolean } {
+  return withLock(() => {
+    const result = campaignTrySiegeSurrender(getGame(), armyId);
+    currentGame = result.state;
+    return { game: getClientGame(), success: result.success };
+  });
+}
+
+/** 战役：撤退 */
+export function campaignRetreat(armyId: string): GameState {
+  return withLock(() => {
+    currentGame = campaignRetreatArmy(getGame(), armyId);
+    return getClientGame();
+  });
+}
+
+/** 战役：参谋行动 */
+export function campaignAdvisor(armyId: string, action: AdvisorAction): GameState {
+  return withLock(() => {
+    currentGame = campaignAdvisorAction(getGame(), armyId, action);
+    return getClientGame();
+  });
+}
+
+/** 战役：获取节点状态 */
+export function campaignNodes(): CampaignNode[] {
+  return getCampaignNodes(getGame());
+}

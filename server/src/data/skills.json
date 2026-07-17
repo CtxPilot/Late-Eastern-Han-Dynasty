@@ -1,0 +1,632 @@
+[
+  {
+    "id": "fire",
+    "name": "火计",
+    "category": "tactics",
+    "description": "纵火伤敌",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "火计·初",
+        "effects": [
+          {
+            "type": "fire",
+            "value": 1,
+            "description": "火计等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "water",
+    "name": "水计",
+    "category": "tactics",
+    "description": "水攻伤敌",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "水计·初",
+        "effects": [
+          {
+            "type": "water",
+            "value": 1,
+            "description": "水计等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "rockfall",
+    "name": "落石",
+    "category": "tactics",
+    "description": "山地落石",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "落石·初",
+        "effects": [
+          {
+            "type": "rockfall",
+            "value": 1,
+            "description": "落石等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "ambush",
+    "name": "伏兵",
+    "category": "tactics",
+    "description": "森林伏击",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "伏兵·初",
+        "effects": [
+          {
+            "type": "ambush",
+            "value": 1,
+            "description": "伏兵等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "taunt",
+    "name": "挑拨",
+    "category": "tactics",
+    "description": "降低敌士气",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "挑拨·初",
+        "effects": [
+          {
+            "type": "taunt",
+            "value": 1,
+            "description": "挑拨等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "discord",
+    "name": "离间",
+    "category": "tactics",
+    "description": "离间敌军",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "离间·初",
+        "effects": [
+          {
+            "type": "discord",
+            "value": 1,
+            "description": "离间等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "calm",
+    "name": "沉着",
+    "category": "tactics",
+    "description": "稳定本方士气",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "沉着·初",
+        "effects": [
+          {
+            "type": "calm",
+            "value": 1,
+            "description": "沉着等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "inspire",
+    "name": "激励",
+    "category": "tactics",
+    "description": "提升士气",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "激励·初",
+        "effects": [
+          {
+            "type": "inspire",
+            "value": 1,
+            "description": "激励等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "sorcery",
+    "name": "妖术",
+    "category": "tactics",
+    "description": "特殊计策",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "妖术·初",
+        "effects": [
+          {
+            "type": "sorcery",
+            "value": 1,
+            "description": "妖术等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "illusion",
+    "name": "幻术",
+    "category": "tactics",
+    "description": "迷惑敌军",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "幻术·初",
+        "effects": [
+          {
+            "type": "illusion",
+            "value": 1,
+            "description": "幻术等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "gallop",
+    "name": "疾驰",
+    "category": "command",
+    "description": "骑兵机动力提升",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "疾驰·初",
+        "effects": [
+          {
+            "type": "gallop",
+            "value": 1,
+            "description": "疾驰等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "forcedMarch",
+    "name": "强行军",
+    "category": "command",
+    "description": "增加移动",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "强行军·初",
+        "effects": [
+          {
+            "type": "forcedMarch",
+            "value": 1,
+            "description": "强行军等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "rapidAttack",
+    "name": "急攻",
+    "category": "command",
+    "description": "提升攻击",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "急攻·初",
+        "effects": [
+          {
+            "type": "rapidAttack",
+            "value": 1,
+            "description": "急攻等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "hold",
+    "name": "固守",
+    "category": "command",
+    "description": "提升防御",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "固守·初",
+        "effects": [
+          {
+            "type": "hold",
+            "value": 1,
+            "description": "固守等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "longRange",
+    "name": "远射",
+    "category": "command",
+    "description": "射程+1",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "远射·初",
+        "effects": [
+          {
+            "type": "longRange",
+            "value": 1,
+            "description": "远射等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "formationChange",
+    "name": "布阵",
+    "category": "command",
+    "description": "切换阵型",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "布阵·初",
+        "effects": [
+          {
+            "type": "formationChange",
+            "value": 1,
+            "description": "布阵等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "reorganize",
+    "name": "重整",
+    "category": "command",
+    "description": "恢复士气",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "重整·初",
+        "effects": [
+          {
+            "type": "reorganize",
+            "value": 1,
+            "description": "重整等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "raid",
+    "name": "奇袭",
+    "category": "command",
+    "description": "奇袭加成",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "奇袭·初",
+        "effects": [
+          {
+            "type": "raid",
+            "value": 1,
+            "description": "奇袭等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "farming",
+    "name": "农政",
+    "category": "civil",
+    "description": "提升农业开发",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "农政·初",
+        "effects": [
+          {
+            "type": "farming",
+            "value": 1,
+            "description": "农政等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "commerce",
+    "name": "商政",
+    "category": "civil",
+    "description": "提升商业开发",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "商政·初",
+        "effects": [
+          {
+            "type": "commerce",
+            "value": 1,
+            "description": "商政等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "fortify",
+    "name": "筑城",
+    "category": "civil",
+    "description": "提升城防",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "筑城·初",
+        "effects": [
+          {
+            "type": "fortify",
+            "value": 1,
+            "description": "筑城等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "recruit",
+    "name": "征兵",
+    "category": "civil",
+    "description": "征兵效率",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "征兵·初",
+        "effects": [
+          {
+            "type": "recruit",
+            "value": 1,
+            "description": "征兵等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "train",
+    "name": "训练",
+    "category": "civil",
+    "description": "训练效率",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "训练·初",
+        "effects": [
+          {
+            "type": "train",
+            "value": 1,
+            "description": "训练等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "discover",
+    "name": "寻访",
+    "category": "civil",
+    "description": "搜索人才",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "寻访·初",
+        "effects": [
+          {
+            "type": "discover",
+            "value": 1,
+            "description": "寻访等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "eloquence",
+    "name": "辩才",
+    "category": "civil",
+    "description": "外交说服",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "辩才·初",
+        "effects": [
+          {
+            "type": "eloquence",
+            "value": 1,
+            "description": "辩才等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "medicine",
+    "name": "医术",
+    "category": "civil",
+    "description": "治疗伤兵",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "医术·初",
+        "effects": [
+          {
+            "type": "medicine",
+            "value": 1,
+            "description": "医术等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "insight",
+    "name": "洞察",
+    "category": "personal",
+    "description": "识破计策",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "洞察·初",
+        "effects": [
+          {
+            "type": "insight",
+            "value": 1,
+            "description": "洞察等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "bravery",
+    "name": "勇武",
+    "category": "personal",
+    "description": "单挑加成",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "勇武·初",
+        "effects": [
+          {
+            "type": "bravery",
+            "value": 1,
+            "description": "勇武等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "riding",
+    "name": "骑术",
+    "category": "personal",
+    "description": "骑兵适性",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "骑术·初",
+        "effects": [
+          {
+            "type": "riding",
+            "value": 1,
+            "description": "骑术等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "archery",
+    "name": "弓术",
+    "category": "personal",
+    "description": "弓兵适性",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "弓术·初",
+        "effects": [
+          {
+            "type": "archery",
+            "value": 1,
+            "description": "弓术等级1"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  }
+]
