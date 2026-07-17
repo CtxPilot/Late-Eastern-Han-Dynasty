@@ -1,0 +1,657 @@
+[
+  {
+    "type": "lightInfantry",
+    "name": "轻步兵",
+    "isSpecial": false,
+    "attack": 5,
+    "defense": 4,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "轻便",
+        "description": "无地形惩罚",
+        "modifier": { "type": "terrain_ignore", "value": 1 }
+      }
+    ],
+    "strongAgainst": ["archer"],
+    "weakAgainst": ["heavyCavalry"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 0, "forest": 0, "mountain": 0, "water": -3 },
+    "recruitCost": { "gold": 80, "food": 50, "population": 1 },
+    "abilities": [
+      {
+        "id": "inf_strike",
+        "name": "奋战",
+        "description": "全力近战一击，伤害随等级提升",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 15, "power": 1.15, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 18, "power": 1.3, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 22, "power": 1.45, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 26, "power": 1.6, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 30, "power": 1.8, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "none",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "inf_rally",
+        "name": "振奋",
+        "description": "鼓舞己方士气，效果随等级增强",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 18, "power": 0.5, "hitRateBonus": 100, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 20, "power": 0.5, "hitRateBonus": 100, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 22, "power": 0.5, "hitRateBonus": 100, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 25, "power": 0.5, "hitRateBonus": 100, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 28, "power": 0.5, "hitRateBonus": 100, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "morale",
+        "effectValue": 10,
+        "minRange": 0,
+        "maxRange": 0,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "heavyInfantry",
+    "name": "重步兵",
+    "isSpecial": false,
+    "attack": 7,
+    "defense": 8,
+    "mobility": 3,
+    "range": 1,
+    "traits": [
+      {
+        "name": "坚盾",
+        "description": "克制枪兵",
+        "modifier": { "type": "vs_spearman", "value": 20 }
+      }
+    ],
+    "strongAgainst": ["spearman"],
+    "weakAgainst": ["archer"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 0, "forest": -1, "mountain": 0, "water": -3 },
+    "recruitCost": { "gold": 120, "food": 70, "population": 1 },
+    "abilities": [
+      {
+        "id": "hvy_hold",
+        "name": "坚守",
+        "description": "稳固防线并反击压迫，高伤近战",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 18, "power": 1.1, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 20, "power": 1.25, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 24, "power": 1.4, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 28, "power": 1.55, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 32, "power": 1.7, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "none",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "hvy_wall",
+        "name": "坚垒",
+        "description": "以重盾压制，概率使敌眩晕",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 22, "power": 1.05, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 25, "power": 1.15, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 28, "power": 1.25, "hitRateBonus": 8, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 32, "power": 1.4, "hitRateBonus": 12, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 36, "power": 1.55, "hitRateBonus": 15, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "stun",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "spearman",
+    "name": "长枪兵",
+    "isSpecial": false,
+    "attack": 8,
+    "defense": 5,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "刺骑",
+        "description": "克制骑兵",
+        "modifier": { "type": "vs_cavalry", "value": 50 }
+      }
+    ],
+    "strongAgainst": ["lightCavalry", "heavyCavalry"],
+    "weakAgainst": ["heavyInfantry"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 0, "forest": 0, "mountain": -1, "water": -3 },
+    "recruitCost": { "gold": 100, "food": 60, "population": 1 },
+    "abilities": [
+      {
+        "id": "pike_thrust",
+        "name": "突刺",
+        "description": "长枪直刺，击退敌军1格",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 18, "power": 1.2, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 20, "power": 1.35, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 24, "power": 1.5, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 28, "power": 1.65, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 32, "power": 1.85, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "knockback",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "pike_spiral",
+        "name": "螺旋",
+        "description": "螺旋突刺，高伤并概率眩晕",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 22, "power": 1.3, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 25, "power": 1.45, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 28, "power": 1.6, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 32, "power": 1.8, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 36, "power": 2.0, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "stun",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "pike_double",
+        "name": "二段突",
+        "description": "连续突进，波及目标邻格敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 28, "power": 1.15, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 30, "power": 1.3, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 34, "power": 1.45, "hitRateBonus": 8, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 38, "power": 1.6, "hitRateBonus": 12, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 42, "power": 1.8, "hitRateBonus": 15, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "aoe",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "archer",
+    "name": "弓箭手",
+    "isSpecial": false,
+    "attack": 6,
+    "defense": 3,
+    "mobility": 4,
+    "range": 3,
+    "traits": [
+      {
+        "name": "劲射",
+        "description": "射程3",
+        "modifier": { "type": "range", "value": 3 }
+      }
+    ],
+    "strongAgainst": ["heavyInfantry"],
+    "weakAgainst": ["lightInfantry", "lightCavalry"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 0, "forest": -1, "mountain": 1, "water": -3 },
+    "recruitCost": { "gold": 90, "food": 55, "population": 1 },
+    "abilities": [
+      {
+        "id": "bow_fire_arrow",
+        "name": "火矢",
+        "description": "火箭射击，附加灼烧",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 20, "power": 1.15, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 22, "power": 1.3, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 26, "power": 1.45, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 30, "power": 1.6, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 34, "power": 1.8, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "fire",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 3,
+        "coopAllowed": true
+      },
+      {
+        "id": "bow_pierce",
+        "name": "贯矢",
+        "description": "贯穿射击，可穿透目标后排",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 22, "power": 1.2, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 25, "power": 1.35, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 28, "power": 1.5, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 32, "power": 1.7, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 36, "power": 1.9, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "pierce",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 3,
+        "coopAllowed": true
+      },
+      {
+        "id": "bow_volley",
+        "name": "乱射",
+        "description": "箭雨覆盖目标周围敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 30, "power": 1.0, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 32, "power": 1.15, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 36, "power": 1.3, "hitRateBonus": 8, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 40, "power": 1.45, "hitRateBonus": 12, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 45, "power": 1.6, "hitRateBonus": 15, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "aoe",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 3,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "lightCavalry",
+    "name": "轻骑兵",
+    "isSpecial": false,
+    "attack": 7,
+    "defense": 4,
+    "mobility": 7,
+    "range": 1,
+    "traits": [
+      {
+        "name": "绕后",
+        "description": "机动高",
+        "modifier": { "type": "flank", "value": 20 }
+      }
+    ],
+    "strongAgainst": ["archer"],
+    "weakAgainst": ["spearman"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 1, "forest": -2, "mountain": -99, "water": -3 },
+    "recruitCost": { "gold": 150, "food": 80, "population": 1 },
+    "abilities": [
+      {
+        "id": "cav_break",
+        "name": "突破",
+        "description": "直线冲锋突进，冲撞路径敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 18, "power": 1.2, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 20, "power": 1.35, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 24, "power": 1.5, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 28, "power": 1.7, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 32, "power": 1.9, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "charge",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "cav_assault",
+        "name": "突击",
+        "description": "强力冲锋，高伤并概率混乱敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 25, "power": 1.35, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 28, "power": 1.5, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 32, "power": 1.7, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 36, "power": 1.9, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 40, "power": 2.15, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "confusion",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "cav_drag",
+        "name": "熊手",
+        "description": "钩拽敌军，击退并造成伤害",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 22, "power": 1.25, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 25, "power": 1.4, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 28, "power": 1.55, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 32, "power": 1.75, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 36, "power": 1.95, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "knockback",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "heavyCavalry",
+    "name": "重骑兵",
+    "isSpecial": false,
+    "attack": 10,
+    "defense": 7,
+    "mobility": 5,
+    "range": 1,
+    "traits": [
+      {
+        "name": "冲锋",
+        "description": "首击强化",
+        "modifier": { "type": "charge", "value": 50 }
+      }
+    ],
+    "strongAgainst": ["lightInfantry", "heavyInfantry"],
+    "weakAgainst": ["spearman"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": 1, "forest": -2, "mountain": -99, "water": -3 },
+    "recruitCost": { "gold": 200, "food": 100, "population": 1 },
+    "abilities": [
+      {
+        "id": "hcav_assault",
+        "name": "突击",
+        "description": "重骑强突，高伤+混乱",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 28, "power": 1.4, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 30, "power": 1.55, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 34, "power": 1.75, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 38, "power": 1.95, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 42, "power": 2.2, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "confusion",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "hcav_break",
+        "name": "突破",
+        "description": "装甲冲锋，突进并冲撞",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 20, "power": 1.25, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 22, "power": 1.4, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 26, "power": 1.55, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 30, "power": 1.75, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 34, "power": 1.95, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "charge",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "hcav_crush",
+        "name": "猛突",
+        "description": "全力撞击，重伤并击退2格",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 32, "power": 1.5, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 35, "power": 1.7, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 38, "power": 1.9, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 42, "power": 2.1, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 48, "power": 2.4, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "knockback",
+        "effectValue": 2,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "lightNavy",
+    "name": "走舸",
+    "isSpecial": false,
+    "attack": 5,
+    "defense": 3,
+    "mobility": 7,
+    "range": 1,
+    "traits": [
+      {
+        "name": "轻舟",
+        "description": "水域机动高，陆地不可战",
+        "modifier": { "type": "water_mobility", "value": 7 }
+      }
+    ],
+    "strongAgainst": ["mediumNavy"],
+    "weakAgainst": ["heavyNavy"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": -99, "forest": -99, "mountain": -99, "water": 2 },
+    "recruitCost": { "gold": 100, "food": 60, "population": 1 },
+    "abilities": [
+      {
+        "id": "sokou_swift",
+        "name": "疾驶",
+        "description": "轻舟突进，快速接敌造成伤害",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 16, "power": 1.15, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 18, "power": 1.3, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 22, "power": 1.45, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 26, "power": 1.6, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 30, "power": 1.8, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "charge",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "sokou_torrent",
+        "name": "激流",
+        "description": "借水势冲撞，击退敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 18, "power": 1.2, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 20, "power": 1.35, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 24, "power": 1.5, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 28, "power": 1.65, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 32, "power": 1.85, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "knockback",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "sokou_fire_arrow",
+        "name": "火箭",
+        "description": "轻舟火箭，附加灼烧",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 20, "power": 1.1, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 22, "power": 1.25, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 26, "power": 1.4, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 30, "power": 1.55, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 34, "power": 1.75, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "fire",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 2,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "mediumNavy",
+    "name": "蒙冲",
+    "isSpecial": false,
+    "attack": 7,
+    "defense": 5,
+    "mobility": 5,
+    "range": 1,
+    "traits": [
+      {
+        "name": "铁撞",
+        "description": "装甲战船，攻防均衡",
+        "modifier": { "type": "water_balanced", "value": 1 }
+      }
+    ],
+    "strongAgainst": ["lightNavy", "archer"],
+    "weakAgainst": ["heavyNavy"],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": -99, "forest": -99, "mountain": -99, "water": 1 },
+    "recruitCost": { "gold": 140, "food": 80, "population": 1 },
+    "abilities": [
+      {
+        "id": "mengchong_ram",
+        "name": "冲撞",
+        "description": "蒙冲接舷冲撞，概率眩晕",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 22, "power": 1.3, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 25, "power": 1.45, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 28, "power": 1.6, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 32, "power": 1.8, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 36, "power": 2.0, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "stun",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "mengchong_fireship",
+        "name": "火船",
+        "description": "纵火船撞击，灼烧敌军（赤壁）",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 25, "power": 1.25, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 28, "power": 1.4, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 32, "power": 1.55, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 36, "power": 1.75, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 40, "power": 2.0, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "fire",
+        "effectValue": 2,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "mengchong_torrent",
+        "name": "激流",
+        "description": "借水势压迫，击退敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 20, "power": 1.2, "hitRateBonus": 5, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 22, "power": 1.35, "hitRateBonus": 8, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 26, "power": 1.5, "hitRateBonus": 12, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 30, "power": 1.7, "hitRateBonus": 16, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 34, "power": 1.9, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "knockback",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "heavyNavy",
+    "name": "楼船",
+    "isSpecial": false,
+    "attack": 10,
+    "defense": 8,
+    "mobility": 3,
+    "range": 1,
+    "traits": [
+      {
+        "name": "巨舰",
+        "description": "重装巨舰，水域攻防特化",
+        "modifier": { "type": "water_heavy", "value": 1 }
+      }
+    ],
+    "strongAgainst": ["lightNavy", "mediumNavy", "lightInfantry"],
+    "weakAgainst": [],
+    "recruitRequirement": null,
+    "terrainModifiers": { "plain": -99, "forest": -99, "mountain": -99, "water": 0 },
+    "recruitCost": { "gold": 200, "food": 120, "population": 2 },
+    "abilities": [
+      {
+        "id": "louchuan_fireship",
+        "name": "火船",
+        "description": "楼船火攻，高伤灼烧",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 28, "power": 1.4, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 30, "power": 1.55, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 34, "power": 1.75, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 38, "power": 1.95, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 42, "power": 2.2, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "fire",
+        "effectValue": 2,
+        "minRange": 1,
+        "maxRange": 2,
+        "coopAllowed": true
+      },
+      {
+        "id": "louchuan_ram",
+        "name": "冲撞",
+        "description": "巨舰撞击，重伤并眩晕",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 30, "power": 1.45, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 32, "power": 1.65, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 36, "power": 1.85, "hitRateBonus": 10, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 40, "power": 2.05, "hitRateBonus": 15, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 46, "power": 2.3, "hitRateBonus": 20, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "stun",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      },
+      {
+        "id": "louchuan_volley",
+        "name": "齐射",
+        "description": "楼船箭雨，波及邻格敌军",
+        "leveling": "leveled",
+        "perLevel": [
+          { "level": 1, "energyCost": 32, "power": 1.1, "hitRateBonus": 0, "requiredProficiency": "C" },
+          { "level": 2, "energyCost": 34, "power": 1.25, "hitRateBonus": 5, "requiredProficiency": "B" },
+          { "level": 3, "energyCost": 38, "power": 1.4, "hitRateBonus": 8, "requiredProficiency": "A" },
+          { "level": 4, "energyCost": 42, "power": 1.55, "hitRateBonus": 12, "requiredProficiency": "S" },
+          { "level": 5, "energyCost": 48, "power": 1.75, "hitRateBonus": 15, "requiredProficiency": "S" }
+        ],
+        "specialEffect": "aoe",
+        "effectValue": 1,
+        "minRange": 1,
+        "maxRange": 2,
+        "coopAllowed": false
+      }
+    ]
+  }
+]

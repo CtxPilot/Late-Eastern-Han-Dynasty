@@ -1,0 +1,33 @@
+{
+  "name": "@leh/server",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "author": "CtxPilot",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "validate-data": "tsx src/scripts/validate-data.ts",
+    "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
+    "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@leh/shared": "workspace:*",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

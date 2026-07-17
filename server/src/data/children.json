@@ -1,0 +1,133 @@
+[
+  {
+    "childId": 950,
+    "childName": "诸葛瞻",
+    "fatherId": 4,
+    "motherId": 201,
+    "birthYear": 227,
+    "appearYear": 243,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 48,
+      "intelligence": 68,
+      "politics": 65,
+      "charisma": 70
+    },
+    "motherBonus": {
+      "fromScholarship": {
+        "intelligence": 5,
+        "politics": 3
+      },
+      "fromBloodline": {},
+      "extraSkills": [
+        "calm"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 951,
+    "childName": "关兴",
+    "fatherId": 6,
+    "motherId": 210,
+    "birthYear": 190,
+    "appearYear": 206,
+    "source": "history",
+    "baseStats": {
+      "leadership": 70,
+      "war": 78,
+      "intelligence": 55,
+      "politics": 45,
+      "charisma": 60
+    },
+    "motherBonus": {
+      "fromScholarship": {},
+      "fromBloodline": {
+        "war": 3
+      },
+      "extraSkills": [
+        "bravery"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 952,
+    "childName": "张苞",
+    "fatherId": 7,
+    "motherId": 210,
+    "birthYear": 192,
+    "appearYear": 208,
+    "source": "romance",
+    "baseStats": {
+      "leadership": 68,
+      "war": 82,
+      "intelligence": 40,
+      "politics": 30,
+      "charisma": 48
+    },
+    "motherBonus": {
+      "fromScholarship": {},
+      "fromBloodline": {
+        "war": 4
+      },
+      "extraSkills": [
+        "bravery"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 953,
+    "childName": "曹丕",
+    "fatherId": 1,
+    "motherId": 207,
+    "birthYear": 187,
+    "appearYear": 203,
+    "source": "history",
+    "baseStats": {
+      "leadership": 78,
+      "war": 55,
+      "intelligence": 82,
+      "politics": 85,
+      "charisma": 75
+    },
+    "motherBonus": {
+      "fromScholarship": {
+        "intelligence": 3
+      },
+      "fromBloodline": {},
+      "extraSkills": [
+        "eloquence"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 954,
+    "childName": "孙登",
+    "fatherId": 3,
+    "motherId": 208,
+    "birthYear": 209,
+    "appearYear": 225,
+    "source": "history",
+    "baseStats": {
+      "leadership": 72,
+      "war": 50,
+      "intelligence": 75,
+      "politics": 78,
+      "charisma": 80
+    },
+    "motherBonus": {
+      "fromScholarship": {
+        "politics": 3
+      },
+      "fromBloodline": {},
+      "extraSkills": [
+        "commerce"
+      ],
+      "extraTalents": []
+    }
+  }
+]

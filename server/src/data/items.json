@@ -1,0 +1,428 @@
+[
+  {
+    "id": 1,
+    "name": "青龙偃月刀",
+    "category": "weapon_primary",
+    "quality": "legendary",
+    "primaryWeaponSubType": "blade",
+    "baseStats": {
+      "war": 10
+    },
+    "baseEffect": [
+      {
+        "type": "crit_rate",
+        "value": 5,
+        "description": "暴击+5%"
+      }
+    ],
+    "equipRequirement": {
+      "minWar": 80
+    },
+    "acquisition": [
+      "initial",
+      "loot"
+    ],
+    "description": "关羽所用大刀"
+  },
+  {
+    "id": 2,
+    "name": "方天画戟",
+    "category": "weapon_primary",
+    "quality": "legendary",
+    "primaryWeaponSubType": "halberd",
+    "baseStats": {
+      "war": 12
+    },
+    "baseEffect": [
+      {
+        "type": "charge_damage",
+        "value": 15
+      }
+    ],
+    "equipRequirement": {
+      "minWar": 90
+    },
+    "acquisition": [
+      "initial",
+      "loot"
+    ],
+    "description": "吕布兵器"
+  },
+  {
+    "id": 3,
+    "name": "丈八蛇矛",
+    "category": "weapon_primary",
+    "quality": "epic",
+    "primaryWeaponSubType": "spear",
+    "baseStats": {
+      "war": 8
+    },
+    "baseEffect": [
+      {
+        "type": "vs_cavalry",
+        "value": 10
+      }
+    ],
+    "equipRequirement": {
+      "minWar": 70
+    },
+    "acquisition": [
+      "initial",
+      "loot"
+    ],
+    "description": "张飞兵器"
+  },
+  {
+    "id": 4,
+    "name": "倚天剑",
+    "category": "weapon_primary",
+    "quality": "legendary",
+    "primaryWeaponSubType": "sword",
+    "baseStats": {
+      "war": 8,
+      "leadership": 3
+    },
+    "baseEffect": [
+      {
+        "type": "authority",
+        "value": 5
+      }
+    ],
+    "equipRequirement": {
+      "minLeadership": 70
+    },
+    "acquisition": [
+      "event"
+    ],
+    "description": "曹操佩剑"
+  },
+  {
+    "id": 5,
+    "name": "雌雄双股剑",
+    "category": "weapon_primary",
+    "quality": "epic",
+    "primaryWeaponSubType": "sword",
+    "baseStats": {
+      "war": 6,
+      "charisma": 3
+    },
+    "baseEffect": [],
+    "equipRequirement": {
+      "minCharisma": 60
+    },
+    "acquisition": [
+      "initial"
+    ],
+    "description": "刘备佩剑"
+  },
+  {
+    "id": 6,
+    "name": "宝雕弓",
+    "category": "weapon_secondary",
+    "quality": "rare",
+    "secondaryWeaponSubType": "bow",
+    "baseStats": {
+      "war": 4
+    },
+    "baseEffect": [
+      {
+        "type": "range",
+        "value": 1
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "shop",
+      "loot"
+    ],
+    "shopPrice": 800,
+    "description": "精良弓"
+  },
+  {
+    "id": 7,
+    "name": "诸葛连弩",
+    "category": "weapon_secondary",
+    "quality": "epic",
+    "secondaryWeaponSubType": "crossbow",
+    "baseStats": {
+      "war": 5,
+      "intelligence": 2
+    },
+    "baseEffect": [
+      {
+        "type": "armor_pierce",
+        "value": 15
+      }
+    ],
+    "equipRequirement": {
+      "minIntelligence": 50
+    },
+    "acquisition": [
+      "craft",
+      "event"
+    ],
+    "description": "连弩"
+  },
+  {
+    "id": 8,
+    "name": "黑铁甲",
+    "category": "armor",
+    "quality": "rare",
+    "armorSubType": "metal",
+    "baseStats": {
+      "leadership": 2
+    },
+    "baseEffect": [
+      {
+        "type": "defense",
+        "value": 8
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "shop",
+      "loot"
+    ],
+    "shopPrice": 1000,
+    "description": "重甲"
+  },
+  {
+    "id": 9,
+    "name": "软猬甲",
+    "category": "armor",
+    "quality": "epic",
+    "armorSubType": "specialArmor",
+    "baseStats": {},
+    "baseEffect": [
+      {
+        "type": "arrow_resist",
+        "value": 30
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "event"
+    ],
+    "description": "防箭奇甲"
+  },
+  {
+    "id": 10,
+    "name": "赤兔马",
+    "category": "mount",
+    "quality": "legendary",
+    "baseStats": {
+      "war": 3
+    },
+    "baseEffect": [
+      {
+        "type": "mobility",
+        "value": 2,
+        "description": "机动力+2"
+      }
+    ],
+    "equipRequirement": {
+      "minWar": 70
+    },
+    "acquisition": [
+      "event",
+      "loot"
+    ],
+    "description": "千里马"
+  },
+  {
+    "id": 11,
+    "name": "的卢",
+    "category": "mount",
+    "quality": "epic",
+    "baseStats": {
+      "charisma": 2
+    },
+    "baseEffect": [
+      {
+        "type": "escape",
+        "value": 20
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "event"
+    ],
+    "description": "刘备坐骑"
+  },
+  {
+    "id": 12,
+    "name": "绝影",
+    "category": "mount",
+    "quality": "epic",
+    "baseStats": {
+      "leadership": 2
+    },
+    "baseEffect": [
+      {
+        "type": "mobility",
+        "value": 1
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "initial"
+    ],
+    "description": "曹操坐骑"
+  },
+  {
+    "id": 13,
+    "name": "孙子兵法",
+    "category": "book",
+    "quality": "legendary",
+    "baseStats": {
+      "intelligence": 8,
+      "leadership": 4
+    },
+    "baseEffect": [
+      {
+        "type": "tactic_power",
+        "value": 10
+      }
+    ],
+    "equipRequirement": {
+      "minIntelligence": 60
+    },
+    "acquisition": [
+      "search",
+      "event"
+    ],
+    "description": "兵家圣典"
+  },
+  {
+    "id": 14,
+    "name": "孟德新书",
+    "category": "book",
+    "quality": "epic",
+    "baseStats": {
+      "leadership": 5,
+      "politics": 3
+    },
+    "baseEffect": [],
+    "equipRequirement": {},
+    "acquisition": [
+      "event"
+    ],
+    "description": "曹操兵书"
+  },
+  {
+    "id": 15,
+    "name": "传国玉玺",
+    "category": "special",
+    "quality": "legendary",
+    "baseStats": {
+      "charisma": 10,
+      "politics": 5
+    },
+    "baseEffect": [
+      {
+        "type": "legitimacy",
+        "value": 50
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "event"
+    ],
+    "description": "受命于天"
+  },
+  {
+    "id": 16,
+    "name": "玉玺残片",
+    "category": "special",
+    "quality": "rare",
+    "baseStats": {
+      "charisma": 2
+    },
+    "baseEffect": [],
+    "equipRequirement": {},
+    "acquisition": [
+      "search"
+    ],
+    "description": "玉玺碎片"
+  },
+  {
+    "id": 17,
+    "name": "金疮药",
+    "category": "consumable",
+    "quality": "common",
+    "baseStats": {},
+    "baseEffect": [],
+    "consumable": {
+      "effect": {
+        "type": "heal",
+        "value": 30,
+        "description": "恢复伤势"
+      },
+      "maxStack": 20
+    },
+    "equipRequirement": {},
+    "acquisition": [
+      "shop"
+    ],
+    "shopPrice": 50,
+    "description": "疗伤药"
+  },
+  {
+    "id": 18,
+    "name": "兵符",
+    "category": "special",
+    "quality": "rare",
+    "baseStats": {
+      "leadership": 3
+    },
+    "baseEffect": [
+      {
+        "type": "recruit_bonus",
+        "value": 10
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "event"
+    ],
+    "description": "调兵信物"
+  },
+  {
+    "id": 19,
+    "name": "青铜剑",
+    "category": "weapon_primary",
+    "quality": "common",
+    "primaryWeaponSubType": "sword",
+    "baseStats": {
+      "war": 2
+    },
+    "baseEffect": [],
+    "equipRequirement": {},
+    "acquisition": [
+      "shop",
+      "loot"
+    ],
+    "shopPrice": 200,
+    "description": "普通铜剑"
+  },
+  {
+    "id": 20,
+    "name": "革甲",
+    "category": "armor",
+    "quality": "common",
+    "armorSubType": "leather",
+    "baseStats": {},
+    "baseEffect": [
+      {
+        "type": "defense",
+        "value": 3
+      }
+    ],
+    "equipRequirement": {},
+    "acquisition": [
+      "shop"
+    ],
+    "shopPrice": 150,
+    "description": "普通革甲"
+  }
+]

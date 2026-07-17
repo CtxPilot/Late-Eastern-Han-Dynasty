@@ -1,0 +1,2020 @@
+[
+  {
+    "id": 1,
+    "name": "曹操",
+    "birthYear": 155,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 100,
+      "war": 72,
+      "intelligence": 91,
+      "politics": 94,
+      "charisma": 90
+    },
+    "hidden": {
+      "compatibility": 25,
+      "righteousness": 5,
+      "ambition": 14,
+      "valor": 5,
+      "composure": 6,
+      "lifespan": 220,
+      "growth": "mid",
+      "personality": "bold",
+      "ideal": "hegemony",
+      "bloodline": [
+        2,
+        3
+      ],
+      "ceilingBonus": {
+        "attribute": "leadership",
+        "hiddenBonus": 15
+      },
+      "power": 65,
+      "burst": 50,
+      "agility": 55,
+      "luck": 95,
+      "intuition": 70,
+      "awe": 90,
+      "strategy": 85,
+      "tactics": 80
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "S",
+      "heavyCavalry": "S",
+      "lightNavy": "B",
+      "mediumNavy": "B",
+      "heavyNavy": "B"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4,
+      6,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "inspire",
+        "level": 3
+      },
+      {
+        "skillId": "farming",
+        "level": 2
+      },
+      {
+        "skillId": "rapidAttack",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "宦官之后",
+      "豪族",
+      "中原",
+      "官吏",
+      "武人",
+      "天命革新"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "刘备",
+    "birthYear": 161,
+    "deathYear": 223,
+    "stats": {
+      "leadership": 85,
+      "war": 75,
+      "intelligence": 78,
+      "politics": 82,
+      "charisma": 100
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 14,
+      "ambition": 10,
+      "valor": 5,
+      "composure": 5,
+      "lifespan": 223,
+      "growth": "mid",
+      "personality": "gentle",
+      "ideal": "benevolence",
+      "bloodline": [
+        10,
+        11
+      ],
+      "ceilingBonus": {
+        "attribute": "charisma",
+        "hiddenBonus": 5
+      },
+      "power": 55,
+      "burst": 40,
+      "agility": 55,
+      "luck": 92,
+      "intuition": 78,
+      "awe": 75,
+      "strategy": 82,
+      "tactics": 60
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      4,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "inspire",
+        "level": 2
+      },
+      {
+        "skillId": "eloquence",
+        "level": 3
+      },
+      {
+        "skillId": "discover",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "宗室远支",
+      "寒门",
+      "青徐",
+      "游侠",
+      "武人",
+      "官吏",
+      "匡扶汉室"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "孙权",
+    "birthYear": 182,
+    "deathYear": 252,
+    "stats": {
+      "leadership": 84,
+      "war": 70,
+      "intelligence": 80,
+      "politics": 88,
+      "charisma": 86
+    },
+    "hidden": {
+      "compatibility": 100,
+      "righteousness": 8,
+      "ambition": 10,
+      "valor": 4,
+      "composure": 5,
+      "lifespan": 252,
+      "growth": "high",
+      "personality": "calm",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 40,
+      "burst": 30,
+      "agility": 40,
+      "luck": 85,
+      "intuition": 70,
+      "awe": 65,
+      "strategy": 78,
+      "tactics": 55
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "A",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "S",
+      "mediumNavy": "S",
+      "heavyNavy": "S"
+    },
+    "formationMastery": [
+      0,
+      4,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "commerce",
+        "level": 2
+      },
+      {
+        "skillId": "hold",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "江东",
+      "官吏",
+      "武人",
+      "割据自守"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "诸葛亮",
+    "birthYear": 181,
+    "deathYear": 234,
+    "stats": {
+      "leadership": 95,
+      "war": 38,
+      "intelligence": 100,
+      "politics": 96,
+      "charisma": 92
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 13,
+      "ambition": 4,
+      "valor": 2,
+      "composure": 7,
+      "lifespan": 234,
+      "growth": "low",
+      "personality": "calm",
+      "ideal": "benevolence",
+      "bloodline": [
+        950
+      ],
+      "ceilingBonus": {
+        "attribute": "intelligence",
+        "hiddenBonus": 20
+      },
+      "power": 20,
+      "burst": 40,
+      "agility": 60,
+      "luck": 70,
+      "intuition": 99,
+      "awe": 70,
+      "strategy": 99,
+      "tactics": 85
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "B",
+      "mediumNavy": "B",
+      "heavyNavy": "B"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4,
+      6,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "fire",
+        "level": 3
+      },
+      {
+        "skillId": "calm",
+        "level": 3
+      },
+      {
+        "skillId": "formationChange",
+        "level": 3
+      },
+      {
+        "skillId": "farming",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "荆襄",
+      "儒生",
+      "名士",
+      "匡扶汉室"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "吕布",
+    "birthYear": 156,
+    "deathYear": 199,
+    "stats": {
+      "leadership": 97,
+      "war": 100,
+      "intelligence": 70,
+      "politics": 65,
+      "charisma": 60
+    },
+    "hidden": {
+      "compatibility": 50,
+      "righteousness": 2,
+      "ambition": 15,
+      "valor": 7,
+      "composure": 2,
+      "lifespan": 199,
+      "growth": "low",
+      "personality": "reckless",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": {
+        "attribute": "war",
+        "hiddenBonus": 50
+      },
+      "power": 100,
+      "burst": 100,
+      "agility": 85,
+      "luck": 30,
+      "intuition": 30,
+      "awe": 98,
+      "strategy": 25,
+      "tactics": 35
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "S",
+      "heavyCavalry": "S",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      2,
+      6,
+      16
+    ],
+    "skills": [
+      {
+        "skillId": "gallop",
+        "level": 3
+      },
+      {
+        "skillId": "bravery",
+        "level": 3
+      },
+      {
+        "skillId": "rapidAttack",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "寒门",
+      "并幽",
+      "边地",
+      "武人",
+      "叛将",
+      "名利之徒",
+      "弑主",
+      "二主之臣"
+    ]
+  },
+  {
+    "id": 6,
+    "name": "关羽",
+    "birthYear": 162,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 95,
+      "war": 97,
+      "intelligence": 75,
+      "politics": 63,
+      "charisma": 94
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 14,
+      "ambition": 6,
+      "valor": 7,
+      "composure": 4,
+      "lifespan": 220,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "benevolence",
+      "bloodline": [
+        7
+      ],
+      "ceilingBonus": null,
+      "power": 92,
+      "burst": 80,
+      "agility": 72,
+      "luck": 60,
+      "intuition": 55,
+      "awe": 95,
+      "strategy": 65,
+      "tactics": 55
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "S",
+      "heavyCavalry": "S",
+      "lightNavy": "A",
+      "mediumNavy": "A",
+      "heavyNavy": "A"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4,
+      6,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "gallop",
+        "level": 3
+      },
+      {
+        "skillId": "inspire",
+        "level": 2
+      },
+      {
+        "skillId": "bravery",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "寒门",
+      "并幽",
+      "武人",
+      "游侠",
+      "匡扶汉室",
+      "义兄弟"
+    ]
+  },
+  {
+    "id": 7,
+    "name": "张飞",
+    "birthYear": 167,
+    "deathYear": 221,
+    "stats": {
+      "leadership": 82,
+      "war": 97,
+      "intelligence": 40,
+      "politics": 28,
+      "charisma": 50
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 10,
+      "ambition": 5,
+      "valor": 7,
+      "composure": 1,
+      "lifespan": 221,
+      "growth": "low",
+      "personality": "reckless",
+      "ideal": "chivalry",
+      "bloodline": [
+        6
+      ],
+      "ceilingBonus": null,
+      "power": 90,
+      "burst": 96,
+      "agility": 70,
+      "luck": 30,
+      "intuition": 25,
+      "awe": 93,
+      "strategy": 20,
+      "tactics": 25
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "S",
+      "spearman": "S",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      2,
+      6,
+      7
+    ],
+    "skills": [
+      {
+        "skillId": "taunt",
+        "level": 2
+      },
+      {
+        "skillId": "bravery",
+        "level": 3
+      },
+      {
+        "skillId": "rapidAttack",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "平民",
+      "河北",
+      "武人",
+      "游侠",
+      "匡扶汉室",
+      "义兄弟"
+    ]
+  },
+  {
+    "id": 8,
+    "name": "荀彧",
+    "birthYear": 163,
+    "deathYear": 212,
+    "stats": {
+      "leadership": 72,
+      "war": 28,
+      "intelligence": 95,
+      "politics": 100,
+      "charisma": 88
+    },
+    "hidden": {
+      "compatibility": 25,
+      "righteousness": 12,
+      "ambition": 3,
+      "valor": 1,
+      "composure": 6,
+      "lifespan": 212,
+      "growth": "low",
+      "personality": "calm",
+      "ideal": "benevolence",
+      "bloodline": [],
+      "ceilingBonus": {
+        "attribute": "politics",
+        "hiddenBonus": 10
+      },
+      "power": 15,
+      "burst": 25,
+      "agility": 40,
+      "luck": 70,
+      "intuition": 80,
+      "awe": 65,
+      "strategy": 99,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      7
+    ],
+    "skills": [
+      {
+        "skillId": "commerce",
+        "level": 3
+      },
+      {
+        "skillId": "eloquence",
+        "level": 3
+      },
+      {
+        "skillId": "discover",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "中原",
+      "官吏",
+      "名士",
+      "匡扶汉室"
+    ]
+  },
+  {
+    "id": 9,
+    "name": "夏侯惇",
+    "birthYear": 156,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 85,
+      "war": 90,
+      "intelligence": 55,
+      "politics": 48,
+      "charisma": 70
+    },
+    "hidden": {
+      "compatibility": 25,
+      "righteousness": 8,
+      "ambition": 7,
+      "valor": 6,
+      "composure": 4,
+      "lifespan": 220,
+      "growth": "mid",
+      "personality": "brave",
+      "ideal": "hegemony",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 88,
+      "burst": 70,
+      "agility": 60,
+      "luck": 40,
+      "intuition": 35,
+      "awe": 80,
+      "strategy": 50,
+      "tactics": 35
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "S",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      2,
+      7
+    ],
+    "skills": [
+      {
+        "skillId": "hold",
+        "level": 2
+      },
+      {
+        "skillId": "bravery",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "豪族",
+      "中原",
+      "武人",
+      "官吏",
+      "天命革新"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "赵云",
+    "birthYear": 168,
+    "deathYear": 229,
+    "stats": {
+      "leadership": 88,
+      "war": 96,
+      "intelligence": 72,
+      "politics": 55,
+      "charisma": 82
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 13,
+      "ambition": 4,
+      "valor": 6,
+      "composure": 6,
+      "lifespan": 229,
+      "growth": "mid",
+      "personality": "brave",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 85,
+      "burst": 85,
+      "agility": 98,
+      "luck": 85,
+      "intuition": 70,
+      "awe": 75,
+      "strategy": 65,
+      "tactics": 70
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "S",
+      "archer": "A",
+      "lightCavalry": "S",
+      "heavyCavalry": "A",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4,
+      6,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "gallop",
+        "level": 2
+      },
+      {
+        "skillId": "bravery",
+        "level": 2
+      },
+      {
+        "skillId": "reorganize",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "河北",
+      "武人",
+      "匡扶汉室"
+    ]
+  },
+  {
+    "id": 11,
+    "name": "周瑜",
+    "birthYear": 175,
+    "deathYear": 210,
+    "stats": {
+      "leadership": 94,
+      "war": 72,
+      "intelligence": 96,
+      "politics": 78,
+      "charisma": 90
+    },
+    "hidden": {
+      "compatibility": 100,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 5,
+      "lifespan": 210,
+      "growth": "low",
+      "personality": "bold",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 35,
+      "burst": 50,
+      "agility": 65,
+      "luck": 75,
+      "intuition": 94,
+      "awe": 60,
+      "strategy": 94,
+      "tactics": 80
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "A",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "S",
+      "mediumNavy": "S",
+      "heavyNavy": "S"
+    },
+    "formationMastery": [
+      0,
+      4,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "fire",
+        "level": 3
+      },
+      {
+        "skillId": "inspire",
+        "level": 2
+      },
+      {
+        "skillId": "formationChange",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "江东",
+      "官吏",
+      "名士",
+      "割据自守"
+    ]
+  },
+  {
+    "id": 12,
+    "name": "司马懿",
+    "birthYear": 179,
+    "deathYear": 251,
+    "stats": {
+      "leadership": 96,
+      "war": 65,
+      "intelligence": 98,
+      "politics": 92,
+      "charisma": 70
+    },
+    "hidden": {
+      "compatibility": 30,
+      "righteousness": 4,
+      "ambition": 14,
+      "valor": 3,
+      "composure": 7,
+      "lifespan": 251,
+      "growth": "high",
+      "personality": "cautious",
+      "ideal": "hegemony",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 30,
+      "burst": 35,
+      "agility": 50,
+      "luck": 80,
+      "intuition": 88,
+      "awe": 70,
+      "strategy": 94,
+      "tactics": 88
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "A",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      2,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "calm",
+        "level": 3
+      },
+      {
+        "skillId": "hold",
+        "level": 2
+      },
+      {
+        "skillId": "insight",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "中原",
+      "官吏",
+      "儒生",
+      "名士",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 13,
+    "name": "典韦",
+    "birthYear": 160,
+    "deathYear": 197,
+    "stats": {
+      "leadership": 70,
+      "war": 97,
+      "intelligence": 35,
+      "politics": 20,
+      "charisma": 45
+    },
+    "hidden": {
+      "compatibility": 25,
+      "righteousness": 9,
+      "ambition": 3,
+      "valor": 7,
+      "composure": 3,
+      "lifespan": 197,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 98,
+      "burst": 80,
+      "agility": 60,
+      "luck": 40,
+      "intuition": 25,
+      "awe": 75,
+      "strategy": 15,
+      "tactics": 20
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "S",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      7
+    ],
+    "skills": [
+      {
+        "skillId": "bravery",
+        "level": 3
+      },
+      {
+        "skillId": "hold",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "游侠",
+      "名利之徒"
+    ]
+  },
+  {
+    "id": 14,
+    "name": "黄忠",
+    "birthYear": 148,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 80,
+      "war": 94,
+      "intelligence": 55,
+      "politics": 40,
+      "charisma": 68
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 10,
+      "ambition": 4,
+      "valor": 6,
+      "composure": 5,
+      "lifespan": 220,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 88,
+      "burst": 65,
+      "agility": 65,
+      "luck": 50,
+      "intuition": 60,
+      "awe": 65,
+      "strategy": 55,
+      "tactics": 45
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "S",
+      "lightCavalry": "A",
+      "heavyCavalry": "B",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C"
+    },
+    "formationMastery": [
+      0,
+      4,
+      6
+    ],
+    "skills": [
+      {
+        "skillId": "archery",
+        "level": 3
+      },
+      {
+        "skillId": "longRange",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "平民",
+      "荆襄",
+      "武人",
+      "官吏",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 15,
+    "name": "陆逊",
+    "birthYear": 183,
+    "deathYear": 245,
+    "stats": {
+      "leadership": 92,
+      "war": 68,
+      "intelligence": 94,
+      "politics": 85,
+      "charisma": 80
+    },
+    "hidden": {
+      "compatibility": 100,
+      "righteousness": 9,
+      "ambition": 6,
+      "valor": 3,
+      "composure": 6,
+      "lifespan": 245,
+      "growth": "high",
+      "personality": "calm",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 30,
+      "burst": 40,
+      "agility": 55,
+      "luck": 75,
+      "intuition": 90,
+      "awe": 55,
+      "strategy": 92,
+      "tactics": 85
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "A",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "S",
+      "mediumNavy": "S",
+      "heavyNavy": "S"
+    },
+    "formationMastery": [
+      0,
+      4,
+      7,
+      8
+    ],
+    "skills": [
+      {
+        "skillId": "fire",
+        "level": 2
+      },
+      {
+        "skillId": "ambush",
+        "level": 2
+      },
+      {
+        "skillId": "calm",
+        "level": 2
+      }
+    ],
+    "tags": [
+      "士族",
+      "江东",
+      "官吏",
+      "儒生",
+      "割据自守"
+    ]
+  },
+  {
+    "id": 100,
+    "name": "占位武将1",
+    "birthYear": 160,
+    "deathYear": 210,
+    "stats": {
+      "leadership": 40,
+      "war": 40,
+      "intelligence": 40,
+      "politics": 40,
+      "charisma": 40
+    },
+    "hidden": {
+      "compatibility": 10,
+      "righteousness": 1,
+      "ambition": 1,
+      "valor": 1,
+      "composure": 1,
+      "lifespan": 210,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "hegemony",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [
+      {
+        "skillId": "fire",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 101,
+    "name": "占位武将2",
+    "birthYear": 161,
+    "deathYear": 211,
+    "stats": {
+      "leadership": 41,
+      "war": 43,
+      "intelligence": 45,
+      "politics": 47,
+      "charisma": 51
+    },
+    "hidden": {
+      "compatibility": 15,
+      "righteousness": 2,
+      "ambition": 2,
+      "valor": 2,
+      "composure": 2,
+      "lifespan": 211,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "benevolence",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2
+    ],
+    "skills": [
+      {
+        "skillId": "water",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 102,
+    "name": "占位武将3",
+    "birthYear": 162,
+    "deathYear": 212,
+    "stats": {
+      "leadership": 42,
+      "war": 46,
+      "intelligence": 50,
+      "politics": 54,
+      "charisma": 62
+    },
+    "hidden": {
+      "compatibility": 20,
+      "righteousness": 3,
+      "ambition": 3,
+      "valor": 3,
+      "composure": 3,
+      "lifespan": 212,
+      "growth": "high",
+      "personality": "bold",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4
+    ],
+    "skills": [
+      {
+        "skillId": "rockfall",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 103,
+    "name": "占位武将4",
+    "birthYear": 163,
+    "deathYear": 213,
+    "stats": {
+      "leadership": 43,
+      "war": 49,
+      "intelligence": 55,
+      "politics": 61,
+      "charisma": 73
+    },
+    "hidden": {
+      "compatibility": 25,
+      "righteousness": 4,
+      "ambition": 4,
+      "valor": 4,
+      "composure": 4,
+      "lifespan": 213,
+      "growth": "low",
+      "personality": "cautious",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [
+      {
+        "skillId": "ambush",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 104,
+    "name": "占位武将5",
+    "birthYear": 164,
+    "deathYear": 214,
+    "stats": {
+      "leadership": 44,
+      "war": 52,
+      "intelligence": 60,
+      "politics": 68,
+      "charisma": 44
+    },
+    "hidden": {
+      "compatibility": 30,
+      "righteousness": 5,
+      "ambition": 5,
+      "valor": 5,
+      "composure": 5,
+      "lifespan": 214,
+      "growth": "mid",
+      "personality": "reckless",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2
+    ],
+    "skills": [
+      {
+        "skillId": "taunt",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 105,
+    "name": "占位武将6",
+    "birthYear": 165,
+    "deathYear": 215,
+    "stats": {
+      "leadership": 45,
+      "war": 55,
+      "intelligence": 65,
+      "politics": 75,
+      "charisma": 55
+    },
+    "hidden": {
+      "compatibility": 35,
+      "righteousness": 6,
+      "ambition": 6,
+      "valor": 6,
+      "composure": 6,
+      "lifespan": 215,
+      "growth": "high",
+      "personality": "gentle",
+      "ideal": "hegemony",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4
+    ],
+    "skills": [
+      {
+        "skillId": "discord",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 106,
+    "name": "占位武将7",
+    "birthYear": 166,
+    "deathYear": 216,
+    "stats": {
+      "leadership": 46,
+      "war": 58,
+      "intelligence": 70,
+      "politics": 42,
+      "charisma": 66
+    },
+    "hidden": {
+      "compatibility": 40,
+      "righteousness": 7,
+      "ambition": 7,
+      "valor": 1,
+      "composure": 1,
+      "lifespan": 216,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "benevolence",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [
+      {
+        "skillId": "calm",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 107,
+    "name": "占位武将8",
+    "birthYear": 167,
+    "deathYear": 217,
+    "stats": {
+      "leadership": 47,
+      "war": 61,
+      "intelligence": 75,
+      "politics": 49,
+      "charisma": 77
+    },
+    "hidden": {
+      "compatibility": 45,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 2,
+      "composure": 2,
+      "lifespan": 217,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2
+    ],
+    "skills": [
+      {
+        "skillId": "inspire",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 108,
+    "name": "占位武将9",
+    "birthYear": 168,
+    "deathYear": 218,
+    "stats": {
+      "leadership": 48,
+      "war": 64,
+      "intelligence": 40,
+      "politics": 56,
+      "charisma": 48
+    },
+    "hidden": {
+      "compatibility": 50,
+      "righteousness": 9,
+      "ambition": 9,
+      "valor": 3,
+      "composure": 3,
+      "lifespan": 218,
+      "growth": "high",
+      "personality": "bold",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4
+    ],
+    "skills": [
+      {
+        "skillId": "sorcery",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 109,
+    "name": "占位武将10",
+    "birthYear": 169,
+    "deathYear": 219,
+    "stats": {
+      "leadership": 49,
+      "war": 67,
+      "intelligence": 45,
+      "politics": 63,
+      "charisma": 59
+    },
+    "hidden": {
+      "compatibility": 55,
+      "righteousness": 10,
+      "ambition": 10,
+      "valor": 4,
+      "composure": 4,
+      "lifespan": 219,
+      "growth": "low",
+      "personality": "cautious",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [
+      {
+        "skillId": "illusion",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 110,
+    "name": "占位武将11",
+    "birthYear": 170,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 50,
+      "war": 70,
+      "intelligence": 50,
+      "politics": 70,
+      "charisma": 70
+    },
+    "hidden": {
+      "compatibility": 60,
+      "righteousness": 1,
+      "ambition": 1,
+      "valor": 5,
+      "composure": 5,
+      "lifespan": 220,
+      "growth": "mid",
+      "personality": "reckless",
+      "ideal": "hegemony",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2
+    ],
+    "skills": [
+      {
+        "skillId": "gallop",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 111,
+    "name": "占位武将12",
+    "birthYear": 171,
+    "deathYear": 221,
+    "stats": {
+      "leadership": 51,
+      "war": 73,
+      "intelligence": 55,
+      "politics": 77,
+      "charisma": 41
+    },
+    "hidden": {
+      "compatibility": 65,
+      "righteousness": 2,
+      "ambition": 2,
+      "valor": 6,
+      "composure": 6,
+      "lifespan": 221,
+      "growth": "high",
+      "personality": "gentle",
+      "ideal": "benevolence",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4
+    ],
+    "skills": [
+      {
+        "skillId": "forcedMarch",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 112,
+    "name": "占位武将13",
+    "birthYear": 172,
+    "deathYear": 222,
+    "stats": {
+      "leadership": 52,
+      "war": 76,
+      "intelligence": 60,
+      "politics": 44,
+      "charisma": 52
+    },
+    "hidden": {
+      "compatibility": 70,
+      "righteousness": 3,
+      "ambition": 3,
+      "valor": 1,
+      "composure": 1,
+      "lifespan": 222,
+      "growth": "low",
+      "personality": "brave",
+      "ideal": "separatist",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "A",
+      "heavyInfantry": "A",
+      "spearman": "A",
+      "archer": "A",
+      "lightCavalry": "A",
+      "heavyCavalry": "A",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [
+      {
+        "skillId": "rapidAttack",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 113,
+    "name": "占位武将14",
+    "birthYear": 173,
+    "deathYear": 223,
+    "stats": {
+      "leadership": 53,
+      "war": 79,
+      "intelligence": 65,
+      "politics": 51,
+      "charisma": 63
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 4,
+      "ambition": 4,
+      "valor": 2,
+      "composure": 2,
+      "lifespan": 223,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "chivalry",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "B",
+      "heavyInfantry": "B",
+      "spearman": "B",
+      "archer": "B",
+      "lightCavalry": "B",
+      "heavyCavalry": "B",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2
+    ],
+    "skills": [
+      {
+        "skillId": "hold",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  },
+  {
+    "id": 114,
+    "name": "占位武将15",
+    "birthYear": 174,
+    "deathYear": 224,
+    "stats": {
+      "leadership": 54,
+      "war": 42,
+      "intelligence": 70,
+      "politics": 58,
+      "charisma": 74
+    },
+    "hidden": {
+      "compatibility": 80,
+      "righteousness": 5,
+      "ambition": 5,
+      "valor": 3,
+      "composure": 3,
+      "lifespan": 224,
+      "growth": "high",
+      "personality": "bold",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 50,
+      "burst": 50,
+      "agility": 50,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 50,
+      "strategy": 50,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "lightNavy": "NONE",
+      "mediumNavy": "NONE",
+      "heavyNavy": "NONE"
+    },
+    "formationMastery": [
+      0,
+      2,
+      4
+    ],
+    "skills": [
+      {
+        "skillId": "longRange",
+        "level": 1
+      }
+    ],
+    "tags": [
+      "平民",
+      "中原",
+      "武人",
+      "择木而栖"
+    ]
+  }
+]

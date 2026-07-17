@@ -1,0 +1,189 @@
+[
+  {
+    "id": 0,
+    "name": "方阵",
+    "description": "攻守均衡之基本阵型。",
+    "historicalSource": "孙膑兵法·十阵",
+    "modifiers": {
+      "attack": 1,
+      "defense": 1,
+      "mobility": 0,
+      "range": 0
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "bestUnits": [
+      "heavyInfantry",
+      "spearman"
+    ],
+    "restrictedUnits": [],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    }
+  },
+  {
+    "id": 2,
+    "name": "锥形阵",
+    "description": "锐锋突进，利于突击。",
+    "historicalSource": "孙膑兵法·十阵",
+    "modifiers": {
+      "attack": 2,
+      "defense": 0,
+      "mobility": 1,
+      "range": 0
+    },
+    "effects": [
+      {
+        "name": "突击",
+        "description": "首回合攻+10%",
+        "modifier": {
+          "type": "first_strike",
+          "value": 10
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "spearman",
+      "lightCavalry",
+      "heavyCavalry"
+    ],
+    "bestUnits": [
+      "heavyCavalry",
+      "spearman"
+    ],
+    "restrictedUnits": [],
+    "terrainModifiers": {
+      "plain": 2,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    }
+  },
+  {
+    "id": 4,
+    "name": "鹤翼阵",
+    "description": "两翼展开包抄。",
+    "historicalSource": "孙膑兵法·十阵",
+    "modifiers": {
+      "attack": 1,
+      "defense": 0,
+      "mobility": 1,
+      "range": 1
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "archer",
+      "lightCavalry"
+    ],
+    "bestUnits": [
+      "archer",
+      "lightCavalry"
+    ],
+    "restrictedUnits": [
+      "heavyCavalry"
+    ],
+    "terrainModifiers": {
+      "plain": 1,
+      "forest": 0,
+      "mountain": -1,
+      "water": -2
+    }
+  },
+  {
+    "id": 6,
+    "name": "锋矢阵",
+    "description": "如箭矢直贯敌阵。",
+    "historicalSource": "武经总要",
+    "modifiers": {
+      "attack": 3,
+      "defense": -1,
+      "mobility": 1,
+      "range": 0
+    },
+    "effects": [],
+    "allowedUnits": [
+      "spearman",
+      "lightCavalry",
+      "heavyCavalry"
+    ],
+    "bestUnits": [
+      "heavyCavalry"
+    ],
+    "restrictedUnits": [],
+    "terrainModifiers": {
+      "plain": 2,
+      "forest": -2,
+      "mountain": -3,
+      "water": -3
+    }
+  },
+  {
+    "id": 7,
+    "name": "偃月阵",
+    "description": "半月形防御反击。",
+    "historicalSource": "武经总要",
+    "modifiers": {
+      "attack": 0,
+      "defense": 2,
+      "mobility": 0,
+      "range": 0
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "bestUnits": [
+      "heavyInfantry"
+    ],
+    "restrictedUnits": [],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 1,
+      "mountain": 1,
+      "water": -2
+    }
+  },
+  {
+    "id": 8,
+    "name": "长蛇阵",
+    "description": "首尾相应，利于行军。",
+    "historicalSource": "孙膑兵法·十阵",
+    "modifiers": {
+      "attack": 0,
+      "defense": 0,
+      "mobility": 2,
+      "range": 0
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "spearman",
+      "archer",
+      "lightCavalry"
+    ],
+    "bestUnits": [
+      "lightCavalry",
+      "lightInfantry"
+    ],
+    "restrictedUnits": [],
+    "terrainModifiers": {
+      "plain": 1,
+      "forest": 1,
+      "mountain": 0,
+      "water": -1
+    }
+  }
+]

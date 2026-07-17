@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "composite": true
+  },
+  "include": [
+    "enums/**/*",
+    "types/**/*",
+    "validators/**/*",
+    "data/**/*",
+    "demographics.ts",
+    "ceiling.ts",
+    "city-roads.ts",
+    "intel.ts",
+    "mask-state.ts",
+    "positions.ts",
+    "stamina.ts",
+    "index.ts"
+  ]
+}

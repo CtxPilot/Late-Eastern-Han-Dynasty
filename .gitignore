@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Temp / cache
+.cache/
+.temp/
+*.tmp
+
+# Third-party / unknown-origin map calibration dumps (do not redistribute)
+docs/screenshots/leh-google-geo-*.png
+docs/screenshots/offset-*.png
+docs/screenshots/tune-*.png
+docs/screenshots/tuned-v2-*.png
+docs/screenshots/leh-geo-*.png
+docs/screenshots/leh-live-run.png
+docs/screenshots/leh-per-city-geo.png
+docs/screenshots/leh-seats-full.png
+
+# Orphan pre-monorepo demo (if recreated locally)
+/index.html
+/src/
