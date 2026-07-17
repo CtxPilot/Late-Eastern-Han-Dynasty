@@ -373,6 +373,24 @@
 | formationMastery | number[] | 可用阵型ID |
 | skills | { skillId: SkillType, level: number }[] | 初始技能(不含使用次数) |
 | uniqueSkill? | SkillType | 专属技 |
+| tags | string[] | 出身标签（社会·地域·职业·政治·特殊） |
+| appearance? | SpecialAppearance | **Session 100 技术储备新增**：武将特殊造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm）。0-A 30 武将手工填写，0-B 全量填写记技术债 D-0B-7 |
+
+#### appearance 字段（Session 100 技术储备，未实装）
+
+> 本字段为 Session 100 技术储备，实装时需同步 `shared/types/officer.ts` + `shared/validators/index.ts` Zod 校验 + 本真源。详见 `docs/07-ui-design.md` §11.3。
+
+| 子字段 | 类型 | 说明 |
+|------|------|------|
+| scale | number | 体型缩放（吕布 1.5 / 关羽 1.3 / 文官 1.0） |
+| auraColor | string | 专属气劲颜色（吕布 #ff1744 血红 / 关羽 #00e676 青龙青） |
+| weaponLength | number | 武器长度（影响 Canvas 上攻击光束判定，吕布 25 方天画戟） |
+| shadingMode | 'normal' \| 'ghost' \| 'enraged' | 外观特效模式 |
+| pheasantPlume? | boolean | 是否有雉翎（吕布/关羽/张飞/赵云 true） |
+| mount? | 'redHare' \| ... | 专属坐骑（吕布 redHare 烈焰足粒子） |
+| ghostForm? | { trigger: {rage, hpRatio}, scale, auraColor, shadingMode } | 鬼神觉醒配置（吕布专属，前端自管 rage 触发） |
+
+**0-A 30 武将填写规则**：猛将（吕布/关羽/张飞/典韦/赵云/马超）手工填写差异化 appearance；文官（荀彧等）填默认值（scale=1.0/auraColor=空/weaponLength=5/normal）。详见 `docs/07-ui-design.md` §11.3 典型武将映射表。
 
 ### 示例
 
@@ -846,4 +864,24 @@ Phase 3 — 持续维护
 
 ---
 
-*文档版本: v1.5 | 最后更新: 2026-07-16（items 字段补充单挑武器映射交叉引用）*
+*文档版本: v1.6 | 2026-07-18 | Session 100 真源同步：officers.json 新增 appearance 字段（武将特殊造型）+ BattleState.activeStrategem 字段（计谋三级联动视觉驱动）。零代码改动，方案文档化，D-0B-7/D-0B-11 技术债登记*
+
+---
+
+## 附：Session 100 真源同步说明（未实装，方案文档化）
+
+> 本节为 Session 100 技术储备，零代码改动。实装时需同步本真源 + `shared/types` + Zod 校验 + 全量 JSON。
+
+### 1. officers.json appearance 字段
+
+见上文 §五 字段说明表。0-A 30 武将手工填写，0-B 全量填写记技术债 D-0B-7。
+
+### 2. BattleState.activeStrategem 字段（计谋三级联动视觉驱动）
+
+**新增字段**（实装时加到 `shared/types/battle.ts`）：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| activeStrategem | 'none' \| 'fire' \| 'water' \| 'ambush'? | 计谋三级联动视觉驱动。火计复用已有 `/battle/fire` 引擎设置；水攻/伏兵服务端引擎后置 D-0B-12；前端未收到时默认 'none' |
+
+**规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。实装时记技术债 D-0B-11。

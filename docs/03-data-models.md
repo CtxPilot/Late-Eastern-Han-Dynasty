@@ -1776,3 +1776,82 @@ interface CityCulture {
 ---
 
 *文档版本: v2.2 | 2026-07-17 | 新增 §20.7 学派与信仰数据类型（CityCulture）*
+
+---
+
+## §21 Session 100 前端体验技术储备数据字段（未实装，方案文档化）
+
+> 本章节为 Session 100 技术储备，零代码改动，实装时同步 `docs/08-data-dictionary.md` 真源。
+
+### §21.1 OfficerStatic.appearance（武将特殊造型）
+
+**新增字段**（实装时加到 `shared/types/officer.ts` + `officers.json` + Zod 校验）：
+
+```typescript
+interface SpecialAppearance {
+  scale: number;          // 体型缩放（如巨型武将吕布 1.5）
+  auraColor: string;      // 专属气劲颜色（如吕布 #ff1744 血红）
+  weaponLength: number;   // 武器长度（影响 Canvas 上攻击光束判定）
+  shadingMode: 'normal' | 'ghost' | 'enraged';  // 外观特效模式
+  pheasantPlume?: boolean;   // 是否有雉翎（吕布及少数猛将）
+  mount?: 'redHare' | ...;   // 专属坐骑（烈焰足粒子）
+  ghostForm?: {              // 鬼神觉醒配置（吕布专属）
+    trigger: { rage: number; hpRatio: number };
+    scale: number;
+    auraColor: string;
+    shadingMode: 'ghost';
+  };
+}
+
+interface OfficerStatic {
+  // ... 现有字段
+  appearance?: SpecialAppearance;  // 新增
+}
+```
+
+**0-A 30 武将填写规则**：猛将（吕布/关羽/张飞/典韦/赵云/马超等）手工填写差异化 appearance；文官（荀彧等）填默认值（scale=1.0/auraColor=空/weaponLength=5/normal）。详见 `docs/07-ui-design.md` §11.3 典型武将映射表。
+
+**0-B 全量填写**记技术债 D-0B-7。
+
+### §21.2 BattleState.activeStrategem（计谋三级联动视觉驱动）
+
+**新增字段**（实装时加到 `shared/types/battle.ts`）：
+
+```typescript
+type StrategemKind = 'none' | 'fire' | 'water' | 'ambush';
+
+interface BattleState {
+  // ... 现有字段
+  activeStrategem?: StrategemKind;  // 新增，计谋三级联动视觉驱动
+}
+```
+
+**设置规则**：
+- 火计：复用已有 `battle.ts` `/battle/fire` 引擎设置 `activeStrategem='fire'`
+- 水攻/伏兵：服务端引擎后置 D-0B-12，S17 L2 实装时设置
+- 前端未收到该字段时默认 `'none'`
+
+**前端订阅**：`gameStore` 订阅 `battle.activeStrategem`，驱动三级 PCG 渲染（一级 MapCanvas 异象层 / 二级 BattleView 地貌侵蚀 / 三级 MeleeStage 全屏粒子）。详见 `docs/07-ui-design.md` §11.5。
+
+### §21.3 gameStore.floatingDelta（财政飘字，纯前端字段）
+
+**新增字段**（实装时加到 `client/src/stores/gameStore.ts`，非服务端字段）：
+
+```typescript
+interface FloatingDelta {
+  gold: number;
+  food: number;
+  reason: string;
+}
+
+interface GameStore {
+  // ... 现有字段
+  floatingDelta: FloatingDelta[];  // 新增，财政飘字 delta
+}
+```
+
+**触发**：gameStore 各 action 在 `set({game})` 时前端算 delta（newGame vs oldGame 的己方城池金粮汇总差），附带 `floatingDelta`。TopBar/RightPanel 订阅渲染 `+N/-N` 上浮淡出。**服务端不动**。
+
+---
+
+*文档版本: v2.3 | 2026-07-18 | Session 100 新增 §21 前端体验技术储备数据字段（OfficerStatic.appearance + BattleState.activeStrategem + gameStore.floatingDelta。零代码改动，方案文档化）*

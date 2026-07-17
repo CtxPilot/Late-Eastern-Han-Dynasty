@@ -3528,3 +3528,102 @@ Part II 保留原§一~§八 战术战斗要素 · §九~§十一 参考保留*
 > - 总军师态势加成未接入自动战斗公式（后置）
 > - 郡国归属算法（§17.6）：0-A 30 城=30 郡国各 1 治所，占治所=全郡归属
 > - AI Army 编成/行军：当前仅玩家 Army，AI 军事仍走旧 `aiMilitary.ts`（后置接入）
+
+---
+
+## §十九 Session 100 前端体验技术储备（未实装，方案文档化）
+
+> 本章节为 Session 100 技术储备，零代码改动，实装拆为 S100~S107 共 8 Session。详见 `docs/07-ui-design.md` §11。
+
+### §19.1 单挑演出层设计（DuelStage 混合范式）
+
+**架构**：新建 `DuelStage.tsx`（Konva 演出层）与现有 `DuelPanel.tsx`（DOM 控制面板）并存。DuelPanel 保留 HP 条/按钮/结局面板/三速度模式切换；DuelStage 接管中央演出区。
+
+**混合范式**：
+- 静态元素（武将占位矩形/姓氏文字/卡牌轮廓/HP 条）：react-konva `<Group>/<Rect>/<Text>` 声明式
+- 动效（粒子/刀光/火花/震屏）：`Konva.Animation` + `layer.getContext()` 底层 `CanvasRenderingContext2D` 命令式（用户 demo 逻辑 95% 可搬）
+- 单一 `<Stage>`，与 BattleView 同范式，不割裂
+
+**三要素**：
+1. **交马对冲**：Konva `Tween` 驱动武将占位矩形对冲位移 + `Konva.Shape` 速度线/飞沙粒子 + `Stage.x/y` tween 震屏 + 碰撞瞬间金色火花散开
+2. **卡牌展示**：服务端已选好指令（`DuelRound.commands[2]`，当前前端未用），前端用卡牌形式展示双方出的什么牌（翻开动画 + 三向克制高亮：猛攻克牵制/牵制克必杀/必杀克猛攻），**玩家不操作**（符合 Session 80 全自动设计）
+3. **技能特写**：读 `DuelRound.criticals/chainHits/counterDamages/injuryApplied`（当前前端未用）触发：全屏暗场 DOM overlay + Konva 贝塞尔刀光（`Line` + `shadowBlur` 发光）+ 暴击数字喷射 + 屏幕震屏
+
+**分阶段演出时序**（每回合）：出牌(200ms)→对冲(300ms)→命中刀光(150ms)→暴击/连击/反手特写(400ms)→扣血(HP tween 300ms)→受伤高亮(200ms)→叙事淡入(200ms)→下一回合。三速度模式控制倍率（full=1.0 / fast=0.4 / skip=跳过演出直接出结果）。
+
+**美术**：纯几何占位起步（彩色矩形 + 姓氏文字 + Konva 程序化刀光/粒子），Phase 5 再接真实立绘/卡牌/音效。
+
+**音频**：原生 Web Audio API 程序化合成（零音频文件）：金属碰撞"锵"（白噪声 + bandpass 滤波 2-4kHz + 短包络衰减 200ms）/ 暴击低频冲击（sine 80Hz + 衰减 150ms + 失真）/ 必杀蓄力（sawtooth 上升扫频 200Hz→800Hz）/ 受伤闷哼（triangle 150Hz + 衰减 300ms）/ 马蹄对冲（短脉冲序列）。
+
+### §19.2 三级战斗串联设计（S21 W6~W9）
+
+**四级架构**：
+
+```
+大地图点出征
+  → W6 一级：军旗沿道路移动 + 烽火 + "是否攻城"弹窗（复用 campaign.ts）
+  → W7 二级：切入 hex 战术沙盘（淡入 + 镜头推进 + 棋子滑行 + 迷雾散开）
+  → hex 邻接攻击
+  → W8 三级：切入白刃战横版（镜头拉近 + 背景模糊 + 方阵对峙 + 飘字 + 武将计特写）
+  → 将领碰头/主动发起
+  → W9 四级：单挑（DuelStage 混合范式）
+  → 单挑结束 → 回白刃 → 回 hex → 回大地图
+```
+
+**状态机**：`screen` 从两态扩展为六态栈 `'boot'|'world'|'campaign'|'tactical'|'melee'|'duel'`。栈式回退。每态有切入/切出动画。
+
+**二级→三级切入**：hex 邻接攻击 → `stage.to({scaleX:3, scaleY:3, x:targetX, y:targetY, duration:0.4})` 镜头推进 → 黑屏 overlay opacity 0→1（300ms）→ `setScreen('melee')` → opacity 1→0（300ms）揭幕白刃战。
+
+**三级白刃战 MeleeStage**（Konva 方阵表现，不引 PixiJS）：
+- 横版两军对垒：Konva `<Stage>` + 左右两 `Layer`，将领占位矩形 + 小队方阵图标
+- 小兵数量：动态缩放（1000 兵=20 粒，5000 兵=80 粒，上限 120），1 粒=20-50 兵
+- 兵种克制：方阵图标颜色/形状区分 + 飘字。复用服务端 `getUnitMatchup`
+- 移动指令：纯战略指令（全军突击/鸣金收兵/发起单挑 三个 DOM 按钮），小兵 AI 自主寻敌对砍
+- 飘字伤害：Konva `Text` + `Tween` 上浮淡出
+- 武将计特写：全屏暗场 DOM + Konva 粒子
+- **Soldier 类移植**（用户 demo 95% 可搬）：`client/src/battle/soldier.ts`，纯 TS 数据类 + 命令式 draw。`ctx` 来源 = `meleeLayer.getContext()`，动画驱动 = `Konva.Animation`。克制矩阵复用服务端 `getUnitMatchup`。
+
+### §19.3 HeroCharacter 特殊造型 + appearance 字段落库
+
+**数据落库**（需改 08 真源）：`officers.json` 每个武将新增 `appearance` 字段（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm）。详见 `docs/07-ui-design.md` §11.3。
+
+**HeroCharacter extends Soldier**，重写 `draw(ctx)`：
+1. enraged 时 `ctx.filter = 'drop-shadow(0 0 8px #ff3d00) saturate(2)'`
+2. auraColor 时虚线环绕气劲光环
+3. scale 体型缩放
+4. weaponLength 特殊武器线条
+5. 残影：缓存前几帧位置画半透明拖影
+
+**不做**：骨骼动画（Spine/DragonBones 需美术资源+商业授权）；WebGL shader 气劲流光（用 Canvas 2D filter 即可）。
+
+### §19.4 吕布鬼神降临（纯前端演出，服务端后置）
+
+**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果后置 D-0B-8）：
+
+- **Verlet 雉翎**：3-4 节点链 Verlet 积分（每节点 {x,y,prevX,prevY}，每帧 `newX = x + (x-prevX)*damping + gravity` + 距离约束迭代 3 次 + 根节点跟随吕布头部），随移动速度/方向产生滞后摆动。零美术，纯代码。仅吕布及少数猛将（关羽/张飞/赵云）有雉翎。
+- **赤兔马烈焰足**：马蹄位置每帧生成暗红粒子（复用粒子系统）
+- **帧缓存残影**：`layer.getContext()` 命令式层，前 3 帧半透明叠加
+- **方天画戟刀光**：贝塞尔曲线 + `ctx.filter='blur()'`
+- **鬼神觉醒**：前端自管 rage（rage≥100 或兵力<30% 触发），与服务端战斗公式解耦，觉醒只改外观不改数值。触发后 `shadingMode='ghost'` + `scale=1.6` + `auraColor=#6a1b9a` + 画布 `saturate(0.4)` 变暗 + 紫黑粒子
+- **单挑登场杀**：DuelStage 扩展，斜切立绘滑入 + 红光眼粒子 + 台词框。心理震慑 debuff（敌方卡牌成功率-20%）服务端后置 D-0B-8
+
+### §19.5 PCG 战术地形绘制 + 计谋三级联动视觉
+
+**PCG 程序化美术**（归入 S20 W3 子项）：保留 `geo-basemap.png`（Natural Earth 公有领域无版权风险），PCG 只用于二级战术网格地形绘制 + 三级白刃战视差背景。算法移植清单（用户 demo 95% 可搬，只换 ctx 来源 `canvas.getContext('2d')` → `layer.getContext()`，rAF → `Konva.Animation`）：
+- `shared/pcg/inkMountains.ts`（drawInkMountains：分层贝塞尔 + 线性渐变晕染）
+- `shared/pcg/naturalRiver.ts`（drawNaturalRiver：多段正弦波 + 伪随机扰动）
+- `shared/pcg/terrainTiles.ts`（drawMiniTree/drawMiniMountain）
+- `client/src/battle/meleeBackground.ts`（drawMeleeParallaxBackground：4 层视差）
+
+**计谋三级联动视觉**（归入 S20 W3 子项）：
+- **触发**：服务端计谋状态驱动（`BattleState.activeStrategem: 'none'|'fire'|'water'|'ambush'`，新字段 D-0B-11）。火计复用已有 `battle.ts` `/battle/fire` 引擎；水攻/伏兵服务端引擎后置 D-0B-12。前端未收到该字段时默认 `'none'`
+- **统一帧计数**：模块级 `frameCount` 变量，多个 `Konva.Animation` 实例共享
+- **三级联动**：
+  - 一级 MapCanvas 计谋异象层（火烟粒子/蓝色波纹/迷雾树影）
+  - 二级 BattleView hex 地貌侵蚀（焦炭黑+火舌/flooded+正弦水纹/局部迷雾仅战旗周边照亮）
+  - 三级 MeleeStage 全屏粒子（火星 screen 混合+橙色烟熏/涌动波浪+雨滴丝/落叶贝塞尔+幽暗 vignette）
+- **算法移植**：`shared/pcg/strategemVisuals.ts`（drawLevel1StrategemVisuals/drawProceduralGridFlame）+ `client/src/battle/meleeStrategem.ts`（drawLevel3StrategemOverlays）
+
+---
+
+*文档版本: v4.2 | 2026-07-18 | Session 100 新增 §19 前端体验技术储备（单挑演出层 DuelStage 混合范式 + 三级战斗串联 + HeroCharacter 特殊造型 + 吕布鬼神降临 + PCG 战术地形 + 计谋三级联动视觉。零代码改动，方案文档化）*

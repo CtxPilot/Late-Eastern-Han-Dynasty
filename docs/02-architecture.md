@@ -461,7 +461,68 @@ server/src/data/loader.ts
 | 2026-07-16 | 单挑 经典化：必杀参与循环 | 发扬经典三向克制精神 (Session 75) |
 | 2026-07-16 | 美女 = 资源，历史女角 = 家族 | 两种不同系统 (Session 43) |
 | 2026-07-16 | 服务端视野裁剪 | 避免客户端误读敌方数据 (Session 56) |
+| 2026-07-18 | 零新依赖原则（Session 100） | React+Konva+Zustand+Tailwind+原生 WS+原生 Web Audio 覆盖 90% 前端体验需求，不引 framer-motion/gsap/PixiJS/D3/G6/howler.js |
+| 2026-07-18 | DuelStage 混合范式（Session 100） | 静态元素 react-konva 声明式 + 动效 Konva.Animation + layer.getContext() 命令式 |
+| 2026-07-18 | screen 六态栈（Session 100） | 'boot'\|'world'\|'campaign'\|'tactical'\|'melee'\|'duel'，栈式回退 |
+| 2026-07-18 | appearance 字段落库（Session 100） | officers.json 新增 appearance（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm），同步 08 真源 |
+| 2026-07-18 | 计谋三级联动服务端驱动（Session 100） | BattleState.activeStrategem 字段，前端订阅渲染，非前端独立切换 |
 
 ---
 
-*文档版本: v2.0 | 最后更新: 2026-07-16 | 全面重写对齐 Session 75 代码现实*
+## 附：Session 100 前端体验技术储备（未实装，方案文档化）
+
+> 本节为 Session 100 技术储备，零代码改动，实装拆为 S100~S107 共 8 Session。详见 `docs/07-ui-design.md` §11。
+
+### 新增前端组件清单（规划）
+
+| 组件 | 路径（规划） | 职责 | 所属系统 |
+|------|------|------|:--:|
+| `useBroadcast` | `client/src/hooks/useBroadcast.ts` | 原生 WebSocket 订阅 server/ws/broadcast.ts | S20-W1 |
+| `TurnProgressOverlay` | `client/src/components/layout/TurnProgressOverlay.tsx` | endTurn 进度遮罩 | S20-W1 |
+| `useAnimatedNumber` | `client/src/hooks/useAnimatedNumber.ts` | rAF + easeOutCubic 数字跳动 | S20-W2 |
+| `mapTerritory` | `client/src/components/map/mapTerritory.ts` | graham scan 凸包纯函数 | S20-W3 |
+| `TerritoryLayer` | `client/src/components/map/TerritoryLayer.tsx` | 势力领土 polygon | S20-W3 |
+| `FogLayer` | `client/src/components/map/FogLayer.tsx` | globalCompositeOperation 挖洞迷雾 | S20-W3 |
+| `FactionPanel` | `client/src/components/layout/FactionPanel.tsx` | 派系面板（tags 派生） | S20-W4 |
+| `OfficerDetail` | `client/src/components/officer/OfficerDetail.tsx` | 武将详情 modal | S20-W4 |
+| `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报 | S20-W4 |
+| `RadarChart` | `client/src/components/ui/RadarChart.tsx` | 纯 SVG 手写外交雷达 | S20-W4 |
+| `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |
+| `DuelStage` | `client/src/components/battle/DuelStage.tsx` | 单挑 Konva 演出层（混合范式） | S21-W9 |
+| `MeleeStage` | `client/src/components/battle/MeleeStage.tsx` | 白刃战横版 Konva 方阵 | S21-W8 |
+| `Soldier` | `client/src/battle/soldier.ts` | 白刃战小兵粒子类（移植用户 demo） | S21-W8 |
+| `HeroCharacter` | `client/src/battle/heroCharacter.ts` | HeroCharacter extends Soldier 特殊造型 | S21-W8 |
+| `frameCount` | `client/src/battle/frameCount.ts` | 模块级共享帧计数 | S20-W3 |
+| `meleeBackground` | `client/src/battle/meleeBackground.ts` | 白刃战视差背景 PCG | S20-W3 |
+| `meleeStrategem` | `client/src/battle/meleeStrategem.ts` | 白刃战计谋全屏粒子 | S20-W3 |
+| `useAudio` | `client/src/hooks/useAudio.ts` | 原生 Web Audio API 程序化合成 | S21-W9 |
+| `inkMountains` | `shared/pcg/inkMountains.ts` | PCG 水墨山脉纯函数 | S20-W3 |
+| `naturalRiver` | `shared/pcg/naturalRiver.ts` | PCG 自然河流纯函数 | S20-W3 |
+| `terrainTiles` | `shared/pcg/terrainTiles.ts` | PCG 战术树/山/水纹绘制 | S20-W3 |
+| `strategemVisuals` | `shared/pcg/strategemVisuals.ts` | PCG 计谋视觉（火烟/水环/伏兵雾） | S20-W3 |
+| `factionInner` | `client/src/lib/factionInner.ts` | 派系判定纯函数（tags 派生） | S20-W4 |
+
+### 新增数据字段（规划，实装时同步 08 真源）
+
+| 字段 | 类型 | 位置 | 说明 |
+|------|------|------|------|
+| `OfficerStatic.appearance` | `SpecialAppearance?` | `shared/types/officer.ts` + officers.json | 武将特殊造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm） |
+| `BattleState.activeStrategem` | `'none'\|'fire'\|'water'\|'ambush'?` | `shared/types/battle.ts` | 计谋三级联动视觉驱动字段 |
+| `gameStore.floatingDelta` | `{gold,food,reason}[]` | `client/src/stores/gameStore.ts` | 财政飘字 delta（前端算，非服务端字段） |
+
+### screen 状态机扩展（规划）
+
+```
+当前: 'boot' | 'world' | 'battle'
+规划: 'boot' | 'world' | 'campaign' | 'tactical' | 'melee' | 'duel'
+                                        ↑hex       ↑白刃    ↑单挑
+栈式回退：单挑结束回白刃，白刃结束回 hex，hex 结束回大地图
+```
+
+### 0-B 前置技术债（D-0B-1~12）
+
+详见 `docs/12-system-map.md` §六。核心：Zustand store 拆 slice（D-0B-1）/ LOD 拖拽冻结（D-0B-2）/ screen 状态机栈式管理（D-0B-6）/ appearance 全量填写（D-0B-7）/ §35 财政俸禄（D-0B-9）/ activeStrategem 字段（D-0B-11）/ S17 L2 水攻伏兵引擎（D-0B-12）。
+
+---
+
+*文档版本: v2.1 | 最后更新: 2026-07-18 | Session 100 前端体验技术储备（新增 S20/S21 组件清单 + 数据字段 + screen 六态栈 + D-0B-1~12 技术债。零代码改动，方案文档化）*
