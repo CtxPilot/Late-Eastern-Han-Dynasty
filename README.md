@@ -12,6 +12,10 @@
 > 🎮 本项目为完全独立的原创作品，与株式会社光荣特库摩（Koei Tecmo）及其旗下《三国志》《信长之野望》等任何游戏系列无任何商业关联、授权或合作关系。游戏中所有三国人物及历史事件素材均来源于《三国志》（陈寿·西晋）、《后汉书》（范晔·南朝宋）、《三国演义》（罗贯中·元末明初）等公有领域古籍。
 >
 > 🇺🇸 This project is an independent work. It is NOT affiliated with, endorsed by, or associated with Koei Tecmo Holdings Co., Ltd. or any of its game series (including *Romance of the Three Kingdoms* / *Nobunaga's Ambition*). All historical references are derived from public-domain classical texts.
+>
+> 🀄 本项目是一款受东汉末年历史与经典策略游戏启发的独立历史策略游戏，并非任何商业游戏公司或游戏系列的官方产品、重制版、克隆版或衍生作品。
+>
+> 🇺🇸 This project is an independent historical strategy game inspired by the late Eastern Han period and classic strategy games. It is not an official product, remake, clone, or derivative work of any commercial game company or franchise.
 
 **日本語** — 三国時代を舞台にしたターン制ストラテジーゲーム。古典的な三国戦略ゲームの設計精神を受け継ぎ、ゼロから構築されたモダンな作品です。武将システム（主副將・部曲・部隊品質・教育・出身派閥）、経済システム（貨幣純度・税収・俸禄・屯田）、戦闘システム（単挑三角相克・武魁大会・戦法エンジン）など、奥深いオリジナル設計が特徴です。
 
@@ -21,6 +25,12 @@
 ![Systems](https://img.shields.io/badge/systems-19-orange)
 ![Platform](https://img.shields.io/badge/platform-Web-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+## Project Status
+
+This project is an independent open-source development project.
+
+Historical names, events, and cultural references are based on public historical sources.
 
 ---
 
@@ -195,6 +205,14 @@ Phase 5  → AI & 打磨
 
 ---
 
-## 许可证
+## License · 许可证
 
-[MIT](./LICENSE) © 2026 CtxPilot
+**Source code** is licensed under the [MIT License](./LICENSE).
+
+**Game assets** (images, audio, fonts, and other media) may have separate licenses. Please refer to [CREDITS.md](./CREDITS.md) for details.
+
+---
+
+**源代码** 以 [MIT 协议](./LICENSE) 授权。
+
+**游戏素材**（图片、音频、字体及其他媒体）可能适用不同的许可协议，详见 [CREDITS.md](./CREDITS.md)。

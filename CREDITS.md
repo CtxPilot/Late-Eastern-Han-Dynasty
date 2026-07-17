@@ -1,4 +1,4 @@
-# CREDITS — 第三方素材来源声明
+# CREDITS — Late Eastern Han Dynasty 第三方素材来源声明
 
 ## 地图数据
 
@@ -43,3 +43,12 @@
 | ws | MIT |
 | cors | MIT |
 | TypeScript | Apache-2.0 |
+
+## Assets
+
+All third-party assets will be documented here.
+
+Before using external assets, verify:
+- license compatibility
+- redistribution permission
+- attribution requirements
