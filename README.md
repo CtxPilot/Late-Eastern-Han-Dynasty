@@ -34,6 +34,16 @@ Historical names, events, and cultural references are based on public historical
 
 ---
 
+## Screenshots · 游戏截图
+
+> Map / territory overview, city details with economy & operations, and personnel interface.
+
+| 地图全景 · Map Overview | 城池详情 · City Detail | 人事界面 · Personnel |
+|:---:|:---:|:---:|
+| ![Map](docs/screenshots/leh-full-map.png) | ![City](docs/screenshots/leh-city-detail.png) | ![Personnel](docs/screenshots/leh-personnel-officers.png) |
+
+---
+
 ## 快速启动
 
 ```bash
