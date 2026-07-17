@@ -177,9 +177,150 @@
 
 ---
 
+## Phase 6 — 前端体验 & 三级战斗串联（S20/S21 技术储备）
+
+> Session 100 技术储备完成方案设计，零代码改动。实装拆为 8 Session（S100~S107），时机后续排定。  
+> 数字真源变更（officers.json appearance / BattleState.activeStrategem）在实装时同步 08-data-dictionary.md。
+
+### S20 — 前端体验（4 Session）
+
+| ID | 任务 | 状态 | 备注 |
+|:--:|------|:--:|------|
+| S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [ ] | 复用已废弃的 server/src/ws/broadcast.ts；降级假进度条 |
+| S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [ ] | rAF + easeOutCubic ~30 行；type 着色/淡入/顶滚 |
+| S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [ ] | 凸包 graham scan；globalCompositeOperation 挖洞；layer.getContext() 命令式 |
+| S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [ ] | tags 派生派系；己方武将列表；忠诚度警报 animate-pulse；外交雷达纯 SVG；财政飘字前端算 delta；行政总署三段式重组 |
+
+### S21 — 三级战斗串联（4 Session）
+
+| ID | 任务 | 状态 | 备注 |
+|:--:|------|:--:|------|
+| S21-W6 | 一级大地图演出 | [ ] | 军旗 Tween + 烽火粒子 + 是否攻城弹窗 + 行军箭头，复用 campaign.ts |
+| S21-W7 | 二级战术串联 | [ ] | screen 六态栈 + 切入渐变 + 棋子滑行 + hex 悬停情报 + 邻接触发三级 + 迷雾散开 |
+| S21-W8 | 三级白刃战横版 | [ ] | MeleeStage Konva 方阵 30-50 图元 + 动态缩放 20-120 粒 + 纯战略指令 + 镜头推进切入 + Soldier 类移植 + 武将计特写 |
+| S21-W9 | 单挑接入 | [ ] | DuelStage 混合范式（已储备）+ 状态机串接：白刃→单挑→回白刃 |
+
+### 0-B 前置技术债（D-0B-1~12）
+
+| ID | 债务 | 触发时机 |
+|:--:|------|------|
+| D-0B-1 | Zustand store 拆 slice + 局部 patch + 细粒度 selector | 0-B 扩容前 |
+| D-0B-2 | LOD 拖拽冻结（debounce / 拖拽中复用上一次 layout） | 0-B 扩容前 |
+| D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo | 0-B 扩容前 |
+| D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
+| D-0B-5 | 矢量州界 path + LOD 简化 | 0-B 引入州界时 |
+| D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序 | 0-B 扩容前 |
+| D-0B-7 | officers.json appearance 字段 0-B 全量填写 + uniqueSkill 派生 | 0-B 扩容前 |
+| D-0B-8 | 吕布服务端无双乱舞 + 心理震慑 + 鬼神数值效果 | S10 战斗深化时 |
+| D-0B-9 | §35 财政税收俸禄数据模型扩展 + 引擎 | 独立 Session |
+| D-0B-10 | PCG 水墨底图若替换 geo-basemap.png 需重做 MapCanvas | 0-B 视觉升级时（可选） |
+| D-0B-11 | BattleState.activeStrategem 字段 + 服务端火计设置 | S20/S21 实装时 |
+| D-0B-12 | S17 L2 水攻/伏兵服务端引擎实装 | S17 L2 实装时 |
+
+---
+
 ## 会话日志
 
 ```log
+## 2026-07-18 — Session 100（前端体验技术储备 — S20/S21 七大方案设计，零代码改动）
+
+- Phase: **纯文档技术储备**（Plan Mode → Build Mode 只落地文档，不改任何代码）
+- 储备内容（共 7 大方案 + 12 项 0-B 前置技术债）:
+  1. **S20 前端体验**（W1~W4 + 内政外交增强）:
+     - W1 endTurn WebSocket 接入 + TurnProgressOverlay（复用已废弃的 server/src/ws/broadcast.ts，client 零 WebSocket 接入是已存在但未打通的能力；降级假进度条）
+     - W2 TopBar useAnimatedNumber 数字跳动（rAF + easeOutCubic ~30 行 hook）+ EventLog 流化（按 action.type 着色 + 新条目 transition-all duration-300 淡入 + 自动顶滚）
+     - W3 势力凸包涂色（graham scan ~30 行纯函数 mapTerritory.ts，konva Path opacity 0.18 填充）+ FogLayer（globalCompositeOperation='destination-out' 挖洞，复用 konva filters.Blur 羽化）+ konva tween（stage.to() 聚焦/缩放/城色渐变，替换瞬切）+ PCG 水墨地形绘制（二三级·Konva.Animation + layer.getContext() 命令式·用户 demo 95% 可搬）
+     - W4 派系面板（tags 派生，§4.5.2 规则，纯前端 useMemo）+ OfficerDetail modal（仿 EventDialog，hidden 五维/ tags/bloodline）+ 内政外交前端增强（己方武将列表 OfficerRosterPanel 当前缺失，忠诚度<60 animate-pulse 红框警报，外交雷达纯 SVG 手写 RadarChart 5 维，财政飘字前端算 delta，行政总署三段式重组 LeftPanel 人事折叠）
+  2. **S21 三级战斗串联**（W6~W9）:
+     - W6 一级大地图演出（军旗 Tween 沿 CampaignArmy.path + 烽火粒子 + 是否攻城弹窗 + 行军箭头，复用已实装 campaign.ts 引擎）
+     - W7 二级战术串联（screen 从两态扩为 'boot'|'world'|'campaign'|'tactical'|'melee'|'duel' 六态栈 + 切入渐变 + 棋子滑行 konva node.to() + hex 悬停地形情报 tooltip + 邻接攻击改为触发三级 + 迷雾散开 FogLayer）
+     - W8 三级白刃战横版 MeleeStage（Konva 方阵表现 30-50 图元，不引 PixiJS；动态缩放 20-120 粒 1 粒=20-50 兵；纯战略指令全军突击/鸣金收兵/发起单挑；镜头推进+渐变切入；Soldier 类移植用户 demo 95% 可搬；武将计特写全屏暗场+粒子）
+     - W9 单挑接入（DuelStage 混合范式·已储备；状态机串接：白刃→单挑→回白刃）
+  3. **单挑动效 DuelStage 混合范式**:
+     - 静态元素（武将占位/卡牌/HP）用 react-konva 声明式；动效（粒子/刀光/火花/震屏）用 Konva.Animation + layer.getContext() 命令式
+     - 卡牌仅展示（服务端已选好指令，前端翻开动画 + 三向克制高亮），不改 Session 80 全自动设计
+     - 美术纯几何占位起步（彩色矩形+姓氏文字+Konva 程序化刀光/粒子），Phase 5 再接立绘
+     - 音频原生 Web Audio API 程序化合成（金属碰撞白噪声+bandpass 滤波，暴击低频脉冲，零音频文件）
+     - 分阶段演出时序：出牌(200ms)→对冲(300ms)→命中刀光(150ms)→暴击/连击/反手特写(400ms)→扣血(300ms)→受伤高亮(200ms)→叙事淡入(200ms)；三速度模式控制倍率
+  4. **HeroCharacter 特殊造型 + appearance 字段落库**:
+     - officers.json 新增 appearance 字段（scale/auraColor/weaponLength/shadingMode），Zod 校验，0-A 30 武将手工填写
+     - 不做骨骼动画（Spine/DragonBones 需美术资源+商业授权，违反纯几何占位原则）
+     - 气劲流光只用 Canvas 2D filter（drop-shadow/saturate/blur），不引 WebGL shader
+     - 典型武将映射：吕布 scale=1.5/auraColor=#ff1744/weaponLength=25/enraged；关羽 1.3/#00e676/22/normal；张飞 1.4/#ff6f00/20/normal；典韦 1.4/#ff1744/15/normal；赵云 1.2/#00b0ff/18/normal；马超 1.3/#ff6f00/20/normal
+  5. **吕布鬼神降临**（纯前端演出，服务端后置）:
+     - Verlet 积分动态雉翎（3-4 节点链 + 重力 + 惯性，挂在 HeroCharacter.draw() 内，仅吕布及少数猛将有）
+     - 赤兔马烈焰足粒子（马蹄位置每帧生成暗红粒子，复用粒子系统）
+     - 帧缓存残影（layer.getContext() 前 3 帧半透明叠加）
+     - 方天画戟刀光（贝塞尔 + ctx.filter='blur()'，复用 drawSlash）
+     - 鬼神觉醒（rage≥100 或兵力<30% 触发，前端自管，shadingMode='ghost' + scale=1.6 + auraColor=#6a1b9a + 画布 saturate(0.4) 变暗 + 紫黑粒子）
+     - 单挑登场杀（DuelStage 扩展，斜切立绘滑入 + 红光眼粒子 + 台词框）
+     - 服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血）后置 D-0B-8
+  6. **PCG 程序化美术**（归入 S20 W3 子项）:
+     - Konva 混合范式（Konva.Animation + layer.getContext() 命令式），用户 demo 算法函数 95% 可搬
+     - 保留 geo-basemap.png（Natural Earth 公有领域，无版权风险），PCG 只用于二级战术网格地形绘制 + 三级白刃战视差背景
+     - 算法移植清单：drawInkMountains/drawNaturalRiver/drawMiniTree/drawMiniMountain/drawMeleeParallaxBackground → shared/pcg/ 工具库
+  7. **计谋三级联动视觉**（归入 S20 W3 子项）:
+     - 服务端计谋状态驱动（BattleState.activeStrategem: 'none'|'fire'|'water'|'ambush'，新字段 D-0B-11）
+     - 火计复用已有 battle.ts /battle/fire 引擎；水攻/伏兵服务端引擎后置 D-0B-12
+     - 只做三种 PCG 视觉算法（用户 demo 三种）：火（火星 screen 混合 + 橙色烟熏 + 焦炭黑地块 + 火舌粒子）、水（涌动波浪 + 雨滴丝 + flooded tileType + 正弦水纹）、伏兵（落叶贝塞尔 + 幽暗 vignette + 局部迷雾仅战旗周边照亮）
+     - 模块级 frameCount 共享帧计数（多个 Konva.Animation 实例共享，与用户 demo 一致）
+- 决策清单（29 项累计）:
+  1. 新增 S20「前端体验」拆 4 Session（S100~S103）
+  2. 关系图只做派系面板 + OfficerDetail
+  3. W5（store 拆分 + LOD 拖拽冻结）记技术债 D-0B-1/2
+  4. 矢量州界 path 留 0-B（D-0B-5）
+  5. 单挑卡牌仅展示，不改 Session 80 全自动
+  6. 单挑美术纯几何占位起步
+  7. 单挑音频原生 Web Audio API
+  8. DuelStage 混合范式（静态 react-konva + 动效 Konva.Animation + layer.getContext()）
+  9. 三级白刃战用 Konva 方阵表现，不引 PixiJS
+  10. 新增 S21「三级战斗串联」拆 4 Session（S104~S107）
+  11. 白刃战纯战略指令（全军突击/鸣金收兵/发起单挑）
+  12. 白刃战粒子动态缩放（20-120 粒，1 粒=20-50 兵）
+  13. 二级→三级切入用镜头推进 + 渐变
+  14. 不做骨骼动画，只用 Canvas 2D filter 气劲/残影/光环
+  15. 特殊造型数据新增 appearance 字段落库（同步 08 真源）
+  16. 气劲流光只用 Canvas 2D filter，不引 WebGL shader
+  17. 吕布鬼神降临只做前端演出，服务端后置 D-0B-8
+  18. 雉翎用 Verlet 积分动态摆动
+  19. 鬼神觉醒前端自管 rage 触发，与服务端数值解耦
+  20. 内政外交增强只做前端可视化，不动服务端/数据模型
+  21. 外交雷达纯 SVG 手写，零新依赖
+  22. 财政飘字前端算 delta 触发，服务端不动
+  23. §35 财政税收俸禄记技术债 D-0B-9，独立 Session
+  24. PCG 归入 S20 W3 子项，不新增 S 编号
+  25. PCG 用 Konva 混合范式，算法函数 95% 可搬
+  26. 保留 geo-basemap.png，PCG 只用于二三级地形/视差
+  27. 计谋三级联动视觉由服务端计谋状态驱动
+  28. 计谋视觉只做火计/水攻/伏兵三种 PCG 算法
+  29. 三级联动用模块级 frameCount 共享帧计数
+- 关键架构发现:
+  - 本仓库是 React+Konva+Zustand+Tailwind（非 Vue3+Pinia+SVG），90% 视觉/交互增强需求已被覆盖，无需引 framer-motion/gsap/PixiJS/D3/G6/howler.js
+  - 数据与渲染已彻底解耦（服务端权威引擎 + 瘦客户端，21 个 engine 文件 + 7 个 battle 文件，客户端零规则计算）
+  - Canvas（react-konva）已规避 SVG DOM 爆炸；LOD 系统质量超预期（4 级 + 标签/Marker 双重碰撞 + screen-pixel sizing）
+  - Zustand 订阅粒度是 0-B 核心隐患（14 组件 100% 整体订阅 s.game，33 处 set({game}) 整体替换），D-0B-1
+  - server/src/ws/broadcast.ts 已建未接（endTurn 广播 turn_progress/turn_complete/event_triggered，client 零 WebSocket），是已存在但未打通的能力
+  - 服务端单挑引擎已返回前端演出所需的全部数据字段（commands/criticals/counterDamages/chainHits/injuryApplied），前端完全未用，只渲染拼好的 description 字符串
+  - §35 财政税收俸禄纯设计零代码（Faction 无 coinQuality/salaryArrears，City 无 taxRate，turn.ts 用旧产金公式）
+  - 己方武将列表组件缺失（PersonnelPanel 只列在野武将），是 OfficerDetail/忠诚度警报/赏金/俸禄的前置
+- 文件处理:
+  - 两个外部参考 demo（map_battleground_procedural_engine.html / map_battleground_procedural_engine (1).html）加入 .gitignore 不入库
+- 同步: 12-system-map（S20/S21 + D-0B-1~12）· 本进度（Phase 6 + 会话日志）· HANDOFF · 07-ui-design · 02-architecture · 05-combat-system · 03-data-models · 08-data-dictionary · 09-roadmap · 04-game-systems
+- Next: 总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。S20/S21 前端体验增强实装时机后续排定。
+
+## 2026-07-17 — Session 99（开源收尾：免责声明/许可证拆分/截图/CREDITS/SECURITY）
+
+- Phase: **文档合规 + 截图 + 项目信息完善**（无游戏代码/设计改动）
+- 变更（共 6 项）:
+  1. `README.md` 声明区新增中英双语独立游戏声明（晚东汉末启发 + 非商业官方产物的免责）
+  2. `README.md` License 区拆分为源代码 MIT 与游戏素材分开许可（源码 MIT，素材见 CREDITS.md）
+  3. `README.md` 新增 `## Project Status` 章节（独立开源项目 + 历史素材源自公有领域）
+  4. `SECURITY.md` 新建安全策略文件（私密报告 + 仅最新开发版受支持）
+  5. `CREDITS.md` 标题加入项目名 + 末尾新增 `## Assets` 占位（未来外部素材须检查许可/再分发/署名）
+  6. 3 张截图 `leh-full-map.png` / `leh-city-detail.png` / `leh-personnel-officers.png` + README `## Screenshots` 章节（三列表格）
+- 同步: 本进度 · HANDOFF
+- Next: 总军师系统实装（任命/态势/献策/对决） → 设施建造回合化 → 势力特点数据 → AI Army 接入
+
 ## 2026-07-17 — Session 98（战役层引擎最小切片实装 — §12~§17 引擎落地）
 - Phase: **代码实装 + 引擎接入 + UI + 自验证**（从设计到可玩）
 - 实装内容（0-A 最小切片，已标注简化项）:
@@ -2018,4 +2159,4 @@
 
 ---
 
-*文档版本: v5.8 | 2026-07-17 | Session 98 战役层引擎最小切片实装（§12节点·§13 Army编成+行军+补给·§15设施·§16状态机·§17自动战斗算法·CampaignPanel UI·57断言全过·dev实操占城）*
+*文档版本: v6.0 | 2026-07-18 | Session 100 前端体验技术储备（S20 前端体验 + S21 三级战斗串联 + 单挑演出层 + HeroCharacter 特殊造型 + 吕布鬼神降临 + 内政外交前端增强 + PCG 程序化美术 + 计谋三级联动视觉。零代码改动，方案文档化，D-0B-1~12 技术债登记）*

@@ -44,3 +44,6 @@ docs/screenshots/leh-seats-full.png
 # Orphan pre-monorepo demo (if recreated locally)
 /index.html
 /src/
+
+# External reference demos (not part of the project; user-provided PCG prototypes)
+/map_battleground_procedural_engine*.html

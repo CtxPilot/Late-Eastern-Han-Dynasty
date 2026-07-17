@@ -2749,6 +2749,8 @@ POST /diplomacy/gift-beauty { targetFactionId, amount? }
 
 > **S17**。战略层「阴谋/布局」，**不是**战场六角上的火计水计（那是 **05 计策 / S10**）。
 >
+> **Session 100 技术储备**：计谋三级联动视觉方案设计完成（零代码改动），归入 S20 W3 子项。服务端计谋状态驱动（`BattleState.activeStrategem: 'none'|'fire'|'water'|'ambush'`，新字段 D-0B-11），前端订阅后驱动三级 PCG 渲染（一级 MapCanvas 异象层 / 二级 BattleView 地貌侵蚀 / 三级 MeleeStage 全屏粒子）。火计复用已有 `battle.ts` `/battle/fire` 引擎；水攻/伏兵服务端引擎后置 D-0B-12。详见 `docs/07-ui-design.md` §11.5。
+>
 > 以孙子兵法 "上兵伐谋、其次伐交、其次伐兵、其下攻城" 为纲，三十六计为目，
 > 分为**战术计谋（L1）**、**战略计谋（L2）**、**国策态势（L3）** 三层。
 > L1/L2 为主动发起的操作，L3 为持续生效的国策开关。
@@ -3222,6 +3224,8 @@ interface Faction {
 ---
 
 ## 三十五、货币·税收·俸禄
+
+> **⚠️ 实装状态：纯设计，零代码实装**（Session 84 文档设计完成）。`Faction` 接口无 `coinQuality`/`salaryArrears`，`City` 无 `taxRate`，`turn.ts` 用旧产金公式，无俸禄发放引擎。记技术债 **D-0B-9**，独立 Session 实装（破坏性改动需先扩类型 + Zod + 全量 JSON + mask-state）。
 
 ### 35.1 货币成色
 
@@ -3838,4 +3842,4 @@ interface Faction {
 
 ---
 
-*文档版本: v4.1 | 2026-07-17 | 新增 §34.5 与学派系统互动 + §三十八 学派与信仰（7学派详表·设施·武将任教·冲突·联动·初始倾向）*
+*文档版本: v4.2 | 2026-07-18 | Session 100 标注：§三十五 货币税收俸禄标技术债 D-0B-9（纯设计零代码）；§三十一 S17 计谋系统标三级联动视觉技术储备（D-0B-11/D-0B-12）*

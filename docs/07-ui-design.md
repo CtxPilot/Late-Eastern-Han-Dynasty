@@ -684,3 +684,212 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 ---
 
 *文档版本: v2.6 | 2026-07-17 | 新增 §10.7 城市文化面板（学派分布·设施·导师·激活效果）*
+
+---
+
+## §11 视觉与交互增强（Session 100 技术储备，未实装）
+
+> 本章节为 Session 100 技术储备方案，零代码改动，实装拆为 S100~S107 共 8 Session，时机后续排定。  
+> **零新依赖原则**：React 18 + Konva 9.3 + Zustand 5 + Tailwind 3.4 + 原生 WebSocket + 原生 Web Audio API 覆盖 90% 需求，不引 framer-motion / gsap / PixiJS / D3 / G6 / howler.js。
+
+### §11.1 S20 前端体验（W1~W4 + 内政外交增强）
+
+#### §11.1.1 W1 endTurn WebSocket 接入 + TurnProgressOverlay
+
+**现状缺口**：`server/src/ws/broadcast.ts` 已存在，endTurn 主动广播 `turn_progress`(phase/progress/message) / `turn_complete` / `event_triggered`，但 `client/src` 全局 grep `WebSocket` 0 命中——广播信号完全无人消费。endTurn 前端 = `set({loading:true})` → 阻塞 await → `set({game})`，期间只有按钮变灰，无进度视觉。
+
+**落地方案**：
+- `client/src/hooks/useBroadcast.ts`（~40 行，原生 WebSocket）：`useEffect` 建连，`onmessage` 解析 `{type, phase, progress, message}` → `setState`。重连退避 1s/3s/10s。模块级单例。
+- `client/src/components/layout/TurnProgressOverlay.tsx`：`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm` + 中央卡片（年月 + phase 文案 + 进度条 + message）。`useBroadcast().active && store.loading` 双条件触发。
+- 降级：WS 不可用时假进度条（`setInterval` 推进到 90% 停住，axios 返回后跳 100%）。
+- **复用已废弃能力**，非新功能。
+
+#### §11.1.2 W2 TopBar 数字跳动 + EventLog 流化
+
+**现状缺口**：`TopBar.tsx:55` `gold.toLocaleString()` 纯文本无动画；`RightPanel.tsx:388-403` 行动日志静态列前 12 条无着色/无新条目高亮/无自动顶滚。
+
+**落地方案**：
+- `client/src/hooks/useAnimatedNumber.ts`（~30 行）：`useRef(cur)` + `requestAnimationFrame` easeOutCubic 插值 + `setDisplay` 每帧 setState。卸载 `cancelAnimationFrame`。挂到 TopBar 金/粮/兵/美女/城数 5 个数字。
+- EventLog 增强（改 `RightPanel.tsx:388-403`）：按 `action.type` 着色（famine→橙、ai_placeholder→灰、event→金、end_turn→琥珀、battle→红、civil→青）；新条目 `animate-[fadeIn_0.3s]`（tailwind.config.js 加 fadeIn keyframes）；自动顶滚 `scrollTo({top:0, behavior:'smooth'})`；显示条数 12→20。
+- TopBar 汇总先 `useMemo` 依赖 `game.cities` 再接 hook（避免 rAF 触发全量遍历）。
+
+#### §11.1.3 W3 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形
+
+**现状缺口**：势力涂色 = 城点小圆 `fill={faction.color}`（`MapCanvas.tsx:396`），无领土 polygon；迷雾 = 服务端裁剪 + 前端灰点 + `???`，**底图地形对未探明区域照样清晰**；缩放/聚焦全瞬切，konva `ref.to()` 0 调用。
+
+**落地方案**：
+- `client/src/components/map/mapTerritory.ts`（~60 行）：graham scan 凸包纯函数。`useMemo` 依赖 `game.cities` 的 **ruler 映射**（非整个 game）。单城势力退化画 Circle。迷雾城不参与凸包。
+- `TerritoryLayer.tsx`：在 `GeoBaseLayer` 之上、官道之下。每势力一条 konva `Line` `closed` `fill={faction.color}` `opacity=0.18` `listening={false}`。城归属变更时 `Line.points` 用 `ref.to({points, duration:0.4})` 平滑过渡。
+- `FogLayer.tsx`：整图盖 `Rect fill rgba(10,10,15,0.55)`，用 `globalCompositeOperation='destination-out'` 在己方/已侦查城位置画半径较大 `Circle`（白色挖洞）+ `filters.Blur` 羽化边缘。挖洞半径按 LOD 缩放。
+- konva tween：`MapCanvas.tsx:261-262` 的 `setScale/setPos` → `stageRef.current?.to({scaleX, scaleY, x, y, duration:0.4, easing:Konva.Easings.EaseOut})`，`onFinish` 同步 React state。城归属变更 `Circle.fill` 用 `ref.to({fill, duration:0.3})`。tween 期间加 `isAnimating` 锁禁用 LOD 重算。
+- **PCG 水墨地形绘制**（归入 W3 子项）：保留 `geo-basemap.png`（Natural Earth 公有领域无版权风险），PCG 只用于二级战术网格地形绘制 + 三级白刃战视差背景。算法移植清单（用户 demo 95% 可搬，只换 ctx 来源 `canvas.getContext('2d')` → `layer.getContext()`，rAF → `Konva.Animation`）：
+  - `shared/pcg/inkMountains.ts`（drawInkMountains：分层贝塞尔 + 线性渐变晕染）
+  - `shared/pcg/naturalRiver.ts`（drawNaturalRiver：多段正弦波 + 伪随机扰动）
+  - `shared/pcg/terrainTiles.ts`（drawMiniTree/drawMiniMountain：战术树/山程序化绘制）
+  - `client/src/battle/meleeBackground.ts`（drawMeleeParallaxBackground：4 层视差 + 夕阳/远山/近林/焦土 + 雾气）
+
+#### §11.1.4 W4 派系面板 + OfficerDetail + 内政外交前端增强
+
+**现状缺口**：§4.5.2 派系系统文档详尽（`04-game-systems.md:481-523`）代码 0 实现；无 OfficerDetail 组件；无己方武将列表组件（PersonnelPanel 只列在野武将）；忠诚度仅在下拉选项文本显示无 <60 警报；外交关系纯文本卡片无图形化；金粮变化瞬切无飘字；§35 财政税收俸禄纯设计零代码。
+
+**落地方案**（纯前端可视化，不动服务端/数据模型）：
+- `client/src/lib/factionInner.ts`（~50 行）：派系判定纯函数，按 `tags` 社会出身分组（士族/豪强/寒门/平民/宗室/边地），§4.5.2 规则（≥3 成派、领袖=官职最高）。`useMemo` 依赖 `game.officers`。
+- `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。
+- `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
+- `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
+- `client/src/components/ui/RadarChart.tsx`：**纯 SVG 手写**外交雷达图（5 维多边形 + scale 0~100）。5 维：友好（favorability）/信任（派生 relation）/姻亲（marriageBond 0/100）/盟约（allied 0/100）/敌意（war|hostile 反转）。放 LeftPanel 外交折叠顶部。数据从 `game.diplomacy` + `findDiplomacy()`（`shared/intel.ts:46`）取。
+- **财政飘字**：gameStore 各 action 在 `set({game})` 时附带 `floatingDelta: {gold, food, reason}[]`（前端算 delta：newGame vs oldGame）。TopBar/RightPanel 订阅渲染 `+N/-N` 上浮淡出（CSS keyframes `floatUp`，tailwind.config.js 加）。
+- **行政总署三段式**：重组 LeftPanel「人事」折叠为独立 `AdminOfficePanel.tsx`，三段 Header（搜索/任命/赏赐）+ 视觉分隔。复用现有 PersonnelPanel/AppointPanel/BeautyPanel。
+- **§35 财政税收俸禄**记技术债 D-0B-9（独立 Session，破坏性改动需先扩类型：Faction 加 coinQuality/salaryArrears，City 加 taxRate，turn.ts 改产金公式，新建俸禄引擎）。
+
+### §11.2 S21 三级战斗串联（W6~W9）
+
+#### §11.2.1 四级架构与状态机
+
+```
+大地图点出征
+  → W6 一级：军旗沿道路移动 + 烽火 + "是否攻城"弹窗
+  → W7 二级：切入 hex 战术沙盘（淡入 + 镜头推进 + 棋子滑行 + 迷雾散开）
+  → hex 邻接攻击
+  → W8 三级：切入白刃战横版（镜头拉近 + 背景模糊 + 方阵对峙 + 飘字 + 武将计特写）
+  → 将领碰头/主动发起
+  → W9 四级：单挑（DuelStage 混合范式，已储备）
+  → 单挑结束 → 回白刃 → 回 hex → 回大地图
+```
+
+`gameStore.ts` 的 `screen` 从两态扩展为六态栈：`'boot' | 'world' | 'campaign' | 'tactical' | 'melee' | 'duel'`。栈式管理：单挑结束回白刃，白刃结束回 hex，hex 结束回大地图。每态有切入/切出动画。
+
+#### §11.2.2 W6 一级大地图演出
+
+复用已实装的战役层引擎（`campaign.ts` §12-17），只补演出：
+- 军旗沿道路移动：Konva `Line` + `Konva.Tween` 驱动军旗占位（彩色矩形+势力字）沿 `CampaignArmy.path` 节点位移。
+- 烽火特效：目标城 `Circle` + `Konva.Animation` 粒子（复用粒子系统）。
+- "是否攻城"弹窗：DOM modal（仿 EventDialog），围城状态触发。
+- 行军箭头：Konva `Arrow` 沿 path。
+
+#### §11.2.3 W7 二级战术串联
+
+BattleView 已有 Demo，补串联与切入：
+- 一级→二级切入：`screen` 状态机扩展 + 渐变 overlay（黑屏淡入淡出）+ 镜头推进 `stage.to({scaleX, scaleY})`。
+- hex 悬停地形情报：Konva `mouseenter` + tooltip DOM（"林地：防御+20%，骑兵移动力减半"）。
+- 棋子移动滑行：`node.to({x, y, duration})` 替换瞬切。
+- 迷雾散开：W3 FogLayer 方案接入。
+- 邻接→三级切入：攻击时不直接扣血，触发 `screen: 'melee'` + 镜头推进+渐变切入。
+
+#### §11.2.4 W8 三级白刃战横版 MeleeStage
+
+**完全新建**，Konva 方阵表现（不引 PixiJS）：
+- 横版两军对垒：Konva `<Stage>` + 左右两 `Layer`，将领占位矩形 + 小队方阵图标。
+- 小兵数量：动态缩放（1000 兵=20 粒，5000 兵=80 粒，上限 120），1 粒=20-50 兵。Konva 2D 60fps 稳。
+- 兵种克制：方阵图标颜色/形状区分 + 飘字。复用服务端 `getUnitMatchup`（已实装）。
+- 移动指令：纯战略指令（全军突击/鸣金收兵/发起单挑 三个 DOM 按钮），小兵 AI 自主寻敌对砍。
+- 飘字伤害：Konva `Text` + `Tween` 上浮淡出。
+- 武将计特写：全屏暗场 DOM + Konva 粒子（复用粒子系统）。
+- **Soldier 类移植**（用户 demo 95% 可搬）：`client/src/battle/soldier.ts`，纯 TS 数据类 + 命令式 draw。`ctx` 来源 = `meleeLayer.getContext()`，动画驱动 = `Konva.Animation`。克制矩阵复用服务端 `getUnitMatchup`。
+- **镜头推进切入**：hex 邻接攻击 → `stage.to({scaleX:3, scaleY:3, x:targetX, y:targetY, duration:0.4})` → 黑屏 overlay opacity 0→1（300ms）→ `setScreen('melee')` → opacity 1→0（300ms）揭幕白刃战。
+
+#### §11.2.5 W9 单挑接入（DuelStage 混合范式）
+
+**架构**：新建 `DuelStage.tsx`（Konva 演出层）与现有 `DuelPanel.tsx`（DOM 控制面板）并存。DuelPanel 保留 HP 条/按钮/结局面板/三速度模式切换；DuelStage 接管中央演出区。
+
+**混合范式**：
+- 静态元素（武将占位矩形/姓氏文字/卡牌轮廓/HP 条）：react-konva `<Group>/<Rect>/<Text>` 声明式
+- 动效（粒子/刀光/火花/震屏）：`Konva.Animation` + `layer.getContext()` 底层 `CanvasRenderingContext2D` 命令式（用户 demo 逻辑 95% 可搬）
+- 单一 `<Stage>`，与 BattleView 同范式，不割裂
+
+**三要素**：
+- 交马对冲：Konva `Tween` 驱动武将占位矩形对冲位移 + `Konva.Shape` 速度线/飞沙粒子 + `Stage.x/y` tween 震屏 + 碰撞瞬间金色火花散开
+- 卡牌展示：服务端已选好指令（`DuelRound.commands[2]`，当前前端未用），前端用卡牌形式展示双方出的什么牌（翻开动画 + 三向克制高亮：猛攻克牵制/牵制克必杀/必杀克猛攻），**玩家不操作**（符合 Session 80 全自动设计）
+- 技能特写：读 `DuelRound.criticals/chainHits/counterDamages/injuryApplied`（当前前端未用）触发：全屏暗场 DOM overlay + Konva 贝塞尔刀光（`Line` + `shadowBlur` 发光）+ 暴击数字喷射 + 屏幕震屏
+
+**分阶段演出时序**（每回合）：出牌(200ms)→对冲(300ms)→命中刀光(150ms)→暴击/连击/反手特写(400ms)→扣血(HP tween 300ms)→受伤高亮(200ms)→叙事淡入(200ms)→下一回合。三速度模式控制倍率（full=1.0 / fast=0.4 / skip=跳过演出直接出结果）。
+
+**美术**：纯几何占位起步（彩色矩形 + 姓氏文字 + Konva 程序化刀光/粒子），Phase 5 再接真实立绘/卡牌/音效。
+
+**音频**：原生 Web Audio API 程序化合成（零音频文件）：金属碰撞"锵"（白噪声 + bandpass 滤波 2-4kHz + 短包络衰减 200ms）/ 暴击低频冲击（sine 80Hz + 衰减 150ms + 失真）/ 必杀蓄力（sawtooth 上升扫频 200Hz→800Hz）/ 受伤闷哼（triangle 150Hz + 衰减 300ms）/ 马蹄对冲（短脉冲序列）。
+
+### §11.3 HeroCharacter 特殊造型 + appearance 字段落库
+
+**数据落库**（需改 08 真源）：`officers.json` 每个武将新增 `appearance` 字段：
+
+```typescript
+interface SpecialAppearance {
+  scale: number;          // 体型缩放（如巨型武将）
+  auraColor: string;      // 专属气劲颜色（如：曹操紫气、刘备金光）
+  weaponLength: number;  // 武器长度（影响 Canvas 上攻击光束的判定）
+  shadingMode: 'normal' | 'ghost' | 'enraged';  // 外观特效模式
+  pheasantPlume?: boolean;   // 是否有雉翎（吕布及少数猛将）
+  mount?: 'redHare' | ...;   // 专属坐骑（烈焰足粒子）
+  ghostForm?: {              // 鬼神觉醒配置（吕布专属）
+    trigger: { rage: number; hpRatio: number };
+    scale: number;
+    auraColor: string;
+    shadingMode: 'ghost';
+  };
+}
+```
+
+**典型武将特殊造型映射**（0-A 30 武将）：
+
+| 武将 | scale | auraColor | weaponLength | shadingMode | pheasantPlume | mount |
+|:--:|:--:|---|:--:|---|:--:|---|
+| 吕布 | 1.5 | #ff1744（血红） | 25（方天画戟） | enraged | ✓ | redHare |
+| 关羽 | 1.3 | #00e676（青龙青） | 22（青龙偃月刀） | normal | ✓ | — |
+| 张飞 | 1.4 | #ff6f00（橙黄） | 20（丈八蛇矛） | normal | ✓ | — |
+| 典韦 | 1.4 | #ff1744（血红） | 15（双铁戟） | normal | — | — |
+| 赵云 | 1.2 | #00b0ff（银蓝） | 18（亮银枪） | normal | ✓ | — |
+| 马超 | 1.3 | #ff6f00（西凉橙） | 20（虎头湛金枪） | normal | — | — |
+| 文官（荀彧等） | 1.0 | — | 5（短剑） | normal | — | — |
+
+**渲染**：HeroCharacter extends Soldier，重写 `draw(ctx)`：
+1. enraged 时 `ctx.filter = 'drop-shadow(0 0 8px #ff3d00) saturate(2)'`
+2. auraColor 时虚线环绕气劲光环（`ctx.strokeStyle` + `setLineDash`）
+3. scale 体型缩放
+4. weaponLength 特殊武器线条
+5. 残影：缓存前几帧位置画半透明拖影
+
+**不做**：骨骼动画（Spine/DragonBones 需美术资源+商业授权，违反纯几何占位原则）；WebGL shader 气劲流光（用 Canvas 2D filter 即可）。
+
+### §11.4 吕布鬼神降临（纯前端演出，服务端后置）
+
+**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果后置 D-0B-8）：
+
+- **Verlet 雉翎**：3-4 节点链 Verlet 积分（每节点 {x,y,prevX,prevY}，每帧 `newX = x + (x-prevX)*damping + gravity` + 距离约束迭代 3 次 + 根节点跟随吕布头部），随移动速度/方向产生滞后摆动，挥戟时甩出弧线。零美术，纯代码。挂在 `HeroCharacter.draw()` 内，仅吕布及少数猛将（关羽/张飞/赵云）有雉翎。
+- **赤兔马烈焰足**：马蹄位置每帧生成暗红粒子（复用粒子系统）。
+- **帧缓存残影**：`layer.getContext()` 命令式层，前 3 帧半透明叠加。
+- **方天画戟刀光**：贝塞尔曲线 + `ctx.filter='blur()'`（复用 drawSlash 逻辑）。
+- **鬼神觉醒**：前端自管 rage（rage≥100 或兵力<30% 触发），与服务端战斗公式解耦，觉醒只改外观不改数值。触发后 `shadingMode='ghost'` + `scale=1.6` + `auraColor=#6a1b9a` + 画布 `saturate(0.4)` 变暗 + 紫黑粒子。
+- **单挑登场杀**：DuelStage 扩展，斜切立绘滑入 + 红光眼粒子 + 台词框（"布在此，反臣贼子，谁敢近前？！"）。心理震慑 debuff（敌方卡牌成功率-20%）服务端后置 D-0B-8。
+
+### §11.5 计谋三级联动视觉（归入 S20 W3 子项）
+
+**触发**：服务端计谋状态驱动（`BattleState.activeStrategem: 'none'|'fire'|'water'|'ambush'`，新字段 D-0B-11）。火计复用已有 `battle.ts` `/battle/fire` 引擎；水攻/伏兵服务端引擎后置 D-0B-12。前端未收到该字段时默认 `'none'`。
+
+**统一帧计数**：模块级 `frameCount` 变量，多个 `Konva.Animation` 实例共享（与用户 demo 一致）。
+
+**三级联动数据流**：
+
+```
+服务端计谋状态 → BattleState.activeStrategem → 前端 gameStore 订阅
+  ├─→ 一级 MapCanvas 计谋异象层
+  │     ├─ fire: drawLevel1StrategemVisuals 火烟粒子
+  │     ├─ water: 蓝色波纹扩散
+  │     └─ ambush: 迷雾树影环绕
+  ├─→ 二级 BattleView hex 地貌侵蚀
+  │     ├─ fire: 焦炭黑 + drawProceduralGridFlame 火舌
+  │     ├─ water: flooded tileType + 正弦水纹
+  │     └─ ambush: 局部迷雾（仅战旗周边照亮）
+  └─→ 三级 MeleeStage 全屏粒子
+        ├─ fire: globalCompositeOperation='screen' 火星 + 橙色烟熏
+        ├─ water: 涌动波浪 + 雨滴丝
+        └─ ambush: 落叶贝塞尔 + 幽暗 vignette
+```
+
+**算法移植清单**（用户 demo 95% 可搬）：
+- `shared/pcg/strategemVisuals.ts`：drawLevel1StrategemVisuals / drawProceduralGridFlame
+- `client/src/battle/meleeStrategem.ts`：drawLevel3StrategemOverlays
+- `client/src/battle/frameCount.ts`：模块级共享帧计数
+
+---
+
+*文档版本: v2.7 | 2026-07-18 | Session 100 新增 §11 视觉与交互增强（S20 前端体验 W1~W4 + S21 三级战斗串联 W6~W9 + HeroCharacter 特殊造型 + 吕布鬼神降临 + 计谋三级联动视觉。零代码改动，方案文档化）*
