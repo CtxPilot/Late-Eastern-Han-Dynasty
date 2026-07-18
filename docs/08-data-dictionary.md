@@ -375,6 +375,7 @@
 | uniqueSkill? | SkillType | 专属技 |
 | tags | string[] | 出身标签（社会·地域·职业·政治·特殊） |
 | appearance? | SpecialAppearance | **Session 100 技术储备新增**：武将特殊造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm）。0-A 30 武将手工填写，0-B 全量填写记技术债 D-0B-7 |
+| avatarGene? | AvatarGene | **Session 101 技术储备新增**：武将头像底图基因（scheme/baseRubbing/faceType/hairType/beardType/eyeType/sealText/clanTitle/officeSeal/ribbonColor/royalSeal）。与 `appearance` 战斗造型字段并存，职责分离。0-A 30 武将手工填差异化 / 0-B 1000+ 武将脚本派生 + 重点人工校对。详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一 |
 
 #### appearance 字段（Session 100 技术储备，未实装）
 
@@ -391,6 +392,34 @@
 | ghostForm? | { trigger: {rage, hpRatio}, scale, auraColor, shadingMode } | 鬼神觉醒配置（吕布专属，前端自管 rage 触发） |
 
 **0-A 30 武将填写规则**：猛将（吕布/关羽/张飞/典韦/赵云/马超）手工填写差异化 appearance；文官（荀彧等）填默认值（scale=1.0/auraColor=空/weaponLength=5/normal）。详见 `docs/07-ui-design.md` §11.3 典型武将映射表。
+
+#### avatarGene 字段（Session 101 技术储备，未实装）
+
+> 本字段为 Session 101 技术储备，实装时需同步 `shared/types/officer.ts` + `shared/validators/index.ts` Zod 校验 + 本真源。详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一美术铁律。
+> 与 `appearance` 字段职责分离：`appearance` 服务战斗演出几何造型（MeleeStage/DuelStage），`avatarGene` 服务头像底图渲染（OfficerRosterPanel/OfficerDetail/派系面板）。
+
+| 子字段 | 类型 | 说明 |
+|------|------|------|
+| scheme | 'rubbing' \| 'seal' \| 'procedural' | 头像方案（A 拓片 / B 印信 / C 拼图，组合方案下默认 'procedural' 含三层） |
+| baseRubbing? | 'warrior' \| 'scholar' \| 'servant' \| 'royal' | 方案 A 拓片底图类型（按武将文/武/龙套/皇室切换） |
+| faceType? | number | 方案 C 脸型（0~4：甲/由/申/国/风字脸） |
+| hairType? | number | 方案 C 冠冕/发髻（0~9：平天冠/进贤冠/武冠/帻巾/帢帽/...） |
+| beardType? | number | 方案 C 胡须（0~9：虬髯/美髯/八字胡/山羊胡/...） |
+| eyeType? | number | 方案 C 眼神/眉毛（0~9：丹凤眼/细眼/环眼/卧蚕眉/...） |
+| sealText? | string | 方案 A/B 姓名印章文字（2~4 字，朱砂红 + 隶书，2 字断行） |
+| royalSeal? | boolean | 是否皇室金边（刘备/曹操/孙权等主公 true） |
+| clanTitle? | string | 方案 B 籍贯氏族（"琅琊诸葛氏"、"河东关氏"、"五原郡吕氏"，静态按出身） |
+| officeSeal? | string | 方案 B 当前官职篆印（"荡寇将军"、"荆州刺史"，动态随 `Officer.position` 变化） |
+| ribbonColor? | 'purple' \| 'cyan' \| 'black' \| 'yellow' | 方案 B 印绶颜色（按汉制官品，动态随 `NobilityRank` 变化：紫绶/青绶/墨绶/黄绶） |
+
+**0-A 30 武将填写规则**：
+- 猛将/主公（吕布/关羽/张飞/典韦/赵云/马超/刘备/曹操/孙权等 15 史实精校）→ 手工填差异化 `avatarGene`
+  - 例：关羽 → `{scheme:'procedural', baseRubbing:'warrior', faceType:3, hairType:2, beardType:1, eyeType:0, sealText:'关羽', royalSeal:false, clanTitle:'河东关氏', officeSeal:'荡寇将军', ribbonColor:'cyan'}`
+  - 例：荀彧 → `{scheme:'procedural', baseRubbing:'scholar', faceType:0, hairType:1, beardType:3, eyeType:1, sealText:'荀彧', royalSeal:false, clanTitle:'颍川荀氏', officeSeal:'尚书令', ribbonColor:'cyan'}`
+- 15 占位武将 → 默认值（scheme='rubbing'/baseRubbing='warrior'/sealText=姓名/clanTitle='占位氏'/ribbonColor='yellow'）
+- 0-B 1000+ 武将 → 脚本按 officer.id 哈希派生 faceType/hairType/beardType/eyeType + 重点人物人工校对 sealText/clanTitle/officeSeal/ribbonColor
+
+**规模说明**：optional 字段，不影响 officers.json 总条数（仍是 0-A 30 / 0-B 1000+）。实装时记技术债 D-0B-7（与 appearance 同条，0-B 全量填写时一并处理）。
 
 ### 示例
 
@@ -864,7 +893,7 @@ Phase 3 — 持续维护
 
 ---
 
-*文档版本: v1.6 | 2026-07-18 | Session 100 真源同步：officers.json 新增 appearance 字段（武将特殊造型）+ BattleState.activeStrategem 字段（计谋三级联动视觉驱动）。零代码改动，方案文档化，D-0B-7/D-0B-11 技术债登记*
+*文档版本: v1.7 | 2026-07-18 | Session 101 真源同步：officers.json 新增 avatarGene 字段（武将头像底图基因，金石水墨·免版权组合方案 A+C+B）。零代码改动，方案文档化，与 Session 100 appearance 字段并存职责分离*
 
 ---
 
@@ -875,6 +904,10 @@ Phase 3 — 持续维护
 ### 1. officers.json appearance 字段
 
 见上文 §五 字段说明表。0-A 30 武将手工填写，0-B 全量填写记技术债 D-0B-7。
+
+### 1-B. officers.json avatarGene 字段（Session 101 新增）
+
+见上文 §五 字段说明表 + avatarGene 子字段表。0-A 30 武将手工填差异化，0-B 1000+ 武将脚本派生 + 重点人工校对，记技术债 D-0B-7（与 appearance 同条）。与 appearance 职责分离：appearance 服务战斗演出几何造型，avatarGene 服务头像底图渲染。详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一。
 
 ### 2. BattleState.activeStrategem 字段（计谋三级联动视觉驱动）
 

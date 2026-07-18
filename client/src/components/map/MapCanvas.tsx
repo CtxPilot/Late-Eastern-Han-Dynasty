@@ -60,6 +60,7 @@ function GeoBaseLayer({
             x={p.x}
             y={p.y}
             text={p.name}
+            fontFamily="HanDynastySerif"
             fontSize={pl.fontSize}
             fill="#c9b882"
             opacity={pl.opacity}
@@ -128,6 +129,7 @@ function CityMarkerNode({
       {plan.showMineBadge && (
         <Text
           text="己"
+          fontFamily="HanDynastySerif"
           fontSize={Math.min(plan.drawR * 1.1, plan.nameFont * 0.85)}
           fill="#fff"
           fontStyle="bold"
@@ -141,6 +143,7 @@ function CityMarkerNode({
           text={city.name}
           x={plan.labelDx}
           y={nameY}
+          fontFamily="HanDynastySerif"
           fontSize={plan.nameFont}
           fill={plan.showMineBadge ? '#ffe9a8' : '#fff8e7'}
           fontStyle="bold"
@@ -163,6 +166,7 @@ function CityMarkerNode({
               text={line.text}
               x={plan.labelDx}
               y={yy}
+              fontFamily="HanDynastySerif"
               fontSize={plan.adminFont}
               fill={line.fill}
               offsetX={(line.text.length * plan.adminFont) / 2}

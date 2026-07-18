@@ -890,6 +890,148 @@ interface SpecialAppearance {
 - `client/src/battle/meleeStrategem.ts`：drawLevel3StrategemOverlays
 - `client/src/battle/frameCount.ts`：模块级共享帧计数
 
+### §11.6 武将头像三方案（金石水墨·免版权组合方案 A+C+B，Phase 5 实装）
+
+> 独立开发 + 彻底免版权死命令下的唯一可行路径。详见 `00-dev-constitution.md` §十一美术铁律、
+> `AGENTS.md` 核心规则 9。1000~1200+ 武将约稿立绘成本 20 万起 + 极高侵权风险（借鉴知名三国游戏
+> 构图即收律师函），不可行。三方案组合：**A 底图 + C 五官 + B 文字层**，三层职责互补，
+> 零美术资源、零侵权、零成本。与 Session 100 `appearance` 战斗造型字段并存，职责分离。
+
+#### §11.6.1 三层职责划分
+
+| 层 | 方案 | 职责 | 数据字段 | 解决问题 |
+|:--:|:--:|---|---|---|
+| 底图层 | **A 拓片印章** | 历史厚重感 + 版权护城河 | `avatarGene.baseRubbing` | 单独 C 缺厚重感、单独 B 缺视觉 |
+| 五官层 | **C 程序化拼图** | 1000+ 武将个体差异 | `avatarGene.faceType/hairType/beardType/eyeType` | 单独 A 龙套重复度高 |
+| 文字层 | **B 官职印信简册** | 考据感 + 史料浪漫 | `avatarGene.clanTitle/officeSeal/ribbonColor/sealText` | 单独 A/C 缺考据深度 |
+
+#### §11.6.2 方案 A — 拓片印章（底图层）技术规格
+
+**素材采集**（公有领域，不入库不入 git，运行时按需加载）：
+- 20~30 张高质感汉代原版拓片切片，按武将类型分类：
+  - `warrior`：执弩骑马射猎图 / 武士对剑图
+  - `scholar`：对坐清谈 / 老生问道
+  - `servant`：汉代侍从 / 小兵拓片
+  - `royal`：皇室纹样拓片
+- 来源：国博 / 各地博物馆官网 / 公开学术资料
+- 版权：中国古代文物图案已进入公共领域
+
+**前端组合**（react-konva，复用现有架构零新依赖）：
+
+```typescript
+// shared/pcg/avatarRenderer.ts（Phase 5 实装）
+function renderAvatarBase(group: Konva.Group, gene: AvatarGene) {
+  // Layer 0: 宣纸背景（PCG 噪声 或 单张底纹）
+  group.add(new Konva.Rect({ fill: 'rgba(255, 246, 220, 1)' /* 宣纸黄 */ }));
+  // Layer A: 拓片切片
+  group.add(new Konva.Image({
+    src: `/assets/rubbings/${gene.baseRubbing}_base.png`,
+    globalCompositeOperation: 'multiply',  // 混合模式：拓片墨迹融入宣纸
+    filters: [Konva.Filters.Hue, Konva.Filters.Contrast],
+    hue: gene.royalSeal ? 10 : 0,
+    contrast: 0.2,
+    opacity: 0.85,
+  }));
+}
+```
+
+**版权护城河**：公有领域 + 程序化混合差异化，即便两人用同一张拓片切片，经 hue/contrast/混合模式处理后视觉效果不同。
+
+#### §11.6.3 方案 C — 程序化拼图（五官层）技术规格
+
+**素材拆解**（自绘或开源无版权，5×10×10×10 = 5000 组合，覆盖 1000+ 武将）：
+- 5 种脸型：甲/由/申/国/风字脸
+- 10 种汉代冠冕/发髻：平天冠/进贤冠/武冠/帻巾/帢帽/...
+- 10 种胡须：虬髯/美髯/八字胡/山羊胡/...
+- 10 种眼神/眉毛：丹凤眼/细眼/环眼/卧蚕眉/...
+
+**种子算法**：
+
+```typescript
+// shared/pcg/avatarGene.ts（Phase 5 实装）
+function getAvatarGene(officerId: string): AvatarGene {
+  const seed = hashString(officerId);  // 固定哈希，不随机
+  return {
+    scheme: 'procedural',
+    faceType: Math.floor(seed * 100) % 5,
+    hairType: Math.floor(seed * 1000) % 10,
+    beardType: Math.floor(seed * 10000) % 10,
+    eyeType: Math.floor(seed * 100000) % 10,
+    // ... A/B 字段
+  };
+}
+```
+
+**重点人物手工指定**（不靠哈希，落库 `officers.json` `avatarGene` 字段）：
+- 关羽：美髯 + 丹凤眼 + 卧蚕眉 + 武冠 + 拓片 warrior
+- 曹操：细眼 + 短髯 + 平天冠 + 拓片 royal
+- 吕布：虬髯 + 猛将眉 + 武冠 + 拓片 warrior + 皇室印
+- 诸葛亮：山羊胡 + 智者眼 + 进贤冠 + 拓片 scholar
+
+**渲染**：`Konva.Image` 绝对定位叠层，按 faceType→hairType→beardType→eyeType 顺序 z-index 递增。
+
+#### §11.6.4 方案 B — 官职印信简册（文字层）技术规格
+
+**三段式文字层**：
+
+| 段 | 内容 | 字体 | 位置 | 数据来源 |
+|:--:|---|---|---|---|
+| 上 | 籍贯与氏族（"琅琊诸葛氏"、"河东关氏"） | 隶书/篆书 | 头像框顶部 | `avatarGene.clanTitle`（静态，按 officer 出身） |
+| 中 | 当前官职/爵位篆印（"荡寇将军"） | 篆书 | 头像框右下角，朱砂红 `rgba(166,25,25,0.85)` + 金边 | `avatarGene.officeSeal`（动态，随 `Officer.position` 变化） |
+| 下 | 印绶色条 | — | 头像框底部 | `avatarGene.ribbonColor`（动态，随 `NobilityRank` 变化） |
+
+**汉制印绶颜色**（与 `NobilityRank` 7 级联动，详见 `04-game-systems.md` §5.5.9）：
+
+| 爵位 | 印绶色 | ribbonColor |
+|:--:|---|---|
+| 皇帝 | 紫绶 + 金印 | `purple` |
+| 王 | 紫绶 | `purple` |
+| 公 | 青绶 | `cyan` |
+| 县侯 | 青绶 | `cyan` |
+| 乡侯 | 墨绶 | `black` |
+| 亭侯 | 墨绶 | `black` |
+| 关内侯 | 黄绶 | `yellow` |
+
+**玩家心理**：对史料核心爱好者，"五原郡吕布，字奉先"放在古朴木简上 + 符合汉制的印绶颜色，比来路不明的立绘更高级。
+
+#### §11.6.5 组合方案渲染流程（Konva.Group 单容器三层叠）
+
+```
+Konva.Group（武将头像容器 120×150，border #3e2723）
+  ├─ Layer 0  宣纸背景（Konva.Rect fill 宣纸黄 + PCG noise 纹理）
+  ├─ Layer A  拓片切片（Konva.Image，baseRubbing 切换，multiply 混合，hue-rotate 差异化）
+  ├─ Layer C  五官拼图（4 层 Konva.Image：faceType → hairType → beardType → eyeType）
+  ├─ Layer B-上  氏族简册文字（Konva.Text，隶书/篆书，竹简纹理背景）
+  ├─ Layer B-中  官职篆印（Konva.Rect 朱砂红 + Konva.Text 篆书 + 金边，royalSeal 时金边加粗）
+  └─ Layer B-下  印绶色条（Konva.Rect，ribbonColor 按 NobilityRank）
+```
+
+**性能**：单头像 7~8 个 Konva 节点，1000+ 武将列表需 viewport culling（D-0B-4）+ 离屏缓存 `group.toCanvas()` 复用，避免每帧重绘。
+
+#### §11.6.6 数据落库（与 Session 100 `appearance` 并存，职责分离）
+
+| 字段 | 职责 | 服务场景 | Session |
+|---|---|---|---|
+| `appearance` | 战斗演出几何造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm） | MeleeStage / DuelStage | 100 已设计 |
+| `avatarGene` | 头像底图基因（scheme/baseRubbing/faceType/hairType/beardType/eyeType/sealText/clanTitle/officeSeal/ribbonColor/royalSeal） | OfficerRosterPanel / OfficerDetail / 派系面板 | 101 新增 |
+
+**0-A 30 武将填写规则**：
+- 猛将/主公（吕布/关羽/张飞/典韦/赵云/马超/刘备/曹操/孙权等 15 史实精校）→ 手工填差异化 `avatarGene`
+- 15 占位武将 → 默认值（scheme='rubbing'/baseRubbing='warrior'/sealText=姓名/clanTitle='占位氏'）
+- 0-B 1000+ 武将 → 脚本按 officer.id 哈希派生 + 重点人物人工校对
+
+**字段定义详见**：`03-data-models.md` §21.2、真源 `08-data-dictionary.md` `OfficerStatic.avatarGene`。
+
+#### §11.6.7 实装路线（Phase 5，分 3 子 Session）
+
+| 子 Session | 任务 | 依赖 |
+|:--:|---|---|
+| P5-10a | A 拓片底图层（素材采集 20~30 张 + `renderAvatarBase` + 宣纸 PCG 纹理） | D-0B-4 viewport culling |
+| P5-10b | C 五官拼图层（素材拆解 5×10×10×10 + `getAvatarGene` 哈希派生 + 重点人物手工填） | P5-10a |
+| P5-10c | B 官职印信层（`clanTitle` 静态填 + `officeSeal` 动态联动 `Officer.position` + `ribbonColor` 联动 `NobilityRank`） | P5-10a，爵位编成加成逻辑（Session 93 设计） |
+
+**暂缓**：头像悬停动画、头像点击放大查看详情、派系面板缩略图批量渲染优化 — 留 Phase 5 后期打磨。
+
 ---
 
-*文档版本: v2.7 | 2026-07-18 | Session 100 新增 §11 视觉与交互增强（S20 前端体验 W1~W4 + S21 三级战斗串联 W6~W9 + HeroCharacter 特殊造型 + 吕布鬼神降临 + 计谋三级联动视觉。零代码改动，方案文档化）*
+*文档版本: v2.8 | 2026-07-18 | Session 101 新增 §11.6 武将头像三方案（金石水墨·免版权组合 A+C+B，Phase 5 实装）+ avatarGene 字段落库*

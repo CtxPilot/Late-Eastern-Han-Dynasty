@@ -57,4 +57,30 @@ docs/     设计真源（见 HANDOFF 文档地图）
 
 ## 一次只攻一个大系统
 
-见 `docs/12-system-map.md`（S01~S19）。禁止并行新开多个大系统。
+见 `docs/12-system-map.md`（S01~S22）。禁止并行新开多个大系统。
+
+## 跨平台字体铁律（Linux / Windows / macOS 三平台防御）
+
+> 详见 `docs/00-dev-constitution.md` §11.3 + §11.7、`AGENTS.md` 核心规则 9、`client/public/fonts/README.md`。
+
+### 禁止
+
+- **禁止**在任何 CSS / Canvas / Konva 代码中引用宿主系统字体
+  - 例：`font-family: "微软雅黑"` / `"华文行楷"` / `"Arial"` / `"PingFang SC"` —— 跨平台必然乱码或回退
+  - Linux 极简发行版（Arch）可能无 CJK 字体 → Canvas 城市名直接 `□□□`（豆腐块）
+
+### 必须
+
+- **必须**使用工程内部别名 `HanDynastySerif`（正文/古籍）/ `HanDynastySeal`（官印/篆书）
+  - 通过 `client/src/styles/fonts.css` 的 `@font-face` 加载本地 woff2
+  - Konva `<Text>` 节点必须显式 `fontFamily="HanDynastySerif"`（Konva 默认是 `Arial`，跨平台不一致）
+- **必须**在 `client/src/App.tsx` 的 FontBarrier 通过后才渲染 Canvas
+  - `waitForGameFonts()` 阻塞等待字形写入内存，防第一帧画错字体
+- 新增字体须同时提交 woff2 到 `client/public/fonts/` + 提供 OFL / SIL OFL 授权证明
+
+### 工程规范（编码 / 换行符 / CI）
+
+- 静态数据 JSON 必须 **UTF-8 (no BOM)**，CI 会自动拦截非 UTF-8 提交
+- 换行符统一 **LF**（`.editorconfig` + `.gitattributes` 强制，Windows 协作者 IDE 会自动遵循）
+- PR 提交后 GitHub Actions 自动跑 typecheck / lint / test / validate-data / 编码门禁
+- 字体 woff2 文件**不入 git**（`.gitignore` 排除 `*.woff2`），开发者按 `client/public/fonts/README.md` 手动放入

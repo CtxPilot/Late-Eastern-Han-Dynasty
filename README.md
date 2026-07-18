@@ -22,7 +22,7 @@
 **한국어** — 삼국시대를 배경으로 한 턴제 전략 게임. 고전 삼국 전략 게임의 설계 정신을 계승하여 처음부터 구축한 현대적인 작품입니다. 무장 시스템(주부장·부곡·부대품질·교육·출신파벌), 경제 시스템(화폐순도·세수·봉록·둔전), 전투 시스템(단도삼각상극·무쾌대회·전법엔진) 등 깊이 있는 오리지널 설계가 특징입니다.
 
 ![Phase](https://img.shields.io/badge/phase-0--A%20(Demo)-blue)
-![Systems](https://img.shields.io/badge/systems-19-orange)
+![Systems](https://img.shields.io/badge/systems-22-orange)
 ![Platform](https://img.shields.io/badge/platform-Web-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -59,7 +59,7 @@ pnpm dev
 
 ---
 
-## 21 大系统总览
+## 22 大系统总览
 
 | ID | 系统 | 成熟度 | 一句话 |
 |:--:|------|:------:|--------|
@@ -84,6 +84,7 @@ pnpm dev
 | S19 | 单挑大会 | D | 设计完成·16人淘汰·押注·武魁称号·引擎待实现 |
 | S20 | 前端体验 | D | Session 100 技术储备方案完成（零代码）：endTurn WS 接入/数字跳动/EventLog 流化/势力凸包涂色/FogLayer/konva tween/PCG 水墨地形/派系面板/OfficerDetail/己方武将列表/忠诚度警报/外交雷达 SVG/财政飘字/行政总署三段式。零新依赖 |
 | S21 | 三级战斗串联 | D | Session 100 技术储备方案完成（零代码）：一级大地图演出/二级战术串联/三级白刃战 MeleeStage Konva 方阵/单挑接入 DuelStage 混合范式/screen 六态栈 |
+| S22 | 美术基调·金石水墨免版权 | S/D | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码：@font-face 工程内部别名 `HanDynastySerif`/`HanDynastySeal` + FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI）。武将头像组合方案 A+C+B（P5-10a/b/c 留 Phase 5）。详见 `00-dev-constitution.md` §11.3+§11.7、`15-linux-ui-spec.md` |
 
 ---
 
@@ -169,7 +170,7 @@ Late-Eastern-Han-Dynasty/
 │   ├── 00-dev-constitution.md
 │   ├── 01-overview.md
 │   ├── 05-combat-system.md   # 战斗·单挑·阵型·部曲·屯田
-│   ├── 12-system-map.md      # 21 大系统总图
+│   ├── 12-system-map.md      # 22 大系统总图
 │   └── ...
 ├── package.json        # Monorepo 根 package
 ├── pnpm-workspace.yaml # pnpm workspace 定义
@@ -207,7 +208,7 @@ Phase 4  → 外交 & 事件 & 婚姻
 Phase 5  → AI & 打磨
 ```
 
-**当前重点**：总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。**S20/S21 前端体验增强方案技术储备完成，实装时机后续排定**。
+**当前重点**：总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。**S20/S21 前端体验增强方案技术储备完成，实装时机后续排定。S22 美术基调·金石水墨免版权：跨平台字体防御已实装（Session 102），武将头像组合方案 A+C+B 与 Linux UI 适配留 Phase 5（P5-07a~e / P5-10a/b/c）**。
 
 ---
 

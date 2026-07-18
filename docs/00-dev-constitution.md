@@ -61,8 +61,8 @@
 - [x] 阵型熟练度（每位武将仅解锁部分阵型）
 - [x] 单挑系统
 - [ ] 武将特殊对话（特定武将组合触发，Phase 4）
-- [ ] 武将头像（Phase 5，需提供头像资源或占位图）
-- [ ] 音乐音效（Phase 5，须使用自有或可商用授权素材）
+- [ ] 武将头像（Phase 5，**金石水墨·免版权组合方案 A+C+B**，详见 §十一与 `07-ui-design.md` §11.6；禁止约稿立绘）
+- [ ] 音乐音效（Phase 5，须使用自有或可商用授权素材；优先原生 Web Audio API 程序化合成，详见 `07-ui-design.md` §11.2）
 
 ## 七、参考标准
 
@@ -112,6 +112,167 @@
 - 已占用时须换用同义但不同字面的名称，不得重名
 - 四字词默认预留给「势力特点」层，其他层级新增命名原则上避免四字
 
+## 十一、美术与版权铁律
+
+> 与§六「经典要素保留清单」、§九「禁止事项」同级，构成项目美术与版权的最高准则。
+> 独立开发 + 彻底免版权侵权死命令下的唯一可行路径。详见 `07-ui-design.md` §11.6 三方案技术规格。
+
+### §11.1 公有领域基调（唯一允许的美术语言）
+
+美术基调固定为「**金石水墨·拓片简册·印信官职**」三件套，**仅使用公有领域历史文物视觉语言**：
+
+| 视觉元素 | 来源 | 版权状态 |
+|---|---|---|
+| 汉代画像砖 / 帛画 / 石刻拓片 | 国博 / 各地博物馆官网 / 公开学术资料 | 公有领域（版权保护期已过） |
+| 竹简 / 木简 / 简册 | 汉代简牍文物视觉语言 | 公有领域 |
+| 官印 / 印绶 / 篆书 | 汉制官印制度（《后汉书·舆服志》） | 公有领域 |
+| 史书文字引用 | 《三国志》《后汉书》《资治通鉴》+裴注 | 全人类共同文化遗产，不受版权法保护 |
+| 地理底图 | Natural Earth 等公有领域数据 | 公有领域 |
+
+**定位**：在独立开发与免版权死命令下，此基调既有最深的版权护城河，又能在一众流水线页游/二次元三国游戏中以"历史厚重感、古朴感、考据感"脱颖而出，契合硬核史料玩家审美。
+
+### §11.2 武将头像三方案（Phase 5 实装，已定为组合方案 A+C+B）
+
+> 独立开发者面对 1000~1200+ 武将，约稿立绘成本 20 万起 + 极高侵权风险（借鉴知名三国游戏构图即收律师函），不可行。
+> 三方案组合：**A 底图 + C 五官 + B 文字层**，三层职责互补，零美术资源、零侵权、零成本。
+
+#### 方案 A — 汉代画像砖与拓片风格（底图层，主推 🌟🌟🌟🌟🌟）
+
+- **采集**：20~30 张高质感汉代原版拓片切片（国博/各地博物馆官网/公开学术资料），按武将类型分类：
+  - 猛将/武将：执弩骑马射猎图 / 武士对剑图
+  - 文官/谋士：对坐清谈 / 老生问道
+  - 龙套/侍从：汉代侍从 / 小兵拓片
+  - 皇室：特殊皇室纹样拓片
+- **前端组合**（React + Konva）：
+  - 背景层：泛黄宣纸/羊皮纸质感（CSS gradient + noise 或 PCG 生成底纹）
+  - 纹理层：`Konva.Image` 加载拓片切片，`globalCompositeOperation='multiply'` + `filters.Blur/Contrast/Hue` 动态差异化
+  - 按武将属性（文/武）切换基础拓片图
+- **版权护城河**：中国古代文物图案已进入公共领域，无版权保护期
+
+#### 方案 C — 程序化拼图（五官层，2D 捏脸算法）
+
+- **拆解素材库**（自绘或开源无版权素材，不入库不入 git）：
+  - 5 种脸型（甲/由/申/国/风字脸）
+  - 10 种汉代冠冕/发髻（平天冠/进贤冠/武冠/帻巾/帢帽）
+  - 10 种胡须（虬髯/美髯/八字胡/山羊胡）
+  - 10 种眼神/眉毛
+- **种子算法**：`getAvatarGene(officerId)` 用武将 ID 哈希派生固定 `AvatarGene`，1000+ 武将各不相同
+- **重点人物手工指定**（不靠哈希）：关羽=美髯+丹凤眼+卧蚕眉；曹操=细眼+短髯；吕布=虬髯+猛将眉
+- **渲染**：`Konva.Image` 绝对定位叠层 或 Canvas 2D `ctx.drawImage()`
+
+#### 方案 B — 官职印信简册（文字层，考据感拉满）
+
+- **三段式文字层**：
+  - 上方：籍贯与氏族（"琅琊诸葛氏"、"河东关氏"、"五原郡吕氏"）
+  - 中央：当前官职/爵位的汉代篆书印章（"荡寇将军"、"荆州刺史"）
+  - 印绶颜色：按汉制官品（紫绶/青绶/墨绶/黄绶）
+- **背景**：核心属性衬底（统帅高→青铜兵符纹，智力高→竹简墨迹）
+- **玩家心理**：对史料核心爱好者，"五原郡吕布，字奉先"放在古朴木简上 + 符合汉制的印绶颜色，比来路不明的立绘更高级
+- **数据动态**：官职印随任命变化（与 `Officer.position` 联动），印绶颜色随爵位变化（与 `NobilityRank` 联动）
+
+#### 组合方案 A+C+B 渲染流程
+
+```
+Konva.Group（武将头像容器 120×150）
+  ├─ Layer 0  宣纸背景（PCG 噪声 / 单张底纹）
+  ├─ Layer A  拓片切片（按 generalType 切换，multiply 混合，hue-rotate 差异化）
+  ├─ Layer C  五官拼图（5 脸型 + 10 冠冕 + 10 胡须 + 10 眉眼，按 avatarGene 叠层）
+  ├─ Layer B-上  氏族简册文字（隶书/篆书，竹简纹理背景）
+  ├─ Layer B-中  官职篆印（朱砂红 rgba(166,25,25,0.85) + 篆书）
+  └─ Layer B-下  印绶色条（紫/青/墨/黄，按 NobilityRank）
+```
+
+### §11.3 字体白名单
+
+| 类别 | 允许 | 禁止 |
+|---|---|---|
+| 系统字体 | ~~SimSun（华文宋体）/ STKaiti（华文楷体）~~ | — |
+| 开源字体 | 思源宋体（Source Han Serif / Noto Serif CJK SC，SIL OFL 1.1）/ 马善政体（Ma Shan Zheng，SIL OFL 1.1，Google Fonts 开源） | — |
+| 商业字库 | — | **方正系 / 汉仪系 / 其他未授权商业字库**（打包即侵权） |
+
+**说明**：Session 102 起，字体白名单**升级为"工程资产闭环"模式**——不再依赖宿主系统字体
+（SimSun/STKaiti 在 Linux 极简发行版不存在 → 豆腐块），改为 woff2 本地打包 + `@font-face` 声明
+工程内部别名 `HanDynastySerif` / `HanDynastySeal`。详见 §11.7 与 `client/public/fonts/README.md`。
+
+**落地状态**（Session 102 实装）：
+- `client/public/fonts/` 目录就位（**3 个 woff2 文件已实际下载，共 ~7MB**，不入 git 由 `.gitignore` 排除）
+- `client/src/styles/fonts.css` `@font-face` 声明 `HanDynastySerif`（思源宋体 SC）/ `HanDynastySeal`（马善政体 Ma Shan Zheng）
+- `client/src/utils/fontBarrier.ts` Canvas 渲染前阻塞握手
+- `client/src/App.tsx` `isEngineReady` 屏障，字体未加载完拒绝渲染 Canvas
+- `MapCanvas.tsx` / `BattleView.tsx` 所有 `<Text>` 节点补 `fontFamily="HanDynastySerif"`
+- `.editorconfig` / `.gitattributes` / `.github/workflows/ci.yml` 编码门禁就位
+- `CONTRIBUTING.md` 跨平台字体铁律条款就位
+
+### §11.4 禁止清单
+
+- **商业字库**：方正/汉仪等未授权字体打包入库即侵权
+- **现代立绘约稿**：1000+ 武将约稿成本 20 万起，且侵权风险极高
+- **借鉴知名三国游戏构图**：不小心借鉴某款知名三国游戏的构图即收律师函
+- **二次元萌娘 / 页游大翅膀风**：与硬核史料定位完全冲突
+- **商业音效库未授权素材**：音效应优先原生 Web Audio API 程序化合成（详见 `07-ui-design.md` §11.2）
+
+### §11.5 史料文字引用免责
+
+- 《三国志》《后汉书》《资治通鉴》+裴注等历史文献属全人类共同文化遗产，不受版权法保护
+- 游戏内可直接大段引用陈寿评曰、裴松之注、范晔论赞，100% 合法
+- 引用时标注出处（如"——《三国志·魏书·武帝纪》"），增强考据感
+
+### §11.6 头像数据落库
+
+- `officers.json` 新增 `avatarGene: AvatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存，职责分离）
+  - `appearance`：战斗演出几何造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm），服务 MeleeStage/DuelStage
+  - `avatarGene`：头像底图基因（scheme/baseRubbing/faceType/hairType/beardType/eyeType/sealText/clanTitle/officeSeal/ribbonColor），服务 OfficerRosterPanel/OfficerDetail/派系面板
+- 0-A 30 武将：手工填差异化（猛将/主公/文官各不同）
+- 0-B 1000+ 武将：脚本按 officer.id 哈希派生 + 重点人物人工校对
+- 字段定义详见 `03-data-models.md` §21.2、真源 `08-data-dictionary.md` `OfficerStatic.avatarGene`
+
+### §11.7 跨平台字体防御与 Linux 适配（Session 102 实装）
+
+> 详见 `docs/15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9、`client/public/fonts/README.md`、`CONTRIBUTING.md` 跨平台字体铁律条款。
+
+#### §11.7.1 字体资产闭环（资产 Anti-Leakage）
+
+**绝对禁止**在任何 CSS / SASS / Canvas / Konva 代码中引用宿主系统预装字体
+（`"微软雅黑"` / `"Arial"` / `"华文行楷"` / `"PingFang SC"` 等）。
+Linux 极简发行版（Arch）可能无 CJK 字体 → Canvas 城市名直接 `□□□`（豆腐块）。
+
+**必须强制**执行"字体随工程分发"原则：
+- 仅允许使用 `client/public/fonts/` 目录中的开源免版权 `.woff2` 字体（**3 文件已实际就位**：思源宋体 SC Regular/Bold + 马善政体）
+- `@font-face` 声明**完全自定义、绝不与宿主系统重名**的工程内部别名
+  - `HanDynastySerif`（思源宋体 SC，SIL OFL 1.1）—— 正文 / 古籍
+  - `HanDynastySeal`（马善政体 Ma Shan Zheng，SIL OFL 1.1，Google Fonts 开源）—— 官印 / 篆书 / 大标题
+  - 说明：原计划用沐瑶软笔体，未找到可确认授权的稳定 woff2 源，改用马善政体——授权明确、CDN 稳定、毛笔楷书风格接近印章/篆书需求；文件名保留 `MuYaoSoftBrush.woff2` 维持工程内部别名稳定
+- `font-display: block` 强行阻塞渲染，防 Windows/Mac 启动闪烁替代字体
+- woff2 文件**不入 git**（`.gitignore` 排除 `*.woff2`），开发者按 `client/public/fonts/README.md` 下载或本地复用已就位文件
+
+#### §11.7.2 Canvas 渲染屏障（Font Loading Barrier）
+
+Canvas 绘文字不经过 DOM 树，直接读字形数据，不可信任 DOM 异步加载。必须在游戏初始化阶段建立阻塞屏障：
+- `client/src/utils/fontBarrier.ts` `waitForGameFonts()` 用 `document.fonts.load('12px HanDynastySerif')` 异步阻塞
+- `client/src/App.tsx` `isEngineReady` 屏障，字体未加载完拒绝渲染 Konva Stage
+- 只有 `Promise.all` 明确返回加载成功后才放行第一帧渲染，防画错字体永久不刷新
+
+Konva `<Text>` 节点默认 `fontFamily='Arial'`，必须显式补 `fontFamily="HanDynastySerif"`（MapCanvas / BattleView 已全部补齐）。
+
+#### §11.7.3 跨平台协作工程规范
+
+| 规范 | 工具 | 防御 |
+|---|---|---|
+| 文件编码 UTF-8 (no BOM) | `.editorconfig` + GitHub Actions CI 编码门禁 | Windows 协作者 IDE 默认 GBK 提交后 Linux 解析乱码 |
+| 换行符 LF | `.editorconfig` + `.gitattributes` (`eol=lf`) | Windows CRLF 导致 JSON 字段尾部多 `\r`，Zod 校验失败 |
+| 二进制保护 | `.gitattributes` (`*.woff2 binary` 等) | Git 误判字体/图片为文本，行尾转换破坏文件 |
+| JSON 校验 | `pnpm validate-data` (Zod) + CI | 武将/城市数据合法性 |
+| CI 门禁 | `.github/workflows/ci.yml` | PR 自动跑 typecheck/lint/test/validate-data + 编码扫描，不通过拒绝合并 |
+
+#### §11.7.4 Linux UI 适配（P5-07 实装，本轮文档固化）
+
+- **HiDPI / Wayland 缩放**：`client/src/utils/hidpi.ts` 读 `window.devicePixelRatio`，Konva `stage.scale({x:dpr,y:dpr})` + CSS 逻辑大小回缩，防 4K/125% 缩放模糊
+- **XDG 存档**：服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出（Blob 下载），Linux 玩家数据主权 + 跨平台兜底
+- **伪 Terminal 文言战报**：`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排，`[ 旬始 ] 岁在丙子...` 格式，`[ 丰 ]` 绿 / `[ 警 ]` 黄 / `[ 凶 ]` 红
+- **金石黑框组件库**：`StonePanel` / `SealButton` / `ConfirmDialog`，朱砂 `#a61919` + 黑框 `#3e2723` + 宣纸黄 `#fffde7`
+
+实装拆 P5-07a~g 子任务，详见 `docs/09-roadmap.md`。
+
 ---
 
-*文档版本: v1.5 | 最后更新: 2026-07-17（§十 全局原则+禁止列补战法名+战法推荐唯一）*
+*文档版本: v1.7 | 最后更新: 2026-07-18（Session 102 §11.3 字体白名单升级为工程资产闭环 + §11.7 跨平台字体防御与 Linux 适配新增）*

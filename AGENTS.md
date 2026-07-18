@@ -33,6 +33,26 @@
    被误判为对应正式任务已完成，导致依赖它的任务被跳过验收。
 7. **不确定先问；有好提议可告知用户**：实现中遇到设计未定/多种合理方案时，先问用户再选；
    有明确可玩性/架构收益的提议可主动提出，由用户拍板后再改真源文档与代码。
-8. **先系统后细节**：扩充玩法前先对照 `12-system-map.md` 选中一个大系统 ID（S01~S21）；
+8. **先系统后细节**：扩充玩法前先对照 `12-system-map.md` 选中一个大系统 ID（S01~S22）；
    一次会话主攻一个系统（可带最小依赖修补）；禁止并行新开多个大系统；
    新增「并列大系统」须先改 `12-system-map.md` 再写代码。
+9. **美术版权铁律**：美术基调固定为「金石水墨·拓片简册·印信官职」三件套，仅使用公有领域
+   历史文物视觉语言（汉代画像砖/帛画/石刻拓片/竹简/官印/印绶）。详见 `00-dev-constitution.md` §十一。
+   - **禁**：商业字库（方正/汉仪等未授权）、现代立绘约稿、借鉴知名三国游戏构图、
+     二次元萌娘/页游大翅膀风、商业音效库未授权素材
+   - **准**：史书大段引用合法（《三国志》《后汉书》《资治通鉴》+裴注）；Natural Earth 等公有领域地理底图
+   - **字体资产闭环（Session 102 实装）**：禁止引用宿主系统字体（"微软雅黑"/"Arial" 等，Linux 极简发行版
+     无 CJK → 豆腐块 □□□）；必须用 `client/src/styles/fonts.css` 声明的工程内部别名
+     `HanDynastySerif`（思源宋体 SC，SIL OFL 1.1）/ `HanDynastySeal`（马善政体 Ma Shan Zheng，SIL OFL 1.1），
+     woff2 本地打包（`client/public/fonts/`，3 文件已就位 ~7MB），`font-display: block`。
+     详见 `00-dev-constitution.md` §11.3 + §11.7、`client/public/fonts/README.md`、`CONTRIBUTING.md`。
+   - **Canvas 屏障**：`client/src/App.tsx` 必须经 `waitForGameFonts()` 屏障后才渲染 Konva Stage；
+     Konva `<Text>` 必须显式 `fontFamily="HanDynastySerif"`（默认 Arial 跨平台不一致）
+   - **跨平台工程规范**：`.editorconfig` UTF-8 LF / `.gitattributes` `eol=lf` + `*.woff2 binary` /
+     GitHub Actions CI 编码门禁（typecheck/lint/test/validate-data + UTF-8 扫描）
+   - **武将头像三方案**（Phase 5 实装，已定为组合方案 A+C+B）：
+     - **A 拓片印章**（底图层）：汉代画像砖/拓片切片 20~30 张 + 宣纸纹理 + 朱砂姓名印
+     - **C 程序化拼图**（五官层）：5 脸型 × 10 冠冕 × 10 胡须 × 10 眉眼，按武将 ID 哈希派生
+     - **B 官职印信简册**（文字层）：氏族/官职篆印 + 汉制印绶颜色（紫/青/墨/黄绶）
+   - **头像数据落库**：`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存，
+     职责分离），0-A 30 武将手工填差异化 / 0-B 1000+ 武将脚本派生 + 重点人工校对

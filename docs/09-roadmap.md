@@ -65,6 +65,7 @@
 | D-0B-10 | PCG 水墨底图若 0-B 要替换 geo-basemap.png，需重做 MapCanvas 底图层 + 算法参数调优 | 0-B 视觉升级时（可选） |
 | D-0B-11 | BattleState.activeStrategem 字段 + 服务端火计引擎设置该字段 | S20/S21 实装时 |
 | D-0B-12 | S17 L2 水攻/伏兵服务端引擎实装（plot.ts 扩展） | S17 L2 实装时 |
+| D-0B-13 | ✅ Session 102 已实装：字体白名单升级为"工程资产闭环"——`@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体，均 SIL OFL 1.1）+ woff2 本地打包 + FontBarrier + .editorconfig/.gitattributes/CI 编码门禁。**剩余 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 战报 / 金石组件库 / 字重扩展 | P5-07 剩余 UI 适配 |
 
 ---
 
@@ -149,9 +150,14 @@
 | P5-05 | 存档/读档(SQLite) | P0-04 |
 | P5-06 | 多剧本完善 | P0-14 |
 | P5-07 | UI 美化(Tailwind主题+动画) | P1~P4 |
+| P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） | P5-07 |
+| P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出 Blob） | P5-05 |
+| P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
+| P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄） | P5-07 |
+| P5-07e | 工程字体资产闭环补完（woff2 文件入 `client/public/fonts/` + 字重扩展） | P5-07 |
 | P5-08 | Canvas 动画(行军/着火/水流/落石) | P1-03, P3-01 |
 | P5-09 | 音效系统 | P5-07 |
-| P5-10 | 武将头像(占位图→最终版) | P0-06 |
+| P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**，详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘） | P0-06 |
 | P5-11 | 平衡性测试 | P5-01~P5-06 |
 | P5-12 | 性能优化(Canvas缓存/数据懒加载) | P5-09 |
 | P5-13 | 打包构建(生产模式) | P0-05 |
@@ -174,4 +180,4 @@
 
 ---
 
-*文档版本: v1.4 | 2026-07-18 | Session 100 新增 0-B 前置技术债 D-0B-1~12（store 拆分/LOD 拖拽冻结/useMemo/viewport culling/矢量州界/screen 状态机/appearance 全量填写/吕布服务端无双/§35 财政俸禄/PCG 底图替换/activeStrategem 字段/S17 L2 水攻伏兵引擎）*
+*文档版本: v1.6 | 2026-07-18 | Session 102 跨平台字体防御实装（FontBarrier + @font-face + Konva fontFamily + .editorconfig/.gitattributes/CI）+ P5-07a~e 子任务拆分（Linux UI 适配）*

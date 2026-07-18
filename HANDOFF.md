@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 100 完成**（前端体验技术储备：S20/S21 七大方案设计，零代码改动） |
-| 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **21 大**（新增 S20 前端体验 + S21 三级战斗串联） |
-| 代码最新 | **9 兵种** + 全战法数据 + **战法/单挑/暴击反击连击引擎** + **战役层引擎(§12~§17 CampaignArmy/行军/自动战斗/围城/战后结算/CampaignPanel UI)**；包 scope `@leh/`；**本轮无代码改动** |
-| 文档最新 | 本文件 · 10-progress 100 · **12-system-map v4.2（19→21 大系统 + D-0B-1~12 技术债）** · 07/02/05/03/08/09/04 同步 |
-| 本交接用途 | 前端体验技术储备完整闭环；下一优先仍为总军师系统实装 |
-| 玩法下一步 | **总军师系统**（任命/态势/献策/对决） → 设施建造回合化 → 势力特点数据 → AI Army 接入。**S20/S21 前端体验增强实装时机后续排定** |
+| 会话 | **Session 102 完成**（跨平台字体防御实装：S22 首批代码 + 工程规范硬基建） |
+| 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大**（S22 D→S/D 部分实装） |
+| 代码最新 | **9 兵种** + 全战法数据 + **战法/单挑/暴击反击连击引擎** + **战役层引擎** + **跨平台字体防御三件套**（@font-face + FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI）；包 scope `@leh/` |
+| 文档最新 | 本文件 · 10-progress 102 · **12-system-map v4.4（S22 S/D + Session 102）** · AGENTS 核心规则 9 扩展 · 00 §11.3+§11.7 · **15-linux-ui-spec 新建** · 09 P5-07a~e |
+| 本交接用途 | 跨平台字体防御硬基建闭环；下一优先仍为总军师系统实装 |
+| 玩法下一步 | **总军师系统**（任命/态势/献策/对决） → 设施建造回合化 → 势力特点数据 → AI Army 接入。**S22 Linux UI 适配（HiDPI/XDG/伪 Terminal/金石组件库）+ 开源筑巢（武将传记拆分/README 工程师段）留 P5-07a~e；S22 武将头像 A+C+B 留 P5-10a/b/c（Phase 5）** |
 
 ---
 
@@ -59,12 +59,14 @@ pnpm --filter @leh/shared build && pnpm dev
 | S19 | **单挑大会** | **D** | §8.17 独立锦标赛：赛制/押注/称号/叙事/数据结构设计完成，引擎待实现 |
 | S20 | **前端体验** | **D** | Session 100 技术储备方案设计完成（零代码）：W1 endTurn WS 接入+overlay · W2 数字跳动+EventLog 流化 · W3 凸包涂色+FogLayer+tween+PCG 水墨地形 · W4 派系面板+OfficerDetail+内政外交增强（己方武将列表/忠诚度警报/外交雷达 SVG/财政飘字/行政总署三段式）。零新依赖（React+Konva+Zustand+Tailwind+原生 WS+原生 Web Audio 覆盖 90%） |
 | S21 | **三级战斗串联** | **D** | Session 100 技术储备方案设计完成（零代码）：W6 一级大地图演出（军旗 Tween+烽火+攻城弹窗，复用 campaign.ts）· W7 二级战术串联（screen 六态栈+切入渐变+棋子滑行+hex 悬停情报+邻接触发三级）· W8 三级白刃战 MeleeStage（Konva 方阵 30-50 图元+动态缩放+纯战略指令+镜头推进切入+Soldier 类移植）· W9 单挑接入（DuelStage 混合范式）。screen 扩展为六态栈 |
+| S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 沐瑶软笔体，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字体补完。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
 
 ### 关键路径
 
 - 内政 · 出征占城 · 火计（气力≥30）· **战法施放（气力≥energyCost）** · **单挑（气力≥20+相邻·全自动结算）** · **暴击/反击/连击（攻击自动触发）** · 任命 · 家族子女 · EventDialog  
 - **战役层**：编成出征（主将+副将+参谋+Squad）→ 行军（BFS 路径+补给消耗）→ 围城/野战 → 劝降/强攻（自动战斗算法）→ 占城/残兵回流  
 - `pnpm test`（68）· `pnpm validate-data` · `tsx src/scripts/verify-duel.ts`（单挑冒烟）· `tsx src/scripts/verify-crit.ts`（暴击/反击/连击冒烟）· **`tsx src/scripts/verify-campaign.ts`（战役层 57 断言）**
+- **字体首次运行**：3 个 woff2 文件已实际就位 `client/public/fonts/`（思源宋体 SC Regular/Bold + 马善政体，共 ~7MB，不入 git）；启动直接可用
 
 ---
 
@@ -176,6 +178,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 会话 | 交付 |
 |------|------|
 | 100 | **前端体验技术储备**（S20 前端体验 + S21 三级战斗串联 七大方案设计，零代码改动，方案文档化。新增 S20/S21 两大系统 19→21，登记 D-0B-1~12 技术债。零新依赖原则：React+Konva+Zustand+Tailwind+原生 WS+原生 Web Audio 覆盖 90%。DuelStage 混合范式 + HeroCharacter 特殊造型 + 吕布鬼神降临 + PCG 程序化美术 + 计谋三级联动视觉） |
+| 101 | **美术版权铁律入最高准则**（S22 美术基调·金石水墨免版权，零代码改动，方案文档化。`AGENTS.md` 核心规则新增第 9 条 + `00-dev-constitution.md` 新增§十一。新增 S22 大系统 21→22。武将头像组合方案 A+C+B：A 拓片印章底图 + C 程序化拼图五官 + B 官职印信简册文字。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 并存职责分离）。字体白名单（系统+开源，禁方正/汉仪，D-0B-13）。P5-10 改述。实装拆 3 子 Session P5-10a/b/c，Phase 5 排定） |
+| 102 | **跨平台字体防御实装 + bug 修复**（S22 首批代码 + 工程规范硬基建，零游戏逻辑改动。资产闭环：`client/public/fonts/` **3 个 woff2 文件已实际下载就位**（思源宋体 SC Regular/Bold + 马善政体 Ma Shan Zheng，均 SIL OFL 1.1，共 ~7MB，沐瑶软笔体无稳定授权源改用马善政体） + `styles/fonts.css` @font-face 工程内部别名 `HanDynastySerif`/`HanDynastySeal` + `font-display: block` + tailwind 注册 + .gitignore 排除 woff2。Canvas 屏障：`utils/fontBarrier.ts` `waitForGameFonts()` + 4s 超时兜底（防 woff2 缺失永久卡死）+ `App.tsx` `isEngineReady` 屏障 + 失败重试按钮。Konva `<Text>` 全部补 `fontFamily`：MapCanvas 4 处 + BattleView 1 处。工程规范：`.editorconfig` UTF-8 LF + `.gitattributes` `eol=lf`/`*.woff2 binary` + `.github/workflows/ci.yml` 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。文档：00 §11.3 升级+§11.7 新增 + AGENTS 核心规则 9 扩展 + `15-linux-ui-spec.md` 新建 + 09 P5-07a~e + 12 v4.4 + README systems-22 + 文档冲突修正。**bug 修复**：fontBarrier 超时兜底 / index.css @import 规范化（改内联 @font-face）/ FontBarrier 失败重试按钮。验证 typecheck/lint/test 68/validate-data 全过。Linux UI 适配 + 开源筑巢留 P5-07a~e） |
 | 99 | **开源收尾**（免责声明/许可证拆分/截图/CREDITS/SECURITY） |
 | 98 | **战役层引擎最小切片实装**（§12节点·§13 Army编成+行军+补给·§15设施·§16状态机·§17自动战斗算法·CampaignPanel UI·8 API端点·57断言全过·dev实操占城） |
 | 97c | **学派与信仰设计**（04 §38 全量写：7学派/设施/任教/冲突/初始倾向 + 03/06/07/01同步） |
@@ -238,7 +242,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 存档 SQLite | 未做 |
 | **S20 前端体验** | Session 100 技术储备方案完成，实装拆 4 Session（S100~S103），时机后续排定 |
 | **S21 三级战斗串联** | Session 100 技术储备方案完成，实装拆 4 Session（S104~S107），时机后续排定 |
-| **D-0B-1~12 技术债** | 0-B 扩容前必须先清（store 拆分/LOD 拖拽冻结/useMemo/viewport culling/矢量州界/screen 状态机/appearance 全量填写/吕布服务端无双/§35 财政俸禄/PCG 底图替换/activeStrategem 字段/S17 L2 水攻伏兵引擎） |
+| **S22 美术基调·金石水墨免版权** | Session 101 最高准则固化 + 方案设计完成，实装拆 3 子 Session（P5-10a/b/c，Phase 5 排定） |
+| **D-0B-1~13 技术债** | 0-B 扩容前必须先清（store 拆分/LOD 拖拽冻结/useMemo/viewport culling/矢量州界/screen 状态机/appearance+avatarGene 全量填写/吕布服务端无双/§35 财政俸禄/PCG 底图替换/activeStrategem 字段/S17 L2 水攻伏兵引擎/UI 字体白名单扫描） |
 
 ---
 
@@ -248,14 +253,17 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 |------|------|
 | `HANDOFF.md` | 本文件 |
 | `docs/10-progress.md` | 任务表 + 会话日志 |
-| `docs/12-system-map.md` | **21 系统**（v4.2：新增 S20 前端体验 + S21 三级战斗串联 + D-0B-1~12 技术债） |
+| `docs/12-system-map.md` | **22 系统**（v4.3：新增 S22 美术基调·金石水墨免版权 + D-0B-13 字体白名单） |
 | `docs/02-architecture.md` | **v2.0** 架构总图 + 20引擎 + 5战斗子模块 + 数据流 + shared工具链（Session 75 全面重写） |
 | `docs/05-combat-system.md` | §5.4 战法+三级水军 · §5.5 **主副将与参谋编成**+爵位加成 · §七 计策 · §6 暴击反击连击(战场) · §8 单挑经典化设计(§8.1~8.16 核心三角+叙事+**宿命对决详表**) |
-| `docs/08-data-dictionary.md` | **规模真源**（0-A units=9） |
+| `docs/00-dev-constitution.md` | 开发总则（**v1.6 §十一 美术与版权铁律**） |
+| `docs/08-data-dictionary.md` | **规模真源**（0-A units=9；officers `appearance` + `avatarGene` 字段） |
 | `docs/11-context-management.md` | 适性 S~NONE 系数 |
 | `docs/04-game-systems.md` | 规则大全 |
 | `docs/06-api-design.md` | 含 `/battle/fire` + `/battle/ability` |
-| `AGENTS.md` | 0-A：30城/9兵种… |
+| `docs/07-ui-design.md` | UI 设计（**v2.8 §11.6 武将头像三方案 A+C+B**） |
+| `docs/15-linux-ui-spec.md` | **v1.0** Linux UI 与跨平台字体规范（Session 102 新建） |
+| `AGENTS.md` | 0-A：30城/9兵种…；**核心规则 9 美术版权铁律 + 跨平台字体防御三件套** |
 
 ---
 
@@ -274,4 +282,4 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 ---
 
-*Session 100 交接 | 2026-07-18 | 前端体验技术储备（S20 前端体验 + S21 三级战斗串联 七大方案设计，零代码改动，D-0B-1~12 技术债登记） | 用途：总军师系统实装*
+*Session 102 交接 | 2026-07-18 | 跨平台字体防御实装（S22 首批代码：资产闭环 @font-face + Canvas 屏障 FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI 编码门禁。S22 D→S/D。Linux UI 适配 P5-07a~e 留档） | 用途：总军师系统实装*
