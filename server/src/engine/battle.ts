@@ -13,6 +13,7 @@ import {
   type CombatAbilityLevel,
   type DuelState,
   type GameState,
+  type Officer,
   type UnitType,
 } from '@leh/shared';
 import { getUnitByType } from '../data/loader.js';
@@ -83,44 +84,44 @@ export function createBattle(
   const playerOfficer =
     (fromCityId != null
       ? Object.values(state.officers).find(
-          (o) =>
+          (o: Officer) =>
             o.faction === playerFaction &&
             o.status === OfficerStatus.ACTIVE &&
             o.location === fromCityId,
         )
       : undefined) ??
     Object.values(state.officers).find(
-      (o) =>
+      (o: Officer) =>
         o.faction === playerFaction &&
         o.status === OfficerStatus.ACTIVE &&
         o.location === cityId,
     ) ??
     Object.values(state.officers).find(
-      (o) => o.faction === playerFaction && o.status === OfficerStatus.ACTIVE,
+      (o: Officer) => o.faction === playerFaction && o.status === OfficerStatus.ACTIVE,
     ) ??
-    Object.values(state.officers).find((o) => o.faction === playerFaction);
+    Object.values(state.officers).find((o: Officer) => o.faction === playerFaction);
 
   // 优先本城守将；无则用势力内非君主武将（避免无城守将时曹操全国飞守）
   const defenderRulerId = state.factions[defenderFaction]?.rulerId;
   const enemyOfficer =
     Object.values(state.officers).find(
-      (o) =>
+      (o: Officer) =>
         o.faction === defenderFaction &&
         o.status === OfficerStatus.ACTIVE &&
         o.location === cityId &&
         o.id !== playerOfficer?.id,
     ) ??
     Object.values(state.officers).find(
-      (o) =>
+      (o: Officer) =>
         o.faction === defenderFaction &&
         o.status === OfficerStatus.ACTIVE &&
         o.id !== defenderRulerId &&
         o.id !== playerOfficer?.id,
     ) ??
     Object.values(state.officers).find(
-      (o) => o.faction === defenderFaction && o.id !== playerOfficer?.id,
+      (o: Officer) => o.faction === defenderFaction && o.id !== playerOfficer?.id,
     ) ??
-    Object.values(state.officers).find((o) => o.faction !== playerFaction);
+    Object.values(state.officers).find((o: Officer) => o.faction !== playerFaction);
 
   if (!playerOfficer || !enemyOfficer) throw new Error('缺少参战武将');
 
@@ -812,7 +813,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState): BattleStat
   }
 
   const officerStats = Object.fromEntries(
-    Object.values(state.officers).map((o) => [
+    Object.values(state.officers).map((o: Officer) => [
       o.id,
       { war: o.stats.war, leadership: o.stats.leadership, name: o.name },
     ]),
