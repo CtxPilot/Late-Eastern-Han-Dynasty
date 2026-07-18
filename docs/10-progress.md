@@ -2263,6 +2263,25 @@
 - 同步: AGENTS · 00 · 09 · 12 · 15 · 本进度 · HANDOFF · CONTRIBUTING
 - Next: 总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。S22 Linux UI 适配（HiDPI/XDG/伪 Terminal/金石组件库）+ 开源筑巢（武将传记拆分/README 工程师段）留 P5-07a~e。S22 武将头像组合方案 A+C+B 实装拆 3 子 Session（P5-10a/b/c，Phase 5 排定）。
 
+## 2026-07-19 — Session 103（CI typecheck 修复：shared 新环境下类型解析失败）
+
+- Phase: **bug 修复**（零设计改动，仅工程配置修复）
+- 问题: CI 中新环境 `pnpm install` → `pnpm -r typecheck` 时，
+  server typecheck 找不到 `@leh/shared` 模块（TS2307）。
+- 根因: `shared/package.json` 的 `exports.types` 指向 `./dist/index.d.ts`，
+  `dist/` 被 `.gitignore`，CI 全新环境不存在。
+  `pnpm -r typecheck` 按拓扑序先跑 shared（`tsc --noEmit` 不生成 dist），
+  然后 server（`tsc --noEmit`）时无法解析 `@leh/shared` 的类型声明。
+- 修复: shared 的 `typecheck` / `lint` 脚本去掉 `--noEmit`，
+  使 shared typecheck 时同时 emit 出 `dist/` 供下游使用。
+  这是 monorepo 中底层包的标准做法（被引用的包必须先 build 出 .d.ts，
+  上层才能解析类型）。
+- 文件变更: `shared/package.json`（2 行）
+- 验证: 模拟 CI 全新环境（删 dist → `pnpm install --frozen-lockfile` →
+  `pnpm -r typecheck`/`pnpm -r lint`/`pnpm test`/`pnpm validate-data`）全部通过。
+- 文档同步: 本进度 · HANDOFF
+- Next: 同 Session 102 Next
+
 ---
 
 *文档版本: v6.3 | 2026-07-18 | Session 102 跨平台字体防御实装 + bug 修复（fontBarrier 超时兜底 / index.css @import 规范 / FontBarrier 失败重试按钮）+ 文档冲突修正*

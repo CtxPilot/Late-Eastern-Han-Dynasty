@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 102 完成**（跨平台字体防御实装：S22 首批代码 + 工程规范硬基建） |
-| 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大**（S22 D→S/D 部分实装） |
+| 会话 | **Session 103 完成**（CI typecheck 修复：shared 新环境下类型解析失败） |
+| 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **9 兵种** + 全战法数据 + **战法/单挑/暴击反击连击引擎** + **战役层引擎** + **跨平台字体防御三件套**（@font-face + FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI）；包 scope `@leh/` |
-| 文档最新 | 本文件 · 10-progress 102 · **12-system-map v4.4（S22 S/D + Session 102）** · AGENTS 核心规则 9 扩展 · 00 §11.3+§11.7 · **15-linux-ui-spec 新建** · 09 P5-07a~e |
+| 文档最新 | 本文件 · 10-progress 103 · 12-system-map v4.4 · AGENTS 核心规则 9 · 00 §11.3+§11.7 · 15-linux-ui-spec · 09 P5-07a~e |
 | 本交接用途 | 跨平台字体防御硬基建闭环；下一优先仍为总军师系统实装 |
 | 玩法下一步 | **总军师系统**（任命/态势/献策/对决） → 设施建造回合化 → 势力特点数据 → AI Army 接入。**S22 Linux UI 适配（HiDPI/XDG/伪 Terminal/金石组件库）+ 开源筑巢（武将传记拆分/README 工程师段）留 P5-07a~e；S22 武将头像 A+C+B 留 P5-10a/b/c（Phase 5）** |
 
@@ -180,6 +180,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 100 | **前端体验技术储备**（S20 前端体验 + S21 三级战斗串联 七大方案设计，零代码改动，方案文档化。新增 S20/S21 两大系统 19→21，登记 D-0B-1~12 技术债。零新依赖原则：React+Konva+Zustand+Tailwind+原生 WS+原生 Web Audio 覆盖 90%。DuelStage 混合范式 + HeroCharacter 特殊造型 + 吕布鬼神降临 + PCG 程序化美术 + 计谋三级联动视觉） |
 | 101 | **美术版权铁律入最高准则**（S22 美术基调·金石水墨免版权，零代码改动，方案文档化。`AGENTS.md` 核心规则新增第 9 条 + `00-dev-constitution.md` 新增§十一。新增 S22 大系统 21→22。武将头像组合方案 A+C+B：A 拓片印章底图 + C 程序化拼图五官 + B 官职印信简册文字。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 并存职责分离）。字体白名单（系统+开源，禁方正/汉仪，D-0B-13）。P5-10 改述。实装拆 3 子 Session P5-10a/b/c，Phase 5 排定） |
 | 102 | **跨平台字体防御实装 + bug 修复**（S22 首批代码 + 工程规范硬基建，零游戏逻辑改动。资产闭环：`client/public/fonts/` **3 个 woff2 文件已实际下载就位**（思源宋体 SC Regular/Bold + 马善政体 Ma Shan Zheng，均 SIL OFL 1.1，共 ~7MB，沐瑶软笔体无稳定授权源改用马善政体） + `styles/fonts.css` @font-face 工程内部别名 `HanDynastySerif`/`HanDynastySeal` + `font-display: block` + tailwind 注册 + .gitignore 排除 woff2。Canvas 屏障：`utils/fontBarrier.ts` `waitForGameFonts()` + 4s 超时兜底（防 woff2 缺失永久卡死）+ `App.tsx` `isEngineReady` 屏障 + 失败重试按钮。Konva `<Text>` 全部补 `fontFamily`：MapCanvas 4 处 + BattleView 1 处。工程规范：`.editorconfig` UTF-8 LF + `.gitattributes` `eol=lf`/`*.woff2 binary` + `.github/workflows/ci.yml` 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。文档：00 §11.3 升级+§11.7 新增 + AGENTS 核心规则 9 扩展 + `15-linux-ui-spec.md` 新建 + 09 P5-07a~e + 12 v4.4 + README systems-22 + 文档冲突修正。**bug 修复**：fontBarrier 超时兜底 / index.css @import 规范化（改内联 @font-face）/ FontBarrier 失败重试按钮。验证 typecheck/lint/test 68/validate-data 全过。Linux UI 适配 + 开源筑巢留 P5-07a~e） |
+| 103 | **CI typecheck 修复**（全新环境 `pnpm install` → `pnpm -r typecheck` 时 server 找不到 `@leh/shared` 类型。根因：shared 的 `exports.types` 指向 `dist/`，CI 无 dist；shared typecheck 用 `--noEmit` 不生成 dist。修复：shared 的 typecheck/lint 脚本去掉 `--noEmit`，使底层包 emit 出 `.d.ts` 供下游解析。模拟 CI 验证全过） |
 | 99 | **开源收尾**（免责声明/许可证拆分/截图/CREDITS/SECURITY） |
 | 98 | **战役层引擎最小切片实装**（§12节点·§13 Army编成+行军+补给·§15设施·§16状态机·§17自动战斗算法·CampaignPanel UI·8 API端点·57断言全过·dev实操占城） |
 | 97c | **学派与信仰设计**（04 §38 全量写：7学派/设施/任教/冲突/初始倾向 + 03/06/07/01同步） |
@@ -282,4 +283,4 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 ---
 
-*Session 102 交接 | 2026-07-18 | 跨平台字体防御实装（S22 首批代码：资产闭环 @font-face + Canvas 屏障 FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI 编码门禁。S22 D→S/D。Linux UI 适配 P5-07a~e 留档） | 用途：总军师系统实装*
+*Session 103 交接 | 2026-07-19 | CI typecheck 修复：shared/package.json typecheck/lint 去掉 --noEmit 使底层包 emit 出 dist 供上游类型解析 | 用途：总军师系统实装*
