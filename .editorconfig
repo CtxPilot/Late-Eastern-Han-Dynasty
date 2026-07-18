@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 CtxPilot
+#
+# EditorConfig — 跨平台协作编辑器行为锁死
+# 详见 docs/00-dev-constitution.md §11.7、AGENTS.md 核心规则 9
+#
+# 防御：
+# - Windows 协作者 IDE 默认 GBK / CRLF 提交后 Linux 解析乱码
+# - Mac 协作者 IDE 默认 UTF-8 / LF 但部分插件可能改编码
+# - 统一 UTF-8 (no BOM) + LF，保证三平台文本资产一致
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# Markdown 保留尾部空格（两空格强制换行）
+[*.md]
+trim_trailing_whitespace = false
+
+# Python 脚本用 4 空格
+[*.py]
+indent_size = 4
+
+# YAML 用 2 空格
+[*.{yml,yaml}]
+indent_size = 2
+
+# Shell 脚本用 2 空格
+[*.sh]
+indent_size = 2

@@ -1,0 +1,45 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 CtxPilot */
+
+/**
+ * 工程字体资产闭环（跨平台字体防御铁律）
+ *
+ * 详见 docs/00-dev-constitution.md §11.3、AGENTS.md 核心规则 9、
+ *      CONTRIBUTING.md 跨平台字体铁律条款、client/public/fonts/README.md
+ *
+ * 铁律：
+ * - 禁止引用宿主系统字体（"微软雅黑" / "Arial" / "华文行楷" 等）
+ * - 必须使用本文件声明的工程内部别名 HanDynastySerif / HanDynastySeal
+ * - font-display: block 阻塞渲染，防 Win/Mac 启动闪烁替代字体
+ * - 字体文件不入 git，由开发者按 client/public/fonts/README.md 手动放入
+ */
+
+/* 正文 / 古籍史料（思源宋体 SC，SIL OFL 1.1） */
+@font-face {
+  font-family: 'HanDynastySerif'; /* 完全自定义内部别名，绝不与宿主系统重名 */
+  src: url('/fonts/NotoSerifCJKsc-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block; /* 强行阻塞渲染，未加载完不画字，防乱码/豆腐块 */
+}
+
+/* 标题加粗 */
+@font-face {
+  font-family: 'HanDynastySerif';
+  src: url('/fonts/NotoSerifCJKsc-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: block;
+}
+
+/* 官印 / 篆书 / 大标题（马善政体 Ma Shan Zheng，SIL OFL 1.1，Google Fonts 开源）
+ * 说明：原计划用沐瑶软笔体，未找到可确认授权的稳定 woff2 源，改用马善政体——
+ *       SIL OFL 1.1 授权明确、CDN 稳定、毛笔楷书风格接近印章/篆书需求。
+ *       文件名保留 MuYaoSoftBrush.woff2 维持工程内部别名稳定。 */
+@font-face {
+  font-family: 'HanDynastySeal';
+  src: url('/fonts/MuYaoSoftBrush.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}

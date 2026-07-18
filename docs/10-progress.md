@@ -2159,4 +2159,110 @@
 
 ---
 
-*文档版本: v6.0 | 2026-07-18 | Session 100 前端体验技术储备（S20 前端体验 + S21 三级战斗串联 + 单挑演出层 + HeroCharacter 特殊造型 + 吕布鬼神降临 + 内政外交前端增强 + PCG 程序化美术 + 计谋三级联动视觉。零代码改动，方案文档化，D-0B-1~12 技术债登记）*
+## 2026-07-18 — Session 101（美术版权铁律入最高准则 — S22 美术基调·金石水墨免版权，零代码改动）
+
+- Phase: **纯文档·最高准则固化**（Plan Mode → Build Mode 只落地文档，不改任何代码）
+- 背景: 独立开发 + 1000~1200+ 武将 + 彻底免版权死命令。约稿立绘成本 20 万起 + 极高侵权风险（借鉴知名三国游戏构图即收律师函），不可行。玩家群体审美偏好是历史厚重感/古朴感/考据感，非二次元萌娘/页游大翅膀。
+- 核心变更（最高准则升级 + 22 大系统 + 头像方案落库）:
+  1. **`AGENTS.md` 核心规则新增第 9 条「美术版权铁律」**（与规则 1~8 同级，每次会话/agent 必读）：
+     - 基调：**金石水墨·拓片简册·印信官职**三件套，仅用公有领域历史文物视觉语言
+     - 禁：商业字库（方正/汉仪）/现代立绘约稿/借鉴知名三国游戏构图/二次元页游风/商业音效未授权
+     - 准：史书大段引用合法（《三国志》《后汉书》《资治通鉴》+裴注）；字体限系统字体+开源思源宋体+字魂织造书体；Natural Earth 公有领域底图
+     - 武将头像三方案：A 拓片印章（底图）+ C 程序化拼图（五官）+ B 官职印信简册（文字），已定为组合方案 A+C+B
+     - 头像数据落库：`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）
+     - **【Session 102 修正】**：字体白名单升级为"工程资产闭环"，不再依赖宿主系统字体（SimSun/STKaiti/字魂织造书体在 Linux 极简发行版不存在 → 豆腐块），改用 woff2 本地打包 + `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体，均 SIL OFL 1.1）
+  2. **`docs/00-dev-constitution.md` 新增§十一「美术与版权铁律」**（与§六/§九/§十同级）：
+     - §11.1 公有领域基调（画像砖/帛画/石刻拓片/竹简/官印/印绶 + Natural Earth）
+     - §11.2 武将头像三方案（A 拓片底图 / C 程序化拼图 / B 官职印信 + 组合方案渲染流程）
+     - §11.3 字体白名单（系统 SimSun/STKaiti + 开源思源宋体/字魂织造书体，禁方正/汉仪，D-0B-13）**【Session 102 修正：已升级为工程资产闭环，不再依赖宿主系统字体，改用 woff2 本地打包 + @font-face 工程内部别名 HanDynastySerif/HanDynastySeal】**
+     - §11.4 禁止清单（商业字库/约稿立绘/借鉴构图/二次元页游风/商业音效未授权）
+     - §11.5 史料文字引用免责（《三国志》《后汉书》《资治通鉴》+裴注不受版权法保护）
+     - §11.6 头像数据落库（`avatarGene` 与 `appearance` 并存，0-A 手工/0-B 脚本派生+重点校对）
+     - §六第 64 行「武将头像」措辞改免版权路径（"占位图→最终版" → "金石水墨·免版权组合方案 A+C+B"）
+  3. **新增 S22 美术基调·金石水墨免版权大系统**（21→22，`docs/12-system-map.md` §二 B 组）：
+     - 组合方案 A+C+B：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）
+     - `avatarGene` 字段落库（与 Session 100 `appearance` 战斗造型字段并存职责分离）
+     - 实装拆 3 子 Session（P5-10a 拓片底图层 / P5-10b 五官拼图层 / P5-10c 官职印信层）
+  4. **数据真源同步**:
+     - `docs/08-data-dictionary.md`：`OfficerStatic` 新增 `avatarGene?` 字段行 + 子字段表（11 字段：scheme/baseRubbing/faceType/hairType/beardType/eyeType/sealText/royalSeal/clanTitle/officeSeal/ribbonColor）+ 0-A 30 武将填写规则 + 关羽/荀彧示例
+     - `docs/03-data-models.md` §21 新增 §21.1-B `AvatarGene` 类型定义（与 §21.1 `SpecialAppearance` 并存职责分离）+ 关羽/吕布/荀彧填写示例
+  5. **文档同步**:
+     - `docs/01-overview.md` §二设计理念新增「美术基调」行 + 22 大系统同步
+     - `docs/07-ui-design.md` 新增 §11.6 武将头像三方案（三层职责表 + A/B/C 技术规格 + 组合渲染流程 + 数据落库 + 实装路线）
+     - `docs/09-roadmap.md` P5-10 改述为「金石水墨·免版权组合方案 A+C+B」+ 新增 D-0B-13（UI 字体白名单扫描留 P5-07）
+     - `docs/12-system-map.md`：§二新增 S22 + §五 Session 101 记录 + §六技术债表 D-0B-7 更新（含 avatarGene）+ D-0B-13 新增
+- 决策清单（Q1~Q4 拍板）:
+  - Q1 最高准则落点 = (a) 双写（`AGENTS.md` 核心规则 9 + `00-dev-constitution.md` §十一）
+  - Q2 三方案优先级 = (c) 组合方案 A+C+B（A 底图 + C 五官 + B 文字层，三层职责互补）
+  - Q3 与 `appearance` 关系 = (a) 新增 `avatarGene` 并存（头像 + 战斗造型职责分离）
+  - Q4 字体白名单 = (a) 写入准则 + 替换留 P5-07（固化红线不扩散本轮改动，D-0B-13 登记）**【Session 102 修正：实际改为本轮即实装工程资产闭环，D-0B-13 已实装，剩余 P5-07a~e】**
+- 关键架构发现:
+  - 现有路线已是"零美术资源 + 纯代码生成"骨架（Session 100 PCG 程序化美术 + appearance 纯几何占位），与用户方针同源
+  - Session 100 `appearance` 字段只覆盖战斗演出几何造型，**不覆盖头像底图方案 A/B/C**，本轮 `avatarGene` 补齐这一缺口
+  - 1000+ 武将若约稿立绘成本 20 万起（200 元×1000+），且借鉴知名三国游戏构图即收律师函，组合方案 A+C+B 零成本零侵权
+  - 玩家审美偏好与硬核史料定位完全契合（金石水墨·拓片·印绶 > 二次元萌娘·页游大翅膀）
+- 文件处理:
+  - 本轮零代码改动，无新增外部素材（拓片采集留 Phase 5 实装时进行，公有领域不入库不入 git）
+- 同步: AGENTS · 00 · 01 · 03 · 07 · 08 · 09 · 12 · 本进度 · HANDOFF
+- Next: 总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。S22 美术基调实装拆 3 子 Session（P5-10a/b/c，Phase 5 排定），S20/S21 前端体验增强实装时机后续排定。
+
+---
+
+## 2026-07-18 — Session 102（跨平台字体防御实装 — S22 首批代码 + 工程规范硬基建）
+
+- Phase: **代码实装 + 工程基建 + 文档固化**（Build Mode，P0+P1 全部实装，零游戏逻辑改动）
+- 背景: Linux/Windows/macOS 三平台开发者协作。Linux 极简发行版无 CJK 字体 → Canvas 城市名豆腐块 □□□；Windows ClearType/GBK 编码惯性；macOS Retina/CoreText 渲染差异。Session 101 §11.3 字体白名单仅文档，零落地代码，跨平台必然乱码。
+- 实装内容（跨平台字体防御三件套 + 工程规范）:
+  1. **资产闭环（Asset Anti-Leakage）**:
+     - `client/public/fonts/` 新建目录 + `README.md`（**3 个 woff2 文件已实际下载就位，共 ~7MB**，`.gitignore` 排除不入 git）
+     - 字体文件：思源宋体 SC Regular/Bold（`@fontsource/noto-serif-sc` 镜像，SIL OFL 1.1）+ 马善政体 Ma Shan Zheng（`@fontsource/ma-shan-zheng` 镜像，SIL OFL 1.1，替代原计划沐瑶软笔体——未找到可确认授权稳定 woff2 源）
+     - `.gitignore` 追加 `*.woff2 *.woff *.ttf *.otf` 排除规则
+     - `client/src/styles/fonts.css` 新建：`@font-face` 声明工程内部别名 `HanDynastySerif`（normal+bold）/ `HanDynastySeal`，`font-display: block` 强行阻塞渲染防闪烁
+     - `client/src/index.css` 追加 `@import './styles/fonts.css'` + 全局 `font-family: 'HanDynastySerif', serif !important`
+     - `client/tailwind.config.js` `theme.extend.fontFamily` 注册 `song` / `seal`
+  2. **Canvas 渲染屏障（Font Loading Barrier）**:
+     - `client/src/utils/fontBarrier.ts` 新建：`waitForGameFonts()` 用 `document.fonts.load('12px HanDynastySerif')` + `Promise.all` 阻塞等待字形写入内存
+     - `client/src/App.tsx` 重构：`isEngineReady` 状态屏障，字体未加载完显示"正在加载工程字体…"占位，加载失败显示错误提示 + woff2 文件放置说明；字体就绪后才调 `boot()` 渲染 Konva Stage
+  3. **Konva `<Text>` 全部补 `fontFamily`**（Konva 默认 Arial 跨平台不一致）:
+     - `client/src/components/map/MapCanvas.tsx` 4 处：州名 / "己"徽章 / 城市名 / 副标 → `fontFamily="HanDynastySerif"`
+     - `client/src/components/battle/BattleView.tsx` 1 处：主将姓 → `fontFamily="HanDynastySerif"`
+  4. **跨平台协作工程规范**:
+     - `.editorconfig` 新建：`charset=utf-8` / `end_of_line=lf` / `insert_final_newline=true` / `indent_style=space` / `indent_size=2` + Markdown/Python/YAML/Shell 特例
+     - `.gitattributes` 新建：`* text=auto eol=lf` + 文本资产强制 LF + 二进制资产（woff2/woff/ttf/otf/png/jpg 等）标 binary
+     - `.github/workflows/ci.yml` 新建：push/PR 触发，跑 typecheck/lint/test/validate-data + 编码门禁（`file --mime-encoding` 扫 server/src/data + shared/data + docs/biographies 的 JSON/MD/TS，非 UTF-8 直接 fail）
+     - `CONTRIBUTING.md` 新增「跨平台字体铁律」章节：禁宿主系统字体 / 必须用工程内部别名 / FontBarrier / 编码规范 / CI 门禁 / woff2 不入 git
+  5. **文档同步**:
+     - `docs/00-dev-constitution.md`：§11.3 字体白名单升级为"工程资产闭环"模式（不再依赖宿主系统字体）+ 落地状态 + §11.7 跨平台字体防御与 Linux 适配新增（§11.7.1 资产闭环 / §11.7.2 Canvas 屏障 / §11.7.3 工程规范 / §11.7.4 Linux UI 适配）
+     - `AGENTS.md` 核心规则 9 扩展：字体资产闭环 / Canvas 屏障 / 跨平台工程规范三件套
+     - `docs/15-linux-ui-spec.md` 新建：Linux UI 与跨平台字体规范完整文档（资产闭环/FontBarrier/工程规范 + P5-07a~e Linux UI 适配留档 + 开源筑巢留档）
+     - `docs/12-system-map.md`：S22 D→S/D（壳+部分实装）+ Session 102 记录 + v4.4
+     - `docs/09-roadmap.md`：P5-07 拆子任务 P5-07a~e（HiDPI/XDG/伪 Terminal/金石组件/字体补完）
+- 决策清单（Q-A~Q-C 我决策）:
+  - Q-A 实装范围 = (a) P0+P1 全部实装（约 90 min，跨平台字体防御硬基建）
+  - Q-B woff2 来源 = 我直接下载（思源宋体 SC 经 @fontsource/noto-serif-sc 镜像，马善政体经 @fontsource/ma-shan-zheng 镜像，授权均 SIL OFL 1.1；沐瑶软笔体未找到可确认授权源，改用马善政体替代）
+  - Q-C Linux UI + 筑巢 = 留 P5-07 文档固化（本轮纯字体防御，不扩散到游戏逻辑）
+- 关键架构发现:
+  - Session 101 §11.3 字体白名单仅文档，`client/src/` 零落地代码，Konva 默认 `fontFamily='Arial'` 跨平台必然乱码
+  - `client/src/App.tsx` 原本 `boot()` 直接渲染 Konva Stage，无 FontBarrier，Linux 极简发行版首屏即豆腐块
+  - 全库零 `.editorconfig` / `.gitattributes` / `.github/workflows/`，Windows 协作者 IDE 默认 GBK+CRLF 提交后 Linux 解析乱码
+  - Konva `<Text>` 默认 `fontFamily='Arial'` 是隐蔽坑：即便 DOM 全局 `font-family` 锁死，Canvas 不继承 DOM 字体
+- 自验证:
+  - `pnpm typecheck` ✅ 3/3 包全过（shared/server/client）
+  - `pnpm lint` ✅ 3/3 包全过
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅ 全过（units=9）
+  - 字体 woff2 未放入时 FontBarrier 会阻塞显示提示（故意的防御行为，按 README 放入后正常启动）
+- 文件处理:
+  - 新增：`client/public/fonts/README.md` / `client/src/styles/fonts.css` / `client/src/utils/fontBarrier.ts` / `.editorconfig` / `.gitattributes` / `.github/workflows/ci.yml` / `docs/15-linux-ui-spec.md`
+  - 修改：`client/src/App.tsx` / `client/src/index.css` / `client/tailwind.config.js` / `client/src/components/map/MapCanvas.tsx` / `client/src/components/battle/BattleView.tsx` / `.gitignore` / `CONTRIBUTING.md` / `AGENTS.md` / `docs/00-dev-constitution.md` / `docs/09-roadmap.md` / `docs/12-system-map.md`
+- **代码审查与 bug 修复（commit 前）**:
+  - **bug1 修复**：`fontBarrier.ts` `document.fonts.load()` 在 woff2 缺失时可能永不 resolve 也永不 reject（FontFace API 网络请求失败前一直 pending），导致游戏永远卡在加载屏。加 4s 超时兜底（与 `font-display: block` 的 3s 回退期对齐 + 1s 余量），超时后仍放行渲染让浏览器 fallback 字体生效（优于永久卡死）。新增 `withTimeout()` helper。
+  - **bug5 修复**：`client/src/index.css` 的 `@import './styles/fonts.css'` 在 `@tailwind` 之后违反 CSS 规范（`@import` 必须在所有其他规则之前），会被浏览器忽略导致 @font-face 不生效。改为直接内联 @font-face 到 index.css，fonts.css 保留为参考文档不再被 import。
+  - **bug10 修复**：`App.tsx` FontBarrier 失败路径（catch 分支）只显示提示文字无重试按钮，玩家会卡死。补"重试加载字体"按钮 + `fontRetryNonce` 状态触发 useEffect 重跑。
+  - **无 bug 确认**：MapCanvas 4 处 + BattleView 1 处 Konva `<Text>` 全部补齐 `fontFamily="HanDynastySerif"`，无遗漏；StrictMode 双跑下 `cancelled` 防御正确（boot 只触发一次）；CI YAML 语法验证通过；.editorconfig 语法验证通过；tailwind fontFamily 注册正确。
+- 同步: AGENTS · 00 · 09 · 12 · 15 · 本进度 · HANDOFF · CONTRIBUTING
+- Next: 总军师系统实装（任命/态势/献策/对决）→ 设施建造回合化 → 势力特点数据 → AI Army 接入。S22 Linux UI 适配（HiDPI/XDG/伪 Terminal/金石组件库）+ 开源筑巢（武将传记拆分/README 工程师段）留 P5-07a~e。S22 武将头像组合方案 A+C+B 实装拆 3 子 Session（P5-10a/b/c，Phase 5 排定）。
+
+---
+
+*文档版本: v6.3 | 2026-07-18 | Session 102 跨平台字体防御实装 + bug 修复（fontBarrier 超时兜底 / index.css @import 规范 / FontBarrier 失败重试按钮）+ 文档冲突修正*

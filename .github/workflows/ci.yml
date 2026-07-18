@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 CtxPilot
+#
+# CI — 跨平台协作自动化门禁
+# 详见 docs/00-dev-constitution.md §11.7、AGENTS.md 核心规则 9、CONTRIBUTING.md
+#
+# 拦截：
+# - 类型错误 / Lint 失败 / 测试失败 / Zod 数据校验失败
+# - 非 UTF-8 编码的 JSON / Markdown 文本资产（防 Windows GBK 乱码入库）
+# - 武将传记 / 静态数据字符集异常
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Zod data validation
+        run: pnpm validate-data
+
+      - name: 编码门禁（UTF-8 no BOM）
+        run: |
+          set -e
+          fail=0
+          for f in $(find server/src/data shared/data docs/biographies \
+                     -type f \( -name '*.json' -o -name '*.md' -o -name '*.ts' \) 2>/dev/null); do
+            enc=$(file --mime-encoding "$f" | awk -F': ' '{print $2}' | tr -d ' ')
+            if [ "$enc" != "utf-8" ] && [ "$enc" != "us-ascii" ]; then
+              echo "FAIL: $f 编码为 [$enc]，必须 UTF-8 (no BOM)"
+              fail=1
+            fi
+          done
+          if [ "$fail" = "1" ]; then exit 1; fi
+          echo "✔ 所有文本资产编码合规（UTF-8 no BOM）"

@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 CtxPilot
+#
+# GitAttributes — Git 跨平台换行符与二进制强制规则
+# 详见 docs/00-dev-constitution.md §11.7、AGENTS.md 核心规则 9
+#
+# 防御：
+# - Git 自动转换 CRLF 导致 JSON 字段尾部多 \r，Zod 校验失败
+# - 二进制字体/图片被误判为文本，行尾转换破坏文件
+# - 配合 .editorconfig 强制 LF，确保三平台一致
+* text=auto eol=lf
+
+# 文本资产：强制 LF
+*.json text eol=lf
+*.md text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.editorconfig text eol=lf
+
+# 二进制资产：禁止转换
+*.woff2 binary
+*.woff binary
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary

@@ -160,6 +160,7 @@ export function BattleView() {
                       />
                       <Text
                         text={game.officers[occ.commanderId]?.name.slice(0, 1) ?? '?'}
+                        fontFamily="HanDynastySerif"
                         fontSize={14}
                         fill="#fff"
                         fontStyle="bold"

@@ -47,3 +47,9 @@ docs/screenshots/leh-seats-full.png
 
 # External reference demos (not part of the project; user-provided PCG prototypes)
 /map_battleground_procedural_engine*.html
+# Engineering fonts (do not redistribute, dev provides locally)
+# See client/public/fonts/README.md for download instructions
+*.woff2
+*.woff
+*.ttf
+*.otf

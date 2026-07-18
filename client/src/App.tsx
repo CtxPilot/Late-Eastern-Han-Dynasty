@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
+import { waitForGameFonts } from './utils/fontBarrier';
 
 export default function App() {
   const screen = useGameStore((s) => s.screen);
@@ -12,10 +13,51 @@ export default function App() {
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   const boot = useGameStore((s) => s.boot);
+  // FontBarrier：字体加载前拒绝渲染 Canvas，防跨平台乱码/豆腐块
+  const [isEngineReady, setIsEngineReady] = useState(false);
+  const [fontError, setFontError] = useState<string | null>(null);
+  const [fontRetryNonce, setFontRetryNonce] = useState(0);
 
   useEffect(() => {
-    void boot();
-  }, [boot]);
+    let cancelled = false;
+    setFontError(null);
+    (async () => {
+      const fontsLoaded = await waitForGameFonts();
+      if (cancelled) return;
+      if (fontsLoaded) {
+        setIsEngineReady(true);
+        void boot();
+      } else {
+        setFontError('工程字体资产加载失败。请按 client/public/fonts/README.md 放入 woff2 文件后点击重试。');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [boot, fontRetryNonce]);
+
+  if (!isEngineReady) {
+    return (
+      <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
+        <h1 className="text-2xl text-amber-400 font-semibold">LateEasternHanDynasty · 可玩 Demo</h1>
+        <p className="text-stone-400 text-sm">
+          {fontError ?? '正在加载工程字体…（跨平台字体防御屏障）'}
+        </p>
+        {fontError && (
+          <>
+            <pre className="text-stone-500 text-xs max-w-2xl px-4 text-center whitespace-pre-wrap">
+              {fontError}
+            </pre>
+            <button
+              type="button"
+              className="px-4 py-2 rounded bg-amber-900 border border-amber-600 text-amber-200"
+              onClick={() => setFontRetryNonce((n) => n + 1)}
+            >
+              重试加载字体
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   if (screen === 'boot' || !game) {
     return (

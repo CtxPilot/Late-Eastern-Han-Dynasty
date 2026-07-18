@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 工程字体资产闭环（跨平台字体防御铁律）
+ * 详见 client/src/styles/fonts.css、docs/00-dev-constitution.md §11.3+§11.7
+ * 不用 @import（CSS 规范要求 @import 必须置顶，在 @tailwind 之后会被忽略），直接内联 */
+@font-face {
+  font-family: 'HanDynastySerif';
+  src: url('/fonts/NotoSerifCJKsc-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'HanDynastySerif';
+  src: url('/fonts/NotoSerifCJKsc-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'HanDynastySeal';
+  src: url('/fonts/MuYaoSoftBrush.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
 html,
 body,
 #root {
@@ -9,4 +34,6 @@ body,
   height: 100%;
   margin: 0;
   overflow: hidden;
+  /* 跨平台字体铁律：全局锁死工程内部别名，禁止回退宿主系统字库 */
+  font-family: 'HanDynastySerif', serif !important;
 }

@@ -1813,6 +1813,52 @@ interface OfficerStatic {
 
 **0-B 全量填写**记技术债 D-0B-7。
 
+### §21.1-B OfficerStatic.avatarGene（武将头像底图基因，Session 101 新增）
+
+> 与 §21.1 `appearance` 战斗造型字段**并存，职责分离**：`appearance` 服务战斗演出几何造型（MeleeStage/DuelStage），`avatarGene` 服务头像底图渲染（OfficerRosterPanel/OfficerDetail/派系面板）。
+> 详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一美术铁律、`AGENTS.md` 核心规则 9。
+
+**新增字段**（实装时加到 `shared/types/officer.ts` + `officers.json` + Zod 校验）：
+
+```typescript
+type AvatarScheme = 'rubbing' | 'seal' | 'procedural';  // A 拓片 / B 印信 / C 拼图
+type BaseRubbing = 'warrior' | 'scholar' | 'servant' | 'royal';
+type RibbonColor = 'purple' | 'cyan' | 'black' | 'yellow';  // 汉制印绶：紫/青/墨/黄绶
+
+interface AvatarGene {
+  scheme: AvatarScheme;
+  // 方案 A/B 共用
+  baseRubbing?: BaseRubbing;
+  sealText?: string;        // 姓名印章文字（2~4字，朱砂红 + 隶书，2字断行）
+  royalSeal?: boolean;      // 皇室金边
+  // 方案 B 专用
+  clanTitle?: string;       // 籍贯氏族 "琅琊诸葛氏"（静态，按出身）
+  officeSeal?: string;      // 当前官职篆印 "荡寇将军"（动态，随 Officer.position 变化）
+  ribbonColor?: RibbonColor;  // 印绶颜色（动态，随 NobilityRank 变化）
+  // 方案 C 专用
+  faceType?: number;   // 0~4（甲/由/申/国/风字脸）
+  hairType?: number;   // 0~9（平天冠/进贤冠/武冠/帻巾/帢帽/...）
+  beardType?: number;  // 0~9（虬髯/美髯/八字胡/山羊胡/...）
+  eyeType?: number;    // 0~9（丹凤眼/细眼/环眼/卧蚕眉/...）
+}
+
+interface OfficerStatic {
+  // ... 现有字段
+  appearance?: SpecialAppearance;  // Session 100 战斗造型
+  avatarGene?: AvatarGene;          // Session 101 头像底图基因（新增）
+}
+```
+
+**0-A 30 武将填写规则**：
+- 猛将/主公（15 史实精校）手工填差异化
+  - 关羽：`{scheme:'procedural', baseRubbing:'warrior', faceType:3, hairType:2, beardType:1, eyeType:0, sealText:'关羽', clanTitle:'河东关氏', officeSeal:'荡寇将军', ribbonColor:'cyan'}`
+  - 吕布：`{scheme:'procedural', baseRubbing:'warrior', faceType:4, hairType:2, beardType:0, eyeType:3, sealText:'吕布', royalSeal:true, clanTitle:'五原郡吕氏', officeSeal:'左将军', ribbonColor:'purple'}`
+  - 荀彧：`{scheme:'procedural', baseRubbing:'scholar', faceType:0, hairType:1, beardType:3, eyeType:1, sealText:'荀彧', clanTitle:'颍川荀氏', officeSeal:'尚书令', ribbonColor:'cyan'}`
+- 15 占位武将默认值：`{scheme:'rubbing', baseRubbing:'warrior', sealText:姓名, clanTitle:'占位氏', ribbonColor:'yellow'}`
+- 0-B 1000+ 武将：脚本按 officer.id 哈希派生 faceType/hairType/beardType/eyeType + 重点人物人工校对 sealText/clanTitle/officeSeal/ribbonColor
+
+**0-B 全量填写**记技术债 D-0B-7（与 appearance 同条，0-B 扩容时一并处理）。
+
 ### §21.2 BattleState.activeStrategem（计谋三级联动视觉驱动）
 
 **新增字段**（实装时加到 `shared/types/battle.ts`）：
@@ -1854,4 +1900,4 @@ interface GameStore {
 
 ---
 
-*文档版本: v2.3 | 2026-07-18 | Session 100 新增 §21 前端体验技术储备数据字段（OfficerStatic.appearance + BattleState.activeStrategem + gameStore.floatingDelta。零代码改动，方案文档化）*
+*文档版本: v2.4 | 2026-07-18 | Session 101 新增 §21.1-B OfficerStatic.avatarGene（武将头像底图基因，与 appearance 并存职责分离，金石水墨·免版权组合方案 A+C+B）。零代码改动，方案文档化*
