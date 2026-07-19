@@ -47,6 +47,12 @@ export function FamilyPanel() {
       .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
   }, [game]);
 
+  const enabledChildren = useMemo(() => {
+    if (!game) return [];
+    const enabledIds = new Set(game.enabledChildEventIds);
+    return childrenCatalog.filter((child) => enabledIds.has(child.childId));
+  }, [game, childrenCatalog]);
+
   /** 男将为中心的姻亲支 */
   const branches = useMemo(() => {
     if (!game) return [];
@@ -54,12 +60,12 @@ export function FamilyPanel() {
       const wives = females.filter(
         (f) => f.husbandId === o.id || o.wifeId === f.id,
       );
-      const kids = childrenCatalog.filter(
+      const kids = enabledChildren.filter(
         (c) => c.fatherId === o.id || wives.some((w) => w.id === c.motherId),
       );
       return { officer: o, wives, kids };
     }).filter((b) => b.wives.length > 0 || b.kids.length > 0);
-  }, [game, officers, females, childrenCatalog]);
+  }, [game, officers, females, enabledChildren]);
 
   if (!game) return null;
 
