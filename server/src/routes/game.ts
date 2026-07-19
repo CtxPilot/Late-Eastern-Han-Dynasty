@@ -2,6 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { Router, type Router as ExpressRouter } from 'express';
+import type { EventSourceClass } from '@leh/shared';
 import * as gameService from '../services/game.js';
 
 export const gameRouter: ExpressRouter = Router();
@@ -14,7 +15,13 @@ gameRouter.post('/create', (req, res) => {
   try {
     const scenarioId = Number(req.body.scenarioId ?? 1);
     const playerFactionId = Number(req.body.playerFactionId ?? 2);
-    const state = gameService.createGame(scenarioId, playerFactionId);
+    const eventLayers = Array.isArray(req.body.eventLayers)
+      ? req.body.eventLayers.map(String) as EventSourceClass[]
+      : undefined;
+    if (!Number.isInteger(scenarioId) || !Number.isInteger(playerFactionId)) {
+      throw new Error('剧本与势力参数必须是整数');
+    }
+    const state = gameService.createGame(scenarioId, playerFactionId, eventLayers);
     res.json(state);
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'create failed' });
