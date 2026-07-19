@@ -2,11 +2,11 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, CampaignArmy, GameState } from '@leh/shared';
+import type { AutoBattleResult, BattleState, CampaignArmy, EventSourceClass, GameState } from '@leh/shared';
 import * as api from '../services/api';
-import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type UsableAbility } from '../services/api';
+import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
-type Screen = 'boot' | 'world' | 'battle';
+type Screen = 'boot' | 'scenario' | 'world' | 'battle';
 
 interface Store {
   screen: Screen;
@@ -25,10 +25,13 @@ interface Store {
   childrenCatalog: ChildCatalogEntry[];
   /** 事件目录（对话/选项标签，无 effects） */
   eventsCatalog: EventCatalogEntry[];
+  scenariosCatalog: ScenarioCatalogEntry[];
   /** S10 当前选中单位可用战法 */
   usableAbilities: UsableAbility[];
 
   boot: () => Promise<void>;
+  startGame: (scenarioId: number, factionId: number, eventLayers: EventSourceClass[]) => Promise<void>;
+  openScenarioSelect: () => void;
   selectCity: (id: number | null) => void;
   focusMapOnCity: (id: number) => void;
   clearMapFocus: () => void;
@@ -119,31 +122,44 @@ export const useGameStore = create<Store>((set, get) => ({
   lastActionOk: null,
   childrenCatalog: [],
   eventsCatalog: [],
+  scenariosCatalog: [],
   usableAbilities: [],
 
   boot: async () => {
     set({ loading: true, error: null, lastActionOk: null });
     try {
       const st = await api.fetchStatic();
-      // F1: 先尝试恢复已有游戏，避免刷新即重置进度
+      // 先尝试恢复已有游戏；无进行中游戏时进入剧本选择，不再静默创建固定剧本。
       let game: GameState | null = null;
       try {
         game = await api.getGameState();
       } catch {
-        // 无进行中游戏 → 创建新局
-        game = await api.createGame(2);
+        game = null;
       }
       set({
         game,
         childrenCatalog: st.children,
         eventsCatalog: st.events,
-        screen: 'world',
+        scenariosCatalog: st.scenarios,
+        screen: game ? 'world' : 'scenario',
         loading: false,
       });
     } catch (e) {
       set({ error: errMsg(e, '启动失败'), loading: false });
     }
   },
+
+  startGame: async (scenarioId, factionId, eventLayers) => {
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      const game = await api.createGame(scenarioId, factionId, eventLayers);
+      set({ game, screen: 'world', loading: false, selectedCityId: game.factions[factionId]?.capitalCityId ?? null });
+    } catch (e) {
+      set({ error: errMsg(e, '创建剧本失败'), loading: false });
+    }
+  },
+
+  openScenarioSelect: () => set({ screen: 'scenario', error: null }),
 
   selectCity: (id) => set({ selectedCityId: id, lastActionOk: null }),
 

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, CampaignArmy, CampaignNode, GameState } from '@leh/shared';
+import type { AutoBattleResult, BattleState, CampaignArmy, CampaignNode, EventSourceClass, GameState, ScenarioFactionSetup } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -32,19 +32,38 @@ export interface EventCatalogEntry {
   name: string;
   description: string;
   category: string;
+  sourceClass: EventSourceClass;
+  sources: string[];
   dialogues: { speakerId?: number; speakerName: string; text: string }[];
   choices: { label: string }[];
+}
+
+export interface ScenarioCatalogEntry {
+  id: number;
+  name: string;
+  type?: 'historical' | 'whatif';
+  description: string;
+  startYear: number;
+  startMonth: number;
+  scopeNote?: string;
+  playableFactions: number[];
+  recommendedFaction?: number;
+  factionSetups: ScenarioFactionSetup[];
+  availableEventLayers: EventSourceClass[];
+  defaultEventLayers: EventSourceClass[];
 }
 
 export async function fetchStatic(): Promise<{
   children: ChildCatalogEntry[];
   events: EventCatalogEntry[];
+  scenarios: ScenarioCatalogEntry[];
 }> {
   const { data } = await http.get<{
     children?: ChildCatalogEntry[];
     events?: EventCatalogEntry[];
+    scenarios?: ScenarioCatalogEntry[];
   }>('/static');
-  return { children: data.children ?? [], events: data.events ?? [] };
+  return { children: data.children ?? [], events: data.events ?? [], scenarios: data.scenarios ?? [] };
 }
 
 export async function chooseEvent(
@@ -58,10 +77,15 @@ export async function chooseEvent(
   return data;
 }
 
-export async function createGame(playerFactionId = 2): Promise<GameState> {
+export async function createGame(
+  scenarioId: number,
+  playerFactionId: number,
+  eventLayers: EventSourceClass[],
+): Promise<GameState> {
   const { data } = await http.post<GameState>('/create', {
-    scenarioId: 1,
+    scenarioId,
     playerFactionId,
+    eventLayers,
   });
   return data;
 }
