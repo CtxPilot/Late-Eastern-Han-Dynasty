@@ -9,6 +9,10 @@ import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+throw new Error(
+  'Legacy 0-A generator is frozen: it predates hand-maintained units, 30 historical officers, and scenario/event isolation. Update the generator before running it.',
+);
+
 const dir = join(dirname(fileURLToPath(import.meta.url)), '../data');
 const w = (name: string, data: unknown) => {
   writeFileSync(join(dir, name), JSON.stringify(data, null, 2) + '\n', 'utf-8');
