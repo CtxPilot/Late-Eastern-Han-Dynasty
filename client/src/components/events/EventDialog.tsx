@@ -26,14 +26,10 @@ export function EventDialog() {
     setDialogueIdx(0);
   }, [pendingId]);
 
-  // F6: catalog 缺失时自动跳过该事件（选 index 0），避免死锁卡死玩家
-  useEffect(() => {
-    if (pendingId != null && !evt && !loading) {
-      void chooseEvent(pendingId, 0);
-    }
-  }, [pendingId, evt, loading, chooseEvent]);
-
-  if (pendingId == null || !evt) return null;
+  if (pendingId == null) return null;
+  if (!evt) {
+    return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 text-red-300">事件目录缺失，请刷新后重试；系统不会代替玩家选择。</div>;
+  }
 
   const dialogues = evt.dialogues ?? [];
   const showChoices = dialogueIdx >= dialogues.length;
@@ -55,6 +51,9 @@ export function EventDialog() {
           <h2 id="event-dialog-title" className="text-amber-300 font-semibold tracking-wide">
             事件：{evt.name}
           </h2>
+          <p className="mt-1 text-[11px] text-amber-200/70">
+            〔{SOURCE_LABEL[evt.sourceClass] ?? evt.sourceClass}〕{evt.sources.join(' · ')}
+          </p>
           {evt.description && (
             <p className="mt-1 text-xs text-stone-400">{evt.description}</p>
           )}
@@ -106,3 +105,11 @@ export function EventDialog() {
     </div>
   );
 }
+
+const SOURCE_LABEL: Record<string, string> = {
+  official_history: '正史',
+  annotated_history: '裴注及早期异闻',
+  literature: '文学演义',
+  legend: '民间传说',
+  gameplay: '玩法改编',
+};
