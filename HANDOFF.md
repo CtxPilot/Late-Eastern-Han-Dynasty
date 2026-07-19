@@ -12,7 +12,7 @@
 | 会话 | **Session 119 完成**（委任军团系统设计——地域划区/官职爵位门槛/委任AI行为/方针/权限/面板UI） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **两剧本选择** + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** |
-| 文档最新 | 本文件 · 10-progress 119 · 12-system-map v5.2 · 03-data-models v2.7 · 04-game-systems v4.6 · 06-api-design v2.5 · 07-ui-design v3.2 · 08-data-dictionary v2.1 · **14-officer-stats-reference v2.0** |
+| 文档最新 | 本文件 · 10-progress 119 · 12-system-map v5.2 · 03-data-models v2.7 · 04-game-systems v4.6 · 01-overview v2.4 · 06-api-design v2.5 · 07-ui-design v3.2 · 08-data-dictionary v2.1 · **14-officer-stats-reference v2.0** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓 |
 | 玩法下一步 | **总军师系统**（任命/态势/献策/对决） → 设施建造回合化 → 势力特点数据 → **委任军团引擎实装**（§39 设计完成，暂未实现代码） → AI Army 接入。**S22 Linux UI 适配（HiDPI/XDG/伪 Terminal/金石组件库）+ 开源筑巢（武将传记拆分/README 工程师段）留 P5-07a~e；S22 武将头像 A+C+B 留 P5-10a/b/c（Phase 5）** |
 
