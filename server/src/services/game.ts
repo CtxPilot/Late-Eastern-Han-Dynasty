@@ -18,6 +18,7 @@ import {
   type City,
   type FemaleCharacter,
   type Faction,
+  type EventSourceClass,
   type GameState,
   type Officer,
   type ScenarioStatic,
@@ -114,35 +115,24 @@ function withLock<T>(fn: () => T): T {
   }
 }
 
-const FACTION_META: Record<number, { name: string; color: string; rulerId: number; capital: number }> = {
-  1: { name: '曹操军', color: '#4a6fa5', rulerId: 1, capital: 1 },
-  2: { name: '刘备军', color: '#3d8b5a', rulerId: 2, capital: 19 },
-  3: { name: '孙权军', color: '#c44b4b', rulerId: 3, capital: 17 },
-  4: { name: '吕布军', color: '#8b5a9e', rulerId: 5, capital: 9 },
-};
-
-export function createGame(scenarioId: number, playerFactionId: number): GameState {
+export function createGame(
+  scenarioId: number,
+  playerFactionId: number,
+  requestedEventLayers?: EventSourceClass[],
+): GameState {
   return withLock(() => {
     const scenario = staticData.scenarios.find((s) => s.id === scenarioId);
     if (!scenario) throw new Error('剧本不存在');
+    if (!scenario.playableFactions.includes(playerFactionId)) throw new Error('该势力不可玩');
+    if (!scenario.startState.activeFactionIds.includes(playerFactionId)) throw new Error('该势力未在本剧本登场');
 
-    let state = buildGameState(scenario, playerFactionId);
-
-    // S18 跟随引擎验证：释放占位武将12(id=111, compat=65, ideal=benevolence)为在野
-    // 与刘备(compat=75, ideal=benevolence) 相性差=10<20 且理想一致 → 可触发投奔
-    // 放在宛(13)——与刘备的襄阳(15)道路邻接
-    const freeOfficer = state.officers[111];
-    if (freeOfficer && freeOfficer.faction != null) {
-      state = releaseOfficer(state, 111);
-      state = {
-        ...state,
-        officers: {
-          ...state.officers,
-          111: { ...state.officers[111], location: 13, status: OfficerStatus.FREE },
-        },
-      };
-      state = pushLogState(state, 'follow_setup', `${freeOfficer.name}流落在野，待明主投奔`);
+    const availableLayers = new Set(scenario.availableEventLayers);
+    const enabledEventLayers = requestedEventLayers ?? scenario.defaultEventLayers;
+    if (enabledEventLayers.length === 0 || enabledEventLayers.some((layer) => !availableLayers.has(layer))) {
+      throw new Error('事件史料层配置无效');
     }
+
+    const state = buildGameState(scenario, playerFactionId, enabledEventLayers);
 
     currentGame = state;
     currentBattle = null;
@@ -150,20 +140,15 @@ export function createGame(scenarioId: number, playerFactionId: number): GameSta
   });
 }
 
-function pushLogState(state: GameState, type: string, message: string): GameState {
-  return {
-    ...state,
-    actionLog: [
-      { year: state.currentYear, month: state.currentMonth, type, message },
-      ...state.actionLog,
-    ].slice(0, 80),
-  };
-}
-
-function buildGameState(scenario: ScenarioStatic, playerFactionId: number): GameState {
+function buildGameState(
+  scenario: ScenarioStatic,
+  playerFactionId: number,
+  enabledEventLayers: EventSourceClass[],
+): GameState {
   const { startState } = scenario;
   const officers: Record<number, Officer> = {};
-  for (const o of staticData.officers) {
+  const availableOfficerIds = new Set(scenario.availableOfficerIds);
+  for (const o of staticData.officers.filter((item) => availableOfficerIds.has(item.id))) {
     const pos = startState.officerPositions.find((p) => p.officerId === o.id);
     officers[o.id] = {
       ...o,
@@ -218,19 +203,25 @@ function buildGameState(scenario: ScenarioStatic, playerFactionId: number): Game
 
   const factions: Record<number, Faction> = {};
   for (const fid of startState.activeFactionIds) {
-    const meta = FACTION_META[fid];
+    const setup = scenario.factionSetups.find((item) => item.id === fid);
+    if (!setup) throw new Error(`势力 ${fid} 缺少剧本定义`);
     const cityIds = Object.entries(startState.cityOwnership)
       .filter(([, v]) => v === fid)
       .map(([k]) => Number(k));
     const officerIds = startState.officerPositions
       .filter((p) => p.factionId === fid)
       .map((p) => p.officerId);
+    if (cityIds.length === 0) throw new Error(`0-A 势力「${setup.name}」至少需要一个补给据点`);
+    if (!cityIds.includes(setup.capitalCityId)) throw new Error(`势力「${setup.name}」的开局治所不在控制据点中`);
+    if (!officerIds.includes(setup.rulerId)) throw new Error(`势力「${setup.name}」的领袖未在本剧本登场`);
     factions[fid] = {
       id: fid,
-      name: meta?.name ?? `势力${fid}`,
-      color: meta?.color ?? '#888',
-      rulerId: meta?.rulerId ?? officerIds[0] ?? 0,
-      capitalCityId: meta?.capital ?? cityIds[0] ?? 1,
+      name: setup.name,
+      color: setup.color,
+      rulerId: setup.rulerId,
+      capitalCityId: setup.capitalCityId,
+      scenarioMode: setup.mode,
+      headquartersLabel: setup.headquartersLabel,
       gold: 5000,
       food: 8000,
       beautyStock: 0,
@@ -242,7 +233,8 @@ function buildGameState(scenario: ScenarioStatic, playerFactionId: number): Game
   }
 
   const females: Record<number, FemaleCharacter> = {};
-  for (const f of staticData.females) {
+  const availableFemaleIds = new Set(scenario.availableFemaleIds);
+  for (const f of staticData.females.filter((item) => availableFemaleIds.has(item.id))) {
     const pos = startState.femalePositions.find((p) => p.femaleId === f.id);
     const husbandId = pos?.husbandId ?? f.initialHusbandId;
     females[f.id] = {
@@ -267,6 +259,8 @@ function buildGameState(scenario: ScenarioStatic, playerFactionId: number): Game
 
   const draft: GameState = {
     scenarioId: scenario.id,
+    enabledEventLayers: [...enabledEventLayers],
+    enabledChildEventIds: [...scenario.childEventIds],
     currentYear: startState.year,
     currentMonth: startState.month,
     season,
@@ -285,6 +279,8 @@ function buildGameState(scenario: ScenarioStatic, playerFactionId: number): Game
     plots: [],
     completedEvents: [...startState.completedEvents],
     pendingEvents: [],
+    invalidatedEvents: [],
+    eventChoices: {},
     actionLog: [
       {
         year: startState.year,
@@ -816,14 +812,24 @@ export function listStatic() {
       name: e.name,
       description: e.description,
       category: e.category,
+      sourceClass: e.sourceClass,
+      sources: e.sources,
       dialogues: e.dialogues,
       choices: e.choices.map((c) => ({ label: c.label })),
     })),
     scenarios: staticData.scenarios.map((s) => ({
       id: s.id,
       name: s.name,
+      type: s.type,
       description: s.description,
+      startYear: s.startYear,
+      startMonth: s.startState.month,
+      scopeNote: s.scopeNote,
       playableFactions: s.playableFactions,
+      recommendedFaction: s.recommendedFaction,
+      factionSetups: s.factionSetups,
+      availableEventLayers: s.availableEventLayers,
+      defaultEventLayers: s.defaultEventLayers,
     })),
   };
 }
