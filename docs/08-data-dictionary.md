@@ -359,6 +359,10 @@
 
 **1000+条记录**。此处给出格式，实际数据用脚本批量生成后再人工校对。
 
+**0-A 验收基线（Session 106）**：30条，已全部替换为史实武将。Session 104 用许褚、曹仁、李典、吕虔、高顺、孙策、甘宁、徐盛、周泰、公孙瓒、臧霸、张嶷替换 ID 100~111；Session 106 再以董卓、袁绍、孙坚替换 ID 112~114，服务 190《关东义兵》技术切片。该覆盖仅是静态人物数据，`personalTroops` 等部曲字段仍未进入共享类型/Zod/运行时。
+
+**当前实际数据（Session 117 文档校正）**：`officers.json` 实测 **199条史实武将**，由0-A验收基线30人、Sessions 110~115累计新增137人，以及当前已存在的 ID 252~283 共32人组成。此处只记录当前文件事实；Phase 0-B 的1000+全量目标仍未启动，继续保持暂缓。
+
 ### 字段说明
 
 | 字段 | 类型 | 说明 |
@@ -413,13 +417,13 @@
 | ribbonColor? | 'purple' \| 'cyan' \| 'black' \| 'yellow' | 方案 B 印绶颜色（按汉制官品，动态随 `NobilityRank` 变化：紫绶/青绶/墨绶/黄绶） |
 
 **0-A 30 武将填写规则**：
-- 猛将/主公（吕布/关羽/张飞/典韦/赵云/马超/刘备/曹操/孙权等 15 史实精校）→ 手工填差异化 `avatarGene`
+- 猛将/主公（吕布/关羽/张飞/典韦/赵云/刘备/曹操/孙权等 27 名史实武将）→ 手工填差异化 `avatarGene`
   - 例：关羽 → `{scheme:'procedural', baseRubbing:'warrior', faceType:3, hairType:2, beardType:1, eyeType:0, sealText:'关羽', royalSeal:false, clanTitle:'河东关氏', officeSeal:'荡寇将军', ribbonColor:'cyan'}`
   - 例：荀彧 → `{scheme:'procedural', baseRubbing:'scholar', faceType:0, hairType:1, beardType:3, eyeType:1, sealText:'荀彧', royalSeal:false, clanTitle:'颍川荀氏', officeSeal:'尚书令', ribbonColor:'cyan'}`
-- 15 占位武将 → 默认值（scheme='rubbing'/baseRubbing='warrior'/sealText=姓名/clanTitle='占位氏'/ribbonColor='yellow'）
+- 董卓、袁绍、孙坚（ID 112~114）→ Phase 5 实装头像时按重点人物手工配置，不再使用占位默认值
 - 0-B 1000+ 武将 → 脚本按 officer.id 哈希派生 faceType/hairType/beardType/eyeType + 重点人物人工校对 sealText/clanTitle/officeSeal/ribbonColor
 
-**规模说明**：optional 字段，不影响 officers.json 总条数（仍是 0-A 30 / 0-B 1000+）。实装时记技术债 D-0B-7（与 appearance 同条，0-B 全量填写时一并处理）。
+**规模说明**：optional 字段，不影响 officers.json 总条数（0-A验收基线30，当前实际199，0-B目标1000+）。实装时记技术债 D-0B-7（与 appearance 同条，0-B 全量填写时一并处理）。
 
 ### 示例
 
@@ -665,7 +669,9 @@ Phase 3 — 持续维护
 
 ## 九、scenarios.json — 剧本
 
-**~7个剧本**。
+**长期首批目标：7个历史剧本（184/190/194/200/208/219/234）+ 英雄集结假想剧本。当前0-A为2个可选剧本。**
+
+**0-A 实际数据（Session 106/109）**：2个场景。场景1为 `英雄集结·开局即高光` what-if Demo，`eventIds=[]`，不会串入历史事件；场景2为 `关东义兵（190·0-A 技术切片）`，正月开局，含董卓、袁绍、曹操、孙坚四个可玩指挥集团与24事件（5→24，Session 109扩展）。后者不是约30势力全量开局：河内、鲁阳不在30城地图中，壶关/宛只作补给节点代理，场景说明不得宣称袁绍占上党或孙坚独占南阳。
 
 ### 字段说明
 
@@ -674,9 +680,17 @@ Phase 3 — 持续维护
 | id | number | 剧本ID |
 | name | string | 剧本名 |
 | description | string | 背景介绍 |
+| type | 'historical' \| 'whatif' | 史实/假想 |
+| noLifespan? | boolean | 假想剧本是否忽略生卒年 |
 | startYear | number | 起始年 |
 | endYear | number | 终止年 |
 | startState | ScenarioStartingState | 初始状态(见03-data-models) |
+| factionSetups | ScenarioFactionSetup[] | 剧本级势力名、颜色、领袖、据点、模式与史实说明 |
+| eventIds | number[] | 本剧本可扫描的事件白名单 |
+| availableOfficerIds / availableFemaleIds | number[] | 场景角色白名单；未列入者不进入运行态 |
+| childEventIds | number[] | 场景可补登的子女事件白名单；历史切片为空 |
+| availableEventLayers / defaultEventLayers | EventSourceClass[] | 可用/默认史料层 |
+| scopeNote? | string | 技术切片或玩法抽象边界 |
 | playableFactions | number[] | 可选势力ID |
 | recommendedFaction? | number | 推荐势力 |
 
@@ -686,9 +700,18 @@ Phase 3 — 持续维护
 {
   "id": 4,
   "name": "三顾茅庐",
+  "type": "historical",
+  "noLifespan": false,
   "description": "建安十二年(207年)，刘备三顾茅庐请出诸葛亮为军师。曹操一统北方，孙权威震江东。荆州刘表老迈，益州刘璋暗弱。天下三分之势，初见端倪...",
   "startYear": 207,
   "endYear": 280,
+  "factionSetups": [ ... ],
+  "eventIds": [120],
+  "availableOfficerIds": [50, 890],
+  "availableFemaleIds": [],
+  "childEventIds": [],
+  "availableEventLayers": ["official_history", "annotated_history", "literature"],
+  "defaultEventLayers": ["official_history", "annotated_history"],
   "startState": {
     "year": 207,
     "month": 1,
@@ -709,6 +732,8 @@ Phase 3 — 持续维护
 
 ## 十、events.json — 历史事件
 
+**0-A 当前实际数据（Session 106/109）**：共 **24条**，均属于场景2。Session 106先建立陈留起兵、推举盟主、迁都长安、汴水追击、虎牢关传奇5个核心事件，Session 109再新增 E105~E123 共19个事件，形成5条叙事线与玩家抉择系统；英雄集结无事件。事件运行态支持场景隔离、史料层过滤、年月窗口、前置、前序选项条件、互斥、过期失效、玩家决策与AI性格/理想权重。
+
 ### 字段说明
 
 | 字段 | 类型 | 说明 |
@@ -717,6 +742,13 @@ Phase 3 — 持续维护
 | name | string | 事件名 |
 | description | string | 简介 |
 | category | string | 类别 |
+| sourceClass | EventSourceClass | `official_history/annotated_history/literature/legend/gameplay` |
+| sources | string[] | 史料或文学来源，不把演义标成正史 |
+| scenarioIds | number[] | 所属剧本；须与 Scenario.eventIds 双向一致 |
+| dateWindow | {startYear,startMonth,endYear,endMonth} | 有效年月窗口；年份不能单独保证触发 |
+| decisionFactionId? | number | 决策势力；玩家控制时弹窗，AI控制时自动加权选择 |
+| prerequisiteEventIds? | number[] | 前置事件 |
+| mutexGroup? | string | 互斥组；同组已有完成事件则失效 |
 | conditions | EventCondition[] | 触发条件 |
 | dialogues | Dialogue[] | 对话段 |
 | choices | EventChoice[] | 选项 |
@@ -729,10 +761,15 @@ Phase 3 — 持续维护
   "name": "三顾茅庐",
   "description": "刘备三次拜访诸葛亮于隆中草庐，请之出山。",
   "category": "historical",
+  "sourceClass": "official_history",
+  "sources": ["《三国志·蜀书·诸葛亮传》"],
+  "scenarioIds": [4],
+  "dateWindow": { "startYear": 207, "startMonth": 1, "endYear": 208, "endMonth": 12 },
+  "decisionFactionId": 2,
   "conditions": [
     { "type": "year", "field": "currentYear", "operator": "equals", "value": 207 },
-    { "type": "faction", "field": "rulerId", "operator": "equals", "value": 50 },
-    { "type": "city", "field": "controllerId", "operator": "equals", "value": 42 },
+    { "type": "faction", "field": "rulerId", "targetId": 2, "operator": "equals", "value": 50 },
+    { "type": "city", "field": "controllerId", "targetId": 42, "operator": "equals", "value": 2 },
     { "type": "officer", "field": "officerId", "operator": "in", "value": [890] },
     { "type": "officer", "field": "status", "operator": "equals", "value": "free" }
   ],
@@ -744,7 +781,7 @@ Phase 3 — 持续维护
     {
       "label": "请孔明出山",
       "effects": [
-        { "type": "recruit_officer", "target": "officer", "targetId": 890, "field": "status", "value": "active" }
+        { "type": "recruit", "target": "officer", "targetId": 890, "field": "faction", "value": 2 }
       ],
       "aiWeight": 100
     }
@@ -893,7 +930,7 @@ Phase 3 — 持续维护
 
 ---
 
-*文档版本: v1.7 | 2026-07-18 | Session 101 真源同步：officers.json 新增 avatarGene 字段（武将头像底图基因，金石水墨·免版权组合方案 A+C+B）。零代码改动，方案文档化，与 Session 100 appearance 字段并存职责分离*
+*文档版本: v2.0 | 2026-07-19 | Session 117 文档漂移校正：0-A验收基线30人、当前实际199名史实武将、2个0-A剧本、24个190事件*
 
 ---
 

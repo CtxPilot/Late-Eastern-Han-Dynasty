@@ -14,7 +14,7 @@
 | P0-03 | shared/validators Zod校验 | validators/index.ts（先于任何 JSON 数据生成完成） |
 | P0-04 | Server 骨架 | Express + WebSocket + tsconfig |
 | P0-05 | Client 骨架 | Vite + React + Konva + Zustand 初始化 |
-| P0A-06 | officers.json（小） | 30武将：15史实精校(曹操/刘备/孙权/诸葛亮/吕布/关羽/张飞/荀彧等) + 15占位 |
+| P0A-06 | officers.json（小） | 0-A验收基线30名史实武将；当前实际199名，0-B 1000+目标仍暂缓 |
 | P0A-07 | cities.json（小） | 30城(覆盖13州、含都城级样本) |
 | P0A-08 | formations.json（小） | 6阵型 |
 | P0A-09 | units.json（小） | 9兵种（6陆+走舸/蒙冲/楼船 Session71） |
@@ -22,8 +22,8 @@
 | P0A-11 | females.json（小） | 10女性 |
 | P0A-12 | children.json（小） | 5子女事件 |
 | P0A-13 | skills.json（小） | 30通用技能(暂不含专属技) |
-| P0A-14 | scenarios.json（小） | 1剧本(覆盖0-A数据集) |
-| P0A-15 | events.json（小） | 5历史事件 |
+| P0A-14 | scenarios.json（小） | 2个：英雄集结 what-if Demo + 190《关东义兵》四势力技术切片；ScenarioSelect 已可用 |
+| P0A-15 | events.json（小） | 24个190事件；5条叙事线+玩家抉择，支持场景/史料层隔离 |
 
 **0-A 验收标准**：Zod 校验全部通过；能渲染地图、能推进至少1回合、能完成1次内政操作、能打通1场最简战斗。
 
@@ -39,7 +39,7 @@
 | P0B-11 | females.json（全量） | 90+女性 | P0A-11 |
 | P0B-12 | children.json（全量） | 50+子女事件 | P0A-12 |
 | P0B-13 | skills.json（全量） | 149技能定义(69通用×5级+80专属) | P0A-13 |
-| P0B-14 | scenarios.json（全量） | 5+剧本 | P0A-14 |
+| P0B-14 | scenarios.json（全量） | 首批7历史剧本+英雄集结；约30势力190全量开局仍属0-B | P0A-14 |
 | P0B-15 | events.json（全量） | 历史事件全量 | P0A-15 |
 
 **0-B 执行规则**：逐类生成，每类生成后立即跑 Zod 校验，不通过不得进入下一类；
@@ -47,7 +47,7 @@
 
 > 后续 Phase（P1~P5）中原先引用 `P0-06`~`P0-15` 的依赖项，均指向 **P0B-xx**（全量数据就绪）。
 
-### 0-B 前置技术债（D-0B-1~12，Session 100 登记）
+### 0-B 前置技术债（D-0B-1~13，Sessions 100~102 登记）
 
 > 0-B 扩容前必须先清。详见 `docs/12-system-map.md` §六。
 
@@ -154,7 +154,7 @@
 | P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出 Blob） | P5-05 |
 | P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
 | P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄） | P5-07 |
-| P5-07e | 工程字体资产闭环补完（woff2 文件入 `client/public/fonts/` + 字重扩展） | P5-07 |
+| P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核） | P5-07 |
 | P5-08 | Canvas 动画(行军/着火/水流/落石) | P1-03, P3-01 |
 | P5-09 | 音效系统 | P5-07 |
 | P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**，详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘） | P0-06 |
@@ -180,4 +180,4 @@
 
 ---
 
-*文档版本: v1.6 | 2026-07-18 | Session 102 跨平台字体防御实装（FontBarrier + @font-face + Konva fontFamily + .editorconfig/.gitattributes/CI）+ P5-07a~e 子任务拆分（Linux UI 适配）*
+*文档版本: v1.8 | 2026-07-19 | Session 117 校正当前199名武将、24个190事件与0-A/0-B边界*
