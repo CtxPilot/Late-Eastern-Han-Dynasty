@@ -150,6 +150,8 @@ function baseBattle(weather: Weather = Weather.CLEAR): BattleState {
 function baseState(): GameState {
   return {
     scenarioId: 1,
+    enabledEventLayers: ['gameplay'],
+    enabledChildEventIds: [],
     currentYear: 190,
     currentMonth: 1,
     season: 0,
@@ -171,6 +173,8 @@ function baseState(): GameState {
     plots: [],
     completedEvents: [],
     pendingEvents: [],
+    invalidatedEvents: [],
+    eventChoices: {},
     actionLog: [],
   };
 }
