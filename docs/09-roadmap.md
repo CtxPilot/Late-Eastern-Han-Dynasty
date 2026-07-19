@@ -14,7 +14,7 @@
 | P0-03 | shared/validators Zod校验 | validators/index.ts（先于任何 JSON 数据生成完成） |
 | P0-04 | Server 骨架 | Express + WebSocket + tsconfig |
 | P0-05 | Client 骨架 | Vite + React + Konva + Zustand 初始化 |
-| P0A-06 | officers.json（小） | 0-A验收基线30名史实武将；当前实际199名，0-B 1000+目标仍暂缓 |
+| P0A-06 | officers.json（小） | 0-A验收基线30名史实武将；当前实际223名，0-B 1000+目标仍暂缓 |
 | P0A-07 | cities.json（小） | 30城(覆盖13州、含都城级样本) |
 | P0A-08 | formations.json（小） | 6阵型 |
 | P0A-09 | units.json（小） | 9兵种（6陆+走舸/蒙冲/楼船 Session71） |
@@ -180,4 +180,4 @@
 
 ---
 
-*文档版本: v1.8 | 2026-07-19 | Session 117 校正当前199名武将、24个190事件与0-A/0-B边界*
+*文档版本: v1.9 | 2026-07-19 | Session 118 扩充至当前223名武将；24个190事件与0-A/0-B边界不变*
