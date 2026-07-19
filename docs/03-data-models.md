@@ -1193,8 +1193,9 @@ export interface ChildBirthEvent {
 
 ```typescript
 export interface EventCondition {
-  type: string;            // 'year' | 'faction' | 'officer' | 'city' | 'relation' | 'item' | 'random'
+  type: 'year' | 'faction' | 'officer' | 'city' | 'event';
   field: string;
+  targetId?: number;       // 精确约束某势力/城市/武将；省略时才做集合检查
   operator: 'equals' | 'gte' | 'lte' | 'in' | 'hasItem' | 'notHas' | 'probability';
   value: unknown;
 }
@@ -1203,11 +1204,13 @@ export interface EventChoice {
   label: string;
   effects: EventEffect[];
   aiWeight?: number;       // AI选择权重 0~100
+  aiPersonalityWeights?: Partial<Record<Personality, number>>;
+  aiIdealWeights?: Partial<Record<Ideal, number>>;
 }
 
 export interface EventEffect {
-  type: string;
-  target: string;          // 'faction' | 'officer' | 'city' | 'global'
+  type: 'recruit' | 'loyalty' | 'develop' | 'relation' | 'war' | 'capital' | 'troops';
+  target: 'faction' | 'officer' | 'city' | 'global';
   targetId?: number;
   field: string;
   value: unknown;
@@ -1218,6 +1221,13 @@ export interface GameEvent {
   name: string;
   description: string;
   category: 'historical' | 'random' | 'marriage' | 'diplomacy' | 'battle';
+  sourceClass: 'official_history' | 'annotated_history' | 'literature' | 'legend' | 'gameplay';
+  sources: string[];
+  scenarioIds: number[];
+  dateWindow: { startYear: number; startMonth: number; endYear: number; endMonth: number };
+  decisionFactionId?: FactionId;
+  prerequisiteEventIds?: number[];
+  mutexGroup?: string;
 
   // 触发条件
   conditions: EventCondition[];
@@ -1285,6 +1295,17 @@ export interface ScenarioStartingState {
   completedEvents: number[];
 }
 
+export interface ScenarioFactionSetup {
+  id: FactionId;
+  name: string;
+  color: string;
+  rulerId: number;
+  capitalCityId: number;
+  mode: 'territorial' | 'expeditionary' | 'hosted';
+  headquartersLabel: string;
+  historicalNote?: string;
+}
+
 export interface Scenario {
   id: number;
   name: string;
@@ -1293,16 +1314,21 @@ export interface Scenario {
   startYear: number;
   endYear: number;
   startState: ScenarioStartingState;
+  factionSetups: ScenarioFactionSetup[];
+  eventIds: number[];
+  availableOfficerIds: number[];
+  availableFemaleIds: number[];
+  childEventIds: number[];
+  availableEventLayers: EventSourceClass[];
+  defaultEventLayers: EventSourceClass[];
+  scopeNote?: string;
   playableFactions: FactionId[];
   recommendedFaction?: FactionId;
-  whatIfRules?: {                         // 英雄集结等假想剧本独有
-    allOfficersAlive: boolean;
-    noHistoryEvents: boolean;
-    freeForAll: boolean;
-    equalStart: boolean;
-  };
+  noLifespan?: boolean;
 }
 ```
+
+`factionSetups` 是势力名称/领袖/据点真源，服务端不再用全局硬编码四势力。0-A 的 `expeditionary/hosted` 仍需一个补给节点维持现有城市经济与命令入口；`historicalNote` 必须声明节点代理不等于史实郡县独占。真正无城军团、寄驻和从属军仍待判别式位置模型。
 
 ---
 
@@ -1311,6 +1337,8 @@ export interface Scenario {
 ```typescript
 export interface GameState {
   scenarioId: number;
+  enabledEventLayers: EventSourceClass[];
+  enabledChildEventIds: number[];
   currentYear: number;
   currentMonth: number;
   season: Season;
@@ -1337,7 +1365,8 @@ export interface GameState {
   // 事件状态
   completedEvents: number[];
   pendingEvents: number[];
-  eventCooldowns: Record<number, number>;
+  invalidatedEvents: number[];
+  eventChoices: Record<number, number>;
 
   // 城市升级记录
   cityUpgradeLogs: CityUpgradeLog[];
@@ -1751,10 +1780,10 @@ interface FactionTrait {
 
 ---
 
-### 20.7 学派与信仰
+### 20.7 文教、声教、学派与技艺（Session 105 技术储备，未实装）
 
 ```typescript
-interface CityCulture {
+interface CitySchoolInfluence {
   confucian: number;   // 儒 0-100
   daoist: number;      // 道
   buddhist: number;    // 佛
@@ -1764,18 +1793,34 @@ interface CityCulture {
   medical: number;     // 医
 }
 
-// City 接口扩展：
-//   culture: CityCulture;
-//   cultureFacilities: string[];
-//   culturePolicy?: string;
-//
+interface CityEducationState {
+  education: number;                    // 文教 0-1000
+  culturalDevelopment: number;          // 声教 0-1000
+  educationOfficerIds: number[];         // 学官，基础1席；太学后最多2席
+  schoolInfluence: CitySchoolInfluence;  // 各学派独立0-100，合计不封顶
+  cultureFacilities: string[];
+  culturePolicy?: string;
+}
+
+interface ActiveResearch {
+  branch: 'farming' | 'commerce' | 'military' | 'fortification' | 'cultivation';
+  targetLevel: number;
+  investedGold: number;
+  completedProgress: number;
+}
+
 // Faction 接口扩展：
+//   techLevels: Record<ActiveResearch['branch'], number>;
+//   activeResearch?: ActiveResearch;
 //   culturalPolicy?: string;
 ```
 
+> 早期草案的 `City.culture: CityCulture` 已废止，避免与城市声教数值重名；未来实装统一使用
+> `schoolInfluence`。本节字段不进入 0-A 静态 JSON 规模统计，实装时再同步 shared 类型、Zod 与状态裁剪。
+
 ---
 
-*文档版本: v2.2 | 2026-07-17 | 新增 §20.7 学派与信仰数据类型（CityCulture）*
+*Session 105 修订：§20.7 统一文教/声教/学派/技艺模型命名（纯设计）*
 
 ---
 
@@ -1900,4 +1945,4 @@ interface GameStore {
 
 ---
 
-*文档版本: v2.4 | 2026-07-18 | Session 101 新增 §21.1-B OfficerStatic.avatarGene（武将头像底图基因，与 appearance 并存职责分离，金石水墨·免版权组合方案 A+C+B）。零代码改动，方案文档化*
+*文档版本: v2.6 | 2026-07-19 | Session 106 实装场景级势力/角色/事件白名单、事件史源/窗口/前置/AI决策与运行态结果*
