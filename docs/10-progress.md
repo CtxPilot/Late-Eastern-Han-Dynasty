@@ -22,7 +22,7 @@
 | P0-03 | shared/validators Zod 校验 | [x] | 先于 JSON；validate-data 脚本 |
 | P0-04 | Server 骨架 (Express + WebSocket) | [x] | :3001 + /ws |
 | P0-05 | Client 骨架 (Vite + React + Konva + Zustand + Tailwind) | [x] | :5173 proxy API |
-| P0A-06 | officers.json（基线30；当前199武将） | [x] | 0-A验收基线30名史实武将；当前JSON实测199名，0-B 1000+目标仍暂缓 |
+| P0A-06 | officers.json（基线30；当前223武将） | [x] | 0-A验收基线30名史实武将；当前JSON实测223名，0-B 1000+目标仍暂缓 |
 | P0A-07 | cities.json（小，30城） | [x] | 覆盖13州；name=治所；x/y=等距圆柱(lon/lat)，非插画手校 |
 | P0A-08 | formations.json（小，6阵型） | [x] | — |
 | P0A-09 | units.json（小） | [x] | **9 兵种**：6陆+走舸/蒙冲/楼船（Session 71） |
@@ -40,7 +40,7 @@
 
 | 域 | 状态 |
 |----|------|
-| 骨架 0-A | 30城/30将验收基线 + Zod + monorepo 全过；当前武将数据已扩至199名 |
+| 骨架 0-A | 30城/30将验收基线 + Zod + monorepo 全过；当前武将数据已扩至223名 |
 | 战略环 | 回合·地图·内政·人口·出征占城·迷雾**服务端裁剪** |
 | 谍报/外交 | 特工+女间谍；进贡/结盟/**献美** |
 | 美女/家族 | S09 stock；S18 女眷/婚配/跟随；**子女登场引擎**（父辈后置） |
@@ -2488,6 +2488,14 @@
 - 验证：JSON实测 officers=199/events=24/scenarios=2；同步 `validate-data.ts` 人数门禁后 `pnpm validate-data` 全部通过；当前摘要旧口径交叉检索清零；`git diff --check`通过。
 - Next：保持既定队列；若继续190，先做无城军团/移动总部/寄驻/从属军模型；约30势力全量开局和1000+武将仍属0-B，需再次明确授权。
 
+## 2026-07-19 — Session 118（武将数据扩充）
+
+- 范围：`officers.json` 新增 ID 284~307 共24人（群雄势力、特殊人物与后期人物），不改动既有条目；`validate-data.ts` 武将数量门禁由199更新为223。
+- 数据兼容：史料未详出生年使用 `0`；未详卒年采用提供的 `hidden.lifespan`。原始资料中不受当前 Zod 枚举支持的性格/理想值映射为既有枚举，以保持静态数据可验证；祝融按 `08-data-dictionary.md` 既定“唯一可出战女将”例外录入。
+- 文档同步：先更新08数字真源，再同步路线图、系统图、武将数值参考、本进度与 `HANDOFF.md` 的当前武将数为223。
+- 验证：`pnpm --filter @leh/shared build && pnpm validate-data` 通过，输出 `officers.json (223)`；`pnpm --filter @leh/server typecheck` 通过；JSON 解析与新增 ID 连续性检查通过。
+- Next：保持既定队列；0-B全量武将扩容仍暂缓。
+
 ---
 
-*文档版本: v6.17 | 2026-07-19 | Session 117 文档漂移校正：当前199名武将、24个190事件、爵位7级*
+*文档版本: v6.18 | 2026-07-19 | Session 118 武将数据扩充：当前223名武将、24个190事件、爵位7级*
