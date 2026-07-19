@@ -100,13 +100,16 @@ POST   /api/v1/game/:id/cities/:cityId/train
 > **S06**：所有返回 `GameState` 的接口经 `maskGameStateForPlayer` 脱敏（迷雾/同盟/侦查档）；服务端内存仍持全量。
 
 ```
-POST   /api/game/create              { scenarioId, playerFactionId } → GameState
+GET    /api/game/static              → { scenarios, events, cities, units, ... }
+  scenarios 含剧本级 factionSetups、年月、推荐势力、可用/默认事件史料层
+POST   /api/game/create              { scenarioId, playerFactionId, eventLayers? } → GameState
+  校验势力可玩且已登场；eventLayers 必须是该剧本允许的非空子集
 GET    /api/game/state               → GameState（经 mask）
 POST   /api/game/end-turn            → GameState
   含：人口生育衰老、结构粮耗、产粮、AI、事件 tick
   有 pendingEvents 时 400「请先处理待决事件」
 POST   /api/game/event/choose        { eventId, choiceIndex } → GameState
-  // S14：从 pending 取事件，应用 choices[i].effects，写入 completedEvents
+  // S14：只允许处理 pendingEvents[0]；应用效果并写 completedEvents/eventChoices
 
 POST   /api/game/civil/develop       { cityId, kind: 'farm'|'commerce'|'wall' }
 POST   /api/game/civil/develop-farm  { cityId }   // 兼容
@@ -492,7 +495,7 @@ ws://localhost:3001/ws?gameId={gameId}
   }
 }
 
-// 历史事件触发
+// 事件触发（史源见 static.events.sourceClass/sources）
 {
   type: 'event_triggered',
   payload: {
@@ -553,8 +556,8 @@ ws://localhost:3001/ws?gameId={gameId}
 ### 4.1 创建游戏 → 游戏主界面
 
 ```
-1. GET /api/v1/data/scenarios → 拿到剧本列表给玩家选择
-2. 玩家选剧本+势力 → POST /api/v1/games → 返回 gameState
+1. 当前Demo调用 GET /api/game/static → 拿到剧本、势力与史料层目录
+2. 玩家选剧本+势力+传奇开关 → POST /api/game/create → 返回 gameState
 3. Client 渲染：(MapCanvas + TopBar + LeftPanel)
 4. 同时连接 WebSocket，接收后续 AI 推送
 ```
@@ -674,27 +677,59 @@ GET    /api/v1/static/faction-traits
 
 ---
 
-### 2.17 学派与文化
+### 2.17 文教、声教、学派与技艺（技术储备，未实装）
+
+> 本组接口只定义未来契约。所有 POST 必须在客户端终审询问窗确认后才发送，服务端仍须独立校验资源、
+> 执行者占用、权限和目标状态，不能信任客户端预览值。
 
 ```
 GET    /api/v1/games/:id/cities/:cityId/culture
-   获取城市学派分布
-   Response: { culture: CityCulture, facilities: string[] }
+   获取城市文教、声教、学派与设施
+   Response: {
+     education: number,
+     culturalDevelopment: number,
+     schoolInfluence: CitySchoolInfluence,
+     facilities: string[],
+     educationOfficerIds: number[]
+   }
+
+POST   /api/v1/games/:id/cities/:cityId/education/invest
+   兴办教育
+   Body: { officerId: number, gold: number }
+   Response: { city: City }
+
+POST   /api/v1/games/:id/cities/:cityId/education/appoint
+   任命持续学官
+   Body: { officerId: number }
+   Response: { city: City }
+
+POST   /api/v1/games/:id/cities/:cityId/education/dismiss
+   撤换学官
+   Body: { officerId: number }
+   Response: { city: City }
 
 POST   /api/v1/games/:id/cities/:cityId/culture/build
    建造文化设施
-   Body: { facilityType: string }   // 'academy'|'temple'|'shrine'|'workshop'|'lawcourt'|'strategist_hall'|'clinic'|'library'
-   Response: { city: City }
-
-POST   /api/v1/games/:id/cities/:cityId/culture/appoint
-   指派学派导师
-   Body: { officerId: number, school: string }
+   Body: { facilityType: string }
    Response: { city: City }
 
 POST   /api/v1/games/:id/cities/:cityId/culture/policy
    设置城市文化政策
    Body: { policy: string }
    Response: { city: City }
+
+GET    /api/v1/games/:id/faction/research
+   查看五条技艺路线与当前研发
+   Response: { techLevels: TechLevels, activeResearch?: ActiveResearch }
+
+POST   /api/v1/games/:id/faction/research/start
+   立项研发（同一势力仅一项）
+   Body: { branch: TechBranch, targetLevel: number }
+   Response: { faction: Faction }
+
+POST   /api/v1/games/:id/faction/research/cancel
+   中止研发并保留一半已完成进度
+   Response: { faction: Faction }
 
 POST   /api/v1/games/:id/faction/cultural-policy
    设置势力文化政策
@@ -704,4 +739,4 @@ POST   /api/v1/games/:id/faction/cultural-policy
 
 ---
 
-*文档版本: v2.3 | 2026-07-17 | 新增 §2.17 学派与文化 API*
+*文档版本: v2.5 | 2026-07-19 | Session 106 同步场景目录、史料层创建参数与事件队列约束*
