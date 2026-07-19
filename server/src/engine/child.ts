@@ -237,7 +237,8 @@ export function catchUpChildren(
   defs: ChildBirthDef[] = getStaticData().children,
 ): GameState {
   let next = state;
-  for (const def of defs) {
+  const enabled = new Set(state.enabledChildEventIds);
+  for (const def of defs.filter((item) => enabled.has(item.childId))) {
     if (def.appearYear <= state.currentYear) {
       next = spawnOne(next, def);
     }
@@ -256,7 +257,8 @@ export function tickChildrenAppear(
   if (state.currentMonth !== 1) return state;
 
   let next = state;
-  for (const def of defs) {
+  const enabled = new Set(state.enabledChildEventIds);
+  for (const def of defs.filter((item) => enabled.has(item.childId))) {
     if (def.appearYear === state.currentYear) {
       next = spawnOne(next, def);
     }
