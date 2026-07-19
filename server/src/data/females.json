@@ -69,9 +69,7 @@
       "diplomaticGrace",
       "captiveShield"
     ],
-    "relatedEvents": [
-      101
-    ],
+    "relatedEvents": [],
     "canCommand": false,
     "description": "王允义女，连环计（《三国演义》）"
   },
