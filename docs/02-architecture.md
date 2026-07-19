@@ -194,14 +194,15 @@ Late-Eastern-Han-Dynasty/
 │       │   ├── skills.json          # 30 技能 (0-A)
 │       │   ├── females.json         # 10 女性 (0-A)
 │       │   ├── children.json        # 5 子女 (0-A)
-│       │   ├── scenarios.json       # 1 剧本 (0-A)
-│       │   └── events.json          # 5 事件 (0-A)
+│       │   ├── scenarios.json       # 2 剧本 (0-A)
+│       │   └── events.json          # 24 事件 (0-A)
 │       ├── scripts/                 # 验证/生成工具
 │       │   ├── validate-data.ts     # pnpm validate-data 入口
 │       │   ├── generate-0a-data.ts  # 0-A 数据集生成
 │       │   ├── sync-city-coords.ts  # 城池坐标同步
 │       │   ├── verify-child-engine.ts
 │       │   ├── verify-fire-tactic.ts
+│       │   ├── verify-scenario-events.ts # 场景/事件32项断言
 │       │   └── verify-geo-google.ts
 │       ├── middleware/
 │       │   └── errors.ts            # AppError + 错误处理
@@ -430,6 +431,7 @@ GameLayout
 | `generate-0a-data.ts` | — | 0-A 小数据集重新生成（**勿盲跑**，会覆盖战法与水军） |
 | `verify-child-engine.ts` | — | 子女引擎 4 用例验证 |
 | `verify-fire-tactic.ts` | — | 火计 4 用例验证 |
+| `pnpm verify-scenario-events` | `verify-scenario-events.ts` | 两剧本隔离、反事实分支、角色/子女白名单、玩家/AI事件、史料层与过期失效验证 |
 
 ## 十一、数据层详解
 
@@ -443,7 +445,7 @@ server/src/data/loader.ts
 数据文件版本: 0-A (小数据集)
   officers=30 · cities=30 · formations=6 · units=9(6陆+3水)
   items=20 · skills=30 · females=10 · children=5
-  scenarios=1 · events=5
+  scenarios=2 · events=24
 ```
 
 ## 十二、决策记录
@@ -457,6 +459,7 @@ server/src/data/loader.ts
 | 2026-07-15 | pnpm workspace monorepo | shared types 共享，避免代码重复 |
 | 2026-07-15 | Zod 运行时校验 | JSON 非 TS 类型，需运行时防错 |
 | 2026-07-16 | Phase 0-A → 0-B 分拆 | 先小数据验证架构再扩容 |
+| 2026-07-19 | 场景级势力/角色/事件白名单 | 同一静态数据包支持英雄集结与190历史切片而不串数据 |
 | 2026-07-16 | 武将水军适性 ≥ C | NONE 仅纯文官（Session 71） |
 | 2026-07-16 | 单挑 经典化：必杀参与循环 | 发扬经典三向克制精神 (Session 75) |
 | 2026-07-16 | 美女 = 资源，历史女角 = 家族 | 两种不同系统 (Session 43) |
@@ -525,4 +528,4 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.1 | 最后更新: 2026-07-18 | Session 100 前端体验技术储备（新增 S20/S21 组件清单 + 数据字段 + screen 六态栈 + D-0B-1~12 技术债。零代码改动，方案文档化）*
+*文档版本: v2.3 | 最后更新: 2026-07-19 | Session 109 事件链扩展至24事件+玩家抉择系统*
