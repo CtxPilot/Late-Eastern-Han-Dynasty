@@ -3,14 +3,16 @@
 
 /**
  * 事件引擎 — 回合末检查 conditions
- * - 有 autoChoice → 自动执行并 completed
- * - 无 autoChoice → 入 pendingEvents，等玩家 POST /event/choose
+ * - 事件仅在当前剧本与启用史料层中生效
+ * - 玩家控制决策势力时入 pending；AI 按历史权重、性格与理想确定选择
  */
 import {
   DipRelation,
   OfficerStatus,
   type EventCondition,
+  type EventChoice,
   type EventEffect,
+  type EventTemplate,
   type GameState,
 } from '@leh/shared';
 import { getStaticData } from '../data/loader.js';
@@ -53,9 +55,11 @@ function checkCondition(state: GameState, cond: EventCondition): boolean {
     }
     case 'officer': {
       const officers = Object.values(state.officers);
+      const target = cond.targetId == null ? undefined : state.officers[cond.targetId];
       switch (cond.operator) {
         case 'equals': {
           if (cond.field === 'faction') {
+            if (cond.targetId != null) return target?.faction === (cond.value as number);
             return officers.some((o) => o.faction === (cond.value as number));
           }
           return false;
@@ -73,9 +77,11 @@ function checkCondition(state: GameState, cond: EventCondition): boolean {
     }
     case 'city': {
       const cities = Object.values(state.cities);
+      const target = cond.targetId == null ? undefined : state.cities[cond.targetId];
       switch (cond.operator) {
         case 'equals': {
           if (cond.field === 'controllerId') {
+            if (cond.targetId != null) return target?.ruler === (cond.value as number);
             return cities.some((c) => c.ruler === (cond.value as number));
           }
           return false;
@@ -86,23 +92,28 @@ function checkCondition(state: GameState, cond: EventCondition): boolean {
     }
     case 'faction': {
       const factions = Object.values(state.factions);
+      const target = cond.targetId == null ? undefined : state.factions[cond.targetId];
       switch (cond.operator) {
         case 'equals': {
           if (cond.field === 'rulerId') {
+            if (cond.targetId != null) return target?.rulerId === (cond.value as number) && target.isAlive;
             return factions.some((f) => f.rulerId === (cond.value as number) && f.isAlive);
           }
+          if (cond.field === 'isAlive' && target) return target.isAlive === (cond.value as boolean);
           return false;
         }
         default:
           return false;
       }
     }
-    default:
-      return false;
+    case 'event': {
+      if (cond.field !== 'choice' || cond.targetId == null || cond.operator !== 'equals') return false;
+      return state.eventChoices[cond.targetId] === (cond.value as number);
+    }
   }
 }
 
-function applyEffect(state: GameState, effect: EventEffect): GameState {
+function applyEffect(state: GameState, effect: EventEffect, decisionFactionId?: number): GameState {
   let cities = { ...state.cities };
   let officers = { ...state.officers };
   let factions = { ...state.factions };
@@ -158,20 +169,25 @@ function applyEffect(state: GameState, effect: EventEffect): GameState {
       break;
     }
     case 'relation': {
-      if (effect.target === 'global') {
-        diplomacy = diplomacy.map((d) => ({
-          ...d,
-          favorability: Math.min(100, Math.max(-100, d.favorability + (effect.value as number))),
-        }));
+      if (effect.target !== 'faction' || effect.targetId == null || decisionFactionId == null) {
+        throw new Error('relation 效果缺少决策势力或目标势力');
       }
+      if (effect.targetId === decisionFactionId) break;
+      const a = Math.min(decisionFactionId, effect.targetId);
+      const b = Math.max(decisionFactionId, effect.targetId);
+      const idx = diplomacy.findIndex((d) => d.factionA === a && d.factionB === b);
+      if (idx < 0) throw new Error(`relation 效果找不到外交关系 ${a}-${b}`);
+      diplomacy[idx] = {
+        ...diplomacy[idx],
+        favorability: Math.min(100, Math.max(-100, diplomacy[idx].favorability + (effect.value as number))),
+      };
       break;
     }
     case 'war': {
-      if (effect.target === 'faction' && effect.targetId != null) {
-        // B18: 若目标势力就是玩家自身，则跳过（避免自环外交）
-        if (effect.targetId === state.playerFactionId) break;
-        const a = Math.min(state.playerFactionId, effect.targetId);
-        const b = Math.max(state.playerFactionId, effect.targetId);
+      if (effect.target === 'faction' && effect.targetId != null && decisionFactionId != null) {
+        if (effect.targetId === decisionFactionId) break;
+        const a = Math.min(decisionFactionId, effect.targetId);
+        const b = Math.max(decisionFactionId, effect.targetId);
         const idx = diplomacy.findIndex(
           (d) =>
             (d.factionA === a && d.factionB === b) ||
@@ -190,41 +206,176 @@ function applyEffect(state: GameState, effect: EventEffect): GameState {
       }
       break;
     }
-    default:
+    case 'capital': {
+      if (effect.target !== 'faction' || effect.targetId == null) {
+        throw new Error('capital 效果目标无效');
+      }
+      const faction = factions[effect.targetId];
+      const cityId = effect.value as number;
+      if (!faction || !faction.cityIds.includes(cityId)) {
+        throw new Error('迁都目标不是该势力控制的城市');
+      }
+      factions[effect.targetId] = { ...faction, capitalCityId: cityId };
       break;
+    }
+    case 'troops': {
+      if (effect.target !== 'city' || effect.targetId == null) {
+        throw new Error('troops 效果目标无效');
+      }
+      const city = cities[effect.targetId];
+      if (!city) throw new Error('troops 效果城市不存在');
+      cities[effect.targetId] = {
+        ...city,
+        troops: Math.max(0, city.troops + (effect.value as number)),
+      };
+      break;
+    }
+    case 'gold': {
+      if (effect.target === 'city' && effect.targetId != null && typeof effect.value === 'number') {
+        const city = cities[effect.targetId];
+        if (city) {
+          cities = { ...cities, [effect.targetId]: { ...city, gold: city.gold + effect.value } };
+        }
+      }
+      break;
+    }
+    case 'food': {
+      if (effect.target === 'city' && effect.targetId != null && typeof effect.value === 'number') {
+        const city = cities[effect.targetId];
+        if (city) {
+          cities = { ...cities, [effect.targetId]: { ...city, food: city.food + effect.value } };
+        }
+      }
+      break;
+    }
+    case 'population': {
+      if (effect.target === 'city' && effect.targetId != null && typeof effect.value === 'number') {
+        const city = cities[effect.targetId];
+        if (city) {
+          cities = { ...cities, [effect.targetId]: { ...city, population: city.population + effect.value } };
+        }
+      }
+      break;
+    }
+    default:
+      throw new Error(`未实现的事件效果：${effect.type}`);
   }
 
   return { ...state, cities, officers, factions, diplomacy };
 }
 
+function dateIndex(year: number, month: number): number {
+  return year * 12 + month - 1;
+}
+
+function isBeforeWindow(state: GameState, event: EventTemplate): boolean {
+  return dateIndex(state.currentYear, state.currentMonth) < dateIndex(event.dateWindow.startYear, event.dateWindow.startMonth);
+}
+
+function isAfterWindow(state: GameState, event: EventTemplate): boolean {
+  return dateIndex(state.currentYear, state.currentMonth) > dateIndex(event.dateWindow.endYear, event.dateWindow.endMonth);
+}
+
+function chooseForAi(state: GameState, event: EventTemplate): number {
+  const decidingFactionId = resolveDecisionFaction(state, event);
+  const faction = decidingFactionId == null ? undefined : state.factions[decidingFactionId];
+  const ruler = faction ? state.officers[faction.rulerId] : undefined;
+  let bestIndex = 0;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  event.choices.forEach((choice: EventChoice, index: number) => {
+    const personality = ruler?.hidden.personality;
+    const ideal = ruler?.hidden.ideal;
+    const score = (choice.aiWeight ?? 0)
+      + (personality ? choice.aiPersonalityWeights?.[personality] ?? 0 : 0)
+      + (ideal ? choice.aiIdealWeights?.[ideal] ?? 0 : 0);
+    if (score > bestScore) {
+      bestIndex = index;
+      bestScore = score;
+    }
+  });
+  return bestIndex;
+}
+
+function applyChoice(state: GameState, event: EventTemplate, choiceIndex: number): GameState {
+  const choice = event.choices[choiceIndex];
+  if (!choice) throw new Error(`事件「${event.name}」选项无效`);
+  let next = state;
+  const decidingFaction = resolveDecisionFaction(state, event);
+  for (const effect of choice.effects) {
+    next = applyEffect(next, effect, decidingFaction);
+  }
+  return pushLog(next, 'event', `【事件】${event.name}：${choice.label}`);
+}
+
+function getScenarioEvents(state: GameState, templates = getStaticData().events): EventTemplate[] {
+  const scenario = getStaticData().scenarios.find((item) => item.id === state.scenarioId);
+  if (!scenario) throw new Error('当前剧本不存在');
+  const eventIds = new Set(scenario.eventIds);
+  const layers = new Set(state.enabledEventLayers);
+  return templates.filter(
+    (event) => eventIds.has(event.id) && event.scenarioIds.includes(state.scenarioId) && layers.has(event.sourceClass),
+  );
+}
+
+/**
+ * 解析事件的决策势力：优先 decisionOfficerId（动态），fallback decisionFactionId（静态）
+ */
+function resolveDecisionFaction(state: GameState, evt: EventTemplate): number | undefined {
+  if (evt.decisionOfficerId != null) {
+    const officer = state.officers[evt.decisionOfficerId];
+    if (officer?.faction != null) return officer.faction;
+  }
+  return evt.decisionFactionId;
+}
+
 /**
  * 回合结算：autoChoice 自动结算；否则入 pending 等 UI 抉择
  */
-export function tickEvents(state: GameState): GameState {
-  const events = getStaticData().events;
+export function tickEvents(state: GameState, templates?: EventTemplate[]): GameState {
+  const events = getScenarioEvents(state, templates);
   let s = state;
   const completed = new Set(s.completedEvents ?? []);
   const pending = new Set(s.pendingEvents ?? []);
+  const invalidated = new Set(s.invalidatedEvents ?? []);
+  const eventChoices = { ...(s.eventChoices ?? {}) };
 
   for (const evt of events) {
-    if (completed.has(evt.id) || pending.has(evt.id)) continue;
+    if (completed.has(evt.id) || pending.has(evt.id) || invalidated.has(evt.id)) continue;
+    if (isBeforeWindow(s, evt)) continue;
+    if (isAfterWindow(s, evt)) {
+      invalidated.add(evt.id);
+      continue;
+    }
+    if (evt.prerequisiteEventIds?.some((id) => !completed.has(id))) continue;
+    if (evt.mutexGroup && events.some((other) => other.id !== evt.id && other.mutexGroup === evt.mutexGroup && completed.has(other.id))) {
+      invalidated.add(evt.id);
+      continue;
+    }
+    const decidingFaction = resolveDecisionFaction(s, evt);
+    if (decidingFaction != null && !s.factions[decidingFaction]?.isAlive) {
+      invalidated.add(evt.id);
+      continue;
+    }
 
     const allMet = evt.conditions.every((c) => checkCondition(s, c));
     if (!allMet) continue;
 
-    if (evt.autoChoice != null && evt.choices[evt.autoChoice]) {
-      const choice = evt.choices[evt.autoChoice];
-      for (const effect of choice.effects) {
-        s = applyEffect(s, effect);
-      }
-      s = pushLog(s, 'event', `【事件】${evt.name}：${choice.label}`);
+    if (evt.choices.length === 0) {
+      s = pushLog(s, 'event', `【事件】${evt.name}`);
       completed.add(evt.id);
-    } else if (evt.choices.length > 0) {
+      continue;
+    }
+
+    const playerDecides = decidingFaction == null || decidingFaction === s.playerFactionId;
+    if (evt.autoChoice == null && playerDecides) {
       pending.add(evt.id);
       s = pushLog(s, 'event_pending', `【事件】${evt.name} 触发，请抉择`);
     } else {
-      s = pushLog(s, 'event', `【事件】${evt.name}`);
+      const choiceIndex = evt.autoChoice ?? chooseForAi(s, evt);
+      s = applyChoice(s, evt, choiceIndex);
       completed.add(evt.id);
+      eventChoices[evt.id] = choiceIndex;
+      s = { ...s, eventChoices: { ...eventChoices } };
     }
   }
 
@@ -232,6 +383,8 @@ export function tickEvents(state: GameState): GameState {
     ...s,
     completedEvents: [...completed],
     pendingEvents: [...pending],
+    invalidatedEvents: [...invalidated],
+    eventChoices,
   };
 }
 
@@ -244,21 +397,20 @@ export function resolveEventChoice(
   choiceIndex: number,
 ): GameState {
   const pending = state.pendingEvents ?? [];
-  if (!pending.includes(eventId)) {
-    throw new Error('该事件不在待决队列');
-  }
+  if (pending[0] !== eventId) throw new Error('只能处理待决队列中的首个事件');
 
-  const evt = getStaticData().events.find((e) => e.id === eventId);
+  const evt = getScenarioEvents(state).find((e) => e.id === eventId);
   if (!evt) throw new Error('事件不存在');
+  const decidingFaction = resolveDecisionFaction(state, evt);
+  if (decidingFaction != null && decidingFaction !== state.playerFactionId) {
+    throw new Error('该事件不由玩家势力决策');
+  }
+  if (isAfterWindow(state, evt)) throw new Error('该事件已经失效');
 
   const choice = evt.choices[choiceIndex];
   if (!choice) throw new Error('选项无效');
 
-  let s = state;
-  for (const effect of choice.effects) {
-    s = applyEffect(s, effect);
-  }
-  s = pushLog(s, 'event', `【事件】${evt.name}：${choice.label}`);
+  const s = applyChoice(state, evt, choiceIndex);
 
   const completed = new Set(s.completedEvents ?? []);
   completed.add(eventId);
@@ -267,5 +419,6 @@ export function resolveEventChoice(
     ...s,
     pendingEvents: pending.filter((id) => id !== eventId),
     completedEvents: [...completed],
+    eventChoices: { ...s.eventChoices, [eventId]: choiceIndex },
   };
 }
