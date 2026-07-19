@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dataDir = join(__dirname, '../data');
 
 const files: { key: validators.DataFileKey; file: string; expected: number }[] = [
-  { key: 'officers', file: 'officers.json', expected: 199 },
+  { key: 'officers', file: 'officers.json', expected: 223 },
   { key: 'cities', file: 'cities.json', expected: 30 },
   { key: 'formations', file: 'formations.json', expected: 6 },
   { key: 'units', file: 'units.json', expected: 9 },
