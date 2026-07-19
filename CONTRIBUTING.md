@@ -13,7 +13,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # 类型检查: pnpm typecheck
 ```
 
-开局默认刘备军（`playerFactionId=2`，成都 id=19）。硬刷新 `Ctrl+Shift+R`。
+首次进入先在 ScenarioSelect 选择剧本与势力；当前可选英雄集结或190《关东义兵》四槽技术切片。硬刷新 `Ctrl+Shift+R`。
 
 ## 项目结构
 
