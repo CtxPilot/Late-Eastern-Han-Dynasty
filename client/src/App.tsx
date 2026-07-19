@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
+import { ScenarioSelect } from './components/scenario/ScenarioSelect';
 import { waitForGameFonts } from './utils/fontBarrier';
 
 export default function App() {
@@ -59,7 +60,7 @@ export default function App() {
     );
   }
 
-  if (screen === 'boot' || !game) {
+  if (screen === 'boot') {
     return (
       <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
         <h1 className="text-2xl text-amber-400 font-semibold">LateEasternHanDynasty · 可玩 Demo</h1>
@@ -75,6 +76,12 @@ export default function App() {
         )}
       </div>
     );
+  }
+
+  if (screen === 'scenario') return <ScenarioSelect />;
+
+  if (!game) {
+    return <div className="h-full flex items-center justify-center bg-stone-950 text-red-300">游戏状态缺失，请重新选择剧本。</div>;
   }
 
   if (screen === 'battle') {

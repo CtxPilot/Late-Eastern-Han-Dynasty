@@ -17,6 +17,7 @@ export function TopBar() {
   const error = useGameStore((s) => s.error);
   const endTurn = useGameStore((s) => s.endTurn);
   const screen = useGameStore((s) => s.screen);
+  const openScenarioSelect = useGameStore((s) => s.openScenarioSelect);
 
   if (!game) return null;
 
@@ -68,6 +69,13 @@ export function TopBar() {
       </span>
       <span className="flex-1" />
       {error && <span className="text-red-400 text-xs mr-2">{error}</span>}
+      <button
+        type="button"
+        className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
+        onClick={openScenarioSelect}
+      >
+        更换剧本
+      </button>
       {screen === 'world' && (
         <button
           type="button"
