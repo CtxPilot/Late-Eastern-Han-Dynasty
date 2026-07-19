@@ -9,6 +9,8 @@ export interface Faction {
   color: string;
   rulerId: number;
   capitalCityId: number;
+  scenarioMode?: 'territorial' | 'expeditionary' | 'hosted';
+  headquartersLabel?: string;
   gold: number;
   food: number;
   /**
