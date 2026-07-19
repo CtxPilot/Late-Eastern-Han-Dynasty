@@ -12,6 +12,7 @@ import type { Faction } from './faction.js';
 import type { Officer } from './officer.js';
 import type { IntelState } from './intel.js';
 import type { Plot } from './plot.js';
+import type { EventSourceClass } from './event.js';
 
 export interface GameAction {
   year: number;
@@ -22,6 +23,8 @@ export interface GameAction {
 
 export interface GameState {
   scenarioId: number;
+  enabledEventLayers: EventSourceClass[];
+  enabledChildEventIds: number[];
   currentYear: number;
   currentMonth: number;
   season: Season;
@@ -48,5 +51,7 @@ export interface GameState {
 
   completedEvents: number[];
   pendingEvents: number[];
+  invalidatedEvents: number[];
+  eventChoices: Record<number, number>;
   actionLog: GameAction[];
 }

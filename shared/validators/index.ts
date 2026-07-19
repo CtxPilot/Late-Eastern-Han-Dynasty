@@ -416,6 +416,14 @@ export const SkillTemplateSchema = z.object({
 
 export const SkillsFileSchema = z.array(SkillTemplateSchema);
 
+const EventSourceClassSchema = z.enum([
+  'official_history',
+  'annotated_history',
+  'literature',
+  'legend',
+  'gameplay',
+]);
+
 export const ScenarioStaticSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
@@ -463,6 +471,23 @@ export const ScenarioStaticSchema = z.object({
     ),
     completedEvents: z.array(z.number()),
   }),
+  factionSetups: z.array(z.object({
+    id: z.number().int().positive(),
+    name: z.string().min(1),
+    color: z.string().min(1),
+    rulerId: z.number().int().positive(),
+    capitalCityId: z.number().int().positive(),
+    mode: z.enum(['territorial', 'expeditionary', 'hosted']),
+    headquartersLabel: z.string().min(1),
+    historicalNote: z.string().optional(),
+  })).min(1),
+  eventIds: z.array(z.number().int().positive()),
+  availableOfficerIds: z.array(z.number().int().positive()).min(1),
+  availableFemaleIds: z.array(z.number().int().positive()),
+  childEventIds: z.array(z.number().int().positive()),
+  availableEventLayers: z.array(EventSourceClassSchema).min(1),
+  defaultEventLayers: z.array(EventSourceClassSchema).min(1),
+  scopeNote: z.string().optional(),
   playableFactions: z.array(z.number()),
   recommendedFaction: z.number().optional(),
 });
@@ -474,10 +499,24 @@ export const EventTemplateSchema = z.object({
   name: z.string().min(1),
   description: z.string(),
   category: z.enum(['historical', 'random', 'marriage', 'diplomacy', 'battle']),
+  sourceClass: EventSourceClassSchema,
+  sources: z.array(z.string().min(1)).min(1),
+  scenarioIds: z.array(z.number().int().positive()).min(1),
+  dateWindow: z.object({
+    startYear: z.number().int(),
+    startMonth: z.number().int().min(1).max(12),
+    endYear: z.number().int(),
+    endMonth: z.number().int().min(1).max(12),
+  }),
+  decisionFactionId: z.number().int().positive().optional(),
+  decisionOfficerId: z.number().int().positive().optional(),
+  prerequisiteEventIds: z.array(z.number().int().positive()).optional(),
+  mutexGroup: z.string().min(1).optional(),
   conditions: z.array(
     z.object({
-      type: z.string(),
+      type: z.enum(['year', 'officer', 'city', 'faction', 'event']),
       field: z.string(),
+      targetId: z.number().int().positive().optional(),
       operator: z.enum(['equals', 'gte', 'lte', 'in', 'hasItem', 'notHas', 'probability']),
       value: z.unknown(),
     }),
@@ -495,17 +534,19 @@ export const EventTemplateSchema = z.object({
       label: z.string(),
       effects: z.array(
         z.object({
-          type: z.string(),
+            type: z.enum(['recruit', 'loyalty', 'develop', 'relation', 'war', 'capital', 'troops', 'gold', 'food', 'population']),
           target: z.enum(['faction', 'officer', 'city', 'global']),
           targetId: z.number().optional(),
           field: z.string(),
           value: z.unknown(),
         }),
       ),
-      aiWeight: z.number().optional(),
+      aiWeight: z.number().min(0).optional(),
+      aiPersonalityWeights: z.record(z.number()).optional(),
+      aiIdealWeights: z.record(z.number()).optional(),
     }),
   ),
-  autoChoice: z.number().optional(),
+  autoChoice: z.number().int().nonnegative().optional(),
 });
 
 export const EventsFileSchema = z.array(EventTemplateSchema);

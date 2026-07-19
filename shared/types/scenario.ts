@@ -10,6 +10,19 @@ import type {
   MilitaryPosition,
   NobilityRank,
 } from '../enums/index.js';
+import type { EventSourceClass } from './event.js';
+
+export interface ScenarioFactionSetup {
+  id: FactionId;
+  name: string;
+  color: string;
+  rulerId: number;
+  capitalCityId: number;
+  /** 0-A historical scenarios may use a supply-seat abstraction for mobile commands. */
+  mode: 'territorial' | 'expeditionary' | 'hosted';
+  headquartersLabel: string;
+  historicalNote?: string;
+}
 
 export interface ScenarioOfficerPosition {
   officerId: number;
@@ -61,6 +74,15 @@ export interface ScenarioStatic {
   startYear: number;
   endYear: number;
   startState: ScenarioStartingState;
+  factionSetups: ScenarioFactionSetup[];
+  eventIds: number[];
+  availableOfficerIds: number[];
+  availableFemaleIds: number[];
+  childEventIds: number[];
+  availableEventLayers: EventSourceClass[];
+  defaultEventLayers: EventSourceClass[];
+  /** Explicitly distinguishes a playable technical slice from a full historical setup. */
+  scopeNote?: string;
   playableFactions: number[];
   recommendedFaction?: number;
 }
