@@ -1943,6 +1943,77 @@ interface GameStore {
 
 **触发**：gameStore 各 action 在 `set({game})` 时前端算 delta（newGame vs oldGame 的己方城池金粮汇总差），附带 `floatingDelta`。TopBar/RightPanel 订阅渲染 `+N/-N` 上浮淡出。**服务端不动**。
 
+### §21.4 委任军团类型
+
+**新增字段**（实装时加到 `shared/types/delegation.ts`）：
+
+```typescript
+// ========================
+// 委任方针
+// ========================
+enum DelegationPolicy {
+  DEVELOPMENT = 'development', // 发展优先
+  ARMAMENT = 'armament',       // 军备优先
+  BALANCED = 'balanced',       // 平衡型
+  OFFENSIVE = 'offensive',     // 攻略型
+}
+
+// ========================
+// 委任报告（每季生成）
+// ========================
+interface DelegationReport {
+  regionId: string;
+  season: number;
+  year: number;
+  governorId: number;
+  actionSummary: string[];             // 本季行动摘要
+  troopDelta: number;                  // 兵力变化
+  goldDelta: number;                   // 金变化
+  foodDelta: number;                   // 粮变化
+  battlesWon: number;                  // 出战胜利次数
+  battlesLost: number;                 // 出战失败次数
+  citiesCaptured: number;              // 攻占城池数
+  officersRecruited: number;           // 登用武将数
+  warnings: string[];                  // 警告/事件
+}
+
+// ========================
+// 委任区
+// ========================
+interface DelegationRegion {
+  id: string;                          // 委任区 ID
+  name: string;                        // 名称
+  cityIds: number[];                   // 归属城池 ID
+  governorId: number;                  // 都督武将 ID
+  policy: DelegationPolicy;            // 委任方针
+  autoRecruit: boolean;                // 自动搜录在野
+  autoReward: boolean;                 // 自动赏赐低忠诚
+  prohibitedTargets: number[];         // 禁止出征目标势力 ID
+  createdYear: number;                 // 创建年份
+  lastReport?: DelegationReport;       // 最近一次报告
+}
+```
+
+**Faction 接口扩展**：
+
+```typescript
+interface Faction {
+  // ...现有字段
+  delegationRegions: DelegationRegion[];  // 委任区列表（§39）
+}
+```
+
+**新增枚举文件**（`shared/enums/delegation.ts`）：
+
+```typescript
+enum DelegationPolicy {
+  DEVELOPMENT = 'development',
+  ARMAMENT = 'armament',
+  BALANCED = 'balanced',
+  OFFENSIVE = 'offensive',
+}
+```
+
 ---
 
-*文档版本: v2.6 | 2026-07-19 | Session 106 实装场景级势力/角色/事件白名单、事件史源/窗口/前置/AI决策与运行态结果*
+*文档版本: v2.7 | 2026-07-19 | 新增 §21.4 委任军团数据类型*
