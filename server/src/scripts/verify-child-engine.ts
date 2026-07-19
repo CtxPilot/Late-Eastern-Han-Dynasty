@@ -171,6 +171,8 @@ const def: ChildBirthDef = {
 function baseState(married: boolean): GameState {
   return {
     scenarioId: 1,
+    enabledEventLayers: ['gameplay'],
+    enabledChildEventIds: [def.childId],
     currentYear: 203,
     currentMonth: 1,
     season: Season.SPRING,
@@ -208,6 +210,8 @@ function baseState(married: boolean): GameState {
     plots: [],
     completedEvents: [],
     pendingEvents: [],
+    invalidatedEvents: [],
+    eventChoices: {},
     actionLog: [],
   };
 }
