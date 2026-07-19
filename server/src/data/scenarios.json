@@ -1,10 +1,55 @@
 [
   {
     "id": 1,
-    "name": "群雄割据（0-A）",
-    "type": "historical",
-    "noLifespan": false,
-    "description": "初平元年前后，曹操、刘备、孙权、吕布四方并立的最小验证剧本。",
+    "name": "英雄集结·开局即高光（0-A Demo）",
+    "type": "whatif",
+    "noLifespan": true,
+    "description": "四方名将跨年代集结的0-A特色展示剧本。推荐刘备军，可在江陵编成主将、副将与参谋，并从襄阳出征宛体验六角战斗与单挑；史载部曲武将仅作阵容展示，部曲机制本身尚未实装。",
+    "scopeNote": "假想玩法 Demo；不触发历史事件。",
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "曹操军",
+        "color": "#4a6fa5",
+        "rulerId": 1,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "洛阳"
+      },
+      {
+        "id": 2,
+        "name": "刘备军",
+        "color": "#3d8b5a",
+        "rulerId": 2,
+        "capitalCityId": 19,
+        "mode": "territorial",
+        "headquartersLabel": "成都"
+      },
+      {
+        "id": 3,
+        "name": "孙权军",
+        "color": "#c44b4b",
+        "rulerId": 3,
+        "capitalCityId": 17,
+        "mode": "territorial",
+        "headquartersLabel": "建业"
+      },
+      {
+        "id": 4,
+        "name": "吕布军",
+        "color": "#8b5a9e",
+        "rulerId": 5,
+        "capitalCityId": 9,
+        "mode": "territorial",
+        "headquartersLabel": "下邳"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114],
+    "availableFemaleIds": [201, 202, 203, 204, 205, 206, 207, 208, 209, 210],
+    "childEventIds": [950, 951, 952, 953, 954],
+    "availableEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
+    "defaultEventLayers": ["gameplay"],
     "startYear": 190,
     "endYear": 220,
     "playableFactions": [
@@ -58,7 +103,7 @@
         "26": 1,
         "27": 1,
         "28": 1,
-        "29": 3,
+        "29": 4,
         "30": 3
       },
       "officerPositions": [
@@ -99,14 +144,14 @@
         },
         {
           "officerId": 2,
-          "cityId": 19,
+          "cityId": 14,
           "factionId": 2,
           "nobilityRank": "prince",
           "loyalty": 100
         },
         {
           "officerId": 4,
-          "cityId": 20,
+          "cityId": 14,
           "factionId": 2,
           "civilPosition": "chancellor",
           "loyalty": 100
@@ -127,7 +172,7 @@
         },
         {
           "officerId": 10,
-          "cityId": 19,
+          "cityId": 14,
           "factionId": 2,
           "militaryPosition": "colonel",
           "loyalty": 100
@@ -169,92 +214,98 @@
         },
         {
           "officerId": 100,
-          "cityId": 1,
+          "cityId": 13,
           "factionId": 1,
-          "loyalty": 70
+          "militaryPosition": "captain",
+          "loyalty": 100
         },
         {
           "officerId": 101,
           "cityId": 5,
           "factionId": 1,
-          "loyalty": 71
+          "militaryPosition": "general",
+          "loyalty": 100
         },
         {
           "officerId": 102,
-          "cityId": 19,
-          "factionId": 2,
-          "loyalty": 72
+          "cityId": 7,
+          "factionId": 1,
+          "loyalty": 92
         },
         {
           "officerId": 103,
-          "cityId": 17,
-          "factionId": 3,
-          "loyalty": 73
+          "cityId": 8,
+          "factionId": 1,
+          "loyalty": 90
         },
         {
           "officerId": 104,
           "cityId": 9,
           "factionId": 4,
-          "loyalty": 74
+          "militaryPosition": "general",
+          "loyalty": 100
         },
         {
           "officerId": 105,
-          "cityId": 2,
-          "factionId": 1,
-          "loyalty": 75
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 100
         },
         {
           "officerId": 106,
           "cityId": 14,
           "factionId": 2,
-          "loyalty": 76
+          "militaryPosition": "colonel",
+          "loyalty": 90
         },
         {
           "officerId": 107,
-          "cityId": 16,
+          "cityId": 17,
           "factionId": 3,
-          "loyalty": 77
+          "loyalty": 90
         },
         {
           "officerId": 108,
-          "cityId": 22,
-          "factionId": 1,
-          "loyalty": 78
+          "cityId": 16,
+          "factionId": 3,
+          "loyalty": 90
         },
         {
           "officerId": 109,
-          "cityId": 24,
-          "factionId": 1,
-          "loyalty": 79
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 95
         },
         {
           "officerId": 110,
-          "cityId": 26,
-          "factionId": 1,
-          "loyalty": 80
+          "cityId": 29,
+          "factionId": 4,
+          "loyalty": 85
         },
         {
           "officerId": 111,
-          "cityId": 29,
-          "factionId": 3,
-          "loyalty": 81
+          "cityId": 14,
+          "factionId": 2,
+          "loyalty": 88
         },
         {
           "officerId": 112,
-          "cityId": 3,
-          "factionId": 1,
+          "cityId": 9,
+          "factionId": 4,
           "loyalty": 82
         },
         {
           "officerId": 113,
-          "cityId": 11,
-          "factionId": 4,
+          "cityId": 3,
+          "factionId": 1,
           "loyalty": 83
         },
         {
           "officerId": 114,
-          "cityId": 7,
-          "factionId": 1,
+          "cityId": 17,
+          "factionId": 3,
           "loyalty": 84
         }
       ],
@@ -360,6 +411,103 @@
           "relation": "neutral",
           "favorability": 0
         }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 2,
+    "name": "关东义兵（190·0-A 技术切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "初平元年正月，关东州郡起兵讨董。四个可玩槽位验证剧本级势力、史料分层和条件式事件链。",
+    "scopeNote": "仅为董卓、袁绍、曹操、孙坚四个指挥集团的技术切片，不代表完整关东诸军。河内、鲁阳未进入30城地图，相关据点使用邻近节点作补给席位，不宣称独占当地郡县。",
+    "startYear": 190,
+    "endYear": 192,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "曹操义兵",
+        "color": "#496b88",
+        "rulerId": 1,
+        "capitalCityId": 7,
+        "mode": "expeditionary",
+        "headquartersLabel": "陈留募兵处",
+        "historicalNote": "曹操在陈留散家财、合义兵；据点是补给席位，不等同陈留郡归曹操所有。"
+      },
+      {
+        "id": 2,
+        "name": "袁绍河内军",
+        "color": "#b59a55",
+        "rulerId": 113,
+        "capitalCityId": 25,
+        "mode": "expeditionary",
+        "headquartersLabel": "河内盟营（壶关节点代理）",
+        "historicalNote": "30城地图尚无河内节点，临时借壶关节点承载补给，不表示袁绍占有上党。"
+      },
+      {
+        "id": 3,
+        "name": "孙坚鲁阳军",
+        "color": "#a84b3f",
+        "rulerId": 114,
+        "capitalCityId": 13,
+        "mode": "hosted",
+        "headquartersLabel": "鲁阳军（宛节点代理）",
+        "historicalNote": "孙坚受袁术节制驻鲁阳；借宛节点承载寄驻补给，不表示孙坚独占南阳。"
+      },
+      {
+        "id": 4,
+        "name": "董卓政权",
+        "color": "#6f445e",
+        "rulerId": 112,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "洛阳"
+      }
+    ],
+    "eventIds": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123],
+    "availableOfficerIds": [1, 5, 9, 101, 102, 103, 104, 105, 112, 113, 114],
+    "availableFemaleIds": [],
+    "childEventIds": [],
+    "availableEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
+    "defaultEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
+    "playableFactions": [1, 2, 3, 4],
+    "recommendedFaction": 1,
+    "startState": {
+      "year": 190,
+      "month": 1,
+      "factions": [1, 2, 3, 4],
+      "activeFactionIds": [1, 2, 3, 4],
+      "cityOwnership": {
+        "1": 4,
+        "2": 4,
+        "7": 1,
+        "13": 3,
+        "22": 4,
+        "23": 4,
+        "25": 2
+      },
+      "officerPositions": [
+        { "officerId": 1, "cityId": 7, "factionId": 1, "militaryPosition": "grandGeneral", "loyalty": 100 },
+        { "officerId": 9, "cityId": 7, "factionId": 1, "militaryPosition": "general", "loyalty": 100 },
+        { "officerId": 101, "cityId": 7, "factionId": 1, "militaryPosition": "general", "loyalty": 100 },
+        { "officerId": 102, "cityId": 7, "factionId": 1, "militaryPosition": "captain", "loyalty": 95 },
+        { "officerId": 103, "cityId": 7, "factionId": 1, "militaryPosition": "captain", "loyalty": 95 },
+        { "officerId": 113, "cityId": 25, "factionId": 2, "militaryPosition": "grandGeneral", "loyalty": 100 },
+        { "officerId": 114, "cityId": 13, "factionId": 3, "militaryPosition": "grandGeneral", "loyalty": 100 },
+        { "officerId": 105, "cityId": 13, "factionId": 3, "militaryPosition": "captain", "loyalty": 100 },
+        { "officerId": 112, "cityId": 1, "factionId": 4, "civilPosition": "chancellor", "loyalty": 100 },
+        { "officerId": 5, "cityId": 1, "factionId": 4, "militaryPosition": "grandGeneral", "loyalty": 90 },
+        { "officerId": 104, "cityId": 1, "factionId": 4, "militaryPosition": "general", "loyalty": 90 }
+      ],
+      "femalePositions": [],
+      "initialDiplomacy": [
+        { "factionA": 1, "factionB": 2, "relation": "allied", "favorability": 45 },
+        { "factionA": 1, "factionB": 3, "relation": "allied", "favorability": 35 },
+        { "factionA": 1, "factionB": 4, "relation": "war", "favorability": -80 },
+        { "factionA": 2, "factionB": 3, "relation": "allied", "favorability": 30 },
+        { "factionA": 2, "factionB": 4, "relation": "war", "favorability": -80 },
+        { "factionA": 3, "factionB": 4, "relation": "war", "favorability": -80 }
       ],
       "completedEvents": []
     }
