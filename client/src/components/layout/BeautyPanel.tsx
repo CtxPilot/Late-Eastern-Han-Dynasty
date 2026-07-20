@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 /**
  * S09 美女资源：仅势力库存赏赐
@@ -13,6 +14,8 @@ export function BeautyPanel() {
   const rewardBeautyStock = useGameStore((s) => s.rewardBeautyStock);
   const loading = useGameStore((s) => s.loading);
   const [officerId, setOfficerId] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const error = useGameStore((s) => s.error);
 
   const officers = useMemo(() => {
     if (!game) return [];
@@ -55,12 +58,33 @@ export function BeautyPanel() {
             disabled={loading || stock < 1 || officerId == null}
             className="px-2 py-0.5 rounded border border-rose-800 text-rose-100 disabled:opacity-40"
             title="耗 1 美女库存，忠诚+12"
-            onClick={() => officerId != null && void rewardBeautyStock(officerId, 1)}
+            onClick={() => setConfirmOpen(true)}
           >
             赏赐×1
           </button>
         </div>
       </div>
+      <CommandConfirmDialog
+        open={confirmOpen}
+        category="人事"
+        command="赏赐美人"
+        summary="从势力美女库存赏赐一人，以提高武将忠诚。"
+        items={[
+          { label: '执行者', value: game.officers[game.factions[game.playerFactionId]?.rulerId]?.name ?? '君主' },
+          { label: '目标', value: officerId != null ? game.officers[officerId]?.name ?? '—' : '—' },
+          { label: '立即消耗', value: '美女库存 1' },
+          { label: '耗时', value: '立即生效' },
+          { label: '主要收益', value: '忠诚 +12' },
+        ]}
+        loading={loading}
+        error={error}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          if (officerId == null) return;
+          await rewardBeautyStock(officerId, 1);
+          if (!useGameStore.getState().error) setConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

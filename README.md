@@ -85,7 +85,7 @@ pnpm dev
 | S17 | 计谋 | M+ | 美人计/离间/假情报/空城·+四面楚歌联动 |
 | S18 | 家族 | M+ | 婚配/跟随/子女引擎·祝融唯一女将 |
 | S19 | 单挑大会 | D | 设计完成·16人淘汰·押注·武魁称号·引擎待实现 |
-| S20 | 前端体验 | D | Session 100 技术储备方案完成（零代码）：endTurn WS 接入/数字跳动/EventLog 流化/势力凸包涂色/FogLayer/konva tween/PCG 水墨地形/派系面板/OfficerDetail/己方武将列表/忠诚度警报/外交雷达 SVG/财政飘字/行政总署三段式。零新依赖 |
+| S20 | 前端体验 | S/D | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报，以及搜索/登用/任命/解职/赏赐统一终审窗；派系、外交雷达、财政飘字及 W1~W3 仍为设计。零新依赖 |
 | S21 | 三级战斗串联 | D | Session 100 技术储备方案完成（零代码）：一级大地图演出/二级战术串联/三级白刃战 MeleeStage Konva 方阵/单挑接入 DuelStage 混合范式/screen 六态栈 |
 | S22 | 美术基调·金石水墨免版权 | S/D | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码：@font-face 工程内部别名 `HanDynastySerif`/`HanDynastySeal` + FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI）。武将头像组合方案 A+C+B（P5-10a/b/c 留 Phase 5）。详见 `00-dev-constitution.md` §11.3+§11.7、`15-linux-ui-spec.md` |
 

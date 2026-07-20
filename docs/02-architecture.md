@@ -472,11 +472,11 @@ server/src/data/loader.ts
 
 ---
 
-## 附：Session 100 前端体验技术储备（未实装，方案文档化）
+## 附：S20/S21 前端体验技术储备（Session 122 部分实装）
 
-> 本节为 Session 100 技术储备，零代码改动，实装拆为 S100~S107 共 8 Session。详见 `docs/07-ui-design.md` §11。
+> 本节源自 Session 100 技术储备；现统一编号为 S20-W1~W4 / S21-W6~W9。Session 122 已实装 `OfficerDetail`、`OfficerRosterPanel` 与统一人事终审窗，其余仍为规划。详见 `docs/07-ui-design.md` §11~§12。
 
-### 新增前端组件清单（规划）
+### 新增前端组件清单（实装状态）
 
 | 组件 | 路径（规划） | 职责 | 所属系统 |
 |------|------|------|:--:|
@@ -487,8 +487,9 @@ server/src/data/loader.ts
 | `TerritoryLayer` | `client/src/components/map/TerritoryLayer.tsx` | 势力领土 polygon | S20-W3 |
 | `FogLayer` | `client/src/components/map/FogLayer.tsx` | globalCompositeOperation 挖洞迷雾 | S20-W3 |
 | `FactionPanel` | `client/src/components/layout/FactionPanel.tsx` | 派系面板（tags 派生） | S20-W4 |
-| `OfficerDetail` | `client/src/components/officer/OfficerDetail.tsx` | 武将详情 modal | S20-W4 |
-| `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报 | S20-W4 |
+| `OfficerDetail` | `client/src/components/officer/OfficerDetail.tsx` | 武将详情 modal（✅ Session 122） | S20-W4 |
+| `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报（✅ Session 122） | S20-W4 |
+| `CommandConfirmDialog` | `client/src/components/ui/CommandConfirmDialog.tsx` | 状态变更命令统一终审窗（✅ Session 122，人事首批接入） | S20-W4/§12 |
 | `RadarChart` | `client/src/components/ui/RadarChart.tsx` | 纯 SVG 手写外交雷达 | S20-W4 |
 | `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |
 | `DuelStage` | `client/src/components/battle/DuelStage.tsx` | 单挑 Konva 演出层（混合范式） | S21-W9 |
@@ -528,4 +529,4 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.3 | 最后更新: 2026-07-19 | Session 109 事件链扩展至24事件+玩家抉择系统*
+*文档版本: v2.4 | 最后更新: 2026-07-20 | Session 122 更新 S20 组件实装状态*

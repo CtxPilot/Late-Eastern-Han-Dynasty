@@ -112,54 +112,59 @@
 
 ## 二、formations.json — 阵型数据
 
-**18条记录**。
+**0-A：6条**（6 陆阵）· **0-B 全量：27条**（18 陆阵 + 9 水阵）。详见 `05-combat-system.md §4`。
 
 ### 字段说明
 
+> Session 120 重写：新增 tiers/ultimate/family/prerequisites 字段。
+
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| id | number | FormationType 枚举值 (0~17) |
+| id | number | FormationType 枚举值（陆阵 0~17，水阵 18~26） |
 | name | string | 阵型名 |
 | description | string | 说明 |
 | historicalSource | string | 史料出处 |
-| modifiers | { attack, defense, mobility, range } | 属性修正 |
+| family | 'land' \| 'water' | 体系：陆阵/水阵 |
+| tiers | FormationLevelData[] | Lv1~Lv5 每级属性（attack/defense/mobility/range/specialEffects） |
+| ultimate | FormationUltimate | 极效果（attackBonus/defenseBonus/effect/proficiencyRequired） |
 | effects | FormationEffect[] | 特殊效果 |
 | allowedUnits | UnitType[] | 可用兵种 |
-| bestUnits | UnitType[] | 最佳兵种(额外+10%) |
+| bestUnits | UnitType[] | 最佳兵种（额外+10%） |
 | restrictedUnits | UnitType[] | 禁用兵种 |
 | terrainModifiers | Record | 地形适应修正 |
+| prerequisites | FormationPrerequisite[]? | 科技树前置条件（非基础阵型必填） |
+| specialUnlock | object? | 特殊解锁条件（智力/水军适性/兵种限定） |
 
-### 示例 (2条)
+### 示例（方阵·新版结构）
 
 ```json
-[
-  {
-    "id": 0,
-    "name": "方阵",
-    "description": "攻守均衡之基本阵型，前后左右均可应敌。",
-    "historicalSource": "孙膑兵法·十阵",
-    "modifiers": { "attack": 1, "defense": 1, "mobility": 0, "range": 0 },
-    "effects": [],
-    "allowedUnits": ["lightInfantry", "heavyInfantry", "spearman", "archer", "crossbowman"],
-    "bestUnits": ["heavyInfantry", "spearman"],
-    "restrictedUnits": [],
-    "terrainModifiers": { "plain": 0, "forest": -1, "mountain": -2, "water": -3 }
+{
+  "id": 0,
+  "name": "方阵",
+  "description": "攻守均衡之基本阵型，前后左右均可应敌。",
+  "historicalSource": "孙膑兵法·十阵",
+  "family": "land",
+  "tiers": [
+    { "level": 1, "attack": 1, "defense": 1, "mobility": 0, "range": 0 },
+    { "level": 2, "attack": 2, "defense": 2, "mobility": 0, "range": 0 },
+    { "level": 3, "attack": 3, "defense": 3, "mobility": 1, "range": 0, "specialEffects": ["被包围时仍可发挥100%战力"] },
+    { "level": 4, "attack": 4, "defense": 4, "mobility": 1, "range": 0 },
+    { "level": 5, "attack": 5, "defense": 5, "mobility": 1, "range": 0 }
+  ],
+  "ultimate": {
+    "attackBonus": 0,
+    "defenseBonus": 0,
+    "mobilityBonus": 0,
+    "rangeBonus": 0,
+    "effect": "免疫一次围剿（被包围时仍可发挥100%战力）",
+    "proficiencyRequired": 500
   },
-  {
-    "id": 15,
-    "name": "八卦阵",
-    "description": "诸葛亮所创八阵图，天地风云龙虎鸟蛇，变化无穷。",
-    "historicalSource": "三国志·诸葛亮传",
-    "modifiers": { "attack": 2, "defense": 2, "mobility": 1, "range": 0 },
-    "effects": [
-      { "name": "八门", "description": "全兵种+15%全属性", "modifier": { "type": "all_stats", "value": 15 } }
-    ],
-    "allowedUnits": ["lightInfantry", "heavyInfantry", "spearman", "archer", "crossbowman", "lightCavalry", "heavyCavalry"],
-    "bestUnits": ["heavyInfantry", "archer"],
-    "restrictedUnits": ["siege"],
-    "terrainModifiers": { "plain": 5, "forest": 5, "mountain": 3, "water": -2 }
-  }
-]
+  "effects": [],
+  "allowedUnits": ["lightInfantry", "heavyInfantry", "spearman", "archer", "crossbowman"],
+  "bestUnits": ["heavyInfantry", "spearman"],
+  "restrictedUnits": [],
+  "terrainModifiers": { "plain": 0, "forest": -1, "mountain": -2, "water": -3 }
+}
 ```
 
 ---
