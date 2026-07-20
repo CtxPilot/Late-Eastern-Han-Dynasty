@@ -10,6 +10,7 @@ import { SpyPanel } from './SpyPanel';
 import { PlotPanel } from './PlotPanel';
 import { PersonnelPanel } from './PersonnelPanel';
 import { AppointPanel } from './AppointPanel';
+import { OfficerRosterPanel } from './OfficerRosterPanel';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { AccSection } from '../ui/AccSection';
 
@@ -136,7 +137,16 @@ export function LeftPanel() {
           open={open === 'personnel'}
           onToggle={() => toggle('personnel')}
         >
+          <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
+            武将名册
+          </div>
+          <OfficerRosterPanel />
+          <div className="border-t border-stone-800 mt-0.5 pt-0.5">
+            <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
+              搜索与登用
+            </div>
           <PersonnelPanel />
+          </div>
           <div className="border-t border-stone-800 mt-0.5 pt-0.5">
             <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
               任命

@@ -19,6 +19,7 @@ import {
   type PositionTrack,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 const CIVIL_OPTS = [
   CivilPosition.CLERK,
@@ -54,6 +55,8 @@ export function AppointPanel() {
   const [officerId, setOfficerId] = useState<number | ''>('');
   const [track, setTrack] = useState<PositionTrack>('military');
   const [position, setPosition] = useState<string>(MilitaryPosition.CAPTAIN);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const error = useGameStore((s) => s.error);
 
   const officers = useMemo(() => {
     if (!game) return [];
@@ -217,18 +220,31 @@ export function AppointPanel() {
         data-testid="btn-appoint"
         disabled={loading || officerId === '' || !canMeet || !atCity}
         className="w-full px-2 py-1.5 rounded border border-amber-800/70 bg-amber-950/40 text-amber-100 disabled:opacity-40"
-        onClick={() => {
-          if (officerId === '') return;
-          void appointOfficer(
-            officerId,
-            track,
-            position,
-            needsCity ? cityId : undefined,
-          );
-        }}
+        onClick={() => setConfirmOpen(true)}
       >
         {position === 'none' ? '解职' : '任命'}
       </button>
+      <CommandConfirmDialog
+        open={confirmOpen}
+        category="人事"
+        command={position === 'none' ? '解除官职' : '任命官职'}
+        summary="官职变更会立即生效；取消可返回并保留当前选择。"
+        items={[
+          { label: '执行者', value: game.officers[game.factions[game.playerFactionId]?.rulerId]?.name ?? '君主' },
+          { label: '目标', value: officer?.name ?? '—' },
+          { label: '变更', value: `${currentLabel} → ${labels[position] ?? position}` },
+          { label: '任职地', value: needsCity && cityId != null ? game.cities[cityId]?.name ?? '—' : '势力任职' },
+          { label: '消耗／耗时', value: '无 · 立即生效' },
+        ]}
+        loading={loading}
+        error={error}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          if (officerId === '') return;
+          await appointOfficer(officerId, track, position, needsCity ? cityId : undefined);
+          if (!useGameStore.getState().error) setConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

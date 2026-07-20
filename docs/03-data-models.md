@@ -77,6 +77,7 @@ export type UnitProficiency = 'S' | 'A' | 'B' | 'C' | 'NONE';
 // 阵型精通
 // ========================
 export enum FormationType {
+  // 陆阵（18 种）
   SQUARE = 0,         // 方阵
   CIRCLE = 1,         // 圆阵
   WEDGE = 2,          // 锥形
@@ -95,6 +96,16 @@ export enum FormationType {
   EIGHT_TRIGRAMS = 15,// 八卦
   CHARGE = 16,        // 冲阵
   CLOUD = 17,         // 云阵
+  // 水阵（9 种，ID 18~26）
+  LINE = 18,          // 横阵
+  COLUMN = 19,        // 纵阵
+  GOOSE_RETURN = 20,  // 雁回阵
+  ENCIRCLE = 21,      // 包围阵
+  FIRE_ATTACK = 22,   // 火攻阵
+  RAM = 23,           // 撞角阵
+  CHAIN = 24,         // 连环阵
+  RAID = 25,          // 突袭阵
+  WATER_DRAGON = 26,  // 水龙阵
 }
 
 // ========================
@@ -532,8 +543,15 @@ export interface Officer {
   // 兵种适应性
   unitProficiency: Record<UnitType, UnitProficiency>;
 
-  // 阵型精通 (可用阵型ID列表，0~17)
+  // 阵型精通与熟练度（Session 120 重写：从二进制列表改为逐阵型等级/熟练度/极状态）
   formationMastery: number[];
+  // ↑ 旧字段保留为"已解锁阵型 ID 列表"，运行时由以下结构派生：
+  // formationProficiency: Record<number, {
+  //   level: number;             // 当前等级 1~5
+  //   experience: number;        // 当前经验值
+  //   ultimateUnlocked: boolean; // 是否已解锁极
+  //   postUltimateProficiency: number; // 达到极后的溢出熟练度
+  // }>;
 
   // 技能
   skills: OfficerSkill[];
@@ -901,31 +919,68 @@ export interface UnitTrait {
 
 ## 九、阵型 Formation
 
+> Session 120 全面重写：新增等级/熟练度/极、水阵体系、科技树前置。以下类型对应运行时代码 `shared/types/formation.ts`。
+
 ```typescript
+/** 单级阵型数据 */
+export interface FormationLevelData {
+  level: 1 | 2 | 3 | 4 | 5;
+  attack: number;
+  defense: number;
+  mobility: number;
+  range: number;
+  specialEffects?: string[];
+}
+
+/** 极效果 */
+export interface FormationUltimate {
+  attackBonus: number;
+  defenseBonus: number;
+  mobilityBonus: number;
+  rangeBonus: number;
+  effect: string;                  // 极的质变描述
+  proficiencyRequired: number;     // 熟练度门槛（默认 500）
+}
+
+/** 阵型前置条件（科技树） */
+export interface FormationPrerequisite {
+  formationId: number;
+  requiredLevel: number;           // 1~5
+}
+
+/** 完整阵型模板（静态 JSON） */
 export interface Formation {
-  id: FormationType;
+  id: number;                      // 陆阵 0~17，水阵 18~26
   name: string;
   description: string;
-  historicalSource: string;      // 史料出处
+  historicalSource: string;        // 史料出处
 
-  // 属性修正
-  modifiers: {
-    attack: number;
-    defense: number;
-    mobility: number;
-    range: number;
-  };
+  family: 'land' | 'water';       // 体系：陆阵 / 水阵
 
-  // 特殊效果
+  tiers: FormationLevelData[];     // Lv1~Lv5 每级数据
+
+  ultimate: FormationUltimate;     // 极效果
+
+  // 特殊效果（独立于等级）
   effects: FormationEffect[];
 
   // 兵种限制
-  allowedUnits: UnitType[];      // 可用兵种
-  bestUnits: UnitType[];         // 最佳兵种(额外加成)
-  restrictedUnits: UnitType[];   // 禁用兵种
+  allowedUnits: UnitType[];        // 可用兵种
+  bestUnits: UnitType[];           // 最佳兵种（额外加成）
+  restrictedUnits: UnitType[];     // 禁用兵种
 
   // 地形适应
   terrainModifiers: Partial<Record<TerrainType, number>>;
+
+  // 科技树前置（非基础阵型必填）
+  prerequisites?: FormationPrerequisite[];
+
+  // 特殊解锁条件
+  specialUnlock?: {
+    minIntelligence?: number;      // 智力门槛
+    minNavalProficiency?: UnitProficiency;  // 水军适性门槛
+    allowOnlyUnitTypes?: UnitType[]; // 限定兵种
+  };
 }
 
 export interface FormationEffect {
@@ -1692,6 +1747,7 @@ interface SiegeState {
 ```typescript
 type StructureType =
   | 'camp' | 'ram' | 'ladder' | 'siege_tower' | 'catapult'
+  | 'crossbow_cart' | 'stone_thrower'
   | 'supply_depot' | 'trap' | 'watchtower'
   | 'palisade' | 'trench' | 'pontoon_bridge';
 
@@ -1702,6 +1758,59 @@ interface CampStructure {
   durability: number;
   effect: string;
   nodeId: number;
+  /** Session 121: 工程器械等级 Lv1~Lv3 */
+  level?: 1 | 2 | 3;
+}
+
+/** Session 121: 工程器械运行时数据 */
+interface SiegeEngine {
+  type: 'ram' | 'ladder' | 'siege_tower' | 'catapult' | 'crossbow_cart' | 'stone_thrower';
+  level: 1 | 2 | 3;
+  durability: number;
+}
+
+/** Session 121: 城防结构（结构性城防·内政建造） */
+interface CityFortification {
+  moat: boolean;         // 护城河
+  barbican: boolean;     // 瓮城
+  barbicanTurrets: 0 | 2 | 4;  // 弩台射位数
+  portcullis: boolean;   // 千斤闸
+  palaceWall: boolean;   // 宫墙
+}
+
+/** Session 121: 战术性城防（围城追加） */
+interface TacticalDefense {
+  sheepWall: boolean;     // 羊马墙
+  ballistaTower: boolean; // 弩台
+  wolfTooth: boolean;     // 狼牙拍
+  hotOil: boolean;        // 热油池
+  groundListen: boolean;  // 地听
+  raiders: {              // 夜袭队
+    deployed: boolean;
+    leaderId?: number;
+  };
+}
+```
+
+### 20.3-B 围城状态（Session 121 扩展）
+
+```typescript
+interface SiegeState {
+  wallDurability: number;
+  maxWallDurability: number;
+  gateDurability: number;
+  siegeTurns: number;
+  attackerStructures: string[];
+  defenderBonus: number;
+  surrenderChance: number;
+
+  // Session 121: 瓮城/城防扩展
+  fortification: CityFortification;       // 城防结构状态
+  tacticalDefense: TacticalDefense;       // 战术城防状态
+  siegePhase: 'outer_wall' | 'barbican' | 'inner_wall' | 'palace';
+  barbicanTurns: number;                  // 瓮城已持续回合数
+  barbicanBreachProgress: number;         // 瓮城突破进度 0~100
+  ladderSkipBarbican: boolean;            // 云梯跳过标志
 }
 ```
 
@@ -1730,7 +1839,9 @@ interface AutoBattleResult {
   spoils: { gold: number; food: number };
   events: {
     round: number;
-    type: 'duel' | 'rout' | 'breach' | 'stratagem' | 'advisor';
+    type: 'duel' | 'rout' | 'breach' | 'stratagem' | 'advisor'
+      | 'barbican_phase' | 'turret_suppressed' | 'night_raid'
+      | 'hot_oil' | 'wall_breach' | 'gate_breach';
     description: string;
   }[];
 }
