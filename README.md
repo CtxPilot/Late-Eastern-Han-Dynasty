@@ -42,6 +42,18 @@ Historical names, events, and cultural references are based on public historical
 |:---:|:---:|:---:|
 | ![Map](docs/screenshots/leh-full-map.png) | ![City](docs/screenshots/leh-city-detail.png) | ![Personnel](docs/screenshots/leh-personnel-officers.png) |
 
+### 代表武将人物简册 · Featured Officer Profiles
+
+纯 SVG/CSS 程序化绘制，以「金石水墨·拓片简册·印信官职」为视觉基调；不使用商业立绘或外部人物图片。
+
+| 吕布 · 奉先 | 关羽 · 云长 |
+|:---:|:---:|
+| ![吕布人物简册](docs/screenshots/leh-officer-lv-bu.png) | ![关羽人物简册](docs/screenshots/leh-officer-guan-yu.png) |
+
+| 诸葛亮 · 孔明 | 曹操 · 孟德 |
+|:---:|:---:|
+| ![诸葛亮人物简册](docs/screenshots/leh-officer-zhuge-liang.png) | ![曹操人物简册](docs/screenshots/leh-officer-cao-cao.png) |
+
 ---
 
 ## 快速启动
@@ -85,9 +97,9 @@ pnpm dev
 | S17 | 计谋 | M+ | 美人计/离间/假情报/空城·+四面楚歌联动 |
 | S18 | 家族 | M+ | 婚配/跟随/子女引擎·祝融唯一女将 |
 | S19 | 单挑大会 | D | 设计完成·16人淘汰·押注·武魁称号·引擎待实现 |
-| S20 | 前端体验 | S/D | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报，以及搜索/登用/任命/解职/赏赐统一终审窗；派系、外交雷达、财政飘字及 W1~W3 仍为设计。零新依赖 |
+| S20 | 前端体验 | S/D | 已实装己方武将名册、人物简册、四名代表人物程序化头像、低忠诚警报，以及人事操作统一终审窗；派系、外交雷达、财政飘字及 W1~W3 仍为设计。零新依赖 |
 | S21 | 三级战斗串联 | D | Session 100 技术储备方案完成（零代码）：一级大地图演出/二级战术串联/三级白刃战 MeleeStage Konva 方阵/单挑接入 DuelStage 混合范式/screen 六态栈 |
-| S22 | 美术基调·金石水墨免版权 | S/D | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码：@font-face 工程内部别名 `HanDynastySerif`/`HanDynastySeal` + FontBarrier + Konva fontFamily + .editorconfig/.gitattributes/CI）。武将头像组合方案 A+C+B（P5-10a/b/c 留 Phase 5）。详见 `00-dev-constitution.md` §11.3+§11.7、`15-linux-ui-spec.md` |
+| S22 | 美术基调·金石水墨免版权 | S/D | 已实装跨平台字体防御，以及吕布/关羽/诸葛亮/曹操四名代表人物的纯 SVG/CSS 程序化头像与印信文字层；完整 A+C+B 数据层仍留 P5-10。详见 `00-dev-constitution.md` §11.3+§11.7、`15-linux-ui-spec.md` |
 
 ---
 

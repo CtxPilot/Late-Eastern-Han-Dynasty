@@ -828,13 +828,14 @@ AccSection·君主
 
 #### §11.1.4 W4 派系面板 + OfficerDetail + 内政外交前端增强
 
-**实现进度（Session 122）**：`OfficerRosterPanel`、`OfficerDetail`、低忠诚红框及人事操作统一终审窗已实装并完成浏览器实测。派系面板、外交雷达、财政飘字、行政总署完整重组仍未实现；§35 财政税收俸禄仍为纯设计。
+**实现进度（Session 122/124）**：`OfficerRosterPanel`、`OfficerDetail`、低忠诚红框及人事操作统一终审窗已实装并完成浏览器实测。Session 124 将详情升级为金石水墨人物简册，并为吕布、关羽、诸葛亮、曹操制作首批差异化程序化头像与“名将试册”快捷入口。派系面板、外交雷达、财政飘字、行政总署完整重组仍未实现；§35 财政税收俸禄仍为纯设计。
 
 **落地方案**（纯前端可视化，不动服务端/数据模型）：
 - `client/src/lib/factionInner.ts`（~50 行）：派系判定纯函数，按 `tags` 社会出身分组（士族/豪强/寒门/平民/宗室/边地），§4.5.2 规则（≥3 成派、领袖=官职最高）。`useMemo` 依赖 `game.officers`。
 - `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。
 - `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
 - `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
+- `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片）：纯 SVG/CSS 程序化拓印头像，不依赖外部立绘。四位重点人物手工指定脸型、冠式、胡须、墨色、氏族题签与朱砂姓名印；其余人物按属性与 ID 生成稳定默认轮廓。此切片实现 C 五官轮廓 + B 文字层 + 程序化纸墨底色，**尚未接入 A 层公有领域汉代拓片切片，也尚未把 `avatarGene` 落库**，不得误记为 P5-10 全量完成。
 - `client/src/components/ui/RadarChart.tsx`：**纯 SVG 手写**外交雷达图（5 维多边形 + scale 0~100）。5 维：友好（favorability）/信任（派生 relation）/姻亲（marriageBond 0/100）/盟约（allied 0/100）/敌意（war|hostile 反转）。放 LeftPanel 外交折叠顶部。数据从 `game.diplomacy` + `findDiplomacy()`（`shared/intel.ts:46`）取。
 - **财政飘字**：gameStore 各 action 在 `set({game})` 时附带 `floatingDelta: {gold, food, reason}[]`（前端算 delta：newGame vs oldGame）。TopBar/RightPanel 订阅渲染 `+N/-N` 上浮淡出（CSS keyframes `floatUp`，tailwind.config.js 加）。
 - **行政总署三段式**：重组 LeftPanel「人事」折叠为独立 `AdminOfficePanel.tsx`，三段 Header（搜索/任命/赏赐）+ 视觉分隔。复用现有 PersonnelPanel/AppointPanel/BeautyPanel。
@@ -1220,4 +1221,4 @@ Konva.Group（武将头像容器 120×150，border #3e2723）
 
 ---
 
-*文档版本: v3.4 | 2026-07-20 | Session 122 武将名册/详情与人事操作终审窗实装*
+*文档版本: v3.5 | 2026-07-21 | Session 124 四名代表武将人物简册切片*
