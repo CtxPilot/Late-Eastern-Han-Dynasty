@@ -2,11 +2,11 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, CampaignArmy, EventSourceClass, GameState } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
-type Screen = 'boot' | 'scenario' | 'world' | 'battle';
+type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee';
 
 interface Store {
   screen: Screen;
@@ -107,6 +107,36 @@ interface Store {
   campaignSiegeSurrender: (armyId: string) => Promise<void>;
   campaignRetreat: (armyId: string) => Promise<void>;
   campaignAdvisorAction: (armyId: string, action: 'inspire' | 'trap' | 'retreat' | 'scout') => Promise<void>;
+
+  // 战场地图（Tier I）
+  battlefield: BattlefieldMap | null;
+  /** 初始化战场地图 */
+  battlefieldInit: (targetCityId: number, fromCityId: number) => Promise<void>;
+  /** 战场行军 */
+  battlefieldMarch: (armyId: string, targetNodeId: number) => Promise<void>;
+  /** 退出战场 */
+  battlefieldExit: () => Promise<void>;
+
+  // 白刃战（Tier II）
+  melee: MeleeState | null;
+  meleeLastResult: MeleeRoundResult | null;
+  /** 发起白刃战 */
+  meleeStart: (attackerArmyId: string, defenderArmyId: string) => Promise<void>;
+  /** 执行白刃战回合 */
+  meleeRound: (actionType: string) => Promise<void>;
+  /** 刷新战术点 */
+  meleeRefresh: () => Promise<void>;
+  /** 退出白刃战 */
+  meleeExit: () => Promise<void>;
+
+  // 总军师系统
+  grandStrategist: import('@leh/shared').GrandStrategist | null;
+  grandStrategistModifiers: any;
+  grandStrategistLoading: boolean;
+  grandStrategistAppoint: (officerId: number) => Promise<void>;
+  grandStrategistDismiss: () => Promise<void>;
+  grandStrategistSwitch: (strategy: string) => Promise<void>;
+  grandStrategistRefresh: () => Promise<void>;
 }
 
 export const useGameStore = create<Store>((set, get) => ({
@@ -124,6 +154,12 @@ export const useGameStore = create<Store>((set, get) => ({
   eventsCatalog: [],
   scenariosCatalog: [],
   usableAbilities: [],
+  battlefield: null,
+  melee: null,
+  meleeLastResult: null,
+  grandStrategist: null,
+  grandStrategistModifiers: null,
+  grandStrategistLoading: false,
 
   boot: async () => {
     set({ loading: true, error: null, lastActionOk: null });
@@ -710,6 +746,122 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '参谋行动' });
     } catch (e) {
       set({ error: errMsg(e, '参谋行动失败'), loading: false });
+    }
+  },
+
+  // ====== 战场地图（Tier I） ======
+
+  battlefieldInit: async (targetCityId, fromCityId) => {
+    set({ loading: true, error: null });
+    try {
+      const bf = await api.battlefieldInit(targetCityId, fromCityId);
+      set({ battlefield: bf, screen: 'battlefield', loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '战场初始化失败'), loading: false });
+    }
+  },
+
+  battlefieldMarch: async (armyId, targetNodeId) => {
+    set({ loading: true, error: null });
+    try {
+      const { game, battlefield } = await api.battlefieldMarch(armyId, targetNodeId);
+      set({ game, battlefield, loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '行军失败'), loading: false });
+    }
+  },
+
+  battlefieldExit: async () => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.battlefieldExit();
+      set({ game, battlefield: null, screen: 'world', loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '退出战场失败'), loading: false });
+    }
+  },
+
+  // ====== 白刃战（Tier II） ======
+
+  meleeStart: async (attackerArmyId, defenderArmyId) => {
+    set({ loading: true, error: null, meleeLastResult: null });
+    try {
+      const { game, melee } = await api.meleeStart(attackerArmyId, defenderArmyId);
+      set({ game, melee, screen: 'melee', loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '白刃战发起失败'), loading: false });
+    }
+  },
+
+  meleeRound: async (actionType) => {
+    set({ loading: true, error: null });
+    try {
+      const { game, result, melee } = await api.meleeRound(actionType);
+      set({ game, melee, meleeLastResult: result, loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '白刃战回合失败'), loading: false });
+    }
+  },
+
+  meleeRefresh: async () => {
+    try {
+      const melee = await api.meleeRefresh();
+      set({ melee });
+    } catch (e) {
+      set({ error: errMsg(e, '战术点刷新失败') });
+    }
+  },
+
+  meleeExit: async () => {
+    set({ loading: true, error: null });
+    try {
+      const { game } = await api.meleeExit();
+      set({ game, melee: null, meleeLastResult: null, screen: 'battlefield', loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '退出白刃战失败'), loading: false });
+    }
+  },
+
+  // ====== 总军师系统 ======
+
+  grandStrategistAppoint: async (officerId) => {
+    set({ grandStrategistLoading: true, error: null });
+    try {
+      const { game, strategist } = await api.grandStrategistAppoint(officerId);
+      set({ game, grandStrategist: strategist, grandStrategistLoading: false, lastActionOk: `拜 ${game?.officers[officerId]?.name ?? ''} 为总军师` });
+    } catch (e) {
+      set({ error: errMsg(e, '任命失败'), grandStrategistLoading: false });
+    }
+  },
+
+  grandStrategistDismiss: async () => {
+    set({ grandStrategistLoading: true, error: null });
+    try {
+      const { game } = await api.grandStrategistDismiss();
+      set({ game, grandStrategist: null, grandStrategistLoading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '解职失败'), grandStrategistLoading: false });
+    }
+  },
+
+  grandStrategistSwitch: async (strategy) => {
+    set({ grandStrategistLoading: true, error: null });
+    try {
+      const { game, log } = await api.grandStrategistSwitch(strategy);
+      set({ game, grandStrategistLoading: false, lastActionOk: log });
+      // 刷新总军师状态
+      await get().grandStrategistRefresh();
+    } catch (e) {
+      set({ error: errMsg(e, '态势切换失败'), grandStrategistLoading: false });
+    }
+  },
+
+  grandStrategistRefresh: async () => {
+    try {
+      const { strategist, modifiers } = await api.grandStrategistStatus();
+      set({ grandStrategist: strategist, grandStrategistModifiers: modifiers });
+    } catch {
+      // 静默失败（非关键请求）
     }
   },
 }));

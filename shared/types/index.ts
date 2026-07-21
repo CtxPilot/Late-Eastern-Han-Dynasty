@@ -23,4 +23,5 @@ export * from './scenario.js';
 export * from './save.js';
 export * from './duel.js';
 export * from './campaign.js';
+export * from './battlefield.js';
 export * from './game.js';

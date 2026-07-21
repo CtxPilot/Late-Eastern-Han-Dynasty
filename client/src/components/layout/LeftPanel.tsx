@@ -12,6 +12,7 @@ import { PersonnelPanel } from './PersonnelPanel';
 import { AppointPanel } from './AppointPanel';
 import { OfficerRosterPanel } from './OfficerRosterPanel';
 import { CampaignPanel } from '../campaign/CampaignPanel';
+import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
 
 type AccordionKey =
@@ -20,6 +21,7 @@ type AccordionKey =
   | 'family'
   | 'intel'
   | 'plot'
+  | 'strategist'
   | 'diplomacy'
   | 'monarch'
   | 'cities'
@@ -118,6 +120,17 @@ export function LeftPanel() {
           onToggle={() => toggle('plot')}
         >
           <PlotPanel />
+        </AccSection>
+
+        <AccSection
+          title="总军师"
+          accent="amber"
+          open={open === 'strategist'}
+          onToggle={() => toggle('strategist')}
+        >
+          <div className="px-2 py-1">
+            <GrandStrategistPanel />
+          </div>
         </AccSection>
 
         <AccSection

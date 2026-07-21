@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, CampaignArmy, CampaignNode, EventSourceClass, GameState, ScenarioFactionSetup } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -498,4 +498,100 @@ export async function campaignAdvisorAction(armyId: string, action: 'inspire' | 
 export async function campaignNodes(): Promise<CampaignNode[]> {
   const { data } = await http.get<{ nodes: CampaignNode[] }>('/campaign/nodes');
   return data.nodes ?? [];
+}
+
+// ====== 战场地图 API（Tier I） ======
+
+/** 初始化战场地图 */
+export async function battlefieldInit(targetCityId: number, fromCityId: number): Promise<BattlefieldMap> {
+  const { data } = await http.post<BattlefieldMap>('/battlefield/init', { targetCityId, fromCityId });
+  return data;
+}
+
+/** 获取当前战场地图 */
+export async function getBattlefield(): Promise<BattlefieldMap | null> {
+  try {
+    const { data } = await http.get<BattlefieldMap>('/battlefield');
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/** 战场行军 */
+export async function battlefieldMarch(armyId: string, targetNodeId: number): Promise<{ game: GameState; battlefield: BattlefieldMap }> {
+  const { data } = await http.post<{ game: GameState; battlefield: BattlefieldMap }>('/battlefield/march', { armyId, targetNodeId });
+  return data;
+}
+
+/** 退出战场 */
+export async function battlefieldExit(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield/exit');
+  return data;
+}
+
+// ====== 白刃战 API（Tier II） ======
+
+/** 发起白刃战 */
+export async function meleeStart(attackerArmyId: string, defenderArmyId: string): Promise<{ game: GameState; melee: MeleeState }> {
+  const { data } = await http.post<{ game: GameState; melee: MeleeState }>('/melee/start', { attackerArmyId, defenderArmyId });
+  return data;
+}
+
+/** 获取当前白刃战状态 */
+export async function getMelee(): Promise<MeleeState | null> {
+  try {
+    const { data } = await http.get<MeleeState>('/melee');
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/** 执行一回合白刃战 */
+export async function meleeRound(actionType: string): Promise<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }> {
+  const { data } = await http.post<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }>('/melee/round', { actionType });
+  return data;
+}
+
+/** 刷新白刃战战术点 */
+export async function meleeRefresh(): Promise<MeleeState> {
+  const { data } = await http.post<MeleeState>('/melee/refresh');
+  return data;
+}
+
+/** 退出白刃战 */
+export async function meleeExit(): Promise<{ game: GameState }> {
+  const { data } = await http.post<{ game: GameState }>('/melee/exit');
+  return data;
+}
+
+// ====== 总军师 API ======
+
+/** 任命总军师 */
+export async function grandStrategistAppoint(officerId: number): Promise<{ game: GameState; strategist: import('@leh/shared').GrandStrategist }> {
+  const { data } = await http.post('/grand-strategist/appoint', { officerId });
+  return data as any;
+}
+
+/** 解职总军师 */
+export async function grandStrategistDismiss(): Promise<{ game: GameState; log: string }> {
+  const { data } = await http.post('/grand-strategist/dismiss');
+  return data as any;
+}
+
+/** 切换态势 */
+export async function grandStrategistSwitch(strategy: string): Promise<{ game: GameState; log: string }> {
+  const { data } = await http.post('/grand-strategist/strategy', { strategy });
+  return data as any;
+}
+
+/** 获取总军师状态 */
+export async function grandStrategistStatus(): Promise<{
+  strategist: import('@leh/shared').GrandStrategist | null;
+  modifiers: any;
+  hasStrategist: boolean;
+}> {
+  const { data } = await http.get('/grand-strategist/status');
+  return data as any;
 }

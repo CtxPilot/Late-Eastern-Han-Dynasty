@@ -28,15 +28,15 @@ const UNIT_LABEL: Record<string, string> = {
   heavyNavy: '楼船',
 };
 
-const STRUCTURE_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: 'camp', label: '营寨' },
-  { value: 'ram', label: '冲车' },
-  { value: 'ladder', label: '云梯' },
-  { value: 'siege_tower', label: '井阑' },
-  { value: 'catapult', label: '投石车' },
-  { value: 'supply_depot', label: '粮仓' },
-  { value: 'palisade', label: '栅栏' },
-  { value: 'trench', label: '壕沟' },
+const STRUCTURE_OPTIONS: Array<{ value: string; label: string; cost: number; turns: number }> = [
+  { value: 'camp', label: '营寨', cost: 100, turns: 1 },
+  { value: 'ram', label: '冲车', cost: 300, turns: 2 },
+  { value: 'ladder', label: '云梯', cost: 200, turns: 2 },
+  { value: 'siege_tower', label: '井阑', cost: 400, turns: 3 },
+  { value: 'catapult', label: '投石车', cost: 500, turns: 3 },
+  { value: 'supply_depot', label: '粮仓', cost: 150, turns: 1 },
+  { value: 'palisade', label: '栅栏', cost: 80, turns: 1 },
+  { value: 'trench', label: '壕沟', cost: 60, turns: 1 },
 ];
 
 /**
@@ -379,8 +379,19 @@ export function CampaignPanel() {
               </div>
             )}
             {selectedArmy.structures.length > 0 && (
-              <div className="mt-0.5">
-                设施：{selectedArmy.structures.map((s) => structLabel(s.type)).join('·')}
+              <div className="mt-0.5 space-y-0.5">
+                {selectedArmy.structures.map((s, i) => (
+                  <div key={i} className="text-stone-400 text-[10px]">
+                    {structLabel(s.type)}
+                    {s.buildProgress < 1 ? (
+                      <span className="text-amber-400/80 ml-1">
+                        建造中 {Math.floor(s.buildProgress * 100)}%
+                      </span>
+                    ) : (
+                      <span className="text-green-400/80 ml-1">已完工</span>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -419,17 +430,22 @@ export function CampaignPanel() {
             <div className="pt-1">
               <div className="text-stone-500 mb-0.5">建造设施：</div>
               <div className="flex flex-wrap gap-1">
-                {STRUCTURE_OPTIONS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => void campaignBuild(selectedArmy.id, s.value)}
-                    className="px-1.5 py-0.5 rounded border border-stone-700 bg-stone-900 text-stone-300 text-[10px] hover:bg-stone-800 disabled:opacity-40"
-                  >
-                    {s.label}
-                  </button>
-                ))}
+                {STRUCTURE_OPTIONS.map((s) => {
+                  const isBuilding = selectedArmy.structures.some((st) => st.buildProgress < 1);
+                  const disabled = loading || isBuilding;
+                  return (
+                    <button
+                      key={s.value}
+                      type="button"
+                      disabled={disabled}
+                      title={`${s.label}：金${s.cost}，${s.turns}回合`}
+                      onClick={() => void campaignBuild(selectedArmy.id, s.value)}
+                      className="px-1.5 py-0.5 rounded border border-stone-700 bg-stone-900 text-stone-300 text-[10px] hover:bg-stone-800 disabled:opacity-40"
+                    >
+                      {s.label} ({s.cost}金/{s.turns}t)
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

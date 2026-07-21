@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
+import { BattlefieldPanel } from './components/battlefield/BattlefieldPanel';
 import { ScenarioSelect } from './components/scenario/ScenarioSelect';
 import { waitForGameFonts } from './utils/fontBarrier';
 
@@ -88,6 +89,14 @@ export default function App() {
     return (
       <div className="h-full flex flex-col">
         <BattleView />
+      </div>
+    );
+  }
+
+  if (screen === 'battlefield' || screen === 'melee') {
+    return (
+      <div className="h-full flex flex-col">
+        <BattlefieldPanel />
       </div>
     );
   }

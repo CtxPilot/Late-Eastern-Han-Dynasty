@@ -129,7 +129,7 @@
 | P3-11 | 战斗 API | [~] | Demo move/attack/fire/ability/exit 已实现 |
 | P3-12 | BattleView 完整组件 | [~] | Demo 组件已实现 |
 | P3-13 | 特殊兵种战斗效果 | [ ] | P3-05 |
-| P3-14 | 战役层引擎（CampaignArmy/行军/自动战斗） | [~] | **Session 98 最小切片已实装**；总军师态势接入/AI Army/设施回合化后置 |
+| P3-14 | 战役层引擎（CampaignArmy/行军/自动战斗） | [~] | **Session 98 最小切片已实装**；Session 125 三层战斗架构实装（战场地图 Tier I + 白刃战 Tier II）|
 
 ---
 
@@ -2595,3 +2595,125 @@
 ---
 
 *文档版本: v7.1 | 2026-07-21 | Session 124 代表武将人物简册切片*
+
+---
+
+## 2026-07-21 — Session 125（三层战斗架构实装 — 战场地图 + 白刃战标准模式）
+
+- Phase: **代码实装**（类型定义 + 引擎 + 服务端 + 前端 UI + 集成）
+- 实装内容:
+  **Tier I 战场地图（§20.2）**:
+  - `shared/types/battlefield.ts` 新建：`BattlefieldNode`/`BattlefieldMap`/`BattlefieldTrap`/`MeleeState`/`MeleeAction`/`MeleeRoundResult`/`MeleeResult`/`WarResult`
+  - `shared/campaign-utils.ts` 新建：从 `campaign.ts` 抽出 `planPath`/`calcFoodCost`/`unitPower`/`expLevelCoeff` 为共享函数
+  - `server/src/engine/battlefield.ts` 新建：`generateBattlefield`/`extractBattlefieldNodes`/`tickBattlefieldMarch`
+  - `server/src/services/game.ts` 新增：`battlefieldInit`/`getBattlefield`/`battlefieldMarch`/`battlefieldExit`
+  - `server/src/routes/game.ts` 新增：`POST /battlefield/init`/`GET /battlefield`/`POST /battlefield/march`/`POST /battlefield/exit`
+  - `client/src/services/api.ts` 新增 battlefield API 函数
+  - `client/src/stores/gameStore.ts` 新增 `battlefield` state + screen `'battlefield'` + actions
+  - `client/src/components/battlefield/BattlefieldPanel.tsx` 新建：战场地图主面板
+  - `client/src/components/battlefield/BattlefieldMapView.tsx` 新建：战场节点子集渲染（节点卡片/Army 位置/邻接行军按钮）
+  - **Tier II 白刃战（§20.3）**:
+  - `server/src/engine/meleeRound.ts` 新建：`runMeleeRound`/`createMeleeState`/`applyMeleeRoundResult`/`refreshMeleeState`/`calcTacticalPointsGain`/`validateTacticalAction`
+  - 服务端新增：`meleeStart`/`getMelee`/`meleeRound`/`meleeRefresh`/`meleeExit`
+  - 路由新增：`POST /melee/start`/`GET /melee`/`POST /melee/round`/`POST /melee/refresh`/`POST /melee/exit`
+  - `client/src/components/battlefield/MeleeEntryDialog.tsx` 新建：入口三选弹窗（自动结算/标准模式/微操受限）
+  - `client/src/components/battlefield/StandardModePanel.tsx` 新建：双方状态对比/战术点显示/战术动作选择/回合执行/结果展示
+  - `App.tsx` 新增 `'battlefield'`/`'melee'` screen 路由
+- 简化/占位标注:
+  - 白刃战伤害公式为 0-A 简化版（基于兵力 × 阵型修正系数），未复用 §6 完整引擎
+  - 战术点消耗固定：普攻0，其余动作3（0-A 简化）
+  - 微操模式入口受限（猛将对决/兵力差<20%），未完全禁用
+  - 战略点/陷阱/战场工程建造留 Phase 1
+  - 标准模式不支持中途切微操（Phase 1 补）
+  - 多军同节点简化（每势力至多 1 支）
+  - 自动结算在 MeleeEntryDialog 前端循环调用 runMeleeRound 实现（非调用 §17 runAutoBattle）
+- 自验证:
+  - `pnpm --filter @leh/shared build` ✅
+  - `pnpm --filter server typecheck` ✅
+  - `pnpm --filter client typecheck` ✅
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+  - `pnpm verify-scenario-events` ✅ 32/32
+- Next: 总军师系统态势接入战场地图层 → 设施建造回合化 → 势力特点数据 → AI Army 接入 → 战略点系统
+
+## 2026-07-21 — Session 125b（总军师系统态势接入战场地图层）
+
+- Phase: **代码实装**（引擎 + 服务端 + 前端 UI + 集成）
+- 实装内容:
+  - `server/src/engine/grandStrategist.ts` 新建（530+行）：
+    - `appointGrandStrategist` — 任命（智力≥85/相性差≤50/不可兼任军中参谋）
+    - `dismissGrandStrategist` — 解职
+    - `switchStrategy` — 态势切换（冷却 1 季）
+    - `checkStrategyAdvice` — 战略献策（5 种类型，概率 = 15%+(智-80)×0.5%）
+    - `grandStrategistDuel` — 总军师对决（智差≥15 识破，≥30 反制）
+    - `tickGrandStrategists` — 回合推进（忠诚≤50 自动辞职/被俘死亡自动空缺）
+    - `calcStrategyModifiers` — 态势加成计算（§20.2.6：攻/防/发展/隐忍 + 智力影响系数）
+    - `getFactionStrategy` — 查询势力当前态势（无总军师时效果×0.5）
+    - `aiAutoStrategy` — AI 自动态势切换（按兵力比判断）
+  - `server/src/services/game.ts` 新增：`grandStrategistAppoint`/`Dismiss`/`Switch`/`Status` + `endTurn` 接入 `gsTick`
+  - `server/src/routes/game.ts` 新增 4 端点：`POST /grand-strategist/appoint`/`dismiss`/`strategy` + `GET /grand-strategist/status`
+  - `client/src/services/api.ts` 新增 API 函数
+  - `client/src/stores/gameStore.ts` 新增 `grandStrategist` state + actions
+  - `client/src/components/strategist/GrandStrategistPanel.tsx` 新建：总军师信息/候选人列表/任命/解职/态势切换（4 按钮）+ 加成效果详情
+  - `client/src/components/layout/LeftPanel.tsx` 新增「总军师」折叠项
+- 简化/占位标注:
+  - AI 自动态势切换使用简单规则（兵力比），未接入完整 AI 决策系统
+  - 献策效果直接返回文字建议（玩家手动采纳，无完整数值引擎）
+  - `checkStrategyAdvice`/`grandStrategistDuel` 引擎已就位但尚未在 `endTurn` 中自动触发（献策需前端弹窗，对决需 S17 计谋联动）
+- 自验证:
+  - `pnpm --filter @leh/shared build` ✅
+  - `pnpm --filter server typecheck` ✅
+  - `pnpm --filter client typecheck` ✅
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+  - `pnpm verify-scenario-events` ✅ 32/32
+- Next: 设施建造回合化 → 势点系数据 → 委任军团引擎实装（§39）→ AI Army 接入 → 战略点系统
+
+## 2026-07-21 — Session 125c（设施建造回合化）
+
+- Phase: **代码实装**（引擎改造 + 前端 UI 展示更新）
+- 实装内容:
+  - `server/src/engine/campaign.ts`：
+    - `STRUCTURE_DEF` 新增 `goldCost` 字段（各设施金消耗 60~500）
+    - `buildStructure` 重写：起始 `buildProgress = 1/turns` + 消耗金（0-A 简化代替木/铁）+ 大型器械（turns>1）建造期 Army 自动转入 garrison + 禁止行军
+    - 新增 `tickConstruction(state)` — 每回合推进所有 Army 的在建设施进度；完成时输出日志
+  - `server/src/services/game.ts`：`endTurn` 接入 `tickConstruction`
+  - `client/src/components/campaign/CampaignPanel.tsx`：
+    - `STRUCTURE_OPTIONS` 新增 cost/turns 字段
+    - 建造按钮显示金消耗和回合数（如"冲车 (300金/2t)"）
+    - 建造中按钮禁用（`isBuilding` 检查）
+    - 结构物列表显示建造进度百分比（`建造中 50%` / `已完工`）
+- 0-A 简化:
+  - 消耗用金代替木/铁双资源（0-B 接回完整资源系统）
+  - 建造者简化为主将（副将/参谋专属设施后置）
+  - 无技能联动（筑城Lv/工巧Lv 建造加速后置）
+- 自验证:
+  - `pnpm --filter @leh/shared build` ✅
+  - `pnpm --filter server typecheck` ✅
+  - `pnpm --filter client typecheck` ✅
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+  - `pnpm verify-scenario-events` ✅ 32/32
+- Next: 势点系数据 → 委任军团引擎实装（§39）→ AI Army 接入 → 战略点系统
+
+*文档版本: v7.4 | 2026-07-21 | Session 125 三层战斗架构 + 总军师系统 + 设施建造回合化*
+
+## 2026-07-21 — Session 126（引擎缺陷修复）
+
+- Phase: **缺陷修复**（3 bug fixes）
+- 实装内容:
+  - **Bug 1 单挑嵌套锁**：`battleChallengeDuel()` 内联 `stepBattleDuel()` 调用，消除 `withLock` 嵌套导致的 400 错误
+  - **Bug 2 战场行军指令失效**：`battlefieldMarch()` 增设行军目标设置（`path=[targetNodeId]` + `phase=marching`），再调 `tickBattlefieldMarch` 推进；到达判定改用更新后的 Army 对象
+  - **Bug 3 meleeRefresh 缺锁**：`meleeRefresh()` 体加入 `withLock`，与其他写操作一致
+- 自验证:
+  - shared build / server typecheck / client typecheck ✅
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+  - `pnpm verify-scenario-events` ✅ 32/32
+  - `pnpm --filter server exec tsx src/scripts/verify-duel.ts` ✅
+  - `pnpm --filter server exec tsx src/scripts/verify-crit.ts` ✅
+  - `pnpm --filter server exec tsx src/scripts/verify-campaign.ts` ✅ 56/57（1 expected failure）
+  - `pnpm --filter server exec tsx src/scripts/verify-fire-tactic.ts` ✅
+  - `pnpm --filter server exec tsx src/scripts/verify-child-engine.ts` ✅
+
+*文档版本: v7.5 | 2026-07-21 | Session 126 引擎缺陷修复*
