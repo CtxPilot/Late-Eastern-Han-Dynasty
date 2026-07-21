@@ -44,7 +44,7 @@ export function TopBar() {
       className="flex items-center gap-3 px-4 py-2 border-b border-amber-900/40 bg-gradient-to-b from-stone-900 to-stone-950 shrink-0 text-sm"
       data-testid="top-bar"
     >
-      <h1 className="text-amber-400 font-semibold tracking-wide shrink-0">LateEasternHanDynasty · Demo</h1>
+      <h1 className="text-amber-400 font-semibold tracking-wide shrink-0">晚东汉末 · Demo</h1>
       <span className="text-stone-500">|</span>
       <span className="text-emerald-300/90 font-medium">{faction?.name ?? '—'}</span>
       <span className="text-stone-300">

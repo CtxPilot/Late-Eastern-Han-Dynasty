@@ -50,7 +50,7 @@ export function GrandStrategistPanel() {
   const candidates = Object.values(game.officers).filter(
     (o) => o.faction === factionId
       && o.id !== grandStrategist?.officerId
-      && (o.status as unknown as string) === 'ACTIVE'
+      && (o.status as unknown as string) === 'active'
       && o.stats.intelligence >= 85,
   );
 

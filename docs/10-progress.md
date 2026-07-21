@@ -2717,3 +2717,26 @@
   - `pnpm --filter server exec tsx src/scripts/verify-child-engine.ts` ✅
 
 *文档版本: v7.5 | 2026-07-21 | Session 126 引擎缺陷修复*
+
+## 2026-07-21 — Session 127（UI 全中文化 — 武将名册/详情/面板英文→中文）
+
+- Phase: **UI 本地化 + 缺陷修复**
+- 实装内容:
+  - **TopBar 游戏标题**：`LateEasternHanDynasty · Demo` → `晚东汉末 · Demo`
+  - **武将名册（OfficerRosterPanel）**：武将非"在职"状态（free/prisoner/dead）从原始 enum 显示改为中文（在野/被俘/阵亡）
+  - **人物简册（OfficerDetail）** 全中文化：
+    - 爵位：`none`/`marquis`/`duke`/`prince`/`king` → 无/侯/公/王/皇帝
+    - 技能 ID：`fire`/`water`/`ambush`/`taunt`/`gallop` 等 30 项英文→中文（火计/水计/伏兵/挑拨/疾驰…），含 uniqueSkill 映射
+    - 兵种适性：`lightInfantry`/`heavyCavalry`/`horseArcher` 等 23 项→中文（轻步/重骑/骑射…）
+    - 状态：`active`/`free`/`prisoner`/`dead` → 在职/在野/被俘/阵亡
+  - **白刃战面板（StandardModePanel）**：阵型名映射从错误的 string key 修复为 FormationType 数字枚举，15 种阵型全中文标注（修复原显示数字的 bug）
+  - **谍报面板（SpyPanel）**：补充缺失任务中文名（incite→煽动/steal→窃取/rescue→营救）
+  - **总军师面板（GrandStrategistPanel）**：修复 `'ACTIVE'` 大写 bug → `'active'`（此前候选人筛选永不匹配）
+- 涉及文件：TopBar.tsx, OfficerRosterPanel.tsx, OfficerDetail.tsx, StandardModePanel.tsx, SpyPanel.tsx, GrandStrategistPanel.tsx
+- 自验证:
+  - `pnpm typecheck` ✅ 3/3 包全过
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+  - `pnpm lint` ✅ 3/3 包全过
+
+*文档版本: v7.6 | 2026-07-21 | Session 127 UI 全中文化*

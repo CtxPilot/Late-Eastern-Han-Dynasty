@@ -11,6 +11,7 @@
  * - 回合执行与结果展示
  */
 import { useState } from 'react';
+import { FormationType } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 
 /** 战术动作中文名 */
@@ -27,13 +28,22 @@ const ACTION_NAMES: Record<string, string> = {
 };
 
 /** 阵型中文名 */
-const FORMATION_NAMES: Record<string, string> = {
-  square: '方阵',
-  circle: '圆阵',
-  cone: '锥形',
-  echelon: '雁行',
-  crane: '鹤翼',
-  arrow: '锋矢',
+const FORMATION_NAMES: Record<number, string> = {
+  [FormationType.SQUARE]: '方阵',
+  [FormationType.CIRCLE]: '圆阵',
+  [FormationType.WEDGE]: '锋矢',
+  [FormationType.GOOSE]: '雁行',
+  [FormationType.CRANE_WING]: '鹤翼',
+  [FormationType.FISH_SCALE]: '鱼鳞',
+  [FormationType.ARROWHEAD]: '冲阵',
+  [FormationType.CRESCENT]: '偃月',
+  [FormationType.LONG_SNAKE]: '长蛇',
+  [FormationType.YOKE]: '衡轭',
+  [FormationType.SPARSE]: '疏阵',
+  [FormationType.DENSE]: '数阵',
+  [FormationType.HOOK]: '钩形',
+  [FormationType.MYSTERIOUS]: '玄襄',
+  [FormationType.CHARIOT_WHEEL]: '车悬',
 };
 
 /** 可用战术动作列表（0-A 简化） */

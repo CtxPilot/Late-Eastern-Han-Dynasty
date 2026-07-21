@@ -2,12 +2,19 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useMemo, useState } from 'react';
-import { OfficerStatus, type Officer } from '@leh/shared';
+import { type Officer } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { OfficerDetail } from '../officer/OfficerDetail';
 import { OfficerPortrait } from '../officer/OfficerPortrait';
 
 type SortKey = 'name' | 'leadership' | 'war' | 'intelligence' | 'loyalty';
+
+const STATUS_LABEL: Record<string, string> = {
+  free: '在野',
+  active: '在职',
+  prisoner: '被俘',
+  dead: '阵亡',
+};
 
 export function OfficerRosterPanel() {
   const game = useGameStore((s) => s.game);
@@ -45,7 +52,7 @@ export function OfficerRosterPanel() {
           return <button key={officer.id} type="button" data-testid={`officer-row-${officer.id}`} onClick={() => setSelected(officer)} className={`flex w-full items-center gap-2 rounded border bg-stone-900/60 px-2 py-1.5 text-left hover:bg-amber-950/20 ${lowLoyalty ? 'border-red-600' : 'border-stone-800 hover:border-amber-800'}`}>
             <OfficerPortrait officer={officer} compact />
             <div className="min-w-0 flex-1"><div className="flex items-center justify-between"><strong className="text-stone-100">{officer.name}</strong><span className={lowLoyalty ? 'text-red-300' : 'text-stone-500'}>忠 {officer.loyalty}</span></div>
-            <div className="mt-1 flex justify-between text-[10px] text-stone-500"><span>统{officer.stats.leadership} · 武{officer.stats.war} · 智{officer.stats.intelligence}</span><span>{officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城'} · {officer.status === OfficerStatus.ACTIVE ? '在职' : String(officer.status)}</span></div></div>
+            <div className="mt-1 flex justify-between text-[10px] text-stone-500"><span>统{officer.stats.leadership} · 武{officer.stats.war} · 智{officer.stats.intelligence}</span><span>{officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城'} · {STATUS_LABEL[officer.status] ?? STATUS_LABEL[String(officer.status)] ?? String(officer.status)}</span></div></div>
           </button>;
         })}
       </div>

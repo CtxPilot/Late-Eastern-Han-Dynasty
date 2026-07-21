@@ -20,6 +20,45 @@ const STAT_ROWS = [
 
 const PROFICIENCY_LABEL: Record<string, string> = { S: 'S', A: 'A', B: 'B', C: 'C', NONE: '—' };
 
+const STATUS_LABEL: Record<string, string> = {
+  free: '在野',
+  active: '在职',
+  prisoner: '被俘',
+  dead: '阵亡',
+};
+
+const NOBILITY_LABEL: Record<string, string> = {
+  none: '无',
+  marquis: '侯',
+  duke: '公',
+  prince: '王',
+  king: '皇帝',
+};
+
+const SKILL_NAME: Record<string, string> = {
+  fire: '火计', water: '水计', rockfall: '落石', ambush: '伏兵',
+  taunt: '挑拨', discord: '离间', calm: '沉着', inspire: '激励',
+  sorcery: '妖术', illusion: '幻术', gallop: '疾驰',
+  forcedMarch: '强行军', rapidAttack: '急攻', hold: '固守',
+  longRange: '远射', formationChange: '布阵', reorganize: '重整',
+  raid: '奇袭', farming: '农政', commerce: '商政', fortify: '筑城',
+  recruit: '征兵', train: '训练', discover: '寻访', eloquence: '辩才',
+  medicine: '医术', insight: '洞察', bravery: '勇武', riding: '骑术',
+  archery: '弓术',
+};
+
+const UNIT_NAME: Record<string, string> = {
+  lightInfantry: '轻步', heavyInfantry: '重步', spearman: '长枪',
+  archer: '弓兵', crossbowman: '弩兵', lightCavalry: '轻骑',
+  heavyCavalry: '重骑', horseArcher: '骑射', lightNavy: '走舸',
+  mediumNavy: '蒙冲', heavyNavy: '楼船', siege: '攻城',
+  tigerLeopard: '虎豹骑', qingzhouTroops: '青州兵',
+  trappedCamp: '陷阵营', whiteHorse: '白马骑', xiliangIron: '西凉铁骑',
+  danyangTroops: '丹阳军', jiefanTroops: '解烦军', whiteEar: '白耳兵',
+  wudangFlying: '无当飞军', rattanArmor: '藤甲兵', elephant: '象兵',
+  yellowTurban: '黄巾兵',
+};
+
 interface Props {
   game: GameState;
   officer: Officer | null;
@@ -70,15 +109,15 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                 <Info label="文官" value={CIVIL_LABELS[officer.civilPosition]} />
                 <Info label="地方" value={LOCAL_LABELS[officer.localPosition]} />
                 <Info label="武官" value={MILITARY_LABELS[officer.militaryPosition]} />
-                <Info label="爵位" value={String(officer.nobilityRank)} />
+                <Info label="爵位" value={NOBILITY_LABEL[officer.nobilityRank] ?? String(officer.nobilityRank)} />
               </div>
             </section>
 
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能与特性</h3>
               <div className="flex flex-wrap gap-1.5 text-[11px]">
-                {officer.uniqueSkill && <Chip text={`${officer.uniqueSkill} · 专属`} accent />}
-                {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${skill.skillId} Lv${skill.level}`} />)}
+                {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
+                {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
                 {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
               </div>
             </section>
@@ -88,7 +127,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">兵种适性</h3>
               <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                {Object.entries(officer.unitProficiency).map(([unit, grade]) => <div key={unit} className="flex justify-between rounded border border-stone-800 bg-stone-900/50 px-2 py-1"><span className="text-stone-500">{unit}</span><strong className="text-amber-200">{PROFICIENCY_LABEL[String(grade)] ?? String(grade)}</strong></div>)}
+                {Object.entries(officer.unitProficiency).map(([unit, grade]) => <div key={unit} className="flex justify-between rounded border border-stone-800 bg-stone-900/50 px-2 py-1"><span className="text-stone-500">{UNIT_NAME[unit] ?? unit}</span><strong className="text-amber-200">{PROFICIENCY_LABEL[String(grade)] ?? String(grade)}</strong></div>)}
               </div>
             </section>
             <section>
@@ -98,7 +137,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </section>
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
-              <div className="grid grid-cols-2 gap-2 text-xs"><Info label="经验" value={String(officer.experience)} /><Info label="体力" value={String(officer.stamina)} /><Info label="阵型" value={`${officer.formationMastery.length} 项`} /><Info label="状态" value={String(officer.status)} /></div>
+              <div className="grid grid-cols-2 gap-2 text-xs"><Info label="经验" value={String(officer.experience)} /><Info label="体力" value={String(officer.stamina)} /><Info label="阵型" value={`${officer.formationMastery.length} 项`} /><Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} /></div>
             </section>
           </div>
           </div>
