@@ -18,6 +18,9 @@ const MISSION_LABEL: Record<string, string> = {
   recon: '探秘',
   sabotage: '破坏',
   assassinate: '刺杀',
+  incite: '煽动',
+  steal: '窃取',
+  rescue: '营救',
   pillowTalk: '枕边风',
   sowDiscord: '离间',
 };
