@@ -12,4 +12,5 @@ export * from './intel.js';
 export * from './mask-state.js';
 export * from './positions.js';
 export * from './stamina.js';
+export * from './campaign-utils.js';
 export * from './types/debate.js';

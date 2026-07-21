@@ -1101,20 +1101,26 @@ function recomputeFactionCities(
 
 // ====== 设施建造（简化） ======
 
-const STRUCTURE_DEF: Record<StructureType, { turns: number; effect: string }> = {
-  camp: { turns: 1, effect: '粮耗-30% 防御+15%' },
-  ram: { turns: 2, effect: '城墙伤害×3' },
-  ladder: { turns: 2, effect: '无视城墙1回合' },
-  siege_tower: { turns: 3, effect: '守军防-20%' },
-  catapult: { turns: 3, effect: '城墙伤害×5' },
-  supply_depot: { turns: 1, effect: '补给线+2节点' },
-  trap: { turns: 1, effect: '敌经过受智×1.5伤' },
-  watchtower: { turns: 1, effect: '视野+2节点' },
-  palisade: { turns: 1, effect: '防+10%' },
-  trench: { turns: 1, effect: '敌通过损兵3%' },
-  pontoon_bridge: { turns: 1, effect: '可渡河' },
+const STRUCTURE_DEF: Record<StructureType, { turns: number; effect: string; goldCost: number }> = {
+  camp: { turns: 1, effect: '粮耗-30% 防御+15%', goldCost: 100 },
+  ram: { turns: 2, effect: '城墙伤害×3', goldCost: 300 },
+  ladder: { turns: 2, effect: '无视城墙1回合', goldCost: 200 },
+  siege_tower: { turns: 3, effect: '守军防-20%', goldCost: 400 },
+  catapult: { turns: 3, effect: '城墙伤害×5', goldCost: 500 },
+  supply_depot: { turns: 1, effect: '补给线+2节点', goldCost: 150 },
+  trap: { turns: 1, effect: '敌经过受智×1.5伤', goldCost: 80 },
+  watchtower: { turns: 1, effect: '视野+2节点', goldCost: 100 },
+  palisade: { turns: 1, effect: '防+10%', goldCost: 80 },
+  trench: { turns: 1, effect: '敌通过损兵3%', goldCost: 60 },
+  pontoon_bridge: { turns: 1, effect: '可渡河', goldCost: 150 },
 };
 
+/**
+ * 建造设施（回合化）
+ * - 消耗金（0-A 简化用金代替木/铁）
+ * - 大型器械（turns > 1）建造期间 Army 不可行军（0-A 简化：phase 变更为 garrison）
+ * - 初始 buildProgress = 1/turns，每回合 tickConstruction 推进
+ */
 export function buildStructure(
   state: GameState,
   armyId: string,
@@ -1126,24 +1132,85 @@ export function buildStructure(
   if (army.phase !== 'sieging' && army.phase !== 'garrison' && army.phase !== 'marching') {
     throw new Error('当前阶段不可建造');
   }
-  // 0-A 简化：即时建造（大型器械的"消耗完整回合"约束后置）
+  // 大型建造中不可再建
+  if (army.structures.some((s) => s.buildProgress < 1)) {
+    throw new Error('已有设施在建中，请等待完成');
+  }
+
   const def = STRUCTURE_DEF[structureType];
   const builderId = army.commanderId; // 简化：主将建造；副将建造后置
+
+  // 扣金（0-A 简化）
+  const faction = state.factions[army.factionId];
+  if (!faction) throw new Error('势力不存在');
+  if (faction.gold < def.goldCost) throw new Error(`金不足（需 ${def.goldCost}，当前 ${faction.gold}）`);
+
+  // 大型建造（turns > 1）→ Army 进入驻守状态不可行军
+  const isLarge = def.turns > 1;
+  const newPhase = isLarge ? 'garrison' as const : army.phase;
+
+  const initProgress = 1 / def.turns;
   const structure: CampStructure = {
     type: structureType,
     builderId,
-    buildProgress: 1,
+    buildProgress: initProgress,
     durability: 500 * (1 + (state.officers[builderId]?.stats.leadership ?? 50) / 200),
     effect: def.effect,
     nodeId: army.currentNodeId,
   };
+
   const armies = state.campaignArmies.map((a) =>
-    a.id === armyId ? { ...a, structures: [...a.structures, structure] } : a,
+    a.id === armyId
+      ? {
+          ...a,
+          phase: newPhase,
+          // 大型器械建造中清除行军路径
+          path: isLarge ? [] : a.path,
+          targetNodeId: isLarge ? undefined : a.targetNodeId,
+          structures: [...a.structures, structure],
+          food: a.food - (isLarge ? Math.floor(a.food * 0.05) : 0), // 驻守建造额外耗粮5%
+        }
+      : a,
   );
+
+  return pushLog(
+    { ...state, campaignArmies: armies, factions: { ...state.factions, [faction.id]: { ...faction, gold: faction.gold - def.goldCost } } },
+    'campaign_build',
+    `${army.name} 开始建造 ${structureType}（需 ${def.turns} 回合${isLarge ? '，建造期间不可行军' : ''}）`,
+  );
+}
+
+/** 每回合推进所有 Army 的设施建造进度 */
+export function tickConstruction(state: GameState): GameState {
+  let armies = [...state.campaignArmies];
+  const logs: string[] = [];
+
+  for (let i = 0; i < armies.length; i++) {
+    const a = armies[i];
+    const incompleteIdx = a.structures.findIndex((s) => s.buildProgress < 1);
+    if (incompleteIdx === -1) continue;
+
+    const struct = a.structures[incompleteIdx];
+    const def = STRUCTURE_DEF[struct.type];
+    const progressPerTurn = 1 / def.turns;
+    const newProgress = Math.min(1, struct.buildProgress + progressPerTurn);
+
+    const newStructs = [...a.structures];
+    newStructs[incompleteIdx] = { ...struct, buildProgress: newProgress };
+
+    armies[i] = { ...a, structures: newStructs };
+
+    if (newProgress >= 1) {
+      logs.push(`${a.name} 建造 ${struct.type} 完成（${def.effect}）`);
+    }
+  }
+
+  if (logs.length === 0) return state;
+
   return pushLog(
     { ...state, campaignArmies: armies },
-    'campaign_build',
-    `${army.name} 建造 ${structureType} 完成（${def.effect}）`,
+    'construction_progress',
+    logs.join('；'),
   );
 }
 

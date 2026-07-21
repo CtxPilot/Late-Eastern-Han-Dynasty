@@ -598,3 +598,137 @@ gameRouter.get('/campaign/nodes', (_req, res) => {
     res.status(400).json({ error: e instanceof Error ? e.message : 'campaign nodes failed' });
   }
 });
+
+// ====== 战场地图 API（05 §二十 Tier I） ======
+
+/** 初始化战场地图（为指定城市生成战场节点子集） */
+gameRouter.post('/battlefield/init', (req, res) => {
+  try {
+    const targetCityId = Number(req.body.targetCityId);
+    const fromCityId = Number(req.body.fromCityId);
+    res.json(gameService.battlefieldInit(targetCityId, fromCityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield init failed' });
+  }
+});
+
+/** 获取当前战场地图 */
+gameRouter.get('/battlefield', (_req, res) => {
+  try {
+    const bf = gameService.getBattlefield();
+    if (!bf) return res.status(404).json({ error: 'no active battlefield' });
+    res.json(bf);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield get failed' });
+  }
+});
+
+/** 战场行军 */
+gameRouter.post('/battlefield/march', (req, res) => {
+  try {
+    const { armyId, targetNodeId } = req.body as { armyId: string; targetNodeId: number };
+    res.json(gameService.battlefieldMarch(armyId, Number(targetNodeId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield march failed' });
+  }
+});
+
+/** 退出战场 */
+gameRouter.post('/battlefield/exit', (_req, res) => {
+  try {
+    res.json(gameService.battlefieldExit());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield exit failed' });
+  }
+});
+
+// ====== 白刃战 API（05 §二十 Tier II） ======
+
+/** 发起白刃战 */
+gameRouter.post('/melee/start', (req, res) => {
+  try {
+    const { attackerArmyId, defenderArmyId } = req.body as { attackerArmyId: string; defenderArmyId: string };
+    res.json(gameService.meleeStart(attackerArmyId, defenderArmyId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee start failed' });
+  }
+});
+
+/** 获取当前白刃战状态 */
+gameRouter.get('/melee', (_req, res) => {
+  try {
+    const m = gameService.getMelee();
+    if (!m) return res.status(404).json({ error: 'no active melee' });
+    res.json(m);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee get failed' });
+  }
+});
+
+/** 执行一回合白刃战 */
+gameRouter.post('/melee/round', (req, res) => {
+  try {
+    const actionType = String(req.body.actionType ?? 'normal_attack');
+    res.json(gameService.meleeRound(actionType));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee round failed' });
+  }
+});
+
+/** 刷新白刃战战术点 */
+gameRouter.post('/melee/refresh', (_req, res) => {
+  try {
+    res.json(gameService.meleeRefresh());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee refresh failed' });
+  }
+});
+
+/** 退出白刃战 */
+gameRouter.post('/melee/exit', (_req, res) => {
+  try {
+    res.json(gameService.meleeExit());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee exit failed' });
+  }
+});
+
+// ====== 总军师 API（§十四/§二十.2.6） ======
+
+/** 任命总军师 */
+gameRouter.post('/grand-strategist/appoint', (req, res) => {
+  try {
+    const officerId = Number(req.body.officerId);
+    res.json(gameService.grandStrategistAppoint(officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'appoint grand strategist failed' });
+  }
+});
+
+/** 解职总军师 */
+gameRouter.post('/grand-strategist/dismiss', (_req, res) => {
+  try {
+    res.json(gameService.grandStrategistDismiss());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'dismiss grand strategist failed' });
+  }
+});
+
+/** 切换态势 */
+gameRouter.post('/grand-strategist/strategy', (req, res) => {
+  try {
+    const newStrategy = String(req.body.strategy);
+    res.json(gameService.grandStrategistSwitch(newStrategy));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'switch strategy failed' });
+  }
+});
+
+/** 获取总军师状态 */
+gameRouter.get('/grand-strategist/status', (_req, res) => {
+  try {
+    res.json(gameService.grandStrategistStatus());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'grand strategist status failed' });
+  }
+});

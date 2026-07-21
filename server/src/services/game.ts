@@ -64,6 +64,7 @@ import {
   startCampaign as campaignStartCampaign,
   tickCampaignGarrison,
   tickCampaignMarch,
+  tickConstruction,
   trySiegeSurrender as campaignTrySiegeSurrender,
   type AdvisorAction,
 } from '../engine/campaign.js';
@@ -94,13 +95,25 @@ import {
   unstationCounter,
 } from '../engine/spy.js';
 import { syncFactionResources } from '../engine/economy.js';
+import { extractBattlefieldNodes, generateBattlefield, tickBattlefieldMarch } from '../engine/battlefield.js';
+import { applyMeleeRoundResult, createMeleeState, refreshMeleeState, runMeleeRound } from '../engine/meleeRound.js';
+import {
+  appointGrandStrategist as gsAppoint,
+  dismissGrandStrategist as gsDismiss,
+  switchStrategy as gsSwitchStrategy,
+  tickGrandStrategists as gsTick,
+  getFactionStrategy,
+  calcStrategyModifiers,
+} from '../engine/grandStrategist.js';
 import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { broadcast } from '../ws/broadcast.js';
-import { PlotType, SpyCaptiveAction, SpyMissionType, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type PositionTrack, type StructureType } from '@leh/shared';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType } from '@leh/shared';
 
 let currentGame: GameState | null = null;
 let currentBattle: BattleState | null = null;
+let currentBattlefield: BattlefieldMap | null = null;
+let currentMelee: MeleeState | null = null;
 // Sec-6: 简单请求锁，防止并发操作导致状态不一致
 let isProcessing = false;
 
@@ -325,6 +338,8 @@ export function endTurn(): GameState {
     // 战役层：行军推进 + 驻守恢复（0-A 最小切片，玩家 Army 与 AI Army 同步推进）
     next = tickCampaignMarch(next);
     next = tickCampaignGarrison(next);
+    next = tickConstruction(next); // 设施建造回合化推进
+    next = gsTick(next); // 总军师系统：忠诚/被俘自动解职
     next = { ...next, campaignNodes: getCampaignNodes(next) };
     currentGame = next;
     const g = getClientGame();
@@ -721,8 +736,10 @@ export function battleChallengeDuel(challengerUnitId: string, targetUnitId: stri
     const { battle, accepted } = challengeDuel(currentBattle, challengerUnitId, targetUnitId, getGame());
     currentBattle = battle;
     if (!accepted) return currentBattle;
-    // 接受后立即自动推进首回合 (全自动结算)
-    return battleDuelStep();
+    // 接受后立即自动推进首回合 (全自动结算) — 内联避免嵌套锁
+    if (!currentBattle) throw new Error('无战斗');
+    currentBattle = stepBattleDuel(currentBattle, getGame());
+    return currentBattle;
   });
 }
 
@@ -898,4 +915,236 @@ export function campaignAdvisor(armyId: string, action: AdvisorAction): GameStat
 /** 战役：获取节点状态 */
 export function campaignNodes(): CampaignNode[] {
   return getCampaignNodes(getGame());
+}
+
+// ====== 战场地图（Tier I） ======
+
+/** 为指定城市生成战场地图 */
+export function battlefieldInit(targetCityId: number, fromCityId: number): BattlefieldMap {
+  return withLock(() => {
+    const state = getGame();
+    const nodes = extractBattlefieldNodes(state, targetCityId, fromCityId);
+
+    const targetCity = state.cities[targetCityId];
+    const fromCity = state.cities[fromCityId];
+    if (!targetCity || !fromCity) throw new Error('城市不存在');
+
+    const bfId = `bf-${targetCityId}-${fromCityId}-${Date.now() % 100000}`;
+    const warId = `war-${targetCityId}-${Date.now() % 10000}`;
+
+    const battlefield = generateBattlefield(
+      bfId, warId, nodes,
+      state.playerFactionId,
+      targetCity.ruler ?? 0,
+      targetCityId,
+      [],
+    );
+
+    currentBattlefield = battlefield;
+    return battlefield;
+  });
+}
+
+/** 获取当前战场地图 */
+export function getBattlefield(): BattlefieldMap | null {
+  return currentBattlefield;
+}
+
+/** 执行战场行军（设置目标并推进一回合） */
+export function battlefieldMarch(armyId: string, targetNodeId: number): { game: GameState; battlefield: BattlefieldMap } {
+  return withLock(() => {
+    const state = getGame();
+    if (!currentBattlefield) throw new Error('没有活跃战场');
+
+    const army = state.campaignArmies.find((a) => a.id === armyId);
+    if (!army) throw new Error('Army 不存在');
+
+    // 验证目标在战场节点中且邻接
+    const targetNode = currentBattlefield.nodes.find((n) => n.id === targetNodeId);
+    if (!targetNode) throw new Error('目标节点不在战场范围内');
+    if (!targetNode.adjacentNodeIds.includes(army.currentNodeId)) {
+      throw new Error('目标节点不邻接当前节点');
+    }
+
+    // 设置行军目标并切换行军阶段
+    const armiesWithPath = state.campaignArmies.map((a) =>
+      a.id === armyId
+        ? { ...a, path: [targetNodeId], targetNodeId, phase: 'marching' as const }
+        : a,
+    );
+    const stateWithPath = { ...state, campaignArmies: armiesWithPath };
+
+    // 推进一回合行军
+    const marchResult = tickBattlefieldMarch(stateWithPath, currentBattlefield);
+    currentGame = marchResult.state;
+    currentBattlefield = marchResult.battlefield;
+
+    // 到达目标 → 围城或野战
+    const updatedArmy = currentGame.campaignArmies.find((a) => a.id === armyId);
+    if (updatedArmy && updatedArmy.path.length === 0) {
+      const tCity = state.cities[targetNodeId];
+      if (tCity && tCity.ruler !== state.playerFactionId) {
+        currentGame = {
+          ...currentGame!,
+          actionLog: [{ year: state.currentYear, month: state.currentMonth, type: 'battlefield', message: `${army.name} 抵达 ${tCity?.name ?? '目标'}，进入围城` }, ...currentGame!.actionLog].slice(0, 80),
+        } as GameState;
+      }
+    }
+
+    return { game: getClientGame(), battlefield: currentBattlefield };
+  });
+}
+
+/** 退出战场，返回行政大地图 */
+export function battlefieldExit(): GameState {
+  return withLock(() => {
+    currentBattlefield = null;
+    currentMelee = null;
+    return getClientGame();
+  });
+}
+
+// ====== 白刃战（Tier II） ======
+
+/** 发起白刃战（两军同节点时调用） */
+export function meleeStart(
+  attackerArmyId: string,
+  defenderArmyId: string,
+): { game: GameState; melee: MeleeState } {
+  return withLock(() => {
+    const state = getGame();
+    const atkArmy = state.campaignArmies.find((a) => a.id === attackerArmyId);
+    const defArmy = state.campaignArmies.find((a) => a.id === defenderArmyId);
+    if (!atkArmy || !defArmy) throw new Error('Army 不存在');
+
+    const atkCommander = state.officers[atkArmy.commanderId];
+
+    const melee = createMeleeState(
+      currentBattlefield?.id ?? 'bf-none',
+      attackerArmyId,
+      defenderArmyId,
+      atkArmy.factionId,
+      defArmy.factionId,
+      atkArmy.troops,
+      defArmy.troops,
+      atkArmy.formation,
+      defArmy.formation,
+      atkCommander?.stats.intelligence ?? 50,
+    );
+
+    currentMelee = melee;
+    return { game: getClientGame(), melee };
+  });
+}
+
+/** 获取当前白刃战状态 */
+export function getMelee(): MeleeState | null {
+  return currentMelee;
+}
+
+/** 执行一回合白刃战 */
+export function meleeRound(
+  actionType: string,
+): { game: GameState; result: import('@leh/shared').MeleeRoundResult; melee: MeleeState } {
+  return withLock(() => {
+    if (!currentMelee) throw new Error('没有活跃白刃战');
+    if (currentMelee.phase !== 'active') throw new Error('白刃战已结束');
+
+    const state = getGame();
+    const atkArmy = state.campaignArmies.find((a) => a.id === currentMelee!.attackerArmyId);
+    const atkCommander = atkArmy ? state.officers[atkArmy.commanderId] : undefined;
+
+    const action = { type: actionType as import('@leh/shared').TacticalActionType };
+    const result = runMeleeRound(currentMelee, action, atkCommander?.stats.intelligence ?? 50);
+    const cost = actionType === 'normal_attack' ? 0 : 3;
+
+    currentMelee = applyMeleeRoundResult(currentMelee, result, cost);
+
+    // 如果战斗结束，同步回战场地图数据
+    if (result.phase !== 'active' && currentBattlefield) {
+      const atkRemaining = result.attackerTroopsAfter;
+      const defRemaining = result.defenderTroopsAfter;
+
+      currentGame = {
+        ...getGame(),
+        campaignArmies: getGame().campaignArmies.map((a) => {
+          if (a.id === currentMelee?.attackerArmyId) {
+            return { ...a, troops: atkRemaining, morale: result.attackerMoraleAfter };
+          }
+          if (a.id === currentMelee?.defenderArmyId) {
+            return { ...a, troops: defRemaining, morale: result.defenderMoraleAfter };
+          }
+          return a;
+        }),
+      };
+    }
+
+    return { game: getClientGame(), result, melee: currentMelee };
+  });
+}
+
+/** 刷新白刃战战术点 */
+export function meleeRefresh(): MeleeState {
+  return withLock(() => {
+    if (!currentMelee) throw new Error('没有活跃白刃战');
+    const state = getGame();
+    const atkArmy = state.campaignArmies.find((a) => a.id === currentMelee!.attackerArmyId);
+    const int = atkArmy ? (state.officers[atkArmy.commanderId]?.stats.intelligence ?? 50) : 50;
+    currentMelee = refreshMeleeState(currentMelee, int);
+    return currentMelee;
+  });
+}
+
+/** 退出白刃战 */
+export function meleeExit(): { game: GameState } {
+  return withLock(() => {
+    currentMelee = null;
+    return { game: getClientGame() };
+  });
+}
+
+// ====== 总军师系统（§十四/§二十.2.6） ======
+
+/** 任命总军师 */
+export function grandStrategistAppoint(officerId: number): { game: GameState; strategist: import('@leh/shared').GrandStrategist } {
+  return withLock(() => {
+    const state = getGame();
+    const result = gsAppoint(state, state.playerFactionId, officerId);
+    currentGame = result.state;
+    return { game: getClientGame(), strategist: result.strategist };
+  });
+}
+
+/** 解职总军师 */
+export function grandStrategistDismiss(): { game: GameState; log: string } {
+  return withLock(() => {
+    const state = getGame();
+    const result = gsDismiss(state, state.playerFactionId);
+    currentGame = result.state;
+    return { game: getClientGame(), log: result.log };
+  });
+}
+
+/** 切换态势 */
+export function grandStrategistSwitch(newStrategy: string): { game: GameState; log: string } {
+  return withLock(() => {
+    const state = getGame();
+    const result = gsSwitchStrategy(state, state.playerFactionId, newStrategy as import('@leh/shared').StrategyType);
+    currentGame = result.state;
+    return { game: getClientGame(), log: result.log };
+  });
+}
+
+/** 获取当前势力态势加成 */
+export function grandStrategistStatus(): {
+  strategist: import('@leh/shared').GrandStrategist | null;
+  modifiers: ReturnType<typeof calcStrategyModifiers>;
+  hasStrategist: boolean;
+} {
+  const state = getGame();
+  const gs = state.grandStrategists.find((g) => g.factionId === state.playerFactionId) ?? null;
+  const { strategy, hasStrategist } = getFactionStrategy(state, state.playerFactionId);
+  const int = gs ? (state.officers[gs.officerId]?.stats.intelligence ?? 85) : 85;
+  const mods = calcStrategyModifiers(strategy, int);
+  return { strategist: gs, modifiers: mods, hasStrategist };
 }

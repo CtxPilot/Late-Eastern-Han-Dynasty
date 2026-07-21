@@ -53,3 +53,7 @@ docs/screenshots/leh-seats-full.png
 *.woff
 *.ttf
 *.otf
+.omo/
+.opencode/
+.playwright-mcp/
+*.orig

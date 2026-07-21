@@ -17,6 +17,7 @@
     "mask-state.ts",
     "positions.ts",
     "stamina.ts",
-    "index.ts"
+    "index.ts",
+    "campaign-utils.ts"
   ]
 }
