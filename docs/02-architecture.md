@@ -489,6 +489,7 @@ server/src/data/loader.ts
 | `FactionPanel` | `client/src/components/layout/FactionPanel.tsx` | 派系面板（tags 派生） | S20-W4 |
 | `OfficerDetail` | `client/src/components/officer/OfficerDetail.tsx` | 武将详情 modal（✅ Session 122） | S20-W4 |
 | `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报（✅ Session 122） | S20-W4 |
+| `OfficerPortrait` | `client/src/components/officer/OfficerPortrait.tsx` | 程序化人物头像；四名代表人物手工预设 + 其他武将稳定默认轮廓（✅ Session 124 简化切片） | S20-W4 / S22 |
 | `CommandConfirmDialog` | `client/src/components/ui/CommandConfirmDialog.tsx` | 状态变更命令统一终审窗（✅ Session 122，人事首批接入） | S20-W4/§12 |
 | `RadarChart` | `client/src/components/ui/RadarChart.tsx` | 纯 SVG 手写外交雷达 | S20-W4 |
 | `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |

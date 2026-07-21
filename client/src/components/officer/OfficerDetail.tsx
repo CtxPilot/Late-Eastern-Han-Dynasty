@@ -8,6 +8,7 @@ import {
   type GameState,
   type Officer,
 } from '@leh/shared';
+import { getOfficerProfile, OfficerPortrait } from './OfficerPortrait';
 
 const STAT_ROWS = [
   ['统帅', 'leadership'],
@@ -30,27 +31,35 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const location = officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城';
   const age = officer.birthYear > 0 ? Math.max(0, game.currentYear - officer.birthYear) : null;
   const wife = officer.wifeId != null ? game.females[officer.wifeId]?.name : null;
+  const profile = getOfficerProfile(officer);
+  const signatureStat = STAT_ROWS.reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/80 px-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <section role="dialog" aria-modal="true" aria-labelledby="officer-detail-title" className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded border border-amber-800/60 bg-stone-950 shadow-2xl" data-testid="officer-detail">
-        <header className="sticky top-0 z-10 flex items-start justify-between border-b border-amber-900/50 bg-stone-950/95 px-5 py-4">
-          <div>
-            <div className="text-[10px] tracking-[0.3em] text-amber-600">武将简册</div>
-            <h2 id="officer-detail-title" className="mt-1 text-2xl font-bold tracking-[0.18em] text-amber-100">{officer.name}</h2>
-            <p className="mt-1 text-xs text-stone-500">{age != null ? `${age}岁 · ` : ''}{location} · 忠诚 {officer.loyalty} · 功绩 {officer.merit}</p>
+      <section role="dialog" aria-modal="true" aria-labelledby="officer-detail-title" className="officer-scroll max-h-[92vh] w-full max-w-4xl overflow-y-auto border border-amber-800/60 shadow-2xl" data-testid="officer-detail">
+        <header className="officer-detail-hero sticky top-0 z-10 flex items-start justify-between border-b border-amber-900/50 px-5 py-4">
+          <div className="flex items-end gap-3">
+            <div><div className="text-[10px] tracking-[0.35em] text-amber-700">汉末人物志 · {profile.role}</div><h2 id="officer-detail-title" className="mt-1 text-3xl font-bold tracking-[0.22em] text-amber-100">{officer.name}<small className="ml-3 text-sm font-normal tracking-widest text-stone-400">{profile.courtesy ? `字 ${profile.courtesy}` : ''}</small></h2>
+            <p className="mt-1 text-xs tracking-wider text-stone-500">{profile.title} · {age != null ? `${age}岁 · ` : ''}{location}</p></div>
           </div>
           <button type="button" className="rounded border border-stone-700 px-2 py-1 text-stone-400 hover:text-stone-100" onClick={onClose} aria-label="关闭">×</button>
         </header>
 
-        <div className="grid gap-5 p-5 md:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-6 p-5 md:grid-cols-[220px_1fr]">
+          <aside className="space-y-3">
+            <OfficerPortrait officer={officer} />
+            <blockquote className="border-l-2 border-red-900/80 pl-3 text-sm leading-6 text-stone-300">{profile.quote}</blockquote>
+            <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="体力" value={String(officer.stamina)} /><Info label="经验" value={String(officer.experience)} /></div>
+            <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
+          </aside>
+          <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-4">
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">五维</h3>
               <div className="space-y-2">
                 {STAT_ROWS.map(([label, key]) => {
                   const value = officer.stats[key];
-                  return <div key={key} className="grid grid-cols-[2rem_2rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className="text-stone-100">{value}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-amber-800 to-amber-400" style={{ width: `${value}%` }} /></div></div>;
+                  return <div key={key} className="grid grid-cols-[2rem_2rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={value >= 95 ? 'text-amber-300' : 'text-stone-100'}>{value}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${value}%` }} /></div></div>;
                 })}
               </div>
             </section>
@@ -91,6 +100,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
               <div className="grid grid-cols-2 gap-2 text-xs"><Info label="经验" value={String(officer.experience)} /><Info label="体力" value={String(officer.stamina)} /><Info label="阵型" value={`${officer.formationMastery.length} 项`} /><Info label="状态" value={String(officer.status)} /></div>
             </section>
+          </div>
           </div>
         </div>
       </section>

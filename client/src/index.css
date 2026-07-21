@@ -37,3 +37,22 @@ body,
   /* 跨平台字体铁律：全局锁死工程内部别名，禁止回退宿主系统字库 */
   font-family: 'HanDynastySerif', serif !important;
 }
+
+.officer-scroll {
+  background-color: #17130f;
+  background-image: radial-gradient(circle at 18% 12%, rgba(142, 92, 36, .12), transparent 25%), repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px);
+}
+.officer-detail-hero { background: linear-gradient(90deg, rgba(35,24,16,.98), rgba(12,11,10,.98)); }
+.officer-portrait { --portrait-ink:#3f3a32; --portrait-seal:#81332d; position:relative; width:100%; aspect-ratio:4/5; overflow:hidden; border:1px solid #6b4e2c; background:linear-gradient(135deg,#c7ae7a,#e4d2a4 48%,#bca06d); box-shadow:inset 0 0 35px rgba(48,29,13,.42),0 8px 24px rgba(0,0,0,.3); }
+.officer-portrait::after { content:""; position:absolute; inset:0; pointer-events:none; opacity:.35; background:repeating-radial-gradient(circle at 20% 30%,rgba(55,35,18,.12) 0 1px,transparent 1px 4px); mix-blend-mode:multiply; }
+.officer-portrait svg { width:100%; height:100%; }
+.portrait-halo { fill:var(--portrait-ink); opacity:.09; }
+.portrait-robe { fill:var(--portrait-ink); opacity:.77; }
+.portrait-face { fill:#d5bf8e; stroke:var(--portrait-ink); stroke-width:2; }
+.portrait-line,.portrait-brow,.portrait-eye,.portrait-faint,.portrait-plume { fill:none; stroke:var(--portrait-ink); stroke-linecap:round; }
+.portrait-line { stroke-width:4; }.portrait-brow { stroke-width:2.8; }.portrait-eye { stroke-width:2; }.portrait-faint { stroke-width:1.3; opacity:.55; }.portrait-plume { stroke-width:3; }
+.portrait-beard { fill:var(--portrait-ink); opacity:.88; }
+.portrait-clan { position:absolute; top:8px; left:8px; padding:3px 5px; color:#3d2d1d; background:rgba(228,210,165,.72); border-left:2px solid var(--portrait-seal); font-size:10px; letter-spacing:.12em; writing-mode:vertical-rl; }
+.portrait-seal { position:absolute; right:9px; bottom:13px; display:grid; place-items:center; width:38px; height:38px; padding:3px; border:2px double #d7aa62; color:#ead4a6; background:var(--portrait-seal); font-family:'HanDynastySeal',serif; font-size:15px; line-height:1; writing-mode:vertical-rl; box-shadow:0 2px 4px rgba(0,0,0,.35); }
+.portrait-ribbon { position:absolute; left:0; right:0; bottom:0; height:5px; background:var(--portrait-ink); opacity:.88; }
+.officer-portrait--compact { flex:0 0 34px; width:34px; height:42px; aspect-ratio:auto; border-color:#57452e; box-shadow:none; }
