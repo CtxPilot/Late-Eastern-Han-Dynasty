@@ -842,12 +842,16 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
     prisoners: Math.floor(targetCity.troops * 0.5),
     spoils: { gold: Math.floor(targetCity.gold * 0.5), food: Math.floor(targetCity.food * 0.5) },
     events: [{ round: 0, type: 'stratagem', description: `${targetCity.name} 开城投降` }],
-  }, { type: 'siege_surrender', defCityId: targetCity.id });
+  }, { type: 'siege_surrender', defCityId: targetCity.id }, rng);
   return { state: captured, success: true };
 }
 
 /** 强攻 = 攻城自动战斗（§16.6） */
-export function assault(state: GameState, armyId: string): { state: GameState; result: AutoBattleResult } {
+export function assault(
+  state: GameState,
+  armyId: string,
+  rng: () => number,
+): { state: GameState; result: AutoBattleResult } {
   const army = state.campaignArmies.find((a) => a.id === armyId);
   if (!army) throw new Error('Army 不存在');
   if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
@@ -869,13 +873,14 @@ export function assault(state: GameState, armyId: string): { state: GameState; r
     army,
     enemyArmy ?? null,
     enemyArmy ? null : { cityId: targetId, garrison: targetCity.troops, wall: targetCity.stats.wall ?? 0 },
+    rng,
   );
 
   const next = applyBattleResultToState(state, army, result, {
     type: enemyArmy ? 'field_battle' : 'assault',
     defCityId: enemyArmy ? undefined : targetId,
     enemyArmyId: enemyArmy?.id,
-  });
+  }, rng);
   return { state: next, result };
 }
 
@@ -922,6 +927,7 @@ function applyBattleResultToState(
   army: CampaignArmy,
   result: AutoBattleResult,
   resolution: BattleResolution,
+  rng: () => number,
 ): GameState {
   let cities = { ...state.cities };
   let officers = { ...state.officers };
@@ -1041,7 +1047,7 @@ function applyBattleResultToState(
       // 清反间 + 抢美女
       let after: GameState = { ...state, cities, officers, factions, campaignArmies: [...armies, updatedArmy] };
       after = clearCityCounterOnCapture(after, targetId);
-      after = lootBeautyOnCapture(after, targetId, army.factionId);
+      after = lootBeautyOnCapture(after, targetId, army.factionId, rng);
       after = syncFactionResources(after);
       const msg = resolution.type === 'siege_surrender'
         ? `${target.name} 开城投降！${army.name} 占领`

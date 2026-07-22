@@ -446,7 +446,7 @@ export function doTrain(cityId: number): GameState {
 
 export function doSeekBeauty(cityId: number): GameState {
   return withLock(() => {
-    currentGame = seekBeauty(getGame(), cityId);
+    currentGame = seekBeauty(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
@@ -461,7 +461,7 @@ export function doRewardBeautyStock(officerId: number, amount?: number): GameSta
 /** 占城抢夺美女（内部） */
 export function applyLootBeauty(cityId: number, attackerFactionId: number): void {
   withLock(() => {
-    currentGame = lootBeautyOnCapture(getGame(), cityId, attackerFactionId);
+    currentGame = lootBeautyOnCapture(getGame(), cityId, attackerFactionId, runtimeRandom);
   });
 }
 
@@ -841,7 +841,7 @@ export function exitBattle(): GameState {
     if (!battle) return getClientGame();
     let nextState = state;
     if (!battle.settled && battle.fromCityId != null) {
-      nextState = settleBattle(state, battle);
+      nextState = settleBattle(state, battle, runtimeRandom);
     } else if (!battle.settled && battle.cityId != null && battle.phase === 'over') {
       // 无出发城的旧演示战：胜也不占城，仅记日志
       if (battle.winner === 'attacker') {
@@ -941,7 +941,7 @@ export function campaignBuild(armyId: string, structureType: StructureType): Gam
 /** 战役：强攻（自动战斗结算） */
 export function doCampaignAssault(armyId: string): { game: GameState; result: import('@leh/shared').AutoBattleResult } {
   return withLock(() => {
-    const result = campaignAssaultEngine(getGame(), armyId);
+    const result = campaignAssaultEngine(getGame(), armyId, runtimeRandom);
     currentGame = result.state;
     return { game: getClientGame(), result: result.result };
   });
@@ -950,7 +950,7 @@ export function doCampaignAssault(armyId: string): { game: GameState; result: im
 /** 战役：劝降 */
 export function campaignSiegeSurrender(armyId: string): { game: GameState; success: boolean } {
   return withLock(() => {
-    const result = campaignTrySiegeSurrender(getGame(), armyId);
+    const result = campaignTrySiegeSurrender(getGame(), armyId, runtimeRandom);
     currentGame = result.state;
     return { game: getClientGame(), success: result.success };
   });

@@ -148,7 +148,7 @@ export function aiIntelTurn(
     );
     if (seekCity) {
       try {
-        s = seekBeauty(s, seekCity.id, factionId);
+        s = seekBeauty(s, seekCity.id, resolutionRng, factionId);
       } catch {
         /* ignore */
       }

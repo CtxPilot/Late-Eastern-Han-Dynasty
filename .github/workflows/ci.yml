@@ -87,6 +87,9 @@ jobs:
       - name: Family deterministic continuation test
         run: pnpm verify-family-rng
 
+      - name: Beauty resource deterministic continuation test
+        run: pnpm verify-beauty-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 

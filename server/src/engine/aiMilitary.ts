@@ -390,7 +390,8 @@ function doAiCapture(
     `${factionName}攻占 ${target.name}！驻军 ${garrison}${freeMsg}`,
   );
   after = clearCityCounterOnCapture(after, target.id);
-  after = lootBeautyOnCapture(after, target.id, factionId);
+  // S15 决策仍可独立随机；一旦决定占城，S09 战利品属于持久化结算。
+  after = lootBeautyOnCapture(after, target.id, factionId, runtimeRandom);
   after = syncFactionResources(after);
   return after;
 }

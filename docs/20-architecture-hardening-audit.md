@@ -56,6 +56,8 @@ interface SaveEnvelopeV1 {
 
 模块进度（Session 154）：第六模块 S18 家族完成。`family.ts` 的默认忠诚及相性/理想/血亲三类在野投奔共 4 处直接调用改为必填 RNG；`advanceTurn`、人事登用和服务操作统一传入同一权威源。确定续玩 32/32 覆盖三类投奔成功、三重失败、默认忠诚，以及婚配、固定子女登场、祝融静态权限零消费边界。当前没有 AI 专属家族决策：月结跟随是影响存档的共享结算，故必须进入权威流。审计确认 `child.ts` 使用固定 `ChildBirthDef`，没有随机出生/属性，当前也没有性别字段/抽签；婚配也没有成功率。`beauty.ts` 属 S09 库存资源，不调用 S18、不生成历史女角，三处寻访/攻城抢夺随机留待独立模块。全局直接调用文件 6→5，剩余 `aiMilitary.ts`、`beauty.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`；未发现 S18 `Date.now()` 或第三方随机。
 
+模块进度（Session 155）：第七模块 S09 美女资源完成。`beauty.ts` 的寻访判定、攻城抢夺数量与民忠损失共 3 处直接调用全部改为必填 RNG；服务端玩家入口，以及 `spyAi.ts` 决定寻访后的共享结算、六角/战役/旧 AI 占城后的共享战利品结算均传入权威流。AI 的“是否行动/选择目标”仍保留在 S15 决策层，不与 S09 结果混用。确定续玩 25/25 覆盖寻访成功/失败、抢夺、无资源抢夺与赏赐零消费；当前没有品质/属性生成或非历史女性实体生成，不虚构覆盖。未发现 `Date.now()`、间接随机工具或 S07/S11/S18 对 `beauty.ts` 的调用；它们只通过 `beautyStock` 数据契约消费库存。全局直接调用文件 5→4，剩余 `aiMilitary.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`。
+
 ### Gate 3：编排器与 Campaign 的职责审计
 
 不预先决定采用 Command Bus、类式 Domain Service、Immer 或 StateMutation。先为 `game.ts` 每个导出操作建立调用图，再按以下信号拆分：

@@ -46,7 +46,12 @@ function ensureFactionBeauty(f: GameState['factions'][number]) {
 /**
  * 寻访：己方城；成功势力 stock+1、城 seekLeft−1
  */
-export function seekBeauty(state: GameState, cityId: number, factionId?: number): GameState {
+export function seekBeauty(
+  state: GameState,
+  cityId: number,
+  rng: () => number,
+  factionId?: number,
+): GameState {
   const fid = factionId ?? state.playerFactionId;
   const city = state.cities[cityId];
   if (!city) throw new Error('城市不存在');
@@ -64,7 +69,7 @@ export function seekBeauty(state: GameState, cityId: number, factionId?: number)
   // 女成越多略易成功
   const popBonus = Math.min(0.2, d.adultFemale / 50000);
   const successRate = Math.min(0.92, BEAUTY_SEEK.baseSuccess + popBonus);
-  const success = Math.random() < successRate;
+  const success = rng() < successRate;
 
   const cities = {
     ...state.cities,
@@ -160,6 +165,7 @@ export function lootBeautyOnCapture(
   state: GameState,
   cityId: number,
   attackerFactionId: number,
+  rng: () => number,
 ): GameState {
   const city = state.cities[cityId];
   if (!city) return state;
@@ -184,12 +190,12 @@ export function lootBeautyOnCapture(
 
   const raw =
     BEAUTY_LOOT.gainMin +
-    Math.floor(Math.random() * (BEAUTY_LOOT.gainMax - BEAUTY_LOOT.gainMin + 1));
+    Math.floor(rng() * (BEAUTY_LOOT.gainMax - BEAUTY_LOOT.gainMin + 1));
   const gain = Math.min(raw, seekLeft);
   const moraleLoss =
     BEAUTY_LOOT.moraleLossMin +
     Math.floor(
-      Math.random() *
+      rng() *
         (BEAUTY_LOOT.moraleLossMax - BEAUTY_LOOT.moraleLossMin + 1),
     );
 
