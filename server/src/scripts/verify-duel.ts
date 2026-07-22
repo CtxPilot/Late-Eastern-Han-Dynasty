@@ -230,7 +230,7 @@ function main(): void {
   // 关羽武器映射 (青龙偃月刀 → blade, 暴伤×3.0)
   label('关羽武器映射 (id=6 → blade)');
   // 武器解析为内部函数; 通过暴击倍率间接验证 — 此处仅断言 createDuel 不抛错
-  assert(createDuel('t', guanYu, dianWei).challengerId === 6, '关羽作为挑战方创建成功');
+  assert(createDuel('t', guanYu, dianWei, DEFAULT_DUEL_CONFIG, makeSeededRng(233)).challengerId === 6, '关羽作为挑战方创建成功');
 
   console.log('\n=== 测试结束 ===');
   if (process.exitCode) {

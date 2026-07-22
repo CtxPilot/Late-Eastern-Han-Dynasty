@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 149 完成**（S10 六角战斗确定性随机流收口） |
+| 会话 | **Session 150 完成**（S10 单挑确定性随机流收口） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **两剧本选择** + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物程序化头像/README四图展示/人事终审窗** + **三层战斗架构实装（战场地图画面+白刃战标准模式引擎+战术点系统；三级状态均进入 GameState）** + **总军师系统实装（任命/态势切换/献策/对决/加成接入）** + **UI 全中文化（武将名册/详情/面板/技能/兵种/状态/战役/计谋/单挑/启动屏全中文，英文残留零）** |
-| 文档最新 | 本文件 · 10-progress v9.8 · **20-architecture-hardening-audit（Gate 2 PRNG 逐域接入：六角战斗完成）** · 19-design-proposal-templates · 18-learning-guide · README 框架定位 · 12-system-map v6.9 · 05-combat-system v4.4 · 03-data-models v4.3 · 04-game-systems v4.7 · 01-overview v2.6 · 02-architecture v2.5 · 06-api-design v2.6 · 07-ui-design v3.6 · 09-roadmap v2.0 · 08-data-dictionary v2.2 · **14-officer-stats-reference v2.0** |
+| 文档最新 | 本文件 · 10-progress v9.9 · **20-architecture-hardening-audit（Gate 2 PRNG 逐域接入：六角战斗+单挑完成）** · 19-design-proposal-templates · 18-learning-guide · README 框架定位 · 12-system-map v7.0 · 05-combat-system v4.5 · 03-data-models v4.3 · 04-game-systems v4.7 · 01-overview v2.6 · 02-architecture v2.5 · 06-api-design v2.6 · 07-ui-design v3.6 · 09-roadmap v2.0 · 08-data-dictionary v2.2 · **14-officer-stats-reference v2.0** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓 |
 | 玩法下一步 | **势力特点数据** → 委任军团引擎实装（§39 设计完成）→ AI Army 接入 → 战略点系统。**武将头像已有四人 C+B 简化切片；完整 A+C+B 与 Linux UI 适配仍留 Phase 5** |
 
@@ -290,7 +290,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1** | 继续确定性续玩收口：六角战斗已完成；下一独立模块为 S10 单挑（`battle/duel.ts` 三个默认随机入口），完成后单独 commit；再按既定顺序推进其他域 |
+| **1** | 继续确定性续玩收口：S10 六角与单挑均完成；下一独立模块为 S03 内政，完成后单独 commit |
 | 2 | 继续分类现有 `verify-*.ts`，只将确定性、无端口依赖的检查逐个接入 CI |
 | 3 | 原玩法队列：势力特点数据 → **委任军团引擎实装（§39 设计完成）** → AI Army 接入 → 战略点系统 |
 | 后置 | **继续 S20-W4**（派系/雷达/飘字/行政总署）及 S20-W1~W3 · **S21 三级战斗串联实装**（S21-W6~W9）· **0-B 前置技术债 D-0B-1~13 清理** · 单挑事件接入 duel.ts 完整演出 · 兵种战法接入战役层 · 数字平衡调整 · 战术层（可选hex） · S17 计谋接入战役层 · 0-B · 存档 |
@@ -299,4 +299,4 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 ---
 
-*Session 149 交接 | 2026-07-22 | S10 六角战斗 RNG 收口完成并独立提交：确定续玩 5/5，相关战斗回归通过，全局直接 Math.random 文件 15→12；下一步单挑 | 基线 commit 89adabf；未 push*
+*Session 150 交接 | 2026-07-22 | S10 单挑 RNG 收口完成并独立提交：确定续玩 3/3，既有单挑冒烟通过，全局直接 Math.random 文件 12→11；下一步 S03 内政 | 基线 89adabf；六角战斗 6dc9619；未 push*

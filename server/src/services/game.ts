@@ -782,13 +782,13 @@ export function battleChallengeDuel(challengerUnitId: string, targetUnitId: stri
   return withLock(() => {
     const activeBattle = getActiveBattle();
     if (!activeBattle) throw new Error('无战斗');
-    const { battle, accepted } = challengeDuel(activeBattle, challengerUnitId, targetUnitId, getGame());
+    const { battle, accepted } = challengeDuel(activeBattle, challengerUnitId, targetUnitId, getGame(), runtimeRandom);
     if (!accepted) {
       commitActiveBattle(battle);
       return battle;
     }
     // 接受后立即自动推进首回合 (全自动结算) — 内联避免嵌套锁
-    const nextBattle = stepBattleDuel(battle, getGame());
+    const nextBattle = stepBattleDuel(battle, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -799,7 +799,7 @@ export function battleDuelStep(): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = stepBattleDuel(battle, getGame());
+    const nextBattle = stepBattleDuel(battle, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -810,7 +810,7 @@ export function battleDuelSkip(): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = skipBattleDuel(battle, getGame());
+    const nextBattle = skipBattleDuel(battle, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
