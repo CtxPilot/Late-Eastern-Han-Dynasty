@@ -4319,4 +4319,12 @@ interface WarResult {
 
 ---
 
-*本节约 20KB 新增设计 | v1.0 定稿 | Session 123*
+## 二十一、确定性随机流接入（Session 149）
+
+六角战斗的基础伤害浮动、火计、兵种战法、暴击/反击/连击和敌方六角行动，统一由服务编排层显式注入服务端权威 `runtimeRandom`。`calcDamage` 与 `runSimpleEnemyAi` 不再自行读取 `Math.random()`；同一次攻击的基础伤害与事件链按固定调用顺序消费同一 `xorshift32-v1` 随机流。AI 军事结算复用 `calcDamage` 的伤害路径也因此接入权威源，但 AI 的目标选择与出征决策仍属于 S15 后续收口范围。
+
+`pnpm verify-battle-rng` 会在同一保存点分别验证 10 次基础伤害与一次完整六角攻击：先记录结果和消费次数，再恢复 GameState + PRNG，重复操作必须得到完全相同的伤害、暴击/反击/连击事件及 `draws` 增量。单挑引擎仍是下一独立模块，`duel.ts` 的三个默认随机入口不计入本节完成范围。
+
+---
+
+*战斗系统 v4.4 | Session 149 六角战斗确定性随机流收口*

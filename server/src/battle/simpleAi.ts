@@ -20,6 +20,7 @@ export function runSimpleEnemyAi(
   rows: number,
   enemySide: 'attacker' | 'defender',
   playerSide: 'attacker' | 'defender',
+  rng: CritRng,
   strongAgainst: Record<string, UnitType[]> = {},
   officers?: Record<number, Officer>,
   battleTurn?: number,
@@ -49,7 +50,7 @@ export function runSimpleEnemyAi(
     const dist = hexDistance(live.position, target.position);
 
     if (dist <= ut.range) {
-      const r = doAttack(next, live, target, terrainMap, unitTemplates, officerStats, strongAgainst, officers, battleTurn);
+      const r = doAttack(next, live, target, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn);
       next = r.units;
       messages.push(r.message);
       if (r.over) return { units: next, message: messages.join('；'), over: true, winner: r.winner };
@@ -92,7 +93,7 @@ export function runSimpleEnemyAi(
       if (bestDist <= ut.range) {
         const still = next.find((u) => u.id === target.id && !u.isDestroyed);
         if (still) {
-          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, strongAgainst, officers, battleTurn);
+          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn);
           next = r.units;
           messages.push(r.message);
           if (r.over) {
@@ -135,6 +136,7 @@ function doAttack(
   terrainMap: TerrainType[][],
   unitTemplates: Record<string, UnitTemplate>,
   officerStats: Record<number, { war: number; leadership: number; name: string }>,
+  rng: CritRng,
   strongAgainst: Record<string, UnitType[]> = {},
   officers?: Record<number, Officer>,
   battleTurn?: number,
@@ -177,6 +179,7 @@ function doAttack(
       morale: defender.morale,
       terrain: defTerrain,
     },
+    rng,
   );
 
   // §6.5 暴击/反击/连击 (若有完整 officers)
@@ -203,7 +206,7 @@ function doAttack(
       attackerTerrain: atkTerrain, defenderTerrain: defTerrain,
       distance: hexDistance(attacker.position, defender.position),
       isFirstRound: battleTurn === 1, attackerMoved: attacker.mp < attacker.maxMp,
-      rng: Math.random as CritRng,
+      rng,
     });
     totalDamage = result.damage + result.chainDamage;
     counterDamage = result.counterDamage;

@@ -246,7 +246,13 @@ export function moveUnit(battle: BattleState, unitId: string, q: number, r: numb
   };
 }
 
-export function attackUnit(battle: BattleState, attackerId: string, defenderId: string, state: GameState): BattleState {
+export function attackUnit(
+  battle: BattleState,
+  attackerId: string,
+  defenderId: string,
+  state: GameState,
+  rng: CritRng,
+): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   const attacker = battle.units.find((u) => u.id === attackerId);
   const defender = battle.units.find((u) => u.id === defenderId);
@@ -292,6 +298,7 @@ export function attackUnit(battle: BattleState, attackerId: string, defenderId: 
       morale: defender.morale,
       terrain: defTerrain,
     },
+    rng,
   );
 
   // §6.5 暴击/反击/连击事件流
@@ -313,7 +320,7 @@ export function attackUnit(battle: BattleState, attackerId: string, defenderId: 
     distance: hexDistance(attacker.position, defender.position),
     isFirstRound: battle.turn === 1,
     attackerMoved: attacker.mp < attacker.maxMp,
-    rng: Math.random as CritRng,
+    rng,
   });
 
   const totalDamage = result.damage + result.chainDamage;
@@ -405,7 +412,7 @@ export function castFireTactic(
   attackerId: string,
   targetId: string,
   state: GameState,
-  rng: () => number = Math.random,
+  rng: () => number,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   if (battle.weather === Weather.SNOW) throw new Error('雪天不可用火计');
@@ -587,7 +594,7 @@ export function castAbility(
   targetId: string,
   abilityId: string,
   state: GameState,
-  rng: () => number = Math.random,
+  rng: () => number,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
 
@@ -683,6 +690,7 @@ export function castAbility(
       morale: target.morale,
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
     },
+    rng,
   );
   const dmg = Math.max(1, Math.round(baseDmg * levelData.power * (0.9 + rng() * 0.2)));
   const newTroops = Math.max(0, target.troopCount - dmg);
@@ -789,7 +797,7 @@ function tickBurnAndEnergy(
   return { units: next, burnNotes };
 }
 
-export function runEnemyPhase(battle: BattleState, state: GameState): BattleState {
+export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRng): BattleState {
   if (battle.phase !== 'enemy') return battle;
 
   const burned = tickBurnAndEnergy(battle.units, state);
@@ -828,6 +836,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState): BattleStat
     ROWS,
     'defender',
     'attacker',
+    rng,
     buildStrongAgainstMap(),
     state.officers,
     battle.turn,

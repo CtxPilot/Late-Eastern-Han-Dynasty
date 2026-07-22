@@ -108,7 +108,7 @@ import {
 import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { broadcast } from '../ws/broadcast.js';
-import { resetRuntimeRng, restoreRuntimeRng } from '../runtime-rng.js';
+import { resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
 import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType } from '@leh/shared';
 
 let currentGame: GameState | null = null;
@@ -723,7 +723,7 @@ export function battleAttack(attackerId: string, defenderId: string): BattleStat
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = attackUnit(battle, attackerId, defenderId, getGame());
+    const nextBattle = attackUnit(battle, attackerId, defenderId, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -733,7 +733,7 @@ export function battleFire(attackerId: string, targetId: string): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = castFireTactic(battle, attackerId, targetId, getGame());
+    const nextBattle = castFireTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -744,7 +744,7 @@ export function battleAbility(attackerId: string, targetId: string, abilityId: s
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = castAbility(battle, attackerId, targetId, abilityId, getGame());
+    const nextBattle = castAbility(battle, attackerId, targetId, abilityId, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -820,7 +820,7 @@ export function battleEnemyPhase(): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = runEnemyPhase(battle, getGame());
+    const nextBattle = runEnemyPhase(battle, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
