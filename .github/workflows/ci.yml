@@ -78,6 +78,9 @@ jobs:
       - name: Civil deterministic continuation test
         run: pnpm verify-civil-rng
 
+      - name: Plot and spy deterministic continuation test
+        run: pnpm verify-plot-spy-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 

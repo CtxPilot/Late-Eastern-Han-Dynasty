@@ -116,8 +116,8 @@ export function recruitBatchFromCity(adultMale: number, troops: number): {
   return { batch: laborPool < 8000 ? 1 : batch, laborPool };
 }
 
-function rollInitialRank(laborPool: number): SpyRank {
-  const r = Math.random();
+function rollInitialRank(laborPool: number, rng: () => number): SpyRank {
+  const r = rng();
   if (laborPool < 5000) return 1;
   if (laborPool < 15000) return r < 0.7 ? 1 : 2;
   if (r < 0.5) return 1;
@@ -125,9 +125,9 @@ function rollInitialRank(laborPool: number): SpyRank {
   return 3;
 }
 
-function baseSkills(rank: SpyRank): SpySkills {
+function baseSkills(rank: SpyRank, rng: () => number): SpySkills {
   const b = 25 + rank * 8;
-  const j = () => b + Math.floor(Math.random() * 15) - 5;
+  const j = () => b + Math.floor(rng() * 15) - 5;
   return {
     recon: Math.max(10, Math.min(90, j())),
     sabotage: Math.max(10, Math.min(90, j())),
@@ -136,22 +136,22 @@ function baseSkills(rank: SpyRank): SpySkills {
   };
 }
 
-function randomName(used: Set<string>): string {
+function randomName(used: Set<string>, rng: () => number): string {
   for (let i = 0; i < 40; i++) {
-    const n = SPY_NAMES[Math.floor(Math.random() * SPY_NAMES.length)];
-    const full = `${n}·${Math.floor(Math.random() * 90) + 10}`;
+    const n = SPY_NAMES[Math.floor(rng() * SPY_NAMES.length)];
+    const full = `${n}·${Math.floor(rng() * 90) + 10}`;
     if (!used.has(full)) return full;
   }
-  return `细作·${Date.now() % 1000}`;
+  return `细作·${Math.floor(rng() * 1000)}`;
 }
 
-function randomNameFromList(used: Set<string>, pool: string[]): string {
+function randomNameFromList(used: Set<string>, pool: string[], rng: () => number): string {
   for (let i = 0; i < 40; i++) {
-    const n = pool[Math.floor(Math.random() * pool.length)];
-    const full = `${n}·${Math.floor(Math.random() * 90) + 10}`;
+    const n = pool[Math.floor(rng() * pool.length)];
+    const full = `${n}·${Math.floor(rng() * 90) + 10}`;
     if (!used.has(full)) return full;
   }
-  return `红颜·${Date.now() % 1000}`;
+  return `红颜·${Math.floor(rng() * 1000)}`;
 }
 
 export function upsertDipFavor(
@@ -217,6 +217,7 @@ function skillForMission(type: SpyMissionType, s: SpySkills): number {
 export function recruitSpies(
   state: GameState,
   cityId: number,
+  rng: () => number,
   factionId?: number,
 ): GameState {
   const fid = factionId ?? state.playerFactionId;
@@ -244,9 +245,9 @@ export function recruitSpies(
   const created: string[] = [];
 
   for (let i = 0; i < batch; i++) {
-    const rank = rollInitialRank(laborPool);
+    const rank = rollInitialRank(laborPool, rng);
     const id = `spy-${fid}-${seq++}`;
-    const name = randomName(usedNames);
+    const name = randomName(usedNames, rng);
     usedNames.add(name);
     agents[id] = {
       id,
@@ -254,7 +255,7 @@ export function recruitSpies(
       name,
       rank,
       exp: 0,
-      skills: baseSkills(rank),
+      skills: baseSkills(rank, rng),
       status: SpyStatus.IDLE,
       homeCityId: cityId,
       locationCityId: cityId,
@@ -290,10 +291,10 @@ export function recruitSpies(
 }
 
 /** 女间谍技能倾向：recon/lethal/tradecraft 偏高，sabotage 偏低（§30.5） */
-function femaleSpySkills(rank: SpyRank): SpySkills {
+function femaleSpySkills(rank: SpyRank, rng: () => number): SpySkills {
   const b = 30 + rank * 8;
-  const j = () => b + Math.floor(Math.random() * 15) - 5;
-  const low = () => 15 + Math.floor(Math.random() * 20);
+  const j = () => b + Math.floor(rng() * 15) - 5;
+  const low = () => 15 + Math.floor(rng() * 20);
   return {
     recon: Math.max(15, Math.min(95, j() + 8)),
     sabotage: Math.max(10, Math.min(70, low())),
@@ -309,6 +310,7 @@ function femaleSpySkills(rank: SpyRank): SpySkills {
 export function trainFemaleSpy(
   state: GameState,
   cityId: number,
+  rng: () => number,
   factionId?: number,
 ): GameState {
   const fid = factionId ?? state.playerFactionId;
@@ -334,8 +336,8 @@ export function trainFemaleSpy(
   const usedNames = new Set(Object.values(intel.agents).map((a) => a.name));
   const seq = intel.nextAgentSeq;
   const id = `spy-${fid}-${seq}`;
-  const rank = rollInitialRank(10000 + Math.floor(Math.random() * 8000));
-  const name = randomNameFromList(usedNames, FEMALE_SPY_NAMES);
+  const rank = rollInitialRank(10000 + Math.floor(rng() * 8000), rng);
+  const name = randomNameFromList(usedNames, FEMALE_SPY_NAMES, rng);
   usedNames.add(name);
 
   const agent: SpyAgent = {
@@ -344,7 +346,7 @@ export function trainFemaleSpy(
     name,
     rank,
     exp: 0,
-    skills: femaleSpySkills(rank),
+    skills: femaleSpySkills(rank, rng),
     status: SpyStatus.IDLE,
     homeCityId: cityId,
     locationCityId: cityId,
@@ -393,6 +395,7 @@ export function trainFemaleSpy(
 export function plantFemaleFromGift(
   state: GameState,
   targetFactionId: number,
+  rng: () => number,
   homeCityId?: number,
 ): GameState {
   const fid = state.playerFactionId;
@@ -429,8 +432,8 @@ export function plantFemaleFromGift(
   const usedNames = new Set(Object.values(intel.agents).map((a) => a.name));
   const seq = intel.nextAgentSeq;
   const id = `spy-${fid}-${seq}`;
-  const rank = rollInitialRank(12000);
-  const name = randomNameFromList(usedNames, FEMALE_SPY_NAMES);
+  const rank = rollInitialRank(12000, rng);
+  const name = randomNameFromList(usedNames, FEMALE_SPY_NAMES, rng);
 
   const agent: SpyAgent = {
     id,
@@ -438,7 +441,7 @@ export function plantFemaleFromGift(
     name,
     rank,
     exp: 0,
-    skills: femaleSpySkills(rank),
+    skills: femaleSpySkills(rank, rng),
     status: SpyStatus.IDLE,
     homeCityId: home.id,
     locationCityId: home.id,
@@ -573,6 +576,7 @@ export function dispatchMission(
     targetOfficerId?: number;
     factionId?: number;
   },
+  rng: () => number,
 ): GameState {
   const fid = opts.factionId ?? state.playerFactionId;
   const type = opts.type;
@@ -650,18 +654,18 @@ export function dispatchMission(
   if (isFemaleAgent && cLevel > 0) detectChance += 5;
   detectChance = Math.max(5, Math.min(85, detectChance));
 
-  const success = Math.random() * 100 < successChance;
-  const detected = Math.random() * 100 < detectChance;
+  const success = rng() * 100 < successChance;
+  const detected = rng() * 100 < detectChance;
   let captured = false;
   let dead = false;
   if (detected) {
-    if (!success) captured = Math.random() < 0.75;
-    else captured = Math.random() < 0.25;
-    if (captured && Math.random() < 0.12) {
+    if (!success) captured = rng() < 0.75;
+    else captured = rng() < 0.25;
+    if (captured && rng() < 0.12) {
       dead = true;
       captured = false;
     }
-  } else if (!success && Math.random() < 0.08) {
+  } else if (!success && rng() < 0.08) {
     captured = true;
   }
 
@@ -688,25 +692,25 @@ export function dispatchMission(
       messages.push(`探得 ${target.name} 虚实（详报至${exp.year}年${exp.month}月）`);
     } else if (type === SpyMissionType.SABOTAGE) {
       const t = cities[opts.targetCityId] ?? target;
-      const roll = Math.random();
+      const roll = rng();
       let next = { ...t };
       if (roll < 0.35) {
-        const loss = 80 + Math.floor(Math.random() * 120);
+        const loss = 80 + Math.floor(rng() * 120);
         next = { ...next, food: Math.max(0, next.food - loss) };
         messages.push(`破坏 ${target.name} 粮储 −${loss}`);
       } else if (roll < 0.65) {
-        const loss = 50 + Math.floor(Math.random() * 80);
+        const loss = 50 + Math.floor(rng() * 80);
         next = { ...next, gold: Math.max(0, next.gold - loss) };
         messages.push(`劫掠 ${target.name} 金库 −${loss}`);
       } else if (roll < 0.85) {
-        const loss = 5 + Math.floor(Math.random() * 10);
+        const loss = 5 + Math.floor(rng() * 10);
         next = {
           ...next,
           stats: { ...next.stats, wall: Math.max(0, next.stats.wall - loss) },
         };
         messages.push(`损毁 ${target.name} 城防 −${loss}`);
       } else {
-        const loss = 8 + Math.floor(Math.random() * 8);
+        const loss = 8 + Math.floor(rng() * 8);
         next = {
           ...next,
           troopsMorale: Math.max(20, (next.troopsMorale ?? 70) - loss),
@@ -734,8 +738,8 @@ export function dispatchMission(
         const victim =
           opts.targetOfficerId != null && state.officers[opts.targetOfficerId]
             ? state.officers[opts.targetOfficerId]
-            : pool[Math.floor(Math.random() * pool.length)];
-        const drop = 25 + Math.floor(Math.random() * 16);
+            : pool[Math.floor(rng() * pool.length)];
+        const drop = 25 + Math.floor(rng() * 16);
         officers = {
           ...state.officers,
           [victim.id]: {
@@ -763,8 +767,8 @@ export function dispatchMission(
         const victim =
           opts.targetOfficerId != null && state.officers[opts.targetOfficerId]
             ? state.officers[opts.targetOfficerId]
-            : pool[Math.floor(Math.random() * pool.length)];
-        const drop = 18 + Math.floor(Math.random() * 18) + agent.rank * 2;
+            : pool[Math.floor(rng() * pool.length)];
+        const drop = 18 + Math.floor(rng() * 18) + agent.rank * 2;
         officers = {
           ...state.officers,
           [victim.id]: {
@@ -794,7 +798,7 @@ export function dispatchMission(
         }
         if (thirdFids.size === 0) {
           // 退而求其次：离间目标势力自身内部 → 民忠下降
-          const loss = 10 + agent.rank * 3 + Math.floor(Math.random() * 8);
+          const loss = 10 + agent.rank * 3 + Math.floor(rng() * 8);
           const curCity = cities[opts.targetCityId] ?? target;
           cities[opts.targetCityId] = {
             ...curCity,
@@ -805,8 +809,8 @@ export function dispatchMission(
           };
           messages.push(`流言惑众：${target.name} 民忠 −${loss}`);
         } else {
-          const thirdFid = [...thirdFids][Math.floor(Math.random() * thirdFids.size)];
-          const drop = 8 + agent.rank * 3 + Math.floor(Math.random() * 12);
+          const thirdFid = [...thirdFids][Math.floor(rng() * thirdFids.size)];
+          const drop = 8 + agent.rank * 3 + Math.floor(rng() * 12);
           diplomacy = upsertDipFavor(state, targetFid, thirdFid, -drop);
           const thirdName = state.factions[thirdFid]?.name ?? '第三方';
           const targetName = state.factions[targetFid]?.name ?? '敌方';

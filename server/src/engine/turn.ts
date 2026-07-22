@@ -123,7 +123,7 @@ function settleCityMonthDetailed(
   };
 }
 
-export function advanceTurn(state: GameState): GameState {
+export function advanceTurn(state: GameState, rng: () => number): GameState {
   let { currentYear, currentMonth } = state;
   currentMonth += 1;
   if (currentMonth > 12) {
@@ -182,12 +182,12 @@ export function advanceTurn(state: GameState): GameState {
   let nextState: GameState = afterAi;
   // 谍报：冷却 → AI 谍报 → 清理过期报告
   nextState = tickSpyMonth(nextState);
-  nextState = runAllAiIntel(nextState);
+  nextState = runAllAiIntel(nextState, rng);
   const intel = pruneExpiredIntel(nextState);
   nextState = { ...nextState, intel };
   // 计谋 S17：AI 发起 → 月度推进（准备→结算/ACTIVE）
-  nextState = runAllAiPlots(nextState);
-  nextState = tickPlotsMonth(nextState);
+  nextState = runAllAiPlots(nextState, rng);
+  nextState = tickPlotsMonth(nextState, rng);
   // AI 军事：读取假情报/空城权重后最简袭扰
   nextState = runAiMilitary(nextState);
   // 家族跟随 S18：在野武将自动投奔检定

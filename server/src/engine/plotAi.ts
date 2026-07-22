@@ -4,6 +4,9 @@
 /**
  * AI 计谋相位 S17：低权重尝试美人计/离间/假情报/空城疑兵
  * 设计真源 docs/04 §31
+ *
+ * 本文件中的 Math.random() 仅决定 S15 AI 是否行动、选择哪类计谋及目标；
+ * 计谋的成功/识破/效果结算统一由 plot.ts 接受权威 resolution RNG。
  */
 import { PlotType, type GameState } from '@leh/shared';
 import { EMPTY_FORT_TROOP_MAX, launchPlot } from './plot.js';
@@ -14,7 +17,11 @@ function myActivePlotCount(state: GameState, factionId: number): number {
   ).length;
 }
 
-export function aiPlotTurn(state: GameState, factionId: number): GameState {
+export function aiPlotTurn(
+  state: GameState,
+  factionId: number,
+  resolutionRng: () => number,
+): GameState {
   let s = state;
   const faction = s.factions[factionId];
   if (!faction?.isAlive || faction.isPlayer) return s;
@@ -38,7 +45,7 @@ export function aiPlotTurn(state: GameState, factionId: number): GameState {
           type: PlotType.EMPTY_FORT,
           factionId,
           targetCityId: weak.id,
-        });
+        }, resolutionRng);
         return s;
       } catch {
         /* ignore */
@@ -67,7 +74,7 @@ export function aiPlotTurn(state: GameState, factionId: number): GameState {
             type: PlotType.FALSE_INTEL,
             factionId,
             targetCityId: Number(detailedEnemy[0]),
-          });
+          }, resolutionRng);
           return s;
         } catch {
           /* ignore */
@@ -97,7 +104,7 @@ export function aiPlotTurn(state: GameState, factionId: number): GameState {
             type: PlotType.HONEY_TRAP,
             factionId,
             targetCityId: Number(detailedEnemy[0]),
-          });
+          }, resolutionRng);
         } catch {
           /* ignore */
         }
@@ -118,7 +125,7 @@ export function aiPlotTurn(state: GameState, factionId: number): GameState {
           type: PlotType.SOW_DISCORD,
           factionId,
           targetFactionId: target.id,
-        });
+        }, resolutionRng);
       } catch {
         /* ignore */
       }
@@ -128,11 +135,11 @@ export function aiPlotTurn(state: GameState, factionId: number): GameState {
   return s;
 }
 
-export function runAllAiPlots(state: GameState): GameState {
+export function runAllAiPlots(state: GameState, resolutionRng: () => number): GameState {
   let s = state;
   for (const f of Object.values(s.factions)) {
     if (!f.isAlive || f.isPlayer) continue;
-    s = aiPlotTurn(s, f.id);
+    s = aiPlotTurn(s, f.id, resolutionRng);
   }
   return s;
 }

@@ -3,6 +3,9 @@
 
 /**
  * AI 谍报相位：与玩家共用 spy 引擎，规则权重决策
+ *
+ * 本文件中的 Math.random() 仅属于 S15 AI 行动/目标/任务选择；共享的招募、
+ * 训练与任务结果必须使用调用方注入的 resolutionRng，避免把决策源混入结算层。
  */
 import {
   DipRelation,
@@ -60,7 +63,11 @@ function hostileTo(state: GameState, a: number, b: number): boolean {
 /**
  * 单个非玩家势力的谍报回合（可能修改 state）
  */
-export function aiIntelTurn(state: GameState, factionId: number): GameState {
+export function aiIntelTurn(
+  state: GameState,
+  factionId: number,
+  resolutionRng: () => number,
+): GameState {
   let s = state;
   const faction = s.factions[factionId];
   if (!faction?.isAlive || faction.isPlayer) return s;
@@ -126,7 +133,7 @@ export function aiIntelTurn(state: GameState, factionId: number): GameState {
       .sort((a, b) => b.troops + (b.demographics?.adultMale ?? 0) - (a.troops + (a.demographics?.adultMale ?? 0)))[0];
     if (rich) {
       try {
-        s = recruitSpies(s, rich.id, factionId);
+        s = recruitSpies(s, rich.id, resolutionRng, factionId);
       } catch {
         /* ignore */
       }
@@ -153,7 +160,7 @@ export function aiIntelTurn(state: GameState, factionId: number): GameState {
     const richCity = myCities.find((c) => c.gold >= 100);
     if (richCity && Math.random() < 0.5) {
       try {
-        s = trainFemaleSpy(s, richCity.id, factionId);
+        s = trainFemaleSpy(s, richCity.id, resolutionRng, factionId);
       } catch {
         /* ignore */
       }
@@ -202,7 +209,7 @@ export function aiIntelTurn(state: GameState, factionId: number): GameState {
       type,
       targetCityId: target.id,
       factionId,
-    });
+    }, resolutionRng);
   } catch {
     /* ignore */
   }
@@ -211,11 +218,11 @@ export function aiIntelTurn(state: GameState, factionId: number): GameState {
 }
 
 /** 全部 AI 势力谍报相位 */
-export function runAllAiIntel(state: GameState): GameState {
+export function runAllAiIntel(state: GameState, resolutionRng: () => number): GameState {
   let s = state;
   for (const f of Object.values(s.factions)) {
     if (!f.isAlive || f.isPlayer) continue;
-    s = aiIntelTurn(s, f.id);
+    s = aiIntelTurn(s, f.id, resolutionRng);
   }
   return s;
 }
