@@ -25,6 +25,7 @@
     "verify-duel-rng": "tsx src/scripts/verify-duel-rng.ts",
     "verify-civil-rng": "tsx src/scripts/verify-civil-rng.ts",
     "verify-plot-spy-rng": "tsx src/scripts/verify-plot-spy-rng.ts",
+    "verify-personnel-rng": "tsx src/scripts/verify-personnel-rng.ts",
     "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js"

@@ -2,7 +2,8 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * Demo 人事：搜索/登用（男将）+ 婚配 / 赏赐美人
+ * Demo 人事：搜索/登用（男将）+ 婚配 / 赏赐美人。
+ * 搜索与登用的结算随机必须由服务端权威 PRNG 显式注入；本模块不拥有独立随机源。
  * 设计参考 04 §3.1~3.2 / §九婚姻 / §十一赏赐；历史女角禁止搜索登用。
  */
 import {
@@ -89,7 +90,11 @@ function pickSearcher(state: GameState, cityId: number, factionId: number): Offi
  * 搜索（己方城）：耗金，按搜索者智/魅判定；
  * 成功时优先发现本城/邻接在野将，否则小额金粮，或无收获。
  */
-export function searchTalent(state: GameState, cityId: number): GameState {
+export function searchTalent(
+  state: GameState,
+  cityId: number,
+  rng: () => number,
+): GameState {
   const fid = state.playerFactionId;
   const city = state.cities[cityId];
   if (!city) throw new Error('城市不存在');
@@ -111,7 +116,7 @@ export function searchTalent(state: GameState, cityId: number): GameState {
   };
   let s: GameState = { ...state, cities };
 
-  if (Math.random() > successRate) {
+  if (rng() > successRate) {
     return pushLog(
       s,
       'personnel_search',
@@ -127,12 +132,12 @@ export function searchTalent(state: GameState, cityId: number): GameState {
     return canMarchAlongRoad(o.location, cityId);
   });
 
-  const roll = Math.random();
+  const roll = rng();
   // 有候选人时提高「发现武将」权重
   const officerChance = localOrAdj.length > 0 ? 0.7 : 0.15;
 
   if (roll < officerChance && localOrAdj.length > 0) {
-    const found = localOrAdj[Math.floor(Math.random() * localOrAdj.length)];
+    const found = localOrAdj[Math.floor(rng() * localOrAdj.length)];
     // 吸引至搜索城（便于登用）
     const officers = {
       ...s.officers,
@@ -148,7 +153,7 @@ export function searchTalent(state: GameState, cityId: number): GameState {
   }
 
   if (roll < officerChance + 0.2) {
-    const gain = 40 + Math.floor(Math.random() * 60);
+    const gain = 40 + Math.floor(rng() * 60);
     const c = s.cities[cityId];
     return pushLog(
       s,
@@ -164,7 +169,7 @@ export function searchTalent(state: GameState, cityId: number): GameState {
   }
 
   if (roll < officerChance + 0.35) {
-    const gain = 60 + Math.floor(Math.random() * 80);
+    const gain = 60 + Math.floor(rng() * 80);
     const c = s.cities[cityId];
     return pushLog(
       s,
@@ -213,6 +218,7 @@ export function calcRecruitChance(
 export function recruitOfficer(
   state: GameState,
   officerId: number,
+  rng: () => number,
   recruiterId?: number,
 ): GameState {
   const fid = state.playerFactionId;
@@ -270,7 +276,7 @@ export function recruitOfficer(
   };
 
   const chance = calcRecruitChance(recruiter, target);
-  if (Math.random() * 100 >= chance) {
+  if (rng() * 100 >= chance) {
     return pushLog(
       s,
       'personnel_recruit',

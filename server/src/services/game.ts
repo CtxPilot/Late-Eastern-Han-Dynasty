@@ -481,7 +481,7 @@ export function doGiftBeauty(femaleId: number, officerId: number): GameState {
 
 export function doSearchTalent(cityId: number): GameState {
   return withLock(() => {
-    currentGame = searchTalent(getGame(), cityId);
+    currentGame = searchTalent(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
@@ -491,6 +491,7 @@ export function doRecruitOfficer(officerId: number, recruiterId?: number): GameS
     currentGame = recruitOfficer(
       getGame(),
       officerId,
+      runtimeRandom,
       recruiterId != null ? recruiterId : undefined,
     );
     return getClientGame();
