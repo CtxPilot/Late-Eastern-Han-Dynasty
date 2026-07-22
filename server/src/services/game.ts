@@ -635,7 +635,7 @@ export function doJoinFaction(officerId: number, factionId: number, cityId?: num
     if (factionId !== state.playerFactionId) {
       throw new Error('仅可招募武将加入己方势力');
     }
-    currentGame = joinFaction(state, officerId, factionId, cityId);
+    currentGame = joinFaction(state, officerId, factionId, runtimeRandom, cityId);
     return getClientGame();
   });
 }
@@ -656,7 +656,7 @@ export function doReleaseOfficer(officerId: number): GameState {
 
 export function doFollowCheck(): GameState {
   return withLock(() => {
-    currentGame = tickFollowCheck(getGame());
+    currentGame = tickFollowCheck(getGame(), runtimeRandom);
     return getClientGame();
   });
 }

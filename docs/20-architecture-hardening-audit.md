@@ -10,9 +10,9 @@
 | WebSocket | `server/src/ws/broadcast.ts` 只发送回合进度、事件提示和 hello | 当前没有“WS 全量 GameState 导致卡顿”的证据；增量状态协议不是立即任务 |
 | 客户端 Store | `client/src/stores/gameStore.ts` 单一 Zustand store，整体 `game` 投影与 UI 状态共存 | D-0B-1 的 slice + 细粒度 selector 方向成立；必须保持一个服务端投影真源 |
 | 静态数据校验 | `server/src/data/loader.ts` 在启动和城市文件 mtime 变化时用 Zod 校验整包 | 不是每回合重复 parse；不可仅凭规模猜测删除运行时边界校验 |
-| 随机数 | **S10、S03、S07/S17、S11 结算已收口**：人事搜索/登用显式注入权威 `runtimeRandom`；`plotAi.ts`/`spyAi.ts` 只保留 S15 决策随机 | 战斗 5/5、单挑 3/3、内政 12/12、计谋谍报 30/30、人事 32/32；继续按模块收口其他域 |
+| 随机数 | **S10、S03、S07/S17、S11、S18 结算已收口**：家族跟随/默认忠诚显式注入权威 `runtimeRandom`；`plotAi.ts`/`spyAi.ts` 只保留 S15 决策随机 | 战斗 5/5、单挑 3/3、内政 12/12、计谋谍报 30/30、人事 32/32、家族 32/32；继续按模块收口其他域 |
 | 存档 | `shared/types/save.ts` 的 `SaveSlot.snapshot` 直接引用 `GameState`，S16 尚未实现 | 首次存档实现前需要独立版本信封、迁移链和加载校验；不应直接冻结当前 GameState 为永久格式 |
-| 引擎验证 | shared 112 测试；既有存档/战役检查与战斗 5、单挑 3、内政 12、计谋谍报 30、人事 32 项确定续玩检查均已接入默认 CI；server 仍有多个独立 `verify-*.ts` | 继续逐个评估确定性与端口依赖后再接入，禁止仅因脚本存在就宣称覆盖 |
+| 引擎验证 | shared 112 测试；既有存档/战役检查与战斗 5、单挑 3、内政 12、计谋谍报 30、人事 32、家族 32 项确定续玩检查均已接入默认 CI；server 仍有多个独立 `verify-*.ts` | 继续逐个评估确定性与端口依赖后再接入，禁止仅因脚本存在就宣称覆盖 |
 | 战斗持久化边界 | 六角、战场地图、白刃战已收口到 `GameState.activeBattles[0]` / `activeBattlefield` / `activeMelee` | 三级战斗运行时已消除模块级双真源；实际恢复仍需完整快照、迁移与生产读档 |
 
 ## 二、建议顺序
@@ -53,6 +53,8 @@ interface SaveEnvelopeV1 {
 模块进度（Session 152）：第四模块 S07/S17 共享结算完成。`plot.ts` 与 `spy.ts` 自身直接 `Math.random()` 归零；普通招募、女间谍训练/献美点化、任务成功/识破/伤亡与四类 L1 计谋的全部已实现随机结果均改为必填 RNG。审计另发现计谋 ID 和密探后备名使用 `Date.now()`，会绕过随机计数并破坏同指令重放，已一并改为权威流。`advanceTurn` 将同一权威源传给 AI 发起后的共享创建/结算，但 `plotAi.ts` / `spyAi.ts` 的“是否行动、目标、任务选择”仍按用户边界保留 `Math.random()`，并以代码注释标明属于 S15 决策层。确定续玩 30/30；四面楚歌未实装，测试只覆盖真实离间流言。该会话曾把全局直接调用文件记为 10→8；Session 153 按统一命令复核并将此修正为收口后 7 个，剩余两个 AI 文件仍不是遗漏。
 
 模块进度（Session 153）：第五模块 S11 人事完成。`personnel.ts` 的搜索成功判定、结果类型、候选筛选、金粮数量及登用成功判定共 6 处调用全部改为必填 RNG，服务层统一注入 `runtimeRandom`；未发现 `Date.now()`、间接随机工具或 AI 调用者。确定续玩 32/32 覆盖搜索发现/失败/资财/粮草与登用成败，并确认任命不消费 RNG；完整赏金/宝物赏赐尚未实装，不虚构覆盖。复核 Session 152 的“剩余 8 文件”是旧计数误差：S11 改动前按 `rg -l 'Math.random\(' server/src` 实测为 7，清除 `personnel.ts` 后为 6；只含 `Date.now()` 的文件不得计为直接 `Math.random()` 文件。
+
+模块进度（Session 154）：第六模块 S18 家族完成。`family.ts` 的默认忠诚及相性/理想/血亲三类在野投奔共 4 处直接调用改为必填 RNG；`advanceTurn`、人事登用和服务操作统一传入同一权威源。确定续玩 32/32 覆盖三类投奔成功、三重失败、默认忠诚，以及婚配、固定子女登场、祝融静态权限零消费边界。当前没有 AI 专属家族决策：月结跟随是影响存档的共享结算，故必须进入权威流。审计确认 `child.ts` 使用固定 `ChildBirthDef`，没有随机出生/属性，当前也没有性别字段/抽签；婚配也没有成功率。`beauty.ts` 属 S09 库存资源，不调用 S18、不生成历史女角，三处寻访/攻城抢夺随机留待独立模块。全局直接调用文件 6→5，剩余 `aiMilitary.ts`、`beauty.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`；未发现 S18 `Date.now()` 或第三方随机。
 
 ### Gate 3：编排器与 Campaign 的职责审计
 

@@ -191,7 +191,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   // AI 军事：读取假情报/空城权重后最简袭扰
   nextState = runAiMilitary(nextState);
   // 家族跟随 S18：在野武将自动投奔检定
-  nextState = tickFollowCheck(nextState);
+  nextState = tickFollowCheck(nextState, rng);
   // 子女 S18：每年 1 月 appearYear 登场
   nextState = tickChildrenAppear(nextState);
   // 事件 S14：自动触发无选项事件

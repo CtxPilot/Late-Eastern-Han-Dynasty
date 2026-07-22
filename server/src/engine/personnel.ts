@@ -289,7 +289,7 @@ export function recruitOfficer(
       ? target.location
       : payCity.id;
 
-  s = joinFaction(s, officerId, fid, cityId, RECRUIT_LOYALTY_BASE + Math.floor(chance / 10));
+  s = joinFaction(s, officerId, fid, rng, cityId, RECRUIT_LOYALTY_BASE + Math.floor(chance / 10));
 
   // 写入城 officers 列表
   const city = s.cities[cityId];
