@@ -376,7 +376,7 @@ export function endTurn(): GameState {
     next = tickCampaignMarch(next);
     next = tickCampaignGarrison(next);
     next = tickConstruction(next); // 设施建造回合化推进
-    next = gsTick(next); // 总军师系统：忠诚/被俘自动解职
+    next = gsTick(next, runtimeRandom); // 总军师系统：忠诚/被俘自动解职
     next = { ...next, campaignNodes: getCampaignNodes(next) };
     currentGame = next;
     const g = getClientGame();

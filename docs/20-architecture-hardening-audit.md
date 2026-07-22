@@ -10,7 +10,7 @@
 | WebSocket | `server/src/ws/broadcast.ts` 只发送回合进度、事件提示和 hello | 当前没有“WS 全量 GameState 导致卡顿”的证据；增量状态协议不是立即任务 |
 | 客户端 Store | `client/src/stores/gameStore.ts` 单一 Zustand store，整体 `game` 投影与 UI 状态共存 | D-0B-1 的 slice + 细粒度 selector 方向成立；必须保持一个服务端投影真源 |
 | 静态数据校验 | `server/src/data/loader.ts` 在启动和城市文件 mtime 变化时用 Zod 校验整包 | 不是每回合重复 parse；不可仅凭规模猜测删除运行时边界校验 |
-| 随机数 | **S10、S03、S07/S17、S11、S18 结算已收口**：家族跟随/默认忠诚显式注入权威 `runtimeRandom`；`plotAi.ts`/`spyAi.ts` 只保留 S15 决策随机 | 战斗 5/5、单挑 3/3、内政 12/12、计谋谍报 30/30、人事 32/32、家族 32/32；继续按模块收口其他域 |
+| 随机数 | **非 S15 结算域已收口**：S10、S03、S07/S17、S11、S18、S09 与总军师结算显式注入权威 `runtimeRandom` | 直接 `Math.random()` 仅剩 `aiMilitary.ts` / `plotAi.ts` / `spyAi.ts` 三个 S15 决策边界文件；总军师 28/28 |
 | 存档 | `shared/types/save.ts` 的 `SaveSlot.snapshot` 直接引用 `GameState`，S16 尚未实现 | 首次存档实现前需要独立版本信封、迁移链和加载校验；不应直接冻结当前 GameState 为永久格式 |
 | 引擎验证 | shared 112 测试；既有存档/战役检查与战斗 5、单挑 3、内政 12、计谋谍报 30、人事 32、家族 32 项确定续玩检查均已接入默认 CI；server 仍有多个独立 `verify-*.ts` | 继续逐个评估确定性与端口依赖后再接入，禁止仅因脚本存在就宣称覆盖 |
 | 战斗持久化边界 | 六角、战场地图、白刃战已收口到 `GameState.activeBattles[0]` / `activeBattlefield` / `activeMelee` | 三级战斗运行时已消除模块级双真源；实际恢复仍需完整快照、迁移与生产读档 |
@@ -57,6 +57,8 @@ interface SaveEnvelopeV1 {
 模块进度（Session 154）：第六模块 S18 家族完成。`family.ts` 的默认忠诚及相性/理想/血亲三类在野投奔共 4 处直接调用改为必填 RNG；`advanceTurn`、人事登用和服务操作统一传入同一权威源。确定续玩 32/32 覆盖三类投奔成功、三重失败、默认忠诚，以及婚配、固定子女登场、祝融静态权限零消费边界。当前没有 AI 专属家族决策：月结跟随是影响存档的共享结算，故必须进入权威流。审计确认 `child.ts` 使用固定 `ChildBirthDef`，没有随机出生/属性，当前也没有性别字段/抽签；婚配也没有成功率。`beauty.ts` 属 S09 库存资源，不调用 S18、不生成历史女角，三处寻访/攻城抢夺随机留待独立模块。全局直接调用文件 6→5，剩余 `aiMilitary.ts`、`beauty.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`；未发现 S18 `Date.now()` 或第三方随机。
 
 模块进度（Session 155）：第七模块 S09 美女资源完成。`beauty.ts` 的寻访判定、攻城抢夺数量与民忠损失共 3 处直接调用全部改为必填 RNG；服务端玩家入口，以及 `spyAi.ts` 决定寻访后的共享结算、六角/战役/旧 AI 占城后的共享战利品结算均传入权威流。AI 的“是否行动/选择目标”仍保留在 S15 决策层，不与 S09 结果混用。确定续玩 25/25 覆盖寻访成功/失败、抢夺、无资源抢夺与赏赐零消费；当前没有品质/属性生成或非历史女性实体生成，不虚构覆盖。未发现 `Date.now()`、间接随机工具或 S07/S11/S18 对 `beauty.ts` 的调用；它们只通过 `beautyStock` 数据契约消费库存。全局直接调用文件 5→4，剩余 `aiMilitary.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`。
+
+模块进度（Session 156）：第八模块总军师/幕僚体系完成。`grandStrategist.ts` 的献策触发、献策类型与低忠诚辞职共 3 处直接随机改为必填 RNG，月度编排传入权威流。献策尚未接入服务/UI，但先收紧了引擎契约；任命、态势、智略修正、对决与 AI 自动态势选择均为确定性。确定续玩 28/28 覆盖献策成败/类型、辞职成败、死亡/无任命零消费和对决/加成零消费。未发现 `Date.now()`、间接随机工具或 S10/S11 随机调用；军中参谋只在任命时做确定性互斥检查。并修正 `05` 的辞职门槛 60→50，与代码/规则真源对齐。全局直接 `Math.random()` 文件 4→3，仅剩三个 S15 AI 决策边界文件，本轮“玩家/共享结算随机收口”阶段完成。
 
 ### Gate 3：编排器与 Campaign 的职责审计
 

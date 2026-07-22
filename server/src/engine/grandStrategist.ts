@@ -274,6 +274,7 @@ interface AdviceResult {
 export function checkStrategyAdvice(
   state: GameState,
   factionId: number,
+  rng: () => number,
 ): AdviceResult {
   const gs = state.grandStrategists.find((gs) => gs.factionId === factionId);
   if (!gs) return { triggered: false };
@@ -283,10 +284,10 @@ export function checkStrategyAdvice(
 
   // 触发概率
   const chance = ADVICE_BASE_CHANCE + (officer.stats.intelligence - 80) * ADVICE_INT_FACTOR;
-  if (Math.random() > chance) return { triggered: false };
+  if (rng() > chance) return { triggered: false };
 
   // 随机选献策类型
-  const type = ADVICE_TYPES[Math.floor(Math.random() * ADVICE_TYPES.length)];
+  const type = ADVICE_TYPES[Math.floor(rng() * ADVICE_TYPES.length)];
 
   switch (type) {
     case 'military': {
@@ -425,7 +426,7 @@ export function grandStrategistDuel(
 // ====== 回合推进 ======
 
 /** 每回合更新总军师系统 */
-export function tickGrandStrategists(state: GameState): GameState {
+export function tickGrandStrategists(state: GameState, rng: () => number): GameState {
   let grandStrategists = [...state.grandStrategists];
   let officers = { ...state.officers };
   const logs: GameState['actionLog'] = [];
@@ -442,7 +443,7 @@ export function tickGrandStrategists(state: GameState): GameState {
     }
 
     // 检查忠诚 ≤ 50 自动辞职
-    if (officer.loyalty != null && officer.loyalty <= 50 && Math.random() < LOYALTY_RESIGN_CHANCE) {
+    if (officer.loyalty != null && officer.loyalty <= 50 && rng() < LOYALTY_RESIGN_CHANCE) {
       grandStrategists = grandStrategists.filter((g) => g.officerId !== gs.officerId);
       logs.push({ year: state.currentYear, month: state.currentMonth, type: 'strategist_resign', message: `${officer.name} 因忠诚不足辞去总军师之职` });
     }

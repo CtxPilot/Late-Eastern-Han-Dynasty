@@ -3087,7 +3087,7 @@ interface CampaignSquad {
 解职原因：
   君主主动解职
   总军师被俘/死亡
-  总军师忠诚 ≤ 60（概率自动辞职）
+  总军师忠诚 ≤ 50（每月 10% 概率自动辞职）
 ```
 
 ### 14.3 态势决策
@@ -3918,7 +3918,7 @@ Part II 保留原§一~§八 战术战斗要素 · §九~§十一 参考保留*
 > - §十三 Army 编成：`startCampaign` 主将+副将+参谋+Squad 五部阵位；校验邻接/兵粮/智力≥85
 > - §十三 行军：`tickCampaignMarch` 逐节点推进 + 补给消耗 + 缺粮士气降 + 经己方城补粮
 > - §十三 路径：`planPath` BFS 道路邻接最短路径
-> - §十四 总军师：数据结构已定义（`GrandStrategist`），任命/态势/献策逻辑后置
+> - §十四 总军师：`GrandStrategist` 数据、任命/解职、态势切换、献策引擎、对决与月度维护已实装；献策服务/UI 接线后置
 > - §十五 设施：`buildStructure` 即时建造（简化）；大型器械回合消耗后置
 > - §十三.6 参谋行动：`advisorAction` 激励/陷阱/撤退休整/斥候 已实装
 > - §十六 状态机：marching→sieging→assaulting→garrison/retreating 转换完整

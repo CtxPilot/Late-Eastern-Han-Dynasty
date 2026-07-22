@@ -78,6 +78,7 @@ pnpm verify-plot-spy-rng
 pnpm verify-personnel-rng
 pnpm verify-family-rng
 pnpm verify-beauty-rng
+pnpm verify-grand-strategist-rng
 pnpm validate-data
 pnpm verify-scenario-events
 ```
