@@ -684,8 +684,8 @@ export function createDuel(
   battleId: string,
   challenger: Officer,
   defender: Officer,
-  cfg: DuelEngineConfig = DEFAULT_DUEL_CONFIG,
-  rng: DuelRng = Math.random,
+  cfg: DuelEngineConfig,
+  rng: DuelRng,
 ): DuelState {
   const uniqueAtk = uniqueOf(challenger);
   const uniqueDef = uniqueOf(defender);
@@ -732,8 +732,8 @@ export function stepDuel(
   state: DuelState,
   challenger: Officer,
   defender: Officer,
-  cfg: DuelEngineConfig = DEFAULT_DUEL_CONFIG,
-  rng: DuelRng = Math.random,
+  cfg: DuelEngineConfig,
+  rng: DuelRng,
 ): DuelState {
   if (state.phase !== 'dueling') return state;
 
@@ -1027,8 +1027,8 @@ export function runDuelToCompletion(
   state: DuelState,
   challenger: Officer,
   defender: Officer,
-  cfg: DuelEngineConfig = DEFAULT_DUEL_CONFIG,
-  rng: DuelRng = Math.random,
+  cfg: DuelEngineConfig,
+  rng: DuelRng,
 ): DuelState {
   let s = state;
   let guard = 0;

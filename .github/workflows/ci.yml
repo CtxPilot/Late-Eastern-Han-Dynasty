@@ -72,6 +72,9 @@ jobs:
       - name: Battle deterministic continuation test
         run: pnpm verify-battle-rng
 
+      - name: Duel deterministic continuation test
+        run: pnpm verify-duel-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 

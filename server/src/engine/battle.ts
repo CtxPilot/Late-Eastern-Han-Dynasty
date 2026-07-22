@@ -25,6 +25,7 @@ import {
   aiAcceptChallenge,
   canChallenge,
   createDuel,
+  DEFAULT_DUEL_CONFIG,
   runDuelToCompletion,
   stepDuel,
 } from '../battle/duel.js';
@@ -897,6 +898,7 @@ export function challengeDuel(
   challengerUnitId: string,
   targetUnitId: string,
   state: GameState,
+  rng: import('../battle/duel.js').DuelRng,
 ): { battle: BattleState; accepted: boolean } {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   if (battle.duel) throw new Error('已有进行中的单挑');
@@ -945,7 +947,7 @@ export function challengeDuel(
   const spentUnits = battle.units.map((u) =>
     u.id === atkUnit.id ? { ...u, energy: energy - DUEL_CHALLENGE_COST } : u,
   );
-  const duel = createDuel(battle.id, challenger, defender);
+  const duel = createDuel(battle.id, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
   return {
     battle: {
       ...battle,
@@ -962,12 +964,13 @@ export function challengeDuel(
 export function stepBattleDuel(
   battle: BattleState,
   state: GameState,
+  rng: import('../battle/duel.js').DuelRng,
 ): BattleState {
   if (!battle.duel || battle.duel.phase !== 'dueling') return battle;
   const challenger = state.officers[battle.duel.challengerId];
   const defender = state.officers[battle.duel.defenderId];
   if (!challenger || !defender) return battle;
-  const duel = stepDuel(battle.duel, challenger, defender);
+  const duel = stepDuel(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
   return applyDuelPhase(battle, duel, state);
 }
 
@@ -975,13 +978,14 @@ export function stepBattleDuel(
 export function skipBattleDuel(
   battle: BattleState,
   state: GameState,
+  rng: import('../battle/duel.js').DuelRng,
 ): BattleState {
   if (!battle.duel) return battle;
   if (battle.duel.phase === 'resolved') return applyDuelOutcome(battle, state);
   const challenger = state.officers[battle.duel.challengerId];
   const defender = state.officers[battle.duel.defenderId];
   if (!challenger || !defender) return battle;
-  const duel = runDuelToCompletion(battle.duel, challenger, defender);
+  const duel = runDuelToCompletion(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
   return applyDuelPhase(battle, duel, state);
 }
 
