@@ -7,7 +7,7 @@ The roadmap is evidence-based: “implemented” means code exists and has been 
 ## Now — stabilize the 0-A framework slice
 
 - ✅ Restore the campaign regression suite to a fully green baseline and add it to default CI (62 deterministic assertions).
-- Define versioned save envelopes, migration validation, and deterministic RNG boundaries before implementing persistence.
+- ✅ Define versioned save envelopes, migration validation, and deterministic continuation boundaries before implementing persistence. All action-resolution randomness now uses the authoritative serializable PRNG; S15 action/target choices remain intentionally independent until replay is required.
 - Establish reproducible 30-city and synthetic 0-B performance baselines before choosing optimizations.
 - Expand automated coverage beyond the shared pure-function suite.
 - Add reproducible engine checks to the default CI workflow.
@@ -21,7 +21,7 @@ The evidence-based hardening gates and rejected premature optimizations are docu
 
 ## Next — persistence and distributable demo
 
-- Implement save/load with a documented, versioned state format.
+- Implement production save/load persistence and UI on top of the documented v1 envelope and validated in-memory restore contract.
 - Add import/export and migration rules for saved state.
 - Produce a reproducible hosted or packaged demo.
 - Publish the first tagged pre-release with release notes and known limitations.
