@@ -74,6 +74,7 @@ pnpm verify-save-migration
 pnpm verify-battle-rng
 pnpm verify-duel-rng
 pnpm verify-civil-rng
+pnpm verify-plot-spy-rng
 pnpm validate-data
 pnpm verify-scenario-events
 ```

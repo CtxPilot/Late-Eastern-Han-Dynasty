@@ -371,7 +371,7 @@ export function endTurn(): GameState {
       throw new Error('请先处理待决事件');
     }
     broadcast({ type: 'turn_progress', phase: 'ai', message: '回合结算中…', progress: 10 });
-    let next = advanceTurn(before);
+    let next = advanceTurn(before, runtimeRandom);
     // 战役层：行军推进 + 驻守恢复（0-A 最小切片，玩家 Army 与 AI Army 同步推进）
     next = tickCampaignMarch(next);
     next = tickCampaignGarrison(next);
@@ -543,14 +543,14 @@ export function doAlliance(targetFactionId: number): GameState {
 
 export function doRecruitSpies(cityId: number): GameState {
   return withLock(() => {
-    currentGame = recruitSpies(getGame(), cityId);
+    currentGame = recruitSpies(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
 
 export function doTrainFemaleSpy(cityId: number): GameState {
   return withLock(() => {
-    currentGame = trainFemaleSpy(getGame(), cityId);
+    currentGame = trainFemaleSpy(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
@@ -558,7 +558,7 @@ export function doTrainFemaleSpy(cityId: number): GameState {
 /** 献美→点化女间谍 */
 export function doPlantFemale(targetFactionId: number, homeCityId?: number): GameState {
   return withLock(() => {
-    currentGame = plantFemaleFromGift(getGame(), targetFactionId, homeCityId);
+    currentGame = plantFemaleFromGift(getGame(), targetFactionId, runtimeRandom, homeCityId);
     return getClientGame();
   });
 }
@@ -575,7 +575,7 @@ export function doSpyMission(
       type: type as SpyMissionType,
       targetCityId,
       targetOfficerId,
-    });
+    }, runtimeRandom);
     return getClientGame();
   });
 }
@@ -619,7 +619,7 @@ export function doLaunchPlot(
       targetCityId,
       targetOfficerId,
       agentId: agentId || undefined,
-    });
+    }, runtimeRandom);
     return getClientGame();
   });
 }

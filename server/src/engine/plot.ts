@@ -135,6 +135,7 @@ export function launchPlot(
     targetOfficerId?: number;
     agentId?: string;
   },
+  rng: () => number,
 ): GameState {
   const fid = opts.factionId ?? state.playerFactionId;
   const faction = state.factions[fid];
@@ -275,7 +276,7 @@ export function launchPlot(
     }
   }
 
-  const plotId = `plot-${fid}-${Date.now().toString(36)}-${plots.length + 1}`;
+  const plotId = `plot-${fid}-${Math.floor(rng() * 0x1_0000_0000).toString(36)}-${plots.length + 1}`;
   const newPlot: Plot = {
     id: plotId,
     type,
@@ -315,7 +316,7 @@ export function launchPlot(
 /**
  * 每月推进计谋：准备期倒计时 → 结算；ACTIVE 效果倒计时
  */
-export function tickPlotsMonth(state: GameState): GameState {
+export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
   const plots = state.plots ?? [];
   if (plots.length === 0) return state;
 
@@ -363,7 +364,7 @@ export function tickPlotsMonth(state: GameState): GameState {
       continue;
     }
 
-    const result = resolvePlot(s, plot, cities, officers, diplomacy, factions, intel);
+    const result = resolvePlot(s, plot, cities, officers, diplomacy, factions, intel, rng);
     cities = result.cities;
     officers = result.officers;
     diplomacy = result.diplomacy;
@@ -415,6 +416,7 @@ function resolvePlot(
   diplomacy: GameState['diplomacy'],
   factions: GameState['factions'],
   intel: GameState['intel'],
+  rng: () => number,
 ): {
   cities: GameState['cities'];
   officers: GameState['officers'];
@@ -465,8 +467,8 @@ function resolvePlot(
   successChance = Math.max(10, Math.min(85, successChance));
   detectChance = Math.max(5, Math.min(75, detectChance));
 
-  const success = Math.random() * 100 < successChance;
-  const detected = Math.random() * 100 < detectChance;
+  const success = rng() * 100 < successChance;
+  const detected = rng() * 100 < detectChance;
 
   let message = '';
   let nextDiplomacy = diplomacy;
@@ -530,8 +532,8 @@ function resolvePlot(
           const victim =
             plot.targetOfficerId != null && nextOfficers[plot.targetOfficerId]
               ? nextOfficers[plot.targetOfficerId]
-              : inCity[Math.floor(Math.random() * inCity.length)];
-          const drop = 25 + Math.floor(Math.random() * 20) + (hasFemaleSpy ? 15 : 0);
+              : inCity[Math.floor(rng() * inCity.length)];
+          const drop = 25 + Math.floor(rng() * 20) + (hasFemaleSpy ? 15 : 0);
           nextOfficers = {
             ...nextOfficers,
             [victim.id]: {
@@ -541,12 +543,12 @@ function resolvePlot(
           };
           message = `美人计成功：${targetFacName} 武将 ${victim.name} 忠诚 −${drop}`;
         } else {
-          const drop = 10 + Math.floor(Math.random() * 15);
+          const drop = 10 + Math.floor(rng() * 15);
           const others = Object.values(factions).filter(
             (f) => f.id !== fid && f.id !== targetFid && f.isAlive,
           );
           if (others.length > 0) {
-            const third = others[Math.floor(Math.random() * others.length)];
+            const third = others[Math.floor(rng() * others.length)];
             nextDiplomacy = upsertDipFavor(
               { ...state, diplomacy: nextDiplomacy },
               targetFid,
@@ -570,8 +572,8 @@ function resolvePlot(
       );
       const pool = withRelation.length > 0 ? withRelation : others;
       if (pool.length > 0) {
-        const third = pool[Math.floor(Math.random() * pool.length)];
-        const drop = 15 + Math.floor(Math.random() * 15) + (hasFemaleSpy ? 10 : 0);
+        const third = pool[Math.floor(rng() * pool.length)];
+        const drop = 15 + Math.floor(rng() * 15) + (hasFemaleSpy ? 10 : 0);
         nextDiplomacy = upsertDipFavor(
           { ...state, diplomacy: nextDiplomacy },
           targetFid,
@@ -615,7 +617,7 @@ function resolvePlot(
   // 女间谍回收
   if (plot.agentId && nextIntel?.agents?.[plot.agentId]) {
     const agent = nextIntel.agents[plot.agentId];
-    if (detected && !success && Math.random() < 0.4 && plot.targetFactionId != null) {
+    if (detected && !success && rng() < 0.4 && plot.targetFactionId != null) {
       nextIntel = {
         ...nextIntel,
         agents: {
