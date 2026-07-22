@@ -2144,7 +2144,7 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 `shared/game-state-full-schema.ts` 将上述七个切片组合为严格 `GameStateSchema`：根字段禁止遗漏或混入瞬态字段，并统一校验城市、势力、武将、女性角色、战役节点、CampaignArmy、三级战斗、外交、谍报和计谋的跨切片引用；事件完成/待处理/失效三账本不得交叉。组合层复用各切片 Schema，不复制域内规则。`BattleUnit.armyId` 是六角战斗内部编组 ID，不是旧 `GameState.armys` 外键；出征后 `Officer.location` 可保留行政归属，因此城市驻留清单只采用“清单内武将必须指向本城”的单向一致性约束。`pnpm verify-save-game-state` 覆盖两剧本、真实计谋和 7 类非法跨引用/根字段，10/10；三级战斗验证另以真实进行中状态确认完整 Schema，24/24。
 
-**当前持久化边界（Session 148）**：已采用“完整保存进行中战斗 + 确定性续玩”方案。六角战斗、战场地图、白刃战均以 `GameState` 为权威真源；v1 信封新增严格 `rng` 状态，固定算法标识 `xorshift32-v1`、非零 uint32 内部寄存器与消费计数。`shared/rng.ts` 提供可序列化 `SerializableRng`，服务端 `runtime-rng.ts` 持有唯一权威实例；新建游戏重置随机流，`restoreGameFromEnvelope` 与权威快照一同恢复 PRNG。单测及真实恢复验证已证明保存点之后连续 8 次结果与消费计数完全一致，迁移/恢复检查 19/19。当前尚未把 civil/plot/personnel/family/spy/AI 及全部 battle 路径的 `Math.random()` 逐域接入该实例，因此确定性基础契约已成立，但不能宣称所有玩法都已确定性续玩。生产存取入口和实际存储介质仍未完成。
+**当前持久化边界（Session 157）**：已采用“完整保存进行中战斗 + 确定性续玩”方案。六角战斗、战场地图、白刃战均以 `GameState` 为权威真源；v1 信封保存 `xorshift32-v1` 的内部寄存器与消费计数。玩家、共享结算及 AI 行动后的持久化结算均已接入该权威流；项目自身只在 S15 的三个 AI 文件保留独立决策随机，因此当前保证“同一已选行动后的结算可确定续玩”，不保证读档后的 AI 行为/整回合完全复现。生产存取入口和实际存储介质仍未完成。
 
 后续加载顺序固定为：解析 JSON → 识别版本/迁移 → 当前信封校验 → 当前快照 Schema 校验 → 重建非持久化运行时上下文。连接、动画、选择框、网络重试等瞬态状态不得加入信封。
 
