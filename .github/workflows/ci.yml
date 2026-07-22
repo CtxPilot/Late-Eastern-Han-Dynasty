@@ -90,6 +90,9 @@ jobs:
       - name: Beauty resource deterministic continuation test
         run: pnpm verify-beauty-rng
 
+      - name: Grand strategist deterministic continuation test
+        run: pnpm verify-grand-strategist-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 
