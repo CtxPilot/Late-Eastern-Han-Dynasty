@@ -13,7 +13,6 @@ import {
 } from '@leh/shared';
 import { getPlotAttackModifier, isEmptyFortDeterring } from './plot.js';
 import { getUnitByType } from '../data/loader.js';
-import { runtimeRandom } from '../runtime-rng.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { clearCityCounterOnCapture } from './spy.js';
@@ -79,6 +78,7 @@ function autoResolveBattle(
   atkLead: number,
   defWar: number,
   defLead: number,
+  resolutionRng: () => number,
 ): { atkLeft: number; defLeft: number; attackerWon: boolean } {
   const unitMap = getUnitByType();
   const atkT = unitMap[atkUnitType];
@@ -120,7 +120,7 @@ function autoResolveBattle(
         morale: 70,
         terrain: 'plain' as any,
       },
-      runtimeRandom,
+      resolutionRng,
     );
     def = Math.max(0, def - atkDmg);
 
@@ -148,7 +148,7 @@ function autoResolveBattle(
         morale: 80,
         terrain: 'plain' as any,
       },
-      runtimeRandom,
+      resolutionRng,
     );
     atk = Math.max(0, atk - defDmg);
   }
@@ -159,16 +159,25 @@ function autoResolveBattle(
 /**
  * 对每个 AI 势力：评估邻接敌城权重，受计谋修正后决定暂缓 / 袭扰 / 出征占城
  */
-export function runAiMilitary(state: GameState): GameState {
+export function runAiMilitary(
+  state: GameState,
+  resolutionRng: () => number,
+  decisionRng: () => number = Math.random,
+): GameState {
   let s = state;
   for (const f of Object.values(s.factions)) {
     if (!f.isAlive || f.isPlayer) continue;
-    s = aiMilitaryTurn(s, f.id);
+    s = aiMilitaryTurn(s, f.id, resolutionRng, decisionRng);
   }
   return s;
 }
 
-function aiMilitaryTurn(state: GameState, factionId: number): GameState {
+function aiMilitaryTurn(
+  state: GameState,
+  factionId: number,
+  resolutionRng: () => number,
+  decisionRng: () => number,
+): GameState {
   const myCities = Object.values(state.cities).filter((c) => c.ruler === factionId);
   if (myCities.length === 0) return state;
 
@@ -218,14 +227,14 @@ function aiMilitaryTurn(state: GameState, factionId: number): GameState {
 
   if (canCapture) {
     const captureChance = 0.25 + (from.troops - target.troops) / Math.max(target.troops, 1) * 0.15;
-    if (Math.random() < Math.min(0.7, captureChance)) {
-      return doAiCapture(state, from, target, factionId, factionName);
+    if (decisionRng() < Math.min(0.7, captureChance)) {
+      return doAiCapture(state, from, target, factionId, factionName, resolutionRng);
     }
   }
 
   // 基础 18% 袭扰；诱饵 +25%
   const chance = baited ? 0.43 : 0.18;
-  if (Math.random() > chance) {
+  if (decisionRng() > chance) {
     if (baited) {
       return pushLog(
         state,
@@ -239,8 +248,9 @@ function aiMilitaryTurn(state: GameState, factionId: number): GameState {
   // 最简袭扰：双方掉兵，不占城
   const force = Math.min(RAID_FORCE, from.troops - 500);
   if (force < 400) return state;
-  const defLoss = Math.min(target.troops, Math.floor(force * (0.4 + Math.random() * 0.35)));
-  const atkLoss = Math.floor(force * (0.25 + Math.random() * 0.3));
+  // 行动已经由 S15 独立决策流决定；伤亡是写入存档的结算结果，必须消费权威流。
+  const defLoss = Math.min(target.troops, Math.floor(force * (0.4 + resolutionRng() * 0.35)));
+  const atkLoss = Math.floor(force * (0.25 + resolutionRng() * 0.3));
 
   const cities = {
     ...state.cities,
@@ -267,6 +277,7 @@ function doAiCapture(
   target: City,
   factionId: number,
   factionName: string,
+  resolutionRng: () => number,
 ): GameState {
   const atkTroops = Math.min(from.troops - 500, Math.floor(from.troops * 0.7));
   if (atkTroops < MIN_CAPTURE_TROOPS) return state;
@@ -304,6 +315,7 @@ function doAiCapture(
     atkOfficer.stats.leadership,
     defOfficer.stats.war,
     defOfficer.stats.leadership,
+    resolutionRng,
   );
 
   if (!result.attackerWon) {
@@ -391,7 +403,7 @@ function doAiCapture(
   );
   after = clearCityCounterOnCapture(after, target.id);
   // S15 决策仍可独立随机；一旦决定占城，S09 战利品属于持久化结算。
-  after = lootBeautyOnCapture(after, target.id, factionId, runtimeRandom);
+  after = lootBeautyOnCapture(after, target.id, factionId, resolutionRng);
   after = syncFactionResources(after);
   return after;
 }
