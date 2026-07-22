@@ -27,6 +27,7 @@
     "verify-plot-spy-rng": "tsx src/scripts/verify-plot-spy-rng.ts",
     "verify-personnel-rng": "tsx src/scripts/verify-personnel-rng.ts",
     "verify-family-rng": "tsx src/scripts/verify-family-rng.ts",
+    "verify-beauty-rng": "tsx src/scripts/verify-beauty-rng.ts",
     "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js"

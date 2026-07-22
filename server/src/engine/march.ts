@@ -195,7 +195,11 @@ function recomputeFactionCities(
 /**
  * 战斗结束 / 撤退时写入大地图：胜则占城，否则残兵回流
  */
-export function settleBattle(state: GameState, battle: BattleState): GameState {
+export function settleBattle(
+  state: GameState,
+  battle: BattleState,
+  rng: () => number,
+): GameState {
   if (battle.settled) return state;
 
   const targetId = battle.cityId;
@@ -302,7 +306,7 @@ export function settleBattle(state: GameState, battle: BattleState): GameState {
     // 占城：拆敌反间驻守
     after = clearCityCounterOnCapture(after, targetId);
     // 抢夺美女资源（势力 stock↑，可寻↓，民忠↓）
-    after = lootBeautyOnCapture(after, targetId, battle.attackerFaction);
+    after = lootBeautyOnCapture(after, targetId, battle.attackerFaction, rng);
     after = syncFactionResources(after);
     return after;
   }

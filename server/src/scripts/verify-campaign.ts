@@ -319,7 +319,11 @@ console.log('\n6. 自动战斗（强攻）');
   state = result.state;
   state = tickCampaignMarch(state); // 到达围城
   const beforeTroops = state.campaignArmies[0].troops;
-  const { state: afterState, result: battleResult } = assault(state, state.campaignArmies[0].id);
+  const { state: afterState, result: battleResult } = assault(
+    state,
+    state.campaignArmies[0].id,
+    () => 0.5,
+  );
   state = afterState;
   assert(battleResult.rounds >= 1, `战斗回合数 ${battleResult.rounds} ≥ 1`);
   assert(battleResult.attackerCasualties + battleResult.defenderCasualties > 0, '双方有伤亡');

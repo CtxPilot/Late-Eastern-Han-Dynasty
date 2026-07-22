@@ -3105,3 +3105,16 @@
 - Next：优先独立收口 S09 `beauty.ts`（玩家寻访 + 战役/AI 攻城后的共享抢夺结算），之后审计 `grandStrategist.ts`；`plotAi.ts`/`spyAi.ts` 继续保留为已确认 S15 决策边界。
 
 *文档版本: v10.3 | 2026-07-22 | Session 154 S18 家族确定性结算收口*
+
+## 2026-07-22 — Session 155（S09 美女资源确定性结算收口）
+
+- 范围：**S09 美女资源 · PRNG 模块收口第 7 步**；只处理 `beauty.ts` 已实装的寻访、攻城抢夺和赏赐边界，不扩展品质、属性或非历史女性实体生成。
+- `beauty.ts` 三处直接随机全部改为必填 RNG：寻访成功判定 1 次、攻城抢夺数量与民忠损失 2 次。玩家服务入口、S15 AI 决定寻访后的共享结算、六角占城、战役占城与旧 AI 占城后的战利品结算均接入单一权威 `runtimeRandom`。
+- AI 边界：`spyAi.ts` / `aiMilitary.ts` 中“是否行动、选择目标”仍属于 S15 决策随机；一旦行动成立，所有写入 `beautyStock` / `beautySeekLeft` / 民忠的结果统一进入 S09 权威流，避免决策源与结算源重复消费。
+- 确定续玩 25/25：覆盖寻访成功/失败、抢夺 2~4、无资源可抢的零随机分支与赏赐零消费；均断言存档恢复后完整状态和 draws 一致。现有赏赐、外交献美及女间谍库存消耗均为确定性转移。
+- 跨模块审计：S07/S17、S11、S18 不调用 `beauty.ts`，只通过 `beautyStock` 数据字段消费或转移库存；`campaign.ts`、`march.ts`、`aiMilitary.ts` 调用共享抢夺结算，`spyAi.ts` 调用共享寻访结算。未发现 `Date.now()`、间接随机工具或第三方内部随机。
+- 全局搜索：项目自身直接 `Math.random()` 文件 5→4，剩余 `aiMilitary.ts`、`grandStrategist.ts`、`plotAi.ts`、`spyAi.ts`。
+- 验证：S09 确定续玩 25/25、shared 112/112、迁移/恢复 19/19、三级战斗 24/24、战役 62/62、战斗/单挑/内政/计谋谍报/人事/家族 RNG 全部通过；存档实体/战役/外交/谍报/计谋/完整状态、场景事件 32 项及数据校验均通过；typecheck/lint/build 与 `git diff --check` 通过（仅保留既有 754.23 kB chunk 警告）。
+- Next：按计划独立审计并收口 `grandStrategist.ts`；其后统一处理/记录 S15 AI 决策随机边界。
+
+*文档版本: v10.4 | 2026-07-22 | Session 155 S09 美女资源确定性结算收口*
