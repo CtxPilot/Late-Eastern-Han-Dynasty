@@ -42,6 +42,33 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Campaign engine integration test
+        run: pnpm verify-campaign
+
+      - name: Save entity schema integration test
+        run: pnpm verify-save-entities
+
+      - name: Save campaign schema integration test
+        run: pnpm verify-save-campaign
+
+      - name: Save battle schema integration test
+        run: pnpm verify-save-battle
+
+      - name: Save diplomacy schema integration test
+        run: pnpm verify-save-diplomacy
+
+      - name: Save intel schema integration test
+        run: pnpm verify-save-intel
+
+      - name: Save plot schema integration test
+        run: pnpm verify-save-plot
+
+      - name: Complete game-state schema integration test
+        run: pnpm verify-save-game-state
+
+      - name: Save migration dispatch integration test
+        run: pnpm verify-save-migration
+
       - name: Zod data validation
         run: pnpm validate-data
 

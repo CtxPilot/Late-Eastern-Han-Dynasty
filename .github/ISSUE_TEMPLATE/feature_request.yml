@@ -1,0 +1,31 @@
+name: Framework proposal
+description: Propose a scoped improvement to the simulation framework
+title: "[Proposal]: "
+labels: [enhancement]
+body:
+  - type: input
+    id: system
+    attributes:
+      label: System ID
+      description: Select the closest S01-S22 entry from docs/12-system-map.md.
+      placeholder: Sxx
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Explain the framework or contributor need, not only the desired feature.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Minimum proposed scope
+      description: Separate runtime work from design-only ideas.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

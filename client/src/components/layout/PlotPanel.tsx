@@ -90,11 +90,11 @@ export function PlotPanel() {
   return (
     <div className="px-2 space-y-2 text-[11px]" data-testid="plot-panel">
       <p className="text-stone-500 px-1 leading-snug">
-        <strong className="text-pink-400">美人计</strong>：detailed + 美女≥2 + 金150
+        <strong className="text-pink-400">美人计</strong>：需探秘情报 + 美女≥2 + 金150
         <br />
         <strong className="text-amber-400">离间计</strong>：金200
         <br />
-        <strong className="text-sky-400">假情报</strong>：detailed + 金120 → 诱敌攻该城
+        <strong className="text-sky-400">假情报</strong>：需探秘情报 + 金120 → 诱敌攻该城
         <br />
         <strong className="text-emerald-400">空城疑兵</strong>：己方寡兵 + 粮150 → 暂缓被攻
       </p>
@@ -142,9 +142,9 @@ export function PlotPanel() {
             setTargetFactionId('');
           }}
         >
-          <option value={PlotType.HONEY_TRAP}>美人计（beauty2+金150）</option>
+          <option value={PlotType.HONEY_TRAP}>美人计（美女2+金150）</option>
           <option value={PlotType.SOW_DISCORD}>离间计（金200）</option>
-          <option value={PlotType.FALSE_INTEL}>假情报（金120+detailed）</option>
+          <option value={PlotType.FALSE_INTEL}>假情报（金120+探秘情报）</option>
           <option value={PlotType.EMPTY_FORT}>空城疑兵（粮150+寡兵）</option>
         </select>
 
@@ -154,7 +154,7 @@ export function PlotPanel() {
             value={targetCityId}
             onChange={(e) => setTargetCityId(e.target.value ? Number(e.target.value) : '')}
           >
-            <option value="">目标城（须 detailed）…</option>
+            <option value="">目标城（须探秘情报）…</option>
             {enemyCities.map((c) => {
               const report = game.intel?.cities?.[c.id];
               const hasDetailed = report?.depth === 'detailed';

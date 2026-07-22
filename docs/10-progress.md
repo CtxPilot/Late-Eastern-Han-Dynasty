@@ -2740,3 +2740,292 @@
   - `pnpm lint` ✅ 3/3 包全过
 
 *文档版本: v7.6 | 2026-07-21 | Session 127 UI 全中文化*
+
+## 2026-07-21 — Session 128（UI 中文化收尾 — 消除全部残留英文）
+
+- Phase: **UI 本地化收尾**
+- 实装内容:
+  - **App.tsx 启动屏标题**：`LateEasternHanDynasty · 可玩 Demo` → `晚东汉末 · 可玩演示`（2 处）
+  - **CampaignPanel.tsx 战役层**：`我军 Army` → `我军`；`尚无出征 Army` → `尚无出征军队`
+  - **PlotPanel.tsx 计谋面板**：`detailed` → `探秘情报`（说明文字+选项 3 处）；`beauty2` → `美女2`
+  - **DuelPanel.tsx 单挑面板**：`HP` → `体力`
+  - **BattleView.tsx 战斗视图**：fallback `'?'` → `'？'`（中文问号）
+  - 共修复 **11 处**英文残留，涉及 5 个文件
+- 涉及文件：App.tsx, CampaignPanel.tsx, PlotPanel.tsx, DuelPanel.tsx, BattleView.tsx
+- 自验证:
+  - `pnpm typecheck` ✅ 3/3 包全过
+  - `pnpm test` ✅ 68/68
+  - `pnpm validate-data` ✅
+- 结论：**前端 UI 英文残留已全部清零**（除 CSS 类名/变量名/import 等非显示文本）
+
+*文档版本: v7.7 | 2026-07-21 | Session 128 UI 中文化收尾*
+
+## 2026-07-22 — Session 129（Codex for OSS 申请前开源质量优化）
+
+- 范围：**开源治理与项目入口文档**（零运行时代码/玩法变更）
+- 完成：
+  - 重写 `README.md` 首屏与结构，将项目准确定位为 **Open-source historical strategy simulation framework**，明确“可玩 0-A 原型、非完整游戏、尚非 npm 通用包”。
+  - 按当前代码列出已实现能力、简化项、未实现项、验证命令、架构边界和素材原创/授权声明；保留真实截图展示。
+  - 新增根目录 `ROADMAP.md`，提供面向贡献者的 Now/Next/Later 路线与退出条件，不替代详细工程真源 `docs/09-roadmap.md`。
+  - 强化 `CONTRIBUTING.md`：Issue/PR 流程、完整验证矩阵、范围约束、行为准则入口，并修正字体二进制提交规则的内部矛盾。
+  - 新增 `CODE_OF_CONDUCT.md`、结构化 Bug/提议 Issue 模板和 PR 模板。
+- 评估事实：公开 MIT 仓库、35 commits、4 stars、0 forks、0 issues/PR、无 Release；具备活跃维护证据，但采用度与外部维护负担信号弱。
+- 决策：不创建无稳定产物支撑的 Release，不虚构托管 Demo、下载量、用户或外部贡献。
+- 验证：文档链接与格式检查、`git diff --check` 均通过；全仓 build/typecheck/lint、68 项共享测试、数据校验与场景事件 32 项均通过。战役验证 **56/57**：当前工作区的回合化设施实现与旧断言“建造进度=1（即时简化）”不一致；属本次开始前既有玩法改动/测试漂移，本次开源文档任务未擅自改动。
+
+*文档版本: v7.8 | 2026-07-22 | Session 129 Codex for OSS 申请前开源质量优化*
+
+## 2026-07-22 — Session 130（美术素材版权证据门槛补强）
+
+- 范围：**S22 美术基调与版权治理**（纯文档，零代码/资产变更）
+- 背景：外部建议中的“程序化 SVG/CSS 头像”方向可取，且本仓库 Session 124 已实装四名代表人物；但“AI 输出 100% CC0”“博物馆公开古画均可直接裁剪”等绝对表述不可靠。
+- 决策与更新：
+  - `00-dev-constitution.md`：新增 §11.1.1，明确文物原作与具体数字照片/扫描件的权利状态必须分开判断；生成式图片不得自动认定 CC0 或零风险。
+  - 建立素材优先级：本项目原创程序化 SVG/Canvas/CSS → 许可证据完整的 CC0/公有领域数字文件 → 其他明确兼容许可；无证据不用。
+  - 外部素材须登记来源 URL、作者/机构、许可、获取日期、哈希；生成式候选还须保存工具/模型、提示词、条款快照和相似性审查记录。
+  - `07-ui-design.md` §11.6.2：同步拓片候选来源、证据要求，并明确滤镜/混合不能洗白无权底图。
+  - `CREDITS.md`：新增视觉素材登记字段与生成式素材边界。
+- 保留：现有 `OfficerPortrait.tsx` 的吕布/关羽/诸葛亮/曹操头像仍是仓库原创纯 SVG/CSS C+B 简化切片，不引入 Gemini 示例 SVG 或外部位图。
+- 验证：`git diff --check` 与相关文档交叉检索。
+
+*文档版本: v7.9 | 2026-07-22 | Session 130 美术素材版权证据门槛补强*
+
+## 2026-07-22 — Session 131（前端学习、可移植性与符号化头像规范）
+
+- 范围：**工程教育/架构边界/S22 视觉规范**（纯文档，零代码/玩法变更）
+- 吸收：
+  - 新增 `docs/18-learning-guide.md`：以本仓库为实践场的 Web 基础、React/TS/Konva/服务端、游戏专项、历史/UX/版权/概率经济/开源维护学习路线。
+  - `02-architecture.md` 新增引擎可移植性边界：JSON/规则语义/测试向量可作为迁移资产，HTML UI、Konva 输入渲染和跨语言引擎需重写或验证；迁移前先做小型 spike，不承诺 60~70% 等固定复用率。
+  - 明确客户端 Zustand 只是服务端权威状态的投影；不为“松耦合”引入能绕过 API/校验的全局 EventBus。
+  - `07-ui-design.md` 补充抽象头像的符号化辨识原则、四人现有符号基线、统一 SVG token 与无姓名识别测试。
+- 未采纳：Agent 生成即版权完全安全、使用宿主系统字体、批量外部 AI 位图优先、未测量的迁移百分比，以及天命/政策卡/檄文/州级地图等未经用户拍板的新玩法提案。
+- 验证：文档链接存在、交叉检索与 `git diff --check`。
+
+*文档版本: v8.0 | 2026-07-22 | Session 131 前端学习、可移植性与符号化头像规范*
+
+## 2026-07-22 — Session 132（地图/事件/外交设计提案模板）
+
+- 范围：**开源协作与设计评审流程**（纯文档，零代码/玩法变更）
+- 新增 `docs/19-design-proposal-templates.md`：
+  - 通用 Sxx RFC 头：问题、证据、最小切片、非目标、真源影响、兼容与验收。
+  - 地图拓扑模板对齐当前 30城 + `city-roads.ts` + `CampaignNode`，明确“13州节点图”只能作为替代方案 RFC，不能未经拍板成为第二套控制权真源。
+  - 事件卡模板严格对齐现有 `EventTemplate` / Zod：史料层、剧本、年月窗口、动态决策者、前置/互斥、AI权重和验证断言；不假设固定三个选项、延迟队列或历史偏离度已存在。
+  - 外交 RFC 对齐当前 `DiplomacyLink`；信誉、modifier、外交点、贸易等新字段必须先证明无法复用现有声望/友好度/评价体系。
+- `CONTRIBUTING.md` 与 README 增加模板入口。
+- 未采纳：外部示例中的州级数值、189势力分布、事件效果、历史偏离度、外交信誉公式、人物“必然背叛”AI、D3依赖及新 `EventManager` 伪实现。
+- 验证：新增链接存在、模型字段交叉核对、`git diff --check`。
+
+*文档版本: v8.1 | 2026-07-22 | Session 132 地图/事件/外交设计提案模板*
+
+## 2026-07-22 — Session 133（0-B 前架构硬化证据审计）
+
+- 范围：**架构审计与路线质量门禁**（纯文档，零代码/玩法变更）
+- 新增 `docs/20-architecture-hardening-audit.md`，逐项核对外部 Review 与当前代码：
+  - WS 当前只广播进度/事件提示，不传全量 GameState，暂不存在“先做增量同步”的证据。
+  - Zod 在静态数据启动/mtime 热重载边界校验，并非每回合 parse；是否优化先测量，不能直接删除运行时校验。
+  - duel/crit/部分 battle/campaign 已注入 RNG，其他 civil/plot/personnel/family/spy/AI 等仍直接用 `Math.random()`，应逐域收口。
+  - `SaveSlot.snapshot` 直接引用 GameState 且 S16 未实现；正式存档前须定义版本信封、迁移链、当前 Schema 校验和瞬态状态隔离。
+  - `game.ts`/campaign 拆分先做调用图与窄 spike，不预定 Command Bus、StateMutation、Immer 或全量不可变改写。
+  - 0-B 基准要求固定环境/合法夹具/重复统计，先记录趋势再定预算，不采用无实测的 50ms 阈值。
+- `ROADMAP.md` 增加绿色回归、存档/RNG契约和性能基线三个近期门禁；README 增加审计入口。
+- 未采纳：全系统 EventBus、全 GameState 脆弱快照、Canvas 一律 ref 绕 React、运行时跳过 Zod、宿主字体 fallback，以及“商业级/教科书级”等无证据宣传。
+- 验证：代码证据交叉检索、文档链接存在、`git diff --check`。
+
+*文档版本: v8.2 | 2026-07-22 | Session 133 0-B 前架构硬化证据审计*
+
+## 2026-07-22 — Session 134（战役绿色回归与 CI 门禁）
+
+- 范围：**S10 战役引擎验证 / 开源 CI 质量门禁**（未改玩法规则）。
+- 修复 `verify-campaign.ts` 的设施建造旧断言：正式语义以 Session 125c 已实装的回合化建造为准，冲车首回合 50%，下一回合完成，不再断言即时完成。
+- 将建造覆盖从 2 项扩充到 7 项：入结构列表、50% 初始进度、扣除 300 金、转驻守、清除路径、推进至 100%、完成日志。
+- 新增 server/root `verify-campaign` 脚本，并将确定性、无端口依赖的战役集成检查接入 GitHub Actions 默认 CI。
+- 验证：`pnpm verify-campaign` ✅ 62/62；`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 68/68；`pnpm validate-data` ✅（223 武将/30 城等）；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- 边界：本轮未改 Campaign 实现、未迁移其他验证脚本、未开始存档或 RNG 重构。
+- Next：按 `docs/20-architecture-hardening-audit.md` Gate 2 先做存档版本信封与 RNG 契约设计；若有影响格式的多种合理方案，先请用户拍板。
+
+*文档版本: v8.3 | 2026-07-22 | Session 134 战役绿色回归与 CI 门禁*
+
+## 2026-07-22 — Session 135（S16 存档 v1 信封基础契约）
+
+- 范围：**S16 存档/剧本 · Gate 2 第一小步**（共享契约与校验入口；无实际持久化）。
+- `shared/types/save.ts` 新增 `CURRENT_SAVE_SCHEMA_VERSION = 1` 与泛型 `SaveEnvelopeV1<TSnapshot>`，将版本和快照显式包在独立持久化信封内；保留现有未使用 `SaveSlot`，避免本轮无必要破坏。
+- `shared/save.ts` 新增 `parseSaveEnvelopeV1` 与 `UnsupportedSaveVersionError`：严格校验 v1、带时区 ISO 时间、正整数剧本 ID、未知根字段，并强制注入快照 Zod Schema。
+- 新增 `shared/save.test.ts` 4 项：合法解析、未知版本、非法时间/瞬态未知字段、快照 Schema 失败；共享测试由 68 增至 72。
+- 边界：仓库尚无完整 `GameState` Zod Schema，故本轮不提供生产读档器、迁移链、SQLite/API/UI 或 RNG 持久化；禁止以 `z.unknown()` 宣称快照已校验。
+- 验证：`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 72/72；`pnpm verify-campaign` ✅ 62/62；`pnpm validate-data` ✅；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- Next：盘点 GameState 各组成域现有 Schema，先补可组合快照 Schema；之后再实现迁移分派与 RNG 契约。
+
+*文档版本: v8.4 | 2026-07-22 | Session 135 S16 存档 v1 信封基础契约*
+
+## 2026-07-22 — Session 136（S16 时间线快照 Schema 切片 + 文档一致性修正）
+
+- 范围：**S16 存档/剧本 · Gate 2 第二小步**（时间线与事件账本持久化边界；无实际存取）。
+- 新增 `shared/game-state-schema.ts`：`GameStateTimelineSchema` 严格覆盖剧本 ID、启用事件层/子女事件、年月/季节、玩家势力、已完成/待处理/失效事件、事件选择与操作日志；通过 `Pick<GameState, ...>` 与实际根类型绑定。
+- 新增 4 项测试：合法切片、月份/季节越界及年月季不一致、非法事件 ID/选项与未知瞬态字段、非法日志；共享测试由 72 增至 76。
+- 查询并修正文档矛盾：`03-data-models` 的 GameState 仍列出未实装旧字段且漏掉战役/外交/谍报/计谋字段；`11-context-management` 的“20项隐藏属性”实际为19项；`12-system-map` 的 Next 仍要求已完成的总军师与设施回合化；`HANDOFF` 未做表也误列这两项。
+- 边界：该 Schema 只是完整快照的首个组合部件，不包含实体、军队、战斗、外交、谍报或计谋域，不能用于生产读档；迁移链、SQLite/API/UI 与 RNG 持久化仍未实现。
+- 验证：`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 76/76；`pnpm verify-campaign` ✅ 62/62；`pnpm validate-data` ✅；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- Next：继续 S16，优先补当前运行时实体域（Officer/City/Faction/Female）的可组合 Schema，再扩到战役与其他状态域。
+
+*文档版本: v8.5 | 2026-07-22 | Session 136 S16 时间线快照 Schema 切片 + 文档一致性修正*
+
+## 2026-07-22 — Session 137（S16 运行时实体快照 Schema 切片）
+
+- 范围：**S16 存档/剧本 · Gate 2 第三小步**（运行时基础实体持久化边界；无实际存取）。
+- 新增 `shared/game-state-entity-schema.ts`：严格覆盖 `Officer`、`City`、`Faction`、`FemaleCharacter`，复用既有静态 Zod shape，并以 `z.nativeEnum` 对齐运行时 TypeScript 枚举。
+- 固化既有不变量：Record 键必须等于实体 ID；城市总人口必须等于四桶人口之和；女性 `husbandId` 与非空 `giftedToOfficerId` 互斥；运行时数值拒绝负资源、越界忠诚/士气等非法值。
+- 新增 4 项 Vitest，覆盖合法实体切片、键/ID 错位、人口矛盾、婚配/赏赐冲突；共享测试由 76 增至 80。
+- 新增无端口 `pnpm verify-save-entities`：实际创建英雄集结与190关东义兵两个剧本，解析服务端权威实体切片并核对四类实体数量，共 10/10；已接入默认 CI。
+- Bug 查询：类型检查发现既有静态 Schema 的字符串枚举不能直接证明为运行时 enum，已通过显式 `z.nativeEnum` 修复，未使用类型断言掩盖；两个真实剧本未发现违反新增实体不变量的数据。
+- 边界：军队、战役节点/总军师、战斗、外交、谍报和计谋域仍未覆盖，故仍无完整 `GameState` Schema、生产读档、迁移链、SQLite/API/UI 或 RNG 持久化。
+- 验证：`pnpm build` ✅（仅既有 >500kB chunk 警告）；`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 80/80；`pnpm verify-campaign` ✅ 62/62；`pnpm verify-save-entities` ✅ 10/10；`pnpm validate-data` ✅；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- Next：继续 S16，补 `Army`、`CampaignArmy`、`CampaignNode`、`GrandStrategist` 的可组合 Schema 与真实战役状态验证。
+
+*文档版本: v8.6 | 2026-07-22 | Session 137 S16 运行时实体快照 Schema 切片*
+
+## 2026-07-22 — Session 138（S16 军队与战役域快照 Schema 切片）
+
+- 范围：**S16 存档/剧本 · Gate 2 第四小步**（军队与战役运行时持久化边界；无实际存取）。
+- 新增 `shared/game-state-campaign-schema.ts`：严格覆盖兼容保留的旧 `Army`、战役 `CampaignArmy`、`CampaignNode`、`GrandStrategist`，以及 Squad、设施和围城状态；所有运行时 enum 与实际 TypeScript 类型对齐。
+- 固化既有不变量：兵力/军粮/城墙耐久不得超过上限；主副将与参谋不得重复任职；Squad 武将和阵位唯一；节点不得自环或重复邻接；旧/战役 Army 与节点 ID 唯一；每势力至多一名总军师。
+- 新增 5 项 Vitest，覆盖合法组合、容量越界、重复任职/阵位、节点自环/耐久越界、重复 ID/总军师；共享测试由 80 增至 85。
+- 新增无端口 `pnpm verify-save-campaign`：实际创建英雄集结与190关东义兵，动态选择当前合法前线与同城武将完成一次真实编成，并另行完成一次真实总军师任命后解析权威战役切片，共 9/9；已接入默认 CI。
+- Bug 查询：首版真实夹具沿用了旧示例的“张飞驻襄阳”假设，当前剧本权威数据不满足并被引擎正确拒绝；已改为从实时状态动态选择合法城市、相邻敌城与同城武将，避免验证暗绑过期布阵。未发现违反新增战役不变量的运行时数据。
+- 边界：战斗、外交、谍报和计谋域仍未覆盖，故仍无完整 `GameState` Schema、生产读档、迁移链、SQLite/API/UI 或 RNG 持久化。
+- 验证：`pnpm build` ✅（仅既有 >500kB chunk 警告）；`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 85/85；`pnpm verify-campaign` ✅ 62/62；`pnpm verify-save-entities` ✅ 10/10；`pnpm verify-save-campaign` ✅ 9/9；`pnpm validate-data` ✅；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- Next：继续 S16，补 `BattleState` 及其嵌套战斗运行时结构的可组合 Schema 与真实战斗状态验证。
+
+*文档版本: v8.7 | 2026-07-22 | Session 138 S16 军队与战役域快照 Schema 切片*
+
+## 2026-07-22 — Session 139（S16 战斗状态快照 Schema 切片）
+
+- 范围：**S16 存档/剧本 · Gate 2 第五小步**（六角战斗运行时持久化数据形状；无实际存取）。
+- 新增 `shared/game-state-battle-schema.ts`：严格覆盖 `BattleState`、`BattleUnit`、状态效果及可选 `DuelState`；所有天气、地形、兵种、阵型与单挑指令 enum 均对齐代码真源。
+- 固化不变量：兵力/移动力/气力不超过上限；战场地形矩阵与宽高一致；单位坐标在边界内且势力匹配攻守方；战斗/单位 ID 唯一；阶段与胜方一致；单挑归属、双方、行动顺序及已结束结果一致。
+- 新增 4 项 Vitest，覆盖合法战斗、容量越界、地形/坐标错误、阶段/势力/重复 ID 冲突；共享测试由 85 增至 89。
+- 新增无端口 `pnpm verify-save-battle`：实际创建英雄集结，动态选择当前合法前线与相邻敌城，完成真实出征并解析引擎产生的 `BattleState`，共 7/7；已接入默认 CI。
+- Bug/矛盾查询：确认 `GameState.activeBattles` 当前从未接收正在进行的战斗，实际状态保存在服务模块级 `currentBattle`。这不是本轮擅自修复的字段错误，而是“仅安全点存档”与“战斗中存档”之间尚未拍板的产品/架构分支；已在模型和审计文档显式标注，禁止把 Schema 完成误报为战斗中存档完成。
+- 边界：外交、谍报和计谋域仍未覆盖；仍无完整 `GameState` Schema、迁移链、生产读档、SQLite/API/UI 或 RNG 持久化。
+- 验证：`pnpm build` ✅（仅既有 >500kB chunk 警告）；`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 89/89；`pnpm verify-campaign` ✅ 62/62；`pnpm verify-save-entities` ✅ 10/10；`pnpm verify-save-campaign` ✅ 9/9；`pnpm verify-save-battle` ✅ 7/7；`pnpm validate-data` ✅；`pnpm verify-scenario-events` ✅ 32/32；`git diff --check` ✅。
+- Next：继续 S16，补外交、谍报与计谋域的可组合 Schema；进入生产存档前请用户拍板战斗存档策略。
+
+*文档版本: v8.8 | 2026-07-22 | Session 139 S16 战斗状态快照 Schema 切片*
+
+## 2026-07-22 — Session 140（S16 六角战斗权威状态收口）
+
+- 范围：**S16 存档/剧本 · Gate 2 重要边界修复**；用户拍板采用“完整保存进行中战斗”，本轮只处理六角 `currentBattle`，不并行扩展其他系统。
+- 移除 `server/src/services/game.ts` 模块级 `currentBattle`；增加窄边界 `getActiveBattle` / `commitActiveBattle`，将创建、出征、移动、攻击、火计、战法、回合切换、单挑与敌方阶段的战斗结果统一提交到 `GameState.activeBattles[0]`。
+- 保持现有当前单场战斗 API 兼容；`activeBattles` 数组仅预留未来多战场，本轮未引入并发战斗调度。退出战斗先按原规则结算占城/残兵，再统一清空权威战斗快照，消除运行时双真源。
+- `verify-save-battle` 从 7 项扩为 9 项：真实战斗进入权威状态、Schema 解析、战斗操作后同步更新、退出结算后清空均已实际执行通过。
+- Bug/逻辑检查：未发现既有战斗或战役回归；确认更大的恢复边界仍包括模块级 `currentBattlefield` 与 `currentMelee`，因此不得把本轮描述为“完整战斗中存档已完成”。
+- 验证：`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 89/89；`pnpm verify-save-battle` ✅ 9/9；`pnpm verify-campaign` ✅ 62/62。
+- Next：继续 S16，优先把战场地图 `currentBattlefield` 纳入权威可持久化状态；随后审计白刃战 `currentMelee`，再回到外交/谍报/计谋 Schema。
+
+*文档版本: v8.9 | 2026-07-22 | Session 140 S16 六角战斗权威状态收口*
+
+## 2026-07-22 — Session 141（S16 战场地图与白刃战权威边界）
+
+- 范围：**S16 存档/剧本 · Gate 2 重要边界修复**；严格按用户顺序先处理 `currentBattlefield`，再处理 `currentMelee`，未扩展其他大系统。
+- `GameState` 新增单实例 `activeBattlefield` / `activeMelee`；移除服务模块级变量。战场生成、行军、白刃战创建/回合/刷新/退出全部读取并提交权威状态；新建游戏清空两者，退出白刃战保留父战场，退出战场级联清理子状态。
+- `GameStateBattleSchema` 扩展覆盖 BattlefieldMap/Node/Trap 与 MeleeState，并校验目标节点、Army 引用、容量、回合、攻守差异、白刃战父子 ID 和参战 Army 归属。
+- Bug/边界修复：战场初始化原先传入空 `armyIds` 且节点只收录玩家 Army，导致真实双方无法进入战场；现按节点收录双方 Army。`meleeStart` 增加当前战场、不同 Army、敌对势力、同节点及战场归属校验。白刃战行动不再把任意字符串静默断言为合法动作，并按真实动作成本拒绝未知行动/战术点不足。
+- `verify-save-battle` 由 9 项扩为 21 项，真实执行六角战斗、非法战场入口、战场初始化、白刃战回合、非法行动、分层退出、级联清理与重新建局隔离；AI 尚不会创建敌方 CampaignArmy，验证脚本仅在夹具准备阶段注入一支合法敌军，已显式标注，不冒充 AI Army 已实现。
+- 验证：`pnpm verify-save-battle` ✅ 21/21；`pnpm typecheck` ✅；`pnpm lint` ✅；`pnpm test` ✅ 91/91；`pnpm verify-campaign` ✅ 62/62；实体 10/10；战役快照 9/9；场景事件 32/32；数据校验 ✅；生产构建 ✅（仅既有 chunk 警告）；`git diff --check` ✅。
+- 边界：三级战斗状态已具备可组合的持久化数据边界，但完整 GameState Schema、版本迁移、生产存取/API/UI、RNG 状态仍未完成，不能宣称玩家存档功能已交付。
+- Next：继续 S16，补外交/谍报/计谋域 Schema，随后组合完整 GameState Schema 与迁移分派。
+
+*文档版本: v9.0 | 2026-07-22 | Session 141 S16 三级战斗权威状态边界完成*
+
+## 2026-07-22 — Session 142（S16 外交快照 Schema 边界）
+
+- 范围：**S16 存档/剧本 · Gate 2 第六小步**；仅处理外交域，未并行展开谍报或计谋。
+- 新增 `GameStateDiplomacySchema`：严格覆盖 `DiplomacyLink[]`，校验 `DipRelation`、-100~100 友好度、非自外交与无向势力对唯一性，拒绝 `1↔2` / `2↔1` 双重关系。
+- 新增 4 项 Vitest，shared 由 91 增至 95；新增无端口 `pnpm verify-save-diplomacy`，已接入默认 CI。
+- 真实功能验证：解析英雄集结/关东义兵两剧本全部初始关系，并在英雄集结实际执行两次进贡（0→30，neutral→friendly）与一次缔盟（allied），变更后权威状态均重新通过 Schema，11/11。
+- Bug/矛盾查询：首次验证暴露根命令依赖旧 `shared/dist`，已让新验证命令先构建 shared，确保冷启动可独立执行；另纠正了“英雄集结只有 3 条外交关系”的过时夹具假设，实际是 4 势力的 6 个完整势力对。
+- 边界：本轮只验证外交切片内部不变量；外交势力 ID 存在性须在完整 `GameState` Schema 组合时校验。谍报/计谋、迁移、实际存取与 RNG 状态仍未完成。
+- 验证：`pnpm test` ✅ 95/95；`pnpm verify-save-diplomacy` ✅ 11/11；`pnpm typecheck` ✅；`pnpm lint` ✅。
+- Next：继续 S16，优先收口谍报 `IntelState`，再处理计谋 `Plot[]`；两者完成后组合完整 `GameState` Schema 并校验跨切片引用。
+
+*文档版本: v9.1 | 2026-07-22 | Session 142 S16 外交快照 Schema 边界完成*
+
+## 2026-07-22 — Session 143（S16 谍报快照 Schema 边界）
+
+- 范围：**S16 存档/剧本 · Gate 2 第七小步**；仅处理谍报域，未并行展开计谋或完整快照组合。
+- 新增 `GameStateIntelSchema`：严格覆盖 `IntelState` 的城市情报、特工、反间布防、任务日志、特工序号与献美点化额度；校验年月、等级、技能、非负计数及严格字段。
+- 内部不变量：特工 Record 键必须等于 `id`；被俘状态与俘获势力成对；死亡特工不得保留所在城市；反间布防与特工 `counter_duty` 状态/位置双向一致；同一特工不得驻守多城。
+- 新增 5 项 Vitest，shared 由 95 增至 100；新增无端口 `pnpm verify-save-intel`，并接入默认 CI、README 与贡献验证清单。
+- 真实功能验证：解析英雄集结/关东义兵初始谍报状态；在英雄集结动态选择合法己方城，实际执行招募密探、驻守反间、撤防，每一步重新解析服务端权威状态并核对金粮、序号、状态和双向引用，12/12。
+- Bug/矛盾查询：发现 `pruneExpiredIntel()` 清理过期报告时漏拷贝 `plantableBeauty`，导致献美点化额度在回合推进后丢失；已补回字段并增加“过期报告删除但点化额度保留”回归测试。确认随机生成的姓名/等级不影响验证结论；跨切片城市/势力引用存在性仍留给完整 `GameState` Schema。
+- 边界：计谋 `Plot[]`、完整 `GameState` Schema、跨切片引用、迁移分派、生产存取与 RNG 状态仍未完成；本轮不代表玩家存档功能可用。
+- 验证：`pnpm test` ✅ 100/100；`pnpm verify-save-intel` ✅ 12/12；战役 62/62、实体 10/10、战役快照 9/9、三级战斗 21/21、外交 11/11、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：继续 S16，收口计谋 `Plot[]`；完成后组合完整 `GameState` Schema 并校验跨切片引用。
+
+*文档版本: v9.2 | 2026-07-22 | Session 143 S16 谍报快照 Schema 边界完成*
+
+## 2026-07-22 — Session 144（S16 计谋快照 Schema 边界）
+
+- 范围：**S16 存档/剧本 · Gate 2 第八小步**；仅处理计谋域，未提前组合完整快照或实现生产存取。
+- 新增 `GameStatePlotSchema`：严格覆盖 `Plot[]`、成本与结算结果，校验 ID 唯一、年月/成本范围及严格字段；准备期、生效期、已结算三阶段必须分别满足倒计时与结果不变量。
+- 类型边界：离间计只允许目标势力，假情报要求目标势力+城市，空城疑兵只允许目标城市，美人计可额外指定目标武将/女间谍；`inverted` 只允许空城疑兵。势力/城市/武将/特工引用存在性明确留给完整组合 Schema。
+- 新增 5 项 Vitest，shared 由 100 增至 105；新增无端口 `pnpm verify-save-plot`，并接入默认 CI、README 与贡献验证清单。
+- 真实功能验证：解析英雄集结/关东义兵初始计谋切片；在英雄集结动态选择存活敌对目标，实际发起离间计，核对准备期记录、目标形状与 200 金扣除，再推进一回合完成结算并重新解析权威状态，9/9。
+- Bug/矛盾查询：未发现计谋推进漏字段或阶段冲突；现有 `Plot` 结果随机性仍直接使用 `Math.random()`，本轮验证只断言结构与不变量，不伪装为确定性回放。生产存档仍受完整快照、迁移和 RNG 状态缺失阻塞。
+- 验证：`pnpm test` ✅ 105/105；`pnpm verify-save-plot` ✅ 9/9；战役 62/62、实体 10/10、战役快照 9/9、三级战斗 21/21、外交 11/11、谍报 12/12、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：继续 S16，组合完整 `GameState` Schema，集中校验城市/势力/武将/特工及三级战斗跨切片引用；随后实现 v1 迁移分派。
+
+*文档版本: v9.3 | 2026-07-22 | Session 144 S16 计谋快照 Schema 边界完成*
+
+## 2026-07-22 — Session 145（S16 完整 GameState Schema 与跨切片引用）
+
+- 范围：**S16 存档/剧本 · Gate 2 第九小步**；只组合完整运行时快照并校验跨切片引用，未提前实现迁移或生产存取。
+- 新增 `GameStateSchema`：严格列出 GameState 全部 26 个根字段，复用时间线、实体、战役、三级战斗、外交、谍报、计谋七个切片 Schema，禁止遗漏字段与瞬态/未知根字段。
+- 跨切片边界：覆盖玩家势力、势力君主/治所/城市/武将双向归属，城市驻留武将，女性角色，旧 Army，战役节点/CampaignArmy/总军师，三级战斗，外交，情报/特工，计谋及结果关系变化；事件完成/待处理/失效三账本禁止交叉。
+- 新增无端口 `pnpm verify-save-game-state` 并接入 CI、README 与贡献清单：两个真实剧本、真实离间计及 7 类非法引用/未知字段共 10/10。三级战斗验证增加完整快照断言，真实六角、战场地图、白刃战进行中均通过，21→24 项。
+- Bug/逻辑冲突查询：真实战斗复验发现两条初拟约束与引擎语义冲突并已纠正：`BattleUnit.armyId` 是六角战斗内部编组 ID，不引用旧 `GameState.armys`；出征武将可保留 `Officer.location` 行政归属但从城市驻留清单移出，因此该关系不能反向强制。另将根级战斗验证补上 shared 预构建，避免旧 dist 掩盖 Schema 变化。
+- 边界：迁移分派、生产存取/API/UI、存储介质、恢复运行时上下文和 RNG 状态仍未完成；本轮不代表玩家存档可用。
+- 验证：`pnpm test` ✅ 105/105；`verify-campaign` ✅ 62/62；实体 10/10、战役快照 9/9、三级战斗 24/24、外交 11/11、谍报 12/12、计谋 9/9、完整快照 10/10、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：继续 S16，实现按 `schemaVersion` 分派的 v1 迁移入口，并让当前 v1 信封使用完整 `GameStateSchema` 完成加载前校验；仍不接生产存储。
+
+*文档版本: v9.4 | 2026-07-22 | Session 145 S16 完整 GameState Schema 与跨切片引用完成*
+
+## 2026-07-22 — Session 146（S16 v1 存档迁移分派与加载前校验）
+
+- 范围：**S16 存档/剧本 · Gate 2 第十小步**；只实现版本分派和当前版本加载前校验，未接生产存储/API/UI。
+- `shared/save.ts` 新增 `migrateSaveEnvelopeToCurrent`：按 `schemaVersion` 显式分发；当前首版 v1 为恒等迁移，未登记旧版、未来版、缺失及非数字版本统一抛出 `UnsupportedSaveVersionError`，不猜测数据升级。
+- 新增 `parseCurrentSaveEnvelope`：固定执行“版本分派 → 严格 v1 信封 → 完整 `GameStateSchema`”，生产候选入口不再允许调用方注入宽松快照 Schema；保留 `parseSaveEnvelopeV1` 供契约测试与未来迁移内部复用。
+- 共享单测新增 3 项，105→108；新增无端口 `pnpm verify-save-migration` 并接入 CI、README 与贡献清单。两个真实权威剧本信封、未来/旧/缺失版本、坏跨引用及瞬态字段共 9/9。
+- Bug/逻辑检查：首版集成夹具误把 `createGame()` 返回的玩家脱敏投影当作权威状态，完整 Schema 正确拒绝了其中被裁剪势力的引用；已改为建局后从 `getGame()` 取服务端权威真源。该结果进一步确认玩家投影不能作为持久化快照。当前没有 v0 历史格式，因此不虚构 v0→v1 数据变换。
+- 边界：本轮是纯加载前契约，不读取或写入磁盘，不恢复锁/连接/动画等运行时上下文，也不持久化 RNG；玩家存读档仍不可用，Gate 2 未结束。
+- 验证：`pnpm test` ✅ 108/108；战役 62/62、实体 10/10、战役快照 9/9、三级战斗 24/24、外交 11/11、谍报 12/12、计谋 9/9、完整快照 10/10、迁移 9/9、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：继续 S16，审计并设计非持久化运行时上下文的恢复边界；恢复契约与 RNG 策略完成前仍不接生产存储。
+
+*文档版本: v9.5 | 2026-07-22 | Session 146 S16 v1 存档迁移分派与加载前校验完成*
+
+## 2026-07-22 — Session 147（S16 v1 内存恢复边界与瞬态上下文隔离）
+
+- 范围：**S16 存档/剧本 · Gate 2 第十一步**；只实现服务端内存恢复边界与瞬态状态隔离，未接磁盘、API/UI 或 RNG 持久化。
+- `parseCurrentSaveEnvelope` 新增强制不变量：信封 `scenarioId` 必须等于快照 `scenarioId`，防止元数据与实际权威状态指向不同剧本。
+- `server/src/services/game.ts` 新增 `restoreGameFromEnvelope`：在现有请求锁内完成版本迁移、完整 Schema 校验、当前静态剧本存在性与事件史料层兼容检查，再安装服务端权威 `currentGame`；返回值仍为玩家脱敏投影。
+- 瞬态边界：`isProcessing` 由 `withLock(...finally)` 在成功/失败恢复后统一释放；WebSocket 实例/连接、静态数据缓存、客户端动画/选框/重试均保持各自运行时所有，不进入信封、不从快照覆盖。
+- 真实功能验证：保存一场进行中的六角战斗，推进权威时间线使当前状态发生变化，再从信封恢复，核对月份与活跃战斗复原；另验证信封/快照剧本冲突、未知剧本拒绝，以及失败后仍可重新建局，`verify-save-migration` 9→17 项全过。
+- Bug/逻辑检查：首次夹具用 `City.faction` 判断敌城，实际控制权真源是 `City.ruler`，被出征规则正确拒绝；已修正为按 `ruler` 选择目标。未发现恢复后三级战斗丢失或请求锁卡死。
+- 边界：这是无磁盘、无 API/UI 的内存恢复契约，玩家仍不能实际存读档。RNG 存档存在“仅恢复状态 / 确定性续玩 / 完整命令回放”三种 materially different 目标，按规则留待用户拍板，不擅自扩展 v1 格式。
+- 验证：`pnpm test` ✅ 108/108；迁移/恢复 17/17；战役 62/62、实体 10/10、战役快照 9/9、三级战斗 24/24、外交 11/11、谍报 12/12、计谋 9/9、完整快照 10/10、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：请用户拍板 RNG 目标；确定后继续 S16 Gate 2。生产存储/API/UI 仍不得提前接入。
+
+*文档版本: v9.6 | 2026-07-22 | Session 147 S16 v1 内存恢复边界与瞬态上下文隔离完成*
+
+## 2026-07-22 — Session 148（S16 可序列化 PRNG 与确定性续玩基础契约）
+
+- 范围：**S16 存档/剧本 · Gate 2 第十二小步**；按用户拍板采用“确定性续玩”，只建立可序列化 PRNG、信封与恢复基础，未一次性改写所有玩法随机调用。
+- 新增 `shared/rng.ts`：`SerializableRng` 使用版本化 `xorshift32-v1`，保存当前非零 uint32 内部寄存器与 `draws` 消费计数；零 seed 自动归一，非法算法/状态/计数拒绝恢复。
+- v1 `SaveEnvelopeV1` 新增必填 `rng`，严格 Zod 校验算法、state、draws。当前尚无已发布生产存档，故在 v1 开发期补齐字段，不虚构 v1→v1 迁移。
+- 新增 `server/src/runtime-rng.ts` 单一权威实例；新建游戏按剧本/玩家重置，`restoreGameFromEnvelope` 与 GameState 同步恢复随机流。WebSocket、锁和客户端瞬态边界不变。
+- 共享新增 4 项测试，108→112：保存内部状态后继续消费 12 次，恢复副本产生完全相同序列；同时覆盖 draws 连续、零 seed 防锁死及坏状态拒绝。
+- 真实功能验证：进行中六角战斗保存点记录 PRNG 状态，先消费 8 次并改变时间线，再恢复存档；恢复后 8 次结果逐项相同且 draws 连续。迁移/恢复验证 17→19 项。
+- 边界/逻辑检查：civil/plot/personnel/family/spy/AI 和部分 battle 仍直接使用 `Math.random()`；它们尚未纳入确定性保证。后续必须逐域注入 `runtimeRandom` 并补消费序列回归，禁止仅因信封已有 rng 就宣称整局可确定续玩。
+- 验证：`pnpm test` ✅ 112/112；迁移/恢复/PRNG 19/19；战役 62/62、实体 10/10、战役快照 9/9、三级战斗 24/24、外交 11/11、谍报 12/12、计谋 9/9、完整快照 10/10、场景事件 32/32 与数据校验均 ✅；`pnpm typecheck` / `lint` / `build` / `git diff --check` ✅（构建仅保留既有 >500kB chunk 警告）。
+- Next：继续 S16，优先收口战斗/单挑 RNG，再按域处理内政、计谋、人事、家族、谍报与 AI；生产存储/API/UI 仍不得提前接入。
+
+*文档版本: v9.7 | 2026-07-22 | Session 148 S16 可序列化 PRNG 与确定性续玩基础契约*

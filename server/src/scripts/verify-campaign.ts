@@ -35,6 +35,7 @@ import {
   startCampaign,
   tickCampaignGarrison,
   tickCampaignMarch,
+  tickConstruction,
   trySiegeSurrender,
 } from '../engine/campaign.js';
 
@@ -180,6 +181,8 @@ function baseState(): GameState {
     campaignNodes: [],
     grandStrategists: [],
     activeBattles: [],
+    activeBattlefield: null,
+    activeMelee: null,
     diplomacy: [],
     intel: emptyIntel(),
     plots: [],
@@ -420,9 +423,20 @@ console.log('\n10. 建造设施');
     troopCount: 3000, food: 1000,
   });
   state = result.state;
+  const goldBefore = state.factions[2].gold;
   state = buildStructure(state, state.campaignArmies[0].id, 'ram');
   assert(state.campaignArmies[0].structures.some((s) => s.type === 'ram'), '冲车建造入 structures');
-  assert(state.campaignArmies[0].structures[0].buildProgress === 1, '建造进度=1（即时简化）');
+  assert(state.campaignArmies[0].structures[0].buildProgress === 0.5, '冲车首回合建造进度=50%');
+  assert(state.factions[2].gold === goldBefore - 300, '冲车建造扣除 300 金');
+  assert(state.campaignArmies[0].phase === 'garrison', '大型器械建造期间转为驻守');
+  assert(state.campaignArmies[0].path.length === 0, '大型器械建造期间清除行军路径');
+
+  state = tickConstruction(state);
+  assert(state.campaignArmies[0].structures[0].buildProgress === 1, '下一回合冲车建造完成');
+  assert(
+    state.actionLog.some((log) => log.type === 'construction_progress'),
+    '建造完成写入进度日志',
+  );
 }
 
 // --- 11. 驻守恢复 ---

@@ -39,7 +39,7 @@ export default function App() {
   if (!isEngineReady) {
     return (
       <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
-        <h1 className="text-2xl text-amber-400 font-semibold">LateEasternHanDynasty · 可玩 Demo</h1>
+        <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
         <p className="text-stone-400 text-sm">
           {fontError ?? '正在加载工程字体…（跨平台字体防御屏障）'}
         </p>
@@ -64,7 +64,7 @@ export default function App() {
   if (screen === 'boot') {
     return (
       <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
-        <h1 className="text-2xl text-amber-400 font-semibold">LateEasternHanDynasty · 可玩 Demo</h1>
+        <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
         <p className="text-stone-400 text-sm">{loading ? '正在创建游戏…' : error ?? '启动中'}</p>
         {error && (
           <button

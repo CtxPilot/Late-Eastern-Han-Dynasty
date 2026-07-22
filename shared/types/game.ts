@@ -4,6 +4,7 @@
 import type { FactionId, Season } from '../enums/index.js';
 import type { Army } from './army.js';
 import type { BattleState } from './battle.js';
+import type { BattlefieldMap, MeleeState } from './battlefield.js';
 import type { CampaignArmy, CampaignNode, GrandStrategist } from './campaign.js';
 import type { City } from './city.js';
 import type { DiplomacyLink } from './diplomacy.js';
@@ -43,6 +44,10 @@ export interface GameState {
   /** 总军师（每势力至多 1 位，05 §14） */
   grandStrategists: GrandStrategist[];
   activeBattles: BattleState[];
+  /** 当前战场地图（Tier I；0-A 单实例边界） */
+  activeBattlefield: BattlefieldMap | null;
+  /** 当前白刃战（Tier II；必须归属于 activeBattlefield） */
+  activeMelee: MeleeState | null;
   diplomacy: DiplomacyLink[];
   /** 谍报：侦查报告等（盟友可见性由外交实时计算） */
   intel: IntelState;

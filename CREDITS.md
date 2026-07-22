@@ -52,3 +52,9 @@ Before using external assets, verify:
 - license compatibility
 - redistribution permission
 - attribution requirements
+
+### 新增视觉素材登记字段
+
+每个外部图片、拓片切片或生成式候选素材必须记录：文件路径、来源 URL、作者/机构、具体许可、获取日期、SHA-256，以及必要的生成工具/模型/提示词和条款快照。古代文物本体进入公有领域，不代表博物馆网站提供的照片或扫描文件自动采用 CC0；无法证明具体数字文件再分发权时不得入库。
+
+生成式图片同样不自动等于 CC0，也不承诺零侵权风险。本项目正式头像资产默认优先采用自行编写的 SVG/Canvas/CSS 程序化图形。

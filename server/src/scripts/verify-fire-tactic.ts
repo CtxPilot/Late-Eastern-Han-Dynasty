@@ -168,6 +168,8 @@ function baseState(): GameState {
     campaignNodes: [],
     grandStrategists: [],
     activeBattles: [],
+    activeBattlefield: null,
+    activeMelee: null,
     diplomacy: [],
     intel: emptyIntel(),
     plots: [],

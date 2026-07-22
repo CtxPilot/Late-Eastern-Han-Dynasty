@@ -159,7 +159,7 @@ export function BattleView() {
                         strokeWidth={occ.id === selectedUnitId ? 3 : 1.5}
                       />
                       <Text
-                        text={game.officers[occ.commanderId]?.name.slice(0, 1) ?? '?'}
+                        text={game.officers[occ.commanderId]?.name.slice(0, 1) ?? '？'}
                         fontFamily="HanDynastySerif"
                         fontSize={14}
                         fill="#fff"

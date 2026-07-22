@@ -217,6 +217,7 @@ export function pruneExpiredIntel(state: GameState): IntelState {
     cityDefense: intel.cityDefense ?? {},
     nextAgentSeq: intel.nextAgentSeq ?? 1,
     recentMissions: intel.recentMissions ?? [],
+    plantableBeauty: intel.plantableBeauty ?? {},
   };
 }
 
