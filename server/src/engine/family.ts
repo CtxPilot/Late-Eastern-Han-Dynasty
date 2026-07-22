@@ -50,6 +50,7 @@ export function joinFaction(
   state: GameState,
   officerId: number,
   factionId: number,
+  rng: () => number,
   cityId?: number,
   loyalty?: number,
 ): GameState {
@@ -73,7 +74,7 @@ export function joinFaction(
       ...officer,
       faction: factionId,
       location: targetCity.id,
-      loyalty: loyalty ?? 50 + Math.floor(Math.random() * 20),
+      loyalty: loyalty ?? 50 + Math.floor(rng() * 20),
       status: OfficerStatus.ACTIVE,
     },
   };
@@ -171,6 +172,7 @@ export function releaseOfficer(state: GameState, officerId: number): GameState {
 function checkFollowConditions(
   state: GameState,
   officer: Officer,
+  rng: () => number,
 ): { factionId: number; cityId: number; reason: string } | null {
   if (officer.faction != null) return null;
   if (officer.status !== OfficerStatus.FREE) return null;
@@ -201,14 +203,14 @@ function checkFollowConditions(
     const compatDiff = Math.abs(myCompat - ruler.hidden.compatibility);
     if (compatDiff < 20) {
       const chance = 0.20;
-      if (Math.random() < chance) {
+      if (rng() < chance) {
         return { factionId: fac.id, cityId: adj[0], reason: `相性相近(差${compatDiff})` };
       }
     }
 
     // Rule 2: 理想一致 (benevolence) → 40%
     if (myIdeal === ruler.hidden.ideal && myIdeal === 'benevolence') {
-      if (Math.random() < 0.40) {
+      if (rng() < 0.40) {
         return { factionId: fac.id, cityId: adj[0], reason: `理想一致(${myIdeal})` };
       }
     }
@@ -220,7 +222,7 @@ function checkFollowConditions(
       return kin && kin.faction === fac.id;
     });
     if (kinInFac) {
-      if (Math.random() < 0.50) {
+      if (rng() < 0.50) {
         return { factionId: fac.id, cityId: adj[0], reason: `血亲召唤` };
       }
     }
@@ -233,7 +235,7 @@ function checkFollowConditions(
  * 每月检查在野武将自动投奔
  * 设计真源 §3.5
  */
-export function tickFollowCheck(state: GameState): GameState {
+export function tickFollowCheck(state: GameState, rng: () => number): GameState {
   let s = state;
   const freeOfficers = Object.values(s.officers).filter(
     (o) => o.faction == null && o.status === OfficerStatus.FREE,
@@ -244,10 +246,10 @@ export function tickFollowCheck(state: GameState): GameState {
   const messages: string[] = [];
 
   for (const officer of freeOfficers) {
-    const result = checkFollowConditions(s, officer);
+    const result = checkFollowConditions(s, officer, rng);
     if (result) {
       const beforeFemales = s.females;
-      s = joinFaction(s, officer.id, result.factionId, result.cityId, 60);
+      s = joinFaction(s, officer.id, result.factionId, rng, result.cityId, 60);
       const facName = s.factions[result.factionId]?.name ?? '势力';
       messages.push(
         `${officer.name} 因${result.reason}投奔${facName}`,
