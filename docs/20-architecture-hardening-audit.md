@@ -10,9 +10,9 @@
 | WebSocket | `server/src/ws/broadcast.ts` 只发送回合进度、事件提示和 hello | 当前没有“WS 全量 GameState 导致卡顿”的证据；增量状态协议不是立即任务 |
 | 客户端 Store | `client/src/stores/gameStore.ts` 单一 Zustand store，整体 `game` 投影与 UI 状态共存 | D-0B-1 的 slice + 细粒度 selector 方向成立；必须保持一个服务端投影真源 |
 | 静态数据校验 | `server/src/data/loader.ts` 在启动和城市文件 mtime 变化时用 Zod 校验整包 | 不是每回合重复 parse；不可仅凭规模猜测删除运行时边界校验 |
-| 随机数 | **S10 六角战斗与单挑已收口**：伤害、火计、战法、暴击链、敌军行动及完整单挑均显式注入权威 `runtimeRandom` | 战斗 5/5、单挑 3/3 证明读档确定续玩；继续按模块收口其他域 |
+| 随机数 | **S10 六角战斗/单挑与 S03 内政已收口**：所有已实现内政随机路径均显式注入权威 `runtimeRandom` | 战斗 5/5、单挑 3/3、内政 12/12 证明读档确定续玩；继续按模块收口其他域 |
 | 存档 | `shared/types/save.ts` 的 `SaveSlot.snapshot` 直接引用 `GameState`，S16 尚未实现 | 首次存档实现前需要独立版本信封、迁移链和加载校验；不应直接冻结当前 GameState 为永久格式 |
-| 引擎验证 | shared 105 测试；战役 62 项、S16 实体 10 项、战役域 9 项、三级战斗边界 24 项、外交域 11 项、谍报域 12 项、计谋域 9 项及完整快照 10 项检查均已接入默认 CI；server 仍有多个独立 `verify-*.ts` | Gate 1 已有八个稳定集成检查；其余脚本仍应逐个评估确定性与端口依赖后再接入 |
+| 引擎验证 | shared 112 测试；既有存档/战役检查与战斗 5、单挑 3、内政 12 项确定续玩检查均已接入默认 CI；server 仍有多个独立 `verify-*.ts` | 继续逐个评估确定性与端口依赖后再接入，禁止仅因脚本存在就宣称覆盖 |
 | 战斗持久化边界 | 六角、战场地图、白刃战已收口到 `GameState.activeBattles[0]` / `activeBattlefield` / `activeMelee` | 三级战斗运行时已消除模块级双真源；实际恢复仍需完整快照、迁移与生产读档 |
 
 ## 二、建议顺序
@@ -47,6 +47,8 @@ interface SaveEnvelopeV1 {
 模块进度（Session 149）：第一模块 S10 六角战斗完成。`battle/damage.ts`、`battle/simpleAi.ts`、`engine/battle.ts` 已无直接 `Math.random()`；服务层对玩家攻击、火计、战法和敌方阶段显式传入 `runtimeRandom`。全局直接调用文件由 15 降至 12；`aiMilitary.ts` 仅因复用伤害函数接入随机源，其目标选择等 S15 行为尚未收口。未发现第三方库内部随机调用需要强改。
 
 模块进度（Session 150）：第二模块 S10 单挑完成。移除 `duel.ts` 三个随机默认值，创建、逐回合与跳过结算均必须由调用方注入；服务层接入权威源，既有 seeded 测试继续独立。全局直接调用文件 12→11，S10 `battle/` 与 `engine/battle.ts` 已归零。
+
+模块进度（Session 151）：第三模块 S03 内政完成。`civil.ts` 的区间辅助及农业、商业、城防、征兵、施米、训练六条现有随机路径均改为必填 RNG，服务层统一注入 `runtimeRandom`；同一保存点六条指令固定消费 6 次，恢复后的结果序列、最终城市状态及 draws 完全一致（12/12）。文化/工艺/交通/卫生与军屯/民屯尚未实装，因此没有虚构随机覆盖；S09 美女与 S14 事件保持系统边界。全局直接调用文件 11→10，未发现第三方库内部随机调用。
 
 ### Gate 3：编排器与 Campaign 的职责审计
 

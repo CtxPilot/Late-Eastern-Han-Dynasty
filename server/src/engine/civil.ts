@@ -53,18 +53,23 @@ function pushLog(
   };
 }
 
-function randGain(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1));
+function randGain(min: number, max: number, rng: () => number): number {
+  return min + Math.floor(rng() * (max - min + 1));
 }
 
 /** 开发农业 / 商业 / 城防 */
-export function developCity(state: GameState, cityId: number, kind: DevelopKind): GameState {
+export function developCity(
+  state: GameState,
+  cityId: number,
+  kind: DevelopKind,
+  rng: () => number,
+): GameState {
   const conf = DEVELOP[kind];
   if (!conf) throw new Error('未知开发类型');
   const city = requirePlayerCity(state, cityId);
   if (city.gold < conf.cost) throw new Error('金钱不足');
 
-  const gain = randGain(conf.gainMin, conf.gainMax);
+  const gain = randGain(conf.gainMin, conf.gainMax, rng);
   const prev = city.stats[conf.stat];
   const nextStat = Math.min(999, prev + gain);
   const nextCity: City = {
@@ -82,15 +87,15 @@ export function developCity(state: GameState, cityId: number, kind: DevelopKind)
 }
 
 /** 兼容旧 API */
-export function developFarm(state: GameState, cityId: number): GameState {
-  return developCity(state, cityId, 'farm');
+export function developFarm(state: GameState, cityId: number, rng: () => number): GameState {
+  return developCity(state, cityId, 'farm', rng);
 }
 
 /**
  * 征兵：耗金+粮；兵力来自成年男（可征上限）
  * 80 金 + 120 粮 → 尝试征 300~450+bonus，不超过可征男丁
  */
-export function conscript(state: GameState, cityId: number): GameState {
+export function conscript(state: GameState, cityId: number, rng: () => number): GameState {
   const city = requirePlayerCity(state, cityId);
   const goldCost = 80;
   const foodCost = 120;
@@ -101,7 +106,7 @@ export function conscript(state: GameState, cityId: number): GameState {
   const maxMen = maxConscriptable(d);
   if (maxMen < 50) throw new Error('成年男丁不足（需保留劳作人口）');
 
-  const troopsGain = 300 + Math.floor(Math.random() * 151);
+  const troopsGain = 300 + Math.floor(rng() * 151);
   const bonus = Math.floor(city.stats.farm / 50) + Math.floor((city.stats.morale ?? 70) / 40);
   const want = troopsGain + bonus * 10;
   const total = Math.min(want, maxMen);
@@ -132,12 +137,12 @@ export function conscript(state: GameState, cityId: number): GameState {
 /**
  * 施米：耗粮，提民心（morale）
  */
-export function relief(state: GameState, cityId: number): GameState {
+export function relief(state: GameState, cityId: number, rng: () => number): GameState {
   const city = requirePlayerCity(state, cityId);
   const foodCost = 150;
   if (city.food < foodCost) throw new Error('粮食不足');
 
-  const gain = 8 + Math.floor(Math.random() * 5);
+  const gain = 8 + Math.floor(rng() * 5);
   const prev = city.stats.morale ?? 70;
   const nextMorale = Math.min(100, prev + gain);
 
@@ -158,13 +163,13 @@ export function relief(state: GameState, cityId: number): GameState {
 /**
  * 训练：耗粮，略提士气（troopsMorale）
  */
-export function trainTroops(state: GameState, cityId: number): GameState {
+export function trainTroops(state: GameState, cityId: number, rng: () => number): GameState {
   const city = requirePlayerCity(state, cityId);
   const foodCost = 60;
   if (city.food < foodCost) throw new Error('粮食不足');
   if (city.troops < 100) throw new Error('兵力不足，无法训练');
 
-  const gain = 5 + Math.floor(Math.random() * 6);
+  const gain = 5 + Math.floor(rng() * 6);
   const prev = city.troopsMorale ?? 70;
   const next = Math.min(100, prev + gain);
 
@@ -181,4 +186,3 @@ export function trainTroops(state: GameState, cityId: number): GameState {
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
 }
-

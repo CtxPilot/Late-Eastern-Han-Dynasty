@@ -23,6 +23,7 @@
     "verify-save-migration": "tsx src/scripts/verify-save-migration.ts",
     "verify-battle-rng": "tsx src/scripts/verify-battle-rng.ts",
     "verify-duel-rng": "tsx src/scripts/verify-duel-rng.ts",
+    "verify-civil-rng": "tsx src/scripts/verify-civil-rng.ts",
     "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js"

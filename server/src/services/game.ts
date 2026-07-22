@@ -411,35 +411,35 @@ export function doEventChoice(eventId: number, choiceIndex: number): GameState {
 
 export function doDevelopFarm(cityId: number): GameState {
   return withLock(() => {
-    currentGame = developFarm(getGame(), cityId);
+    currentGame = developFarm(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
 
 export function doDevelop(cityId: number, kind: DevelopKind): GameState {
   return withLock(() => {
-    currentGame = developCity(getGame(), cityId, kind);
+    currentGame = developCity(getGame(), cityId, kind, runtimeRandom);
     return getClientGame();
   });
 }
 
 export function doConscript(cityId: number): GameState {
   return withLock(() => {
-    currentGame = conscript(getGame(), cityId);
+    currentGame = conscript(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
 
 export function doRelief(cityId: number): GameState {
   return withLock(() => {
-    currentGame = relief(getGame(), cityId);
+    currentGame = relief(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
 
 export function doTrain(cityId: number): GameState {
   return withLock(() => {
-    currentGame = trainTroops(getGame(), cityId);
+    currentGame = trainTroops(getGame(), cityId, runtimeRandom);
     return getClientGame();
   });
 }
