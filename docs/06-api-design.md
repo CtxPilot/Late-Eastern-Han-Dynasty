@@ -584,6 +584,8 @@ ws://localhost:3001/ws?gameId={gameId}
 6. 战斗结束 → battle.state = 'resolved' → 切换回大地图
 ```
 
+**当前 Demo 权威状态约束（Session 141）**：`/api/game/battle/*`、`/battlefield/*`、`/melee/*` 仍采用“当前单场”接口，不要求客户端传 battleId。服务端分别以 `GameState.activeBattles[0]`、`activeBattlefield`、`activeMelee` 为唯一真源；退出白刃战保留父战场，退出战场级联清除白刃战。战场初始化要求己方出发城和有敌方统治者的目标城；`melee/start` 要求双方是当前战场内、同节点、不同势力且不同 ID 的 CampaignArmy；未知行动或战术点不足在修改状态前拒绝。当前不得据这些字段推断已支持并发战争。
+
 ---
 
 ### 2.14 战役
@@ -739,4 +741,4 @@ POST   /api/v1/games/:id/faction/cultural-policy
 
 ---
 
-*文档版本: v2.5 | 2026-07-19 | Session 106 同步场景目录、史料层创建参数与事件队列约束*
+*文档版本: v2.7 | 2026-07-22 | Session 141 三级战斗 API 权威状态与校验边界*

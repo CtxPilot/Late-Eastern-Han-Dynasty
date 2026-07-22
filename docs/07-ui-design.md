@@ -836,6 +836,10 @@ AccSection·君主
 - `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
 - `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
 - `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片）：纯 SVG/CSS 程序化拓印头像，不依赖外部立绘。四位重点人物手工指定脸型、冠式、胡须、墨色、氏族题签与朱砂姓名印；其余人物按属性与 ID 生成稳定默认轮廓。此切片实现 C 五官轮廓 + B 文字层 + 程序化纸墨底色，**尚未接入 A 层公有领域汉代拓片切片，也尚未把 `avatarGene` 落库**，不得误记为 P5-10 全量完成。
+- **抽象头像的目标不是写实，而是符号化辨识**：每名重点人物只强化 1~2 个有历史/文本依据的轮廓符号（冠式、胡须、眉眼、持物或官印），其余细节服从统一几何语法。辨识度须通过不显示姓名的快速识别测试验证，不能仅凭维护者主观判断。
+- 四名现有切片的符号基线：吕布=双翎武冠+锐脸/虬髯；关羽=方脸+长髯；诸葛亮=文冠+长脸/山羊胡；曹操=王者冠式+圆脸/短髯。后续不得直接照搬现代影视、动漫或商业游戏的专有服饰与构图。
+- 一致性由代码和设计 token 保证：统一 viewBox/头肩比例、眼眉线宽、墨线、宣纸色域、朱砂印和内部字体别名；不得依赖外部 AI 每批“风格相近”的主观输出。势力色只作辅助状态标记，不把历史人物永久绑定到会变化的游戏势力。
+- 新头像先补 `avatarGene` 与 SVG 组件变体，再考虑外部位图。纹理优先使用确定性噪声/自制纹理；来源规则见 `00-dev-constitution.md` §11.1.1。
 - `client/src/components/ui/RadarChart.tsx`：**纯 SVG 手写**外交雷达图（5 维多边形 + scale 0~100）。5 维：友好（favorability）/信任（派生 relation）/姻亲（marriageBond 0/100）/盟约（allied 0/100）/敌意（war|hostile 反转）。放 LeftPanel 外交折叠顶部。数据从 `game.diplomacy` + `findDiplomacy()`（`shared/intel.ts:46`）取。
 - **财政飘字**：gameStore 各 action 在 `set({game})` 时附带 `floatingDelta: {gold, food, reason}[]`（前端算 delta：newGame vs oldGame）。TopBar/RightPanel 订阅渲染 `+N/-N` 上浮淡出（CSS keyframes `floatUp`，tailwind.config.js 加）。
 - **行政总署三段式**：重组 LeftPanel「人事」折叠为独立 `AdminOfficePanel.tsx`，三段 Header（搜索/任命/赏赐）+ 视觉分隔。复用现有 PersonnelPanel/AppointPanel/BeautyPanel。
@@ -1006,14 +1010,15 @@ interface SpecialAppearance {
 
 #### §11.6.2 方案 A — 拓片印章（底图层）技术规格
 
-**素材采集**（公有领域，不入库不入 git，运行时按需加载）：
+**素材采集**（具体数字文件须完成许可审查；历史文物本体公有领域不代表馆方照片/扫描件自动 CC0）：
 - 20~30 张高质感汉代原版拓片切片，按武将类型分类：
   - `warrior`：执弩骑马射猎图 / 武士对剑图
   - `scholar`：对坐清谈 / 老生问道
   - `servant`：汉代侍从 / 小兵拓片
   - `royal`：皇室纹样拓片
-- 来源：国博 / 各地博物馆官网 / 公开学术资料
-- 版权：中国古代文物图案已进入公共领域
+- 候选来源：博物馆开放数据页、Wikimedia Commons、Internet Archive 或公开学术资料；只采用明确标注 CC0/公有领域或允许再分发的**具体文件**
+- 证据：`CREDITS.md` 逐件记录来源 URL、机构/作者、许可、获取日期、文件哈希；网页仅供浏览不等于允许复制
+- 生成式图片：不得声称 AI 输出天然为 CC0 或“100% 无版权风险”；正式入库须按 `00-dev-constitution.md` §11.1.1 保存工具条款、生成记录并完成人工相似性审查。默认优先使用本项目原创 SVG/Canvas/CSS
 
 **前端组合**（react-konva，复用现有架构零新依赖）：
 
@@ -1034,7 +1039,7 @@ function renderAvatarBase(group: Konva.Group, gene: AvatarGene) {
 }
 ```
 
-**版权护城河**：公有领域 + 程序化混合差异化，即便两人用同一张拓片切片，经 hue/contrast/混合模式处理后视觉效果不同。
+**版权与原创性策略**：许可证据完整的公有领域数字文件 + 本项目程序化重绘/混合。色相、对比度和混合模式只提供视觉差异，**不能把无权使用的底图转化为合规素材**。
 
 #### §11.6.3 方案 C — 程序化拼图（五官层）技术规格
 

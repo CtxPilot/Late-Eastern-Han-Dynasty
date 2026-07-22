@@ -173,7 +173,7 @@ function HpBar({
       <div className="flex justify-between text-xs mb-1">
         <span className={side === 'atk' ? 'text-emerald-400' : 'text-red-400'}>{name}</span>
         <span className="text-stone-400">
-          HP {hp}/{maxHp}
+          体力 {hp}/{maxHp}
           {injury && <span className="ml-1 text-orange-400">[{injuryLabel[injury.part] ?? '伤'}]</span>}
         </span>
       </div>

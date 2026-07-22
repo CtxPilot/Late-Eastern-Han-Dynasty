@@ -310,10 +310,10 @@ export function CampaignPanel() {
       {/* Army 列表 */}
       <div className="px-3 py-2 border-b border-stone-800">
         <div className="text-amber-400/80 font-medium mb-1">
-          我军 Army（{myArmies.length}）
+          我军（{myArmies.length}）
         </div>
         {myArmies.length === 0 ? (
-          <p className="text-stone-600">尚无出征 Army</p>
+          <p className="text-stone-600">尚无出征军队</p>
         ) : (
           <div className="space-y-1">
             {myArmies.map((a) => {

@@ -1,6 +1,16 @@
-# 贡献指南（人类开发者）
+# Contributing · 贡献指南
 
-> AI Agent 请先读 `AGENTS.md` 与 `HANDOFF.md`。本文面向人类接手。
+Thank you for helping build an open-source historical strategy simulation framework. Tests, documentation, accessibility, historical-source review, and focused engine changes are all useful contributions.
+
+感谢你参与这个开源历史策略模拟框架。AI Agent 请先读 `AGENTS.md` 与 `HANDOFF.md`；人类贡献者也应先了解本文所列的事实边界和验证要求。
+
+## 开始之前
+
+- 先搜索现有 Issue；较大的功能或数据扩容请先开 Issue 讨论范围，并使用 [`docs/19-design-proposal-templates.md`](docs/19-design-proposal-templates.md) 区分“提案”与“已定设计”。
+- 一次 PR 聚焦一个大系统（`docs/12-system-map.md` 的 S01~S22）。
+- 不要把 `docs/` 中标记为“设计中”的能力描述为已实现。
+- 不提交商业字体、商业游戏素材、来源不明图片或模仿知名游戏构图的资产。
+- 参与项目即表示同意遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
 
 ## 怎么跑
 
@@ -45,6 +55,43 @@ docs/     设计真源（见 HANDOFF 文档地图）
 - 跑：`pnpm --filter @leh/shared test`  
 - 业务 API：手动/curl 黑盒；改玩法后须实际点一遍再写「怎么验证」
 
+提交 PR 前至少运行：
+
+```bash
+pnpm build
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm verify-campaign
+pnpm verify-save-entities
+pnpm verify-save-campaign
+pnpm verify-save-battle
+pnpm verify-save-diplomacy
+pnpm verify-save-intel
+pnpm verify-save-plot
+pnpm verify-save-game-state
+pnpm verify-save-migration
+pnpm validate-data
+pnpm verify-scenario-events
+```
+
+若修改单挑、暴击/反击/连击、子女或火计，请额外运行同目录对应的 `verify-*.ts`。涉及 UI 的 PR 必须说明实际点击路径、预期结果和测试环境；截图应来自本仓库实际运行界面。
+
+## Pull request 清单
+
+- [ ] PR 标题采用 Conventional Commits 风格。
+- [ ] 描述“改了什么 / 为什么 / 如何验证 / 尚未实现什么”。
+- [ ] 新行为有测试或验证脚本覆盖。
+- [ ] 静态规模数字先改 `docs/08-data-dictionary.md`，再同步引用处。
+- [ ] 功能改动已同步 `docs/10-progress.md`、`HANDOFF.md` 和受影响设计文档。
+- [ ] 未引入来源不明、不可再分发或与 MIT 不兼容的资产。
+
+## Issue 与安全报告
+
+Bug 报告请给出复现步骤、预期行为、实际行为、环境和必要截图。功能建议请明确所属 Sxx 系统、最小范围和为什么适合框架定位。
+
+安全漏洞不要公开提交 Issue；请按 [SECURITY.md](SECURITY.md) 私下报告。
+
 ## 提交规范
 
 - Conventional Commits：`feat:` / `fix:` / `docs:` / `test:`  
@@ -76,7 +123,7 @@ docs/     设计真源（见 HANDOFF 文档地图）
   - Konva `<Text>` 节点必须显式 `fontFamily="HanDynastySerif"`（Konva 默认是 `Arial`，跨平台不一致）
 - **必须**在 `client/src/App.tsx` 的 FontBarrier 通过后才渲染 Canvas
   - `waitForGameFonts()` 阻塞等待字形写入内存，防第一帧画错字体
-- 新增字体须同时提交 woff2 到 `client/public/fonts/` + 提供 OFL / SIL OFL 授权证明
+- 新增字体必须提供 OFL / SIL OFL 授权证明，并更新 `client/public/fonts/README.md`；当前字体二进制按仓库策略不进入 Git。
 
 ### 工程规范（编码 / 换行符 / CI）
 

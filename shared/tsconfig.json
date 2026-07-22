@@ -17,6 +17,16 @@
     "mask-state.ts",
     "positions.ts",
     "stamina.ts",
+    "save.ts",
+    "rng.ts",
+    "game-state-schema.ts",
+    "game-state-entity-schema.ts",
+    "game-state-campaign-schema.ts",
+    "game-state-battle-schema.ts",
+    "game-state-diplomacy-schema.ts",
+    "game-state-intel-schema.ts",
+    "game-state-plot-schema.ts",
+    "game-state-full-schema.ts",
     "index.ts",
     "campaign-utils.ts"
   ]

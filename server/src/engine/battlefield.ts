@@ -104,7 +104,7 @@ export function extractBattlefieldNodes(
       wallDurability: n.wallDurability,
       maxWallDurability: n.maxWallDurability,
       armyIds: state.campaignArmies
-        .filter((a) => a.currentNodeId === n.id && a.factionId === state.playerFactionId)
+        .filter((a) => a.currentNodeId === n.id)
         .map((a) => a.id),
       traps: [],
     }));

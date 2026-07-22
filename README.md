@@ -1,250 +1,152 @@
-# LateEasternHanDynasty — 三国题材策略游戏
+# Late Eastern Han Dynasty
 
-> 受经典三国策略游戏启发，从零构建的现代回合制三国策略游戏。
-> 融合历代三国策略游戏的设计精华（单挑三角克制·单挑大会·部曲私兵·屯田质任），加入原创设计（主副将与参谋编成·爵位加成·战法·人际关系·子女家族·计谋谍报·货币成色·出身派系）。
+> **Open-source historical strategy simulation framework** for modeling the late Eastern Han era through data-driven rules, turn-based state transitions, campaign systems, and a playable web reference client.
 >
-> **声明 · Disclaimer**
->
-> 🀄 本项目是一款基于 React + Canvas 构建的三国题材独立策略游戏。**与百度开源前端框架 San 无任何关联**。
->
-> 🇺🇸 This project is an independent strategy game inspired by the Three Kingdoms period. **It is NOT affiliated with Baidu's San front-end framework.**
->
-> 🎮 本项目为完全独立的原创作品，与株式会社光荣特库摩（Koei Tecmo）及其旗下《三国志》《信长之野望》等任何游戏系列无任何商业关联、授权或合作关系。游戏中所有三国人物及历史事件素材均来源于《三国志》（陈寿·西晋）、《后汉书》（范晔·南朝宋）、《三国演义》（罗贯中·元末明初）等公有领域古籍。
->
-> 🇺🇸 This project is an independent work. It is NOT affiliated with, endorsed by, or associated with Koei Tecmo Holdings Co., Ltd. or any of its game series (including *Romance of the Three Kingdoms* / *Nobunaga's Ambition*). All historical references are derived from public-domain classical texts.
->
-> 🀄 本项目是一款受东汉末年历史与经典策略游戏启发的独立历史策略游戏，并非任何商业游戏公司或游戏系列的官方产品、重制版、克隆版或衍生作品。
->
-> 🇺🇸 This project is an independent historical strategy game inspired by the late Eastern Han period and classic strategy games. It is not an official product, remake, clone, or derivative work of any commercial game company or franchise.
+> 面向东汉末年历史题材的**开源历史策略模拟框架**：以数据驱动规则、回合状态演算、战役系统和可运行 Web 客户端验证历史策略玩法。
 
-**日本語** — 三国時代を舞台にしたターン制ストラテジーゲーム。古典的な三国戦略ゲームの設計精神を受け継ぎ、ゼロから構築されたモダンな作品です。武将システム（主副將・部曲・部隊品質・教育・出身派閥）、経済システム（貨幣純度・税収・俸禄・屯田）、戦闘システム（単挑三角相克・武魁大会・戦法エンジン）など、奥深いオリジナル設計が特徴です。
+[![CI](https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/actions/workflows/ci.yml/badge.svg)](https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Status](https://img.shields.io/badge/status-0--A%20playable%20prototype-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 
-**한국어** — 삼국시대를 배경으로 한 턴제 전략 게임. 고전 삼국 전략 게임의 설계 정신을 계승하여 처음부터 구축한 현대적인 작품입니다. 무장 시스템(주부장·부곡·부대품질·교육·출신파벌), 경제 시스템(화폐순도·세수·봉록·둔전), 전투 시스템(단도삼각상극·무쾌대회·전법엔진) 등 깊이 있는 오리지널 설계가 특징입니다.
+The repository is both a framework under active development and a playable reference implementation—not a finished game or a reusable npm package yet. Its main engineering value is the separation of validated historical data, shared simulation contracts, server-side rule engines, and a Canvas-based client.
 
-![Phase](https://img.shields.io/badge/phase-0--A%20(Demo)-blue)
-![Systems](https://img.shields.io/badge/systems-22-orange)
-![Platform](https://img.shields.io/badge/platform-Web-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-green)
+本仓库同时包含持续开发中的框架与可玩参考实现，**目前不是完整游戏，也尚未发布为通用 npm 包**。项目重点是验证：历史数据校验、共享模拟合约、服务端规则引擎与 Canvas 客户端能否以清晰边界共同演进。
 
-## Project Status
+## Why this repository exists
 
-This project is an independent open-source development project.
+- Provide reusable architectural patterns for data-heavy historical strategy simulations.
+- Keep simulation rules on the server and shared contracts in a framework-neutral TypeScript package.
+- Treat historical records, inferred material, and fictionalized gameplay content as distinct source layers.
+- Validate a small but complete scenario before scaling to the full historical dataset.
+- Demonstrate an original, copyright-conscious visual language based on public-domain historical materials.
 
-Historical names, events, and cultural references are based on public historical sources.
+## Current status and honest scope
 
----
+The **0-A playable prototype** currently includes:
 
-## Screenshots · 游戏截图
+- a 30-city simulation baseline, 9 unit types, 6 implemented formations, and 223 historical officer records;
+- two selectable scenarios: a sandbox-style hero assembly and a four-faction 190 CE historical slice;
+- seasonal turns, city development, recruitment, training, personnel actions, population/food consumption, diplomacy, intelligence, plots, family events, and server-side fog-of-war masking;
+- campaign armies with commander/deputy/adviser composition, marching, sieges, simplified facilities, and automatic battle resolution;
+- tactical hex combat, tactics, duel resolution, critical/counter/chain attacks, and a simplified close-combat mode;
+- 24 scenario events across five narrative lines with player choices and source-layer labels.
 
-> Map / territory overview, city details with economy & operations, and personnel interface.
+Important limitations:
 
-| 地图全景 · Map Overview | 城池详情 · City Detail | 人事界面 · Personnel |
+- AI domestic behavior and several campaign calculations remain deliberately simplified.
+- Save/load, full historical scenarios, delegated armies, private retinues, farming colonies, full formation progression, and the duel tournament are not implemented.
+- Several systems documented in `docs/` are designs or technical reserves; they are explicitly marked as such.
+- Automated tests currently focus on 100 shared contract/pure-function tests plus dedicated engine verification scripts; this is not full end-to-end coverage.
+
+For the precise playable path and known boundaries, see [Demo build and playbook](docs/16-demo-build-playbook.md). For implementation maturity by system, see [System map](docs/12-system-map.md).
+
+## Screenshots
+
+| Map and territories | City operations | Officer roster |
 |:---:|:---:|:---:|
-| ![Map](docs/screenshots/leh-full-map.png) | ![City](docs/screenshots/leh-city-detail.png) | ![Personnel](docs/screenshots/leh-personnel-officers.png) |
+| ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) | ![Officer roster](docs/screenshots/leh-personnel-officers.png) |
 
-### 代表武将人物简册 · Featured Officer Profiles
+The officer profiles are generated with SVG/CSS in the project's original “rubbing, bamboo-slip, and official-seal” visual system. They do not use commercial character art.
 
-纯 SVG/CSS 程序化绘制，以「金石水墨·拓片简册·印信官职」为视觉基调；不使用商业立绘或外部人物图片。
+| Lü Bu | Guan Yu | Zhuge Liang | Cao Cao |
+|:---:|:---:|:---:|:---:|
+| ![Lü Bu profile](docs/screenshots/leh-officer-lv-bu.png) | ![Guan Yu profile](docs/screenshots/leh-officer-guan-yu.png) | ![Zhuge Liang profile](docs/screenshots/leh-officer-zhuge-liang.png) | ![Cao Cao profile](docs/screenshots/leh-officer-cao-cao.png) |
 
-| 吕布 · 奉先 | 关羽 · 云长 |
-|:---:|:---:|
-| ![吕布人物简册](docs/screenshots/leh-officer-lv-bu.png) | ![关羽人物简册](docs/screenshots/leh-officer-guan-yu.png) |
+## Quick start
 
-| 诸葛亮 · 孔明 | 曹操 · 孟德 |
-|:---:|:---:|
-| ![诸葛亮人物简册](docs/screenshots/leh-officer-zhuge-liang.png) | ![曹操人物简册](docs/screenshots/leh-officer-cao-cao.png) |
-
----
-
-## 快速启动
+Requirements: Node.js 20+ and pnpm 9.15.x.
 
 ```bash
 pnpm install
 pnpm --filter @leh/shared build
 pnpm dev
-# 服务 :3001  前端 :5173（代理 /api）
-# 数据校验: pnpm validate-data
-# 场景/事件验证: pnpm verify-scenario-events
-# 单元测试: pnpm test
 ```
 
-0-A Demo 的真实能力边界与12回合流程见 [`docs/16-demo-build-playbook.md`](docs/16-demo-build-playbook.md)。
+Open `http://localhost:5173`; the API server runs on `http://localhost:3001`. On first launch, select a scenario and faction.
 
-硬刷新 `Ctrl+Shift+R`。首次进入先选择剧本与势力；当前提供英雄集结和190《关东义兵》四势力技术切片。
+The bundled CJK font binaries are intentionally excluded from Git. Follow [client/public/fonts/README.md](client/public/fonts/README.md) if the local assets are absent.
 
----
+## Validation
 
-## 22 大系统总览
-
-| ID | 系统 | 成熟度 | 一句话 |
-|:--:|------|:------:|--------|
-| S01 | 回合 | M+ | 年月季推进·全势力金粮同步 |
-| S02 | 地图 | M | Natural Earth 底图·30 城·LOD |
-| S03 | 内政 | M | **已实装：**农/商/城即时开发、征兵/训练/施米；**设计中：**民屯田/军屯田 |
-| S04 | 人口经济 | M | 四桶 demographics + 粮耗·征兵池 |
-| S05 | 军事 | M+ | 邻接出征→六角战→占城·战役 Army **主副将与参谋编成**；爵位编成加成仍为设计 |
-| S06 | 迷雾 | M+ | UI + 服务端裁剪 `maskGameStateForPlayer` |
-| S07 | 谍报 | M+ | 女间谍·驻守反间·流言联动 |
-| S08 | 外交 | M+ | 进贡/结盟/献美·友好度体系 |
-| S09 | 美女资源 | M | 寻访/抢夺/赏赐·非历史女 |
-| S10 | 战斗 | **M+（引擎）/入口有缺陷** | 六角+克制+火计+战法+暴击/反击/连击；完整单挑引擎冒烟通过，但接受挑战的 UI/API 链路存在嵌套锁错误；战役层 Army 编成/行军/围城/自动战斗已可玩。部曲、屯田、爵位编成加成及战役→单挑串联仍待实现 |
-| S11 | 人事 | M+ | 搜索/登用/赏赐/任命三轨·仅男将 |
-| S12 | 官职功绩体力 | S/M | 0-A 精简任命·体力完整·功绩字段代码待补 |
-| S13 | 宝物 | S | 20 件 (0-A) |
-| S14 | 事件 | M+ | 剧本/史料层隔离·年月窗口·前置/互斥/失效·玩家/AI选择·EventDialog来源标签 |
-| S15 | AI | M+ | 内政占位·出征占城·计谋谍报相位 |
-| S16 | 剧本/存档 | M/D | 两剧本选择与场景白名单已可玩；SQLite存档未实现 |
-| S17 | 计谋 | M+ | 美人计/离间/假情报/空城·+四面楚歌联动 |
-| S18 | 家族 | M+ | 婚配/跟随/子女引擎·祝融唯一女将 |
-| S19 | 单挑大会 | D | 设计完成·16人淘汰·押注·武魁称号·引擎待实现 |
-| S20 | 前端体验 | S/D | 已实装己方武将名册、人物简册、四名代表人物程序化头像、低忠诚警报，以及人事操作统一终审窗；派系、外交雷达、财政飘字及 W1~W3 仍为设计。零新依赖 |
-| S21 | 三级战斗串联 | D | Session 100 技术储备方案完成（零代码）：一级大地图演出/二级战术串联/三级白刃战 MeleeStage Konva 方阵/单挑接入 DuelStage 混合范式/screen 六态栈 |
-| S22 | 美术基调·金石水墨免版权 | S/D | 已实装跨平台字体防御，以及吕布/关羽/诸葛亮/曹操四名代表人物的纯 SVG/CSS 程序化头像与印信文字层；完整 A+C+B 数据层仍留 P5-10。详见 `00-dev-constitution.md` §11.3+§11.7、`15-linux-ui-spec.md` |
-
----
-
-## 特色玩法
-
-### 🔥 单挑系统（引擎已实装 · 全自动结算）
-- 7 指令三向克制：猛攻→牵制→必杀→猛攻，全自动引擎内部推演
-- 隐藏属性(8项) × 体力 × 性格的多维博弈
-- **无双保护**（不屈不斩·仅吕布）+ **专属技能**（武圣/龙胆/咆哮/天义/恶来/刚烈/虎痴/骑神/火神）
-- 宿命对决（设计完成，待实装）· **单挑大会 S19**（设计完成，待实装）
-
-### ⚔️ 主副将与参谋·爵位加成·部曲·部队品质（设计完成）
-
-> 运行时边界：Army 主/副将/参谋与 Squad 已可玩；爵位编成加成、部曲私兵字段及随将逻辑仍是设计。0-A Demo 只用史载部曲武将作为普通副将做替代展示。
-- **主将 + 副将 + 参谋（独立槽位·智力≥85·幕僚不带兵·智略加成）+ 副参谋**
-- **爵位编成加成**：关内侯→皇帝 7 级，叠加于武官官职之上，上限大将军 9 人/君主 10 人
-- 18 种阵型 × 兵种组合产生差异化表现 + **暴击/反击/连击阵型修正**
-- **部曲系统**：许褚·高顺·公孙瓒等 12 位史载武将拥有私兵，随人走
-- **部队经验** Lv1~7（新卒→铁军），**组织度** 0~100，士气深化
-
-### 🌾 屯田与家属（设计完成）
-
-> 运行时边界：军屯/民屯未实装；当前可玩的“开发农业”和196年“屯田令”事件都只是 farm 数值变化。
-- **军屯田**：驻军耕作自给，训练减半
-- **民屯田**：人口分配型农业，不花金，平行于 farm 开发
-- **家属质任制**：士兵家属在征兵城 → 敌占城士气崩盘 → 曹魏式迁家属到首都
-
-### 🕵️ 计谋与谍报
-- 美人计·离间计·假情报·空城疑兵
-- 女间谍训练 + 枕边风
-- 流言 + 四面楚歌联动家属系统
-
----
-
-## 技术栈
-
-| 层 | 技术 |
-|:---|:-----|
-| 前端 | React 18 + TypeScript + Vite + Konva.js + Tailwind CSS |
-| 状态 | Zustand |
-| 后端 | Express + TypeScript + WebSocket (ws) |
-| 校验 | Zod（运行时 JSON 校验） |
-| 测试 | Vitest（68 单测） |
-| 包管理 | pnpm workspace (Monorepo) |
-
----
-
-## 项目结构
-
-```
-Late-Eastern-Han-Dynasty/
-├── shared/            # 类型·Zod·纯函数工具
-│   ├── types/         # 24 个类型定义文件
-│   ├── enums/         # 全部枚举
-│   ├── validators/    # Zod schema
-│   ├── stamina.ts     # 体力系统
-│   ├── ceiling.ts     # 五维天花板
-│   ├── demographics.ts # 人口结构
-│   ├── city-roads.ts  # 0-A 30城官道邻接
-│   ├── mask-state.ts  # 视野裁剪
-│   ├── intel.ts       # 谍报可见性
-│   └── positions.ts   # 三轨官职
-├── server/            # Express 后端
-│   ├── src/
-│   │   ├── engine/    # 20 个引擎模块
-│   │   ├── battle/    # 7 个战斗子模块
-│   │   ├── services/  # 游戏编排器
-│   │   ├── routes/    # REST API
-│   │   ├── data/      # JSON 10 文件 + loader
-│   │   ├── scripts/   # 10 个验证/维护脚本（旧0-A生成器已冻结）
-│   │   ├── middleware/ # 错误处理
-│   │   └── ws/        # WebSocket 广播
-│   └── ...
-├── client/            # Vite + React 前端
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── layout/   # 10 面板组件
-│   │   │   ├── map/      # 地图 (Konva)
-│   │   │   ├── battle/   # 战斗 + 单挑面板
-│   │   │   ├── events/   # 事件弹窗
-│   │   │   └── ui/       # 通用折叠
-│   │   ├── stores/     # Zustand
-│   │   └── services/   # API 客户端
-│   └── ...
-├── scripts/            # 工具脚本 (SPDX/底图)
-├── docs/              # 15 份设计文档
-│   ├── 00-dev-constitution.md
-│   ├── 01-overview.md
-│   ├── 05-combat-system.md   # 战斗·单挑·阵型·部曲·屯田
-│   ├── 12-system-map.md      # 22 大系统总图
-│   └── ...
-├── package.json        # Monorepo 根 package
-├── pnpm-workspace.yaml # pnpm workspace 定义
-├── tsconfig.base.json  # TypeScript 基础配置
-├── tsconfig.json       # TypeScript 配置
-├── vite.config.ts      # Vite 配置
-├── LICENSE             # MIT 许可证
-├── AGENTS.md          # AI 助手规则
-├── CONTRIBUTING.md    # 贡献指南
-├── CREDITS.md         # 第三方致谢
-└── HANDOFF.md         # 会话交接
+```bash
+pnpm build
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm verify-campaign
+pnpm verify-save-entities
+pnpm verify-save-campaign
+pnpm verify-save-battle
+pnpm verify-save-diplomacy
+pnpm verify-save-intel
+pnpm verify-save-plot
+pnpm verify-save-game-state
+pnpm verify-save-migration
+pnpm validate-data
+pnpm verify-scenario-events
 ```
 
----
+The default CI includes the deterministic campaign engine integration check (62 assertions), save-entity (10), save-campaign (9), three-tier battle-boundary (24), diplomacy-state (11), intel-state (12), plot-state (9), complete GameState cross-reference (10), and v1 save-migration/runtime-restore/PRNG (19) checks. Dedicated duel, critical-hit, child-engine, and fire-tactic verification scripts remain available in `server/src/scripts/` and are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## 设计哲学
+## Architecture
 
-1. **玩法优先 · 小数据集验证**：先 30 城/9 兵种/30 将跑通架构，再 0-B 全量扩容
-2. **数字真源**：`docs/08-data-dictionary.md` 是所有规模数字的唯一真源
-3. **Zod 先于 JSON**：运行时校验确保数据完整性
-4. **完成即文档**：每个新功能必须同步更新受影响的设计文档
-5. **一次一个大系统**：对照 `12-system-map.md` 选定 Sxx，不并行
+```text
+client/   React + Vite + Konva reference UI
+   │
+   ├── REST / WebSocket
+   ▼
+server/   Express API, game orchestration, simulation engines, validated JSON data
+   │
+   ▼
+shared/   TypeScript contracts, Zod schemas, enums, and deterministic utilities
 
----
-
-## 开发路线
-
-```
-Phase 0-A → 架构骨架 + 30城小数据（当前）
-Phase 0-B → 全量数据（105城/1000将/21兵种）
-Phase 1  → 地图 & 回合
-Phase 2  → 内政 & 人事
-Phase 3  → 战斗系统深化（单挑引擎·武魁大会·战法UI）
-Phase 4  → 外交 & 事件 & 婚姻
-Phase 5  → AI & 打磨
+docs/     Rules, data dictionary, architecture decisions, progress, and playbooks
 ```
 
-**当前重点**：190《关东义兵》四槽技术切片已完成；下一步先扩展无城军团/寄驻/从属军模型，再审定约30势力全量开局（仍属0-B，未完成）。原优先队列总军师→设施回合化→势力特点→AI Army 保留。
+| Layer | Technology | Responsibility |
+|:--|:--|:--|
+| Client | React 18, TypeScript, Vite, Konva, Zustand, Tailwind | Reference interface and Canvas visualization |
+| Server | Express, TypeScript, WebSocket | Authoritative state and simulation rules |
+| Shared | TypeScript, Zod | Contracts, validation, and pure utilities |
+| Tests | Vitest + verification scripts | Pure-function and engine regression checks |
 
----
+The project uses a pnpm monorepo. Static data is validated through Zod before it reaches the simulation. `docs/08-data-dictionary.md` is the single source of truth for dataset scale, while `docs/12-system-map.md` records system maturity.
 
-## 贡献
+## Development roadmap
 
-参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+Near-term priorities are to harden the framework before expanding the dataset:
 
----
+1. improve automated engine and end-to-end coverage;
+2. implement delegated armies and connect campaign AI to the Army model;
+3. remove 0-A simplifications in facilities, formation modifiers, and campaign resolution;
+4. add durable save/load support;
+5. prepare a reproducible public demo and the first tagged pre-release;
+6. only then expand toward the full 0-B historical dataset.
 
-## License · 许可证
+See [ROADMAP.md](ROADMAP.md) for the contributor-facing plan and [docs/09-roadmap.md](docs/09-roadmap.md) for the detailed engineering backlog.
 
-**Source code** is licensed under the [MIT License](./LICENSE).
+## Contributing
 
-**Game assets** (images, audio, fonts, and other media) may have separate licenses. Please refer to [CREDITS.md](./CREDITS.md) for details.
+Contributions are welcome, especially in tests, historical-source review, data validation, accessibility, documentation, and isolated engine improvements.
 
----
+Please read [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and the repository rules in [AGENTS.md](AGENTS.md) before opening a pull request. Security issues should follow [SECURITY.md](SECURITY.md), not a public issue.
 
-**源代码** 以 [MIT 协议](./LICENSE) 授权。
+## Originality, historical sources, and assets
 
-**游戏素材**（图片、音频、字体及其他媒体）可能适用不同的许可协议，详见 [CREDITS.md](./CREDITS.md)。
+This is an independent original project. It is not affiliated with, endorsed by, or derived from Koei Tecmo, Baidu's San framework, or any commercial game franchise. Historical names and events are researched from public-domain classical sources; gameplay rules, code, interface composition, and programmatic art are original to this project.
+
+Source code is licensed under the [MIT License](LICENSE). Media and font assets may use separate licenses; provenance and attribution are recorded in [CREDITS.md](CREDITS.md) and [client/public/fonts/README.md](client/public/fonts/README.md).
+
+## Maintainer documentation
+
+- [Architecture](docs/02-architecture.md)
+- [Data models](docs/03-data-models.md)
+- [Game systems](docs/04-game-systems.md)
+- [API design](docs/06-api-design.md)
+- [Data dictionary](docs/08-data-dictionary.md)
+- [Progress log](docs/10-progress.md)
+- [Learning and contribution guide](docs/18-learning-guide.md)
+- [Design proposal templates](docs/19-design-proposal-templates.md)
+- [Architecture hardening audit](docs/20-architecture-hardening-audit.md)
+- [Session handoff](HANDOFF.md)

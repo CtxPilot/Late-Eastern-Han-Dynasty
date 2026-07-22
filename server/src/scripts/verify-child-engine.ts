@@ -205,6 +205,8 @@ function baseState(married: boolean): GameState {
     campaignNodes: [],
     grandStrategists: [],
     activeBattles: [],
+    activeBattlefield: null,
+    activeMelee: null,
     diplomacy: [],
     intel: emptyIntel(),
     plots: [],

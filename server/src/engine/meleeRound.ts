@@ -48,6 +48,10 @@ const TACTICAL_COSTS: Record<TacticalActionType, number> = {
   counter_stratagem: 2,
 };
 
+export function getTacticalActionCost(actionType: TacticalActionType): number | null {
+  return TACTICAL_COSTS[actionType] ?? null;
+}
+
 /** 阵型攻防修正（0-A 简化，仅 Lv1） */
 const FORMATION_MODS: Record<string, { atk: number; def: number; mobility: number }> = {
   square:     { atk: 0.0,  def: 0.30, mobility: 0.8  },  // 方阵

@@ -1404,18 +1404,18 @@ export interface GameState {
   cities: Record<number, City>;
   factions: Record<number, Faction>;
   females: Record<number, FemaleCharacter>;
-  beauties: Beauty[];
-  passes: Record<number, Pass>;
-  minorities: Record<EthnicGroup, MinorityState>;
 
-  // 资源
-  factionResources: Record<number, ResourceStock>;
-
-  // 活跃部队
+  // 旧战术层与当前战役层
   armys: Army[];
-
-  // 进行中的战斗
+  campaignArmies: CampaignArmy[];
+  campaignNodes: CampaignNode[];
+  grandStrategists: GrandStrategist[];
   activeBattles: BattleState[];
+  activeBattlefield: BattlefieldMap | null;
+  activeMelee: MeleeState | null;
+  diplomacy: DiplomacyLink[];
+  intel: IntelState;
+  plots: Plot[];
 
   // 事件状态
   completedEvents: number[];
@@ -1423,40 +1423,20 @@ export interface GameState {
   invalidatedEvents: number[];
   eventChoices: Record<number, number>;
 
-  // 城市升级记录
-  cityUpgradeLogs: CityUpgradeLog[];
-
-  // 宝物归属
-  itemOwnership: Record<number, number>;
-
-  // 消耗品库存
-  consumableStock: Record<number, Record<number, number>>;
-
-  // 操作日志
   actionLog: GameAction[];
 }
 
-export interface SaveData {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  scenarioName: string;
+export interface GameAction {
   year: number;
   month: number;
-  playerFaction: string;
-  gameState: GameState;
-}
-
-export interface GameAction {
-  turn: number;
-  actionType: string;
-  actorId: number;         // 操作者武将ID 或 factionId
-  targetIds: number[];
-  description: string;
-  result: object;
+  type: string;
+  message: string;
 }
 ```
+
+以上根字段以 `shared/types/game.ts` 为代码真源。早期设计中的 `beauties`、`passes`、
+`minorities`、`factionResources`、升级记录与宝物库存尚未进入当前运行时 `GameState`，
+不得在 v1 快照 Schema 中凭文档旧稿虚构。
 
 ---
 
@@ -2127,4 +2107,47 @@ enum DelegationPolicy {
 
 ---
 
-*文档版本: v2.7 | 2026-07-19 | 新增 §21.4 委任军团数据类型*
+## 二十二、存档版本信封（S16 · Gate 2 基础契约）
+
+```typescript
+const CURRENT_SAVE_SCHEMA_VERSION = 1;
+
+interface SaveEnvelopeV1<TSnapshot = GameState> {
+  schemaVersion: 1;
+  createdAt: string;   // 带时区的 ISO 8601
+  updatedAt: string;   // 带时区的 ISO 8601
+  scenarioId: number;
+  rng: {
+    algorithm: 'xorshift32-v1';
+    state: number;      // 当前非零 uint32 内部寄存器，不只是初始 seed
+    draws: number;      // 已消费次数，供审计随机流漂移
+  };
+  snapshot: TSnapshot;
+}
+```
+
+`shared/save.ts` 保留通用 `parseSaveEnvelopeV1(input, snapshotSchema)`，并新增 `migrateSaveEnvelopeToCurrent(input)` 与 `parseCurrentSaveEnvelope(input)`。入口先按 `schemaVersion` 显式分发，再以严格 v1 信封和完整 `GameStateSchema` 校验；当前首版就是 v1，因此 v1 分支为恒等迁移，未登记旧版本、未来版本、缺失或非数字版本一律抛出 `UnsupportedSaveVersionError`，不得猜测升级。通用解析器仍要求显式快照 Schema，生产路径禁止传入 `z.unknown()` 绕过快照校验。
+
+`shared/game-state-schema.ts` 已增加首个可组合部件 `GameStateTimelineSchema`，覆盖剧本、年月、季节、玩家势力、事件层、事件账本与操作日志，并严格拒绝未知字段；月份与季节还必须符合 1~3月春、4~6月夏、7~9月秋、10~12月冬。它使用 `Pick<GameState, ...>` 与实际根类型绑定，但当前仍只是组合部件；计谋域补齐并完成全根组合与跨切片校验前，仍不得作为生产快照 Schema。
+
+`shared/game-state-entity-schema.ts` 增加第二个组合部件 `GameStateEntitiesSchema`，覆盖运行时 `Officer`、`City`、`Faction`、`FemaleCharacter`。静态字段复用既有 Zod shape，运行时枚举使用 `z.nativeEnum` 与 TypeScript 类型对齐；记录键必须等于实体 `id`，城市 `population` 必须等于四桶人口之和，婚配与赏赐状态互斥。`pnpm verify-save-entities` 会实际创建两个现有剧本并解析服务端权威实体切片；这仍不等于完整存档可用。
+
+`shared/game-state-campaign-schema.ts` 增加第三个组合部件 `GameStateCampaignSchema`，覆盖兼容保留的旧 `Army`、战役 `CampaignArmy`、`CampaignNode` 与 `GrandStrategist`，并细分 Squad、设施和围城状态 Schema。它拒绝兵力/军粮或城墙耐久超过上限、主副将/参谋重复任职、Squad 武将或阵位重复、节点自环/重复邻接，以及重复 Army/节点 ID 和同势力多个总军师。`pnpm verify-save-campaign` 会实际创建两个剧本，并在英雄集结中完成一次合法编成与一次总军师任命后解析权威战役切片；验证参数从当前状态动态选择，不绑定固定武将驻地。
+
+`shared/game-state-battle-schema.ts` 增加第四个组合部件 `GameStateBattleSchema`，严格覆盖六角 `BattleState`、Tier I `BattlefieldMap` 与 Tier II `MeleeState`，包括嵌套战斗单位、节点、陷阱和单挑状态。除容量、坐标、阶段、归属与 ID 唯一性外，还校验战场目标节点、节点 Army 引用，以及白刃战必须归属于当前战场且双方 Army 均在该战场。`pnpm verify-save-battle` 会实际建局并依次执行六角战斗、战场初始化、白刃战回合、分层退出和重新建局边界。
+
+`shared/game-state-diplomacy-schema.ts` 增加第五个组合部件 `GameStateDiplomacySchema`，覆盖 `DiplomacyLink[]`。关系枚举与 `DipRelation` 真源对齐，友好度限制为 -100~100，禁止自外交，并以无向势力对识别 `1↔2` / `2↔1` 重复关系。`pnpm verify-save-diplomacy` 会解析两个真实剧本的初始外交状态，并真实执行两次进贡与一次缔盟后重新校验权威状态。关系中的势力 ID 是否存在属于跨切片引用，留待完整 `GameState` Schema 组合时校验。
+
+`shared/game-state-intel-schema.ts` 增加第六个组合部件 `GameStateIntelSchema`，严格覆盖情报报告、特工、城级反间、任务日志、序号及献美点化额度。除日期、等级、技能和资源范围外，还校验特工 Record 键与 `id` 一致、被俘状态与俘获势力成对、死亡特工无所在城市，以及反间驻守记录与特工 `counter_duty` 状态/位置双向一致；同一特工不得驻守多城。`pnpm verify-save-intel` 会解析两个真实剧本，并实际执行招募、驻守反间、撤防后逐步重新解析权威状态。本轮同时修复 `pruneExpiredIntel()` 重建情报状态时漏掉 `plantableBeauty`、导致献美点化额度随回合清理丢失的问题。城市与势力引用是否存在仍属于完整组合 Schema 的跨切片职责。
+
+`shared/game-state-plot-schema.ts` 增加第七个组合部件 `GameStatePlotSchema`，严格覆盖 `Plot[]`、成本与结算结果。计谋 ID 必须唯一；准备期必须有正数倒计时且无结果，生效期必须有正数倒计时和结果，已结算状态必须倒计时归零且有结果。四类计谋的目标形状也与当前引擎收口：离间计只指定目标势力，假情报指定敌势力与城市，空城疑兵只指定己方城市，美人计可额外指定武将及女间谍；`inverted` 仅属于空城疑兵。`pnpm verify-save-plot` 会解析两个真实剧本，并实际执行离间计发起、扣除 200 金和推进一回合结算，每一步重新解析权威状态。势力、城市、武将及特工引用是否存在仍由下一步完整组合 Schema 统一检查。
+
+`shared/game-state-full-schema.ts` 将上述七个切片组合为严格 `GameStateSchema`：根字段禁止遗漏或混入瞬态字段，并统一校验城市、势力、武将、女性角色、战役节点、CampaignArmy、三级战斗、外交、谍报和计谋的跨切片引用；事件完成/待处理/失效三账本不得交叉。组合层复用各切片 Schema，不复制域内规则。`BattleUnit.armyId` 是六角战斗内部编组 ID，不是旧 `GameState.armys` 外键；出征后 `Officer.location` 可保留行政归属，因此城市驻留清单只采用“清单内武将必须指向本城”的单向一致性约束。`pnpm verify-save-game-state` 覆盖两剧本、真实计谋和 7 类非法跨引用/根字段，10/10；三级战斗验证另以真实进行中状态确认完整 Schema，24/24。
+
+**当前持久化边界（Session 148）**：已采用“完整保存进行中战斗 + 确定性续玩”方案。六角战斗、战场地图、白刃战均以 `GameState` 为权威真源；v1 信封新增严格 `rng` 状态，固定算法标识 `xorshift32-v1`、非零 uint32 内部寄存器与消费计数。`shared/rng.ts` 提供可序列化 `SerializableRng`，服务端 `runtime-rng.ts` 持有唯一权威实例；新建游戏重置随机流，`restoreGameFromEnvelope` 与权威快照一同恢复 PRNG。单测及真实恢复验证已证明保存点之后连续 8 次结果与消费计数完全一致，迁移/恢复检查 19/19。当前尚未把 civil/plot/personnel/family/spy/AI 及全部 battle 路径的 `Math.random()` 逐域接入该实例，因此确定性基础契约已成立，但不能宣称所有玩法都已确定性续玩。生产存取入口和实际存储介质仍未完成。
+
+后续加载顺序固定为：解析 JSON → 识别版本/迁移 → 当前信封校验 → 当前快照 Schema 校验 → 重建非持久化运行时上下文。连接、动画、选择框、网络重试等瞬态状态不得加入信封。
+
+---
+
+*文档版本: v4.3 | 2026-07-22 | v1 可序列化 PRNG 与确定性续玩基础契约*
