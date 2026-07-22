@@ -74,6 +74,8 @@ POST   /api/v1/games/:id/load/:saveId
   Response: { gameState: GameState }
 ```
 
+> **实现状态（Session 157）**：以上三个存档 HTTP 端点仍是设计稿，当前不可调用。代码层已经具备严格 v1 信封、完整 `GameState` 校验、迁移分派、受锁内存恢复和 `xorshift32-v1` 状态恢复；尚未接入磁盘/SQLite、存档列表、正式 API 或前端 UI。
+
 ### 2.2 内政
 
 ```
@@ -741,4 +743,4 @@ POST   /api/v1/games/:id/faction/cultural-policy
 
 ---
 
-*文档版本: v2.7 | 2026-07-22 | Session 141 三级战斗 API 权威状态与校验边界*
+*文档版本: v2.8 | 2026-07-23 | Session 158 存档 API 设计/实装状态澄清*
