@@ -93,6 +93,9 @@ jobs:
       - name: Grand strategist deterministic continuation test
         run: pnpm verify-grand-strategist-rng
 
+      - name: AI military settlement deterministic continuation test
+        run: pnpm verify-ai-military-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 

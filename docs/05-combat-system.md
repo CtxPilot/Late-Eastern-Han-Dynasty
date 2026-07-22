@@ -4321,7 +4321,7 @@ interface WarResult {
 
 ## 二十一、确定性随机流接入（Session 149）
 
-六角战斗的基础伤害浮动、火计、兵种战法、暴击/反击/连击和敌方六角行动，统一由服务编排层显式注入服务端权威 `runtimeRandom`。`calcDamage` 与 `runSimpleEnemyAi` 不再自行读取 `Math.random()`；同一次攻击的基础伤害与事件链按固定调用顺序消费同一 `xorshift32-v1` 随机流。AI 军事结算复用 `calcDamage` 的伤害路径也因此接入权威源，但 AI 的目标选择与出征决策仍属于 S15 后续收口范围。
+六角战斗的基础伤害浮动、火计、兵种战法、暴击/反击/连击和敌方六角行动，统一由服务编排层显式注入服务端权威 `runtimeRandom`。`calcDamage` 与 `runSimpleEnemyAi` 不再自行读取 `Math.random()`；同一次攻击的基础伤害与事件链按固定调用顺序消费同一 `xorshift32-v1` 随机流。AI 军事的自动战斗伤害、袭扰伤亡与占城战利品结算也接入权威源；目标选择、是否出征/袭扰仍属于 S15 独立决策边界。`pnpm verify-ai-military-rng` 以 7/7 验证袭扰结算的存档恢复一致性及决策不行动时的零消费。
 
 `pnpm verify-battle-rng` 会在同一保存点分别验证 10 次基础伤害与一次完整六角攻击。Session 150 又将 `createDuel` / `stepDuel` / `runDuelToCompletion` 的默认 `Math.random()` 全部改为必填 RNG 注入，服务层统一传入 `runtimeRandom`；`pnpm verify-duel-rng` 证明恢复后完整单挑的七指令、隐藏属性判定、受伤和专属触发完全一致（3/3）。
 

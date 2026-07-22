@@ -91,6 +91,7 @@ pnpm verify-personnel-rng
 pnpm verify-family-rng
 pnpm verify-beauty-rng
 pnpm verify-grand-strategist-rng
+pnpm verify-ai-military-rng
 pnpm validate-data
 pnpm verify-scenario-events
 ```
