@@ -75,6 +75,9 @@ jobs:
       - name: Duel deterministic continuation test
         run: pnpm verify-duel-rng
 
+      - name: Civil deterministic continuation test
+        run: pnpm verify-civil-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 
