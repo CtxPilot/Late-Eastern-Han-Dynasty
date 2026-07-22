@@ -69,6 +69,9 @@ jobs:
       - name: Save migration dispatch integration test
         run: pnpm verify-save-migration
 
+      - name: Battle deterministic continuation test
+        run: pnpm verify-battle-rng
+
       - name: Zod data validation
         run: pnpm validate-data
 

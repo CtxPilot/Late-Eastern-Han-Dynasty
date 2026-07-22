@@ -30,7 +30,11 @@ export function getUnitMatchup(
 }
 
 /** 05 §6.1 core formula (demo-proven simplified path) */
-export function calcDamage(attacker: DamageInput, defender: DamageInput): number {
+export function calcDamage(
+  attacker: DamageInput,
+  defender: DamageInput,
+  rng: () => number,
+): number {
   const baseAttack = attacker.unitAttack + attacker.officerWar / 10;
   const baseDefense = defender.unitDefense + defender.officerLeadership / 10;
 
@@ -45,6 +49,6 @@ export function calcDamage(attacker: DamageInput, defender: DamageInput): number
 
   // floor so near-parity stats still deal meaningful troop loss (05 §6.1 structure)
   const raw = Math.max(1.5, finalAttack - finalDefense + 2);
-  const roll = 0.9 + Math.random() * 0.2;
+  const roll = 0.9 + rng() * 0.2;
   return Math.max(1, Math.round(raw * (attacker.troops / 30) * roll));
 }

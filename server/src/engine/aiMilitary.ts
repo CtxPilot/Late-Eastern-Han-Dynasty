@@ -13,6 +13,7 @@ import {
 } from '@leh/shared';
 import { getPlotAttackModifier, isEmptyFortDeterring } from './plot.js';
 import { getUnitByType } from '../data/loader.js';
+import { runtimeRandom } from '../runtime-rng.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { clearCityCounterOnCapture } from './spy.js';
@@ -119,6 +120,7 @@ function autoResolveBattle(
         morale: 70,
         terrain: 'plain' as any,
       },
+      runtimeRandom,
     );
     def = Math.max(0, def - atkDmg);
 
@@ -146,6 +148,7 @@ function autoResolveBattle(
         morale: 80,
         terrain: 'plain' as any,
       },
+      runtimeRandom,
     );
     atk = Math.max(0, atk - defDmg);
   }

@@ -83,11 +83,12 @@ pnpm verify-save-intel
 pnpm verify-save-plot
 pnpm verify-save-game-state
 pnpm verify-save-migration
+pnpm verify-battle-rng
 pnpm validate-data
 pnpm verify-scenario-events
 ```
 
-The default CI includes the deterministic campaign engine integration check (62 assertions), save-entity (10), save-campaign (9), three-tier battle-boundary (24), diplomacy-state (11), intel-state (12), plot-state (9), complete GameState cross-reference (10), and v1 save-migration/runtime-restore/PRNG (19) checks. Dedicated duel, critical-hit, child-engine, and fire-tactic verification scripts remain available in `server/src/scripts/` and are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+The default CI includes the deterministic campaign engine integration check (62 assertions), save-entity (10), save-campaign (9), three-tier battle-boundary (24), diplomacy-state (11), intel-state (12), plot-state (9), complete GameState cross-reference (10), v1 save-migration/runtime-restore/PRNG (19), and battle deterministic-continuation (5) checks. Dedicated duel, critical-hit, child-engine, and fire-tactic verification scripts remain available in `server/src/scripts/` and are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Architecture
 
