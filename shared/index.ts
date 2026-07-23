@@ -5,6 +5,7 @@ export * from './enums/index.js';
 export * from './types/index.js';
 export * as validators from './validators/index.js';
 export * from './data/cities-geo-reference.js';
+export * from './data/historical-geography/index.js';
 export * from './demographics.js';
 export * from './ceiling.js';
 export * from './city-roads.js';
