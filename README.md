@@ -47,7 +47,7 @@ For the precise playable path and known boundaries, see [Demo build and playbook
 |:---:|:---:|:---:|
 | ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) | ![Officer roster](docs/screenshots/leh-personnel-officers.png) |
 
-The officer profiles are generated with SVG/CSS in the project's original “rubbing, bamboo-slip, and official-seal” visual system. They do not use commercial character art.
+The four featured officer profiles use the project's new ink-and-cinnabar portrait set; the remaining roster keeps the original SVG/CSS procedural fallback.
 
 | Lü Bu | Guan Yu | Zhuge Liang | Cao Cao |
 |:---:|:---:|:---:|:---:|
@@ -129,11 +129,12 @@ The project uses a pnpm monorepo. Static data is validated through Zod before it
 Near-term priorities are to harden the framework before expanding the dataset:
 
 1. improve automated engine and end-to-end coverage;
-2. implement delegated armies and connect campaign AI to the Army model;
-3. remove 0-A simplifications in facilities, formation modifiers, and campaign resolution;
-4. add durable save/load support;
-5. prepare a reproducible public demo and the first tagged pre-release;
-6. only then expand toward the full 0-B historical dataset.
+2. implement BF-P1 on top of the completed Nanjun historical-geography schema: enter the commandery battlefield, march between county nodes, resolve an encounter, and write results back once;
+3. deepen the now-integrated CampaignArmy military AI beyond its current single-army/simple-formation baseline;
+4. remove 0-A simplifications in facilities, formation modifiers, and campaign resolution;
+5. add durable save/load support;
+6. prepare a reproducible public demo and the first tagged pre-release;
+7. only then expand toward the full 0-B historical dataset.
 
 See [ROADMAP.md](ROADMAP.md) for the contributor-facing plan and [docs/09-roadmap.md](docs/09-roadmap.md) for the detailed engineering backlog.
 
