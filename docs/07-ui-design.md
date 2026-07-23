@@ -840,7 +840,7 @@ AccSection·君主
 - `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。
 - `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
 - `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
-- `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片）：纯 SVG/CSS 程序化拓印头像，不依赖外部立绘。四位重点人物手工指定脸型、冠式、胡须、墨色、氏族题签与朱砂姓名印；其余人物按属性与 ID 生成稳定默认轮廓。此切片实现 C 五官轮廓 + B 文字层 + 程序化纸墨底色，**尚未接入 A 层公有领域汉代拓片切片，也尚未把 `avatarGene` 落库**，不得误记为 P5-10 全量完成。
+- `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片，Session 166 素材替换）：吕布、关羽、诸葛亮、曹操改用工程内金石水墨 PNG，继续叠加氏族题签、朱砂姓名印与印绶色条；其余人物仍按属性与 ID 生成稳定 SVG/CSS 默认轮廓。`avatarGene` 尚未落库，四张位图也只是重点人物替换，**不得误记为 P5-10 全量完成**。
 - **抽象头像的目标不是写实，而是符号化辨识**：每名重点人物只强化 1~2 个有历史/文本依据的轮廓符号（冠式、胡须、眉眼、持物或官印），其余细节服从统一几何语法。辨识度须通过不显示姓名的快速识别测试验证，不能仅凭维护者主观判断。
 - 四名现有切片的符号基线：吕布=双翎武冠+锐脸/虬髯；关羽=方脸+长髯；诸葛亮=文冠+长脸/山羊胡；曹操=王者冠式+圆脸/短髯。后续不得直接照搬现代影视、动漫或商业游戏的专有服饰与构图。
 - 一致性由代码和设计 token 保证：统一 viewBox/头肩比例、眼眉线宽、墨线、宣纸色域、朱砂印和内部字体别名；不得依赖外部 AI 每批“风格相近”的主观输出。势力色只作辅助状态标记，不把历史人物永久绑定到会变化的游戏势力。
@@ -1284,4 +1284,4 @@ P1 南郡最小画面应包含：
 
 ---
 
-*文档版本: v3.9 | 2026-07-23 | Session 162 郡域战场与场景栈 UI 方向批准*
+*文档版本: v4.0 | 2026-07-23 | Session 166 四名代表人物位图头像替换*
