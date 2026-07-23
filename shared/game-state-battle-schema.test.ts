@@ -33,12 +33,12 @@ function validBattle() {
     attackerFaction: 2, defenderFaction: 1, isSiege: true,
     cityId: 13, fromCityId: 15, settled: false,
     units: [
-      { id: 'atk-1', armyId: 'a1', commanderId: 6, factionId: 2, side: 'attacker' as const,
+      { id: 'atk-1', armyId: 'a1', commanderId: 6, commanderName: '关羽', factionId: 2, side: 'attacker' as const,
         unitType: UnitType.HEAVY_CAVALRY, formation: FormationType.WEDGE,
         troopCount: 4000, maxTroops: 4000, morale: 90, food: 1000,
         position: { q: 2, r: 3 }, mp: 6, maxMp: 6, energy: 100, maxEnergy: 100,
         hasActed: false, isRetreated: false, isDestroyed: false, statusEffects: [] },
-      { id: 'def-1', armyId: 'd1', commanderId: 1, factionId: 1, side: 'defender' as const,
+      { id: 'def-1', armyId: 'd1', commanderId: 1, commanderName: '曹操', factionId: 1, side: 'defender' as const,
         unitType: UnitType.HEAVY_INFANTRY, formation: FormationType.SQUARE,
         troopCount: 3000, maxTroops: 3000, morale: 80, food: 1000,
         position: { q: 16, r: 11 }, mp: 3, maxMp: 3, energy: 100, maxEnergy: 100,
@@ -62,6 +62,12 @@ describe('GameStateBattleSchema', () => {
     const battle = validBattle();
     battle.units[0]!.troopCount = 4001;
     expect(() => BattleStateRuntimeSchema.parse(battle)).toThrow(/兵力不能超过上限/);
+  });
+
+  it('requires a non-empty commander name snapshot for battle presentation', () => {
+    const battle = validBattle();
+    battle.units[1]!.commanderName = '';
+    expect(() => BattleStateRuntimeSchema.parse(battle)).toThrow();
   });
 
   it('rejects malformed terrain dimensions and out-of-bounds units', () => {

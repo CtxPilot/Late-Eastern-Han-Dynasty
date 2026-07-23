@@ -16,8 +16,12 @@ export function DuelPanel({ duel }: { duel: DuelState }) {
   const [mode, setMode] = useState<'full' | 'fast' | 'skip'>('full');
   const [idx, setIdx] = useState(0);
 
-  const challengerName = game?.officers[duel.challengerId]?.name ?? '挑战方';
-  const defenderName = game?.officers[duel.defenderId]?.name ?? '应战方';
+  const battle = useGameStore((s) => s.battle);
+  const commanderName = (officerId: number) =>
+    battle?.units.find((unit) => unit.commanderId === officerId)?.commanderName ??
+    game?.officers[officerId]?.name;
+  const challengerName = commanderName(duel.challengerId) ?? '挑战方';
+  const defenderName = commanderName(duel.defenderId) ?? '应战方';
   const rounds = duel.roundHistory;
   const shownRound = rounds[Math.min(idx, rounds.length - 1)];
   const resolved = duel.phase === 'resolved' && !!duel.result;
@@ -68,7 +72,7 @@ export function DuelPanel({ duel }: { duel: DuelState }) {
         <div className="mb-3 max-h-24 overflow-y-auto rounded bg-stone-900/70 p-2 text-sm text-stone-300">
           {duel.dialogueLog.map((d, i) => (
             <div key={i} className="mb-1">
-              <span className="text-amber-400">{game?.officers[d.speakerId]?.name ?? ''}：</span>
+              <span className="text-amber-400">{commanderName(d.speakerId) ?? ''}：</span>
               {d.text}
             </div>
           ))}
