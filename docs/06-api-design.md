@@ -301,6 +301,54 @@ POST   /api/v1/games/:id/battles/:battleId/retreat
   Response: { battle: BattleState, retreatSuccess: boolean }
 ```
 
+#### 独立郡域战场 API（P1～P3 规划，当前不可调用）
+
+> Q1～Q8 已批准；以下只登记正式接口方向，不代表路由或 Schema 已实现。P0 只完成资料与 Schema 契约，不提供玩法端点。现有 Demo `/api/game/battlefield/*` 与“当前单场”状态在 P2 前继续作为兼容路径。
+
+```text
+POST /api/v1/games/:id/battlefields
+  创建战争与战场实例
+  Body: { campaignArmyId, targetCommanderyId, entryRouteId }
+  Response: { battlefield: BattlefieldInstance }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/enter
+  Army 到达郡界后从已校验入口进入
+  Body: { armyId, entryNodeId }
+  Response: { battlefield: BattlefieldInstance }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/armies/:armyId/march
+  郡域节点间行军
+  Body: { targetNodeId }
+  Response: { battlefield: BattlefieldInstance, encounter?: Encounter }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/encounters
+  同节点接触、攻击驻军或强攻城池时创建接战
+  Body: { nodeId, attackerArmyIds, defenderArmyIds }
+  Response: { encounter: Encounter }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/encounters/:encounterId/start
+  从同一战前快照选择自动/标准/六角微操
+  Body: { mode: 'auto' | 'standard' | 'tactical' }
+  Response: { encounter: Encounter, melee?: MeleeState, battle?: BattleState }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/encounters/:encounterId/settle
+  接战结果幂等回写郡域实例
+  Body: { result: EncounterResult }
+  Response: { battlefield: BattlefieldInstance }
+
+POST /api/v1/games/:id/battlefields/:battlefieldId/settle
+  战争结束后原子回写行政大地图
+  Body: { expectedVersion, settlementId }
+  Response: { settlement: BattlefieldSettlement, gameState: GameState }
+```
+
+权威边界：
+
+- 服务端校验外交、Army 归属、入口、节点邻接、接战双方和结算版本；客户端不得直接提交控制权或伤亡差值。
+- `settlementId` 必须幂等；一支 Army 不得同时属于两个活动战场。
+- P2 起 `BattlefieldInstance` / `Encounter` 进入完整 `GameState` 快照；场景栈、镜头和动画不进入 API 存档负载。
+- P3 所有动态生成及战场 AI 行动选择统一消费权威 `xorshift32-v1`，禁止客户端或端点私建随机源。
+
 ### 2.6 外交
 
 ```
@@ -745,4 +793,4 @@ POST   /api/v1/games/:id/faction/cultural-policy
 
 ---
 
-*文档版本: v3.0 | 2026-07-23 | Session 160 战斗主将身份揭示契约*
+*文档版本: v3.1 | 2026-07-23 | Session 162 独立郡域战场规划端点登记*

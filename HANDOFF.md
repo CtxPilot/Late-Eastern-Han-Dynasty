@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 161 完成**（S15 军事 AI 战争决策完善） |
+| 会话 | **Session 162 完成**（独立战场 Q1～Q8 批准与文档同步） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物程序化头像/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** |
-| 文档最新 | 本文件 · 10-progress v11.0 · 04-game-systems（Session 161 S15）· 06-api-design v3.0 · 07-ui-design（AI 战报）· **20-architecture-hardening-audit** · 12-system-map v7.9 · 05-combat-system v4.7 · 03-data-models v4.4 · 01-overview v2.6 · 02-architecture · 09-roadmap v2.0 · 08-data-dictionary v2.2 |
+| 文档最新 | 本文件 · 10-progress v11.1 · **21-battlefield-scene-design v1.0（已批准）** · 08-data-dictionary v2.2 · 03-data-models v4.5 · 05-combat-system v4.8 · 06-api-design v3.1 · 07-ui-design v3.9 · 02-architecture v2.7 · 09-roadmap v2.1 · 12-system-map v8.0 · CREDITS 郡县史料入口框架 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓 |
-| 玩法下一步 | 等待 `docs/21-battlefield-scene-design.md` Q1~Q8 拍板 → 独立战场场景 → 驻军差异化。**武将头像已有四人 C+B 简化切片；完整 A+C+B 与 Linux UI 适配仍留 Phase 5** |
+| 玩法下一步 | **启动独立战场 BF-P0：南郡历史地理资料校勘与 Schema 契约**；P0 详细 prompt 待用户派发。BF-P0～P6 已全线批准，驻军差异化仍排在独立战场之后 |
 
 ---
 
@@ -293,7 +293,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1** | 按用户顺序：等待 `docs/21-battlefield-scene-design.md` Q1~Q8 拍板 → 推进独立战场场景 → 最后做驻军差异化配置 |
+| **1** | 等用户派发 BF-P0 详细 prompt：南郡历史地理资料校勘与 Schema 契约；本轮未提前写 Schema/JSON/引擎 |
+| **Session 162 已完成** | Q1～Q8 于 2026-07-23 全部按推荐方案批准；同步 21/08/03/05/06/07/02/09/12/CREDITS/10/HANDOFF，统一 105 为“105 行政治所 ↔ 105 郡国模板”，县总数待校勘 |
 | **Session 161 已完成** | S15 军事 AI：外交排除、君主激进度、真实 CampaignArmy 出征/围城/自动战斗、行动日志战报；专用验证 29/29 |
 | **Session 160 已修复** | 敌将 `undefined` 根因已修：BattleUnit 携带正式交战姓名快照，未放宽大地图迷雾；Headless Chrome 实测宛城守将显示“许褚” |
 | 2 | 继续分类现有 `verify-*.ts`，只将确定性、无端口依赖的检查逐个接入 CI |
@@ -304,4 +305,4 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 ---
 
-*Session 161 交接 | 2026-07-23 | S15 军事 AI CampaignArmy 主路径完成；下一步等待独立战场 Q1~Q8 拍板*
+*Session 162 交接 | 2026-07-23 | 独立战场 Q1～Q8 与 BF-P0～P6 已批准；下一步等待 BF-P0 详细 prompt*

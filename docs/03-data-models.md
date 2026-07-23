@@ -24,6 +24,7 @@
 18. [战斗状态 BattleState](#十八战斗状态-battlestate)
 19. [单挑类型 DuelTypes](#十九单挑类型-dueltypes)
 20. [API 通用类型](#二十api-通用类型)
+23. [独立郡域战场设计契约](#二十三独立郡域战场设计契约)
 
 ---
 
@@ -2151,4 +2152,110 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 ---
 
-*文档版本: v4.4 | 2026-07-23 | Session 160 BattleUnit 主将姓名快照契约*
+## 二十三、独立郡域战场设计契约
+
+> **状态：Q1～Q8 已批准，以下仅为 P0 设计记录，尚未创建 TypeScript/Zod/JSON。** 字段定稿以 P0 Schema 评审为准，完整语义见 `docs/21-battlefield-scene-design.md`。
+
+```typescript
+type HistoricalConfidence = 'attested' | 'approximate' | 'inferred';
+
+interface CommanderyDefinition {
+  id: string;
+  name: string;
+  province: string;
+  seatCountyId: string;
+  worldCityId: number;
+  validFromYear?: number;
+  validToYear?: number;
+  variantOf?: string;
+  countyIds: string[];
+  localBounds: LocalBounds;
+  sourceRefs: string[];
+}
+
+interface CountyDefinition {
+  id: string;
+  name: string;
+  commanderyId: string;
+  role: 'seat' | 'county' | 'marquisate' | 'frontier';
+  validFromYear?: number;
+  validToYear?: number;
+  lon?: number;
+  lat?: number;
+  localX: number;
+  localY: number;
+  confidence: HistoricalConfidence;
+  locationNote?: string;
+  terrainTags: string[];
+  adjacentCountyIds: string[];
+  landmarkIds: string[];
+  sourceRefs: string[];
+}
+
+interface HistoricalRouteDefinition {
+  id: string;
+  commanderyId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  kind: 'road' | 'river' | 'pass' | 'ferry';
+  movementCost: number;
+  seasonal?: 'all' | 'dry' | 'wet';
+  confidence: HistoricalConfidence;
+  sourceRefs: string[];
+}
+
+interface BattlefieldLandmarkDefinition {
+  id: string;
+  commanderyId: string;
+  name: string;
+  kind: 'river' | 'lake' | 'marsh' | 'mountain' | 'pass' | 'ferry' | 'bridge' | 'port';
+  localGeometry: unknown; // P0 收紧为 point/polyline/polygon 判别联合
+  tacticalTags: string[];
+  confidence: HistoricalConfidence;
+  sourceRefs: string[];
+}
+
+interface BattlefieldInstance {
+  id: string;
+  warId: string;
+  templateId: string;
+  templateVersion: number;
+  scenarioDateAtCreation: string;
+  targetCommanderyId: string;
+  entryNodeIds: string[];
+  nodeStates: BattlefieldNodeState[];
+  routeStates: BattlefieldRouteState[];
+  armyIds: string[];
+  encounters: Encounter[];
+  turn: number;
+  phase: 'active' | 'settling' | 'resolved';
+  generationAudit: {
+    rngAlgorithm: 'xorshift32-v1';
+    rngDrawStart: number;
+    rngDrawEnd: number;
+    decisions: string[];
+  };
+}
+
+interface Encounter {
+  id: string;
+  battlefieldId: string;
+  nodeId: string;
+  attackerArmyIds: string[];
+  defenderArmyIds: string[];
+  mode?: 'auto' | 'standard' | 'tactical';
+  phase: 'pending' | 'active' | 'resolved';
+  result?: EncounterResult;
+}
+```
+
+契约边界：
+
+- `CountyDefinition` 是静态历史地理，不等于完整行政 `City`；可争夺状态只存在于 `BattlefieldNodeState`。
+- `BattlefieldInstance` 冻结 `templateVersion`，进入存档权威快照；场景栈、镜头和动画不入存档。
+- `Encounter` 是郡域战场与自动/标准/六角三种接战入口的共同边界，三者输出统一结果后再回写战场实例。
+- 所有动态随机函数显式注入权威 `xorshift32-v1`；静态模板解析零 RNG 消费。P3 进一步将战场 AI 行动选择纳入同一权威流，实现整场复现。
+
+---
+
+*文档版本: v4.5 | 2026-07-23 | Session 162 独立郡域战场接口设计登记（未实装）*

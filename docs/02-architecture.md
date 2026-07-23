@@ -292,7 +292,7 @@ GameLayout
     └── 人口/内政/军事/日志
 ```
 
-**战斗屏幕**（`BattleView`）是独立全屏组件，覆盖在主布局之上。
+**战斗场景**是同一局游戏内的全屏场景。独立郡域战场批准后采用 Zustand 场景栈 `world → battlefield → melee/tactical → duel`，不为每层新增浏览器路由；服务端进行中状态仍是恢复与校验真源。
 
 ## 五、后端分层
 
@@ -349,15 +349,18 @@ GameLayout
 ### 战斗流程
 
 ```
-出征 (march.ts)
-  → 创建 BattleState + BattleUnit
-    → 玩家回合: 选单位 BFS 移动范围 → 执行指令
-      → 攻击/战法/火计/移动 → 引擎计算 → 更新战场
-        → 敌方回合: simpleAi 决策
-          → 单挑触发: 6状态机(设计完成)
-            → 一方全灭/撤退 → settleBattle
-              → 占城/败撤/俘虏 → 更新 GameState
+行政大地图出征
+  → 服务端校验外交/编成/粮草/跨郡路径
+    → 创建 War + BattlefieldInstance，冻结历史模板版本
+      → Army 抵达郡界后从显式入口进入目标郡
+        → 郡域节点行军
+          → 同节点接触/攻击驻军/强攻城池 → Encounter
+            → 自动 / 标准 / 六角微操（同一战前快照）
+              → EncounterResult 回写郡域战场
+                → 战争结束后 BattlefieldSettlement 原子回写 GameState
 ```
+
+当前 Demo 仍使用 `activeBattlefield` / `activeMelee` 单场状态；上述正式实例化从 P1 开始分期实施，P2 才完成多实例、场景栈与中途恢复门禁。
 
 ### 服务端视野裁剪（S06）
 
@@ -539,14 +542,24 @@ server/src/data/loader.ts
 | `BattleState.activeStrategem` | `'none'\|'fire'\|'water'\|'ambush'?` | `shared/types/battle.ts` | 计谋三级联动视觉驱动字段 |
 | `gameStore.floatingDelta` | `{gold,food,reason}[]` | `client/src/stores/gameStore.ts` | 财政飘字 delta（前端算，非服务端字段） |
 
-### screen 状态机扩展（规划）
+### 场景栈扩展（已批准，P2 实装）
 
 ```
-当前: 'boot' | 'world' | 'battle'
-规划: 'boot' | 'world' | 'campaign' | 'tactical' | 'melee' | 'duel'
-                                        ↑hex       ↑白刃    ↑单挑
-栈式回退：单挑结束回白刃，白刃结束回 hex，hex 结束回大地图
+应用壳: 'boot'（不进入游戏场景栈）
+游戏栈: 'scenario' | 'world' | 'battlefield' | 'melee' | 'tactical' | 'duel'
+
+回退：duel → melee/tactical → battlefield → world
 ```
+
+前端栈只保存场景 ID、镜头与选择等瞬态信息；`BattlefieldInstance`、`Encounter`、Army、节点控制、模板版本及权威 PRNG 快照属于服务端 `GameState`。刷新或读档时先恢复权威快照，再由进行中状态重建场景栈，禁止把前端栈反写为游戏真源。
+
+### 独立郡域战场数据流（已批准，P0～P6）
+
+- 静态层：版本化 `CommanderyDefinition` / `CountyDefinition` / route / landmark，经 Zod 校验后加载；全量目标与 105 个行政治所一一对应。
+- 实例层：`BattlefieldInstance` 冻结模板版本，记录 Army、节点/路线状态、Encounter 与生成审计。
+- 接战层：自动、标准和六角微操消费同一战前快照并输出统一 `EncounterResult`。
+- 回写层：单一幂等服务端事务同步城市控制、势力列表、Army、武将、伤亡与战利品。
+- 随机层：静态模板零 RNG；动态部署、天气、遭遇及 P3 战场 AI 行动显式注入权威 `xorshift32-v1`，实现整场复现。
 
 ### 0-B 前置技术债（D-0B-1~13）
 
@@ -554,4 +567,4 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.6 | 最后更新: 2026-07-23 | Session 158 S16 边界与技术债同步*
+*文档版本: v2.7 | 最后更新: 2026-07-23 | Session 162 独立郡域战场权威状态与场景栈批准*
