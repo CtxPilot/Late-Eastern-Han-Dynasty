@@ -809,6 +809,8 @@ AccSection·君主
 
 **现状缺口**：`TopBar.tsx:55` `gold.toLocaleString()` 纯文本无动画；`RightPanel.tsx:388-403` 行动日志静态列前 12 条无着色/无新条目高亮/无自动顶滚。
 
+**Session 161 当前能力**：AI 出征、袭扰和自动战斗胜败已写入既有 `GameState.actionLog`，分别使用 `ai_war_report` / `ai_battle_report`；玩家可在右栏「行动日志」看到“某势力自某城出征/袭扰/攻城胜败”的月度简讯。未新建通知面板；类型着色、自动顶滚与更完整战报筛选仍属于本 W2。
+
 **落地方案**：
 - `client/src/hooks/useAnimatedNumber.ts`（~30 行）：`useRef(cur)` + `requestAnimationFrame` easeOutCubic 插值 + `setDisplay` 每帧 setState。卸载 `cancelAnimationFrame`。挂到 TopBar 金/粮/兵/美女/城数 5 个数字。
 - EventLog 增强（改 `RightPanel.tsx:388-403`）：按 `action.type` 着色（famine→橙、ai_placeholder→灰、event→金、end_turn→琥珀、battle→红、civil→青）；新条目 `animate-[fadeIn_0.3s]`（tailwind.config.js 加 fadeIn keyframes）；自动顶滚 `scrollTo({top:0, behavior:'smooth'})`；显示条数 12→20。
@@ -1229,4 +1231,4 @@ Konva.Group（武将头像容器 120×150，border #3e2723）
 
 ---
 
-*文档版本: v3.7 | 2026-07-23 | Session 160 战斗敌将姓名显示修复*
+*文档版本: v3.8 | 2026-07-23 | Session 161 AI 战报复用行动日志*

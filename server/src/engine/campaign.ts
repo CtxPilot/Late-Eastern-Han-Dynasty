@@ -120,7 +120,12 @@ function pushLog(state: GameState, type: string, message: string): GameState {
 }
 
 function genArmyId(state: GameState, commanderId: number): string {
-  return `army-${commanderId}-${state.campaignArmies.length + 1}-${Date.now() % 100000}`;
+  const prefix = `army-${commanderId}-${state.currentYear}-${state.currentMonth}`;
+  let sequence = 1;
+  while (state.campaignArmies.some((army) => army.id === `${prefix}-${sequence}`)) {
+    sequence += 1;
+  }
+  return `${prefix}-${sequence}`;
 }
 
 function officerName(state: GameState, id: number): string {
@@ -128,14 +133,18 @@ function officerName(state: GameState, id: number): string {
 }
 
 /** 校验编成选项合法性 */
-export function validateFormation(state: GameState, opts: CampaignFormationOptions): void {
+export function validateFormation(
+  state: GameState,
+  opts: CampaignFormationOptions,
+  actingFactionId: number = state.playerFactionId,
+): void {
   const from = state.cities[opts.fromNodeId];
   if (!from) throw new Error('出发节点不存在');
-  if (from.ruler !== state.playerFactionId) throw new Error('出发节点非己方');
+  if (from.ruler !== actingFactionId) throw new Error('出发节点非己方');
 
   const target = state.cities[opts.targetNodeId];
   if (!target) throw new Error('目标节点不存在');
-  if (target.ruler === state.playerFactionId) throw new Error('目标已是己方');
+  if (target.ruler === actingFactionId) throw new Error('目标已是己方');
   if (target.ruler == null) throw new Error('暂不支持攻打无主节点');
 
   if (!areCitiesRoadAdjacent(opts.fromNodeId, opts.targetNodeId)) {
@@ -144,21 +153,24 @@ export function validateFormation(state: GameState, opts: CampaignFormationOptio
 
   const commander = state.officers[opts.commanderId];
   if (!commander) throw new Error('主将不存在');
-  if (commander.faction !== state.playerFactionId) throw new Error('主将非己方');
+  if (commander.faction !== actingFactionId) throw new Error('主将非己方');
   if (commander.status !== OfficerStatus.ACTIVE) throw new Error('主将不可出征');
   if (commander.location !== opts.fromNodeId) throw new Error('主将须在出发节点');
+  if (state.campaignArmies.some((army) =>
+    [army.commanderId, ...army.subCommanderIds, army.advisorId, army.subAdvisorId].includes(opts.commanderId)
+  )) throw new Error('主将已在其他战役 Army 中');
 
   for (const sid of opts.subCommanderIds) {
     const sub = state.officers[sid];
     if (!sub) throw new Error(`副将 ${sid} 不存在`);
-    if (sub.faction !== state.playerFactionId) throw new Error(`${sub.name} 非己方`);
+    if (sub.faction !== actingFactionId) throw new Error(`${sub.name} 非己方`);
     if (sub.location !== opts.fromNodeId) throw new Error(`${sub.name} 须在出发节点`);
   }
 
   if (opts.advisorId != null) {
     const adv = state.officers[opts.advisorId];
     if (!adv) throw new Error('参谋不存在');
-    if (adv.faction !== state.playerFactionId) throw new Error('参谋非己方');
+    if (adv.faction !== actingFactionId) throw new Error('参谋非己方');
     if (adv.stats.intelligence < 85) throw new Error('参谋智力须 ≥85（§5.5.8）');
     if (adv.location !== opts.fromNodeId) throw new Error('参谋须在出发节点');
   }
@@ -227,7 +239,16 @@ export function startCampaign(
   state: GameState,
   opts: CampaignFormationOptions,
 ): { state: GameState; army: CampaignArmy } {
-  validateFormation(state, opts);
+  return startCampaignForFaction(state, opts, state.playerFactionId);
+}
+
+/** 服务端权威入口：为指定势力创建 CampaignArmy；玩家 API 仍走 startCampaign。 */
+export function startCampaignForFaction(
+  state: GameState,
+  opts: CampaignFormationOptions,
+  actingFactionId: number,
+): { state: GameState; army: CampaignArmy } {
+  validateFormation(state, opts, actingFactionId);
 
   const from = state.cities[opts.fromNodeId];
   const limit = subCommanderLimit(state, opts.commanderId);
@@ -251,7 +272,7 @@ export function startCampaign(
 
   const army: CampaignArmy = {
     id: genArmyId(state, opts.commanderId),
-    factionId: state.playerFactionId,
+    factionId: actingFactionId,
     name: `${commander.name}军`,
     commanderId: opts.commanderId,
     subCommanderIds: opts.subCommanderIds,
@@ -852,9 +873,19 @@ export function assault(
   armyId: string,
   rng: () => number,
 ): { state: GameState; result: AutoBattleResult } {
+  return assaultForFaction(state, armyId, state.playerFactionId, rng);
+}
+
+/** 服务端权威入口：指定势力对其已接战 Army 执行自动强攻。 */
+export function assaultForFaction(
+  state: GameState,
+  armyId: string,
+  actingFactionId: number,
+  rng: () => number,
+): { state: GameState; result: AutoBattleResult } {
   const army = state.campaignArmies.find((a) => a.id === armyId);
   if (!army) throw new Error('Army 不存在');
-  if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
+  if (army.factionId !== actingFactionId) throw new Error('非己方 Army');
   if (army.phase !== 'sieging' && army.phase !== 'engaged') {
     throw new Error('当前阶段不可强攻');
   }
