@@ -2154,7 +2154,9 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 ## 二十三、独立郡域战场设计契约
 
-> **状态：Q1～Q8 已批准，以下仅为 P0 设计记录，尚未创建 TypeScript/Zod/JSON。** 字段定稿以 P0 Schema 评审为准，完整语义见 `docs/21-battlefield-scene-design.md`。
+> **状态：BF-P0 静态历史地理契约已实装。** 正式 Zod 与推导类型位于
+> `shared/data/historical-geography/schema.ts`；南郡 190 数据和只读预览位于同目录。
+> `BattlefieldInstance` / `Encounter` 仍只是 P2 设计记录，尚未实装。
 
 ```typescript
 type HistoricalConfidence = 'attested' | 'approximate' | 'inferred';
@@ -2200,6 +2202,9 @@ interface HistoricalRouteDefinition {
   kind: 'road' | 'river' | 'pass' | 'ferry';
   movementCost: number;
   seasonal?: 'all' | 'dry' | 'wet';
+  validFromYear?: number;
+  validToYear?: number;
+  variantOf?: string;
   confidence: HistoricalConfidence;
   sourceRefs: string[];
 }
@@ -2209,9 +2214,13 @@ interface BattlefieldLandmarkDefinition {
   commanderyId: string;
   name: string;
   kind: 'river' | 'lake' | 'marsh' | 'mountain' | 'pass' | 'ferry' | 'bridge' | 'port';
-  localGeometry: unknown; // P0 收紧为 point/polyline/polygon 判别联合
+  validFromYear?: number;
+  validToYear?: number;
+  variantOf?: string;
+  localGeometry: LocalPoint | LocalPolyline | LocalPolygon;
   tacticalTags: string[];
   confidence: HistoricalConfidence;
+  locationNote?: string;
   sourceRefs: string[];
 }
 
@@ -2249,6 +2258,16 @@ interface Encounter {
 }
 ```
 
+P0 定稿相对草案补充：
+
+- 四类静态记录均采用 `.strict()`，稳定 ID 使用小写 snake_case。
+- `sourceRefs` 是非空来源 ID 数组，指向同 bundle 的结构化 `HistoricalSource` 目录。
+- `localX/localY` 与所有 geometry 坐标强制在 0..1；经纬度必须成对出现且在合法范围。
+- `validFromYear <= validToYear`；`variantOf` 已预留于四类记录。
+- bundle 级校验覆盖 ID 唯一、来源/郡/县/地标/路线端点引用和县邻接对称性。
+- `confidence` 对县记录主要表达位置置信度；县名/隶属可有原典明文而位置仍为
+  `approximate` / `inferred`。
+
 契约边界：
 
 - `CountyDefinition` 是静态历史地理，不等于完整行政 `City`；可争夺状态只存在于 `BattlefieldNodeState`。
@@ -2258,4 +2277,4 @@ interface Encounter {
 
 ---
 
-*文档版本: v4.5 | 2026-07-23 | Session 162 独立郡域战场接口设计登记（未实装）*
+*文档版本: v4.6 | 2026-07-23 | Session 163 BF-P0 静态历史地理契约实装*

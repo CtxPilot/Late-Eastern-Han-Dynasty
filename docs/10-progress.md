@@ -3211,3 +3211,27 @@
 - Next：等待用户派发 BF-P0“南郡历史地理数据 Schema 与首批资料校勘”详细 prompt；本轮不提前启动。
 
 *文档版本: v11.1 | 2026-07-23 | Session 162 独立战场设计批准同步*
+
+## 2026-07-23 — Session 163（BF-P0 南郡历史地理 Schema 与首批校勘）
+
+- 范围严格限于 S02/S05/S10 独立战场 BF-P0 静态资料契约：未写生成引擎、Encounter、UI、
+  Zustand、游戏逻辑或 RNG。
+- 年代切片：采用现有英雄集结明确的 190 年；以《续汉书·郡国志》南郡十七城为基线，
+  以《三国志》刘表/周瑜传做年代边界复核，以《水经注》卷 32/34/35 校核江、沮/漳、
+  夏水、云梦、荆门虎牙与津渡。
+- Schema：新增 `shared/data/historical-geography/schema.ts`，正式落地 Commandery/County/
+  Route/Landmark、结构化来源目录与 point/polyline/polygon 几何。严格校验稳定 ID、非空
+  sourceRefs、有效期、0..1 坐标、经纬度成对、置信度、唯一 ID、跨引用及邻接对称性。
+- 数据：`nanjun-190.ts` 收录 1 郡、17 县、12 路线、10 地标；县名/隶属均有原典明文，
+  但不伪造古城址经纬度。中卢、编、邔、宜城、鄀、州陵、很山位置标 `inferred`，其余县
+  位置标 `approximate`；路线 8 条 attested、4 条 inferred。
+- 只读预览：`preview.ts` 仅排序复制静态数据，无 RNG 导入或消费；两次投影结果严格一致。
+- P0 验收逐项：逐条来源与方位说明 ✅；Zod/交叉引用/有效期/坐标/邻接对称 ✅；稳定零 RNG
+  预览 ✅；CREDITS 正式来源登记 ✅。专用测试 4 项；运行时无消费者，P1 尚未启动。
+- 发现两项 P1 前置冲突：190 史料层南郡包含襄阳，而当前世界地图另列襄阳节点；江陵旧
+  `countyCount: 7` 与校勘 17 县不一致。本轮遵守范围未改 `cities.json`，P1 必须显式处理。
+- 验证：shared 专用 schema 测试（连同匹配的 schema 测试 38/38）、shared typecheck、
+  全量 shared 测试、全仓 typecheck/lint/validate-data 与 `git diff --check`。
+- Next：用户审阅校勘结论与两项 P1 映射问题；确认后启动 BF-P1 静态郡域闭环。
+
+*文档版本: v11.2 | 2026-07-23 | Session 163 BF-P0 南郡历史地理契约*
