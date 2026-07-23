@@ -96,6 +96,9 @@ jobs:
       - name: AI military settlement deterministic continuation test
         run: pnpm verify-ai-military-rng
 
+      - name: Fog-masked march integration test
+        run: pnpm verify-march-fog
+
       - name: Zod data validation
         run: pnpm validate-data
 
