@@ -15,8 +15,11 @@ describe('BF-P0 historical geography schema', () => {
     expect(result.error?.issues).toEqual(undefined);
     expect(result.success).toBe(true);
     expect(nanjun190.commanderies).toHaveLength(1);
-    expect(nanjun190.counties).toHaveLength(17);
-    expect(nanjun190.commanderies[0]?.countyIds).toHaveLength(17);
+    expect(nanjun190.counties).toHaveLength(16);
+    expect(nanjun190.commanderies[0]?.countyIds).toHaveLength(16);
+    expect(nanjun190.counties.some(({ name }) => name === '襄阳')).toBe(false);
+    expect(nanjun190.landmarks.find(({ id }) => id === 'nanjun_xiangyang_ferry')?.tacticalTags)
+      .toContain('boundary_entry');
   });
 
   it('rejects out-of-range coordinates and missing source references', () => {
@@ -41,8 +44,8 @@ describe('BF-P0 historical geography schema', () => {
     const first = createHistoricalGeographyPreview(nanjun190);
     const second = createHistoricalGeographyPreview(nanjun190);
     expect(second).toEqual(first);
-    expect(first.counties).toHaveLength(17);
-    expect(first.routes).toHaveLength(12);
+    expect(first.counties).toHaveLength(16);
+    expect(first.routes).toHaveLength(11);
     expect(first.landmarks).toHaveLength(10);
   });
 });
