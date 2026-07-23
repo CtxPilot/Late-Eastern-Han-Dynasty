@@ -73,7 +73,7 @@ function stubOfficer(
 
 function stubUnit(id: string, side: 'attacker' | 'defender', commanderId: number, unitType: UnitType, formation: FormationType, troops: number): BattleUnit {
   return {
-    id, armyId: side === 'attacker' ? 'a1' : 'd1', commanderId,
+    id, armyId: side === 'attacker' ? 'a1' : 'd1', commanderId, commanderName: `武将${commanderId}`,
     factionId: side === 'attacker' ? 2 : 1, side,
     unitType, formation, troopCount: troops, maxTroops: troops, morale: 90, food: 1000,
     position: { q: side === 'attacker' ? 5 : 6, r: 5 },

@@ -1451,6 +1451,7 @@ export interface HexCoord {
 export interface BattleUnit {
   armyId: number;
   commanderId: number;
+  commanderName: string;    // 正式交战时揭示的姓名快照；不依赖全局迷雾 officers 投影
   factionId: FactionId;
   unitType: UnitType;
   formation: FormationType;
@@ -2134,7 +2135,7 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 `shared/game-state-campaign-schema.ts` 增加第三个组合部件 `GameStateCampaignSchema`，覆盖兼容保留的旧 `Army`、战役 `CampaignArmy`、`CampaignNode` 与 `GrandStrategist`，并细分 Squad、设施和围城状态 Schema。它拒绝兵力/军粮或城墙耐久超过上限、主副将/参谋重复任职、Squad 武将或阵位重复、节点自环/重复邻接，以及重复 Army/节点 ID 和同势力多个总军师。`pnpm verify-save-campaign` 会实际创建两个剧本，并在英雄集结中完成一次合法编成与一次总军师任命后解析权威战役切片；验证参数从当前状态动态选择，不绑定固定武将驻地。
 
-`shared/game-state-battle-schema.ts` 增加第四个组合部件 `GameStateBattleSchema`，严格覆盖六角 `BattleState`、Tier I `BattlefieldMap` 与 Tier II `MeleeState`，包括嵌套战斗单位、节点、陷阱和单挑状态。除容量、坐标、阶段、归属与 ID 唯一性外，还校验战场目标节点、节点 Army 引用，以及白刃战必须归属于当前战场且双方 Army 均在该战场。`pnpm verify-save-battle` 会实际建局并依次执行六角战斗、战场初始化、白刃战回合、分层退出和重新建局边界。
+`shared/game-state-battle-schema.ts` 增加第四个组合部件 `GameStateBattleSchema`，严格覆盖六角 `BattleState`、Tier I `BattlefieldMap` 与 Tier II `MeleeState`，包括嵌套战斗单位、节点、陷阱和单挑状态。除容量、坐标、阶段、归属与 ID 唯一性外，还要求每个六角战斗单位具有非空 `commanderName` 交战快照，并校验战场目标节点、节点 Army 引用，以及白刃战必须归属于当前战场且双方 Army 均在该战场。`pnpm verify-save-battle` 会实际建局并依次执行六角战斗、战场初始化、白刃战回合、分层退出和重新建局边界。
 
 `shared/game-state-diplomacy-schema.ts` 增加第五个组合部件 `GameStateDiplomacySchema`，覆盖 `DiplomacyLink[]`。关系枚举与 `DipRelation` 真源对齐，友好度限制为 -100~100，禁止自外交，并以无向势力对识别 `1↔2` / `2↔1` 重复关系。`pnpm verify-save-diplomacy` 会解析两个真实剧本的初始外交状态，并真实执行两次进贡与一次缔盟后重新校验权威状态。关系中的势力 ID 是否存在属于跨切片引用，留待完整 `GameState` Schema 组合时校验。
 
@@ -2150,4 +2151,4 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 ---
 
-*文档版本: v4.3 | 2026-07-22 | v1 可序列化 PRNG 与确定性续玩基础契约*
+*文档版本: v4.4 | 2026-07-23 | Session 160 BattleUnit 主将姓名快照契约*

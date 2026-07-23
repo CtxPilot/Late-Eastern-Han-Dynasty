@@ -4327,4 +4327,12 @@ interface WarResult {
 
 ---
 
-*战斗系统 v4.5 | Session 150 六角战斗与单挑确定性随机流收口*
+## 二十二、交战身份揭示边界（Session 160）
+
+六角战斗创建时，服务端继续以权威 `GameState.officers` 选择并计算双方主将，同时把主将姓名写入 `BattleUnit.commanderName` 作为战斗表现快照。`BattleView` 与 `DuelPanel` 只在该正式战斗内读取快照；大地图 `GameState.officers` 的 S06 裁剪规则不变，因此不会借由一次交战揭示其他城市或其他武将。
+
+城市没有本地驻留武将时，0-A 既有规则仍选取同势力后备武将，保证守军战斗单位始终关联有效权威武将；这不是初始驻军差异化配置。`pnpm verify-battle-commanders` 覆盖两剧本全部玩家视角下的可交战 AI 城池，以及刘备从襄阳进攻未探明宛城的迷雾边界。
+
+---
+
+*战斗系统 v4.6 | Session 160 战斗主将身份揭示契约*

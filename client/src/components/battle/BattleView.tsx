@@ -159,7 +159,7 @@ export function BattleView() {
                         strokeWidth={occ.id === selectedUnitId ? 3 : 1.5}
                       />
                       <Text
-                        text={game.officers[occ.commanderId]?.name.slice(0, 1) ?? '？'}
+                        text={occ.commanderName.slice(0, 1)}
                         fontFamily="HanDynastySerif"
                         fontSize={14}
                         fill="#fff"
@@ -233,7 +233,7 @@ export function BattleView() {
         <div className="flex gap-2 pointer-events-auto">
           {attacker && (
             <SideCard
-              title={`我军 · ${game.officers[attacker.commanderId]?.name}`}
+              title={`我军 · ${attacker.commanderName}`}
               troops={attacker.troopCount}
               morale={attacker.morale}
               energy={attacker.energy ?? 100}
@@ -241,7 +241,7 @@ export function BattleView() {
           )}
           {defender && (
             <SideCard
-              title={`敌军 · ${game.officers[defender.commanderId]?.name}`}
+              title={`敌军 · ${defender.commanderName}`}
               troops={defender.troopCount}
               morale={defender.morale}
               energy={defender.energy ?? 100}
@@ -368,4 +368,3 @@ function SideCard({
     </div>
   );
 }
-

@@ -99,6 +99,9 @@ jobs:
       - name: Fog-masked march integration test
         run: pnpm verify-march-fog
 
+      - name: Battle commander presentation integration test
+        run: pnpm verify-battle-commanders
+
       - name: Zod data validation
         run: pnpm validate-data
 

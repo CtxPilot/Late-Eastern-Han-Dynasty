@@ -81,6 +81,7 @@ pnpm verify-beauty-rng
 pnpm verify-grand-strategist-rng
 pnpm verify-ai-military-rng
 pnpm verify-march-fog
+pnpm verify-battle-commanders
 pnpm validate-data
 pnpm verify-scenario-events
 ```

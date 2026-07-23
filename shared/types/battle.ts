@@ -15,6 +15,11 @@ export interface BattleUnit {
   id: string;
   armyId: string;
   commanderId: number;
+  /**
+   * 交战时揭示的主将姓名快照。它属于战斗表现契约，不要求客户端读取
+   * 可能已被 S06 迷雾裁剪掉的全局 officers 表。
+   */
+  commanderName: string;
   factionId: FactionId;
   side: 'attacker' | 'defender';
   unitType: UnitType;

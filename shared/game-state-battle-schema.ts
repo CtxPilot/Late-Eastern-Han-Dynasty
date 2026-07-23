@@ -117,6 +117,7 @@ export const BattleUnitRuntimeSchema: z.ZodType<BattleUnit> = z
     id: z.string().min(1),
     armyId: z.string().min(1),
     commanderId: PositiveIdSchema,
+    commanderName: z.string().min(1),
     factionId: PositiveIdSchema,
     side: z.enum(['attacker', 'defender']),
     unitType: z.nativeEnum(UnitType),
