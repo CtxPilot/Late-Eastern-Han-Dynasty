@@ -93,7 +93,7 @@ jobs:
       - name: Grand strategist deterministic continuation test
         run: pnpm verify-grand-strategist-rng
 
-      - name: AI military settlement deterministic continuation test
+      - name: AI military diplomacy, campaign, and deterministic continuation test
         run: pnpm verify-ai-military-rng
 
       - name: Fog-masked march integration test

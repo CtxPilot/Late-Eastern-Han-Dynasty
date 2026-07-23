@@ -3936,7 +3936,7 @@ Part II 保留原§一~§八 战术战斗要素 · §九~§十一 参考保留*
 > - 阵型联动修正=0（阵型×暴击/反击/连击由§6 战术层处理，战役层后置接入）
 > - 总军师态势加成未接入自动战斗公式（后置）
 > - 郡国归属算法（§17.6）：0-A 30 城=30 郡国各 1 治所，占治所=全郡归属
-> - AI Army 编成/行军：当前仅玩家 Army，AI 军事仍走旧 `aiMilitary.ts`（后置接入）
+> - AI Army（Session 161）：军事决策通过后复用 `CampaignArmy` 编成扣兵粮、月度行军、围城、`runAutoBattle` 与战后结算；当前 AI 使用单主将/轻步兵/方阵的 0-A 简化编成，每势力同一时间只主动维持一支攻击 Army
 
 ---
 
@@ -4321,7 +4321,7 @@ interface WarResult {
 
 ## 二十一、确定性随机流接入（Session 149）
 
-六角战斗的基础伤害浮动、火计、兵种战法、暴击/反击/连击和敌方六角行动，统一由服务编排层显式注入服务端权威 `runtimeRandom`。`calcDamage` 与 `runSimpleEnemyAi` 不再自行读取 `Math.random()`；同一次攻击的基础伤害与事件链按固定调用顺序消费同一 `xorshift32-v1` 随机流。AI 军事的自动战斗伤害、袭扰伤亡与占城战利品结算也接入权威源；目标选择、是否出征/袭扰仍属于 S15 独立决策边界。`pnpm verify-ai-military-rng` 以 7/7 验证袭扰结算的存档恢复一致性及决策不行动时的零消费。
+六角战斗的基础伤害浮动、火计、兵种战法、暴击/反击/连击和敌方六角行动，统一由服务编排层显式注入服务端权威 `runtimeRandom`。`calcDamage` 与 `runSimpleEnemyAi` 不再自行读取 `Math.random()`；同一次攻击的基础伤害与事件链按固定调用顺序消费同一 `xorshift32-v1` 随机流。Session 161 又将 S15 军事的目标行动决定、CampaignArmy 自动战斗、袭扰伤亡与占城战利品统一到回合注入的权威源；`pnpm verify-ai-military-rng` 以 29/29 验证外交过滤、激进度、Army 全链与保存恢复复现。
 
 `pnpm verify-battle-rng` 会在同一保存点分别验证 10 次基础伤害与一次完整六角攻击。Session 150 又将 `createDuel` / `stepDuel` / `runDuelToCompletion` 的默认 `Math.random()` 全部改为必填 RNG 注入，服务层统一传入 `runtimeRandom`；`pnpm verify-duel-rng` 证明恢复后完整单挑的七指令、隐藏属性判定、受伤和专属触发完全一致（3/3）。
 
@@ -4335,4 +4335,4 @@ interface WarResult {
 
 ---
 
-*战斗系统 v4.6 | Session 160 战斗主将身份揭示契约*
+*战斗系统 v4.7 | Session 161 AI CampaignArmy 战争流程接入*

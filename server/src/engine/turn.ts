@@ -188,8 +188,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   // 计谋 S17：AI 发起 → 月度推进（准备→结算/ACTIVE）
   nextState = runAllAiPlots(nextState, rng);
   nextState = tickPlotsMonth(nextState, rng);
-  // AI 军事：读取假情报/空城权重后最简袭扰
-  nextState = runAiMilitary(nextState, rng);
+  // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
+  nextState = runAiMilitary(nextState, rng, rng);
   // 家族跟随 S18：在野武将自动投奔检定
   nextState = tickFollowCheck(nextState, rng);
   // 子女 S18：每年 1 月 appearYear 登场
@@ -220,7 +220,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
         type: 'ai_placeholder',
         message: d.message,
       })),
-      ...state.actionLog,
+      ...nextState.actionLog,
     ].slice(0, 80),
   };
 }
