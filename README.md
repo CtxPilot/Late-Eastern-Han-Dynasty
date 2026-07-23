@@ -47,11 +47,13 @@ For the precise playable path and known boundaries, see [Demo build and playbook
 |:---:|:---:|:---:|
 | ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) | ![Officer roster](docs/screenshots/leh-personnel-officers.png) |
 
-The four featured officer profiles use the project's new ink-and-cinnabar portrait set; the remaining roster keeps the original SVG/CSS procedural fallback.
+The new ink-and-cinnabar portraits are integrated into the complete officer dossier UI, alongside stats, appointments, skills, traits, and unit proficiency. The remaining roster keeps the original SVG/CSS procedural fallback.
 
-| Lü Bu | Guan Yu | Zhuge Liang | Cao Cao |
-|:---:|:---:|:---:|:---:|
-| ![Lü Bu profile](docs/screenshots/leh-officer-lv-bu.png) | ![Guan Yu profile](docs/screenshots/leh-officer-guan-yu.png) | ![Zhuge Liang profile](docs/screenshots/leh-officer-zhuge-liang.png) | ![Cao Cao profile](docs/screenshots/leh-officer-cao-cao.png) |
+| Lü Bu — portrait, stats, skills, and proficiency | Guan Yu — portrait, stats, skills, and proficiency |
+|:---:|:---:|
+| ![Lü Bu integrated officer dossier](docs/screenshots/leh-officer-lv-bu.png?v=167) | ![Guan Yu integrated officer dossier](docs/screenshots/leh-officer-guan-yu.png?v=167) |
+| Zhuge Liang — portrait, stats, skills, and proficiency | Cao Cao — portrait, stats, skills, and proficiency |
+| ![Zhuge Liang integrated officer dossier](docs/screenshots/leh-officer-zhuge-liang.png?v=167) | ![Cao Cao integrated officer dossier](docs/screenshots/leh-officer-cao-cao.png?v=167) |
 
 ## Quick start
 
