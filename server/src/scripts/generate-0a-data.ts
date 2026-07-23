@@ -747,7 +747,7 @@ const cities = [
   facilities: [],
   policy: null,
   developmentProgress: { farm: 0, commerce: 0, wall: 0 },
-  countyCount: 3 + (c.id % 5),
+  countyCount: c.id === 14 ? 17 : 3 + (c.id % 5),
 }));
 w('cities.json', cities);
 

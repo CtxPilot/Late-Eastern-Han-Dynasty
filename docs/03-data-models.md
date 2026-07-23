@@ -648,7 +648,7 @@ export interface City {
   terrain: TerrainType;
   maxPopulation: number;
   tier: CityTier;               // 城市等级 1~6
-  countyCount: number;           // 郡下辖县数（决定战斗地图小城数）
+  countyCount: number;           // 史实郡国下辖县数摘要；不直接决定战场节点数或参与数值公式
 
   stats: CityStats;
   gold: number;
@@ -2277,4 +2277,4 @@ P0 定稿相对草案补充：
 
 ---
 
-*文档版本: v4.6 | 2026-07-23 | Session 163 BF-P0 静态历史地理契约实装*
+*文档版本: v4.7 | 2026-07-23 | Session 164 大地图节点与史实郡县口径分离*
