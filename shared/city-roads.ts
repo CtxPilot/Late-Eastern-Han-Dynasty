@@ -13,6 +13,7 @@
  *
  * 改边须同步 docs/04 出征邻接说明与地图道路层。
  */
+import type { City } from './types/city.js';
 
 /** 无向边 [cityIdA, cityIdB] */
 export const CITY_ROAD_EDGES: ReadonlyArray<readonly [number, number]> = [
@@ -99,6 +100,32 @@ export function playerCitiesAdjacentTo(
   targetCityId: number,
 ): number[] {
   return playerCityIds.filter((id) => areCitiesRoadAdjacent(id, targetCityId));
+}
+
+/**
+ * 客户端是否可尝试向目标城出征。
+ *
+ * 目标城可能来自 S06 迷雾投影（ruler=null、troops=0），因此资格只依赖：
+ * - 目标不是可确认的己方城；
+ * - 至少一座己方城与目标道路邻接且驻军达到最低门槛。
+ *
+ * 不得读取目标驻军或要求目标 ruler 非空；真实归属与结算由服务端权威状态校验。
+ */
+export function canAttemptMarchTo(
+  cities: Record<number, Pick<City, 'id' | 'ruler' | 'troops'>>,
+  playerFactionId: number,
+  targetCityId: number,
+  minimumTroops = 1000,
+): boolean {
+  const target = cities[targetCityId];
+  if (!target || target.ruler === playerFactionId) return false;
+
+  return Object.values(cities).some(
+    (city) =>
+      city.ruler === playerFactionId &&
+      city.troops >= minimumTroops &&
+      areCitiesRoadAdjacent(city.id, targetCityId),
+  );
 }
 
 /** 所有道路边（地图绘制用） */

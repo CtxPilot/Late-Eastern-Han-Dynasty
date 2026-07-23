@@ -80,6 +80,7 @@ pnpm verify-family-rng
 pnpm verify-beauty-rng
 pnpm verify-grand-strategist-rng
 pnpm verify-ai-military-rng
+pnpm verify-march-fog
 pnpm validate-data
 pnpm verify-scenario-events
 ```

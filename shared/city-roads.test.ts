@@ -6,6 +6,7 @@ import {
   CITY_ROAD_EDGES,
   roadNeighbors,
   areCitiesRoadAdjacent,
+  canAttemptMarchTo,
   canMarchAlongRoad,
   playerCitiesAdjacentTo,
   allRoadEdges,
@@ -97,6 +98,30 @@ describe('playerCitiesAdjacentTo', () => {
 
   it('returns empty if no player cities adjacent', () => {
     expect(playerCitiesAdjacentTo([30], 1)).toEqual([]);
+  });
+});
+
+describe('canAttemptMarchTo', () => {
+  const cities = {
+    13: { id: 13, ruler: null, troops: 0 },
+    15: { id: 15, ruler: 2, troops: 5000 },
+    19: { id: 19, ruler: 2, troops: 5000 },
+  };
+
+  it('allows a road-adjacent fog-masked target without reading hidden ownership or troops', () => {
+    expect(canAttemptMarchTo(cities, 2, 13)).toBe(true);
+  });
+
+  it('still rejects a known player city and targets without an eligible adjacent source', () => {
+    expect(canAttemptMarchTo(cities, 2, 15)).toBe(false);
+    expect(canAttemptMarchTo(cities, 2, 1)).toBe(false);
+    expect(
+      canAttemptMarchTo(
+        { ...cities, 15: { ...cities[15], troops: 999 } },
+        2,
+        13,
+      ),
+    ).toBe(false);
   });
 });
 

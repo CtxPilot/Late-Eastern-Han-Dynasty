@@ -4,6 +4,7 @@
 import { useState, type ReactNode } from 'react';
 import {
   areCitiesRoadAdjacent,
+  canAttemptMarchTo,
   ensureDemographics,
   foodNeedBreakdown,
   formatEconomyForView,
@@ -65,10 +66,8 @@ export function RightPanel() {
   );
   const canMarch =
     selected != null &&
-    !isPlayerCity &&
-    selected.ruler != null &&
     !loading &&
-    marchFromWithTroops.length > 0;
+    canAttemptMarchTo(game.cities, game.playerFactionId, selected.id);
   const marchHint = (() => {
     if (!selected || isPlayerCity) return '请选择他方城';
     if (adjacentFrom.length === 0) return '无官道邻接己方城，不可出征';
