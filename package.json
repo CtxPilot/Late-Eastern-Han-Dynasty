@@ -17,6 +17,7 @@
     "verify-save-entities": "pnpm --filter @leh/server verify-save-entities",
     "verify-save-campaign": "pnpm --filter @leh/server verify-save-campaign",
     "verify-save-battle": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-battle",
+    "verify-save-battlefield-instance": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-battlefield-instance",
     "verify-save-diplomacy": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-diplomacy",
     "verify-save-intel": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-intel",
     "verify-save-plot": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-plot",

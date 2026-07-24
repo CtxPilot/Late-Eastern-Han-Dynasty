@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -528,6 +528,30 @@ export async function battlefieldMarch(armyId: string, targetNodeId: number): Pr
 export async function battlefieldExit(): Promise<GameState> {
   const { data } = await http.post<GameState>('/battlefield/exit');
   return data;
+}
+
+// ====== 郡域战场实例 API（BF-P2 Q10 Tier II 郡域层） ======
+
+/** 进入南郡郡域战场：服务端生成 BattlefieldInstance 并写入 GameState */
+export async function enterNanjunBattlefield(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/enter');
+  return data;
+}
+
+/** 退出南郡郡域战场：清空 activeBattlefieldInstance */
+export async function exitNanjunBattlefield(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/exit');
+  return data;
+}
+
+/** 获取当前郡域战场实例（如有） */
+export async function getBattlefieldInstance(): Promise<BattlefieldInstance | null> {
+  try {
+    const { data } = await http.get<BattlefieldInstance>('/battlefield-instance');
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 // ====== 白刃战 API（Tier II） ======

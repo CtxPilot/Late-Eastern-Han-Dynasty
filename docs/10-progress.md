@@ -3419,3 +3419,19 @@
 
 *v11.12 | 2026-07-24 | Session 173 · BF-P1 最小闭环打通（world→战场→六角→回写）*
 *文档版本: v12.0 | 2026-07-23 | Session 171 R2 文档收口与 R3 次日交接*
+
+## 2026-07-24 — Session 174（BF-P2 Q10：activeBattlefieldInstance 无损追加至 GameState 存档契约）
+
+- 范围：按已批准的 `docs/25-bf-p2-design.md` 方案 A，在 GameState 中无损追加 `activeBattlefieldInstance?: BattlefieldInstance | null`，沿用 PRNG 信封 v1 处理经验，不升 schema 版本，不破坏 CampaignArmy 62/62。
+- 类型层：`shared/types/game.ts` GameState 加 optional 字段（与 activeBattlefield 场景栈互斥）；`shared/game-state-battle-schema.ts` GameStateBattleSchema 加 `BattlefieldInstanceSchema.nullable().optional()` + superRefine 互斥护栏（activeBattles 六角战斗层不参与互斥，父子关系可共存）；`shared/game-state-full-schema.ts` ROOT_KEYS + pickState + 跨域引用校验（rulerFactionId/armyIds/encounters/targetSeatNodeId；routeStates fromNodeId/toNodeId 与 entryNodeIds 可合法引用郡域外边界入口如襄阳渡口，不做"必须在 nodeStates 中"校验）。
+- 服务端 orchestrator：`server/src/services/game.ts` 新增 `enterNanjunBattlefield()`（调 shared `generateNanjunBattlefield` 写入 `currentGame.activeBattlefieldInstance`，已有 activeBattlefield 时提前断言抛错）+ `exitNanjunBattlefield()`（幂等清 null）+ `getBattlefieldInstance()`。
+- 路由：`server/src/routes/game.ts` 加 `POST /api/game/battlefield-instance/enter|exit` + `GET /api/game/battlefield-instance` 三个 endpoint。
+- client：`client/src/services/api.ts` 加 3 个 API 函数；`client/src/stores/gameStore.ts` 改造 `enterNanjunBattlefield` 从 client-only `generateNanjunBattlefield` 改为调服务端 API（服务端真源持久化）；新增 `exitNanjunBattlefield` action（调 API + 清 zustand + popToScene('world')）；`BattlefieldSceneView` "退出战场"按钮从 `popTo('world')` 改为调 `exitNanjunBattlefield`。
+- 新测试：`server/src/scripts/verify-save-battlefield-instance.ts` 27/27 全过——5 类断言（a 空场景存档读档往返；b 进行中场存档读档全字段序列一致 id/nodeStates/routeStates/encounters/armyIds/phase/turn/targetSeatNodeId/JSON 一致；c exitNanjunBattlefield 清档后字段归 null；d 跨存档版本兼容——旧存档无 activeBattlefieldInstance 字段时读档正常降级为 undefined 不报错；e Zod 严格校验——互斥约束拒绝同时非 null、node id 重复拒绝、orchestrator 提前断言已有 activeBattlefield 时 enter 抛错、exitNanjunBattlefield 幂等清档不抛错）。
+- CI 门禁：`.github/workflows/ci.yml` 加 `verify-save-battlefield-instance` 步骤；`package.json`/`server/package.json` 加脚本；`README.md` 验证列表与 CI 描述同步。
+- 全量回归零破坏：typecheck/lint/build 全过；shared 172/172、CampaignArmy 62/62、save-diplomacy 11/11、save-game-state 10/10（扩展后仍通过）、ai-military 29/29、BF-P0 schema 38/38、turn-cadence 28/28、negotiation-r2 20/20、march-fog 7/7、battle-commanders 全过。
+- Headless Chrome 闭环重测（Playwright）：选曹操军→进入大地图→点「进入南郡战场」→服务端 `activeBattlefieldInstance` 写入（instanceId/16 县/11 路线/active，fetch /api/game/state 实测）+ BattlefieldSceneView 16 县渲染→点「退出战场」→服务端 `activeBattlefieldInstance` 清 null + 游戏状态完好（scenarioId/年月未变）。**P1 闭环仍工作，字段管理正确**。engageJiangling 的 marchOnCity 400 是 P1 既有 hack 局限（曹操初始无 1000 兵城），非本次改动引入；"围城中途存档读档"由 verify-save-battlefield-instance.ts b 类断言在服务端层面覆盖。
+- 同步：`docs/25-bf-p2-design.md`（标记 Q10 已实施）、`docs/21-battlefield-scene-design.md` §10.4（Q10 接入 GameState schema 已完成）、HANDOFF（进度双写）。
+- **标注**：Q9（县级攻打首批 3 县）、Q11（类型归并文档化）、Q12（AI 攻县依赖声明）仍待实施；R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
+
+*v12.1 | 2026-07-24 | Session 174 · BF-P2 Q10 activeBattlefieldInstance 无损追加*
