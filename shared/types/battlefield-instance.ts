@@ -32,7 +32,25 @@ export interface BattlefieldNodeState {
   adjacentNodeIds: string[];
   localX: number;
   localY: number;
+  /**
+   * 已被当前 rulerFactionId 连续控制的月数（BF-P2 Q9）。
+   * - 0 = 未占领或刚占领；
+   * - >0 = 已占领且经过月度 tick；
+   * 月度 tick 中若 garrison==0 且 controlTurns>0，则掉控制（rulerFactionId=null）。
+   */
+  controlTurns: number;
 }
+
+/**
+ * BF-P2 Q9 首批可攻打县（当阳/华容/枝江）。
+ * 江陵 seat 在 P1 已实现；这 3 县在 Q9 开放为可攻打目标。
+ * 其余 12 县本轮仍为纯静态展示（不参与攻打/驻军/控制权流转）。
+ */
+export const FIRST_BATCH_COUNTY_IDS = [
+  'nanjun_dangyang',
+  'nanjun_huarong',
+  'nanjun_zhijiang',
+] as const;
 
 export interface BattlefieldRouteState {
   routeId: string;

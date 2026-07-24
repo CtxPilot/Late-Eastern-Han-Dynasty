@@ -12,6 +12,7 @@ import {
   laborForce,
   pruneExpiredIntel,
   withSyncedPopulation,
+  FIRST_BATCH_COUNTY_IDS,
   type City,
   type CityDemographics,
   type GameState,
@@ -265,4 +266,79 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
       ...nextState.actionLog,
     ].slice(0, 80),
   };
+}
+
+/**
+ * BF-P2 Q9：郡域战场实例月度 tick。
+ *
+ * 在 endTurn 里于 tickCampaignMarch/tickCampaignGarrison 之后调用，处理：
+ * 1. 驻军消耗：已占领县 controlTurns++；若 garrison==0 则掉控制（rulerFactionId=null）。
+ * 2. 补给线切断（0-A 简化版）：攻方占领至少 1 个首批县 → 守方所有 CampaignArmy 士气 -5。
+ *
+ * 0-A 简化说明：真正的"补给线经过攻方控制县"判定需要 CampaignArmy 在郡域战场内移动
+ * （countyId 体系），当前 Army 在大地图层移动（数字 cityId），两者无映射；
+ * 故简化为"占领任意首批县 → 守方全军士气流失"。糧耗×2 留 P5/R6 多线 AI 范畴。
+ */
+export function tickBattlefieldInstance(state: GameState): GameState {
+  const inst = state.activeBattlefieldInstance;
+  if (!inst) return state;
+
+  const seat = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  const defenderFactionId = seat?.rulerFactionId ?? null;
+  const attackerFactionId = state.playerFactionId;
+
+  let nodeStatesChanged = false;
+  const newNodeStates = inst.nodeStates.map((node) => {
+    if (node.rulerFactionId != null) {
+      const controlTurns = node.controlTurns + 1;
+      if (node.garrison === 0) {
+        nodeStatesChanged = true;
+        return { ...node, rulerFactionId: null, controlTurns: 0 };
+      }
+      nodeStatesChanged = true;
+      return { ...node, controlTurns };
+    }
+    return node;
+  });
+
+  const attackerOccupiedFirstBatch = FIRST_BATCH_COUNTY_IDS.some((cid) =>
+    newNodeStates.find((n) => n.nodeId === cid)?.rulerFactionId === attackerFactionId,
+  );
+
+  let campaignArmiesChanged = false;
+  let newCampaignArmies = state.campaignArmies;
+  if (attackerOccupiedFirstBatch && defenderFactionId != null) {
+    newCampaignArmies = state.campaignArmies.map((army) => {
+      if (army.factionId === defenderFactionId) {
+        campaignArmiesChanged = true;
+        return { ...army, morale: Math.max(0, army.morale - 5) };
+      }
+      return army;
+    });
+  }
+
+  if (!nodeStatesChanged && !campaignArmiesChanged) return state;
+
+  let next: GameState = state;
+  if (nodeStatesChanged) {
+    next = { ...next, activeBattlefieldInstance: { ...inst, nodeStates: newNodeStates } };
+  }
+  if (campaignArmiesChanged) {
+    next = { ...next, campaignArmies: newCampaignArmies };
+    const occupiedCount = newNodeStates.filter((n) =>
+      n.rulerFactionId === attackerFactionId &&
+      (FIRST_BATCH_COUNTY_IDS as readonly string[]).includes(n.nodeId),
+    ).length;
+    next = {
+      ...next,
+      actionLog: [{
+        year: state.currentYear,
+        month: state.currentMonth,
+        type: 'battlefield',
+        message: `攻方占领 ${occupiedCount} 个首批县，守方士气 -5（补给线受扰）`,
+      }, ...next.actionLog].slice(0, 80),
+    };
+  }
+
+  return next;
 }

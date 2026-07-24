@@ -25,7 +25,7 @@ import {
   type ScenarioStatic,
 } from '@leh/shared';
 import { staticData } from '../data/loader.js';
-import { advanceTurn } from '../engine/turn.js';
+import { advanceTurn, tickBattlefieldInstance } from '../engine/turn.js';
 import { catchUpChildren } from '../engine/child.js';
 import {
   conscript,
@@ -75,6 +75,7 @@ import {
   prepareMarch,
   settleBattle,
 } from '../engine/march.js';
+import { runAutoBattle } from '../engine/campaign.js';
 import {
   giftBeauty,
   marryFemale,
@@ -109,7 +110,7 @@ import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { broadcast } from '../ws/broadcast.js';
 import { resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
-import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType, generateNanjunBattlefield } from '@leh/shared';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateNanjunBattlefield } from '@leh/shared';
 
 let currentGame: GameState | null = null;
 // Sec-6: 简单请求锁，防止并发操作导致状态不一致
@@ -377,6 +378,7 @@ export function endTurn(): GameState {
     next = tickCampaignGarrison(next);
     next = tickConstruction(next); // 设施建造回合化推进
     next = gsTick(next, runtimeRandom); // 总军师系统：忠诚/被俘自动解职
+    next = tickBattlefieldInstance(next); // BF-P2 Q9：郡域战场月度 tick（驻军消耗 + 补给线切断）
     next = { ...next, campaignNodes: getCampaignNodes(next) };
     currentGame = next;
     const g = getClientGame();
@@ -1121,6 +1123,103 @@ export function exitNanjunBattlefield(): GameState {
 /** 获取当前郡域战场实例（如有）。 */
 export function getBattlefieldInstance(): BattlefieldInstance | null {
   return getGame().activeBattlefieldInstance ?? null;
+}
+
+/**
+ * BF-P2 Q9：攻打郡域县节点（当阳/华容/枝江）。
+ *
+ * 接受字符串 countyId（区别于 P1 engageJiangling 借用数字 cityId=14 的 hack）。
+ * 复用既有 runAutoBattle 自动结算引擎（设计文档 §7.2 三种结算模式之一），
+ * 不调 createBattle（六角，需数字 cityId 体系，县级无映射）。
+ *
+ * 攻占效果契约（Q6/Q9 边界）：不写入 GameState.cities、不产生金粮收入、
+ * 不触发 S03/S04；仅更新 BattlefieldInstance.nodeStates + CampaignArmy.troops。
+ *
+ * RNG 边界：runAutoBattle 接受 runtimeRandom（权威 xorshift32-v1），
+ * generateNanjunBattlefield 保持零 RNG 纯函数不变。
+ */
+export function engageCounty(countyId: string): GameState {
+  return withLock(() => {
+    const state = getGame();
+    const inst = state.activeBattlefieldInstance;
+    if (!inst) throw new Error('未进入郡域战场');
+
+    if (!(FIRST_BATCH_COUNTY_IDS as readonly string[]).includes(countyId)) {
+      throw new Error(`${countyId} 不在首批可攻打县列表（当阳/华容/枝江）`);
+    }
+
+    const nodeIndex = inst.nodeStates.findIndex((n) => n.nodeId === countyId);
+    if (nodeIndex < 0) throw new Error(`县节点 ${countyId} 不在战场中`);
+    const node = inst.nodeStates[nodeIndex];
+    if (node.rulerFactionId === state.playerFactionId) {
+      throw new Error(`${node.name} 已是己方控制`);
+    }
+
+    // 选第一支攻方 Army 作为攻打部队
+    const atkArmy = state.campaignArmies.find(
+      (a) => a.factionId === state.playerFactionId && a.troops > 0,
+    );
+    if (!atkArmy) throw new Error('没有可用于攻县的己方 CampaignArmy（需先编成出征军）');
+
+    // 首次攻打时若县无守军，设为小驻军（模拟县民兵），让攻打有实际意义
+    const defGarrison = node.garrison > 0 ? node.garrison : 1000;
+    const defWall = node.wallDurability;
+
+    const result = runAutoBattle(
+      state,
+      atkArmy,
+      null,
+      { cityId: 0, garrison: defGarrison, wall: defWall },
+      runtimeRandom,
+    );
+
+    // 更新 nodeStates
+    const newNodeStates = inst.nodeStates.map((n, i) => {
+      if (i !== nodeIndex) return n;
+      if (result.winner === 'attacker') {
+        return {
+          ...n,
+          rulerFactionId: state.playerFactionId,
+          garrison: result.attackerRemaining,
+          wallDurability: Math.max(0, n.wallDurability - Math.floor(n.maxWallDurability * 0.5)),
+          controlTurns: 0,
+        };
+      }
+      return {
+        ...n,
+        garrison: result.defenderRemaining,
+      };
+    });
+
+    // 更新攻方 Army 兵力（消耗）+ morale clamp 到 0-100（Zod schema 约束）
+    const newCampaignArmies = state.campaignArmies.map((a) =>
+      a.id === atkArmy.id
+        ? {
+            ...a,
+            troops: result.attackerRemaining,
+            morale: Math.max(0, Math.min(100, result.attackerMoraleAfter)),
+          }
+        : a,
+    );
+
+    const occupied = result.winner === 'attacker';
+    const logMsg = occupied
+      ? `${atkArmy.name} 攻占 ${node.name}（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}`
+      : `${atkArmy.name} 攻打 ${node.name} 失利（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}`;
+
+    currentGame = {
+      ...state,
+      campaignArmies: newCampaignArmies,
+      activeBattlefieldInstance: { ...inst, nodeStates: newNodeStates },
+      actionLog: [{
+        year: state.currentYear,
+        month: state.currentMonth,
+        type: 'battlefield',
+        message: logMsg,
+      }, ...state.actionLog].slice(0, 80),
+    };
+    return getClientGame();
+  });
 }
 
 // ====== 白刃战（Tier II） ======

@@ -16,15 +16,21 @@
  */
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
+  FIRST_BATCH_COUNTY_IDS,
   GameStateSchema,
+  UnitType,
+  FormationType,
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
 import { getRuntimeRngState } from '../runtime-rng.js';
+import { tickBattlefieldInstance } from '../engine/turn.js';
 import {
   battlefieldInit,
+  campaignStart,
   createGame,
   enterNanjunBattlefield,
+  engageCounty,
   exitNanjunBattlefield,
   getGame,
   restoreGameFromEnvelope,
@@ -199,6 +205,119 @@ try {
 }
 check('e4 exitNanjunBattlefield 在无 instance 时不抛错（幂等清档）', !exitThrew);
 check('e4 exitNanjunBattlefield 后 activeBattlefieldInstance 为 null', getGame().activeBattlefieldInstance === null);
+
+// ====== f. 县级攻打 + 攻占效果（BF-P2 Q9） ======
+console.log('\nf. 县级攻打 + 攻占效果:');
+
+// f0 夹具：编成一支 CampaignArmy + 进入南郡战场
+createGame(1, 2);
+const fState = getGame();
+const fFromCity = Object.values(fState.cities).find((city) =>
+  city.ruler === fState.playerFactionId && city.troops >= 1000 &&
+  fState.campaignNodes
+    .find((node) => node.id === city.id)
+    ?.adjacentNodeIds.some((id) => {
+      const target = fState.cities[id];
+      return target?.ruler != null && target.ruler !== fState.playerFactionId;
+    }),
+);
+if (!fFromCity) throw new Error('f0 夹具：找不到出征前线城市');
+const fTargetNodeId = fState.campaignNodes
+  .find((n) => n.id === fFromCity.id)!
+  .adjacentNodeIds.find((id) => {
+    const target = fState.cities[id];
+    return target?.ruler != null && target.ruler !== fState.playerFactionId;
+  });
+if (fTargetNodeId == null) throw new Error('f0 夹具：找不到相邻敌方城');
+const fCommander = fFromCity.officers
+  .map((id) => fState.officers[id])
+  .find((o) => o?.faction === fState.playerFactionId);
+if (!fCommander) throw new Error('f0 夹具：找不到同城武将');
+campaignStart({
+  commanderId: fCommander.id,
+  subCommanderIds: [],
+  advisorId: undefined,
+  fromNodeId: fFromCity.id,
+  targetNodeId: fTargetNodeId,
+  unitType: UnitType.HEAVY_CAVALRY,
+  formation: FormationType.WEDGE,
+  troopCount: 1000,
+  food: 500,
+});
+check('f0 夹具：编成 CampaignArmy 后部队数 > 0', getGame().campaignArmies.some((a) => a.factionId === getGame().playerFactionId && a.troops > 0));
+
+enterNanjunBattlefield();
+const fInst = getGame().activeBattlefieldInstance;
+check('f0 夹具：进入南郡战场后 instance 非 null', fInst != null);
+
+// f1. engageCounty 非首批县 → 抛错
+check('f1 夹具：nanjun_wu 不在首批县列表', !(FIRST_BATCH_COUNTY_IDS as readonly string[]).includes('nanjun_wu'));
+let f1Threw = false;
+try { engageCounty('nanjun_wu'); } catch (e) {
+  f1Threw = e instanceof Error && /首批可攻打县/.test(e.message);
+}
+check('f1 engageCounty 非首批县抛错', f1Threw);
+
+// f2. engageCounty 当阳 → 节点流转到已占领
+const beforeDangyang = getGame().activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang');
+check('f2 夹具：当阳初始 rulerFactionId 为 null', beforeDangyang?.rulerFactionId == null);
+engageCounty('nanjun_dangyang');
+const afterDangyang = getGame().activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang');
+const f2Occupied = afterDangyang?.rulerFactionId === getGame().playerFactionId;
+check('f2 engageCounty 当阳后节点 rulerFactionId = 攻方', f2Occupied);
+check('f2 占领后 garrison > 0（留驻）', (afterDangyang?.garrison ?? 0) > 0);
+check('f2 占领后 controlTurns = 0', afterDangyang?.controlTurns === 0);
+
+// f3. engageCounty 己方已占领县 → 抛错
+let f3Threw = false;
+try { engageCounty('nanjun_dangyang'); } catch (e) {
+  f3Threw = e instanceof Error && /己方控制/.test(e.message);
+}
+check('f3 engageCounty 己方已占领县抛错', f3Threw);
+
+// f4. engageCounty 华容 → 另一个县也流转
+engageCounty('nanjun_huarong');
+const afterHuarong = getGame().activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === 'nanjun_huarong');
+check('f4 engageCounty 华容后节点 rulerFactionId = 攻方', afterHuarong?.rulerFactionId === getGame().playerFactionId);
+
+// f5. 占领后存档读档 → nodeStates 一致
+const f5State = getGame();
+const f5Envelope = envelopeFor(f5State);
+restoreGameFromEnvelope(f5Envelope);
+const f5Restored = getGame().activeBattlefieldInstance;
+check('f5 占领后存档读档 instance id 一致', f5Restored?.id === f5State.activeBattlefieldInstance?.id);
+check('f5 读档后当阳 rulerFactionId 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.rulerFactionId === getGame().playerFactionId);
+check('f5 读档后当阳 garrison 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison === f5State.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison);
+
+// f6. 补给线切断：克隆攻方 Army 作为守方，调 tickBattlefieldInstance → morale -5
+const f6State = getGame();
+const f6DefenderId = f6State.activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === f6State.activeBattlefieldInstance!.targetSeatNodeId)?.rulerFactionId;
+const f6AtkArmy = f6State.campaignArmies.find((a) => a.factionId === f6State.playerFactionId);
+if (!f6AtkArmy || f6DefenderId == null) throw new Error('f6 夹具：找不到攻方 Army 或守方势力');
+const f6DefArmy = { ...f6AtkArmy, id: 'f6-defender-clone', factionId: f6DefenderId, name: '守方测试军' };
+const f6WithDef: GameState = { ...f6State, campaignArmies: [...f6State.campaignArmies, f6DefArmy] };
+const f6BeforeMorale = f6DefArmy.morale;
+const f6After = tickBattlefieldInstance(f6WithDef);
+const f6AfterMorale = f6After.campaignArmies.find((a) => a.id === 'f6-defender-clone')?.morale;
+check('f6 占领首批县后守方 morale -5（补给线受扰）', f6AfterMorale === f6BeforeMorale - 5);
+
+// f7. 驻军消耗：占领后 controlTurns++ → 1；garrison=0 时掉控制
+// 先调一次 tick → controlTurns 从 0 → 1（当阳 garrison > 0，保留控制）
+const f7State1 = getGame();
+const f7After1 = tickBattlefieldInstance(f7State1);
+const f7Dangyang1 = f7After1.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang');
+check('f7a 占领后首次 tick controlTurns 0→1', f7Dangyang1?.controlTurns === 1);
+check('f7a 首次 tick 后当阳仍为己方控制（garrison>0）', f7Dangyang1?.rulerFactionId === getGame().playerFactionId);
+
+// 手动设 garrison=0，再调 tick → 掉控制
+const f7State2 = structuredClone(f7After1);
+const f7Inst2 = f7State2.activeBattlefieldInstance!;
+const f7DangyangIdx = f7Inst2.nodeStates.findIndex((n) => n.nodeId === 'nanjun_dangyang');
+f7Inst2.nodeStates[f7DangyangIdx] = { ...f7Inst2.nodeStates[f7DangyangIdx], garrison: 0 };
+const f7After2 = tickBattlefieldInstance(f7State2);
+const f7Dangyang2 = f7After2.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang');
+check('f7b garrison=0 时 tick 后掉控制（rulerFactionId=null）', f7Dangyang2?.rulerFactionId == null);
+check('f7b 掉控制后 controlTurns=0', f7Dangyang2?.controlTurns === 0);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

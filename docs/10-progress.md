@@ -3448,3 +3448,17 @@
 - **标注**：Q9（县级攻打首批 3 县）仍待实施；R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。Q11/Q12 零代码风险已完成，Q10/Q11/Q12 三项落地后，P2 实施剩余仅 Q9（HIGH 风险但非破坏性增量）。
 
 *v12.2 | 2026-07-24 | Session 175 · BF-P2 Q11+Q12 类型归并文档化 + AI 攻县依赖声明*
+
+## 2026-07-24 — Session 176（BF-P2 Q9：首批 3 县可攻打落地，BF-P2 实施阶段完成）
+
+- 范围：Q9 首批 3 县（当阳/华容/枝江）+ 江陵 seat = 4 县可攻打节点。攻占效果按 Q6/Q9 边界：不写入 GameState.cities、不产生金粮收入、不触发 S03/S04；仅影响 BattlefieldInstance 内部。
+- 类型层：`BattlefieldNodeState` 加 `controlTurns`（已控制月数，用于驻军消耗掉控制判定）；`shared/battlefield-instance-schema.ts` Zod 加 NonNegInt 校验；`shared/nanjun-battlefield.ts` 初始化 controlTurns=0；导出 `FIRST_BATCH_COUNTY_IDS` 常量（当阳/华容/枝江）。
+- 服务端引擎：`server/src/engine/turn.ts` 新增 `tickBattlefieldInstance(state)` 月度 tick：(1) 驻军消耗——已占领县 controlTurns++，garrison==0 时掉控制（rulerFactionId=null）；(2) 补给线切断（0-A 简化版）——攻方占领至少 1 个首批县 → 守方所有 CampaignArmy morale -5。0-A 简化说明：真正的"补给线经过攻方控制县"判定需要 Army 在郡域战场内移动（countyId 体系），当前 Army 在大地图层移动（数字 cityId），两者无映射；故简化为"占领任意首批县 → 守方全军士气流失"。糧耗×2 留 P5/R6 多线 AI 范畴。`endTurn` 在 tickCampaignMarch/tickCampaignGarrison 之后调 tickBattlefieldInstance。
+- engageCounty orchestrator（`server/src/services/game.ts`）：接受字符串 countyId（区别于 P1 engageJiangling 借用数字 cityId=14 的 hack）。复用既有 `runAutoBattle` 自动结算引擎（设计文档 §7.2 三种结算模式之一），不调 createBattle（六角，需数字 cityId 体系，县级无映射——runAutoBattle defCity 参数用 cityId=0 fallback，city 不存在时 defCmd=undefined 降级，spoils=0 符合 Q6"不产生金粮"）。首次攻打时若县无守军（garrison==0）设为 1000（模拟县民兵）。结算后手动更新 nodeStates（占领→rulerFactionId=attacker, garrison=attackerRemaining, controlTurns=0）+ CampaignArmy.troops（消耗）。morale clamp 到 0-100（Zod schema 约束）。RNG 边界：runAutoBattle 接受 runtimeRandom（权威 xorshift32-v1），generateNanjunBattlefield 保持零 RNG 纯函数不变。
+- 路由 + client：`POST /api/game/battlefield-instance/engage-county`；client api.ts 加 engageCounty 函数；gameStore 加 engageCounty action；BattlefieldSceneView 3 县（当阳/华容/枝江）可点击（cursor=pointer + 首批县棕色 #5a4a2a vs 非首批县灰色 #3a3a32）+ 占领高亮（绿色 #2d5a2d + "驻N"文本）+ 江陵 seat 保持红色。
+- 测试扩展：`verify-save-battlefield-instance.ts` 44/44 全过（原 27 + 新 f 类 17）：f0 夹具编成 Army+进入战场；f1 非首批县抛错；f2 engageCounty 当阳→占领（rulerFactionId=攻方, garrison>0, controlTurns=0）；f3 己方已占领县抛错；f4 engageCounty 华容→占领；f5 占领后存档读档 nodeStates 一致；f6 补给线切断（占领首批县→守方 morale -5）；f7a 首次 tick controlTurns 0→1（garrison>0 保留控制）；f7b garrison=0 时 tick 掉控制（rulerFactionId=null, controlTurns=0）。
+- 全量回归零破坏：typecheck/lint/build 全过；shared 172/172、CampaignArmy 62/62、save-diplomacy 11/11、save-game-state 10/10、ai-military 29/29、BF-P0 schema 38/38、turn-cadence 28/28、negotiation-r2 20/20、march-fog 7/7、battle-commanders 全过。
+- Headless Chrome 完整验证（Playwright）：选刘备军→createGame→campaignStart（江陵→番禺，刘备 1000 兵）→reload→点"进入南郡战场"→服务端 instance 写入（armyIds 含编成 Army, 当阳初始 null/0）→click 当阳节点（cursor=pointer 可点击）→engageCounty→服务端 runAutoBattle 结算→当阳 rulerFactionId=2（占领）+ garrison=858（留驻）+ controlTurns=0 + Army troops=858（消耗）+ 日志"刘备军 攻占 当阳（剩兵 858），守方残兵 640"→UI 视觉变化：当阳 fill=#2d5a2d（占领绿，之前 #5a4a2a 棕）+ "驻858"文本。掉控制逻辑由 f7 服务端层面验证（garrison=0 时 tickBattlefieldInstance 掉控制），Headless Chrome 层面因 UI 无"抽走驻军"操作不重复。
+- **BF-P2 实施阶段完成**：Q10（存档接入）+ Q11（类型归并文档化）+ Q12（AI 攻县依赖声明）+ Q9（首批 3 县可攻打）全部落地。BF-P2 四项实施完毕，BF-P2 可正式标记为"实施完成"。R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
+
+*v12.3 | 2026-07-24 | Session 176 · BF-P2 Q9 首批 3 县可攻打落地，BF-P2 实施阶段完成*

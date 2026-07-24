@@ -56,6 +56,7 @@ export function generateNanjunBattlefield(opts: GenerateNanjunBattlefieldOpts): 
       adjacentNodeIds: c.adjacentCountyIds,
       localX: c.localX,
       localY: c.localY,
+      controlTurns: 0,
     };
   });
 

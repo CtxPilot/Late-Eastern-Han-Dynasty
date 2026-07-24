@@ -22,6 +22,7 @@ interface Store {
   enterNanjunBattlefield: () => Promise<void>;
   exitNanjunBattlefield: () => Promise<void>;
   engageJiangling: () => Promise<void>;
+  engageCounty: (countyId: string) => Promise<void>;
   game: GameState | null;
   battle: BattleState | null;
   selectedCityId: number | null;
@@ -228,6 +229,24 @@ export const useGameStore = create<Store>((set, get) => ({
   engageJiangling: async () => {
     await get().selectCity(14);
     await get().marchOnCity(undefined, 5000);
+  },
+
+  // engageCounty（BF-P2 Q9）：攻打郡域县节点（当阳/华容/枝江）。
+  // 调服务端 engageCounty orchestrator（runAutoBattle 自动结算 + 更新 nodeStates/CampaignArmy）。
+  engageCounty: async (countyId) => {
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      const game = await api.engageCounty(countyId);
+      const inst = game.activeBattlefieldInstance ?? null;
+      set({
+        game,
+        battlefieldInstance: inst,
+        loading: false,
+        lastActionOk: game.actionLog[0]?.message ?? '攻打县节点',
+      });
+    } catch (e) {
+      set({ error: errMsg(e, '攻打县失败'), loading: false });
+    }
   },
 
   boot: async () => {
