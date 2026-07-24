@@ -11,6 +11,8 @@ The roadmap is evidence-based: “implemented” means code exists and has been 
 - ✅ Restore the campaign regression suite to a fully green baseline and add it to default CI (62 deterministic assertions).
 - ✅ Define versioned save envelopes, migration validation, and deterministic continuation boundaries before implementing persistence. All action-resolution randomness uses the authoritative serializable PRNG; S15 military action/target choices now use it as well.
 - ✅ Complete the BF-P0 historical-geography contract for the 190 CE Nanjun prototype, including strict schemas, sourced data, and the strategic-node/county boundary rule.
+- ✅ BF-P1 (Session 173): static Nanjun battlefield minimal loop打通 (world→战场→六角接战→回写 Headless 通过).
+- ✅ BF-P2 (Session 174~176): Q10 activeBattlefieldInstance 无损追加至 GameState (44/44); Q11 双层数据模型保持独立文档化; Q12 AI 攻县依赖声明归 R6; Q9 首批 3 县 (当阳/华容/枝江) 可攻打落地 (engageCounty + tickBattlefieldInstance 月度 tick).
 - Establish reproducible 30-city and synthetic 0-B performance baselines before choosing optimizations.
 - Expand automated coverage beyond the shared pure-function suite.
 - Add reproducible engine checks to the default CI workflow.

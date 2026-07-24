@@ -304,9 +304,16 @@ POST   /api/v1/games/:id/battles/:battleId/retreat
   Response: { battle: BattleState, retreatSuccess: boolean }
 ```
 
-#### 独立郡域战场 API（P1～P3 规划，当前不可调用）
+#### 独立郡域战场 API（P1～P3 规划，BF-P2 已实装子集）
 
-> Q1～Q8 已批准；以下只登记正式接口方向，不代表路由或 Schema 已实现。P0 只完成资料与 Schema 契约，不提供玩法端点。现有 Demo `/api/game/battlefield/*` 与“当前单场”状态在 P2 前继续作为兼容路径。
+> Q1～Q8 已批准；以下为正式接口方向。**BF-P2 已实装（Session 174~176）：**
+> 以下 4 个 Demo 端点在 `/api/game/battlefield-instance/*` 路径下已可用：
+> - `POST /api/game/battlefield-instance/enter` — 进入南郡郡域战场（Q10）
+> - `POST /api/game/battlefield-instance/exit` — 退出清空 activeBattlefieldInstance（Q10）
+> - `GET /api/game/battlefield-instance` — 获取当前实例（Q10）
+> - `POST /api/game/battlefield-instance/engage-county` — 攻打首批 3 县（Q9，Body: `{ countyId }`）
+>
+> 现有 Demo `/api/game/battlefield/*`（Tier I 大地图层）与 `/api/game/battlefield-instance/*`（Tier II 郡域层）并存，场景栈强制互斥。
 
 ```text
 POST /api/v1/games/:id/battlefields
