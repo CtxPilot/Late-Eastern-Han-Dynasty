@@ -1075,6 +1075,12 @@ export function battlefieldExit(): GameState {
  * 场景栈互斥；进入时必须保证 activeBattlefield 为 null。
  * 互斥护栏在 Zod 层（GameStateBattleSchema superRefine）兜底；本函数额外断言
  * 以便在写入前快速失败。
+ *
+ * RNG 边界（为 BF-P3 预留）：generateNanjunBattlefield 是零 RNG 纯函数
+ * （静态模板生成不消费随机数）；当前 enterNanjunBattlefield 不注入 RNG。
+ * 未来 BF-P3 实施"动态部署/遭遇/AI 行动"扩展点时，须显式注入权威
+ * runtimeRandom（xorshift32-v1），不得引入 Math.random()——参见
+ * docs/21-battlefield-scene-design.md §九 RNG 与确定性。
  */
 export function enterNanjunBattlefield(): GameState {
   return withLock(() => {

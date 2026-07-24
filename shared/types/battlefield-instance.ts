@@ -6,8 +6,18 @@
  *
  * 与 `BattlefieldMap`（Tier I，大地图节点数字 id）不同，BattlefieldInstance 基于
  * 历史郡域县节点（字符串 id，如 'nanjun_jiangling'），是更细粒度的郡域战场容器。
- * 进行中实例可序列化（§8.1），但 BF-P1 暂不接入 GameState schema（避免破坏
- * CampaignArmy 62/62）；存档往返用独立 Zod 验证。
+ * 双层数据模型（Q11 已落地）：两类型保持独立、不合并不废弃，职责分离——
+ * 详见 `docs/02-architecture.md` §独立郡域战场数据流 + `docs/25-bf-p2-design.md` §四。
+ *
+ * 存档契约（Q10 已实装，Session 174）：已接入 `GameState.activeBattlefieldInstance`
+ * （optional 字段，不升 schema 版本），与 `activeBattlefield` 场景栈强制互斥
+ * （Zod `superRefine` + orchestrator 双重护栏）。`verify-save-battlefield-instance`
+ * 27/27 覆盖空场/进行中场/清档/跨版本兼容/Zod 严格 5 类断言。
+ *
+ * RNG 边界（为 BF-P3 预留）：`generateNanjunBattlefield` 是零 RNG 纯函数
+ * （静态模板生成不消费随机数）；`enterNanjunBattlefield` orchestrator 当前不
+ * 注入 RNG，但未来 BF-P3 实施"动态部署/遭遇/AI 行动"时，扩展点须显式注入权威
+ * `xorshift32-v1`（runtimeRandom），不得引入 `Math.random()`。
  */
 
 export interface BattlefieldNodeState {

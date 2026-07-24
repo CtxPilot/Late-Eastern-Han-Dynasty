@@ -240,6 +240,8 @@ P2 实施时必须新增以下验证脚本，沿用 `verify-save-*` 系列模式
 
 ## 四、`BattlefieldInstance` 与 `BattlefieldMap` 归并判断
 
+> **状态：Q11 已落地（Session 174，2026-07-24）** — 方案 C 保持独立已批准并文档化；结论同步至 `docs/02-architecture.md` §独立郡域战场数据流、`docs/03-data-models.md` §二十三、`docs/12-system-map.md` S02/S10/S16 系统条目。两类型并行不冗余，后续维护者不应误判为临时过渡态而尝试强行合并。
+
 ### 4.1 当前使用状态审计（基于 codegraph 全仓扫描）
 
 | 类型 | 调用点数 | 主要调用方 | 使用状态 |

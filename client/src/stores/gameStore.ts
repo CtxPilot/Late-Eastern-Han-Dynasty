@@ -221,6 +221,10 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  // engageJiangling（P1 既有 hack）：借用 marchOnCity 路径打 cityId=14（江陵 worldCityId），
+  // 不重写战斗逻辑，沿用既有 createBattle + runtimeRandom。Q9 县级攻打扩展时
+  // 会新增 engageCounty(countyId) 走同一 createBattle 路径，仍沿用 runtimeRandom，
+  // 为 BF-P3 预留 RNG 注入接口（不引入 Math.random）。
   engageJiangling: async () => {
     await get().selectCity(14);
     await get().marchOnCity(undefined, 5000);
