@@ -16,6 +16,7 @@
 export type Scene =
   | 'scenario'
   | 'world'
+  | 'battle'
   | 'battlefield'
   | 'melee'
   | 'tactical'
