@@ -537,7 +537,7 @@ export function doGiftBeautyDip(targetFactionId: number, amount?: number): GameS
 
 export function doAlliance(targetFactionId: number): GameState {
   return withLock(() => {
-    currentGame = formAlliance(getGame(), targetFactionId);
+    currentGame = formAlliance(getGame(), targetFactionId, runtimeRandom);
     return getClientGame();
   });
 }

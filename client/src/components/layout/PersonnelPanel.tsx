@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useMemo, useState } from 'react';
-import { OfficerStatus, type Officer } from '@leh/shared';
+import { OfficerStatus, calculateRecruitChance, type Officer } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
@@ -80,6 +80,8 @@ export function PersonnelPanel() {
               ruler != null
                 ? Math.abs(o.hidden.compatibility - ruler.hidden.compatibility)
                 : null;
+            const recruitChance =
+              ruler != null ? calculateRecruitChance(ruler, o) : null;
             return (
               <div
                 key={o.id}
@@ -91,6 +93,9 @@ export function PersonnelPanel() {
                     {loc} · 统{o.stats.leadership}/武{o.stats.war}/智
                     {o.stats.intelligence}
                     {compatDiff != null ? ` · 相性差${compatDiff}` : ''}
+                    {recruitChance != null
+                      ? ` · 成功率${Math.round(recruitChance)}%`
+                      : ''}
                   </div>
                 </div>
                 <button
@@ -138,14 +143,21 @@ export function PersonnelPanel() {
           { label: '目标', value: `${confirm.officer.name}（${game.cities[confirm.officer.location ?? -1]?.name ?? '未知'}）` },
           { label: '立即消耗', value: '金 200' },
           { label: '耗时', value: '立即结算' },
-          { label: '可能结果', value: '受相性与魅力影响，可能拒绝', tone: 'warning' },
+          {
+            label: '成功率',
+            value:
+              ruler != null
+                ? `${Math.round(calculateRecruitChance(ruler, confirm.officer))}%`
+                : '—',
+            tone: 'warning',
+          },
         ] : []}
         loading={loading}
         error={error}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm?.type !== 'recruit') return;
-          await recruitOfficer(confirm.officer.id);
+          await recruitOfficer(confirm.officer.id, ruler?.id);
           if (!useGameStore.getState().error) setConfirm(null);
         }}
       />

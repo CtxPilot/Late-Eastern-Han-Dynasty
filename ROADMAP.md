@@ -6,6 +6,8 @@ The roadmap is evidence-based: “implemented” means code exists and has been 
 
 ## Now — stabilize the 0-A framework slice
 
+- ✅ Complete consistency remediations R1 and R2: monthly cadence plus unified percentage-point personnel/diplomacy formulas.
+- Start R3 on 2026-07-24: add one pre-duel strategic stance choice and make Lü Bu the strongest rules-compliant duelist without mathematical invincibility.
 - ✅ Restore the campaign regression suite to a fully green baseline and add it to default CI (62 deterministic assertions).
 - ✅ Define versioned save envelopes, migration validation, and deterministic continuation boundaries before implementing persistence. All action-resolution randomness uses the authoritative serializable PRNG; S15 military action/target choices now use it as well.
 - ✅ Complete the BF-P0 historical-geography contract for the 190 CE Nanjun prototype, including strict schemas, sourced data, and the strategic-node/county boundary rule.
@@ -13,7 +15,7 @@ The roadmap is evidence-based: “implemented” means code exists and has been 
 - Expand automated coverage beyond the shared pure-function suite.
 - Add reproducible engine checks to the default CI workflow.
 - ✅ Connect strategic military AI to real CampaignArmy marching, siege, battle resolution, diplomacy filtering, and war reports.
-- Implement BF-P1: enter the static Nanjun battlefield, march between historical county nodes, resolve a local encounter, and write the result back exactly once.
+- Keep BF-P1 approved and queued behind the active consistency-remediation sequence.
 - Replace remaining instant or hard-coded campaign calculations with explicit turn-based rules.
 - Improve contributor onboarding, issue triage, and public maintenance workflows.
 

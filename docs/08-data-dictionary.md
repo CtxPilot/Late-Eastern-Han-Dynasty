@@ -55,7 +55,7 @@
 |------|------|------|
 | population | number | ≡ sum(demographics) |
 | demographics | CityDemographics | 四桶；征兵改 adultMale；生育加 child；衰老改 elder |
-| beautyPool | number | `floor(adultFemale/400)`，与女成强制同步 |
+| beautyPool | number | **旧 Demo 兼容字段**：当前仍为 `floor(adultFemale/400)`；S09 R7 迁移后废止，不得作为目标规则 |
 | gold / food / troops / stats | … | 既有；粮耗见 04§28.3 |
 
 ### 示例 (2条)
@@ -930,7 +930,7 @@ Phase 4 — 特殊人物审核
     },
     {
       "piecesRequired": 3,
-      "description": "单挑不败 + 冲锋后仍可自由行动",
+      "description": "单挑高先手与三连击 + 每战一次败后重伤撤退保护（不改写胜负）+ 冲锋后仍可自由行动",
       "effects": [
         { "type": "duel_invincible", "value": 1 },
         { "type": "free_move_after_charge", "value": 1 }

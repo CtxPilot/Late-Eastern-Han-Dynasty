@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useMemo, useState } from 'react';
-import { findDiplomacy } from '@leh/shared';
+import { calculateAllianceChance, findDiplomacy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { BeautyPanel } from './BeautyPanel';
 import { FamilyPanel } from './FamilyPanel';
@@ -199,6 +199,10 @@ export function LeftPanel() {
                 const atWar = rel === 'war';
                 const plantable =
                   game.intel?.plantableBeauty?.[f.id] ?? 0;
+                const alliance =
+                  !atWar && rel !== 'allied'
+                    ? calculateAllianceChance(game, f.id)
+                    : null;
                 return (
                   <div
                     key={f.id}
@@ -214,6 +218,9 @@ export function LeftPanel() {
                     </div>
                     <div className="text-[10px] text-stone-500 mt-0.5">
                       {REL_LABEL[rel] ?? rel} · 友好 {fav}
+                      {alliance
+                        ? ` · 结盟率 ${Math.round(alliance.chance)}%`
+                        : ''}
                       {plantable > 0 ? ` · 可点化${plantable}` : ''}
                     </div>
                     <div className="flex gap-1 mt-1 flex-wrap">
@@ -250,7 +257,11 @@ export function LeftPanel() {
                         type="button"
                         disabled={loading || rel === 'allied'}
                         className="flex-1 min-w-[3.5rem] px-1.5 py-1 rounded border border-sky-900/60 text-[10px] text-sky-100 hover:bg-sky-950 disabled:opacity-40"
-                        title="500金，友好≥30"
+                        title={
+                          alliance
+                            ? `500金，友好≥30；使者魅力${alliance.envoyCharisma}，成功率${Math.round(alliance.chance)}%`
+                            : '500金，友好≥30'
+                        }
                         onClick={() => void formAlliance(f.id)}
                       >
                         {rel === 'allied' ? '已同盟' : '结盟'}

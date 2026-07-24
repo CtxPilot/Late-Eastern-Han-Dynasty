@@ -31,6 +31,31 @@ export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
 }
 
+export interface TurnCalendar {
+  year: number;
+  month: number;
+  season: Season;
+  isQuarterStart: boolean;
+  isYearStart: boolean;
+}
+
+/** S01 时间真源：每次推进恰好一个月；季度从 1/4/7/10 月开始。 */
+export function advanceCalendar(currentYear: number, currentMonth: number): TurnCalendar {
+  if (!Number.isInteger(currentYear) || !Number.isInteger(currentMonth) || currentMonth < 1 || currentMonth > 12) {
+    throw new Error('无效的游戏年月');
+  }
+
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  const nextYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+  return {
+    year: nextYear,
+    month: nextMonth,
+    season: monthToSeason(nextMonth),
+    isQuarterStart: nextMonth === 1 || nextMonth === 4 || nextMonth === 7 || nextMonth === 10,
+    isYearStart: nextMonth === 1,
+  };
+}
+
 function sumSafe(d: CityDemographics): number {
   return d.adultMale + d.adultFemale + d.child + d.elder;
 }
@@ -124,13 +149,14 @@ function settleCityMonthDetailed(
 }
 
 export function advanceTurn(state: GameState, rng: () => number): GameState {
-  let { currentYear, currentMonth } = state;
-  currentMonth += 1;
-  if (currentMonth > 12) {
-    currentMonth = 1;
-    currentYear += 1;
-  }
-  const season = monthToSeason(currentMonth);
+  const calendar = advanceCalendar(state.currentYear, state.currentMonth);
+  const {
+    year: currentYear,
+    month: currentMonth,
+    season,
+    isQuarterStart,
+    isYearStart,
+  } = calendar;
   const seasonNames = ['春', '夏', '秋', '冬'] as const;
   const seasonLabel = seasonNames[season] ?? '';
 
@@ -208,6 +234,22 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
         type: 'end_turn',
         message: ecoMsg,
       },
+      ...(isQuarterStart
+        ? [{
+            year: currentYear,
+            month: currentMonth,
+            type: 'quarter_start',
+            message: `${currentYear}年${currentMonth}月 — ${seasonLabel}季开始`,
+          }]
+        : []),
+      ...(isYearStart
+        ? [{
+            year: currentYear,
+            month: currentMonth,
+            type: 'year_start',
+            message: `${currentYear}年开始`,
+          }]
+        : []),
       ...famineNotes.slice(0, 8).map((message) => ({
         year: currentYear,
         month: currentMonth,

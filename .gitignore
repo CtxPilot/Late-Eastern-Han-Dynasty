@@ -45,6 +45,10 @@ docs/screenshots/leh-seats-full.png
 /index.html
 /src/
 
+# Local high-resolution portrait source PNGs (do not redistribute; the
+# README uses docs/screenshots/leh-officer-*.png which are already in git)
+/assets/portraits/
+
 # External reference demos (not part of the project; user-provided PCG prototypes)
 /map_battleground_procedural_engine*.html
 # Engineering fonts (do not redistribute, dev provides locally)

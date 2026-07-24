@@ -33,6 +33,8 @@
     "verify-ai-military-rng": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-ai-military-rng",
     "verify-march-fog": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-march-fog",
     "verify-battle-commanders": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-battle-commanders",
+    "verify-turn-cadence": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-turn-cadence",
+    "verify-negotiation-r2": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-negotiation-r2",
     "test": "pnpm --filter @leh/shared test",
     "spdx": "node scripts/add-spdx-headers.mjs"
   },

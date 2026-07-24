@@ -9,6 +9,7 @@
 import {
   MaritalStatus,
   OfficerStatus,
+  calculateRecruitChance,
   canMarchAlongRoad,
   panelStatsDisplay,
   type FemaleCharacter,
@@ -199,17 +200,7 @@ export function calcRecruitChance(
   recruiter: Officer,
   target: Officer,
 ): number {
-  const chaDiff = recruiter.stats.charisma - target.stats.charisma;
-  const compatDiff = Math.abs(
-    recruiter.hidden.compatibility - target.hidden.compatibility,
-  );
-  let rate =
-    40 +
-    chaDiff * 0.3 +
-    (1 - compatDiff / 150) * 40 +
-    (target.hidden.righteousness ?? 50) * 0.02 -
-    (target.hidden.ambition ?? 50) * 0.03;
-  return Math.max(5, Math.min(90, rate));
+  return calculateRecruitChance(recruiter, target);
 }
 
 /**

@@ -32,6 +32,8 @@
     "verify-ai-military-rng": "tsx src/scripts/verify-ai-military-rng.ts",
     "verify-march-fog": "tsx src/scripts/verify-march-fog.ts",
     "verify-battle-commanders": "tsx src/scripts/verify-battle-commanders.ts",
+    "verify-turn-cadence": "tsx src/scripts/verify-turn-cadence.ts",
+    "verify-negotiation-r2": "tsx src/scripts/verify-negotiation-r2.ts",
     "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js"

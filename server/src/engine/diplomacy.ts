@@ -7,6 +7,7 @@
  */
 import {
   DipRelation,
+  calculateAllianceChance,
   findDiplomacy,
   type DiplomacyLink,
   type GameState,
@@ -185,8 +186,12 @@ export function giftBeautyStock(
   );
 }
 
-/** 缔结盟约：友好≥30 且非战争 */
-export function formAlliance(state: GameState, targetFactionId: number): GameState {
+/** 缔结盟约：友好≥30 且非战争；消耗一次权威 RNG 进行百分点判定。 */
+export function formAlliance(
+  state: GameState,
+  targetFactionId: number,
+  rng: () => number,
+): GameState {
   if (targetFactionId === state.playerFactionId) throw new Error('不能与本势力结盟');
   if (!state.factions[targetFactionId]) throw new Error('目标势力不存在');
 
@@ -204,6 +209,18 @@ export function formAlliance(state: GameState, targetFactionId: number): GameSta
   }
 
   const cities = payFromAnyPlayerCity(state, ALLIANCE_GOLD);
+  const breakdown = calculateAllianceChance(state, targetFactionId);
+  const envoy = state.officers[breakdown.envoyId];
+  if (rng() * 100 >= breakdown.chance) {
+    const name = state.factions[targetFactionId].name;
+    const withCities = pushLog(
+      state,
+      'alliance',
+      `${envoy.name} 与 ${name} 结盟交涉失败（成功率 ${Math.round(breakdown.chance)}%，耗金 ${ALLIANCE_GOLD}）`,
+      { cities },
+    );
+    return syncFactionResources(withCities);
+  }
   const diplomacy = upsertLink(
     state.diplomacy,
     state.playerFactionId,
@@ -218,7 +235,7 @@ export function formAlliance(state: GameState, targetFactionId: number): GameSta
   const withCities = pushLog(
     state,
     'alliance',
-    `与 ${name} 缔结盟约（耗金 ${ALLIANCE_GOLD}；盟友城池情报部分共享）`,
+    `${envoy.name} 与 ${name} 缔结盟约（成功率 ${Math.round(breakdown.chance)}%，耗金 ${ALLIANCE_GOLD}；盟友城池情报部分共享）`,
     { cities, diplomacy },
   );
   return syncFactionResources(withCities);
