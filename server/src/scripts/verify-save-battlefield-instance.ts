@@ -289,7 +289,17 @@ check('f5 占领后存档读档 instance id 一致', f5Restored?.id === f5State.
 check('f5 读档后当阳 rulerFactionId 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.rulerFactionId === getGame().playerFactionId);
 check('f5 读档后当阳 garrison 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison === f5State.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison);
 
-// f6. 补给线切断：克隆攻方 Army 作为守方，调 tickBattlefieldInstance → morale -5
+// f6. 补给线切断（简化替代版，非设计原意的糧耗×2 路径判定）：
+//   ⚠️ 本断言验证的是 BF-P2 Q9 落地的**简化替代机制**——"攻方占领至少 1 个首批县
+//   → 守方全部 CampaignArmy morale -5"（全局士气流失）。
+//   这**不是**设计文档（docs/25-bf-p2-design.md §2.4 第 1 条）原始承诺的
+//   "经过占领县的敌方 Army 糧耗×2 + 士气-5"路径判定机制。
+//   简化原因：CampaignArmy（数字 cityId）与郡域县节点（字符串 countyId）当前
+//   无位置映射，无法做"补给线经过攻方控制县"的路径判定。真正糧耗×2 路径判定
+//   留 R6（S15 多线 AI）/ BF-P5，前置依赖是 Army-郡域位置映射。
+//   f6 通过 ≠ 糧耗×2 路径判定已实现，仅代表简化替代机制按预期跑通。
+//   详见 docs/25-bf-p2-design.md §2.6.1。
+// 克隆攻方 Army 作为守方，调 tickBattlefieldInstance → morale -5
 const f6State = getGame();
 const f6DefenderId = f6State.activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === f6State.activeBattlefieldInstance!.targetSeatNodeId)?.rulerFactionId;
 const f6AtkArmy = f6State.campaignArmies.find((a) => a.factionId === f6State.playerFactionId);
@@ -299,7 +309,7 @@ const f6WithDef: GameState = { ...f6State, campaignArmies: [...f6State.campaignA
 const f6BeforeMorale = f6DefArmy.morale;
 const f6After = tickBattlefieldInstance(f6WithDef);
 const f6AfterMorale = f6After.campaignArmies.find((a) => a.id === 'f6-defender-clone')?.morale;
-check('f6 占领首批县后守方 morale -5（补给线受扰）', f6AfterMorale === f6BeforeMorale - 5);
+check('f6 占领首批县后守方 morale -5（简化替代：全局士气流失，非糧耗×2 路径判定）', f6AfterMorale === f6BeforeMorale - 5);
 
 // f7. 驻军消耗：占领后 controlTurns++ → 1；garrison=0 时掉控制
 // 先调一次 tick → controlTurns 从 0 → 1（当阳 garrison > 0，保留控制）
