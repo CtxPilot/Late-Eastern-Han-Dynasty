@@ -62,7 +62,7 @@
 | S20 | **前端体验** | **S/D** | **Session 122 已实装：**己方武将名册、OfficerDetail、低忠诚警报、人事搜索/登用/任命/解职/赏赐统一终审窗。**仍设计中：**W1 endTurn WebSocket+overlay；W2 数字跳动+EventLog；W3 势力凸包/Fog/tween/PCG；W4 派系面板、外交雷达、财政飘字、行政总署完整重组。0-B 前置技术债 D-0B-1~5、D-0B-9~10 |
 | S21 | **战争四层串联** | **D** | 行政大地图→郡域战场→局部交战→单挑演出；局部交战统一为自动/标准/六角微操三种结算模式，白刃是标准模式表现而非额外必经结算层。沿用 W6~W9 工程包与 screen 六态栈；0-B 前置技术债 D-0B-6 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | 基调固定「金石水墨·拓片简册·印信官职」，仅用公有领域历史视觉语言。**Session 102** 已实装跨平台字体资产闭环与 Canvas 屏障；**Session 124** 已实装吕布/关羽/诸葛亮/曹操四名代表人物的纯 SVG/CSS 程序化头像、氏族题签和姓名印（C+B 简化切片）。完整 A+C+B 仍待 P5-10：公有领域拓片底图、`avatarGene` 类型/Zod/JSON 落库及 30 人精校。详见 `00-dev-constitution.md` §11、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`。 |
-| S23 | **人物状态表情系统** | **S/D**（Commit 1 设计完成） | S22 美术基调 A+C+B 方案中 **C 层（程序化五官拼图）的动态状态化扩展**：把静态哈希派生的「眉眼」维度改为由确定性游戏状态（战斗胜负/忠诚/士气/stamina）驱动切换。本轮仅吕布/曹操/诸葛亮 3 原型 + 程序化 SVG 占位，不产出成品美术。状态词表精简为 7 词（`neutral`/`victory`/`defeat`/`anger`/`reluctant`/`suspicion`/`ponder`）；优先级：负伤>战斗瞬时态>忠诚>士气>默认；单一主表情 + 独立背景色调层叠加；衰减用 `activeBattles` 判定（不引入计时器）。接入点：BattleView SideCard（瞬时态）+ OfficerDetail 大头像（持续态）。详见 `24-character-expression-system-design.md`。 |
+| S23 | **人物状态表情系统** | **M/D**（Commit 1+2 完成，7 状态 Headless 实测过） | S22 美术基调 A+C+B 方案中 **C 层（程序化五官拼图）的动态状态化扩展**：把静态哈希派生的「眉眼」维度改为由确定性游戏状态（战斗胜负/忠诚/士气/stamina）驱动切换。本轮仅吕布/曹操/诸葛亮 3 原型 + 程序化 SVG 占位，不产出成品美术。状态词表精简为 7 词（`neutral`/`victory`/`defeat`/`anger`/`reluctant`/`suspicion`/`ponder`）；优先级：负伤>战斗瞬时态>忠诚>士气>默认；单一主表情 + 独立背景色调层叠加；衰减用 `activeBattles` 判定（不引入计时器）。接入点：BattleView SideCard（瞬时态）+ OfficerDetail 大头像（持续态）。详见 `24-character-expression-system-design.md`。 |
 
 ### C. 归并
 
@@ -96,7 +96,7 @@
 2. **第 1.5**：S09 ✓ → S18 ✓ → 女间谍 ✓ → S17 ✓ → 跟随 ✓ → Debug ✓  
 3. **第 2**：~~S11~~ ✓ · ~~S14 事件引擎+选项 UI~~ ✓ · ~~外交献美~~ ✓ · ~~点化~~ ✓ · ~~S17 假情报/空城~~ ✓ · ~~S06 裁剪~~ ✓ · ~~兵种克制~~ ✓ · ~~AI 占城~~ ✓  
 4. **当前一致性修复主线**：~~R1 S01~~ ✅ → ~~R2 S11/S08~~ ✅ → **R3 S10（2026-07-24 下一步）** → R4～R8
-5. **已批准战场子路线**：~~BF-P0 南郡资料/Schema~~ ✅ → BF-P1 静态郡域闭环 → BF-P2～P6；一致性修复期间保持待办，不抢跑
+5. **已批准战场子路线**：~~BF-P0 南郡资料/Schema~~ ✅ → ~~BF-P1 静态郡域闭环~~ ✅（Session 173）→ BF-P2～P6
 
 ---
 
@@ -131,9 +131,10 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 
 - **原则**：武将水军适性≥C；NONE 仅文官。  
 - **当前优先（Session 171）**：R1/R2 已完成；2026-07-24 从 R3 开始，只处理 S10
-  单挑四倾向与吕布“规则内最强但可败”。BF-P1 仍为已批准战场下一步，但在一致性修复期间待办。
+  单挑四倾向与吕布“规则内最强但可败”。**BF-P1 已于 Session 173 完成最小闭环**（world→战场→六角接战→回写全链路 Headless 通过；存档契约留 P2）。
 - 暂缓 0-B · 连携 · 造船。战术层（hex battle）设计保留，代码存续。
 - **Session 172（S23 人物状态表情系统，并行任务）**：新增 S23 大系统（22→23），挂 S22 美术基调 C 层状态化扩展。本轮仅吕布/曹操/诸葛亮 3 原型 + 程序化 SVG 占位，不产出成品美术。状态词表精简 7 词；优先级负伤>战斗瞬时态>忠诚>士气>默认；单一主表情+独立背景色调层；衰减用 `activeBattles` 判定。接入点 BattleView SideCard（瞬时态）+ OfficerDetail 大头像（持续态）。R3 仍为 R3，本任务不抢占 R3 优先级，是用户指派的独立需求。详见 `24-character-expression-system-design.md`。
+- **Session 173（BF-P1 静态郡域场景+六角引擎最小闭环，并行任务）**：world→战场→六角接战→回写全链路 Headless 通过。落地：`shared/scenes.ts` 场景栈纯函数 + gameStore sceneStack 驱动 screen；`shared/types/battlefield-instance.ts` + Zod schema；`shared/nanjun-battlefield.ts` generateNanjunBattlefield（16 县/11 路线，江陵 seat）；`BattlefieldSceneView` SVG；engageJiangling 复用 createBattle（cityId=14）不重写战斗逻辑。存档契约可序列化结构+往返单测已落地，不接 GameState schema 留 P2。回归 62/29/38/172 无破坏。详见 `21-battlefield-scene-design.md` §十。
 
 ### 六、0-B 前置技术债（D-0B-1~13）
 
@@ -157,4 +158,4 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 
 ---
 
-*v8.3 | Session 172（S23 人物状态表情系统新增，22→23；R3 仍为 R3 下一步）*
+*v8.4 | Session 173（BF-P1 最小闭环打通；S23 已完成 Session 172；R3 仍为 R3 下一步）*
