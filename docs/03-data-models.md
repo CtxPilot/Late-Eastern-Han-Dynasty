@@ -2171,9 +2171,10 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 ## 二十三、独立郡域战场设计契约
 
-> **状态：BF-P0 静态历史地理契约已实装；BF-P1 最小闭环已打通；BF-P2 Q10 `BattlefieldInstance` 接入 GameState 已实装。** 正式 Zod 与推导类型位于
+> **状态：BF-P0 静态历史地理契约已实装；BF-P1 最小闭环已打通；BF-P2 全部落地（Q10+Q11+Q12+Q9）。** 正式 Zod 与推导类型位于
 > `shared/data/historical-geography/schema.ts`；南郡 190 数据和只读预览位于同目录。
 > `BattlefieldInstance` 已接入 `GameState.activeBattlefieldInstance`（Q10，Session 174），与 `activeBattlefield`（Tier I）场景栈互斥；`Encounter` 仍是 P2 设计记录，运行时为空数组。
+> **BF-P2 Q9（Session 176）**：`BattlefieldNodeState` 加 `controlTurns` 字段（已控制月数，用于驻军消耗掉控制判定）；`engageCounty(countyId)` orchestrator 复用 `runAutoBattle` 自动结算（不调 `createBattle` 六角，县级无 cityId 映射）；`tickBattlefieldInstance(state)` 月度 tick 实现驻军消耗掉控制 + 补给线切断简化版（守方 morale -5）；首批 3 县（当阳/华容/枝江）开放为可攻打目标。详见 `docs/25-bf-p2-design.md` §二。
 >
 > **双层数据模型（Q11 已落地）**：`BattlefieldMap`（Tier I，数字 cityId）与
 > `BattlefieldInstance`（Tier II，字符串 countyId）保持独立、不合并不废弃——
