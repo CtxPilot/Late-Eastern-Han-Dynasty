@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import type { Officer } from '@leh/shared';
+import type { Officer, OfficerStats } from '@leh/shared';
 
 type PortraitPreset = {
   image?: string;
@@ -24,11 +24,33 @@ const HERO_PRESETS: Record<number, PortraitPreset> = {
   6: { image: '/portraits/guan_yu.png', courtesy: '云长', clan: '河东关氏', title: '威震华夏', role: '名将', quote: '忠义凛然，水淹七军', ink: '#29473f', seal: '#8f2822', face: 'square', crown: 'warrior', beard: 'long' },
 };
 
+/**
+ * 非原型武将的称号 fallback：从五维派生，不再取 tags 末项（避免把"义兄弟"
+ * "匡扶汉室"等关系/政治标签当称号）。4 原型武将走 HERO_PRESETS 专属称号不受影响。
+ *
+ * 阈值参考 0-A 武将分布：95+ 为顶流（万人敌/神算），90+ 为一流（猛将/谋主），
+ * 80+ 为二线（宿将/谋士/战将），85+ 统帅/名士为辅线。其余 fallback '时势英杰'。
+ */
+function deriveFallbackTitle(stats: OfficerStats): string {
+  const { war, intelligence, leadership, politics, charisma } = stats;
+  if (war >= 95) return '万人敌';
+  if (intelligence >= 95) return '神算';
+  if (war >= 90) return '猛将';
+  if (intelligence >= 90) return '谋主';
+  if (war >= 80 && leadership >= 80) return '宿将';
+  if (intelligence >= 80) return '谋士';
+  if (war >= 80) return '战将';
+  if (leadership >= 85) return '统帅';
+  if (politics >= 80) return '干吏';
+  if (charisma >= 85) return '名士';
+  return '时势英杰';
+}
+
 export function getOfficerProfile(officer: Officer): PortraitPreset {
   return HERO_PRESETS[officer.id] ?? {
     courtesy: '',
     clan: officer.tags.slice(0, 2).join(' · ') || '汉末人物',
-    title: officer.tags[officer.tags.length - 1] ?? '时势英杰',
+    title: deriveFallbackTitle(officer.stats),
     role: officer.stats.war >= 80 ? '武将' : officer.stats.intelligence >= 80 ? '谋臣' : '官吏',
     quote: '生逢乱世，各秉其志',
     ink: '#3f3a32',
