@@ -3,8 +3,11 @@
 
 import {
   CIVIL_LABELS,
+  FORMATION_LABEL,
+  IDEAL_LABEL,
   LOCAL_LABELS,
   MILITARY_LABELS,
+  PERSONALITY_LABEL,
   type GameState,
   type Officer,
 } from '@leh/shared';
@@ -116,11 +119,19 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </section>
 
             <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能与特性</h3>
+              <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能</h3>
               <div className="flex flex-wrap gap-1.5 text-[11px]">
                 {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
                 {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
                 {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
+              </div>
+            </section>
+
+            <section>
+              <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格</h3>
+              <div className="flex flex-wrap gap-1.5 text-[11px]">
+                <Chip text={`性 · ${PERSONALITY_LABEL[officer.hidden.personality] ?? officer.hidden.personality}`} />
+                <Chip text={`志 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
               </div>
             </section>
           </div>
@@ -138,8 +149,15 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               <p className="mt-2 text-xs text-stone-500">正妻：{wife ?? '—'} · 赏赐美人：{officer.beauties.length}</p>
             </section>
             <section>
+              <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型</h3>
+              <div className="flex flex-wrap gap-1.5 text-[11px]">
+                {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
+                {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}
+              </div>
+            </section>
+            <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
-              <div className="grid grid-cols-2 gap-2 text-xs"><Info label="经验" value={String(officer.experience)} /><Info label="体力" value={String(officer.stamina)} /><Info label="阵型" value={`${officer.formationMastery.length} 项`} /><Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} /></div>
+              <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
             </section>
           </div>
           </div>
