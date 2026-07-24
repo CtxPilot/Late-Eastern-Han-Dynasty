@@ -20,6 +20,8 @@
     "negotiation.ts",
     "expression.ts",
     "scenes.ts",
+    "battlefield-instance-schema.ts",
+    "nanjun-battlefield.ts",
     "save.ts",
     "rng.ts",
     "game-state-schema.ts",
