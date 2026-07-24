@@ -3482,3 +3482,20 @@
 - **正式 BF-P2 完成声明**：**BF-P2 实施阶段完成。** Q10+Q11+Q12+Q9 四项全部落地；其中 Q9 的四项攻占效果中，**两项（驻军消耗、战场推进）为完整实现，两项（补给线切断、视野扩张）为简化替代/占位**——补给线切断当前是"占领首批县→守方全军 morale -5"全局简化，非设计原意的糧耗×2 路径判定（留 R6/BF-P5，前置 Army-郡域位置映射）；视野扩张当前仅为占领视觉反馈，郡域场景无迷雾层（是新发现缺口，留 R6/BF-P5）。详见 `docs/25-bf-p2-design.md` §2.6。**不能笼统说"四项攻占效果全部完整落地"。** R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
 
 *v12.4 | 2026-07-24 | Session 177 · BF-P2 Q9 老实标注（补给线/视野扩张为简化替代或占位），正式签发 BF-P2 完成*
+
+## 2026-07-24 — Session 178（武将详情界面修复：阵型/经验体力/性格/称号 + 阵型数据补录）
+
+- **触发**：用户反馈角色详情界面（`OfficerDetail`）阵型显示不全、技能重复、特性缺失、图片错误。先做诊断（不改代码），再据诊断修复。
+- **诊断（纯调查）**：Headless Chrome 实测 5 名武将（诸葛亮/关羽/张飞/黄忠 + roster 缩略图）+ 代码/数据/网络层穷尽分析。确认 4 类问题：(1) 阵型区块只显数量"6 项"不显名称，且 10 名骑兵系武将（吕布/夏侯渊/马超/马腾/曹彰/庞德/文鸯/曹纯等）`formationMastery` 引用不存在的 id 16；(2) 经验/体力在 aside 与状态区块重复渲染；(3) `officer.hidden` 19 字段全未渲染，"技能与特性"标题误导（只有技能）；(4) 非原型武将称号取 `tags` 末项（张飞"义兄弟"、黄忠"择木而栖"，语义不当）。图片问题：代码/网络层无加载故障（4 PNG 存在/200 OK/0 控制台错误/映射按名正确），视觉内容确认受环境模型限制（GLM 5.2 无视觉）无法完成，诊断截图存 `/tmp/officer-ui-diag/`。详见此前诊断报告。
+- **修复（4 commit，每个独立通过测试）**：
+  1. `fix(data)` `4489592`：补录 `formations.json` id 16 **冲阵**。**判定：漏录非错误引用**——依据：`08-data-dictionary` L124 id 区间陆阵 0~17（id 16 在范围内）、`05-combat-system` §4 L238/L273 明确 id 16=冲阵（Tier 4，仅骑兵，+3/-3/+2/0，冲锋+80%）、`FormationType.CHARGE=16` 枚举、`08-data-dictionary` L473 示例就用了 id 16、`crit.ts:83` FORMATION_MODS 已含 CHARGE（战斗早已认识）、10 名引用武将全骑兵系与"仅骑兵"吻合。补录按 05 §4 设计值完整定义（name/modifiers/effects/allowedUnits 骑兵/bestUnits 重骑/restrictedUnits 步兵/terrainModifiers）。战斗不受影响（crit.ts/meleeRound.ts FORMATION_MODS 硬编码不读 formations.json）。`validate-data.ts` expected 6→7。文档数字真源双写（6→7 阵型：08/09/02/README/AGENTS/10-progress 状态行；历史 Session 日志不改）。
+  2. `feat(shared)` `098e349`：新建 `shared/labels.ts` 导出 `FORMATION_LABEL`（18 陆阵 id→中文名，覆盖设计内全量，0-A 实录 7 条+11 预留名保证 UI 永不显示 undefined）、`PERSONALITY_LABEL`（6 性格：勇烈/沉稳/果敢/谨慎/刚烈/温厚）、`IDEAL_LABEL`（5 志向：霸业/仁政/割据/侠义/名利）。`shared/index.ts` 导出；`shared/tsconfig.json` include 补 `labels.ts`。
+  3. `fix(officer-detail)` `09a39a0`：`OfficerDetail.tsx` 三处修复——阵型区块用 `FORMATION_LABEL` 渲染 chip（替代"6 项"，未知 id 优雅 fallback `未知·{id}`）；状态区块移除经验/体力（保留 aside，消除重复），只剩"状态:在职"；拆"技能与特性"→"技能"+"性格"（性格区块展示 `hidden.personality`+`ideal` 文字，用 PERSONALITY_LABEL/IDEAL_LABEL；**数值类 hidden 字段按设计决策保持隐藏**）。
+  4. `fix(officer-portrait)` `8a01872`：`getOfficerProfile` fallback 的 `title` 改 `deriveFallbackTitle` 从五维派生（war95+/智95+→万人敌/神算；war90+/智90+→猛将/谋主；war80+统80+/智80+/武80+→宿将/谋士/战将；统85+/政80+/魅85+→统帅/干吏/名士；其余→时势英杰），不再取 `tags` 末项。4 原型武将（曹操/诸葛亮/吕布/关羽）HERO_PRESETS 专属称号不动。
+- **Headless Chrome 验证**：实测张飞（非原型→"万人敌" war97≥95，阵型=方阵/锥形阵/锋矢阵/偃月阵，性·刚烈/志·侠义，状态仅在职）+ 诸葛亮（原型"卧龙经略"保留，性·沉稳/志·仁政）+ 吕布（原型"虓虎无双"保留，**阵型=锥形阵/锋矢阵/冲阵——id 16→冲阵 关键验证通过**，性·刚烈/志·名利，状态仅在职）。3 名武将覆盖原型称号保留、非原型称号派生、id 16 渲染、性格区块、经验体力去重全部修复点。
+- **全量回归零破坏**：shared 172/172、validate-data（formations 7 条含冲阵）、typecheck/lint/build 全 Done、verify-save-battlefield-instance 45/0（存档契约无回归，client UI 改动不影响 server）。
+- **新发现既有 bug（非本轮引入，未修，供后续参考）**：`CampaignPanel.tsx:276` 与 `StandardModePanel.tsx:38` 把 `FormationType.ARROWHEAD`（id 6，锋矢阵）误标为"冲阵"（实际 `CHARGE`=16 才是冲阵），且两处本地 FORMATION_NAMES 映射表漏 id 16 条目。建议后续统一改用 `shared/labels.ts` 的 `FORMATION_LABEL` 根治。
+- **明确未做**：不修改头像图片本身（用户已更换新版头像，需另外单独核对）；不展示 hidden 数值类字段（设计决策已定，保持隐藏）。
+- **标注**：R3（S10 单挑四倾向）仍为下一步，本轮武将界面修复是用户指派独立需求，不归属 R3/R8 序列。
+
+*v12.5 | 2026-07-24 | Session 178 · 武将详情界面修复（阵型显名称/经验体力去重/性格区块/称号派生 + id 16 冲阵补录）*

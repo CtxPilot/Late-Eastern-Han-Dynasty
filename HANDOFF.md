@@ -9,11 +9,11 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 177 完成（BF-P2 Q9 老实标注 + 正式签发 BF-P2 完成）**；S176 Q9 首批 3 县可攻打落地（初判完成，老实标注见 S177）；S175 Q11+Q12 文档化；S174 Q10 存档接入；S173 BF-P1 最小闭环；S23 Session 172；R3 仍为 R3 下一步 |
+| 会话 | **Session 178 完成（武将详情界面修复：阵型/经验体力/性格/称号 + 阵型数据补录 id 16 冲阵）**；S177 BF-P2 Q9 老实标注 + 正式签发 BF-P2 完成；S176 Q9 首批 3 县可攻打；S175 Q11+Q12 文档化；S174 Q10 存档接入；S173 BF-P1 最小闭环；S23 Session 172；**R3（S10 单挑四倾向）仍为下一步** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物金石水墨位图头像（其余程序化回退）/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** + **S23 人物状态表情系统（3 原型占位，程序化 SVG 分层，7 状态 Headless 实测过）** + **BF-P1 静态郡域场景+六角引擎最小闭环（world→战场→六角接战→回写全链路 Headless 通过；场景栈+BattlefieldInstance+南郡生成+engageJiangling 复用 createBattle）** |
+| 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物金石水墨位图头像（其余程序化回退）/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** + **S23 人物状态表情系统（3 原型占位，程序化 SVG 分层，7 状态 Headless 实测过）** + **BF-P1 静态郡域场景+六角引擎最小闭环** + **BF-P2 Q10+Q11+Q12+Q9 全部落地（含老实标注：补给线/视野扩张为简化替代或占位）** + **武将详情界面修复（Session 178：阵型显名称/经验体力去重/性格区块/非原型称号从 stats 派生 + formations.json 补录 id 16 冲阵）** |
 | 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · **23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施）** · **24-character-expression-system-design（S23 设计+实装，172/172+Headless 7 状态）** · **21-battlefield-scene-design v1.3（BF-P1 最小闭环已打通）** |
-| 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送并与 `origin/main` 对齐至 `958e0ed` |
+| 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送至 `ed9db10`（BF-P2 全部 + 老实标注），**本地领先 origin/main 5 个 commit（S178 武将界面修复 4 + 进度文档 1，未推送）** |
 | 玩法下一步 | **2026-07-24 开始 R3：S10 单挑四倾向与吕布“强但可败”规则**。本轮只做 R3，不并行 R4；BF-P1 保持已批准待办。**Session 172 并行任务：S23 人物状态表情系统**（用户指派独立需求，不归属 R3/R8 序列；Commit 1+2 完成，7 状态 Headless 实测过；详见 `docs/24-...`）。**Session 173 并行任务：BF-P1 静态郡域场景+六角引擎最小闭环**（world→战场→六角接战→回写全链路 Headless 通过；场景栈+BattlefieldInstance+南郡生成；存档契约留 P2；详见 `docs/21-...` §十）。 |
 
 ---
@@ -194,6 +194,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 175 | **BF-P2 Q11+Q12：类型归并文档化 + AI 攻县依赖声明**（Q11：BattlefieldMap Tier I 19 调用点 vs BattlefieldInstance Tier II 6 调用点保持独立不合并不废弃，结论落地至 02-architecture/03-data-models/12-system-map/25-bf-p2-design；Q12：R6 范围补"县级攻打决策不属于 BF-P2/P3，归 R6"，09-roadmap BF-P3 同步范围边界；3 处代码注释补 RNG 边界为 BF-P3 预留说明；修正 03-data-models 两处过时口径"BattlefieldInstance 尚未实装"+ GameState 缺字段。git diff --check + typecheck/lint 全过。Q9 仍待实施） |
 | 176 | **BF-P2 Q9：首批 3 县可攻打落地，BF-P2 实施阶段完成（初判）**（当阳/华容/枝江 + 江陵 seat = 4 县可攻打节点。BattlefieldNodeState 加 controlTurns；turn.ts tickBattlefieldInstance 月度 tick——驻军消耗掉控制 + 补给线切断简化版守方 morale -5；engageCounty orchestrator 复用 runAutoBattle 自动结算（不调 createBattle 六角，县级无 cityId 映射），手动更新 nodeStates + CampaignArmy；路由 + client API + gameStore action + BattlefieldSceneView 3 县可点击 + 占领绿色高亮 + "驻N"文本；verify-save-battlefield-instance 44/44 含 f 类县级攻打状态流转+补给线+驻军掉控制；全量回归零破坏；Headless Chrome 完整验证 enter→click 当阳→占领→UI 绿色+驻858。**BF-P2 Q10+Q11+Q12+Q9 四项全部落地，初判完成；但四项攻占效果实现程度不一（两项完整/两项简化占位），老实标注见 Session 177）** |
 | 177 | **BF-P2 Q9 老实标注 + 正式签发 BF-P2 完成**（纯文档/注释澄清，零代码逻辑改动。Session 176 报告将四项攻占效果统一标"✓ 通过"，但实际两项是简化替代/占位。本轮老实分级：补给线切断=简化替代实现——设计原意糧耗×2 路径判定，实际是"占领任意首批县→守方全军 morale -5"全局士气流失，简化因 Army-数字cityId 与郡域县节点-字符串countyId 无位置映射，真正路径判定留 R6/BF-P5；视野扩张=未实现，当前为占位视觉反馈——郡域场景无迷雾遮蔽，占领后只是节点变绿+驻军数字，不存在"揭示"动作，郡域迷雾是新发现缺口（此前从未被任何阶段排期覆盖）；驻军消耗+战场推进=✅完整实现。文档改动 5 处：25-bf-p2-design §二状态块+§2.4+新增§2.6 老实标注；23 R6 补登记两项待办依赖；09-roadmap BF-P2/BF-P3/BF-P5 行+版本号；verify-save-battlefield-instance f6 注释扩展+check label 诚实化（断言布尔条件不变）；10-progress Session 177+HANDOFF。**正式 BF-P2 完成声明：四项攻占效果中两项（驻军消耗、战场推进）为完整实现，两项（补给线切断、视野扩张）为简化替代/占位，详见 25 号文档 §2.6，不能笼统说四项全部完整落地。** typecheck/lint 确认无破坏） |
+| 178 | **武将详情界面修复（用户指派独立需求，不归属 R3/R8）**（先诊断后修复，4 commit。诊断：Headless Chrome 实测 5 名武将 + 代码/数据/网络层穷尽分析，确认 4 类问题——阵型只显数量"6 项"且 10 名骑兵武将引用不存在的 id 16、经验/体力重复、19 hidden 字段全未渲染+标题误导、非原型称号取 tags 末项。修复：①`fix(data)` 补录 formations.json id 16 **冲阵**——判定漏录非错误引用（08-data-dictionary id 区间 0~17、05 §4 L238 id 16=冲阵、FormationType.CHARGE=16、crit.ts 已含 CHARGE、10 名引用武将全骑兵系），按 05 §4 设计值补完整定义，战斗不受影响（硬编码 FORMATION_MODS 不读 formations.json），validate-data 6→7，文档数字真源双写；②`feat(shared)` 新建 shared/labels.ts 导出 FORMATION_LABEL(18 陆阵)+PERSONALITY_LABEL(6)+IDEAL_LABEL(5)；③`fix(officer-detail)` 阵型 chip 用 FORMATION_LABEL 渲染+移除状态区块经验/体力（保留 aside）+拆"技能与特性"→"技能"+"性格"（性格区块展示 personality+ideal 文字，数值类 hidden 按设计决策保持隐藏）；④`fix(officer-portrait)` getOfficerProfile fallback title 改 deriveFallbackTitle 从五维派生（万人敌/神算/猛将/谋主/宿将/谋士/战将/统帅/干吏/名士/时势英杰），4 原型 HERO_PRESETS 不动。Headless 验证：张飞→万人敌+方阵/锥形阵/锋矢阵/偃月阵+性·刚烈/志·侠义+状态仅在职；诸葛亮→卧龙经略保留+性·沉稳/志·仁政；吕布→虓虎无双保留+**阵型含冲阵(id 16 关键验证)**+性·刚烈/志·名利。全量回归 shared 172/172+validate-data(7)+typecheck/lint/build+verify-save-battlefield-instance 45/0 全绿。新发现既有 bug 未修：CampaignPanel/StandardModePanel 把 ARROWHEAD(6,锋矢阵)误标"冲阵"且漏 id 16，建议后续统一用 FORMATION_LABEL 根治。未做：头像图片本身（用户已换新版需另外核对）；hidden 数值类字段（设计决策保持隐藏）） |
 | 172 | **S23 人物状态表情系统**（新增 S23 大系统 22→23，挂 S22 美术基调 C 层状态化扩展；本轮用户指派独立需求，不抢占 R3。**Commit 1+2 完成**：设计文档 `24-...` + `shared/expression.ts` 纯函数 + 28 单测（147/147）+ `ExpressionPortrait.tsx` 程序化 SVG 分层 + BattleView SideCard/OfficerDetail 接入。状态词表精简 7 词；优先级负伤>战斗瞬时态>忠诚>士气>默认；单一主表情+独立背景色调层；衰减用 activeBattles 判定；3 原型各 4 条属性规则；stamina 代理负伤。Plan 阶段确认 4 抉择：文档编号 24-*/渲染=程序化 SVG 分层/负伤=stamina 代理/UI=SideCard+Detail。Headless Chrome 7 状态实测全过（胜/败/低忠诚/负伤/互斥）。验证限制：zustand store 不可外部 setState + 敌方城点迷雾不可点击，瞬时态改用真实吕布 officer+Vite 动态 import 组件+createRoot 独立挂载验证，等价覆盖。本轮占位非成品美术。详见 `docs/24-character-expression-system-design.md`） |
 | 121 | **工程器械与城防体系设计**（文档层）：05 §15 全量重写（6种器械Lv1~Lv3+城防体系+瓮城阶段+专属武将联动）；03 §20.3/20.3-B/20.4 类型扩展（SiegeEngine/CityFortification/TacticalDefense/SiegePhase）；07 §12.6 瓮城"未拍板"→已定案；12 S10 更新。 |
 | 120 | **阵型系统全面重设计**（文档层）：05 §4 完整重写（27阵型18陆+9水/双轴成长Lv1~Lv5+熟练度·极/科技树前置/陆水交互/暴击反击连击联动/切换规则）；03 §9 Formation/Officer 类型扩展；08 §二 formations.json 字段 6→27；04 §十九 新增阵型养成子章节；01/12同步。 |
@@ -307,7 +308,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（2026-07-24）** | 执行 `23-design-consistency-remediation.md` **R3：S10 单挑四倾向 + 吕布规则内最强但可败** |
+| **1（待启动）** | 执行 `23-design-consistency-remediation.md` **R3：S10 单挑四倾向 + 吕布规则内最强但可败**。Session 178 武将界面修复是用户指派独立需求，不抢占 R3，明天可启动 R3。 |
+| **Session 178 已完成** | 武将详情界面修复（阵型显名称/经验体力去重/性格区块/非原型称号派生 + formations.json 补录 id 16 冲阵）；4 commit 本地领先 origin/main 未推送。详见 10-progress Session 178。**未做**：头像图片本身需另外核对（用户已换新版）；CampaignPanel/StandardModePanel 的 ARROWHEAD↔冲阵 既有误标 bug 待后续用 FORMATION_LABEL 根治。 |
 | **Session 170 已完成** | R2：登用/结盟共享百分点公式，结盟接权威 RNG，UI/日志同源；专项验证 20/20 |
 | **Session 166 已完成** | 吕布、关羽、诸葛亮、曹操四张新头像接入人物简册与名册缩略图；非重点人物保留程序化回退；README 四张人物截图已用真实浏览器流程重拍 |
 | **Session 167 已完成** | README 将四张完整人物简册从单行四列改为 2×2 大图，确保新头像与五维、技能、兵种适性、官职整合界面在 GitHub 可辨读；图片 URL 增加版本参数刷新缓存 |
@@ -335,6 +337,6 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
   `quarter_start/year_start` 只是统一调度信号，不代表 R5 的季度内政或年度预算已实现。
 - **R2 已实装并验收**：登用义理/野心百分点修正；结盟共享公式、权威 RNG、日志/UI 同源，
   专项验证 20/20。声望、戒备和利益冲突字段仍未实装，当前按 0 的 Demo 处理。
-- 当前 Next：2026-07-24 开始 R3（S10）；只处理四种单挑倾向与吕布公平性，不并行 R4。
+- 当前 Next：R3（S10 单挑四倾向 + 吕布公平性）待启动；只处理四种单挑倾向与吕布公平性，不并行 R4。Session 178 武将界面修复已完成（独立需求），本地领先 origin/main 5 commit 未推送。
 
-*Session 171 交接 | 2026-07-23 | R1/R2 已完成；2026-07-24 开始 R3*
+*Session 178 交接 | 2026-07-24 | R1/R2 已完成；BF-P2 全部落地（含老实标注）；武将详情界面修复完成；R3 待启动*
