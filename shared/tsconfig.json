@@ -17,6 +17,7 @@
     "mask-state.ts",
     "positions.ts",
     "stamina.ts",
+    "expression.ts",
     "save.ts",
     "rng.ts",
     "game-state-schema.ts",

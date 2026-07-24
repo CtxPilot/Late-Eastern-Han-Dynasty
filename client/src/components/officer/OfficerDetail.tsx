@@ -8,7 +8,8 @@ import {
   type GameState,
   type Officer,
 } from '@leh/shared';
-import { getOfficerProfile, OfficerPortrait } from './OfficerPortrait';
+import { getOfficerProfile } from './OfficerPortrait';
+import { ExpressionPortrait } from './ExpressionPortrait';
 
 const STAT_ROWS = [
   ['统帅', 'leadership'],
@@ -71,6 +72,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const age = officer.birthYear > 0 ? Math.max(0, game.currentYear - officer.birthYear) : null;
   const wife = officer.wifeId != null ? game.females[officer.wifeId]?.name : null;
   const profile = getOfficerProfile(officer);
+  const armyMorale = game.campaignArmies.find((a) => a.commanderId === officer.id)?.morale;
   const signatureStat = STAT_ROWS.reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
 
   return (
@@ -86,7 +88,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
 
         <div className="grid gap-6 p-5 md:grid-cols-[220px_1fr]">
           <aside className="space-y-3">
-            <OfficerPortrait officer={officer} />
+            <ExpressionPortrait officer={officer} armyMorale={armyMorale} />
             <blockquote className="border-l-2 border-red-900/80 pl-3 text-sm leading-6 text-stone-300">{profile.quote}</blockquote>
             <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="体力" value={String(officer.stamina)} /><Info label="经验" value={String(officer.experience)} /></div>
             <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>

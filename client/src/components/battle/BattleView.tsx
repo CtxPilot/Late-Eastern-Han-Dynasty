@@ -3,9 +3,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Stage, Layer, Circle, Text, Group, Line, RegularPolygon } from 'react-konva';
-import { TerrainType } from '@leh/shared';
+import { TerrainType, type Officer, type BattleSideContext } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
+import { ExpressionPortrait } from '../officer/ExpressionPortrait';
 
 const HEX_SIZE = 28;
 const ORIGIN = { x: 50, y: 50 };
@@ -237,6 +238,8 @@ export function BattleView() {
               troops={attacker.troopCount}
               morale={attacker.morale}
               energy={attacker.energy ?? 100}
+              portrait={game.officers[attacker.commanderId]}
+              battleSide={{ side: attacker.side, winner: battle.winner, morale: attacker.morale, isDestroyed: attacker.isDestroyed, isRetreated: attacker.isRetreated }}
             />
           )}
           {defender && (
@@ -245,6 +248,8 @@ export function BattleView() {
               troops={defender.troopCount}
               morale={defender.morale}
               energy={defender.energy ?? 100}
+              portrait={game.officers[defender.commanderId]}
+              battleSide={{ side: defender.side, winner: battle.winner, morale: defender.morale, isDestroyed: defender.isDestroyed, isRetreated: defender.isRetreated }}
             />
           )}
         </div>
@@ -353,15 +358,24 @@ function SideCard({
   troops,
   morale,
   energy,
+  portrait,
+  battleSide,
 }: {
   title: string;
   troops: number;
   morale: number;
   energy: number;
+  portrait?: Officer | null;
+  battleSide?: BattleSideContext;
 }) {
   return (
     <div className="rounded-lg border border-amber-900/50 bg-stone-950/90 p-2 text-xs min-w-[140px]">
-      <div className="text-amber-400 mb-1">{title}</div>
+      <div className="text-amber-400 mb-1 flex items-center gap-1.5">
+        {portrait && battleSide && (
+          <ExpressionPortrait officer={portrait} battle={battleSide} compact />
+        )}
+        <span>{title}</span>
+      </div>
       <div>兵力 {troops}</div>
       <div>士气 {morale}</div>
       <div>气力 {energy}</div>

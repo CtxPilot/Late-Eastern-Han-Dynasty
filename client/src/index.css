@@ -53,6 +53,8 @@ body,
 .portrait-line,.portrait-brow,.portrait-eye,.portrait-faint,.portrait-plume { fill:none; stroke:var(--portrait-ink); stroke-linecap:round; }
 .portrait-line { stroke-width:4; }.portrait-brow { stroke-width:2.8; }.portrait-eye { stroke-width:2; }.portrait-faint { stroke-width:1.3; opacity:.55; }.portrait-plume { stroke-width:3; }
 .portrait-beard { fill:var(--portrait-ink); opacity:.88; }
+.portrait-mouth { fill:none; stroke:var(--portrait-ink); stroke-width:2; stroke-linecap:round; }
+.expression-tone { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; z-index:1; }
 .portrait-clan { position:absolute; top:8px; left:8px; padding:3px 5px; color:#3d2d1d; background:rgba(228,210,165,.72); border-left:2px solid var(--portrait-seal); font-size:10px; letter-spacing:.12em; writing-mode:vertical-rl; }
 .portrait-seal { position:absolute; right:9px; bottom:13px; display:grid; place-items:center; width:38px; height:38px; padding:3px; border:2px double #d7aa62; color:#ead4a6; background:var(--portrait-seal); font-family:'HanDynastySeal',serif; font-size:15px; line-height:1; writing-mode:vertical-rl; box-shadow:0 2px 4px rgba(0,0,0,.35); }
 .portrait-ribbon { position:absolute; left:0; right:0; bottom:0; height:5px; background:var(--portrait-ink); opacity:.88; }
