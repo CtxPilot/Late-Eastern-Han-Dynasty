@@ -561,6 +561,8 @@ server/src/data/loader.ts
 - 回写层：单一幂等服务端事务同步城市控制、势力列表、Army、武将、伤亡与战利品。
 - 随机层：静态模板零 RNG；动态部署、天气、遭遇及 P3 战场 AI 行动显式注入权威 `xorshift32-v1`，实现整场复现。
 
+**双层数据模型结论（Q11 已落地，Session 174）**：`BattlefieldMap`（Tier I 大地图层，数字 `cityId`，19 个活跃调用点：`client/services/api.ts`、`server/engine/battlefield.ts`、`server/services/game.ts`、`shared/game-state-battle-schema.ts`、`client/stores/gameStore.ts`、`client/components/battlefield/BattlefieldPanel.tsx` 等）与 `BattlefieldInstance`（Tier II 郡域场景层，字符串 `countyId`，6 个调用点：`shared/battlefield-instance-schema.ts`、`shared/nanjun-battlefield.ts`、`client/stores/gameStore.ts`、`client/components/battlefield/BattlefieldSceneView.tsx` 等）**保持独立，不合并不废弃**。两类型服务不同层级（30 城邻接切片战场 vs 郡治+属县+水系+关隘历史地理场景），数据源、ID 体系、调用方均不同；废弃或合并都会破坏大量既有调用点与 CampaignArmy 62/62。`GameState.activeBattlefield` 与 `activeBattlefieldInstance` 场景栈强制互斥（不可同时非 null，Zod `superRefine` + orchestrator 双重护栏），`activeBattles`（六角战斗层）与两者均可父子共存。两类型未来可通过 `targetCommanderyId` / `worldCityId` 互引做一致性校验（预留接口，不强制实装）。详见 `docs/25-bf-p2-design.md` §四。
+
 ### 0-B 前置技术债（D-0B-1~13）
 
 详见 `docs/12-system-map.md` §六。核心：Zustand store 拆 slice（D-0B-1）/ LOD 拖拽冻结（D-0B-2）/ screen 状态机栈式管理（D-0B-6）/ appearance+avatarGene 全量填写（D-0B-7）/ §35 财政俸禄（D-0B-9）/ activeStrategem 字段（D-0B-11）/ S17 L2 水攻伏兵引擎（D-0B-12）/ 字体资产闭环后的剩余 UI 适配（D-0B-13）。

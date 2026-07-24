@@ -1421,6 +1421,8 @@ export interface GameState {
   activeBattles: BattleState[];
   activeBattlefield: BattlefieldMap | null;
   activeMelee: MeleeState | null;
+  // BF-P2 Q10：郡域战场实例（Tier II）；与 activeBattlefield 场景栈互斥
+  activeBattlefieldInstance?: BattlefieldInstance | null;
   diplomacy: DiplomacyLink[];
   intel: IntelState;
   plots: Plot[];
@@ -2169,9 +2171,13 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 ## 二十三、独立郡域战场设计契约
 
-> **状态：BF-P0 静态历史地理契约已实装。** 正式 Zod 与推导类型位于
+> **状态：BF-P0 静态历史地理契约已实装；BF-P1 最小闭环已打通；BF-P2 Q10 `BattlefieldInstance` 接入 GameState 已实装。** 正式 Zod 与推导类型位于
 > `shared/data/historical-geography/schema.ts`；南郡 190 数据和只读预览位于同目录。
-> `BattlefieldInstance` / `Encounter` 仍只是 P2 设计记录，尚未实装。
+> `BattlefieldInstance` 已接入 `GameState.activeBattlefieldInstance`（Q10，Session 174），与 `activeBattlefield`（Tier I）场景栈互斥；`Encounter` 仍是 P2 设计记录，运行时为空数组。
+>
+> **双层数据模型（Q11 已落地）**：`BattlefieldMap`（Tier I，数字 cityId）与
+> `BattlefieldInstance`（Tier II，字符串 countyId）保持独立、不合并不废弃——
+> 详见 `docs/02-architecture.md` §独立郡域战场数据流 + `docs/25-bf-p2-design.md` §四。
 
 ```typescript
 type HistoricalConfidence = 'attested' | 'approximate' | 'inferred';

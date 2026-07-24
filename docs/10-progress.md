@@ -3435,3 +3435,16 @@
 - **标注**：Q9（县级攻打首批 3 县）、Q11（类型归并文档化）、Q12（AI 攻县依赖声明）仍待实施；R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
 
 *v12.1 | 2026-07-24 | Session 174 · BF-P2 Q10 activeBattlefieldInstance 无损追加*
+
+## 2026-07-24 — Session 175（BF-P2 Q11+Q12：类型归并文档化 + AI 攻县依赖声明）
+
+- 范围：Q11（`BattlefieldInstance` 与 `BattlefieldMap` 归并判断落地文档）+ Q12（AI 攻县依赖声明同步），两者均为文档性工作，不涉及功能代码改动，仅触碰 3 处代码注释。
+- Q11 落地：`docs/25-bf-p2-design.md` §四标记"已落地"；`docs/02-architecture.md` §独立郡域战场数据流补"双层数据模型结论"（BattlefieldMap Tier I 19 调用点 vs BattlefieldInstance Tier II 6 调用点，保持独立不合并不废弃，场景栈强制互斥，targetCommanderyId/worldCityId 互引预留接口）；`docs/03-data-models.md` §二十三状态更新（BattlefieldInstance 已接入 GameState，Encounter 仍设计记录）+ GameState 类型定义补 activeBattlefieldInstance 字段；`docs/12-system-map.md` S02/S16 系统条目反映双层数据模型最终状态。
+- Q12 声明：`docs/23-design-consistency-remediation.md` R6 行补"县级攻打决策不属于 BF-P2/P3 范围，归入 R6 多线 AI；BF-P3 仅覆盖出征/围城/自动战斗既有决策 RNG 收口，不含县级战术目标选择"；`docs/09-roadmap.md` BF-P3 行同步范围边界。
+- 代码注释（文档性质最小触碰，3 处）：`shared/types/battlefield-instance.ts` 顶部注释更新（Q10 已接入 GameState，移除"暂不接入"过时表述，补 RNG 边界为 BF-P3 预留说明）；`client/src/stores/gameStore.ts` engageJiangling 加注释（标明 P1 既有 hack 性质 + Q9 扩展契约走同一 createBattle 路径 + 为 BF-P3 预留 RNG 注入接口不引入 Math.random）；`server/src/services/game.ts` enterNanjunBattlefield JSDoc 补 RNG 边界说明（generateNanjunBattlefield 零 RNG 纯函数，未来扩展点须显式注入 runtimeRandom）。
+- 文档口径不一致一并修正：`docs/03-data-models.md:2174` "BattlefieldInstance 仍只是 P2 设计记录，尚未实装" 已过时（Q10 已实装），本次改为"已接入 GameState.activeBattlefieldInstance（Q10）"；`docs/03-data-models.md:1422` GameState 类型定义缺 activeBattlefieldInstance 字段（Q10 已加代码，文档同步）。
+- 验证：`git diff --check` exit 0（无 Markdown 格式问题）；typecheck/lint 全过（shared/server/client 都 Done，注释改动未破坏编译）。
+- 同步：`docs/25-bf-p2-design.md` §四标记 Q11 已落地、`docs/21-battlefield-scene-design.md` §10.4 已在 Session 174 标记 Q10 完成、HANDOFF（进度双写）。
+- **标注**：Q9（县级攻打首批 3 县）仍待实施；R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。Q11/Q12 零代码风险已完成，Q10/Q11/Q12 三项落地后，P2 实施剩余仅 Q9（HIGH 风险但非破坏性增量）。
+
+*v12.2 | 2026-07-24 | Session 175 · BF-P2 Q11+Q12 类型归并文档化 + AI 攻县依赖声明*
