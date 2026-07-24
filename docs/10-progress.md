@@ -3459,6 +3459,26 @@
 - 测试扩展：`verify-save-battlefield-instance.ts` 44/44 全过（原 27 + 新 f 类 17）：f0 夹具编成 Army+进入战场；f1 非首批县抛错；f2 engageCounty 当阳→占领（rulerFactionId=攻方, garrison>0, controlTurns=0）；f3 己方已占领县抛错；f4 engageCounty 华容→占领；f5 占领后存档读档 nodeStates 一致；f6 补给线切断（占领首批县→守方 morale -5）；f7a 首次 tick controlTurns 0→1（garrison>0 保留控制）；f7b garrison=0 时 tick 掉控制（rulerFactionId=null, controlTurns=0）。
 - 全量回归零破坏：typecheck/lint/build 全过；shared 172/172、CampaignArmy 62/62、save-diplomacy 11/11、save-game-state 10/10、ai-military 29/29、BF-P0 schema 38/38、turn-cadence 28/28、negotiation-r2 20/20、march-fog 7/7、battle-commanders 全过。
 - Headless Chrome 完整验证（Playwright）：选刘备军→createGame→campaignStart（江陵→番禺，刘备 1000 兵）→reload→点"进入南郡战场"→服务端 instance 写入（armyIds 含编成 Army, 当阳初始 null/0）→click 当阳节点（cursor=pointer 可点击）→engageCounty→服务端 runAutoBattle 结算→当阳 rulerFactionId=2（占领）+ garrison=858（留驻）+ controlTurns=0 + Army troops=858（消耗）+ 日志"刘备军 攻占 当阳（剩兵 858），守方残兵 640"→UI 视觉变化：当阳 fill=#2d5a2d（占领绿，之前 #5a4a2a 棕）+ "驻858"文本。掉控制逻辑由 f7 服务端层面验证（garrison=0 时 tickBattlefieldInstance 掉控制），Headless Chrome 层面因 UI 无"抽走驻军"操作不重复。
-- **BF-P2 实施阶段完成**：Q10（存档接入）+ Q11（类型归并文档化）+ Q12（AI 攻县依赖声明）+ Q9（首批 3 县可攻打）全部落地。BF-P2 四项实施完毕，BF-P2 可正式标记为"实施完成"。R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
+- **BF-P2 实施阶段完成（初判）**：Q10（存档接入）+ Q11（类型归并文档化）+ Q12（AI 攻县依赖声明）+ Q9（首批 3 县可攻打）全部落地。BF-P2 四项实施完毕。**⚠️ 但四项攻占效果的实现程度不一（两项完整、两项简化/占位），Session 177 对此做了老实标注后才正式签发完成声明，见下条。** R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
 
-*v12.3 | 2026-07-24 | Session 176 · BF-P2 Q9 首批 3 县可攻打落地，BF-P2 实施阶段完成*
+*v12.3 | 2026-07-24 | Session 176 · BF-P2 Q9 首批 3 县可攻打落地，BF-P2 实施阶段完成（初判，老实标注见 Session 177）*
+
+## 2026-07-24 — Session 177（BF-P2 Q9 老实标注：补给线/视野扩张为简化替代或占位，正式签发 BF-P2 完成）
+
+- **触发**：Session 176 报告将 Q9 四项攻占效果统一标为"✓ 验证通过"，但实际两项是简化替代/占位，不是设计文档原始承诺的机制。本轮纯文档/注释澄清，不改代码逻辑、不动断言布尔条件。
+- **老实分级（四项攻占效果）**：
+  - **补给线切断 —— 简化替代实现**：设计原意是"经过占领县的敌方 Army 糧耗×2 + 士气-5"路径判定；实际落地是"攻方占领任意首批县 → 守方全部 CampaignArmy morale -5"全局士气流失。简化原因：`CampaignArmy`（数字 cityId）与郡域县节点（字符串 countyId）无位置映射，无法做路径判定。真正糧耗×2 路径判定留 R6（S15 多线 AI）/ BF-P5，前置依赖 Army-郡域位置映射。
+  - **视野扩张 —— 未实现，当前为占位视觉反馈**：设计原意是"占领后点亮周边道路敌方 Army，复用 S06 迷雾"；实际：郡域场景无任何迷雾遮蔽，全部节点始终可见，占领后只是"节点变绿 + 显示驻军数字"的占领视觉反馈，不存在"揭示"动作。**新发现缺口**：郡域迷雾此前从未被任何阶段排期覆盖（BF-P0~P2 未做、S06 只服务 Tier I、BF-P3"伏击/侦察"只覆盖 Tier I），需补登记。
+  - **驻军消耗压力 —— ✅ 完整实现**：与设计原意一致（garrison>0 保留控制、==0 掉控制、controlTurns 累计）。
+  - **战场推进节点 —— ✅ 完整实现**：与设计原意一致（县攻打复用 runAutoBattle、不同入侵入口→不同首攻县）。
+- **文档改动**（5 处）：
+  1. `docs/25-bf-p2-design.md` §二状态块引用（L46）改写为分级标注表 + §2.4 四项效果标题加内联实现状态 + 新增 §2.6 老实标注小节（§2.6.1 补给线/§2.6.2 视野/§2.6.3 对比说明）；
+  2. `docs/23-design-consistency-remediation.md` R6 行 Q12 注释块后补"R6 待办依赖补登记"——(1) 补给线糧耗×2 真实路径判定、(2) 郡域场景迷雾机制（新发现缺口）；
+  3. `docs/09-roadmap.md` BF-P2 行（L58）补"四项中两项完整/两项简化占位"摘要 + BF-P3 行注明"伏击/侦察仅 Tier I，郡域迷雾是新缺口" + BF-P5 行补两项待办依赖 + 版本号 v2.4→v2.5；
+  4. `server/src/scripts/verify-save-battlefield-instance.ts` f6 注释扩展为"本断言验证简化替代机制（全局 morale -5），不是糧耗×2 路径判定，f6 通过 ≠ 糧耗×2 已实现"+ check label 同步诚实化（仅注释/label，断言布尔条件 `f6AfterMorale === f6BeforeMorale - 5` 不变）；
+  5. 本条（`docs/10-progress.md` Session 177）+ `HANDOFF.md` 同步。
+- **新发现缺口登记位置**：郡域场景迷雾机制——登记于 `docs/23-design-consistency-remediation.md` R6 待办依赖补登记块 + `docs/09-roadmap.md` BF-P3 行注 + BF-P5 行待办依赖。此前从未被任何阶段排期覆盖。
+- **验证**：纯文档/注释改动，运行 typecheck + lint 确认无破坏（断言逻辑未动，verify-save-battlefield-instance 44/44 行为不变）。
+- **正式 BF-P2 完成声明**：**BF-P2 实施阶段完成。** Q10+Q11+Q12+Q9 四项全部落地；其中 Q9 的四项攻占效果中，**两项（驻军消耗、战场推进）为完整实现，两项（补给线切断、视野扩张）为简化替代/占位**——补给线切断当前是"占领首批县→守方全军 morale -5"全局简化，非设计原意的糧耗×2 路径判定（留 R6/BF-P5，前置 Army-郡域位置映射）；视野扩张当前仅为占领视觉反馈，郡域场景无迷雾层（是新发现缺口，留 R6/BF-P5）。详见 `docs/25-bf-p2-design.md` §2.6。**不能笼统说"四项攻占效果全部完整落地"。** R3（S10 单挑四倾向）仍为 R3，BF-P2 是并行独立任务。
+
+*v12.4 | 2026-07-24 | Session 177 · BF-P2 Q9 老实标注（补给线/视野扩张为简化替代或占位），正式签发 BF-P2 完成*
