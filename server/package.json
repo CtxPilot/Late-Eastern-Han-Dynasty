@@ -16,6 +16,7 @@
     "verify-save-entities": "tsx src/scripts/verify-save-entities.ts",
     "verify-save-campaign": "tsx src/scripts/verify-save-campaign.ts",
     "verify-save-battle": "tsx src/scripts/verify-save-battle.ts",
+    "verify-save-battlefield-instance": "tsx src/scripts/verify-save-battlefield-instance.ts",
     "verify-save-diplomacy": "tsx src/scripts/verify-save-diplomacy.ts",
     "verify-save-intel": "tsx src/scripts/verify-save-intel.ts",
     "verify-save-plot": "tsx src/scripts/verify-save-plot.ts",

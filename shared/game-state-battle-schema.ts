@@ -3,6 +3,7 @@
 
 import { z } from 'zod';
 import { FormationType, TerrainType, UnitType, Weather } from './enums/index.js';
+import { BattlefieldInstanceSchema } from './battlefield-instance-schema.js';
 import type { BattleState, BattleUnit } from './types/battle.js';
 import type { BattlefieldMap, BattlefieldNode, MeleeState } from './types/battlefield.js';
 import { DuelCommand, type DuelState } from './types/duel.js';
@@ -307,13 +308,14 @@ export const MeleeStateRuntimeSchema: z.ZodType<MeleeState> = z.object({
   }
 });
 
-type GameStateCombatSlice = Pick<GameState, 'activeBattles' | 'activeBattlefield' | 'activeMelee'>;
+type GameStateCombatSlice = Pick<GameState, 'activeBattles' | 'activeBattlefield' | 'activeMelee' | 'activeBattlefieldInstance'>;
 
 export const GameStateBattleSchema: z.ZodType<GameStateCombatSlice> = z
   .object({
     activeBattles: z.array(BattleStateRuntimeSchema),
     activeBattlefield: BattlefieldMapRuntimeSchema.nullable(),
     activeMelee: MeleeStateRuntimeSchema.nullable(),
+    activeBattlefieldInstance: BattlefieldInstanceSchema.nullable().optional(),
   })
   .strict()
   .superRefine((slice, ctx) => {
@@ -332,6 +334,15 @@ export const GameStateBattleSchema: z.ZodType<GameStateCombatSlice> = z
       if (!armies.has(slice.activeMelee.attackerArmyId) || !armies.has(slice.activeMelee.defenderArmyId)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['activeMelee'], message: '白刃战双方 Army 必须属于活跃战场' });
       }
+    }
+    // BF-P2 Q10: 场景栈强制互斥——Tier I 大地图战场 与 Tier II 郡域战场不可同时非 null。
+    // activeBattles（六角战斗层）与两者均可共存（父子关系），不参与此互斥。
+    if (slice.activeBattlefield && slice.activeBattlefieldInstance) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['activeBattlefieldInstance'],
+        message: 'activeBattlefield（Tier I）与 activeBattlefieldInstance（Tier II）场景栈互斥，不可同时非 null',
+      });
     }
   });
 

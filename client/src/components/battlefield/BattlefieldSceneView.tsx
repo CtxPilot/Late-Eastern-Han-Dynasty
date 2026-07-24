@@ -6,7 +6,7 @@ import { useGameStore } from '../../stores/gameStore';
 export function BattlefieldSceneView() {
   const inst = useGameStore((s) => s.battlefieldInstance);
   const engageJiangling = useGameStore((s) => s.engageJiangling);
-  const popTo = useGameStore((s) => s.popToSceneFrame);
+  const exitNanjunBattlefield = useGameStore((s) => s.exitNanjunBattlefield);
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   if (!inst) return null;
@@ -30,8 +30,9 @@ export function BattlefieldSceneView() {
           </button>
           <button
             data-testid="btn-exit-battlefield"
-            className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm text-stone-200 hover:bg-stone-700"
-            onClick={() => popTo('world')}
+            className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm text-stone-200 hover:bg-stone-700 disabled:opacity-40"
+            disabled={loading}
+            onClick={() => void exitNanjunBattlefield()}
           >
             退出战场
           </button>

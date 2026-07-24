@@ -1100,8 +1100,8 @@ Headless Chrome 实测全链路：
 
 ### 10.4 留待 P2 及以后
 
-- BattlefieldInstance 接入 GameState schema（进行中战场进存档；现有 activeBattlefield/activeMelee/activeBattles 已覆盖大地图层）。
-- R2 negotiation 函数（Session 170 遗漏）的 diplomacy/LeftPanel/PersonnelPanel 配套改动仍留工作树未提交（BF-P1 Commit A 已补提交 negotiation.ts 本体解依赖）。
+- ~~BattlefieldInstance 接入 GameState schema（进行中战场进存档；现有 activeBattlefield/activeMelee/activeBattles 已覆盖大地图层）。~~ **Q10 已完成（Session 174）**：GameState 加 `activeBattlefieldInstance?: BattlefieldInstance | null` optional 字段，battle schema superRefine 互斥护栏，full schema 跨域引用校验，服务端 enterNanjunBattlefield/exitNanjunBattlefield orchestrator + 3 API 路由，client gameStore 改造调 API，verify-save-battlefield-instance.ts 27/27 全过（含跨存档版本兼容）。详见 `docs/25-bf-p2-design.md` §三。
+- R2 negotiation 函数（Session 170 遗漏）的 diplomacy/LeftPanel/PersonnelPanel 配套改动仍留工作树未提交（BF-P1 Commit A 已补提交 negotiation.ts 本体解依赖）。**已完成（commit de9d909）**：R1+R2+23 设计基线整批已补提交，工作树已清。
 - 16 县节点独立可控/可争夺逻辑（Q6「可控但不进全局经济」）。
 - 城下单挑（P4）、AI 决策整场复现收口（P3）、多郡（颍川 P4）、真实美术资产。
 - 旧 `BattlefieldMap`/`BattlefieldPanel`（Tier I 大地图节点）保留但 P1 路径不用；未来合并或废弃待定。

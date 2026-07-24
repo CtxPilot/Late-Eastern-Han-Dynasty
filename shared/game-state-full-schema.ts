@@ -15,8 +15,9 @@ const ROOT_KEYS = [
   'scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth',
   'season', 'playerFactionId', 'officers', 'cities', 'factions', 'females', 'armys',
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
-  'activeBattlefield', 'activeMelee', 'diplomacy', 'intel', 'plots', 'completedEvents',
-  'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog',
+  'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
+  'plots', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
+  'actionLog',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {
@@ -59,7 +60,7 @@ export const GameStateSchema = z
       GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog'])),
       GameStateEntitiesSchema.safeParse(pickState(state, ['officers', 'cities', 'factions', 'females'])),
       GameStateCampaignSchema.safeParse(pickState(state, ['armys', 'campaignArmies', 'campaignNodes', 'grandStrategists'])),
-      GameStateBattleSchema.safeParse(pickState(state, ['activeBattles', 'activeBattlefield', 'activeMelee'])),
+      GameStateBattleSchema.safeParse(pickState(state, ['activeBattles', 'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance'])),
       GameStateDiplomacySchema.safeParse(pickState(state, ['diplomacy'])),
       GameStateIntelSchema.safeParse(pickState(state, ['intel'])),
       GameStatePlotSchema.safeParse(pickState(state, ['plots'])),
@@ -180,6 +181,27 @@ export const GameStateSchema = z
       requireRef(factionIds.has(state.activeBattlefield.attackerFactionId), ['activeBattlefield', 'attackerFactionId'], '战场进攻势力不存在', ctx);
       requireRef(factionIds.has(state.activeBattlefield.defenderFactionId), ['activeBattlefield', 'defenderFactionId'], '战场防守势力不存在', ctx);
       state.activeBattlefield.armyIds.forEach((id, index) => requireRef(campaignArmyIds.has(id), ['activeBattlefield', 'armyIds', index], '战场引用的战役 Army 不存在', ctx));
+    }
+
+    if (state.activeBattlefieldInstance) {
+      const inst = state.activeBattlefieldInstance;
+      const instNodeIds = new Set(inst.nodeStates.map((n) => n.nodeId));
+      // 注意：routeStates 的 fromNodeId/toNodeId 与 entryNodeIds 可合法引用郡域外
+      // 边界入口节点（如 nanjun_xiangyang_ferry 即襄阳北部入口），因此不做
+      // “必须在 nodeStates 中”的校验；只校验真正跨域的引用。
+      inst.nodeStates.forEach((node, nodeIndex) => {
+        if (node.rulerFactionId != null) {
+          requireRef(factionIds.has(node.rulerFactionId), ['activeBattlefieldInstance', 'nodeStates', nodeIndex, 'rulerFactionId'], '郡域战场节点控制势力不存在', ctx);
+        }
+        node.armyIds.forEach((armyId, armyIndex) => requireRef(campaignArmyIds.has(armyId), ['activeBattlefieldInstance', 'nodeStates', nodeIndex, 'armyIds', armyIndex], '郡域战场节点引用的战役 Army 不存在', ctx));
+      });
+      inst.armyIds.forEach((armyId, armyIndex) => requireRef(campaignArmyIds.has(armyId), ['activeBattlefieldInstance', 'armyIds', armyIndex], '郡域战场引用的战役 Army 不存在', ctx));
+      inst.encounters.forEach((encounter, encIndex) => {
+        requireRef(campaignArmyIds.has(encounter.attackerArmyId), ['activeBattlefieldInstance', 'encounters', encIndex, 'attackerArmyId'], '郡域战场遭遇战攻方 Army 不存在', ctx);
+        if (encounter.defenderArmyId) requireRef(campaignArmyIds.has(encounter.defenderArmyId), ['activeBattlefieldInstance', 'encounters', encIndex, 'defenderArmyId'], '郡域战场遭遇战守方 Army 不存在', ctx);
+        encounter.defenderNodeIds.forEach((nodeId, nodeIndex) => requireRef(instNodeIds.has(nodeId), ['activeBattlefieldInstance', 'encounters', encIndex, 'defenderNodeIds', nodeIndex], '郡域战场遭遇战守方节点不在本实例中', ctx));
+      });
+      requireRef(instNodeIds.has(inst.targetSeatNodeId), ['activeBattlefieldInstance', 'targetSeatNodeId'], '郡域战场目标 seat 节点不在本实例中', ctx);
     }
 
     state.diplomacy.forEach((link, index) => {

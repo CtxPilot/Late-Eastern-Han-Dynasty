@@ -109,7 +109,7 @@ import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { broadcast } from '../ws/broadcast.js';
 import { resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
-import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType } from '@leh/shared';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType, generateNanjunBattlefield } from '@leh/shared';
 
 let currentGame: GameState | null = null;
 // Sec-6: 简单请求锁，防止并发操作导致状态不一致
@@ -1065,6 +1065,56 @@ export function battlefieldExit(): GameState {
     currentGame = { ...getGame(), activeBattlefield: null, activeMelee: null };
     return getClientGame();
   });
+}
+
+// ====== 郡域战场实例（Tier II；BF-P2 Q10） ======
+
+/**
+ * 进入南郡郡域战场：从 shared 纯函数生成 BattlefieldInstance 并写入
+ * GameState.activeBattlefieldInstance。与 activeBattlefield（Tier I 大地图层）
+ * 场景栈互斥；进入时必须保证 activeBattlefield 为 null。
+ * 互斥护栏在 Zod 层（GameStateBattleSchema superRefine）兜底；本函数额外断言
+ * 以便在写入前快速失败。
+ */
+export function enterNanjunBattlefield(): GameState {
+  return withLock(() => {
+    const state = getGame();
+    if (state.activeBattlefield) {
+      throw new Error('已有进行中的 Tier I 大地图战场；先退出再进入郡域战场');
+    }
+    const attackerFactionId = state.playerFactionId;
+    const defenderFaction = Object.values(state.factions).find(
+      (faction) => faction.id !== attackerFactionId && faction.isAlive,
+    );
+    if (!defenderFaction) throw new Error('未找到敌方势力');
+    const armyIds = state.campaignArmies
+      .filter((army) => army.factionId === attackerFactionId)
+      .map((army) => army.id);
+    const now = Date.now();
+    const instance = generateNanjunBattlefield({
+      instanceId: `bf-nanjun-${now}`,
+      warId: `war-nanjun-${now}`,
+      attackerFactionId,
+      defenderFactionId: defenderFaction.id,
+      armyIds,
+      rngDrawStart: 0,
+    });
+    currentGame = { ...state, activeBattlefieldInstance: instance };
+    return getClientGame();
+  });
+}
+
+/** 退出南郡郡域战场：清空 activeBattlefieldInstance，返回行政大地图。 */
+export function exitNanjunBattlefield(): GameState {
+  return withLock(() => {
+    currentGame = { ...getGame(), activeBattlefieldInstance: null };
+    return getClientGame();
+  });
+}
+
+/** 获取当前郡域战场实例（如有）。 */
+export function getBattlefieldInstance(): BattlefieldInstance | null {
+  return getGame().activeBattlefieldInstance ?? null;
 }
 
 // ====== 白刃战（Tier II） ======

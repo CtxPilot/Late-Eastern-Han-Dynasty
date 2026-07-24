@@ -642,6 +642,37 @@ gameRouter.post('/battlefield/exit', (_req, res) => {
   }
 });
 
+// ====== 郡域战场实例 API（BF-P2 Q10 Tier II 郡域层） ======
+
+/** 进入南郡郡域战场：生成 BattlefieldInstance 并写入 GameState.activeBattlefieldInstance */
+gameRouter.post('/battlefield-instance/enter', (_req, res) => {
+  try {
+    res.json(gameService.enterNanjunBattlefield());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield instance enter failed' });
+  }
+});
+
+/** 获取当前郡域战场实例 */
+gameRouter.get('/battlefield-instance', (_req, res) => {
+  try {
+    const inst = gameService.getBattlefieldInstance();
+    if (!inst) return res.status(404).json({ error: 'no active battlefield instance' });
+    res.json(inst);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield instance get failed' });
+  }
+});
+
+/** 退出南郡郡域战场：清空 activeBattlefieldInstance */
+gameRouter.post('/battlefield-instance/exit', (_req, res) => {
+  try {
+    res.json(gameService.exitNanjunBattlefield());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield instance exit failed' });
+  }
+});
+
 // ====== 白刃战 API（05 §二十 Tier II） ======
 
 /** 发起白刃战 */

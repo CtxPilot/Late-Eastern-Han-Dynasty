@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
-import { type SceneFrame, type BattlefieldInstance, generateNanjunBattlefield, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
+import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
@@ -20,6 +20,7 @@ interface Store {
 
   battlefieldInstance: BattlefieldInstance | null;
   enterNanjunBattlefield: () => Promise<void>;
+  exitNanjunBattlefield: () => Promise<void>;
   engageJiangling: () => Promise<void>;
   game: GameState | null;
   battle: BattleState | null;
@@ -181,22 +182,43 @@ export const useGameStore = create<Store>((set, get) => ({
   clearSceneStack: () => set({ sceneStack: clearStack(), screen: BOOT_SCREEN }),
 
   enterNanjunBattlefield: async () => {
-    const game = get().game;
-    if (!game) { set({ error: '未进入游戏' }); return; }
-    const attackerFactionId = game.playerFactionId;
-    const defenderFaction = Object.values(game.factions).find((f) => f.id !== attackerFactionId && f.isAlive);
-    if (!defenderFaction) { set({ error: '未找到敌方势力' }); return; }
-    const armyIds = game.campaignArmies.filter((a) => a.factionId === attackerFactionId).map((a) => a.id);
-    const inst = generateNanjunBattlefield({
-      instanceId: `bf-nanjun-${Date.now()}`,
-      warId: `war-nanjun-${Date.now()}`,
-      attackerFactionId,
-      defenderFactionId: defenderFaction.id,
-      armyIds,
-      rngDrawStart: 0,
-    });
-    const after = pushScene(get().sceneStack, { scene: 'battlefield', battlefieldId: inst.id });
-    set({ battlefieldInstance: inst, sceneStack: after, screen: screenOf(after), error: null, lastActionOk: '进入南郡战场' });
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      const game = await api.enterNanjunBattlefield();
+      const inst = game.activeBattlefieldInstance ?? null;
+      if (!inst) {
+        throw new Error('服务端未返回郡域战场实例');
+      }
+      const after = pushScene(get().sceneStack, { scene: 'battlefield', battlefieldId: inst.id });
+      set({
+        game,
+        battlefieldInstance: inst,
+        sceneStack: after,
+        screen: screenOf(after),
+        loading: false,
+        lastActionOk: '进入南郡战场',
+      });
+    } catch (e) {
+      set({ error: errMsg(e, '进入南郡战场失败'), loading: false });
+    }
+  },
+
+  exitNanjunBattlefield: async () => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.exitNanjunBattlefield();
+      const after = popToScene(get().sceneStack, 'world');
+      set({
+        game,
+        battlefieldInstance: null,
+        sceneStack: after,
+        screen: screenOf(after),
+        loading: false,
+        lastActionOk: '退出南郡战场',
+      });
+    } catch (e) {
+      set({ error: errMsg(e, '退出南郡战场失败'), loading: false });
+    }
   },
 
   engageJiangling: async () => {

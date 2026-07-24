@@ -108,6 +108,9 @@ jobs:
       - name: Monthly turn and quarter/year cadence integration test
         run: pnpm verify-turn-cadence
 
+      - name: Battlefield instance save contract integration test
+        run: pnpm verify-save-battlefield-instance
+
       - name: Zod data validation
         run: pnpm validate-data
 

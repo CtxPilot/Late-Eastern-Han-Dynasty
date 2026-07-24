@@ -150,6 +150,8 @@ interface BattlefieldNodeState {
 
 ## 三、存档接入（`BattlefieldInstance` → `GameState`）
 
+> **状态：Q10 已实施（Session 174，2026-07-24）** — 方案 A 无损追加已落地，`verify-save-battlefield-instance.ts` 27/27 全过；详见 `docs/10-progress.md` Session 174 条目。
+
 ### 3.1 现状
 
 P1 §10.4 自承"BattlefieldInstance 接入 GameState schema（进行中战场进存档；现有 activeBattlefield/activeMelee/activeBattles 已覆盖大地图层）"留待 P2。当前：

@@ -4,6 +4,7 @@
 import type { FactionId, Season } from '../enums/index.js';
 import type { Army } from './army.js';
 import type { BattleState } from './battle.js';
+import type { BattlefieldInstance } from './battlefield-instance.js';
 import type { BattlefieldMap, MeleeState } from './battlefield.js';
 import type { CampaignArmy, CampaignNode, GrandStrategist } from './campaign.js';
 import type { City } from './city.js';
@@ -48,6 +49,13 @@ export interface GameState {
   activeBattlefield: BattlefieldMap | null;
   /** 当前白刃战（Tier II；必须归属于 activeBattlefield） */
   activeMelee: MeleeState | null;
+  /**
+   * 当前郡域战场实例（Tier II；BF-P2 Q10 接入）。
+   * 与 activeBattlefield（Tier I 大地图层）场景栈强制互斥，不可同时非 null。
+   * 旧存档无此字段时按 null 处理（Zod 标记为 nullable().optional()）。
+   * 参见 docs/25-bf-p2-design.md §三。
+   */
+  activeBattlefieldInstance?: BattlefieldInstance | null;
   diplomacy: DiplomacyLink[];
   /** 谍报：侦查报告等（盟友可见性由外交实时计算） */
   intel: IntelState;
