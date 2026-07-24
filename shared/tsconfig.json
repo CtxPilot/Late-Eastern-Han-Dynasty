@@ -16,6 +16,7 @@
     "intel.ts",
     "mask-state.ts",
     "positions.ts",
+    "labels.ts",
     "stamina.ts",
     "negotiation.ts",
     "expression.ts",

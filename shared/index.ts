@@ -12,6 +12,7 @@ export * from './city-roads.js';
 export * from './intel.js';
 export * from './mask-state.js';
 export * from './positions.js';
+export * from './labels.js';
 export * from './stamina.js';
 export * from './negotiation.js';
 export * from './expression.js';
