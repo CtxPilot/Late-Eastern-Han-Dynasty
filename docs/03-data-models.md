@@ -483,6 +483,13 @@ export enum CityPolicy {
 }
 ```
 
+### 5-A. 谈判概率契约（R2）
+
+`shared/negotiation.ts` 是 S11 登用与 S08 结盟的共享纯函数真源。输入、逐项修正与输出统一采用
+`0~100` 的百分点数值，最后一次 clamp 到 `[5,90]`；UI 不保存第二份概率字段，而是从当前
+`GameState` / `Officer` 即时派生，避免 DTO 百分比与服务端结算漂移。当前 `Faction` 尚无声望、
+戒备和利益冲突字段，结盟分解中的这些项按 0 处理；这是明确的 Demo 缺口，不新增伪字段。
+
 ---
 
 ## 二、武将 Officer
@@ -630,7 +637,7 @@ export interface CityStats {
 /**
  * 城市人口结构（见 04-game-systems §28；实现 shared/demographics.ts）
  * total = adultMale + adultFemale + child + elder
- * City.population ≡ total；City.beautyPool ∝ adultFemale
+ * City.population ≡ total；City.beautyPool 是旧 Demo 兼容字段，R7 后不得由 adultFemale 派生
  */
 export interface CityDemographics {
   adultMale: number;    // 成年男 — 征兵池、粮耗最高、劳力主力
@@ -1396,8 +1403,8 @@ export interface GameState {
   enabledEventLayers: EventSourceClass[];
   enabledChildEventIds: number[];
   currentYear: number;
-  currentMonth: number;
-  season: Season;
+  currentMonth: number; // 1~12；每次结束回合只推进 1 月
+  season: Season;       // 由月份派生：1~3春、4~6夏、7~9秋、10~12冬
   playerFactionId: FactionId;
 
   // 实体
@@ -1434,6 +1441,10 @@ export interface GameAction {
   message: string;
 }
 ```
+
+S01 运行时不额外持久化季度计数；季度边界由新月份 `1/4/7/10` 唯一派生。每次月推进写
+`end_turn` 日志，进入季度首月时另写 `quarter_start`，跨年至 1 月时再写 `year_start`。
+这些日志是节拍信号，不代表尚未实装的季度内政、俸禄或委任报告已自动结算。
 
 以上根字段以 `shared/types/game.ts` 为代码真源。早期设计中的 `beauties`、`passes`、
 `minorities`、`factionResources`、升级记录与宝物库存尚未进入当前运行时 `GameState`，
@@ -1545,11 +1556,14 @@ export interface BattleActionResult {
 > - 新增 `DuelCombatantState`（每方运行时快照，含 sneakUsed/consecutiveBlocks/lastCommand）
 > - `DuelState.combatants: Record<number, DuelCombatantState>` 取代 `hp/energy/injury` 平铺字段
 > - 新增 `DuelEngineConfig`（maxRounds/baseHp/challengeEnergyCost 可调）
+> - **目标差异（Session 168 已批准、未实装）**：增加 `DuelStance` 与双方 stance 快照；
+>   吕布传奇保护改为“败而重伤撤退”，不得改写胜负。
 
 ```typescript
 export type DuelPhase = 'pre_duel' | 'dueling' | 'resolving' | 'resolved';
 
 export type DuelOutcome = 'killed' | 'captured' | 'escaped' | 'draw' | 'surrendered';
+export type DuelStance = 'assault' | 'steady' | 'bait' | 'delegate';
 
 export interface DuelInjury {
   part: 'arm' | 'leg' | 'rib' | 'head' | 'severe';
@@ -1595,6 +1609,7 @@ export interface DuelState {
   dialogueLog: DuelDialog[];
   roundHistory: DuelRound[];
   injury: Record<number, DuelInjury | null>;
+  stance: Record<number, DuelStance>; // 目标字段；服务端权威记录
   autoResolve: boolean;
   turnOrder: number[];       // [先手Id, 后手Id]
   result?: DuelResult;

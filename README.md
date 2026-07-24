@@ -27,7 +27,7 @@ The **0-A playable prototype** currently includes:
 
 - a 30-city simulation baseline, 9 unit types, 6 implemented formations, and 223 historical officer records;
 - two selectable scenarios: a sandbox-style hero assembly and a four-faction 190 CE historical slice;
-- seasonal turns, city development, recruitment, training, personnel actions, population/food consumption, diplomacy, intelligence, plots, family events, and server-side fog-of-war masking;
+- monthly turns with explicit quarter/year boundaries, city development, recruitment, training, personnel actions, population/food consumption, diplomacy, intelligence, plots, family events, and server-side fog-of-war masking;
 - campaign armies with commander/deputy/adviser composition, marching, sieges, simplified facilities, and automatic battle resolution;
 - tactical hex combat, tactics, duel resolution, critical/counter/chain attacks, and a simplified close-combat mode;
 - 24 scenario events across five narrative lines with player choices and source-layer labels.
@@ -96,11 +96,13 @@ pnpm verify-grand-strategist-rng
 pnpm verify-ai-military-rng
 pnpm verify-march-fog
 pnpm verify-battle-commanders
+pnpm verify-turn-cadence
+pnpm verify-negotiation-r2
 pnpm validate-data
 pnpm verify-scenario-events
 ```
 
-The default CI includes the deterministic campaign engine integration check (62 assertions), save-entity (10), save-campaign (9), three-tier battle-boundary (24), diplomacy-state (11), intel-state (12), plot-state (9), complete GameState cross-reference (10), v1 save-migration/runtime-restore/PRNG (19), battle deterministic-continuation (5), duel deterministic-continuation (3), civil deterministic-continuation (12), plot/spy deterministic-continuation (30), personnel deterministic-continuation (32), family deterministic-continuation (32), beauty-resource deterministic-continuation (25), grand-strategist deterministic-continuation (28), AI-military resolution deterministic-continuation (7), fog-masked march authority-boundary (7), and battle-commander presentation checks across every current scenario/player perspective. Dedicated critical-hit, child-engine, and fire-tactic verification scripts remain available in `server/src/scripts/` and are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+The default CI includes the deterministic campaign engine integration check (62 assertions), save-entity (10), save-campaign (9), three-tier battle-boundary (24), diplomacy-state (11), intel-state (12), plot-state (9), complete GameState cross-reference (10), v1 save-migration/runtime-restore/PRNG (19), battle deterministic-continuation (5), duel deterministic-continuation (3), civil deterministic-continuation (12), plot/spy deterministic-continuation (30), personnel deterministic-continuation (32), R2 personnel/diplomacy percentage-point consistency (20), family deterministic-continuation (32), beauty-resource deterministic-continuation (25), grand-strategist deterministic-continuation (28), AI-military resolution deterministic-continuation (7), fog-masked march authority-boundary (7), battle-commander presentation checks across every current scenario/player perspective, and the 12-turn monthly/quarter/year cadence check (28). Dedicated critical-hit, child-engine, and fire-tactic verification scripts remain available in `server/src/scripts/` and are documented in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Architecture
 
@@ -130,13 +132,14 @@ The project uses a pnpm monorepo. Static data is validated through Zod before it
 
 Near-term priorities are to harden the framework before expanding the dataset:
 
-1. improve automated engine and end-to-end coverage;
-2. implement BF-P1 on top of the completed Nanjun historical-geography schema: enter the commandery battlefield, march between county nodes, resolve an encounter, and write results back once;
-3. deepen the now-integrated CampaignArmy military AI beyond its current single-army/simple-formation baseline;
-4. remove 0-A simplifications in facilities, formation modifiers, and campaign resolution;
-5. add durable save/load support;
-6. prepare a reproducible public demo and the first tagged pre-release;
-7. only then expand toward the full 0-B historical dataset.
+1. continue the approved consistency-remediation sequence after completed R1/R2; R3 starts on 2026-07-24 with duel stances and Lü Bu fairness;
+2. improve automated engine and end-to-end coverage;
+3. keep BF-P1 queued on top of the completed Nanjun historical-geography schema;
+4. deepen the now-integrated CampaignArmy military AI beyond its current single-army/simple-formation baseline;
+5. remove 0-A simplifications in facilities, formation modifiers, and campaign resolution;
+6. add durable save/load support;
+7. prepare a reproducible public demo and the first tagged pre-release;
+8. only then expand toward the full 0-B historical dataset.
 
 See [ROADMAP.md](ROADMAP.md) for the contributor-facing plan and [docs/09-roadmap.md](docs/09-roadmap.md) for the detailed engineering backlog.
 

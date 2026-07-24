@@ -84,6 +84,9 @@ jobs:
       - name: Personnel deterministic continuation test
         run: pnpm verify-personnel-rng
 
+      - name: R2 personnel and diplomacy percentage-point integration test
+        run: pnpm verify-negotiation-r2
+
       - name: Family deterministic continuation test
         run: pnpm verify-family-rng
 
@@ -101,6 +104,9 @@ jobs:
 
       - name: Battle commander presentation integration test
         run: pnpm verify-battle-commanders
+
+      - name: Monthly turn and quarter/year cadence integration test
+        run: pnpm verify-turn-cadence
 
       - name: Zod data validation
         run: pnpm validate-data

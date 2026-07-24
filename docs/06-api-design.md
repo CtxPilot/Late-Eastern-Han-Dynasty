@@ -108,7 +108,9 @@ POST   /api/game/create              { scenarioId, playerFactionId, eventLayers?
   校验势力可玩且已登场；eventLayers 必须是该剧本允许的非空子集
 GET    /api/game/state               → GameState（经 mask）
 POST   /api/game/end-turn            → GameState
-  含：人口生育衰老、结构粮耗、产粮、AI、事件 tick
+  每次只推进 1 月；含人口生育衰老、结构粮耗、产粮、AI、事件 tick
+  每月 actionLog 写 end_turn；新月份为 1/4/7/10 时写 quarter_start；
+  跨年至 1 月时同时写 year_start
   有 pendingEvents 时 400「请先处理待决事件」
 POST   /api/game/event/choose        { eventId, choiceIndex } → GameState
   // S14：只允许处理 pendingEvents[0]；应用效果并写 completedEvents/eventChoices
@@ -126,7 +128,7 @@ POST   /api/game/personnel/marry       { femaleId, officerId }  // 婚配 300金
 POST   /api/game/personnel/gift-beauty { femaleId, officerId }  // 赏赐 100金
 POST   /api/game/personnel/join-faction  { officerId, factionId, cityId? }  // S18 跟随：入势力，妻跟随
 POST   /api/game/personnel/search          { cityId }              // S11 搜索：己方城 80金
-POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 登用在野男将 200金
+POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 登用在野男将 200金；R2 UI 显式提交君主并显示共享成功率
 POST   /api/game/personnel/appoint         { officerId, track: civil|local|military, position, cityId? }
                                       // S11/S12 任命；position=none 解职；太守等 needsCity
 POST   /api/game/personnel/release-officer { officerId }  // S18 跟随：释放为在野
@@ -159,7 +161,7 @@ GET    /api/game/policy/current       → { activePolicies: NationalPolicy[], co
 
 POST   /api/game/diplomacy/tribute     { targetFactionId }  // 进贡 200金，友好+15
 POST   /api/game/diplomacy/gift-beauty { targetFactionId, amount? }  // 献美：beauty−n/对方+n，友好+12×n（1~5）
-POST   /api/game/diplomacy/alliance    { targetFactionId }  // 结盟 500金，友好≥30
+POST   /api/game/diplomacy/alliance    { targetFactionId }  // 结盟 500金，友好≥30；R2 权威概率判定，成败均扣金
 
 POST   /api/game/march               { targetCityId, fromCityId?, troopCount? }
   → { game, battle }  // 须道路邻接；默认邻接己方城；服务端以未脱敏权威状态校验目标归属/守军
@@ -263,17 +265,18 @@ POST   /api/v1/games/:id/battles/:battleId/tactic
 
 POST   /api/v1/games/:id/battles/:battleId/duel/challenge
    发起单挑 ✅ 已实装（Session 88）
-   Body: { challengerUnitId, targetUnitId }
+   当前 Body: { challengerUnitId, targetUnitId }
+   目标 Body: { challengerUnitId, targetUnitId, stance: 'assault'|'steady'|'bait'|'delegate' }（未实装）
    Response: { duelState: DuelState }
    说明: 发起方消耗20气力；target自动/拒绝见 §8.3.2；接受后引擎自动推进首回合
 
 POST   /api/v1/games/:id/battles/:battleId/duel/respond
-   回应单挑挑战（AI 自动决策，玩家不操作；本端点为设计预留，0-A 由 challenge 内部完成）
-   Body: { accept: boolean }
+   回应单挑挑战（目标规则允许玩家应战时选择倾向；当前 0-A 仍由 challenge 内部自动处理）
+   目标 Body: { accept: boolean, stance?: 'assault'|'steady'|'bait'|'delegate' }
    Response: { duelState: DuelState | null }
 
 POST   /api/v1/games/:id/battles/:battleId/duel/action
-   提交单挑指令（全自动模式下玩家不选指令；本端点为设计预留）
+   提交逐回合单挑指令（废止：目标规则不让玩家逐回合点牌；仅保留兼容说明）
    Body: { action: DuelAction }
    Response: { duelState: DuelState, roundResult: DuelRound }
 

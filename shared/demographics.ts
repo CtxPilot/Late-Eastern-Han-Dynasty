@@ -65,8 +65,8 @@ export interface AgeTickResult {
 }
 
 /**
- * 每季人均粮耗（人×系数，再 × 季节）
- * 标定：~3 万城 + 5k 兵 ≈ 1200~1500 粮/季；成年男显著最高
+ * 每月人均粮耗（人×系数，再 × 季节）
+ * 标定：~3 万城 + 5k 兵 ≈ 1200~1500 粮/月；成年男显著最高
  */
 export const FOOD_EAT: Readonly<Record<keyof CityDemographics, number>> = {
   adultMale: 0.048, // 明显高于其他
@@ -83,7 +83,7 @@ export const LABOR_WEIGHT: Readonly<Record<keyof CityDemographics, number>> = {
   elder: 0.35,
 };
 
-/** 驻军粮耗（人/季）— 高于普通男成 */
+/** 驻军粮耗（人/月）— 高于普通男成 */
 export const TROOP_FOOD_EAT = 0.055;
 
 const SEASON_FOOD_MUL: Record<number, number> = {
@@ -208,7 +208,7 @@ export function withSyncedPopulation<
   };
 }
 
-/** 民口季度粮耗（不含驻军） */
+/** 民口月度粮耗（不含驻军） */
 export function civilianFoodNeed(d: CityDemographics, season: Season | number = 0): number {
   const mul = SEASON_FOOD_MUL[season as number] ?? 1;
   const raw =
