@@ -3388,5 +3388,20 @@
 - 验证：纯文档 commit，不跑代码测试；`git diff --check` 通过。Next：Commit 2 原型实现（`shared/expression.ts` 纯函数 + 单测 + `ExpressionPortrait` 组件 + 两处接入 + Headless Chrome 实测）。
 - **标注**：本轮是原型占位（程序化 SVG 几何形状，非成品美术），不得误记为 P5-10 全量完成。3 原型以外武将走通用回退。
 
-*v11.10 | 2026-07-24 | Session 172 Commit 1 · S23 设计文档*
+### Commit 2：原型实现（同 Session）
+
+- 范围：`shared/expression.ts` 纯函数 `resolveExpression` + 28 项单测；`client/src/components/officer/ExpressionPortrait.tsx` 程序化 SVG 分层合成组件；BattleView SideCard + OfficerDetail 大头像接入；`client/src/index.css` 新增 `.portrait-mouth`/`.expression-tone` 背景色调层。
+- 静态验证：`pnpm --filter @leh/shared build` 通过；`pnpm --filter @leh/client typecheck/lint` 通过；`pnpm --filter @leh/shared test` **14 文件 147/147 全过**（原 119 + 新增 28）；未误动 `officers.json`（`pnpm validate-data` 不受影响）。
+- Headless Chrome 实测（Playwright）：选「英雄集结·吕布军·下邳」，通过 `/api/game/march` 触发真实出征（吕布 id=5 攻方 vs 周瑜守方，battle.winner=null/phase=player），确认战斗数据源真实可用；再动态 import React/ReactDOM/ExpressionPortrait + 真实吕布 officer，独立挂载点渲染 7 种状态，逐一核对 `data-expression`/`data-tone`：
+  1. 默认（loyalty100/stamina正常/无battle）→ `neutral`+`neutral` ✓
+  2. 胜仗（winner=attacker）→ `victory`+`gold`（吕布狂傲）✓
+  3. 败仗（winner=defender）→ `anger`+`cold`（吕布怒）✓
+  4. 战斗中（winner=null）→ `neutral`+`neutral`（未分胜负不算瞬时态）✓
+  5. 低忠诚40（无battle）→ `reluctant`+`dark-red`（吕布不甘）✓
+  6. 负伤stamina20（无battle）→ `anger`+`grey`（stamina 代理负伤）✓
+  7. 互斥：胜仗+低忠诚40 → `victory`+`dark-red`（瞬时态表情+持续态背景透出）✓
+- 验证限制说明：BattleView SideCard 的真实 UI 渲染未能通过浏览器外部触发——zustand store 不可从 page.evaluate 调 setState（React 18 useSyncExternalStore 不暴露 store 引用），且敌方城点在 S06 迷雾下不可点击出征。故瞬时态验证改用「真实吕布 officer（fetch /api/game/state）+ 真实 ExpressionPortrait 组件（Vite 动态 import 源码）+ 真实 React createRoot 渲染 + 模拟 BattleSideContext」的独立挂载方案，等价验证「组件接收不同 battle 状态时头像图层确实按预期切换」。逻辑正确性由 28 项单测完整覆盖，组件渲染由 DOM data 属性实测确认。
+- 同步更新：`HANDOFF`（进度双写 + 近期会话索引 Session 172 条目补 Commit 2）。
+
+*v11.11 | 2026-07-24 | Session 172 Commit 2 · S23 原型实现 + Headless Chrome 7 状态验证*
 *文档版本: v12.0 | 2026-07-23 | Session 171 R2 文档收口与 R3 次日交接*

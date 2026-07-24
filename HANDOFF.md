@@ -11,8 +11,8 @@
 |----|------|
 | 会话 | **Session 172 进行中**（S23 人物状态表情系统 Commit 1 设计完成；R3 仍为 R3 下一步，本任务不抢占） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物金石水墨位图头像（其余程序化回退）/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** + **S23 人物状态表情系统设计（3 原型占位，程序化 SVG 分层，Commit 1 设计完成）** |
-| 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · **23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施）** · **24-character-expression-system-design（S23 设计完成，原型实现待 Commit 2）** |
+| 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物金石水墨位图头像（其余程序化回退）/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** + **S23 人物状态表情系统（3 原型占位，程序化 SVG 分层，Commit 1+2 完成，7 状态 Headless 实测过）** |
+| 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · **23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施）** · **24-character-expression-system-design（S23 设计完成 + 原型实装，147/147 单测 + Headless 7 状态验证）** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送并与 `origin/main` 对齐至 `958e0ed` |
 | 玩法下一步 | **2026-07-24 开始 R3：S10 单挑四倾向与吕布“强但可败”规则**。本轮只做 R3，不并行 R4；BF-P1 保持已批准待办。**Session 172 并行任务：S23 人物状态表情系统**（用户指派独立需求，不归属 R3/R8 序列；Commit 1 设计完成，Commit 2 原型实现待续；详见 `docs/24-character-expression-system-design.md`）。 |
 
@@ -189,7 +189,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 会话 | 交付 |
 |------|------|
-| 172 | **S23 人物状态表情系统**（新增 S23 大系统 22→23，挂 S22 美术基调 C 层状态化扩展；本轮用户指派独立需求，不抢占 R3。Commit 1 设计文档完成：状态词表精简 7 词、优先级负伤>战斗瞬时态>忠诚>士气>默认、单一主表情+独立背景色调层、衰减用 activeBattles 判定、3 原型各 4 条属性驱动规则、程序化 SVG 分层方案、BattleView SideCard+OfficerDetail 两接入点。Plan 阶段确认 4 抉择：文档编号 24-*/渲染=程序化 SVG 分层/负伤=stamina 代理/UI=SideCard+Detail。Commit 2 原型实现待续。详见 `docs/24-character-expression-system-design.md`） |
+| 172 | **S23 人物状态表情系统**（新增 S23 大系统 22→23，挂 S22 美术基调 C 层状态化扩展；本轮用户指派独立需求，不抢占 R3。**Commit 1+2 完成**：设计文档 `24-...` + `shared/expression.ts` 纯函数 + 28 单测（147/147）+ `ExpressionPortrait.tsx` 程序化 SVG 分层 + BattleView SideCard/OfficerDetail 接入。状态词表精简 7 词；优先级负伤>战斗瞬时态>忠诚>士气>默认；单一主表情+独立背景色调层；衰减用 activeBattles 判定；3 原型各 4 条属性规则；stamina 代理负伤。Plan 阶段确认 4 抉择：文档编号 24-*/渲染=程序化 SVG 分层/负伤=stamina 代理/UI=SideCard+Detail。Headless Chrome 7 状态实测全过（胜/败/低忠诚/负伤/互斥）。验证限制：zustand store 不可外部 setState + 敌方城点迷雾不可点击，瞬时态改用真实吕布 officer+Vite 动态 import 组件+createRoot 独立挂载验证，等价覆盖。本轮占位非成品美术。详见 `docs/24-character-expression-system-design.md`） |
 | 121 | **工程器械与城防体系设计**（文档层）：05 §15 全量重写（6种器械Lv1~Lv3+城防体系+瓮城阶段+专属武将联动）；03 §20.3/20.3-B/20.4 类型扩展（SiegeEngine/CityFortification/TacticalDefense/SiegePhase）；07 §12.6 瓮城"未拍板"→已定案；12 S10 更新。 |
 | 120 | **阵型系统全面重设计**（文档层）：05 §4 完整重写（27阵型18陆+9水/双轴成长Lv1~Lv5+熟练度·极/科技树前置/陆水交互/暴击反击连击联动/切换规则）；03 §9 Formation/Officer 类型扩展；08 §二 formations.json 字段 6→27；04 §十九 新增阵型养成子章节；01/12同步。 |
 | 118 | **武将数据扩充**：新增ID 284~307共24人（群雄势力/特殊人物/后期人物），`validate-data.ts` 武将门禁199→223；shared build、数据校验223/223与server typecheck全过。史料未详出生年统一为0，未详卒年使用提供的lifespan；祝融按既定唯一可出战女将例外录入；08数字真源、09/10/12/14及HANDOFF同步。 |

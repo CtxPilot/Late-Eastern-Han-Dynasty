@@ -13,6 +13,7 @@ export * from './intel.js';
 export * from './mask-state.js';
 export * from './positions.js';
 export * from './stamina.js';
+export * from './expression.js';
 export * from './campaign-utils.js';
 export * from './save.js';
 export * from './rng.js';
