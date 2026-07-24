@@ -16,6 +16,8 @@ export * from './stamina.js';
 export * from './negotiation.js';
 export * from './expression.js';
 export * from './scenes.js';
+export * from './battlefield-instance-schema.js';
+export * from './nanjun-battlefield.js';
 export * from './campaign-utils.js';
 export * from './save.js';
 export * from './rng.js';
