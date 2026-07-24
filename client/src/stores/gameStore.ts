@@ -3,13 +3,20 @@
 
 import { create } from 'zustand';
 import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
+import { type SceneFrame, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
-type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee';
+type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee' | 'tactical' | 'duel';
 
 interface Store {
   screen: Screen;
+  sceneStack: SceneFrame[];
+  pushSceneFrame: (frame: SceneFrame) => void;
+  popSceneFrame: () => void;
+  popToSceneFrame: (scene: SceneFrame['scene']) => void;
+  replaceSceneStack: (frame: SceneFrame) => void;
+  clearSceneStack: () => void;
   game: GameState | null;
   battle: BattleState | null;
   selectedCityId: number | null;
@@ -141,6 +148,7 @@ interface Store {
 
 export const useGameStore = create<Store>((set, get) => ({
   screen: 'boot',
+  sceneStack: [],
   game: null,
   battle: null,
   selectedCityId: null,
@@ -160,6 +168,12 @@ export const useGameStore = create<Store>((set, get) => ({
   grandStrategist: null,
   grandStrategistModifiers: null,
   grandStrategistLoading: false,
+
+  pushSceneFrame: (frame) => set((s) => { const stack = pushScene(s.sceneStack, frame); return { sceneStack: stack, screen: screenOf(stack) }; }),
+  popSceneFrame: () => set((s) => { const stack = popScene(s.sceneStack); return { sceneStack: stack, screen: screenOf(stack) }; }),
+  popToSceneFrame: (scene) => set((s) => { const stack = popToScene(s.sceneStack, scene); return { sceneStack: stack, screen: screenOf(stack) }; }),
+  replaceSceneStack: (frame) => set({ sceneStack: replaceStack(frame), screen: screenOf([frame]) }),
+  clearSceneStack: () => set({ sceneStack: clearStack(), screen: BOOT_SCREEN }),
 
   boot: async () => {
     set({ loading: true, error: null, lastActionOk: null });
