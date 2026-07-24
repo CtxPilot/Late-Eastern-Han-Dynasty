@@ -6,11 +6,14 @@ import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
 import { BattlefieldPanel } from './components/battlefield/BattlefieldPanel';
+import { BattlefieldSceneView } from './components/battlefield/BattlefieldSceneView';
 import { ScenarioSelect } from './components/scenario/ScenarioSelect';
 import { waitForGameFonts } from './utils/fontBarrier';
 
 export default function App() {
   const screen = useGameStore((s) => s.screen);
+  const battlefieldInstance = useGameStore((s) => s.battlefieldInstance);
+  const enterNanjunBattlefield = useGameStore((s) => s.enterNanjunBattlefield);
   const game = useGameStore((s) => s.game);
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
@@ -93,6 +96,14 @@ export default function App() {
     );
   }
 
+  if (screen === 'battlefield' && battlefieldInstance) {
+    return (
+      <div className="h-full flex flex-col">
+        <BattlefieldSceneView />
+      </div>
+    );
+  }
+
   if (screen === 'battlefield' || screen === 'melee') {
     return (
       <div className="h-full flex flex-col">
@@ -101,5 +112,16 @@ export default function App() {
     );
   }
 
-  return <GameLayout />;
+  return (
+    <div className="h-full relative">
+      <GameLayout />
+      <button
+        data-testid="btn-enter-nanjun-battlefield"
+        className="fixed top-14 right-2 z-50 px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800"
+        onClick={() => void enterNanjunBattlefield()}
+      >
+        进入南郡战场（BF-P1）
+      </button>
+    </div>
+  );
 }

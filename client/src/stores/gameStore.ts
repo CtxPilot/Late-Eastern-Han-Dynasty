@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
-import { type SceneFrame, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
+import { type SceneFrame, type BattlefieldInstance, generateNanjunBattlefield, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
@@ -17,6 +17,10 @@ interface Store {
   popToSceneFrame: (scene: SceneFrame['scene']) => void;
   replaceSceneStack: (frame: SceneFrame) => void;
   clearSceneStack: () => void;
+
+  battlefieldInstance: BattlefieldInstance | null;
+  enterNanjunBattlefield: () => Promise<void>;
+  engageJiangling: () => Promise<void>;
   game: GameState | null;
   battle: BattleState | null;
   selectedCityId: number | null;
@@ -149,6 +153,7 @@ interface Store {
 export const useGameStore = create<Store>((set, get) => ({
   screen: 'boot',
   sceneStack: [],
+  battlefieldInstance: null,
   game: null,
   battle: null,
   selectedCityId: null,
@@ -174,6 +179,30 @@ export const useGameStore = create<Store>((set, get) => ({
   popToSceneFrame: (scene) => set((s) => { const stack = popToScene(s.sceneStack, scene); return { sceneStack: stack, screen: screenOf(stack) }; }),
   replaceSceneStack: (frame) => set({ sceneStack: replaceStack(frame), screen: screenOf([frame]) }),
   clearSceneStack: () => set({ sceneStack: clearStack(), screen: BOOT_SCREEN }),
+
+  enterNanjunBattlefield: async () => {
+    const game = get().game;
+    if (!game) { set({ error: '未进入游戏' }); return; }
+    const attackerFactionId = game.playerFactionId;
+    const defenderFaction = Object.values(game.factions).find((f) => f.id !== attackerFactionId && f.isAlive);
+    if (!defenderFaction) { set({ error: '未找到敌方势力' }); return; }
+    const armyIds = game.campaignArmies.filter((a) => a.factionId === attackerFactionId).map((a) => a.id);
+    const inst = generateNanjunBattlefield({
+      instanceId: `bf-nanjun-${Date.now()}`,
+      warId: `war-nanjun-${Date.now()}`,
+      attackerFactionId,
+      defenderFactionId: defenderFaction.id,
+      armyIds,
+      rngDrawStart: 0,
+    });
+    const after = pushScene(get().sceneStack, { scene: 'battlefield', battlefieldId: inst.id });
+    set({ battlefieldInstance: inst, sceneStack: after, screen: screenOf(after), error: null, lastActionOk: '进入南郡战场' });
+  },
+
+  engageJiangling: async () => {
+    await get().selectCity(14);
+    await get().marchOnCity(undefined, 5000);
+  },
 
   boot: async () => {
     set({ loading: true, error: null, lastActionOk: null });
@@ -203,13 +232,13 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null, lastActionOk: null });
     try {
       const game = await api.createGame(scenarioId, factionId, eventLayers);
-      set({ game, screen: 'world', loading: false, selectedCityId: game.factions[factionId]?.capitalCityId ?? null });
+      set({ game, sceneStack: replaceStack({ scene: 'world' }), screen: 'world', loading: false, selectedCityId: game.factions[factionId]?.capitalCityId ?? null });
     } catch (e) {
       set({ error: errMsg(e, '创建剧本失败'), loading: false });
     }
   },
 
-  openScenarioSelect: () => set({ screen: 'scenario', error: null }),
+  openScenarioSelect: () => set({ sceneStack: replaceStack({ scene: 'scenario' }), screen: 'scenario', error: null }),
 
   selectCity: (id) => set({ selectedCityId: id, lastActionOk: null }),
 
@@ -530,10 +559,12 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { game: nextGame, battle } = await api.march(id, fromCityId, troopCount);
+      const after = pushScene(get().sceneStack, { scene: 'battle' });
       set({
         game: nextGame,
         battle,
-        screen: 'battle',
+        sceneStack: after,
+        screen: screenOf(after),
         selectedUnitId: null,
         moveRange: [],
         loading: false,
@@ -646,10 +677,12 @@ export const useGameStore = create<Store>((set, get) => ({
     try {
       const game = await api.exitBattle();
       const msg = game.actionLog[0]?.message ?? '返回大地图';
+      const after = popScene(get().sceneStack);
       set({
         game,
         battle: null,
-        screen: 'world',
+        sceneStack: after,
+        screen: screenOf(after),
         selectedUnitId: null,
         moveRange: [],
         loading: false,
