@@ -113,7 +113,7 @@
 
 ## 二、formations.json — 阵型数据
 
-**0-A：6条**（6 陆阵）· **0-B 全量：27条**（18 陆阵 + 9 水阵）。详见 `05-combat-system.md §4`。
+**0-A：7条**（6 基础陆阵 + 1 补录冲阵 id 16，因 10 名骑兵系武将 `formationMastery` 已引用 id 16 但 formations.json 漏录，Session 178 补全）· **0-B 全量：27条**（18 陆阵 + 9 水阵）。详见 `05-combat-system.md §4`。
 
 ### 字段说明
 

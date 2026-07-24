@@ -188,7 +188,7 @@ Late-Eastern-Han-Dynasty/
 │       │   ├── loader.ts            # JSON 数据加载 + Zod 校验
 │       │   ├── officers.json        # 30 武将 (0-A)
 │       │   ├── cities.json          # 30 城 (0-A)
-│       │   ├── formations.json      # 6 阵型 (0-A)
+│       │   ├── formations.json      # 7 阵型 (0-A, 含补录冲阵)
 │       │   ├── units.json           # 9 兵种 (0-A: 6陆+3水)
 │       │   ├── items.json           # 20 宝物 (0-A)
 │       │   ├── skills.json          # 30 技能 (0-A)
@@ -470,7 +470,7 @@ server/src/data/loader.ts
   4. 后续通过 getStaticData() 访问
 
 数据文件版本: 0-A (小数据集)
-  officers=30 · cities=30 · formations=6 · units=9(6陆+3水)
+  officers=30 · cities=30 · formations=7 · units=9(6陆+3水)
   items=20 · skills=30 · females=10 · children=5
   scenarios=2 · events=24
 ```

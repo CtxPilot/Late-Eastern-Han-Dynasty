@@ -185,5 +185,49 @@
       "mountain": 0,
       "water": -1
     }
+  },
+  {
+    "id": 16,
+    "name": "冲阵",
+    "description": "仅骑兵，冲锋伤害 +80%（设计 §4，Tier 4 陆阵）。",
+    "historicalSource": "武经总要",
+    "modifiers": {
+      "attack": 3,
+      "defense": -3,
+      "mobility": 2,
+      "range": 0
+    },
+    "effects": [
+      {
+        "name": "冲锋",
+        "description": "仅骑兵，冲锋伤害 +80%",
+        "modifier": {
+          "type": "charge",
+          "value": 80,
+          "condition": "cavalry_only"
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "heavyCavalry"
+    ],
+    "restrictedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman"
+    ],
+    "terrainModifiers": {
+      "plain": 2,
+      "forest": -2,
+      "mountain": -3,
+      "water": -3
+    }
   }
 ]

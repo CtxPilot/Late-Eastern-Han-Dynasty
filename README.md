@@ -25,7 +25,7 @@ The repository is both a framework under active development and a playable refer
 
 The **0-A playable prototype** currently includes:
 
-- a 30-city simulation baseline, 9 unit types, 6 implemented formations, and 223 historical officer records;
+- a 30-city simulation baseline, 9 unit types, 7 implemented formations, and 223 historical officer records;
 - two selectable scenarios: a sandbox-style hero assembly and a four-faction 190 CE historical slice;
 - monthly turns with explicit quarter/year boundaries, city development, recruitment, training, personnel actions, population/food consumption, diplomacy, intelligence, plots, family events, and server-side fog-of-war masking;
 - campaign armies with commander/deputy/adviser composition, marching, sieges, simplified facilities, and automatic battle resolution;
