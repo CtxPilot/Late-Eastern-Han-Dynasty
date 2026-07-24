@@ -3404,4 +3404,18 @@
 - 同步更新：`HANDOFF`（进度双写 + 近期会话索引 Session 172 条目补 Commit 2）。
 
 *v11.11 | 2026-07-24 | Session 172 Commit 2 · S23 原型实现 + Headless Chrome 7 状态验证*
+
+## 2026-07-24 — Session 173（BF-P1 静态郡域场景 + 六角引擎最小闭环）
+
+- 范围：BF-P1 §6.5/§7.1/§8.2 落地，打通 world→战场→六角接战→回写最小闭环。BF-P0 数据（nanjun190 16 县/11 路线）已就绪。
+- Commit A：`shared/scenes.ts` 场景栈纯函数（pushScene/popScene/popToScene/replaceStack/screenOf，空栈=boot 壳）+ 12 单测；gameStore 加 sceneStack 字段 + push/pop action，startGame/marchOnCity/exitBattle 用 push/pop 驱动 screen 派生。**前置补提交** `shared/negotiation.ts`（Session 170 R2 遗漏，client LeftPanel/PersonnelPanel 与 server diplomacy/personnel 工作树依赖缺失致 typecheck 不过；其配套改动仍留工作树）。
+- Commit B：`shared/types/battlefield-instance.ts`（BattlefieldInstance/NodeState/RouteState/EncounterState/GenerationAudit §8.2）+ `shared/battlefield-instance-schema.ts` Zod（strict + superRefine：seat 校验/邻接存在/id 不重复）+ `shared/nanjun-battlefield.ts` generateNanjunBattlefield 纯函数（从 nanjun190 16 县+11 路线生成，江陵 seat 守方据点 5000 兵/100 城防，入口=当阳+枝江）+ 13 单测（对照 nanjun 数据 + Zod parse + JSON 往返存档一致性 + 拒绝非 seat target/空 nodeStates）。**存档契约（§8.1）可序列化结构 + 往返单测已落地；暂不接入 GameState schema**（避免破坏 CampaignArmy 62/62），接入留 P2。
+- Commit C：六角引擎接入（§7.1 迁移适配不推倒）——engageJiangling → selectCity(14=江陵 worldCityId) + marchOnCity(undefined, 5000) 复用现有 createBattle + BattleView，不重写战斗逻辑；exitBattle 用 popScene 自动回战场或大地图。BattlefieldSceneView（SVG 渲染 16 县节点 localX/localY + 11 路线 river/road 分色 + 江陵 seat 高亮 + 围攻/退出按钮，占位几何）。App.tsx 路由 screen='battlefield'+battlefieldInstance → BattlefieldSceneView，world 加进入入口按钮。Scene 类型加 'battle'（兼容 gameStore 现有 Screen）。
+- 全量回归：shared 172/172、CampaignArmy 62/62、AI 军事 29/29、南郡 Schema 38/38、validate-data 全过——**无回归**。client/server typecheck 全过。
+- Headless Chrome 闭环实测（Playwright）：吕布军残留状态 → 点「进入南郡战场」→ BattlefieldSceneView 16 县渲染 → 点「围攻江陵」→ 进入 BattleView（六角 createBattle cityId=14）→ 点「撤军返回」→ exitBattle popScene → 回 BattlefieldSceneView（16 县）→ 点「退出战场」→ popToScene world → 回大地图。**全链路通过**。
+- 发现的架构限制（仿 BF-P0「PNG 无法叠加表情层」报告）：(1) zustand store 不可从浏览器外部 setState（React 18 useSyncExternalStore 不暴露 store 引用），闭环走真实 UI 点击而非 page.evaluate 注入；(2) BattlefieldInstance（县节点字符串 id）与现有 BattlefieldMap（大地图数字 id）数据不兼容，P1 不强行合并新建独立类型，旧 BattlefieldMap 保留不动避免破坏 62/62；(3) Scene 需含 'battle' 而非仅设计文档的 'tactical'，实施时加入。
+- 同步：`docs/21-battlefield-scene-design.md`（v1.2→v1.3，§十 P1 实施记录）、HANDOFF（进度双写 + Session 173 条目）。
+- **标注**：本轮 BattlefieldInstance 不进 GameState（存档留 P2）；16 县节点本轮仅静态展示（Q6 可控但不进全局经济留后）；旧 BattlefieldMap/BattlefieldPanel 保留但 P1 路径不用。R3（S10 单挑四倾向）仍为 R3，BF-P1 是并行独立任务。
+
+*v11.12 | 2026-07-24 | Session 173 · BF-P1 最小闭环打通（world→战场→六角→回写）*
 *文档版本: v12.0 | 2026-07-23 | Session 171 R2 文档收口与 R3 次日交接*
