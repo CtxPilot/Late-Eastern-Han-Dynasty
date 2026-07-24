@@ -2,15 +2,20 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useGameStore } from '../../stores/gameStore';
+import { FIRST_BATCH_COUNTY_IDS } from '@leh/shared';
 
 export function BattlefieldSceneView() {
   const inst = useGameStore((s) => s.battlefieldInstance);
+  const game = useGameStore((s) => s.game);
   const engageJiangling = useGameStore((s) => s.engageJiangling);
+  const engageCounty = useGameStore((s) => s.engageCounty);
   const exitNanjunBattlefield = useGameStore((s) => s.exitNanjunBattlefield);
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
-  if (!inst) return null;
+  if (!inst || !game) return null;
   const jiangling = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  const playerFactionId = game.playerFactionId;
+  const firstBatch = FIRST_BATCH_COUNTY_IDS as readonly string[];
 
   return (
     <div className="h-full flex flex-col bg-[#1a2218]">
@@ -57,24 +62,50 @@ export function BattlefieldSceneView() {
           })}
           {inst.nodeStates.map((n) => {
             const isSeat = n.nodeId === inst.targetSeatNodeId;
+            const isOwned = n.rulerFactionId === playerFactionId;
+            const isEngageable = firstBatch.includes(n.nodeId) && !isOwned;
+            const fillColor = isSeat
+              ? '#a21d24'
+              : isOwned
+                ? '#2d5a2d'
+                : firstBatch.includes(n.nodeId)
+                  ? '#5a4a2a'
+                  : '#3a3a32';
+            const strokeColor = isSeat ? '#ffd700' : isOwned ? '#4a8a4a' : '#111';
             return (
-              <g key={n.nodeId} data-testid={`bf-node-${n.nodeId}`}>
+              <g
+                key={n.nodeId}
+                data-testid={`bf-node-${n.nodeId}`}
+                style={isEngageable ? { cursor: 'pointer' } : undefined}
+                onClick={isEngageable ? () => void engageCounty(n.nodeId) : undefined}
+              >
                 <circle
                   cx={n.localX} cy={n.localY}
                   r={isSeat ? 0.032 : 0.018}
-                  fill={isSeat ? '#a21d24' : '#3a3a32'}
-                  stroke={isSeat ? '#ffd700' : '#111'}
-                  strokeWidth={isSeat ? 0.005 : 0.002}
+                  fill={fillColor}
+                  stroke={strokeColor}
+                  strokeWidth={isSeat ? 0.005 : isOwned ? 0.004 : 0.002}
                 />
                 <text
                   x={n.localX} y={n.localY - 0.04}
                   fontSize={0.024}
-                  fill={isSeat ? '#ffd700' : '#cfc0a0'}
+                  fill={isSeat ? '#ffd700' : isOwned ? '#8aff8a' : '#cfc0a0'}
                   textAnchor="middle"
                   fontFamily="HanDynastySerif"
                 >
                   {n.name}
                 </text>
+                {isOwned && (
+                  <text
+                    x={n.localX} y={n.localY + 0.035}
+                    fontSize={0.014}
+                    fill="#8aff8a"
+                    textAnchor="middle"
+                    fontFamily="HanDynastySerif"
+                  >
+                    驻{n.garrison}
+                  </text>
+                )}
               </g>
             );
           })}

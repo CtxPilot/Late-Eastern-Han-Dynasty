@@ -544,6 +544,12 @@ export async function exitNanjunBattlefield(): Promise<GameState> {
   return data;
 }
 
+/** BF-P2 Q9：攻打郡域县节点（当阳/华容/枝江） */
+export async function engageCounty(countyId: string): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/engage-county', { countyId });
+  return data;
+}
+
 /** 获取当前郡域战场实例（如有） */
 export async function getBattlefieldInstance(): Promise<BattlefieldInstance | null> {
   try {

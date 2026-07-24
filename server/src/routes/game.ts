@@ -673,6 +673,16 @@ gameRouter.post('/battlefield-instance/exit', (_req, res) => {
   }
 });
 
+/** BF-P2 Q9：攻打郡域县节点（当阳/华容/枝江） */
+gameRouter.post('/battlefield-instance/engage-county', (req, res) => {
+  try {
+    const { countyId } = req.body as { countyId: string };
+    res.json(gameService.engageCounty(countyId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'engage county failed' });
+  }
+});
+
 // ====== 白刃战 API（05 §二十 Tier II） ======
 
 /** 发起白刃战 */

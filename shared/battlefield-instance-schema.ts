@@ -19,6 +19,7 @@ export const BattlefieldNodeStateSchema: z.ZodType<BattlefieldNodeState> = z.obj
   adjacentNodeIds: z.array(StableIdSchema),
   localX: z.number(),
   localY: z.number(),
+  controlTurns: NonNegInt,
 }).strict();
 
 export const BattlefieldRouteStateSchema: z.ZodType<BattlefieldRouteState> = z.object({
