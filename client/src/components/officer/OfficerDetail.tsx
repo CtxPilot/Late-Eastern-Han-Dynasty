@@ -148,6 +148,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </div>
 
             {tab === 'stats' && (
+              <>
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-4">
                   <section>
@@ -220,6 +221,16 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                   </section>
                 </div>
               </div>
+
+              <section>
+                <h3 className="mb-2 text-xs tracking-widest text-amber-500">列传</h3>
+                {officer.biography ? (
+                  <p className="text-xs leading-6 text-stone-300 whitespace-pre-line">{officer.biography}</p>
+                ) : (
+                  <p className="text-stone-600 text-xs">暂无列传记载</p>
+                )}
+              </section>
+              </>
             )}
 
             {tab === 'family' && (
