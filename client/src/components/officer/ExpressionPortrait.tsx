@@ -102,13 +102,6 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
           <path className="portrait-faint" d="M43 112 L60 132 77 112 M60 132 V150" />
         </g>
       </svg>
-      {!compact && (
-        <>
-          <span className="portrait-clan">{p.clan}</span>
-          <span className="portrait-seal" style={{ fontFamily: "'HanDynastySeal', serif" }}>{officer.name}</span>
-          <span className="portrait-ribbon" />
-        </>
-      )}
     </div>
   );
 }
