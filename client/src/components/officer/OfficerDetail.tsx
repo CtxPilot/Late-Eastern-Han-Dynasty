@@ -128,10 +128,10 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </section>
 
             <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格</h3>
+              <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格与理想</h3>
               <div className="flex flex-wrap gap-1.5 text-[11px]">
                 <Chip text={`性 · ${PERSONALITY_LABEL[officer.hidden.personality] ?? officer.hidden.personality}`} />
-                <Chip text={`志 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
+                <Chip text={`理 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
               </div>
             </section>
           </div>

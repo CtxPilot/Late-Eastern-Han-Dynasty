@@ -9,7 +9,7 @@
  *
  * 设计决策（Session 178）：hidden 数值类字段（righteousness/ambition/valor/composure/
  * luck 等）保持隐藏，不在 UI 展示；仅 personality + ideal 这两个文字风味字段在
- * OfficerDetail "性格" 区块展示。数值类隐藏属性通过游玩发现，不在简册直读。
+ * OfficerDetail "性格与理想" 区块展示。数值类隐藏属性通过游玩发现，不在简册直读。
  *
  * 参见 `docs/05-combat-system.md` §4（阵型设计）、`shared/enums/index.ts`（枚举定义）。
  */
@@ -45,7 +45,7 @@ export const FORMATION_LABEL: Record<number, string> = {
 
 /**
  * 性格（Personality 枚举）→ 中文文案。
- * 文字风味字段，用于 OfficerDetail "性格" 区块展示。
+ * 文字风味字段，用于 OfficerDetail "性格与理想" 区块展示。
  */
 export const PERSONALITY_LABEL: Record<Personality, string> = {
   [Personality.BRAVE]: '勇烈',
@@ -57,12 +57,13 @@ export const PERSONALITY_LABEL: Record<Personality, string> = {
 };
 
 /**
- * 志向（Ideal 枚举）→ 中文文案。
- * 文字风味字段，用于 OfficerDetail "性格" 区块展示。
+ * 理想（Ideal 枚举）→ 中文文案。
+ * 文字风味字段，用于 OfficerDetail "性格与理想" 区块展示。
+ * 枚举值回归文档原值（01-overview.md:111）：霸道/王道/割据/侠义/名利。
  */
 export const IDEAL_LABEL: Record<Ideal, string> = {
-  [Ideal.HEGEMONY]: '霸业',
-  [Ideal.BENEVOLENCE]: '仁政',
+  [Ideal.HEGEMONY]: '霸道',
+  [Ideal.BENEVOLENCE]: '王道',
   [Ideal.SEPARATIST]: '割据',
   [Ideal.CHIVALRY]: '侠义',
   [Ideal.FAME]: '名利',
