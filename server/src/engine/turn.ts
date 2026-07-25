@@ -189,12 +189,14 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   let factions = syncFactionResources({ ...state, cities }).factions;
 
   const ai = runAllAiTurns({ ...state, cities, factions, currentYear, currentMonth, season });
-  // Use ai result as base so any future AI modifications to officers/diplomacy/intel
-  // are preserved instead of silently discarded.
-  // AI 改城池后再次全量同步，避免 faction.gold 与城池脱节
+  // 显式取 ai.factions/ai.cities，不 spread 整个 ai 对象——避免 ai.decisions
+  // （临时日志字段，line 260 已转成 actionLog 条目）泄漏进 GameState，
+  // 否则 GameStateSchema strict 校验会在 restoreGameFromEnvelope 时拒绝。
+  // 未来 ai 若扩展返回 officers/diplomacy/intel 等字段，在此显式追加。
   let afterAi: GameState = {
     ...state,
-    ...ai,
+    factions: ai.factions,
+    cities: ai.cities,
     currentYear,
     currentMonth,
     season,
