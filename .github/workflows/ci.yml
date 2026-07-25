@@ -99,6 +99,27 @@ jobs:
       - name: AI military diplomacy, campaign, and deterministic continuation test
         run: pnpm verify-ai-military-rng
 
+      - name: AI faction sort stabilization test
+        run: pnpm verify-ai-faction-sort
+
+      - name: Plot AI decisionRng parameter test
+        run: pnpm verify-plot-ai-decision
+
+      - name: Spy AI decisionRng parameter test
+        run: pnpm verify-spy-ai-decision
+
+      - name: AI decision military replay test
+        run: pnpm verify-ai-decision-military
+
+      - name: AI decision plot replay test
+        run: pnpm verify-ai-decision-plot
+
+      - name: AI decision spy replay test
+        run: pnpm verify-ai-decision-spy
+
+      - name: AI decision integration replay test
+        run: pnpm verify-ai-decision-integration
+
       - name: Fog-masked march integration test
         run: pnpm verify-march-fog
 
