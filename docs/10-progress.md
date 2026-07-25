@@ -3696,3 +3696,19 @@
 - 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
 
 *v13.2 | 2026-07-25 | Session 185 · 美术 Step 1 色板 token 化完成（4 commit）；Tailwind 注册 ink/paper/seal/gold + 军政人谍语义别名；左栏 9 + 右栏 4 section 跳色语义化；R3 仍为玩法下一步*
+
+## 2026-07-25 — Session 186（体力基础值缩放 + 行动次数系统 + 体力消耗不对称，4 commit）
+
+- Phase: **代码实装 + 单测 + Headless 验证**（用户指派，含存档兼容性处理）
+- **公式审计**：确认 `shared/stamina.ts:66` 公式 `base = 80 + eWar/2 + eLead/10 + (ePol+eInt+eCha)/50`，权重结构 **武力0.5 > 统帅0.1 > 其余0.02**，与任务描述完全一致，无需重新发明。吕布168 = 80+75(武150含ceiling50/2)+9.7(统97/10)+3.9(文195/50)+0(merit)+0(age34) = 168.6→168。
+- 变更（按 commit 归纳）:
+  1. **体力缩放**（`6327e18`）：`calcStaminaMax` 末尾乘 `STAMINA_SCALE_FACTOR=100/168` 常量（导出）。权重结构不变，吕布=100，223武将等比例≤100。基础值≤100，meritLevel/装备等加成叠加突破100（04§27双轨制，加成引擎未实装属独立技术债）。
+  2. **行动次数系统**（`8dbc1f0`）：新增 `actionsPerMonth?: number` optional 字段（Officer 类型 + Zod schema optional 保证旧存档兼容）。game.ts 初始化 1。advanceTurn 月度重置为 1（参照 R1 月度节拍，不另起节拍）。与体力独立：行动次数决定能否发起新动作，体力决定动作效果，两者不互相阻塞。新增 `shared/stamina-cost.ts` 体力消耗不对称机制：`deriveRole`(war>=int→military) + `staminaCost`(本行×1.0/跨界×1.5) + `staminaEffectFactor`(<10→0.6/<30→0.8/≥30→1.0，沿用04§27.4阶梯)。
+  3. **测试+UI+Headless**（`9f2c...`）：`shared/stamina-cost.test.ts` 17项新测试（缩放/不对称/低体力惩罚）。OfficerDetail 体力展示去掉"基80"语义+加"行动 N/月"。Headless Chrome 验证吕布详情页体力=100、行动=1/月。
+  4. **文档**：04§27.1 缩放说明 + 本进度双写 + HANDOFF。
+- 验证：typecheck/lint/build 全绿；shared test 189/189（原172+新17）；存档兼容 verify-save-game-state 10/10 + verify-save-migration 19/19 + verify-save-entities 10/10；Headless 吕布体力100截图存 `docs/screenshots/session-186-stamina-actions/`。
+- **存档兼容性处理**：actionsPerMonth 设为 optional + schema optional，旧存档（无该字段）恢复时 strict schema 不拒绝，运行时按默认1处理；新存档写入该字段。无需 v2 迁移。
+- **明确不做**：装备/官职/爵位加成引擎（独立技术债，本轮只确保基础值结构能被接入）；舌战机制本身（仅预留 stratagem 分类）；行动次数加成来源规则（仅预留字段）。
+- 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
+
+*v13.3 | 2026-07-25 | Session 186 · 体力缩放（吕布168→100）+ 行动次数系统 + 不对称消耗完成（4 commit）；R3 仍为玩法下一步*

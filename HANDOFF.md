@@ -9,9 +9,9 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 185 完成（美术第一梯队 Step 1：色板 token 化 + 跳色统一，4 commit；Tailwind 注册 ink/paper/seal/gold + 军政人谍语义别名；左栏 9 + 右栏 4 section 跳色语义化；Headless 5 张截图存盘待审）**；S184 美术总监审查；**R3（S10 单挑四倾向）仍为玩法下一步** |
+| 会话 | **Session 186 完成（体力基础值缩放吕布168→100 + 行动次数系统 actionsPerMonth + 体力消耗不对称本行×1.0/跨界×1.5，4 commit；存档兼容 optional 字段处理）**；S185 美术 Step 1 色板 token 化（含 ESM config 不合并修复）；**R3（S10 单挑四倾向）仍为玩法下一步** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S185 美术 Step 1：色板 token 化（tailwind.config 注册 ink/paper/seal/gold + military/civil/personnel/intel 语义别名）+ 裸 hex 收口（canvasTokens.ts + MapCanvas 14 处 + index.css 头像外 3 处）+ 左右栏跳色语义化（AccSection 扩 6 accent，左 9 + 右 4 section）+ 07 §一废止说明** + 既有 S15/S10/S06 + 223 武将 + 三层战斗 + 总军师 + S23 表情系统 + BF-P2 + 武将详情四页签 + SVG 头像统一 + BF-P3 AI 决策 RNG 收口 |
+| 代码最新 | **S186 体力缩放 STAMINA_SCALE_FACTOR=100/168（吕布封顶100，223武将等比例≤100）+ 行动次数系统 actionsPerMonth（月度重置1，与体力独立）+ 体力消耗不对称 deriveRole/staminaCost（本行×1.0跨界×1.5）+ staminaEffectFactor（<10→0.6/<30→0.8/≥30→1.0）** + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
 | 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · 23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施） · 24-character-expression-system-design（S23 设计+实装） · 21-battlefield-scene-design v1.3 · **`design/ArtDirection.md` v1.0（Session 184 新建：视觉唯一真源，07 §一冲突行废止）** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送至 `8f14448`（S182 BF-P3 Session A），**本地领先 origin/main 3 个 commit（S183 BF-P3 Session B：权威流接入 + 4 个决策复现脚本 + CI 接入，未推送）** |
 | 玩法下一步 | **R3（S10 单挑四倾向与吕布“强但可败”规则）仍为下一步**。**Session 179 待办**：体力拆解已定（基80+加成）；列传扩展30基线~7.5-9.5h（merge+UI已就绪）；俸禄D-0B-9独立Session（已审计确认）；CampaignPanel ARROWHEAD↔冲阵误标未修（建议用FORMATION_LABEL根治）。BF-P1 保持已批准待办。 |
