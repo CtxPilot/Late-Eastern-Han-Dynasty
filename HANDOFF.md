@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 183 完成（BF-P3 Session B：接入权威流 + 4 个整场决策复现脚本 + ai.decisions 泄漏修复，3 commit；BF-P3 AI 决策 RNG 收口部分正式完成）**；S182 BF-P3 Session A；S181 头像统一 SVG；S180 武将界面收口；S179 武将详情页四页签；S178 武将界面修复；S177 BF-P2 Q9 老实标注；S173 BF-P1；S23 Session 172；**R3（S10 单挑四倾向）仍为下一步** |
+| 会话 | **Session 185 完成（美术第一梯队 Step 1：色板 token 化 + 跳色统一，4 commit；Tailwind 注册 ink/paper/seal/gold + 军政人谍语义别名；左栏 9 + 右栏 4 section 跳色语义化；Headless 5 张截图存盘待审）**；S184 美术总监审查；**R3（S10 单挑四倾向）仍为玩法下一步** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S15 外交过滤+君主激进度+AI CampaignArmy 出征/围城/自动结算+战报（军事决策与结算统一权威 PRNG）** + **S10 正式交战单位携带主将姓名快照** + **S06 未探明目标可尝试道路邻接出征** + 两剧本选择 + 190**24事件沉浸式链**/5叙事线/玩家抉择系统/史源分层 + 9兵种 + 战法/单挑/暴击反击连击引擎 + 战役层引擎 + 跨平台字体防御 + **223名史实武将** + **武将名册/人物简册/四名代表人物金石水墨位图头像（其余程序化回退）/README四图展示/人事终审窗** + **三层战斗架构实装** + **总军师系统实装** + **S23 人物状态表情系统（3 原型占位，程序化 SVG 分层，7 状态 Headless 实测过）** + **BF-P1 静态郡域场景+六角引擎最小闭环** + **BF-P2 Q10+Q11+Q12+Q9 全部落地（含老实标注：补给线/视野扩张为简化替代或占位）** + **武将详情界面修复（Session 178：阵型显名称/经验体力去重/性格区块/非原型称号从 stats 派生 + formations.json 补录 id 16 冲阵）** + **Session 179 武将详情页四页签（属性/家族/装备/列传）+ 人物列传架构（4原型试点：类型+Zod+merge脚本+4篇传记）+ 术语统一（理想替代志向，枚举值回归文档）+ SVG头像辨识度优化（4原型差异化+guan武圣冠）+ 体力拆解展示（基80+加成，不封顶100）** + **Session 181 头像统一收尾（4 PNG 退役为装饰未用，头像区域文字叠加清除，223 武将全员走程序化 SVG，表情系统 7 状态不变，Headless Chrome 15/15）** + **Session 182 BF-P3 Session A（AI 势力排序稳定化 + plotAi/spyAi 加 decisionRng 参数 + 12 处 Math.random() 替换为 decisionRng()）** + **Session 183 BF-P3 Session B（接入权威流 turn.ts line 212/216 显式传 decisionRng=rng + 4 个整场决策复现 verify 脚本共 16 项断言 + 修复 ai.decisions 泄漏进 GameState 的 pre-existing bug + 7 个新 verify 脚本接入 CI；BF-P3 AI 决策 RNG 收口部分正式完成，读档后 AI 决策序列完全可复现）** |
-| 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · **23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施）** · **24-character-expression-system-design（S23 设计+实装，172/172+Headless 7 状态）** · **21-battlefield-scene-design v1.3（BF-P1 最小闭环已打通）** |
+| 代码最新 | **S185 美术 Step 1：色板 token 化（tailwind.config 注册 ink/paper/seal/gold + military/civil/personnel/intel 语义别名）+ 裸 hex 收口（canvasTokens.ts + MapCanvas 14 处 + index.css 头像外 3 处）+ 左右栏跳色语义化（AccSection 扩 6 accent，左 9 + 右 4 section）+ 07 §一废止说明** + 既有 S15/S10/S06 + 223 武将 + 三层战斗 + 总军师 + S23 表情系统 + BF-P2 + 武将详情四页签 + SVG 头像统一 + BF-P3 AI 决策 RNG 收口 |
+| 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · 23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施） · 24-character-expression-system-design（S23 设计+实装） · 21-battlefield-scene-design v1.3 · **`design/ArtDirection.md` v1.0（Session 184 新建：视觉唯一真源，07 §一冲突行废止）** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送至 `8f14448`（S182 BF-P3 Session A），**本地领先 origin/main 3 个 commit（S183 BF-P3 Session B：权威流接入 + 4 个决策复现脚本 + CI 接入，未推送）** |
 | 玩法下一步 | **R3（S10 单挑四倾向与吕布“强但可败”规则）仍为下一步**。**Session 179 待办**：体力拆解已定（基80+加成）；列传扩展30基线~7.5-9.5h（merge+UI已就绪）；俸禄D-0B-9独立Session（已审计确认）；CampaignPanel ARROWHEAD↔冲阵误标未修（建议用FORMATION_LABEL根治）。BF-P1 保持已批准待办。 |
 
@@ -327,6 +327,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | `docs/15-linux-ui-spec.md` | **v1.0** Linux UI 与跨平台字体规范（Session 102 新建） |
 | `docs/16-demo-build-playbook.md` | 0-A Demo 12回合流程；严格标注已验证、引擎受阻、替代展示与设计中能力 |
 | `docs/24-character-expression-system-design.md` | S23 人物状态表情系统设计（Session 172；3 原型占位，程序化 SVG 分层；状态→图层映射纯函数 + 背景色调层） |
+| `docs/design/ArtDirection.md` | **视觉唯一真源**（Session 184 新建）：色彩/字体/UI/图标/人物/地图/战斗/工程合规八章；07 §一冲突行（#8B6914 色板/思源黑体/等宽/像素图标）废止；头像 A′+C+B 方案与分级策展 |
 | `AGENTS.md` | 0-A：30城/9兵种…；**核心规则 9 美术版权铁律 + 跨平台字体防御三件套** |
 
 ---
@@ -336,6 +337,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 优先级 | 事项 |
 |:------:|------|
 | **1（待启动）** | 执行 `23-design-consistency-remediation.md` **R3：S10 单挑四倾向 + 吕布规则内最强但可败**。Session 178 武将界面修复是用户指派独立需求，不抢占 R3，明天可启动 R3。 |
+| **Session 184 已完成** | 全项目美术总监审查（纯文档零代码）：TOP10 问题清单（4×P0/4×P1/2×P2）+ 新建 `docs/design/ArtDirection.md` 视觉唯一真源 + 头像 A′+C+B 重建与分级策展方案。**待拍板**：美术实装批次（高收益首批=色板 token 化+金石组件库+战斗层换色+头像管线接通）与 R3 的先后次序由用户定。 |
+| **Session 185 已完成** | 美术第一梯队 Step 1 色板 token 化 + 跳色统一（4 commit）。Tailwind 注册 ink/paper/seal/gold + military/civil/personnel/intel 语义别名；MapCanvas 14 处裸 hex 收口至 canvasTokens.ts；左栏 9 + 右栏 4 section 跳色改语义色；07 §一废止说明。Headless 5 张截图存 `docs/screenshots/session-184-color-tokens/`。**遗留并存**（Step 4 收口）：25 文件 200+ 处 amber-/stone- 直写类名 + AccSection 旧 accent 键。**下一 Step**：Step 2 战斗层换色 / Step 3 工程残留清理 / Step 4 金石组件库，三者与 R3 的次序待用户定。 |
 | **Session 178 已完成** | 武将详情界面修复（阵型显名称/经验体力去重/性格区块/非原型称号派生 + formations.json 补录 id 16 冲阵）；4 commit 本地领先 origin/main 未推送。详见 10-progress Session 178。**未做**：头像图片本身需另外核对（用户已换新版）；CampaignPanel/StandardModePanel 的 ARROWHEAD↔冲阵 既有误标 bug 待后续用 FORMATION_LABEL 根治。 |
 | **Session 170 已完成** | R2：登用/结盟共享百分点公式，结盟接权威 RNG，UI/日志同源；专项验证 20/20 |
 | **Session 166 已完成** | 吕布、关羽、诸葛亮、曹操四张新头像接入人物简册与名册缩略图；非重点人物保留程序化回退；README 四张人物截图已用真实浏览器流程重拍 |

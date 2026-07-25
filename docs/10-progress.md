@@ -3657,4 +3657,42 @@
 - 同步：HANDOFF §1 会话/代码最新/本交接用途三行 + 本进度双写
 - **标注**：本轮是 BF-P3 Session B（接入权威流 + 整场复现验证），BF-P3 AI 决策 RNG 收口部分正式完成。R3（S10 单挑四倾向）仍为下一步。BF-P3 完整范围仍含"战场 AI 行动选择 RNG"（未在本次评估/实施范围）。
 
-*v13.0 | 2026-07-25 | Session 183 · BF-P3 Session B 完成（接入权威流 + 整场决策复现 + ai.decisions 泄漏修复）；BF-P3 AI 决策 RNG 收口部分正式完成*
+## 2026-07-25 — Session 184（全项目美术总监审查 + 视觉真源建立，纯文档零代码）
+
+- Phase: **文档/审查**（用户指派独立需求，不抢占 R3；零代码/数据/规则改动）
+- 审查范围：设计文档（00/01/07/15/24）+ client/src 全部 30+ 组件与渲染代码 + 截图证据（大地图/城详/人事/四武将简册/S179 头像四图）。
+- **核心发现（TOP10 摘要）**：
+  1. **P0 视觉真源三分裂**：07 §一色板（#8B6914 金系）/ 00 §11.7（朱砂 #a61919 系）/ 代码事实（Tailwind stone+amber）三套并存；07 §一「正文思源黑体/数字等宽/像素图标」与 §11.7 资产闭环及金石基调冲突。
+  2. **P0 金石水墨未出头像框**：除 120×150 头像外，UI chrome/地图/战斗零拓片/简册/印信元素；P5-07d 金石黑框组件库未实装。
+  3. **P0 战斗层色板撕裂**：BattleView 亮粉彩（#c8d9a0/#5b9bd5 等）与全局暗墨冲突；单位=圆形+姓氏首字；火计/战法零视觉反馈；全库动画仅 DuelPanel 一处 transition。
+  4. **P0 头像数据管线断裂**：`avatarGene` 字段 client 零消费（HERO_PRESETS 硬编码 4 人 + id%2/id%3 哈希回退）；A 层拓片 PNG 已退役、B 层印信文字 S181 摘除未重建（`.portrait-seal/.portrait-clan/.portrait-ribbon` 死 CSS 残留）；HanDynastySeal 每启动加载但全游戏零像素渲染。S179 截图姓名印序颠倒（布吕/羽关/操曹/亮葛诸），重建铁律：姓上名下。
+  5. **P1 地图 GIS 化**：无地形风格化/无迷雾视觉层/城池无等级符号/军队无旗帜/无季节感。
+  6. **P1 图标系统为零**：资源/兵种/阵型/适性全文本；「美女」占顶栏核心位。
+  7. **P1 工程残留**：App.tsx 南郡调试按钮、WorldMap.tsx 死文件、font-song/seal 未用别名、@font-face 双份、ASCII 条与渐变条并存、README 四图仍是旧位图头像。
+  8. **P1 信息层级**：左栏手风琴按 section 无语义跳色、10~11px 密排、TopBar 资源无权重。
+  9. **P2 动效近零**；10. **P2 扩展兼容**：LeftPanel 手风琴与 07 §12 底部命令坞+抽屉+终审窗设计冲突，迟早重构。
+- **交付**：新建 **`docs/design/ArtDirection.md` v1.0**——视觉唯一真源（色彩/字体/UI/图标/人物/地图/战斗/工程合规八章）；07 §一冲突行（色板/思源黑体/等宽/像素图标）自该文件建立起废止。头像系统方案 A′+C+B（A′=程序化拓影替代扫描拓片，免除逐件许可举证；接通 avatarGene；重建 B 层印信）与分级策展（S/A/B/C 级）已定，待排期实装。
+- 验证：纯文档会话。事实性结论均经代码坐实（`avatarGene` 全 client 零 grep 命中；`.portrait-seal` 等三类仅存在于 index.css 无任何组件渲染；战斗色板/字体泄漏经两路独立探查交叉确认）；未跑测试因零代码改动。
+- 同步：HANDOFF §1 会话/文档最新 + §7 文档地图 + §8 Next；本进度双写。
+
+*v13.1 | 2026-07-25 | Session 184 · 全项目美术总监审查完成（纯文档）；新建 docs/design/ArtDirection.md 视觉真源；R3 仍为玩法下一步*
+
+## 2026-07-25 — Session 185（美术第一梯队 Step 1：色板 token 化 + 跳色统一，4 commit）
+
+- Phase: **代码实装 + Headless 截图验证**（用户指派，美术第一梯队 Step 1；策略 A 双层 token 骨架先行经用户拍板）
+- 范围严格约束：只做色板 token 化与跳色统一，不涉战斗层换色（Step 2）、工程残留清理（Step 3）、金石组件库（Step 4）、头像管线（第二梯队）、布局结构改动。
+- 变更（按 commit 归纳）:
+  1. **token 注册**（`tailwind.config.js`）：注册 ArtDirection 四套具名色 `ink`(950/900/800/700/600，与 stone 同值零视觉风险) + `paper`(100/300/700) + `seal`(600/400/900) + `gold`(400/200/900) + 四个语义别名 `military`(军=朱红系) / `civil`(政=金系) / `personnel`(人=宣色系) / `intel`(谍=青系)。不覆盖 stone/amber 默认（保证既有类名不破坏）。
+  2. **裸 hex 收口**（`client/src/theme/canvasTokens.ts` 新建 + `MapCanvas.tsx` 14 处 + `index.css` 头像外 3 处）：MapCanvas 14 个裸 hex 全部改引用 `MAP_TOKENS`；index.css `--ink-scroll`/`--ink-hero-from`/`--ink-hero-to` CSS 变量化。头像专属色（portrait-*/HERO_PRESETS）保留不动（B 层重建时收口）。BattleView/BattlefieldSceneView 换色属 Step 2 不动。
+  3. **跳色语义化**（`AccSection.tsx` + `LeftPanel.tsx` 9 section + `RightPanel.tsx` 4 section）：AccSection accent 从 4 种扩 6 种（military/civil/personnel/intel 新增 + amber/rose/emerald/sky 旧键保留兼容）。左栏 9 section 按系统归属重映射：战役/总军师=military(朱)、谍报/计谋=intel(青)、家族/人事=personnel(宣)、外交/君主/己方城池=civil(金)；右栏基本信息/人口结构/内政操作=civil、军事操作=military。消除原 amber/sky/rose/emerald 按位置无语义跳色。
+  4. **07 §一废止 + 进度双写**：07-ui-design.md §一 添加废止说明（色板 #8B6914 系/思源黑体正文/等宽数字/像素图标四项废止，指向 ArtDirection.md）；本进度 + HANDOFF 双写。
+- **seal-600 一屏 ≤2 处铁律核查**：本轮未在 UI chrome 引入 seal-600（military accent 用 red-400 同值的 military-400 而非 seal-600，主按钮仍用既有 amber 系）；seal-600 留 Step 4 金石组件库的 SealButton 主令专用。无滥用。
+- 验证：
+  - ✅ typecheck/lint/build 全绿（chunk 大小警告为既有，非本轮引入）
+  - ✅ shared test 172/172 无回归
+  - ✅ Headless Chrome 5 张截图存 `docs/screenshots/session-184-color-tokens/`（01-主界面/02-左栏单域/03-左栏全域/04-右栏城详/05-武将详情）
+  - ✅ 浏览器 evaluate 断言：9 个左栏 section 的 className 全部正确应用 text-military-400/text-intel-400/text-personnel-300/text-civil-400，Tailwind 自定义类生成成功
+- **遗留并存登记**（Step 4 收口）：25 文件 200+ 处 amber-/stone- 直写类名本轮不动（值与 ink/gold 同源无视觉撕裂，机械替换需逐处判语义、风险高、实质是 Step 4 组件库工作）；AccSection 旧 accent 键 amber/rose/emerald/sky 保留兼容。
+- 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
+
+*v13.2 | 2026-07-25 | Session 185 · 美术 Step 1 色板 token 化完成（4 commit）；Tailwind 注册 ink/paper/seal/gold + 军政人谍语义别名；左栏 9 + 右栏 4 section 跳色语义化；R3 仍为玩法下一步*
