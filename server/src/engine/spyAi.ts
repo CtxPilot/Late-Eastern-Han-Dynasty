@@ -220,7 +220,7 @@ export function aiIntelTurn(
 /** 全部 AI 势力谍报相位 */
 export function runAllAiIntel(state: GameState, resolutionRng: () => number): GameState {
   let s = state;
-  for (const f of Object.values(s.factions)) {
+  for (const f of Array.from(Object.values(s.factions)).sort((a, b) => a.id - b.id)) {
     if (!f.isAlive || f.isPlayer) continue;
     s = aiIntelTurn(s, f.id, resolutionRng);
   }
