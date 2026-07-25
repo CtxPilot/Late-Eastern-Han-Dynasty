@@ -120,11 +120,12 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
 
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">
+              <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
                 {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
                 {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
                 {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
               </div>
+              <p className="mt-1.5 text-[10px] text-stone-600">技能升级系统待实装，当前仅展示已有技能等级</p>
             </section>
 
             <section>
@@ -150,10 +151,11 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </section>
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">
+              <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
                 {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
                 {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}
               </div>
+              <p className="mt-1.5 text-[10px] text-stone-600">阵型精通成长系统待实装，当前仅展示已掌握阵型</p>
             </section>
             <section>
               <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
