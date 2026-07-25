@@ -221,11 +221,13 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               <div className="space-y-4">
                 <section>
                   <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <Info label="正妻" value={wife ?? '—'} />
-                    <Info label="赏赐美人" value={String(officer.beauties.length)} />
-                  </div>
-                  <p className="mt-1.5 text-[10px] text-stone-600">赏赐美人为势力库存资源（S09），记录该武将已接收的赏赐数量</p>
+                  <Info label="正妻" value={wife ?? '—'} />
+                </section>
+
+                <section>
+                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">人事拉拢</h3>
+                  <Info label="赏赐美人" value={String(officer.beauties.length)} />
+                  <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
                 </section>
 
                 <section>
