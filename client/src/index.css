@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 色板真源：docs/design/ArtDirection.md（Session 184）。
+ * 头像外 UI 裸 hex 收口为 CSS 变量；头像专属色（portrait-* / HERO_PRESETS）
+ * 属头像系统数据，由 B 层重建时收口，本轮不动。 */
+:root {
+  --ink-scroll: #17130f;
+  --ink-hero-from: rgba(35,24,16,.98);
+  --ink-hero-to: rgba(12,11,10,.98);
+}
+
 /* 工程字体资产闭环（跨平台字体防御铁律）
  * 详见 client/src/styles/fonts.css、docs/00-dev-constitution.md §11.3+§11.7
  * 不用 @import（CSS 规范要求 @import 必须置顶，在 @tailwind 之后会被忽略），直接内联 */
@@ -39,10 +48,10 @@ body,
 }
 
 .officer-scroll {
-  background-color: #17130f;
+  background-color: var(--ink-scroll);
   background-image: radial-gradient(circle at 18% 12%, rgba(142, 92, 36, .12), transparent 25%), repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0 1px, transparent 1px 7px);
 }
-.officer-detail-hero { background: linear-gradient(90deg, rgba(35,24,16,.98), rgba(12,11,10,.98)); }
+.officer-detail-hero { background: linear-gradient(90deg, var(--ink-hero-from), var(--ink-hero-to)); }
 .officer-portrait { --portrait-ink:#3f3a32; --portrait-seal:#81332d; position:relative; width:100%; aspect-ratio:4/5; overflow:hidden; border:1px solid #6b4e2c; background:linear-gradient(135deg,#c7ae7a,#e4d2a4 48%,#bca06d); box-shadow:inset 0 0 35px rgba(48,29,13,.42),0 8px 24px rgba(0,0,0,.3); }
 .officer-portrait::after { content:""; position:absolute; inset:0; pointer-events:none; opacity:.35; background:repeating-radial-gradient(circle at 20% 30%,rgba(55,35,18,.12) 0 1px,transparent 1px 4px); mix-blend-mode:multiply; }
 .officer-portrait svg { width:100%; height:100%; }

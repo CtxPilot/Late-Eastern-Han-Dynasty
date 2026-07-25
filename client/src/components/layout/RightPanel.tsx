@@ -149,7 +149,7 @@ export function RightPanel() {
 
           <AccSection
             title="基本信息"
-            accent="amber"
+            accent="civil"
             open={open === 'basic'}
             onToggle={() => toggle('basic')}
           >
@@ -224,7 +224,7 @@ export function RightPanel() {
 
           <AccSection
             title="人口结构"
-            accent="emerald"
+            accent="civil"
             open={open === 'population'}
             onToggle={() => toggle('population')}
           >
@@ -273,7 +273,7 @@ export function RightPanel() {
 
           <AccSection
             title="内政操作"
-            accent="amber"
+            accent="civil"
             open={open === 'civil'}
             onToggle={() => toggle('civil')}
           >
@@ -326,7 +326,7 @@ export function RightPanel() {
 
           <AccSection
             title="军事操作"
-            accent="sky"
+            accent="military"
             open={open === 'military'}
             onToggle={() => toggle('military')}
           >

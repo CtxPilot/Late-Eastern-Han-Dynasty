@@ -10,7 +10,7 @@ export function AccSection({
   open,
   onToggle,
   children,
-  accent = 'amber',
+  accent = 'civil',
 }: {
   title: string;
   /** 标题右侧小计数，如美人人数 */
@@ -18,9 +18,20 @@ export function AccSection({
   open: boolean;
   onToggle: () => void;
   children: ReactNode;
-  accent?: 'amber' | 'rose' | 'emerald' | 'sky';
+  /**
+   * 语义色别名（ArtDirection.md §1.2：军=朱红 / 政=金 / 人=宣 / 谍=青）。
+   * 新键优先：military/civil/personnel/intel；旧键 amber/rose/emerald/sky 保留兼容
+   * （值与对应语义键同色，未迁移的调用点不破坏，留 Step 4 组件库统一收口）。
+   */
+  accent?:
+    | 'military' | 'civil' | 'personnel' | 'intel'
+    | 'amber' | 'rose' | 'emerald' | 'sky';
 }) {
   const accentCls = {
+    military: 'text-military-400/90',
+    civil: 'text-civil-400/90',
+    personnel: 'text-personnel-300/90',
+    intel: 'text-intel-400/90',
     amber: 'text-amber-400/90',
     rose: 'text-rose-400/90',
     emerald: 'text-emerald-400/90',

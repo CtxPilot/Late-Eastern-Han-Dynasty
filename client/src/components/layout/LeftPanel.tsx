@@ -97,7 +97,7 @@ export function LeftPanel() {
         <AccSection
           title="战役"
           badge={armyCount}
-          accent="amber"
+          accent="military"
           open={open === 'campaign'}
           onToggle={() => toggle('campaign')}
         >
@@ -106,7 +106,7 @@ export function LeftPanel() {
 
         <AccSection
           title="谍报"
-          accent="sky"
+          accent="intel"
           open={open === 'intel'}
           onToggle={() => toggle('intel')}
         >
@@ -115,7 +115,7 @@ export function LeftPanel() {
 
         <AccSection
           title="计谋"
-          accent="amber"
+          accent="intel"
           open={open === 'plot'}
           onToggle={() => toggle('plot')}
         >
@@ -124,7 +124,7 @@ export function LeftPanel() {
 
         <AccSection
           title="总军师"
-          accent="amber"
+          accent="military"
           open={open === 'strategist'}
           onToggle={() => toggle('strategist')}
         >
@@ -136,7 +136,7 @@ export function LeftPanel() {
         <AccSection
           title="家族"
           badge={familyCount}
-          accent="amber"
+          accent="personnel"
           open={open === 'family'}
           onToggle={() => toggle('family')}
         >
@@ -146,7 +146,7 @@ export function LeftPanel() {
         <AccSection
           title="人事"
           badge={beautyStock > 0 ? `美${beautyStock}` : undefined}
-          accent="rose"
+          accent="personnel"
           open={open === 'personnel'}
           onToggle={() => toggle('personnel')}
         >
@@ -176,7 +176,7 @@ export function LeftPanel() {
 
         <AccSection
           title="外交"
-          accent="sky"
+          accent="civil"
           open={open === 'diplomacy'}
           onToggle={() => toggle('diplomacy')}
         >
@@ -290,7 +290,7 @@ export function LeftPanel() {
         <AccSection
           title="己方城池"
           badge={playerCities.length}
-          accent="emerald"
+          accent="civil"
           open={open === 'cities'}
           onToggle={() => toggle('cities')}
         >

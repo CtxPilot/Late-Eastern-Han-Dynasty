@@ -15,6 +15,7 @@ import {
   getCityVisibility,
   lonLatToPixel,
 } from '@leh/shared';
+import { MAP_TOKENS } from '../../theme/canvasTokens';
 import { useGameStore } from '../../stores/gameStore';
 import {
   MAP_LOD_META,
@@ -49,7 +50,7 @@ function GeoBaseLayer({
 
   return (
     <Group listening={true}>
-      <Rect width={MAP_W} height={MAP_H} fill="#121c2a" listening={true} />
+      <Rect width={MAP_W} height={MAP_H} fill={MAP_TOKENS.background} listening={true} />
       {mapImg && (
         <KonvaImage image={mapImg} width={MAP_W} height={MAP_H} listening={true} />
       )}
@@ -62,13 +63,13 @@ function GeoBaseLayer({
             text={p.name}
             fontFamily="HanDynastySerif"
             fontSize={pl.fontSize}
-            fill="#c9b882"
+            fill={MAP_TOKENS.provinceLabel}
             opacity={pl.opacity}
             offsetX={(p.name.length * pl.fontSize) / 2}
             offsetY={pl.fontSize / 2}
             listening={false}
             shadowBlur={Math.max(2, pl.fontSize * 0.08)}
-            shadowColor="#000"
+            shadowColor={MAP_TOKENS.shadow}
           />
         ))}
     </Group>
@@ -97,15 +98,15 @@ function CityMarkerNode({
   const nameY = plan.labelDir < 0 ? plan.labelDy - plan.nameFont : plan.labelDy;
   const subLines: { text: string; fill: string }[] = [];
   if (plan.showAdmin && city.adminName && city.adminName !== city.name) {
-    subLines.push({ text: city.adminName, fill: '#a89870' });
+    subLines.push({ text: city.adminName, fill: MAP_TOKENS.adminSubLabel });
   }
   if (plan.showTroops && troopsLabel != null) {
     subLines.push({
       text: troopsLabel === '???' ? '???' : `${troopsLabel}${/^\d+$/.test(troopsLabel) ? '兵' : ''}`,
-      fill: troopsLabel === '???' ? '#666' : '#8aaa90',
+      fill: troopsLabel === '???' ? MAP_TOKENS.cityUnknownTroops : MAP_TOKENS.cityFriendlyTroops,
     });
   }
-  const fillColor = showFactionColor ? color : '#4a4a4a';
+  const fillColor = showFactionColor ? color : MAP_TOKENS.cityUnknownFill;
 
   return (
     <Group
@@ -123,7 +124,7 @@ function CityMarkerNode({
         radius={plan.drawR}
         fill={fillColor}
         opacity={showFactionColor ? 0.95 : 0.75}
-        stroke={selected ? '#ffd700' : plan.showMineBadge ? '#e8d48b' : '#0a0a0a'}
+        stroke={selected ? MAP_TOKENS.cityStrokeSelected : plan.showMineBadge ? MAP_TOKENS.cityStrokeMine : MAP_TOKENS.cityStrokeDefault}
         strokeWidth={plan.strokeW}
       />
       {plan.showMineBadge && (
@@ -131,7 +132,7 @@ function CityMarkerNode({
           text="己"
           fontFamily="HanDynastySerif"
           fontSize={Math.min(plan.drawR * 1.1, plan.nameFont * 0.85)}
-          fill="#fff"
+          fill={MAP_TOKENS.unitText}
           fontStyle="bold"
           offsetX={plan.drawR * 0.38}
           offsetY={plan.drawR * 0.42}
@@ -145,12 +146,12 @@ function CityMarkerNode({
           y={nameY}
           fontFamily="HanDynastySerif"
           fontSize={plan.nameFont}
-          fill={plan.showMineBadge ? '#ffe9a8' : '#fff8e7'}
+          fill={plan.showMineBadge ? MAP_TOKENS.cityNameMine : MAP_TOKENS.cityNameOther}
           fontStyle="bold"
           offsetX={(city.name.length * plan.nameFont) / 2}
           listening={false}
           shadowBlur={4}
-          shadowColor="#000"
+          shadowColor={MAP_TOKENS.shadow}
           shadowOpacity={0.85}
         />
       )}
@@ -172,7 +173,7 @@ function CityMarkerNode({
               offsetX={(line.text.length * plan.adminFont) / 2}
               listening={false}
               shadowBlur={3}
-              shadowColor="#000"
+              shadowColor={MAP_TOKENS.shadow}
             />
           );
         })}
@@ -376,7 +377,7 @@ export function MapCanvas() {
                 <Line
                   key={`road-${a}-${b}`}
                   points={[ca.x, ca.y, cb.x, cb.y]}
-                  stroke="#8a7355"
+                  stroke={MAP_TOKENS.road}
                   strokeWidth={Math.max(1.5, 2.2 / scale)}
                   opacity={0.45}
                   dash={[8 / scale, 6 / scale]}
@@ -397,7 +398,7 @@ export function MapCanvas() {
                 <CityMarkerNode
                   city={city}
                   plan={plan}
-                  color={faction?.color ?? '#666'}
+                  color={faction?.color ?? MAP_TOKENS.factionFallback}
                   selected={city.id === selectedCityId}
                   onSelect={() => selectCity(city.id)}
                   troopsLabel={troopsLabel}
