@@ -17,11 +17,12 @@ import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
 
 const STAT_ROWS = [
-  ['统帅', 'leadership'],
-  ['武力', 'war'],
-  ['智力', 'intelligence'],
-  ['政治', 'politics'],
-  ['魅力', 'charisma'],
+  ['统帅', 'leadership', false],
+  ['武力', 'war', false],
+  ['智力', 'intelligence', false],
+  ['政治', 'politics', false],
+  ['魅力', 'charisma', false],
+  ['体力', 'stamina', true],
 ] as const;
 
 const PROFICIENCY_LABEL: Record<string, string> = { S: 'S', A: 'A', B: 'B', C: 'C', NONE: '—' };
@@ -110,7 +111,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const wife = officer.wifeId != null ? game.females[officer.wifeId]?.name : null;
   const profile = getOfficerProfile(officer);
   const armyMorale = game.campaignArmies.find((a) => a.commanderId === officer.id)?.morale;
-  const signatureStat = STAT_ROWS.reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
+  const signatureStat = STAT_ROWS.filter(r => !r[2]).reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
   const factionName = officer.faction != null ? game.factions[officer.faction]?.name ?? '未知势力' : null;
 
   return (
@@ -128,7 +129,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
           <aside className="space-y-3">
             <ExpressionPortrait officer={officer} armyMorale={armyMorale} />
             <blockquote className="border-l-2 border-red-900/80 pl-3 text-sm leading-6 text-stone-300">{profile.quote}</blockquote>
-            <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="体力" value={String(officer.stamina)} /><Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} /><Info label="经验" value={String(officer.experience)} /></div>
+            <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} /><Info label="经验" value={String(officer.experience)} /></div>
             <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
           </aside>
           <div>
@@ -152,11 +153,14 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-4">
                   <section>
-                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">五维</h3>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">六维</h3>
                     <div className="space-y-2">
-                      {STAT_ROWS.map(([label, key]) => {
-                        const value = officer.stats[key];
-                        return <div key={key} className="grid grid-cols-[2rem_2rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={value >= 95 ? 'text-amber-300' : 'text-stone-100'}>{value}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${value}%` }} /></div></div>;
+                      {STAT_ROWS.map(([label, key, isStamina]) => {
+                        const raw = isStamina ? (officer.stamina ?? 0) : officer.stats[key];
+                        const capped = Math.min(raw, 100);
+                        const overflow = raw > 100 ? raw - 100 : 0;
+                        const display = overflow > 0 ? `${capped} (+${overflow})` : String(capped);
+                        return <div key={key} className="grid grid-cols-[2rem_3rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
                       })}
                     </div>
                   </section>
