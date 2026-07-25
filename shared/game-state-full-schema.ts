@@ -17,7 +17,7 @@ const ROOT_KEYS = [
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
   'plots', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
-  'actionLog',
+  'actionLog', 'emperorLocation',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {

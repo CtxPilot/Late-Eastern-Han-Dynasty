@@ -67,4 +67,14 @@ export interface GameState {
   invalidatedEvents: number[];
   eventChoices: Record<number, number>;
   actionLog: GameAction[];
+
+  /**
+   * 汉献帝所在城池 id（docs/26，HC-P0-1，Q1 方案A）。
+   * null=未迎奉/汉帝不在任何可控城池；number=汉帝当前所在城池。
+   * "控制汉帝"判定：占领 emperorLocation 对应城池的势力即视为控制汉帝；
+   * 城池易主时 emperorLocation 本身不变（汉帝本人还在原地，只是换了占领者）。
+   * 汉帝迁移（董卓迁都类事件）是后续增强，本轮只做静态位置+动态归属判定。
+   * optional 追加，旧存档无此字段时按 null 兜底，不升 schema 版本。
+   */
+  emperorLocation?: number | null;
 }

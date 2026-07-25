@@ -22,6 +22,7 @@
     "negotiation.ts",
     "expression.ts",
     "scenes.ts",
+    "hegemony.ts",
     "battlefield-instance-schema.ts",
     "nanjun-battlefield.ts",
     "save.ts",

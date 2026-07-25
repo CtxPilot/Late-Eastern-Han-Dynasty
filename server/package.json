@@ -42,6 +42,7 @@
     "verify-battle-commanders": "tsx src/scripts/verify-battle-commanders.ts",
     "verify-turn-cadence": "tsx src/scripts/verify-turn-cadence.ts",
     "verify-negotiation-r2": "tsx src/scripts/verify-negotiation-r2.ts",
+    "verify-hc-p0": "tsx src/scripts/verify-hc-p0.ts",
     "sync-city-coords": "tsx src/scripts/sync-city-coords.ts",
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js"

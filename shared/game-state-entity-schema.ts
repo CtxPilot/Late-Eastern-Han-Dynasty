@@ -171,6 +171,7 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     officerIds: z.array(PositiveIdSchema),
     isPlayer: z.boolean(),
     isAlive: z.boolean(),
+    politicalStage: z.enum(['vassal', 'hegemon', 'king', 'emperor']).optional(),
   })
   .strict();
 

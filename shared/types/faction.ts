@@ -3,6 +3,13 @@
 
 import type { FactionId } from '../enums/index.js';
 
+/**
+ * 政治阶段状态机（docs/26 霸府/称王/称帝主线，Q5 已批准）。
+ * vassal=诸侯（默认），hegemon=霸府（挟天子开府），king=王，emperor=帝。
+ * 线性链不可跳级，开府/称王/称帝一旦发生不可撤销。
+ */
+export type PoliticalStage = 'vassal' | 'hegemon' | 'king' | 'emperor';
+
 export interface Faction {
   id: FactionId;
   name: string;
@@ -22,4 +29,9 @@ export interface Faction {
   officerIds: number[];
   isPlayer: boolean;
   isAlive: boolean;
+  /**
+   * 政治阶段（docs/26，HC-P0-2）。optional 追加，旧存档无此字段时按 'vassal' 兜底。
+   * 不升 schema 版本，沿用 activeBattlefieldInstance 无损追加经验。
+   */
+  politicalStage?: PoliticalStage;
 }

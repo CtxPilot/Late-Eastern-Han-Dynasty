@@ -242,6 +242,7 @@ function buildGameState(
       officerIds,
       isPlayer: fid === playerFactionId,
       isAlive: true,
+      politicalStage: 'vassal',
     };
   }
 
@@ -304,6 +305,10 @@ function buildGameState(
         message: `开始剧本「${scenario.name}」，扮演 ${factions[playerFactionId]?.name}`,
       },
     ],
+    // HC-P0-1（docs/26 Q1 方案A）：汉献帝开局在洛阳（id=1）。
+    // 两个剧本均 190 年正月开局，汉帝此时在洛阳（董卓迁都长安是二月事件，开局未触发）。
+    // 城池易主时本字段不变，"控制汉帝"由 controlsEmperor() 按当前城池归属动态判定。
+    emperorLocation: 1,
   };
   // 子女补登：appearYear ≤ 开局年则直接入库（0-A 起 190 年通常无人）
   const withChildren = catchUpChildren(draft);
