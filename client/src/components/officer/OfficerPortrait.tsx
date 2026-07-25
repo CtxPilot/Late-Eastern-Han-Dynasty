@@ -3,6 +3,10 @@
 
 import type { Officer, OfficerStats } from '@leh/shared';
 
+type FaceShape = 'round' | 'long' | 'square' | 'sharp';
+type CrownShape = 'royal' | 'warrior' | 'scholar' | 'guan';
+type BeardShape = 'short' | 'long' | 'goatee' | 'wild';
+
 type PortraitPreset = {
   image?: string;
   courtesy: string;
@@ -12,16 +16,69 @@ type PortraitPreset = {
   quote: string;
   ink: string;
   seal: string;
-  face: 'round' | 'long' | 'square' | 'sharp';
-  crown: 'royal' | 'warrior' | 'scholar';
-  beard: 'short' | 'long' | 'goatee' | 'wild';
+  face: FaceShape;
+  crown: CrownShape;
+  beard: BeardShape;
+};
+
+/**
+ * 程序化五官路径常量（OfficerPortrait 列表缩略图 + ExpressionPortrait 详情页大头像共用）。
+ * 路径坐标基于 viewBox 0 0 120 150。brow/eye/mouth 不在此处（由表情层 EXPRESSION_PATHS 覆盖）。
+ *
+ * Session 179 辨识度优化：加大 face/crown/beard 路径差异 + 新增 guan 武圣冠 +
+ * 胡须标志性强化（关羽 long 更飘逸/吕布 wild 更狂乱）+ 色调色相差异化。
+ */
+export const FACE_PATHS: Record<FaceShape, string> = {
+  // 曹操：宽圆脸（宽 37-83=46，高 46-86=40，近 1:1）
+  round: 'M37 46 Q60 33 83 46 L79 86 Q60 103 41 86Z',
+  // 诸葛亮：窄长脸（宽 44-76=32，高 41-93=52，0.6:1 明显长）
+  long: 'M44 41 Q60 33 76 41 L72 93 Q60 109 48 93Z',
+  // 关羽：方宽下颌（下颌 39-81 宽方，体现方额广颐）
+  square: 'M37 44 Q60 35 83 44 L81 88 Q60 100 39 88Z',
+  // 吕布：尖下颌（下颌尖到 60,103，体现虓虎锐相）
+  sharp: 'M40 44 Q60 31 80 44 L66 84 L60 103 L54 84Z',
+};
+
+export const CROWN_RENDER: Record<CrownShape, { line: string; plume?: string; faint?: string; beads?: string; band?: string }> = {
+  // 曹操帝冠：旒珠挂下（新增标志性细节，区分于其他冠冕）
+  royal: {
+    line: 'M36 43 L40 25 L80 25 84 43 M32 25 H88 M43 25 V15 M77 25 V15 M38 15 H82',
+    beads: 'M42 26 Q43 33 42 40 M78 26 Q77 33 78 40',
+    faint: 'M28 20 H92',
+  },
+  // 吕布武冠：双雉翎更夸张更长更弯（强化飞将识别度，区别于关羽盔缨）
+  warrior: {
+    line: 'M37 44 Q38 19 60 17 Q82 19 83 44 M39 30 H81 M45 22 L38 10 M75 22 L82 10',
+    plume: 'M42 21 Q12 3 4 38 M78 21 Q108 3 116 38',
+  },
+  // 诸葛亮纶巾：加横带轮廓（新增标志性，区分于其他文冠）
+  scholar: {
+    line: 'M40 43 L43 21 H77 L80 43 M43 29 H77 M50 21 L48 10 H72 L70 21',
+    band: 'M44 17 Q60 14 76 17',
+    faint: 'M31 30 Q60 23 89 30',
+  },
+  // 关羽武圣冠（Session 179 新增）：无雉翎，盔缨短而上翘——区别于吕布雉翎的长弯外展
+  guan: {
+    line: 'M38 44 Q40 22 60 20 Q80 22 82 44 M40 32 H80 M48 24 L42 14 M72 24 L78 14',
+    plume: 'M50 20 Q44 6 36 16 M70 20 Q76 6 84 16',
+    faint: 'M44 36 H76',
+  },
+};
+
+export const BEARD_PATHS: Record<BeardShape, string> = {
+  short: 'M48 78 Q60 89 72 78 Q69 96 60 99 Q51 96 48 78Z',
+  // 关羽长髯：更长更飘逸（延伸到 150，体现美髯公标志）
+  long: 'M45 76 Q60 89 75 76 Q80 118 72 145 L60 150 48 145 Q40 118 45 76Z',
+  goatee: 'M52 78 Q60 87 68 78 L64 112 60 123 56 112Z',
+  // 吕布乱须：更狂乱分叉（增加分叉节点，体现虓虎狂态）
+  wild: 'M42 74 Q60 92 78 74 L82 108 Q72 100 68 110 L60 122 52 110 Q48 100 38 108 L42 74Z',
 };
 
 const HERO_PRESETS: Record<number, PortraitPreset> = {
-  1: { image: '/portraits/cao_cao.png', courtesy: '孟德', clan: '沛国曹氏', title: '魏武挥鞭', role: '雄主', quote: '设奇策，挟天子，定北方', ink: '#27354a', seal: '#8c2f2b', face: 'round', crown: 'royal', beard: 'short' },
-  4: { image: '/portraits/zhuge_liang.png', courtesy: '孔明', clan: '琅琊诸葛氏', title: '卧龙经略', role: '军师', quote: '隆中定策，鞠躬尽瘁', ink: '#405348', seal: '#7f352c', face: 'long', crown: 'scholar', beard: 'goatee' },
-  5: { image: '/portraits/lv_bu.png', courtesy: '奉先', clan: '五原郡吕氏', title: '虓虎无双', role: '飞将', quote: '辕门射戟，勇冠并州', ink: '#502e32', seal: '#a21d24', face: 'sharp', crown: 'warrior', beard: 'wild' },
-  6: { image: '/portraits/guan_yu.png', courtesy: '云长', clan: '河东关氏', title: '威震华夏', role: '名将', quote: '忠义凛然，水淹七军', ink: '#29473f', seal: '#8f2822', face: 'square', crown: 'warrior', beard: 'long' },
+  1: { image: '/portraits/cao_cao.png', courtesy: '孟德', clan: '沛国曹氏', title: '魏武挥鞭', role: '雄主', quote: '设奇策，挟天子，定北方', ink: '#1e2a3d', seal: '#7a2820', face: 'round', crown: 'royal', beard: 'short' },
+  4: { image: '/portraits/zhuge_liang.png', courtesy: '孔明', clan: '琅琊诸葛氏', title: '卧龙经略', role: '军师', quote: '隆中定策，鞠躬尽瘁', ink: '#2d4a3a', seal: '#6a3528', face: 'long', crown: 'scholar', beard: 'goatee' },
+  5: { image: '/portraits/lv_bu.png', courtesy: '奉先', clan: '五原郡吕氏', title: '虓虎无双', role: '飞将', quote: '辕门射戟，勇冠并州', ink: '#4a1d2a', seal: '#a01820', face: 'sharp', crown: 'warrior', beard: 'wild' },
+  6: { image: '/portraits/guan_yu.png', courtesy: '云长', clan: '河东关氏', title: '威震华夏', role: '名将', quote: '忠义凛然，水淹七军', ink: '#1e3a2d', seal: '#7a2818', face: 'square', crown: 'guan', beard: 'long' },
 };
 
 /**
@@ -61,9 +118,25 @@ export function getOfficerProfile(officer: Officer): PortraitPreset {
   };
 }
 
+/**
+ * 渲染冠冕全部分支 path（line/plume/faint/beads/band）。供 OfficerPortrait 与
+ * ExpressionPortrait 共用，避免两边分叉。
+ */
+export function renderCrownPaths(crown: CrownShape) {
+  const c = CROWN_RENDER[crown];
+  return (
+    <>
+      <path className="portrait-line portrait-crown" d={c.line} />
+      {c.plume && <path className="portrait-plume" d={c.plume} />}
+      {c.faint && <path className="portrait-faint" d={c.faint} />}
+      {c.beads && <path className="portrait-faint" d={c.beads} />}
+      {c.band && <path className="portrait-faint" d={c.band} />}
+    </>
+  );
+}
+
 export function OfficerPortrait({ officer, compact = false }: { officer: Officer; compact?: boolean }) {
   const p = getOfficerProfile(officer);
-  const facePath = p.face === 'round' ? 'M41 45 Q60 35 79 45 L76 83 Q60 99 44 83Z' : p.face === 'long' ? 'M43 42 Q60 34 77 42 L74 88 Q60 103 46 88Z' : p.face === 'sharp' ? 'M40 43 Q60 32 80 43 L73 83 L60 99 47 83Z' : 'M39 43 Q60 34 81 43 L77 86 Q60 98 43 86Z';
 
   return (
     <div className={`officer-portrait ${compact ? 'officer-portrait--compact' : ''}`} style={{ '--portrait-ink': p.ink, '--portrait-seal': p.seal } as React.CSSProperties} aria-label={`${officer.name}${p.courtesy ? `，字${p.courtesy}` : ''}头像`}>
@@ -72,17 +145,12 @@ export function OfficerPortrait({ officer, compact = false }: { officer: Officer
         <path className="portrait-halo" d="M22 130 Q16 80 33 39 Q60 8 87 39 Q104 80 98 130Z" />
         <g filter={`url(#rough-${officer.id})`}>
           <path className="portrait-robe" d="M20 150 Q25 105 48 91 L72 91 Q95 105 100 150Z" />
-          <path className="portrait-face" d={facePath} />
-          {p.crown === 'royal' && <><path className="portrait-line portrait-crown" d="M36 43 L40 25 L80 25 84 43 M32 25 H88 M43 25 V15 M77 25 V15 M38 15 H82"/><path className="portrait-faint" d="M28 20 H92"/></>}
-          {p.crown === 'warrior' && <><path className="portrait-line portrait-crown" d="M37 44 Q38 19 60 17 Q82 19 83 44 M39 30 H81 M45 22 L38 10 M75 22 L82 10"/><path className="portrait-plume" d="M42 21 Q20 7 12 32 M78 21 Q100 7 108 32"/></>}
-          {p.crown === 'scholar' && <><path className="portrait-line portrait-crown" d="M40 43 L43 21 H77 L80 43 M43 29 H77 M50 21 L48 10 H72 L70 21"/><path className="portrait-faint" d="M31 30 Q60 23 89 30"/></>}
+          <path className="portrait-face" d={FACE_PATHS[p.face]} />
+          {renderCrownPaths(p.crown)}
           <path className="portrait-brow" d={p.face === 'sharp' ? 'M45 55 L56 58 M75 55 L64 58' : p.face === 'square' ? 'M44 54 Q50 50 56 54 M76 54 Q70 50 64 54' : 'M45 55 Q51 53 56 55 M75 55 Q69 53 64 55'} />
           <path className="portrait-eye" d="M46 61 Q51 64 56 61 M74 61 Q69 64 64 61" />
           <path className="portrait-faint" d="M60 62 L58 73 63 74" />
-          {p.beard === 'short' && <path className="portrait-beard" d="M48 78 Q60 89 72 78 Q69 96 60 99 Q51 96 48 78Z" />}
-          {p.beard === 'goatee' && <path className="portrait-beard" d="M52 78 Q60 87 68 78 L64 112 60 123 56 112Z" />}
-          {p.beard === 'wild' && <path className="portrait-beard" d="M44 76 Q60 91 76 76 L79 102 68 96 60 116 52 96 41 102Z" />}
-          {p.beard === 'long' && <path className="portrait-beard" d="M45 76 Q60 89 75 76 Q78 111 69 139 L60 147 51 139 Q42 111 45 76Z" />}
+          <path className="portrait-beard" d={BEARD_PATHS[p.beard]} />
           <path className="portrait-faint" d="M43 112 L60 132 77 112 M60 132 V150" />
         </g>
       </svg>}

@@ -3,7 +3,7 @@
 
 import type { Officer } from '@leh/shared';
 import { resolveExpression, type BackgroundTone, type BattleSideContext, type ExpressionId } from '@leh/shared';
-import { getOfficerProfile } from './OfficerPortrait';
+import { BEARD_PATHS, FACE_PATHS, getOfficerProfile, renderCrownPaths } from './OfficerPortrait';
 
 /**
  * S23 人物状态表情系统 — 分层合成渲染组件（`docs/24-...md` §5）。
@@ -14,6 +14,9 @@ import { getOfficerProfile } from './OfficerPortrait';
  *
  * 不读 PNG：即使 officer.id ∈ {1,4,5}（3 原型已接入静态 PNG 名册），本组件也走程序化 SVG，
  * 以保证五官可叠加表情层。静态名册仍用 OfficerPortrait（PNG 优先）。
+ *
+ * Session 179：face/crown/beard 路径改用 OfficerPortrait 导出的共享常量
+ * （FACE_PATHS/CROWN_RENDER/BEARD_PATHS），避免两边分叉；辨识度优化见 OfficerPortrait 注释。
  */
 
 interface ExpressionPath { brow: string; eye: string; mouth: string; }
@@ -67,11 +70,6 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
     battle: battle ?? null,
   });
   const p = getOfficerProfile(officer);
-  const facePath =
-    p.face === 'round' ? 'M41 45 Q60 35 79 45 L76 83 Q60 99 44 83Z'
-      : p.face === 'long' ? 'M43 42 Q60 34 77 42 L74 88 Q60 103 46 88Z'
-        : p.face === 'sharp' ? 'M40 43 Q60 32 80 43 L73 83 L60 99 47 83Z'
-          : 'M39 43 Q60 34 81 43 L77 86 Q60 98 43 86Z';
   const ex = EXPRESSION_PATHS[state.expression];
 
   return (
@@ -94,33 +92,13 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
         <path className="portrait-halo" d="M22 130 Q16 80 33 39 Q60 8 87 39 Q104 80 98 130Z" />
         <g filter={`url(#rough-ex-${officer.id})`}>
           <path className="portrait-robe" d="M20 150 Q25 105 48 91 L72 91 Q95 105 100 150Z" />
-          <path className="portrait-face" d={facePath} />
-          {p.crown === 'royal' && (
-            <>
-              <path className="portrait-line portrait-crown" d="M36 43 L40 25 L80 25 84 43 M32 25 H88 M43 25 V15 M77 25 V15 M38 15 H82" />
-              <path className="portrait-faint" d="M28 20 H92" />
-            </>
-          )}
-          {p.crown === 'warrior' && (
-            <>
-              <path className="portrait-line portrait-crown" d="M37 44 Q38 19 60 17 Q82 19 83 44 M39 30 H81 M45 22 L38 10 M75 22 L82 10" />
-              <path className="portrait-plume" d="M42 21 Q20 7 12 32 M78 21 Q100 7 108 32" />
-            </>
-          )}
-          {p.crown === 'scholar' && (
-            <>
-              <path className="portrait-line portrait-crown" d="M40 43 L43 21 H77 L80 43 M43 29 H77 M50 21 L48 10 H72 L70 21" />
-              <path className="portrait-faint" d="M31 30 Q60 23 89 30" />
-            </>
-          )}
+          <path className="portrait-face" d={FACE_PATHS[p.face]} />
+          {renderCrownPaths(p.crown)}
           <path className="portrait-faint" d="M60 62 L58 73 63 74" />
           <path className="portrait-brow" d={ex.brow} />
           <path className="portrait-eye" d={ex.eye} />
           <path className="portrait-mouth" d={ex.mouth} />
-          {p.beard === 'short' && <path className="portrait-beard" d="M48 78 Q60 89 72 78 Q69 96 60 99 Q51 96 48 78Z" />}
-          {p.beard === 'goatee' && <path className="portrait-beard" d="M52 78 Q60 87 68 78 L64 112 60 123 56 112Z" />}
-          {p.beard === 'wild' && <path className="portrait-beard" d="M44 76 Q60 91 76 76 L79 102 68 96 60 116 52 96 41 102Z" />}
-          {p.beard === 'long' && <path className="portrait-beard" d="M45 76 Q60 89 75 76 Q78 111 69 139 L60 147 51 139 Q42 111 45 76Z" />}
+          <path className="portrait-beard" d={BEARD_PATHS[p.beard]} />
           <path className="portrait-faint" d="M43 112 L60 132 77 112 M60 132 V150" />
         </g>
       </svg>
