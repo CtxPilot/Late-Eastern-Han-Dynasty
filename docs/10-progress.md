@@ -3575,3 +3575,43 @@
 - **标注**：本轮是头像系统统一收尾，不归属 R3/R8 序列；R3（S10 单挑四倾向）仍为下一步。表情系统 7 状态由 `shared/expression.ts` 28 项单测覆盖（在 shared 172/172 中通过）。
 
 *v12.8 | 2026-07-25 | Session 181 · 头像系统统一收尾（SVG 全员化 + PNG 退役 + 文字清除）*
+
+## 2026-07-25 — Session 182（BF-P3 Session A — AI 势力排序稳定化 + plotAi/spyAi 加 decisionRng 参数）
+
+- Phase: **代码实装 + 单测**（3 commit，BF-P3 收口第 1 阶段；不接入 advanceTurn 权威流，留 Session B）
+- 变更主题（按 commit 归纳）:
+  1. **势力遍历顺序稳定化**（`2f6ba00`）:
+     - `aiMilitary.ts`/`plotAi.ts`/`spyAi.ts` 三处 `for (const f of Object.values(s.factions))` 改为 `Array.from(Object.values(s.factions)).sort((a, b) => a.id - b.id)`
+     - BF-P3 RNG 收口的隐性前置：原遍历依赖 `Object.keys()` 枚举顺序（即插入顺序），非规范保证；即使后续决策 RNG 接入权威 xorshift32-v1 流，若势力遍历顺序不固定，AI 决策序列在不同 JS 引擎或不同插入顺序下仍会失败
+     - 新增 `verify-ai-faction-sort.ts`（10/10）：sort 函数本身按 ID 升序（4 种插入顺序）+ 真实 game state 不同插入顺序下 runAiMilitary/runAllAiPlots/runAllAiIntel 结果一致 + 同一状态多次运行 idempotent
+  2. **plotAi.ts 加 decisionRng 参数**（`bdc8f56`）:
+     - `aiPlotTurn`/`runAllAiPlots` 函数签名新增 `decisionRng: () => number = resolutionRng`（默认 fallback，参考 aiMilitary.ts 已有模式）
+     - 4 处 `Math.random()` 替换为 `decisionRng()`：是否发动任何计谋（line 30）/ 是否空城疑兵（line 38）/ 是否假情报（line 57）/ 离间计目标势力选择（line 122）
+     - 新增 `verify-plot-ai-decision.ts`（6/6）：decisionRng=1 时不行动 / decisionRng=0 时不抛错 / 同一序列 idempotent / 区分性 / 接受 decisionRng 参数 / fallback
+  3. **spyAi.ts 加 decisionRng 参数**（`3592e6d`）:
+     - `aiIntelTurn`/`runAllAiIntel` 函数签名新增 `decisionRng: () => number = resolutionRng`
+     - 8 处 `Math.random()` 替换为 `decisionRng()`：俘虏处置（line 84）/ 寻访美女（line 145）/ 训练女间谍（line 161）/ 谍报目标纳入（line 181）/ 目标城市选择（line 186）/ 女间谍枕边风或离间（line 195）/ 女间谍任务类型（line 197）/ 男间谍任务类型（line 202）
+     - 新增 `verify-spy-ai-decision.ts`（6/6）：同 plotAi 模式，但用 0.99/0.01 替代 1/0（避免 `Math.floor(rng * n)` 越界陷阱）
+- **明确不做的事（留 Session B）**:
+  - 不修改 `advanceTurn` 调用签名（line 212/216/219 不动）
+  - 不接入权威 `xorshift32-v1` 流（decisionRng 默认 fallback 到 resolutionRng，与结算共用同一流）
+  - 不写整场决策复现的 4 个 verify 脚本（Session B 范围）
+  - 不涉及战场 AI 行动选择（BF-P3 另一部分）
+- **Math.random 残留清零验证**: `grep -l "Math.random()" aiMilitary.ts plotAi.ts spyAi.ts` 返回 0 文件——三文件 Math.random 已全部清零
+- **全量回归无破坏**:
+  - typecheck/lint/build 全绿
+  - shared test 172/172
+  - verify-ai-military-rng 29/29（既有未破坏）
+  - verify-plot-spy-rng 30/30（既有未破坏）
+  - verify-campaign 62/62、verify-turn-cadence 28/28、verify-scenario-events 32/32、verify-grand-strategist-rng 28/28、verify-save-battlefield-instance 45/45
+  - 新增 3 个 verify 脚本：verify-ai-faction-sort 10/10、verify-plot-ai-decision 6/6、verify-spy-ai-decision 6/6
+- **是否已具备进入 Session B 的条件**:
+  - ✅ 排序稳定化完成（隐性前置已解决）
+  - ✅ plotAi/spyAi 函数签名加 decisionRng 参数（参数化完成）
+  - ✅ 12 处 Math.random 替换为 decisionRng()（决策层不再用 Math.random）
+  - ✅ 单测验证纯函数层确定性（10+6+6=22 项断言）
+  - ⏳ Session B 待做：接入 advanceTurn 权威流（line 212/216/219 显式传 decisionRng=runtimeRandom）+ 4 个整场决策复现 verify 脚本（aiMilitary/plotAi/spyAi/整合，约 23 项断言）
+- 同步：HANDOFF §1 会话/代码最新/本交接用途三行 + 本进度双写
+- **标注**：本轮是 BF-P3 Session A（基础设施层），不归属 R3/R8 序列；R3（S10 单挑四倾向）仍为下一步。Session B 接入权威流后即可实现整场 AI 决策复现。
+
+*v12.9 | 2026-07-25 | Session 182 · BF-P3 Session A（势力排序 + decisionRng 参数化）*
