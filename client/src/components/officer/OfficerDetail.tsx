@@ -105,6 +105,22 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
     );
   }, [game, childrenCatalog, officer]);
 
+  // 君主身份特例（04 §3.8）：君主不参与忠诚度/拉拢记录/功绩系统，UI 隐藏相关区块，
+  // 功绩位置改显势力综合国力派生指标（城池数/总兵力/总金/总粮，从已有数据派生）。
+  const realmStats = useMemo(() => {
+    if (!officer || officer.faction == null) return null;
+    const fid = officer.faction;
+    if (game.factions[fid]?.rulerId !== officer.id) return null;
+    const owned = Object.values(game.cities).filter((c) => c.ruler === fid);
+    const faction = game.factions[fid];
+    return {
+      cityCount: owned.length,
+      totalTroops: owned.reduce((sum, c) => sum + (c.troops ?? 0), 0),
+      totalGold: faction?.gold ?? 0,
+      totalFood: faction?.food ?? 0,
+    };
+  }, [game.cities, game.factions, officer]);
+
   if (!officer) return null;
   const location = officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城';
   const age = officer.birthYear > 0 ? Math.max(0, game.currentYear - officer.birthYear) : null;
@@ -113,6 +129,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const armyMorale = game.campaignArmies.find((a) => a.commanderId === officer.id)?.morale;
   const signatureStat = STAT_ROWS.filter(r => !r[2]).reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
   const factionName = officer.faction != null ? game.factions[officer.faction]?.name ?? '未知势力' : null;
+  const isRuler = realmStats != null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/80 px-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -129,7 +146,23 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
           <aside className="space-y-3">
             <ExpressionPortrait officer={officer} armyMorale={armyMorale} />
             <blockquote className="border-l-2 border-red-900/80 pl-3 text-sm leading-6 text-stone-300">{profile.quote}</blockquote>
-            <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} /><Info label="经验" value={String(officer.experience)} /></div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {isRuler ? (
+                <>
+                  <Info label="城池" value={realmStats ? String(realmStats.cityCount) : '—'} />
+                  <Info label="总兵力" value={realmStats ? String(realmStats.totalTroops) : '—'} />
+                  <Info label="总金" value={realmStats ? String(realmStats.totalGold) : '—'} />
+                  <Info label="总粮" value={realmStats ? String(realmStats.totalFood) : '—'} />
+                </>
+              ) : (
+                <>
+                  <Info label="忠诚" value={String(officer.loyalty)} />
+                  <Info label="功绩" value={String(officer.merit)} />
+                </>
+              )}
+              <Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} />
+              <Info label="经验" value={String(officer.experience)} />
+            </div>
             <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
           </aside>
           <div>
@@ -218,11 +251,13 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
                     <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
                   </section>
-                  <section>
-                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">拉拢记录</h3>
-                    <Info label="赏赐美人" value={String(officer.beauties.length)} />
-                    <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
-                  </section>
+                  {!isRuler && (
+                    <section>
+                      <h3 className="mb-2 text-xs tracking-widest text-amber-500">拉拢记录</h3>
+                      <Info label="赏赐美人" value={String(officer.beauties.length)} />
+                      <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
+                    </section>
+                  )}
                 </div>
               </div>
             )}

@@ -568,7 +568,7 @@ export interface Officer {
   // 当前状态
   faction: FactionId | null;
   location: number;            // 城市ID
-  loyalty: number;             // 0~100
+  loyalty: number;             // 0~100（君主身份占位 100，不参与忠诚度系统，见 04 §3.8）
   experience: number;          // 经验
   status: OfficerStatus;
   wounds: number;              // 伤势 0~100
@@ -580,7 +580,7 @@ export interface Officer {
   nobilityRank: NobilityRank | null;
 
   // 功绩
-  merit: number;               // 累计功绩 0~210000+
+  merit: number;               // 累计功绩 0~210000+（君主身份占位 0，不参与功绩系统，见 04 §3.8/§6.5）
 
   // 功绩等级（以下3字段设计稿已定，运行时类型尚未实现，需在 shared/types/officer.ts 补全）
   // meritLevel: number;          // 功绩等级 1~20，由 merit 反查20级表得到
@@ -606,7 +606,7 @@ export interface Officer {
 
   // 美人 / 婚配（Demo 运行时）
   wifeId?: number | null;       // 正妻女性 id
-  beauties: number[];           // 赏赐美人（非婚配）女性 id
+  beauties: number[];           // 赏赐美人（非婚配）女性 id（君主身份恒为空，见 04 §3.8）
   beautyMaintenance?: number;   // 月均美人供养费（全量未做）
 
   // 出身标签 & 关系

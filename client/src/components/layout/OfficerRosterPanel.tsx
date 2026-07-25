@@ -22,6 +22,9 @@ export function OfficerRosterPanel() {
   const [sort, setSort] = useState<SortKey>('leadership');
   const [selected, setSelected] = useState<Officer | null>(null);
 
+  const isRulerOf = (officer: Officer): boolean =>
+    officer.faction != null && game?.factions[officer.faction]?.rulerId === officer.id;
+
   const officers = useMemo(() => {
     if (!game) return [];
     const list = Object.values(game.officers).filter((o) => o.faction === game.playerFactionId && o.name.includes(query.trim()));
@@ -48,10 +51,11 @@ export function OfficerRosterPanel() {
       <div className="mb-1 flex justify-between px-1 text-[10px] text-stone-600"><span>在职武将 {officers.length}</span><span>点击查看简册</span></div>
       <div className="max-h-64 space-y-1 overflow-y-auto">
         {officers.map((officer) => {
-          const lowLoyalty = officer.loyalty < 60;
+          const ruler = isRulerOf(officer);
+          const lowLoyalty = !ruler && officer.loyalty < 60;
           return <button key={officer.id} type="button" data-testid={`officer-row-${officer.id}`} onClick={() => setSelected(officer)} className={`flex w-full items-center gap-2 rounded border bg-stone-900/60 px-2 py-1.5 text-left hover:bg-amber-950/20 ${lowLoyalty ? 'border-red-600' : 'border-stone-800 hover:border-amber-800'}`}>
             <OfficerPortrait officer={officer} compact />
-            <div className="min-w-0 flex-1"><div className="flex items-center justify-between"><strong className="text-stone-100">{officer.name}</strong><span className={lowLoyalty ? 'text-red-300' : 'text-stone-500'}>忠 {officer.loyalty}</span></div>
+            <div className="min-w-0 flex-1"><div className="flex items-center justify-between"><strong className="text-stone-100">{officer.name}</strong><span className={ruler ? 'text-amber-400' : lowLoyalty ? 'text-red-300' : 'text-stone-500'}>{ruler ? '君主' : `忠 ${officer.loyalty}`}</span></div>
             <div className="mt-1 flex justify-between text-[10px] text-stone-500"><span>统{officer.stats.leadership} · 武{officer.stats.war} · 智{officer.stats.intelligence}</span><span>{officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城'} · {STATUS_LABEL[officer.status] ?? STATUS_LABEL[String(officer.status)] ?? String(officer.status)}</span></div></div>
           </button>;
         })}
