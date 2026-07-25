@@ -89,6 +89,7 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     nobilityRank: z.nativeEnum(NobilityRank),
     merit: z.number().int().nonnegative(),
     stamina: z.number().int().nonnegative(),
+    actionsPerMonth: z.number().int().nonnegative().optional(),
     wifeId: NullablePositiveIdSchema.optional(),
     beauties: z.array(PositiveIdSchema),
   })

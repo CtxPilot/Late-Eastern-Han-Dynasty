@@ -227,6 +227,16 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickEvents(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
+  // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
+  nextState = {
+    ...nextState,
+    officers: Object.fromEntries(
+      Object.entries(nextState.officers).map(([id, o]) => [
+        id,
+        { ...o, actionsPerMonth: 1 },
+      ]),
+    ),
+  };
 
   return {
     ...nextState,

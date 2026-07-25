@@ -176,6 +176,7 @@ function buildGameState(
       nobilityRank: (pos?.nobilityRank as NobilityRank) ?? NobilityRank.NONE,
       merit: pos?.merit ?? 0,
       stamina: calcStaminaMax(o, pos?.merit ?? 0, scenario.noLifespan ? 40 : (startState.year - o.birthYear)),
+      actionsPerMonth: 1,
       wifeId: null,
       beauties: [],
     };

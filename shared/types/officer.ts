@@ -84,6 +84,8 @@ export interface Officer extends OfficerStatic {
   nobilityRank: NobilityRank;
   merit: number;
   stamina: number;
+  /** 每月可用行动次数（独立于体力）：决定"本月还能否发起新动作"，默认 1，可被技能/特性/装备加成突破。月度重置。 */
+  actionsPerMonth?: number;
   /** 正妻女性 id（婚配）；面板不展示隐藏加成 */
   wifeId?: number | null;
   /** 赏赐美人（非婚配）女性 id 列表 */

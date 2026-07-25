@@ -14,6 +14,7 @@ export * from './mask-state.js';
 export * from './positions.js';
 export * from './labels.js';
 export * from './stamina.js';
+export * from './stamina-cost.js';
 export * from './negotiation.js';
 export * from './expression.js';
 export * from './scenes.js';
