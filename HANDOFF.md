@@ -9,9 +9,9 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 186 完成（体力基础值缩放吕布168→100 + 行动次数系统 actionsPerMonth + 体力消耗不对称本行×1.0/跨界×1.5，4 commit；存档兼容 optional 字段处理）**；S185 美术 Step 1 色板 token 化（含 ESM config 不合并修复）；**R3（S10 单挑四倾向）仍为玩法下一步** |
+| 会话 | **Session 187 完成（体力并入六维区块统一进度条展示，1 commit；承接 S186 体力缩放）**；S186 体力缩放吕布168→100 + 行动次数 + 不对称消耗；S185 美术 Step 1 色板 token 化；**R3（S10 单挑四倾向）仍为玩法下一步** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S186 体力缩放 STAMINA_SCALE_FACTOR=100/168（吕布封顶100，223武将等比例≤100）+ 行动次数系统 actionsPerMonth（月度重置1，与体力独立）+ 体力消耗不对称 deriveRole/staminaCost（本行×1.0跨界×1.5）+ staminaEffectFactor（<10→0.6/<30→0.8/≥30→1.0）** + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
+| 代码最新 | **S187 体力并入六维区块统一进度条（STAT_ROWS 加体力第六项，aside 移除独立体力卡片，超100标 100(+N)）** + S186 体力缩放 STAMINA_SCALE_FACTOR=100/168 + 行动次数 actionsPerMonth + 不对称消耗 deriveRole/staminaCost/staminaEffectFactor + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
 | 文档最新 | 本文件 · 10-progress · 09-roadmap · 12-system-map · ROADMAP · README · 23-design-consistency-remediation（R1/R2 已完成，R3～R8 待实施） · 24-character-expression-system-design（S23 设计+实装） · 21-battlefield-scene-design v1.3 · **`design/ArtDirection.md` v1.0（Session 184 新建：视觉唯一真源，07 §一冲突行废止）** |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 已推送至 `8f14448`（S182 BF-P3 Session A），**本地领先 origin/main 3 个 commit（S183 BF-P3 Session B：权威流接入 + 4 个决策复现脚本 + CI 接入，未推送）** |
 | 玩法下一步 | **R3（S10 单挑四倾向与吕布“强但可败”规则）仍为下一步**。**Session 179 待办**：体力拆解已定（基80+加成）；列传扩展30基线~7.5-9.5h（merge+UI已就绪）；俸禄D-0B-9独立Session（已审计确认）；CampaignPanel ARROWHEAD↔冲阵误标未修（建议用FORMATION_LABEL根治）。BF-P1 保持已批准待办。 |
@@ -339,6 +339,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | **1（待启动）** | 执行 `23-design-consistency-remediation.md` **R3：S10 单挑四倾向 + 吕布规则内最强但可败**。Session 178 武将界面修复是用户指派独立需求，不抢占 R3，明天可启动 R3。 |
 | **Session 184 已完成** | 全项目美术总监审查（纯文档零代码）：TOP10 问题清单（4×P0/4×P1/2×P2）+ 新建 `docs/design/ArtDirection.md` 视觉唯一真源 + 头像 A′+C+B 重建与分级策展方案。**待拍板**：美术实装批次（高收益首批=色板 token 化+金石组件库+战斗层换色+头像管线接通）与 R3 的先后次序由用户定。 |
 | **Session 185 已完成** | 美术第一梯队 Step 1 色板 token 化 + 跳色统一（4 commit）。Tailwind 注册 ink/paper/seal/gold + military/civil/personnel/intel 语义别名；MapCanvas 14 处裸 hex 收口至 canvasTokens.ts；左栏 9 + 右栏 4 section 跳色改语义色；07 §一废止说明。Headless 5 张截图存 `docs/screenshots/session-184-color-tokens/`。**遗留并存**（Step 4 收口）：25 文件 200+ 处 amber-/stone- 直写类名 + AccSection 旧 accent 键。**下一 Step**：Step 2 战斗层换色 / Step 3 工程残留清理 / Step 4 金石组件库，三者与 R3 的次序待用户定。 |
+| **Session 186 已完成** | 体力基础值缩放（吕布168→100，STAMINA_SCALE_FACTOR=100/168）+ 行动次数系统 actionsPerMonth（月度重置1，与体力独立）+ 体力消耗不对称 deriveRole/staminaCost（本行×1.0跨界×1.5）+ staminaEffectFactor（<10→0.6/<30→0.8/≥30→1.0）。4 commit；17 项新单测；存档兼容 optional 字段处理。 |
+| **Session 187 已完成** | 体力并入六维区块统一进度条展示（1 commit `e984ceb`）。STAT_ROWS 加体力第六项，aside 移除独立体力卡片，标题五维→六维，超100标 `100(+N)`。07 §7.3/§5.3 文档同步。Headless 验证吕布体力100 在六维区块。 |
 | **Session 178 已完成** | 武将详情界面修复（阵型显名称/经验体力去重/性格区块/非原型称号派生 + formations.json 补录 id 16 冲阵）；4 commit 本地领先 origin/main 未推送。详见 10-progress Session 178。**未做**：头像图片本身需另外核对（用户已换新版）；CampaignPanel/StandardModePanel 的 ARROWHEAD↔冲阵 既有误标 bug 待后续用 FORMATION_LABEL 根治。 |
 | **Session 170 已完成** | R2：登用/结盟共享百分点公式，结盟接权威 RNG，UI/日志同源；专项验证 20/20 |
 | **Session 166 已完成** | 吕布、关羽、诸葛亮、曹操四张新头像接入人物简册与名册缩略图；非重点人物保留程序化回退；README 四张人物截图已用真实浏览器流程重拍 |

@@ -3712,3 +3712,21 @@
 - 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
 
 *v13.3 | 2026-07-25 | Session 186 · 体力缩放（吕布168→100）+ 行动次数系统 + 不对称消耗完成（4 commit）；R3 仍为玩法下一步*
+
+## 2026-07-25 — Session 187（体力并入六维区块，统一进度条展示，1 commit）
+
+- Phase: **UI 调整 + 文档同步**（用户指派，承接 Session 186 体力缩放）
+- 背景：Session 186 体力基础值封顶 100 后与五维同刻度，继续单独放 aside 数字卡片制造不一致。
+- 变更（1 commit `e984ceb`）：
+  - `OfficerDetail.tsx` STAT_ROWS 加第六项 `['体力','stamina',true]`，isStamina 标记区分顶层字段 vs stats 对象
+  - 标题"五维"→"六维"，体力用与五维完全相同的进度条样式（相同渐变/数值标注/标签风格）
+  - 进度条超 100：按 0-100 填满，超出部分数值标 `100 (+N)`
+  - aside 移除独立体力数字卡片，保留行动/忠诚/功绩/经验/最胜所长
+  - signatureStat 计算过滤体力（只算五维），避免访问 `officer.stats['stamina']`
+  - 数值列宽 2rem→3rem 容纳 overflow 标注
+  - 动态战斗内消耗状态不在详情页展示，只显示静态基础值（留战斗 UI 处理）
+- 验证：typecheck/lint/build 全绿；shared test 189/189；Headless Chrome 吕布详情页 h3 含"六维"、aside 无"体力"字样、体力100 在六维区块（截图存 `docs/screenshots/session-186-stamina-actions/02-lvbu-six-wei.png`）。
+- 文档：07 §7.3 ASCII 图加体力第六项 + §5.3 状态 B"五维雷达图"→"六维进度条"反映当前实装；本进度双写 + HANDOFF。
+- 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
+
+*v13.4 | 2026-07-25 | Session 187 · 体力并入六维区块统一进度条展示完成（1 commit）；R3 仍为玩法下一步*
