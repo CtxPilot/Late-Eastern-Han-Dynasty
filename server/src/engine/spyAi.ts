@@ -4,8 +4,10 @@
 /**
  * AI 谍报相位：与玩家共用 spy 引擎，规则权重决策
  *
- * 本文件中的 Math.random() 仅属于 S15 AI 行动/目标/任务选择；共享的招募、
+ * 本文件中的 decisionRng() 仅属于 S15 AI 行动/目标/任务选择；共享的招募、
  * 训练与任务结果必须使用调用方注入的 resolutionRng，避免把决策源混入结算层。
+ * decisionRng 默认 fallback 到 resolutionRng（Session A 阶段未接入权威流，
+ * 调用方不传时与结算共用同一流；Session B 接入后由 advanceTurn 显式传权威源）。
  */
 import {
   DipRelation,
@@ -67,6 +69,7 @@ export function aiIntelTurn(
   state: GameState,
   factionId: number,
   resolutionRng: () => number,
+  decisionRng: () => number = resolutionRng,
 ): GameState {
   let s = state;
   const faction = s.factions[factionId];
@@ -81,7 +84,7 @@ export function aiIntelTurn(
     (a) => a.status === SpyStatus.CAPTIVE && a.captiveByFactionId === factionId,
   );
   for (const cap of captives) {
-    const r = Math.random();
+    const r = decisionRng();
     const action =
       r < 0.4
         ? SpyCaptiveAction.EXECUTE
@@ -142,7 +145,7 @@ export function aiIntelTurn(
 
   // 3a) AI 寻访美女：beautyStock < 4 时尝试在有余量的城寻访（解 B-6 死锁）
   const faction2 = s.factions[factionId];
-  if (faction2 && (faction2.beautyStock ?? 0) < 4 && Math.random() < 0.5) {
+  if (faction2 && (faction2.beautyStock ?? 0) < 4 && decisionRng() < 0.5) {
     const seekCity = myCities.find(
       (c) => (c.beautySeekLeft ?? 0) >= 1 && c.gold >= 60,
     );
@@ -158,7 +161,7 @@ export function aiIntelTurn(
   // 3b) AI 训练女间谍：beautyStock ≥ 4 且有空编制时
   if (faction2 && (faction2.beautyStock ?? 0) >= 4 && aliveCount(s, factionId) < cap) {
     const richCity = myCities.find((c) => c.gold >= 100);
-    if (richCity && Math.random() < 0.5) {
+    if (richCity && decisionRng() < 0.5) {
       try {
         s = trainFemaleSpy(s, richCity.id, resolutionRng, factionId);
       } catch {
@@ -178,12 +181,12 @@ export function aiIntelTurn(
     if (playerCitiesAdjacentTo(myIds, c.id).length === 0) return false;
     // 优先敌对/玩家
     const foe = c.ruler === s.playerFactionId || hostileTo(s, factionId, c.ruler);
-    return foe || Math.random() < 0.3;
+    return foe || decisionRng() < 0.3;
   });
 
   if (targets.length === 0) return s;
 
-  const target = targets[Math.floor(Math.random() * targets.length)];
+  const target = targets[Math.floor(decisionRng() * targets.length)];
   const report = ensureIntel(s).cities[target.id];
 
   // 女间谍优先枕边风/离间；男特工探秘→破坏/刺杀
@@ -192,14 +195,14 @@ export function aiIntelTurn(
 
   let agent = idles[0];
   let type = SpyMissionType.RECON;
-  if (femaleIdle && report?.depth === 'detailed' && Math.random() < 0.6) {
+  if (femaleIdle && report?.depth === 'detailed' && decisionRng() < 0.6) {
     agent = femaleIdle;
-    type = Math.random() < 0.6 ? SpyMissionType.PILLOW_TALK : SpyMissionType.SOW_DISCORD;
+    type = decisionRng() < 0.6 ? SpyMissionType.PILLOW_TALK : SpyMissionType.SOW_DISCORD;
   } else {
     agent = maleIdle ?? idles[0];
     if (report?.depth === 'detailed') {
       type =
-        Math.random() < 0.7 ? SpyMissionType.SABOTAGE : SpyMissionType.ASSASSINATE;
+        decisionRng() < 0.7 ? SpyMissionType.SABOTAGE : SpyMissionType.ASSASSINATE;
     }
   }
 
@@ -218,11 +221,11 @@ export function aiIntelTurn(
 }
 
 /** 全部 AI 势力谍报相位 */
-export function runAllAiIntel(state: GameState, resolutionRng: () => number): GameState {
+export function runAllAiIntel(state: GameState, resolutionRng: () => number, decisionRng: () => number = resolutionRng): GameState {
   let s = state;
   for (const f of Array.from(Object.values(s.factions)).sort((a, b) => a.id - b.id)) {
     if (!f.isAlive || f.isPlayer) continue;
-    s = aiIntelTurn(s, f.id, resolutionRng);
+    s = aiIntelTurn(s, f.id, resolutionRng, decisionRng);
   }
   return s;
 }
