@@ -93,6 +93,7 @@ export const OfficerStaticSchema = z.object({
   ),
   uniqueSkill: z.string().optional(),
   tags: z.array(z.string()),
+  biography: z.string().optional(),
 });
 
 export const OfficersFileSchema = z.array(OfficerStaticSchema);

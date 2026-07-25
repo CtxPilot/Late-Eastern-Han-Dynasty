@@ -66,6 +66,8 @@ export interface OfficerStatic {
   skills: OfficerSkillStatic[];
   uniqueSkill?: SkillType;
   tags: string[];           // 出身标签（社会·地域·职业·政治·特殊）
+  /** 武将列传（由 docs/biographies/officer_{id}.md 合并，见 scripts/merge-biographies.ts） */
+  biography?: string;
 }
 
 /** Runtime officer entity */
