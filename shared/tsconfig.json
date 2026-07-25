@@ -18,6 +18,7 @@
     "positions.ts",
     "labels.ts",
     "stamina.ts",
+    "stamina-cost.ts",
     "negotiation.ts",
     "expression.ts",
     "scenes.ts",

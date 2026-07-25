@@ -67,8 +67,19 @@ export function calcStaminaMax(
   const merit = meritLevel * 2;
   const ageMod = ageModifier(age, officer.hidden.power);
 
-  return Math.floor(Math.max(0, base + merit + ageMod));
+  // 体力基础值缩放（Session 186）：权重结构不变（武力0.5 > 统帅0.1 > 其余0.02），
+  // 整体乘 STAMINA_SCALE_FACTOR 使吕布（原始最高 168）封顶 100，223 武将等比例分布。
+  // 基础值 ≤ 100；未来装备/官职/爵位等加成（04§27 双轨制）在此之上叠加突破 100。
+  return Math.floor(Math.max(0, (base + merit + ageMod) * STAMINA_SCALE_FACTOR));
 }
+
+/**
+ * 体力基础值缩放系数 = 100 / 168。
+ * 168 = 吕布（id=5）运行时原始体力上限：80 + 150/2 + 97/10 + 195/50 + 0(merit) + 0(age34) = 168.6 → 168。
+ * 150 = 武力面板100 + ceilingBonus.hiddenBonus50（武天花板）。
+ * 系数锁定为常量，避免 ceilingBonus/age 变化导致基准漂移。
+ */
+export const STAMINA_SCALE_FACTOR = 100 / 168;
 
 export function calcStaminaRecovery(
   officer: OfficerStatic,
