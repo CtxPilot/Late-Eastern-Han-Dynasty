@@ -3538,3 +3538,40 @@
 - Next：R3（S10 单挑四倾向 + 吕布"规则内最强但可败"）仍为下一步；BF-P5 设计阶段评估（补给线/郡域迷雾）并行推进。
 
 *v12.7 | 2026-07-25 | Session 180 · 武将详情页 UI 迭代收口 + 已知技术债清单汇总*
+
+## 2026-07-25 — Session 181（头像系统统一收尾——SVG 全员化 + PNG 退役 + 文字清除）
+
+- Phase: **代码实装 + 文档同步**（2 commit，用户指派独立需求，不归属 R3/R8）
+- 改动主题（按 commit 归纳）:
+  1. **OfficerPortrait.tsx PNG 退役 + 文字叠加清除**（`c483ef3`）:
+     - 删除 `PortraitPreset.image?: string` 字段 + HERO_PRESETS 4 行 image 引用（曹操/诸葛亮/吕布/关羽 4 张 PNG）
+     - 主 JSX 三元 `p.image ? <img> : <svg>` 改为只渲染 `<svg>`，223 名武将全员走程序化 SVG（4 原型 face/crown/beard 差异化保留辨识度）
+     - 删除 `!compact && <><span class='portrait-clan/seal/ribbon'></span></>` 头像文字叠加（氏族题签 + 朱砂姓名印 + 印绶色条）
+     - aria-label 保留（无障碍标签，非视觉文字）；身份信息由 OfficerDetail 页面文字区 role/courtesy/title/quote 承担
+     - 4 张 PNG 文件保留 `client/public/portraits/` 不删，但功能性引用全部移除
+  2. **ExpressionPortrait.tsx 文字叠加清除**（`7e9f666`）:
+     - 删除 `!compact && <><span class='portrait-clan/seal/ribbon'></span></>` 头像文字叠加
+     - 保留 aria-label + CSS 变量 `--portrait-ink`/`--portrait-seal` 用于 SVG 色调
+     - `data-expression`/`data-tone` 属性保留（S23 表情系统 7 状态切换不变）
+- **PNG 装饰位评估结论**（不接入，如实报告）:
+  - `App.tsx` 启动屏（line 42-83）是字体加载/启动占位界面（标题+提示+重试按钮），不适合插入 4 张武将 PNG 装饰
+  - `ScenarioSelect.tsx` 是功能性剧本选择页面，4 张单人武将 PNG 与"选剧本"主题关联弱，强行加入会喧宾夺主
+  - 当前无合适位置，**PNG 文件保留但当前不使用**，留待以后有合适场景（如未来加"汉末英杰陈列"页面、README GitHub 展示等）再接入
+- **文字元素清理结果**:
+  - 头像 SVG 中无文字/印章元素（程序化 SVG 全是 path 几何，无 `<text>` 元素）
+  - PNG 本身自带的印章文字是原始插画构图元素，非"UI 叠加文字"，本次未触及（4 PNG 已功能性退役，不存在"裁切/遮罩去掉印章"的问题）
+  - 明确原则落地：头像区域只保留人物图像本身，武将姓名/称号等身份信息完全交由页面文字区承担
+- **Headless Chrome 实测**（puppeteer-core + 系统 google-chrome）:
+  - roster 缩略图：10 张全 SVG（`svgCount: 10/10`），无 `img.portrait-image`（`imgCount: 0`），无 `.portrait-clan/seal/ribbon` 文字叠加
+  - 详情大头像：关羽/诸葛亮 `data-expression=neutral` + `data-tone=neutral`（S23 表情系统正常），无 PNG img，无文字叠加，`aria-label="关羽，字云长头像·neutral"` 保留
+  - 4 原型中 2 个（关羽 id=6 / 诸葛亮 id=4）在刘备 session 实测走 SVG；曹操/吕布由 grep 静态证明（`client/src` 内 4 PNG 引用全清零）
+  - 结果：**15/15 全过**
+- **全量回归**:
+  - client typecheck/lint/build 全过（仅保留既有 782.85 kB chunk 警告，比 S179 的 762.84 kB 增约 20KB 因全员 SVG 路径在 bundle 中）
+  - shared test 172/172
+  - verify-save-battlefield-instance 45/45、verify-campaign 62/62、verify-turn-cadence 28/28、verify-scenario-events 32/32、verify-grand-strategist-rng 28/28
+  - 注：`verify-biographies.ts` 脚本在 `server/src/scripts/` 不存在（pre-existing 状态，与本次改动无关，本次未触 biographies 代码）
+- 同步：HANDOFF §1 会话/代码最新/本交接用途三行 + 本进度双写
+- **标注**：本轮是头像系统统一收尾，不归属 R3/R8 序列；R3（S10 单挑四倾向）仍为下一步。表情系统 7 状态由 `shared/expression.ts` 28 项单测覆盖（在 shared 172/172 中通过）。
+
+*v12.8 | 2026-07-25 | Session 181 · 头像系统统一收尾（SVG 全员化 + PNG 退役 + 文字清除）*
