@@ -359,6 +359,14 @@ gameRouter.post('/diplomacy/alliance', (req, res) => {
   }
 });
 
+gameRouter.post('/hegemony/establish', (_req, res) => {
+  try {
+    res.json(gameService.doEstablishHegemony());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'establish hegemony failed' });
+  }
+});
+
 gameRouter.post('/battle/start', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);

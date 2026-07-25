@@ -91,6 +91,7 @@ interface Store {
   ) => Promise<void>;
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
+  establishHegemony: () => Promise<void>;
   giftBeautyDip: (targetFactionId: number, amount?: number) => Promise<void>;
   plantFemale: (targetFactionId: number) => Promise<void>;
   formAlliance: (targetFactionId: number) => Promise<void>;
@@ -552,6 +553,16 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '进贡完成' });
     } catch (e) {
       set({ error: errMsg(e, '进贡失败'), loading: false });
+    }
+  },
+
+  establishHegemony: async () => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.establishHegemony();
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '开霸府成功' });
+    } catch (e) {
+      set({ error: errMsg(e, '开霸府失败'), loading: false });
     }
   },
 

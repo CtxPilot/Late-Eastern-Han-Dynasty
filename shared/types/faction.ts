@@ -34,4 +34,12 @@ export interface Faction {
    * 不升 schema 版本，沿用 activeBattlefieldInstance 无损追加经验。
    */
   politicalStage?: PoliticalStage;
+  /**
+   * 政治头衔（docs/26，HC-P0-3，Q7 方案B）。与 politicalStage 一一对应：
+   * vassal→undefined、hegemon→"丞相"/"大将军"等、king→"X王"、emperor→"X帝"。
+   * 独立于 rulerId，头衔变化不动 Officer 实体。
+   */
+  politicalTitle?: string;
+  /** 开府/称王/称帝的年份记录（docs/26，HC-P0-3）。 */
+  politicalStageChangedYear?: number;
 }

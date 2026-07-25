@@ -130,6 +130,10 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const signatureStat = STAT_ROWS.filter(r => !r[2]).reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
   const factionName = officer.faction != null ? game.factions[officer.faction]?.name ?? '未知势力' : null;
   const isRuler = realmStats != null;
+  // 政治头衔（HC-P0-3）：君主且势力 politicalStage !== 'vassal' 时展示
+  const politicalTitle = isRuler && officer.faction != null
+    ? game.factions[officer.faction]?.politicalTitle
+    : undefined;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/80 px-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -137,7 +141,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
         <header className="officer-detail-hero sticky top-0 z-10 flex items-start justify-between border-b border-amber-900/50 px-5 py-4">
           <div className="flex items-end gap-3">
             <div><div className="text-[10px] tracking-[0.35em] text-amber-700">汉末人物志 · {profile.role}</div><h2 id="officer-detail-title" className="mt-1 text-3xl font-bold tracking-[0.22em] text-amber-100">{officer.name}<small className="ml-3 text-sm font-normal tracking-widest text-stone-400">{profile.courtesy ? `字 ${profile.courtesy}` : ''}</small></h2>
-            <p className="mt-1 text-xs tracking-wider text-stone-500">{profile.title} · {age != null ? `${age}岁 · ` : ''}{location}</p></div>
+            <p className="mt-1 text-xs tracking-wider text-stone-500">{profile.title} · {age != null ? `${age}岁 · ` : ''}{location}{politicalTitle ? ` · ${politicalTitle}` : ''}</p></div>
           </div>
           <button type="button" className="rounded border border-stone-700 px-2 py-1 text-stone-400 hover:text-stone-100" onClick={onClose} aria-label="关闭">×</button>
         </header>

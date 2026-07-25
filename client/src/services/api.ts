@@ -625,3 +625,9 @@ export async function grandStrategistStatus(): Promise<{
   const { data } = await http.get('/grand-strategist/status');
   return data as any;
 }
+
+/** 开霸府（HC-P0-3）。前置：控制汉献帝 + 当前 politicalStage='vassal'。 */
+export async function establishHegemony(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/hegemony/establish');
+  return data;
+}

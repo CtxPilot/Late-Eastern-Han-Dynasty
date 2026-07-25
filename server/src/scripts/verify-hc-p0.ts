@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * HC-P0-1 + HC-P0-2 确定性验证（docs/26 霸府/称王/称帝主线地基）。
+ * HC-P0-1 + HC-P0-2 + HC-P0-3 确定性验证（docs/26 霸府/称王/称帝主线地基+开府）。
  *
  * 覆盖：
  * 1. 两个剧本开局 emperorLocation 指向洛阳(id=1) + 所有势力 politicalStage='vassal'
@@ -10,6 +10,7 @@
  * 3. 存档信封往返一致性（emperorLocation + politicalStage 序列化/反序列化保留）
  * 4. 旧存档降级（无 emperorLocation + 无 politicalStage → parse 通过，字段 undefined 不报错）
  * 5. GameStateSchema.strict() 接受新字段（ROOT_KEYS 已加 emperorLocation）
+ * 6. HC-P0-3 开霸府操作：前置校验（未控制汉帝/已开府/已是王帝拒绝）+ 状态转移 + actionLog + 存档往返
  *
  * Run: pnpm verify-hc-p0
  */
@@ -21,7 +22,8 @@ import {
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
-import { createGame, getGame } from '../services/game.js';
+import { createGame, getGame, doEstablishHegemony } from '../services/game.js';
+import { establishHegemony } from '../engine/hegemony.js';
 import { getRuntimeRngState } from '../runtime-rng.js';
 
 let passed = 0;
@@ -129,6 +131,88 @@ console.log('\n— politicalStage 枚举校验 —');
 const badStage = structuredClone(getGame());
 (badStage.factions[1] as { politicalStage?: unknown }).politicalStage = 'invalidStage';
 check('politicalStage 非法值被 Zod 拒绝', !GameStateSchema.safeParse(badStage).success);
+
+// ── 7. HC-P0-3 开霸府操作 ──
+console.log('\n— HC-P0-3 开霸府操作 —');
+
+// 7a. 前置：未控制汉帝时开府应被拒绝
+// 190 剧本选曹操（faction 1，不占洛阳，洛阳归董卓 faction 4）→ 不控制汉帝
+createGame(2, 1);
+let hegemonyRejected = false;
+let hegemonyError = '';
+try {
+  establishHegemony(getGame(), 1);
+} catch (e) {
+  hegemonyRejected = true;
+  hegemonyError = (e as Error).message;
+}
+check('未控制汉帝时开府被拒绝', hegemonyRejected);
+check('拒绝信息含"未控制汉献帝"', hegemonyError.includes('未控制汉献帝'));
+
+// 7b. 前置：已开府重复开府应被拒绝
+// 先让曹操控制汉帝（把洛阳 ruler 改成 1），开府成功，再尝试重复开府
+createGame(2, 1);
+const fakeControlState = structuredClone(getGame());
+fakeControlState.cities[1].ruler = 1; // 模拟曹操占领洛阳
+let afterEstablish = establishHegemony(fakeControlState, 1);
+check('控制汉帝后开府成功：politicalStage === "hegemon"', afterEstablish.factions[1].politicalStage === 'hegemon');
+check('开府后 politicalTitle === "丞相"', afterEstablish.factions[1].politicalTitle === '丞相');
+check('开府后 politicalStageChangedYear === 当前年', afterEstablish.factions[1].politicalStageChangedYear === afterEstablish.currentYear);
+check('开府后 actionLog 含 hegemony_established 类型', afterEstablish.actionLog.some((l) => l.type === 'hegemony_established'));
+
+let repeatRejected = false;
+try {
+  establishHegemony(afterEstablish, 1);
+} catch (e) {
+  repeatRejected = (e as Error).message.includes('已是霸府');
+}
+check('已是霸府时重复开府被拒绝（"已是霸府"）', repeatRejected);
+
+// 7c. 前置：已是王/帝状态时开府应被拒绝
+const kingState = structuredClone(afterEstablish);
+(kingState.factions[1] as { politicalStage?: string }).politicalStage = 'king';
+let kingRejected = false;
+try {
+  establishHegemony(kingState, 1);
+} catch (e) {
+  kingRejected = (e as Error).message.includes('已称王');
+}
+check('已是王状态时开府被拒绝（"已称王"）', kingRejected);
+
+const emperorState = structuredClone(afterEstablish);
+(emperorState.factions[1] as { politicalStage?: string }).politicalStage = 'emperor';
+let emperorRejected = false;
+try {
+  establishHegemony(emperorState, 1);
+} catch (e) {
+  emperorRejected = (e as Error).message.includes('已称帝');
+}
+check('已是帝状态时开府被拒绝（"已称帝"）', emperorRejected);
+
+// 7d. 端到端：英雄集结曹操（faction 1 占洛阳，开局即控制汉帝）→ service doEstablishHegemony 成功
+createGame(1, 1);
+const beforeService = getGame();
+check('英雄集结曹操开局 controlsEmperor=true', controlsEmperor(beforeService, 1));
+const afterService = doEstablishHegemony();
+check('service doEstablishHegemony 后 politicalStage === "hegemon"', afterService.factions[1].politicalStage === 'hegemon');
+check('service doEstablishHegemony 后 politicalTitle === "丞相"', afterService.factions[1].politicalTitle === '丞相');
+check('service doEstablishHegemony 后 actionLog 含开府记录', afterService.actionLog.some((l) => l.type === 'hegemony_established' && l.message.includes('开霸府')));
+
+// 7e. 开府后存档往返一致性
+const hegemonySave = envelopeFor(getGame());
+const hegemonyParsed = parseCurrentSaveEnvelope(hegemonySave);
+check('开府状态存档往返后 politicalStage === "hegemon"', hegemonyParsed.snapshot.factions[1].politicalStage === 'hegemon');
+check('开府状态存档往返后 politicalTitle === "丞相"', hegemonyParsed.snapshot.factions[1].politicalTitle === '丞相');
+check('开府状态存档往返后 GameStateSchema 通过', GameStateSchema.safeParse(hegemonyParsed.snapshot).success);
+
+// 7f. 开府后 service 层再调用应被拒绝（currentGame 已是霸府）
+let serviceRepeatRejected = false;
+try {
+  doEstablishHegemony();
+} catch (e) {
+  serviceRepeatRejected = (e as Error).message.includes('已是霸府');
+}
+check('service 层重复开府被拒绝（currentGame 已是霸府）', serviceRepeatRejected);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

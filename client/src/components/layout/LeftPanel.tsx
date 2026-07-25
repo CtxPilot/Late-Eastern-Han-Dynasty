@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { calculateAllianceChance, findDiplomacy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { controlsEmperor } from '@leh/shared';
 import { BeautyPanel } from './BeautyPanel';
 import { FamilyPanel } from './FamilyPanel';
 import { SpyPanel } from './SpyPanel';
@@ -46,6 +47,7 @@ export function LeftPanel() {
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
   const endTurn = useGameStore((s) => s.endTurn);
   const tribute = useGameStore((s) => s.tribute);
+  const establishHegemony = useGameStore((s) => s.establishHegemony);
   const giftBeautyDip = useGameStore((s) => s.giftBeautyDip);
   const plantFemale = useGameStore((s) => s.plantFemale);
   const formAlliance = useGameStore((s) => s.formAlliance);
@@ -278,13 +280,46 @@ export function LeftPanel() {
           open={open === 'monarch'}
           onToggle={() => toggle('monarch')}
         >
-          <MenuBtn
-            label="结束回合"
-            hint="收获+AI"
-            disabled={loading}
-            onClick={() => void endTurn()}
-            emphasize
-          />
+          {(() => {
+            if (!game) return null;
+            const fid = game.playerFactionId;
+            const faction = game.factions[fid];
+            if (!faction) return null;
+            const ruler = game.officers[faction.rulerId];
+            const stage = faction.politicalStage ?? 'vassal';
+            const controlsHan = controlsEmperor(game, fid);
+            return (
+              <div className="px-2 py-1 space-y-1">
+                {ruler && (
+                  <div className="text-[11px] text-stone-400">
+                    {ruler.name}
+                    {faction.politicalTitle ? <span className="ml-1 text-amber-300">· {faction.politicalTitle}</span> : null}
+                  </div>
+                )}
+                {stage === 'vassal' && controlsHan && (
+                  <MenuBtn
+                    label="开霸府"
+                    hint="迎奉天子·自立丞相"
+                    disabled={loading}
+                    onClick={() => void establishHegemony()}
+                  />
+                )}
+                {stage === 'vassal' && !controlsHan && (
+                  <div className="text-[10px] text-stone-600 px-2">未控制汉献帝（需占领汉帝所在城池）</div>
+                )}
+                {stage !== 'vassal' && (
+                  <div className="text-[10px] text-stone-600 px-2">已{stage === 'hegemon' ? '开霸府' : stage === 'king' ? '称王' : '称帝'}</div>
+                )}
+                <MenuBtn
+                  label="结束回合"
+                  hint="收获+AI"
+                  disabled={loading}
+                  onClick={() => void endTurn()}
+                  emphasize
+                />
+              </div>
+            );
+          })()}
         </AccSection>
 
         <AccSection
