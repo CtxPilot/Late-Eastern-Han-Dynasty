@@ -5,8 +5,10 @@
  * AI 计谋相位 S17：低权重尝试美人计/离间/假情报/空城疑兵
  * 设计真源 docs/04 §31
  *
- * 本文件中的 Math.random() 仅决定 S15 AI 是否行动、选择哪类计谋及目标；
+ * 本文件中的 decisionRng() 仅决定 S15 AI 是否行动、选择哪类计谋及目标；
  * 计谋的成功/识破/效果结算统一由 plot.ts 接受权威 resolution RNG。
+ * decisionRng 默认 fallback 到 resolutionRng（Session A 阶段未接入权威流，
+ * 调用方不传时与结算共用同一流；Session B 接入后由 advanceTurn 显式传权威源）。
  */
 import { PlotType, type GameState } from '@leh/shared';
 import { EMPTY_FORT_TROOP_MAX, launchPlot } from './plot.js';
@@ -21,13 +23,14 @@ export function aiPlotTurn(
   state: GameState,
   factionId: number,
   resolutionRng: () => number,
+  decisionRng: () => number = resolutionRng,
 ): GameState {
   let s = state;
   const faction = s.factions[factionId];
   if (!faction?.isAlive || faction.isPlayer) return s;
 
   if (myActivePlotCount(s, factionId) >= 2) return s;
-  if (Math.random() > 0.35) return s;
+  if (decisionRng() > 0.35) return s;
 
   const myCities = Object.values(s.cities).filter((c) => c.ruler === factionId);
   if (myCities.length === 0) return s;
@@ -35,7 +38,7 @@ export function aiPlotTurn(
   const intel = s.intel;
 
   // 空城疑兵：寡兵己方城 + 粮≥150
-  if (myActivePlotCount(s, factionId) < 2 && Math.random() < 0.4) {
+  if (myActivePlotCount(s, factionId) < 2 && decisionRng() < 0.4) {
     const weak = myCities.find(
       (c) => c.troops < EMPTY_FORT_TROOP_MAX && c.food >= 150,
     );
@@ -54,7 +57,7 @@ export function aiPlotTurn(
   }
 
   // 假情报：detailed 敌城 + 金≥120
-  if (myActivePlotCount(s, factionId) < 2 && Math.random() < 0.35) {
+  if (myActivePlotCount(s, factionId) < 2 && decisionRng() < 0.35) {
     const rich = myCities.find((c) => c.gold >= 120);
     if (rich) {
       const detailedEnemy = Object.entries(intel?.cities ?? {}).find(
@@ -119,7 +122,7 @@ export function aiPlotTurn(
       (f) => f.id !== factionId && f.isAlive,
     );
     if (enemies.length > 0) {
-      const target = enemies[Math.floor(Math.random() * enemies.length)];
+      const target = enemies[Math.floor(decisionRng() * enemies.length)];
       try {
         s = launchPlot(s, {
           type: PlotType.SOW_DISCORD,
@@ -135,11 +138,11 @@ export function aiPlotTurn(
   return s;
 }
 
-export function runAllAiPlots(state: GameState, resolutionRng: () => number): GameState {
+export function runAllAiPlots(state: GameState, resolutionRng: () => number, decisionRng: () => number = resolutionRng): GameState {
   let s = state;
   for (const f of Array.from(Object.values(s.factions)).sort((a, b) => a.id - b.id)) {
     if (!f.isAlive || f.isPlayer) continue;
-    s = aiPlotTurn(s, f.id, resolutionRng);
+    s = aiPlotTurn(s, f.id, resolutionRng, decisionRng);
   }
   return s;
 }
