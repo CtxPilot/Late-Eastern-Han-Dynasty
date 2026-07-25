@@ -61,50 +61,41 @@ const stateDesc: GameState = {
   ),
 };
 
-// Stub Math.random 让 plotAi/spyAi 内部尚未收口的 Math.random() 也确定（commit 2/3 替换后此 stub 可移除）
-const originalMathRandom = Math.random;
-Math.random = () => 0.5;
+const mockRng = () => 0.5;
 
-try {
-  // 用确定性 mock RNG（恒返回 0.5）跑两次，比对结果
-  const mockRng = () => 0.5;
+const resultAscMil = runAiMilitary(stateAsc, mockRng, mockRng);
+const resultDescMil = runAiMilitary(stateDesc, mockRng, mockRng);
+assert(
+  JSON.stringify(resultAscMil) === JSON.stringify(resultDescMil),
+  'runAiMilitary: 不同 factions 插入顺序结果一致（sort 生效）',
+);
 
-  const resultAscMil = runAiMilitary(stateAsc, mockRng, mockRng);
-  const resultDescMil = runAiMilitary(stateDesc, mockRng, mockRng);
-  assert(
-    JSON.stringify(resultAscMil) === JSON.stringify(resultDescMil),
-    'runAiMilitary: 不同 factions 插入顺序结果一致（sort 生效）',
-  );
+const resultAscPlot = runAllAiPlots(stateAsc, mockRng, mockRng);
+const resultDescPlot = runAllAiPlots(stateDesc, mockRng, mockRng);
+assert(
+  JSON.stringify(resultAscPlot) === JSON.stringify(resultDescPlot),
+  'runAllAiPlots: 不同 factions 插入顺序结果一致（sort 生效）',
+);
 
-  const resultAscPlot = runAllAiPlots(stateAsc, mockRng);
-  const resultDescPlot = runAllAiPlots(stateDesc, mockRng);
-  assert(
-    JSON.stringify(resultAscPlot) === JSON.stringify(resultDescPlot),
-    'runAllAiPlots: 不同 factions 插入顺序结果一致（sort 生效；plotAi 内 Math.random 已 stub）',
-  );
+const resultAscIntel = runAllAiIntel(stateAsc, mockRng, mockRng);
+const resultDescIntel = runAllAiIntel(stateDesc, mockRng, mockRng);
+assert(
+  JSON.stringify(resultAscIntel) === JSON.stringify(resultDescIntel),
+  'runAllAiIntel: 不同 factions 插入顺序结果一致（sort 生效）',
+);
 
-  const resultAscIntel = runAllAiIntel(stateAsc, mockRng);
-  const resultDescIntel = runAllAiIntel(stateDesc, mockRng);
-  assert(
-    JSON.stringify(resultAscIntel) === JSON.stringify(resultDescIntel),
-    'runAllAiIntel: 不同 factions 插入顺序结果一致（sort 生效；spyAi 内 Math.random 已 stub）',
-  );
+// ===== Test 3: 同一插入顺序多次运行，结果也一致（idempotent 验证） =====
 
-  // ===== Test 3: 同一插入顺序多次运行，结果也一致（idempotent 验证） =====
+const run1 = runAiMilitary(stateAsc, mockRng, mockRng);
+const run2 = runAiMilitary(stateAsc, mockRng, mockRng);
+assert(JSON.stringify(run1) === JSON.stringify(run2), 'runAiMilitary: 同一状态多次运行结果一致');
 
-  const run1 = runAiMilitary(stateAsc, mockRng, mockRng);
-  const run2 = runAiMilitary(stateAsc, mockRng, mockRng);
-  assert(JSON.stringify(run1) === JSON.stringify(run2), 'runAiMilitary: 同一状态多次运行结果一致');
+const run3 = runAllAiPlots(stateAsc, mockRng, mockRng);
+const run4 = runAllAiPlots(stateAsc, mockRng, mockRng);
+assert(JSON.stringify(run3) === JSON.stringify(run4), 'runAllAiPlots: 同一状态多次运行结果一致');
 
-  const run3 = runAllAiPlots(stateAsc, mockRng);
-  const run4 = runAllAiPlots(stateAsc, mockRng);
-  assert(JSON.stringify(run3) === JSON.stringify(run4), 'runAllAiPlots: 同一状态多次运行结果一致');
-
-  const run5 = runAllAiIntel(stateAsc, mockRng);
-  const run6 = runAllAiIntel(stateAsc, mockRng);
-  assert(JSON.stringify(run5) === JSON.stringify(run6), 'runAllAiIntel: 同一状态多次运行结果一致');
-} finally {
-  Math.random = originalMathRandom;
-}
+const run5 = runAllAiIntel(stateAsc, mockRng, mockRng);
+const run6 = runAllAiIntel(stateAsc, mockRng, mockRng);
+assert(JSON.stringify(run5) === JSON.stringify(run6), 'runAllAiIntel: 同一状态多次运行结果一致');
 
 console.log(`AI faction sort verification passed: ${passed}/10`);

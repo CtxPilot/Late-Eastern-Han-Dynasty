@@ -209,11 +209,11 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   let nextState: GameState = afterAi;
   // 谍报：冷却 → AI 谍报 → 清理过期报告
   nextState = tickSpyMonth(nextState);
-  nextState = runAllAiIntel(nextState, rng);
+  nextState = runAllAiIntel(nextState, rng, rng);
   const intel = pruneExpiredIntel(nextState);
   nextState = { ...nextState, intel };
   // 计谋 S17：AI 发起 → 月度推进（准备→结算/ACTIVE）
-  nextState = runAllAiPlots(nextState, rng);
+  nextState = runAllAiPlots(nextState, rng, rng);
   nextState = tickPlotsMonth(nextState, rng);
   // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
   nextState = runAiMilitary(nextState, rng, rng);
