@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
   FORMATION_LABEL,
@@ -11,6 +12,7 @@ import {
   type GameState,
   type Officer,
 } from '@leh/shared';
+import { useGameStore } from '../../stores/gameStore';
 import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
 
@@ -63,6 +65,23 @@ const UNIT_NAME: Record<string, string> = {
   yellowTurban: '黄巾兵',
 };
 
+/** 装备 5 槽（07-ui-design:195 规划，Officer.equipped 代码未实装，占位展示） */
+const EQUIP_SLOTS = [
+  { key: 'weaponPrimary', label: '主武器' },
+  { key: 'weaponSecondary', label: '副武器' },
+  { key: 'armor', label: '盔甲' },
+  { key: 'mount', label: '坐骑' },
+  { key: 'auxiliary', label: '辅助' },
+] as const;
+
+type Tab = 'stats' | 'family' | 'equipment';
+
+const TABS: readonly [Tab, string][] = [
+  ['stats', '属性'],
+  ['family', '家族'],
+  ['equipment', '装备'],
+];
+
 interface Props {
   game: GameState;
   officer: Officer | null;
@@ -70,6 +89,20 @@ interface Props {
 }
 
 export function OfficerDetail({ game, officer, onClose }: Props) {
+  const [tab, setTab] = useState<Tab>('stats');
+  const childrenCatalog = useGameStore((s) => s.childrenCatalog);
+
+  const children = useMemo(() => {
+    if (!officer) return [];
+    const enabledIds = new Set(game.enabledChildEventIds);
+    return childrenCatalog.filter(
+      (c) =>
+        enabledIds.has(c.childId) &&
+        (c.fatherId === officer.id ||
+          (officer.wifeId != null && c.motherId === officer.wifeId)),
+    );
+  }, [game, childrenCatalog, officer]);
+
   if (!officer) return null;
   const location = officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城';
   const age = officer.birthYear > 0 ? Math.max(0, game.currentYear - officer.birthYear) : null;
@@ -77,6 +110,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const profile = getOfficerProfile(officer);
   const armyMorale = game.campaignArmies.find((a) => a.commanderId === officer.id)?.morale;
   const signatureStat = STAT_ROWS.reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
+  const factionName = officer.faction != null ? game.factions[officer.faction]?.name ?? '未知势力' : null;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-stone-950/80 px-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -96,72 +130,157 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             <div className="grid grid-cols-2 gap-2 text-xs"><Info label="忠诚" value={String(officer.loyalty)} /><Info label="功绩" value={String(officer.merit)} /><Info label="体力" value={String(officer.stamina)} /><Info label="经验" value={String(officer.experience)} /></div>
             <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
           </aside>
-          <div className="grid gap-5 md:grid-cols-2">
-          <div className="space-y-4">
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">五维</h3>
-              <div className="space-y-2">
-                {STAT_ROWS.map(([label, key]) => {
-                  const value = officer.stats[key];
-                  return <div key={key} className="grid grid-cols-[2rem_2rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={value >= 95 ? 'text-amber-300' : 'text-stone-100'}>{value}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${value}%` }} /></div></div>;
-                })}
-              </div>
-            </section>
+          <div>
+            <div className="flex gap-1 mb-3 px-0.5" role="tablist" aria-label="武将详情页签">
+              {TABS.map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === k}
+                  data-testid={`officer-tab-${k}`}
+                  className={`flex-1 py-1.5 rounded border text-[11px] tracking-widest ${tab === k ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400 hover:text-stone-200'}`}
+                  onClick={() => setTab(k)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">官职</h3>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <Info label="文官" value={CIVIL_LABELS[officer.civilPosition]} />
-                <Info label="地方" value={LOCAL_LABELS[officer.localPosition]} />
-                <Info label="武官" value={MILITARY_LABELS[officer.militaryPosition]} />
-                <Info label="爵位" value={NOBILITY_LABEL[officer.nobilityRank] ?? String(officer.nobilityRank)} />
-              </div>
-            </section>
+            {tab === 'stats' && (
+              <div className="grid gap-5 md:grid-cols-2">
+                <div className="space-y-4">
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">五维</h3>
+                    <div className="space-y-2">
+                      {STAT_ROWS.map(([label, key]) => {
+                        const value = officer.stats[key];
+                        return <div key={key} className="grid grid-cols-[2rem_2rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={value >= 95 ? 'text-amber-300' : 'text-stone-100'}>{value}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${value}%` }} /></div></div>;
+                      })}
+                    </div>
+                  </section>
 
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
-                {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
-                {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
-                {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
-              </div>
-              <p className="mt-1.5 text-[10px] text-stone-600">技能升级系统待实装，当前仅展示已有技能等级</p>
-            </section>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">官职</h3>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <Info label="文官" value={CIVIL_LABELS[officer.civilPosition]} />
+                      <Info label="地方" value={LOCAL_LABELS[officer.localPosition]} />
+                      <Info label="武官" value={MILITARY_LABELS[officer.militaryPosition]} />
+                      <Info label="爵位" value={NOBILITY_LABEL[officer.nobilityRank] ?? String(officer.nobilityRank)} />
+                    </div>
+                  </section>
 
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格与理想</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">
-                <Chip text={`性 · ${PERSONALITY_LABEL[officer.hidden.personality] ?? officer.hidden.personality}`} />
-                <Chip text={`理 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
-              </div>
-            </section>
-          </div>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能</h3>
+                    <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
+                      {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
+                      {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
+                      {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-stone-600">技能升级系统待实装，当前仅展示已有技能等级</p>
+                  </section>
 
-          <div className="space-y-4">
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">兵种适性</h3>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                {Object.entries(officer.unitProficiency).map(([unit, grade]) => <div key={unit} className="flex justify-between rounded border border-stone-800 bg-stone-900/50 px-2 py-1"><span className="text-stone-500">{UNIT_NAME[unit] ?? unit}</span><strong className="text-amber-200">{PROFICIENCY_LABEL[String(grade)] ?? String(grade)}</strong></div>)}
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格与理想</h3>
+                    <div className="flex flex-wrap gap-1.5 text-[11px]">
+                      <Chip text={`性 · ${PERSONALITY_LABEL[officer.hidden.personality] ?? officer.hidden.personality}`} />
+                      <Chip text={`理 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
+                    </div>
+                  </section>
+                </div>
+
+                <div className="space-y-4">
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">兵种适性</h3>
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                      {Object.entries(officer.unitProficiency).map(([unit, grade]) => <div key={unit} className="flex justify-between rounded border border-stone-800 bg-stone-900/50 px-2 py-1"><span className="text-stone-500">{UNIT_NAME[unit] ?? unit}</span><strong className="text-amber-200">{PROFICIENCY_LABEL[String(grade)] ?? String(grade)}</strong></div>)}
+                    </div>
+                  </section>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">出身标签</h3>
+                    <div className="flex flex-wrap gap-1.5 text-[11px]">{officer.tags.map((tag) => <Chip key={tag} text={tag} />)}{officer.tags.length === 0 && <span className="text-stone-600">暂无标签</span>}</div>
+                    <p className="mt-1.5 text-[10px] text-stone-600">出身分类（社会·地域·职业·政治·特殊），非家族关系数据</p>
+                  </section>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型</h3>
+                    <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
+                      {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
+                      {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-stone-600">阵型精通成长系统待实装，当前仅展示已掌握阵型</p>
+                  </section>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
+                    <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
+                  </section>
+                </div>
               </div>
-            </section>
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">身份与家族</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px]">{officer.tags.map((tag) => <Chip key={tag} text={tag} />)}{officer.tags.length === 0 && <span className="text-stone-600">暂无标签</span>}</div>
-              <p className="mt-2 text-xs text-stone-500">正妻：{wife ?? '—'} · 赏赐美人：{officer.beauties.length}</p>
-            </section>
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型</h3>
-              <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
-                {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
-                {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}
+            )}
+
+            {tab === 'family' && (
+              <div className="space-y-4">
+                <section>
+                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <Info label="正妻" value={wife ?? '—'} />
+                    <Info label="赏赐美人" value={String(officer.beauties.length)} />
+                  </div>
+                  <p className="mt-1.5 text-[10px] text-stone-600">赏赐美人为势力库存资源（S09），记录该武将已接收的赏赐数量</p>
+                </section>
+
+                <section>
+                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">子女</h3>
+                  {children.length === 0 ? (
+                    <p className="text-stone-600 text-xs">无子女记录</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {children.map((c) => {
+                        const live = game.officers[c.childId];
+                        return (
+                          <div key={c.childId} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5 text-xs">
+                            <div className="text-stone-200">{c.childName}</div>
+                            <div className="text-stone-500 text-[10px] mt-0.5">
+                              {c.birthYear}生 · {c.appearYear}登场 · {c.source}
+                            </div>
+                            {live ? (
+                              <div className="text-emerald-600/90 text-[10px] mt-0.5">
+                                已登场
+                                {live.faction === officer.faction ? '·本势力' : live.faction == null ? '·在野' : '·他势力'}
+                              </div>
+                            ) : (
+                              <div className="text-stone-600 text-[10px] mt-0.5">待登场</div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+
+                <section>
+                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">效力</h3>
+                  <Info label="当前状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
+                  {factionName && <Info label="所属势力" value={factionName} />}
+                  {officer.faction == null && officer.status === 'free' && (
+                    <p className="mt-1.5 text-[10px] text-stone-600">在野武将，满足相性/理想/血亲条件可投奔势力</p>
+                  )}
+                </section>
               </div>
-              <p className="mt-1.5 text-[10px] text-stone-600">阵型精通成长系统待实装，当前仅展示已掌握阵型</p>
-            </section>
-            <section>
-              <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
-              <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
-            </section>
-          </div>
+            )}
+
+            {tab === 'equipment' && (
+              <div className="space-y-4">
+                <p className="text-[10px] text-stone-600">装备系统待实装（Officer.equipped 5 槽代码未实装，0-B 技术债 D-0B-7），当前仅展示占位槽位</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {EQUIP_SLOTS.map((slot) => (
+                    <div key={slot.key} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2">
+                      <div className="text-[10px] text-stone-500">{slot.label}</div>
+                      <div className="text-stone-600 text-xs mt-1">未装备</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
