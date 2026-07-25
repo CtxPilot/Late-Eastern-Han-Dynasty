@@ -3615,3 +3615,46 @@
 - **标注**：本轮是 BF-P3 Session A（基础设施层），不归属 R3/R8 序列；R3（S10 单挑四倾向）仍为下一步。Session B 接入权威流后即可实现整场 AI 决策复现。
 
 *v12.9 | 2026-07-25 | Session 182 · BF-P3 Session A（势力排序 + decisionRng 参数化）*
+
+## 2026-07-25 — Session 183（BF-P3 Session B — 接入权威流 + 4 个整场决策复现脚本 + ai.decisions 泄漏修复）
+
+- Phase: **代码实装 + 单测 + CI 接入**（3 commit，BF-P3 收口第 2 阶段；BF-P3 AI 决策 RNG 收口部分正式完成）
+- 变更主题（按 commit 归纳）:
+  1. **接入权威流 + 移除 Session A stub**（`9c26276`）:
+     - turn.ts line 212/216 显式传 `decisionRng=rng`：`runAllAiIntel(nextState, rng, rng)` / `runAllAiPlots(nextState, rng, rng)`（line 219 `runAiMilitary(nextState, rng, rng)` 已有不动）
+     - 移除 verify-ai-faction-sort.ts 中 Session A 留下的 Math.random stub（plotAi/spyAi 已收口 Math.random → decisionRng，stub 不再需要；runAllAiPlots/runAllAiIntel 改为显式双参调用不依赖 fallback）
+  2. **修复 ai.decisions 泄漏进 GameState + 4 个整场决策复现脚本**（`a05403c`）:
+     - **修复 pre-existing bug**：turn.ts advanceTurn line 197 原 `...ai` 把 `ai.decisions`（AI 内政 tick 临时日志，line 260 已转成 actionLog）泄漏进 GameState，导致 GameStateSchema strict 校验在 restoreGameFromEnvelope 时拒绝（"Unrecognized key: decisions"）。修复：显式取 `ai.factions`/`ai.cities`，不 spread 整个 ai 对象。未来 ai 若扩展返回字段，在此显式追加。
+     - **4 个整场决策复现 verify 脚本**（每个 4/4，共 16 项断言）：
+       - `verify-ai-decision-military.ts`：N=12 月，记录每月军事决策（CampaignArmy 列表 + ai_war_report/ai_battle_report 战报），读档重放断言序列一致 + PRNG draws 一致。6 月决策序列：总 Army 6，总战报 26
+       - `verify-ai-decision-plot.ts`：同模式覆盖计谋决策（Plot 列表 + ai_placeholder 日志）。6 月决策序列：总 Plot 80，总 ai_placeholder 日志 156
+       - `verify-ai-decision-spy.ts`：同模式覆盖谍报决策（agents/cityDefense/beautySeekLeft）。6 月决策序列：总 agent 18
+       - `verify-ai-decision-integration.ts`：N=24 月整合测试，记录三者交织完整指标。12 月决策序列：总 Army 21，总 Plot 298，总 agent 65
+     - 证明不只是"数值结算一致"，连"AI 选择打哪里""AI 选择用什么计谋""AI 选择什么谍报任务"这类决策本身在读档后完全可预测
+  3. **CI 门禁接入 7 个新脚本**（`dfb2ea2`）:
+     - server/package.json + package.json (root 转发) + .github/workflows/ci.yml 三处同步接入：
+       - Session A 3 个：verify-ai-faction-sort / verify-plot-ai-decision / verify-spy-ai-decision
+       - Session B 4 个：verify-ai-decision-military / -plot / -spy / -integration
+     - 共新增 38 项断言（10+6+6+4+4+4+4），BF-P3 AI 决策 RNG 收口完整 CI 覆盖
+- **既有 RNG 测试受影响情况**:
+  - ✅ verify-ai-military-rng 29/29（未破坏——接入权威流理论上不应改变既有断言，因 aiMilitary line 219 已是双参）
+  - ✅ verify-plot-spy-rng 30/30（未破坏）
+  - ✅ verify-turn-cadence 28/28（未破坏——advanceTurn 内部 bug 修复不影响月度节拍）
+  - ✅ verify-save-game-state 10/10（含"拒绝完整快照根部未知字段"断言通过——证明 bug 修复后 state 不再有非法 decisions 字段）
+  - ✅ verify-save-migration 19/19、verify-campaign 62/62、verify-scenario-events 32/32、verify-grand-strategist-rng 28/28、verify-save-battlefield-instance 45/45
+  - ✅ typecheck/lint/build 全绿、shared test 172/172
+- **BF-P3 AI 决策 RNG 收口部分正式完成声明**:
+  - ✅ 势力遍历顺序稳定化（Session A）
+  - ✅ plotAi/spyAi 加 decisionRng 参数 + 12 处 Math.random 替换（Session A）
+  - ✅ 接入 advanceTurn 权威流（Session B line 212/216/219 全部双参）
+  - ✅ 4 个整场决策复现 verify 脚本（Session B 共 16 项断言）
+  - ✅ CI 门禁完整覆盖（Session B 7 个新脚本接入）
+  - ✅ 修复 ai.decisions 泄漏进 GameState 的 pre-existing bug（Session B 副产品）
+  - **读档后 AI 决策序列完全可复现**——不只是数值结算一致，连决策本身（打哪里/用什么计谋/什么谍报任务）都可预测
+- **明确不做的事**:
+  - 不涉及战场 AI 行动选择（BF-P3 的另一部分，不在本次范围）
+  - 不涉及县级攻打（BF-P2 边界已确认不受影响）
+- 同步：HANDOFF §1 会话/代码最新/本交接用途三行 + 本进度双写
+- **标注**：本轮是 BF-P3 Session B（接入权威流 + 整场复现验证），BF-P3 AI 决策 RNG 收口部分正式完成。R3（S10 单挑四倾向）仍为下一步。BF-P3 完整范围仍含"战场 AI 行动选择 RNG"（未在本次评估/实施范围）。
+
+*v13.0 | 2026-07-25 | Session 183 · BF-P3 Session B 完成（接入权威流 + 整场决策复现 + ai.decisions 泄漏修复）；BF-P3 AI 决策 RNG 收口部分正式完成*
