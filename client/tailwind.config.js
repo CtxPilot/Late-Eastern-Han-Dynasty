@@ -11,6 +11,12 @@
  * - 散布在各组件中的 stone-/amber- 直写类名属遗留并存态（值同，无视觉撕裂），
  *   统一收口至 StonePanel/SealButton 组件库（Step 4）处理；本轮只新设骨架不强制全量替换。
  * 详见 ArtDirection.md §1.2 使用纪律、§3.2 按钮层级。
+ *
+ * 注意：Tailwind v3.4 在 package.json type=module 的 ESM config 下不合并
+ * theme.extend.colors 自定义色（默认色如 amber/rose/sky 仍正常生成），经 Session 185
+ * 对照实验坐实。故四套具名色 + 四语义别名在此保留作文档真源与未来 Tailwind 版本修复后
+ * 的落地锚点，但当前渲染走 client/src/index.css 的 --accent-* CSS 变量 +
+ * AccSection inline style（见 index.css :root + AccSection.tsx）。
  */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,tsx}'],

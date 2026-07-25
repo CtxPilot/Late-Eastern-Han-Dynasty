@@ -9,6 +9,13 @@
   --ink-scroll: #17130f;
   --ink-hero-from: rgba(35,24,16,.98);
   --ink-hero-to: rgba(12,11,10,.98);
+  /* 语义 accent 色（ArtDirection.md §1.2：军=朱/政=金/人=宣/谍=青）
+   * Tailwind v3.4 在 ESM config 下不合并 theme.extend.colors 自定义色，
+   * 故语义 accent 走 CSS 变量 + inline style，不依赖 Tailwind 类生成。 */
+  --accent-military: #F87171;
+  --accent-civil: #FBBF24;
+  --accent-personnel: #C7AE7A;
+  --accent-intel: #38BDF8;
 }
 
 /* 工程字体资产闭环（跨平台字体防御铁律）
