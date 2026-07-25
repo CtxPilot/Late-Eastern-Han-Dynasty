@@ -3489,7 +3489,7 @@
 - **诊断（纯调查）**：Headless Chrome 实测 5 名武将（诸葛亮/关羽/张飞/黄忠 + roster 缩略图）+ 代码/数据/网络层穷尽分析。确认 4 类问题：(1) 阵型区块只显数量"6 项"不显名称，且 10 名骑兵系武将（吕布/夏侯渊/马超/马腾/曹彰/庞德/文鸯/曹纯等）`formationMastery` 引用不存在的 id 16；(2) 经验/体力在 aside 与状态区块重复渲染；(3) `officer.hidden` 19 字段全未渲染，"技能与特性"标题误导（只有技能）；(4) 非原型武将称号取 `tags` 末项（张飞"义兄弟"、黄忠"择木而栖"，语义不当）。图片问题：代码/网络层无加载故障（4 PNG 存在/200 OK/0 控制台错误/映射按名正确），视觉内容确认受环境模型限制（GLM 5.2 无视觉）无法完成，诊断截图存 `/tmp/officer-ui-diag/`。详见此前诊断报告。
 - **修复（4 commit，每个独立通过测试）**：
   1. `fix(data)` `4489592`：补录 `formations.json` id 16 **冲阵**。**判定：漏录非错误引用**——依据：`08-data-dictionary` L124 id 区间陆阵 0~17（id 16 在范围内）、`05-combat-system` §4 L238/L273 明确 id 16=冲阵（Tier 4，仅骑兵，+3/-3/+2/0，冲锋+80%）、`FormationType.CHARGE=16` 枚举、`08-data-dictionary` L473 示例就用了 id 16、`crit.ts:83` FORMATION_MODS 已含 CHARGE（战斗早已认识）、10 名引用武将全骑兵系与"仅骑兵"吻合。补录按 05 §4 设计值完整定义（name/modifiers/effects/allowedUnits 骑兵/bestUnits 重骑/restrictedUnits 步兵/terrainModifiers）。战斗不受影响（crit.ts/meleeRound.ts FORMATION_MODS 硬编码不读 formations.json）。`validate-data.ts` expected 6→7。文档数字真源双写（6→7 阵型：08/09/02/README/AGENTS/10-progress 状态行；历史 Session 日志不改）。
-  2. `feat(shared)` `098e349`：新建 `shared/labels.ts` 导出 `FORMATION_LABEL`（18 陆阵 id→中文名，覆盖设计内全量，0-A 实录 7 条+11 预留名保证 UI 永不显示 undefined）、`PERSONALITY_LABEL`（6 性格：勇烈/沉稳/果敢/谨慎/刚烈/温厚）、`IDEAL_LABEL`（5 志向：霸业/仁政/割据/侠义/名利）。`shared/index.ts` 导出；`shared/tsconfig.json` include 补 `labels.ts`。
+  2. `feat(shared)` `098e349`：新建 `shared/labels.ts` 导出 `FORMATION_LABEL`（18 陆阵 id→中文名，覆盖设计内全量，0-A 实录 7 条+11 预留名保证 UI 永不显示 undefined）、`PERSONALITY_LABEL`（6 性格：勇烈/沉稳/果敢/谨慎/刚烈/温厚）、`IDEAL_LABEL`（5 理想：霸道/王道/割据/侠义/名利）。`shared/index.ts` 导出；`shared/tsconfig.json` include 补 `labels.ts`。
   3. `fix(officer-detail)` `09a39a0`：`OfficerDetail.tsx` 三处修复——阵型区块用 `FORMATION_LABEL` 渲染 chip（替代"6 项"，未知 id 优雅 fallback `未知·{id}`）；状态区块移除经验/体力（保留 aside，消除重复），只剩"状态:在职"；拆"技能与特性"→"技能"+"性格"（性格区块展示 `hidden.personality`+`ideal` 文字，用 PERSONALITY_LABEL/IDEAL_LABEL；**数值类 hidden 字段按设计决策保持隐藏**）。
   4. `fix(officer-portrait)` `8a01872`：`getOfficerProfile` fallback 的 `title` 改 `deriveFallbackTitle` 从五维派生（war95+/智95+→万人敌/神算；war90+/智90+→猛将/谋主；war80+统80+/智80+/武80+→宿将/谋士/战将；统85+/政80+/魅85+→统帅/干吏/名士；其余→时势英杰），不再取 `tags` 末项。4 原型武将（曹操/诸葛亮/吕布/关羽）HERO_PRESETS 专属称号不动。
 - **Headless Chrome 验证**：实测张飞（非原型→"万人敌" war97≥95，阵型=方阵/锥形阵/锋矢阵/偃月阵，性·刚烈/志·侠义，状态仅在职）+ 诸葛亮（原型"卧龙经略"保留，性·沉稳/志·仁政）+ 吕布（原型"虓虎无双"保留，**阵型=锥形阵/锋矢阵/冲阵——id 16→冲阵 关键验证通过**，性·刚烈/志·名利，状态仅在职）。3 名武将覆盖原型称号保留、非原型称号派生、id 16 渲染、性格区块、经验体力去重全部修复点。
@@ -3499,3 +3499,32 @@
 - **标注**：R3（S10 单挑四倾向）仍为下一步，本轮武将界面修复是用户指派独立需求，不归属 R3/R8 序列。
 
 *v12.5 | 2026-07-24 | Session 178 · 武将详情界面修复（阵型显名称/经验体力去重/性格区块/称号派生 + id 16 冲阵补录）*
+
+## 2026-07-25 — Session 179（武将详情页系列改动：四页签+列传+术语统一+体力拆解，10 commit）
+
+- Phase: **代码实装 + 文档同步**（10 commit，用户指派独立需求，不归属 R3/R8）
+- 变更主题（按 commit 归纳）:
+  1. SVG 头像辨识度优化（9072ad4）：提取共享常量 FACE_PATHS/CROWN_RENDER/BEARD_PATHS，4 原型 face/crown/beard 路径差异化 + 新增 guan 武圣冠 + 色调色相差异化。不换技术方案（继续 SVG + 保留 S23 表情叠加）。
+  2. 术语统一（ecb8cb4）：IDEAL_LABEL "志向"→"理想"，枚举值回归文档原值（霸道/王道，非霸业/仁政）；OfficerDetail "志·"→"理·"，区块标题"性格"→"性格与理想"；04 §26.1 隐藏属性计数笔误 20→19。
+  3. 技能/阵型可滚动布局（037b6bf）：chip 容器 max-h-32 overflow-y-auto + "待实装"提示（技能升级/阵型精通成长），不展示虚假进度。
+  4. 三页签重构（8a87e31）：OfficerDetail 从单页改为三页签（属性/家族/装备）。家族页签只读展示婚姻/子女/效力；装备页签 5 槽占位（Officer.equipped 代码无，0-B D-0B-7）。
+  5. 婚姻区块拆分（7657357）：赏赐美人从"婚姻"区块拆出独立"人事拉拢"区块（赏赐美人不是妾，是 S09 势力资源赏赐记录）。
+  6. 赏赐美人迁移（5f3b654）：从家族页签"人事拉拢"移至属性页签"拉拢记录"（家族页签保持纯血缘/婚姻）。
+  7. 人物列传架构（a827b5a）：按 15 号文档规划实装——OfficerStatic 加 biography?: string + Zod schema + scripts/merge-biographies.ts + 4 原型传记（曹操/诸葛亮/吕布/关羽，文言风格，基于公有领域史书原创改写）+ verify-biographies.ts（25/25）。
+  8. 列传 UI 接入→独立第四页签（a6b7162→f1468c1）：先接入属性页签底部，后改为独立第四页签（属性/家族/装备/列传）。无传记显示"暂无列传记载"。
+  9. 体力拆解展示（b593ba2）：aside 体力从"168"改为"168（基80+88）"拆解格式（基础80+属性贡献），不封顶100（审计确认体力是 calcStaminaMax 计算值，封顶会破坏公式+丢失天花板差异化体感）。
+- 审计结论（不改代码）:
+  - **特性系统**（trait）：04 §26 完整设计（42项×5级），代码零实装（OfficerTrait/traitId 在 shared 层零存在），0-B 范围
+  - **技能系统**：设计 149（69通用×5+80专属），当前 30 条；useCount 字段有但无升级引擎（永远0）
+  - **阵型系统**：设计 27（18陆+9水），当前 7 条；formationProficiency 代码零存在（只有 formationMastery id 清单）
+  - **"学习空间"机制**：文档有完整设计（04 §十八装备熟练度/§十九阵型养成/技能useCount升级/特性天花板），全部未实装，0-B/Phase 3~5 范围
+  - **俸禄系统**：04 §35 完整设计（年俸表/欠俸忠诚后果/货币成色），零代码实装，D-0B-9 独立 Session
+  - **数值上限**：04 §27 双轨制（裸属性≤100面板 + 隐藏加成引擎用 + 装备/功绩/爵位/官职加成叠加→255），代码未完整实装
+- 待办（下次会话需知）:
+  - 体力展示方案已确定为拆解格式（基80+加成）
+  - 人物列传扩展到 30 基线武将工作量 ~7.5-9.5 小时（可分 3-4 次会话，merge 脚本+UI 已就绪，只需写 Markdown + 运行 merge）
+  - 俸禄系统 D-0B-9 已审计确认为独立 Session 范畴，本轮未实装
+  - CampaignPanel/StandardModePanel 的 ARROWHEAD↔冲阵 误标 bug 仍未修（建议用 FORMATION_LABEL 根治）
+- 全量回归: typecheck/lint 3/3 + pnpm test 172/172 + validate-data + verify-biographies 25/25 + Headless Chrome 实测全过
+
+*v12.6 | 2026-07-25 | Session 179 · 武将详情页四页签+列传+术语统一+体力拆解*
