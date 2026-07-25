@@ -609,6 +609,9 @@ export interface Officer {
   beauties: number[];           // 赏赐美人（非婚配）女性 id（君主身份恒为空，见 04 §3.8）
   beautyMaintenance?: number;   // 月均美人供养费（全量未做）
 
+  // 霸府/称王/称帝主线（docs/26，Session 188 Q2 已批准方案B，设计阶段未实装）
+  // hegemonyPosition?: HegemonyPosition;  // 霸府/王国/帝国专属官职独立轨道，非霸府势力为空
+
   // 出身标签 & 关系
   tags: OfficerTag[];
   relations: Record<number, OfficerRelation>;
@@ -773,6 +776,13 @@ export interface Faction {
   diplomacy: Record<number, DiplomaticRelation>;
   technology: TechnologyLevel;
   activePolicy: string | null;
+
+  // 霸府/称王/称帝主线（docs/26，Session 188 Q1~Q11 已批准，设计阶段未实装）
+  // politicalStage?: 'vassal' | 'hegemon' | 'king' | 'emperor';  // 政治阶段状态机，默认 vassal
+  // politicalTitle?: string;                                      // 政治头衔（与 politicalStage 一一对应，Q7 方案B）
+  // politicalStageChangedYear?: number;                           // 开府/称王/称帝年份记录
+  // imperialAuthority?: number;                                   // 皇权点数（霸府伪诏宣战消耗，Q4）
+  // tags?: string[];                                              // 势力级叙事立场 tag（Q5 两者并用：匡扶汉室/篡汉/割据等）
 }
 
 export interface DiplomaticRelation {
@@ -1432,6 +1442,9 @@ export interface GameState {
   pendingEvents: number[];
   invalidatedEvents: number[];
   eventChoices: Record<number, number>;
+
+  // 霸府/称王/称帝主线（docs/26，Session 188 Q1 已批准方案A，设计阶段未实装）
+  // emperorLocation?: number | null;  // 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移
 
   actionLog: GameAction[];
 }

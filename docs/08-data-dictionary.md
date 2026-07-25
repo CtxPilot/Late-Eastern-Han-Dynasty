@@ -993,3 +993,21 @@ Phase 4 — 特殊人物审核
 | activeStrategem | 'none' \| 'fire' \| 'water' \| 'ambush'? | 计谋三级联动视觉驱动。火计复用已有 `/battle/fire` 引擎设置；水攻/伏兵服务端引擎后置 D-0B-12；前端未收到时默认 'none' |
 
 **规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。实装时记技术债 D-0B-11。
+
+---
+
+### 3. 霸府/称王/称帝主线新字段（docs/26，Session 188 Q1~Q11 已批准，设计阶段未实装）
+
+**新增字段**（实装时加到 `shared/types/`，均为 optional 追加，存档兼容方案参照 `activeBattlefieldInstance` 无损追加经验）：
+
+| 字段 | 所属类型 | 类型 | Q | 说明 |
+|------|:----:|------|:-:|------|
+| `emperorLocation` | GameState | `number \| null?` | Q1 | 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移 |
+| `politicalStage` | Faction | `'vassal'\|'hegemon'\|'king'\|'emperor'?` | Q5 | 政治阶段状态机，默认 vassal |
+| `politicalTitle` | Faction | `string?` | Q7 | 政治头衔，与 politicalStage 一一对应（vassal→无/hegemon→丞相大将军/king→X王/emperor→X帝） |
+| `politicalStageChangedYear` | Faction | `number?` | — | 开府/称王/称帝年份记录 |
+| `imperialAuthority` | Faction | `number?` | Q4 | 皇权点数（霸府伪诏宣战消耗） |
+| `tags` | Faction | `string[]?` | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
+| `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2 | 霸府/王国/帝国专属官职独立轨道，非霸府势力为空 |
+
+**规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。设计真源 `docs/26-hegemony-court-design.md`，实装分期 HC-P0/P1/P2。

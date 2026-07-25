@@ -3740,8 +3740,25 @@
   - 修复真实 bug：首次把 useMemo 放在 early return 之后导致 Rules of Hooks 违反（React "Rendered more hooks than during the previous render"），Headless 实测 console errors 抓出，已修正 useMemo 移到 early return 之前
   - 验证：typecheck/lint 全过；shared test 189/189；回归 validate-data + campaign 62/62 + save-battlefield-instance 45/45 + personnel 32/32 + family 32/32；Headless Chrome 实测曹操（君主）详情页显城池17/总兵力85000/总金38080/总粮55290 无忠诚/功绩/拉拢记录，司马懿（普通武将）详情页忠诚80/功绩0/拉拢记录正常显示无变化（截图 docs/screenshots/session-188-monarch-detail-caocao.png）
   - **未做切片 C**（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩），留待下一轮单独验证回归后落地，不与本次 UI 改动混提交
-- 任务2 霸府/称王/称帝主线审计与设计（**进行中，本轮未完成**）：4 条审计线已并行派出（汉献帝数据表示 / 官职系统结构 / 外交势力性质修正 / tag 体系与对汉室态度），结果回来后写 docs/27-hegemony-court-design.md（审计+设计+开放问题清单），单独 commit
-- 构想登记：城市设施系统（商铺/米铺/铁匠铺/书馆/医官/马馆等，分级可升级有上限，产出与城市特产/规模关联），用户 Session 188 提出，**仅记录构想未审计**，排在霸府主线 docs/27 完成后启动审计。登记位置：HANDOFF §6.7 未来构想登记（待审计）
+- 任务2 霸府/称王/称帝主线审计与设计（**进行中，本轮未完成**）：4 条审计线已并行派出（汉献帝数据表示 / 官职系统结构 / 外交势力性质修正 / tag 体系与对汉室态度），结果回来后写 docs/26-hegemony-court-design.md（审计+设计+开放问题清单），单独 commit
+- 构想登记：城市设施系统（商铺/米铺/铁匠铺/书馆/医官/马馆等，分级可升级有上限，产出与城市特产/规模关联），用户 Session 188 提出，**仅记录构想未审计**，排在霸府主线 docs/26 完成后启动审计。登记位置：HANDOFF §6.7 未来构想登记（待审计）
 - 同步：HANDOFF §6.7 新增未来构想登记区 + 本进度双写。
 
-*v13.5 | 2026-07-25 | Session 188 · 君主特例 UI 切片 A+B 完成（1 commit `655a929`）；城市设施构想登记；霸府主线审计进行中；R3 仍为玩法下一步*
+### Session 188 续：霸府/称王/称帝主线 Q1~Q11 批准 + 文档同步
+
+- 用户批准 docs/26 Q1~Q11 全部开放问题，进入 HC-P0 实施：
+  - Q1 方案A（`GameState.emperorLocation` 汉帝所在地显式字段）
+  - Q2 方案B（`Officer.hegemonyPosition?` 独立轨道承载霸府/王国/帝国专属官职）
+  - Q5 两者并用（`Faction.politicalStage` 结构化状态机 + `Faction.tags` 叙事立场）
+  - Q6 门槛按剧本相对化，具体数值后续拍板
+  - Q7 方案B（`Faction.politicalTitle` 独立于 rulerId，与 politicalStage 一一对应）
+  - Q8 天命系统设为 HC-P2 可选增强
+  - Q9 禅让/废立事件链设为 HC-P2 可选增强，称帝先只支持自主称帝路径
+  - Q10 分离（FactionTrait 势力性格 与 politicalStage 政治阶段独立）
+  - Q11 可并行（君主特例切片 C 与 HC-P0 霸府官职任命改动点不重叠）
+  - Q3/Q4 方向已批准（参照 04 §36.2 设计区间），具体数值留待实战调参，不阻塞 HC-P0 启动
+- 文档同步（零代码）：docs/26 文首状态改"已批准进入 HC-P0"+Q1~Q11 标注已批准方案；03 登记新字段设计记录（emperorLocation/hegemonyPosition/politicalStage/politicalTitle/imperialAuthority/Faction.tags）；04 §3.8 补"头衔变化不影响君主特例规则"+新增 §四十霸府主线引用章节；08 登记新字段数据字典条目（设计阶段）；09 写入 HC-P0/P1/P2 分期任务；12 S08/S11/S12 深化标注引用 26 号文档；HANDOFF §1/§8 同步
+- **下一步**：HC-P0 启动（挟天子判定 + 开霸府最小切片），按 HC-P0-1~HC-P0-6 逐项推进，用户逐项派发实施 prompt
+- 同步：HANDOFF §1 会话/玩法下一步 + §8 Next；本进度双写。
+
+*v13.6 | 2026-07-25 | Session 188 续 · 霸府/称王/称帝 Q1~Q11 已批准 + 文档同步；下一步 HC-P0 启动*
