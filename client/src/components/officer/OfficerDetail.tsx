@@ -74,12 +74,13 @@ const EQUIP_SLOTS = [
   { key: 'auxiliary', label: '辅助' },
 ] as const;
 
-type Tab = 'stats' | 'family' | 'equipment';
+type Tab = 'stats' | 'family' | 'equipment' | 'biography';
 
 const TABS: readonly [Tab, string][] = [
   ['stats', '属性'],
   ['family', '家族'],
   ['equipment', '装备'],
+  ['biography', '列传'],
 ];
 
 interface Props {
@@ -148,7 +149,6 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
             </div>
 
             {tab === 'stats' && (
-              <>
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-4">
                   <section>
@@ -221,7 +221,9 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                   </section>
                 </div>
               </div>
+            )}
 
+            {tab === 'biography' && (
               <section>
                 <h3 className="mb-2 text-xs tracking-widest text-amber-500">列传</h3>
                 {officer.biography ? (
@@ -230,7 +232,6 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                   <p className="text-stone-600 text-xs">暂无列传记载</p>
                 )}
               </section>
-              </>
             )}
 
             {tab === 'family' && (
