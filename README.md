@@ -47,13 +47,13 @@ For the precise playable path and known boundaries, see [Demo build and playbook
 |:---:|:---:|:---:|
 | ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) | ![Officer roster](docs/screenshots/leh-personnel-officers.png) |
 
-The new ink-and-cinnabar portraits are integrated into the complete officer dossier UI, alongside stats, appointments, skills, traits, and unit proficiency. The remaining roster keeps the original SVG/CSS procedural fallback.
+The new ink-and-cinnabar portraits are integrated into the complete officer dossier UI, alongside stats, appointments, skills, traits, and unit proficiency. The 4-tab dossier (stats, family, equipment, biography) is demonstrated below on Lü Bu as a showcase.
 
-| Lü Bu — portrait, stats, skills, and proficiency | Guan Yu — portrait, stats, skills, and proficiency |
+| Lü Bu — stats tab (六维/官职/技能/兵种适性) | Lü Bu — family tab (婚姻/子女/效力) |
 |:---:|:---:|
-| ![Lü Bu integrated officer dossier](docs/screenshots/leh-officer-lv-bu.png?v=167) | ![Guan Yu integrated officer dossier](docs/screenshots/leh-officer-guan-yu.png?v=167) |
-| Zhuge Liang — portrait, stats, skills, and proficiency | Cao Cao — portrait, stats, skills, and proficiency |
-| ![Zhuge Liang integrated officer dossier](docs/screenshots/leh-officer-zhuge-liang.png?v=167) | ![Cao Cao integrated officer dossier](docs/screenshots/leh-officer-cao-cao.png?v=167) |
+| ![Lü Bu stats tab](docs/screenshots/leh-officer-lv-bu-stats.png) | ![Lü Bu family tab](docs/screenshots/leh-officer-lv-bu-family.png) |
+| Lü Bu — equipment tab (5-slot placeholder) | Lü Bu — biography tab (historical narrative) |
+| ![Lü Bu equipment tab](docs/screenshots/leh-officer-lv-bu-equipment.png) | ![Lü Bu biography tab](docs/screenshots/leh-officer-lv-bu-biography.png) |
 
 ## Quick start
 

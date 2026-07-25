@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 188 完成（君主身份特例 UI 切片 A+B + 城市设施构想登记 + 霸府/称王/称帝主线 Q1~Q11 批准 + 文档同步）**；S187 体力并入六维区块；S186 体力缩放；S185 美术 Step 1 色板 token 化；**下一步 HC-P0 启动（挟天子判定+开霸府最小切片）** |
+| 会话 | **Session 188 完成（君主身份特例 UI + 城市设施构想 + 霸府主线 Q1~Q11 批准 + HC-P0-1/2/3 实施）**：HC-P0-1（emperorLocation 字段） + HC-P0-2（politicalStage 字段） + HC-P0-3（开霸府操作引擎+API+UI+头衔展示）。**下一步 HC-P0-4（霸府专属官职最小切片）** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S188 君主特例 UI（OfficerDetail/OfficerRosterPanel 君主判定，隐藏忠诚/拉拢/功绩，改显势力综合国力）** + S187 体力并入六维 + S186 体力缩放 + 行动次数 + 不对称消耗 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
-| 文档最新 | 本文件 · 10-progress · 09-roadmap（新增 HC-P0~P2 分期） · 12-system-map（S08/S11/S12 深化标注） · **`26-hegemony-court-design.md` v1.1（Q1~Q11 已批准，进入 HC-P0）** · 04 §3.8 君主特例+§四十霸府引用 · 03 新字段设计记录 · 08 新字段数据字典 · 23-design-consistency-remediation · 24-character-expression-system-design · 21-battlefield-scene-design v1.3 · `design/ArtDirection.md` v1.0 |
-| 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将，当前武将数据223人；0-B继续暂缓；`main` 本地领先 origin/main 多 commit（S183 BF-P3 Session B + S188 君主特例 + 城市设施构想 + 霸府主线文档同步，未推送） |
-| 玩法下一步 | **HC-P0 启动（挟天子判定 + 开霸府最小切片，按 HC-P0-1~HC-P0-6 逐项推进，用户逐项派发实施 prompt）**。R3（S10 单挑四倾向）保持待启动。君主特例切片 C（引擎守卫）与 HC-P0 可并行（Q11）。 |
+| 代码最新 | **S188 HC-P0-1~3（emperorLocation + politicalStage + 开霸府）** + 君主特例 UI + S187 体力并入六维 + S186 体力缩放 + 行动次数 + 不对称消耗 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
+| 文档最新 | **`26-hegemony-court-design.md` v1.1（Q1~Q11 已批准，HC-P0 实施中）** + 04 §3.8 君主特例 + §四十 霸府主线引用 + 03 新字段设计记录 + 08 新字段数据字典 + 09 HC-P0/P1/P2 分期 + 12 S08/S11/S12 深化标注 |
+| 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
+| 玩法下一步 | **HC-P0-4（霸府专属官职最小切片，Q2 方案B `Officer.hegemonyPosition?` 独立轨道，先 2~3 个霸府官职+任命引擎+UI）**。君主特例切片 C（引擎守卫）与 HC-P0 可并行。R3（S10 单挑四倾向）保持待启动。 |
 
 ---
 
@@ -346,10 +346,11 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（下一步启动）** | **HC-P0 启动：挟天子判定 + 开霸府最小切片**（`docs/26` Q1~Q11 已批准）。按 HC-P0-1~HC-P0-6 逐项推进，用户逐项派发实施 prompt，不一次性铺开。第一步预期是 HC-P0-1（汉献帝控制权判定，Q1 方案A `GameState.emperorLocation`）+ HC-P0-2（`Faction.politicalStage` 字段 + 存档兼容）。 |
+| **1（下一步启动）** | **HC-P0-4：霸府专属官职最小切片**（docs/26 Q2 方案B `Officer.hegemonyPosition?` 独立轨道，先 2~3 个霸府官职+任命引擎+UI 展示）。Q7 方案B `politicalTitle` 已接入，下一步扩展官职系统。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
-| **Session 188 已完成** | 君主身份特例 UI 切片 A+B（1 commit `655a929`）：04 §3.8 规则定稿 + OfficerDetail/OfficerRosterPanel 君主判定隐藏忠诚/拉拢/功绩改显势力综合国力；城市设施构想登记（1 commit `0742b19`，HANDOFF §6.7）；霸府/称王/称帝主线 docs/26 审计与设计（1 commit `2027446`）+ Q1~Q11 批准文档同步（本轮 commit）。下一步 HC-P0 启动。 |
+| **Session 188 HC-P0-1~3 已完成** | HC-P0-3 开霸府操作（1 commit `67d0aba`）：`Faction.politicalTitle` + `politicalStageChangedYear` 字段、`establishHegemony` 引擎（前置校验 controlsEmperor+vassal→转移+actionLog）、`POST /hegemony/establish` 路由、LeftPanel 君主折叠项开府按钮+头衔展示、OfficerDetail 头衔追加、verify-hc-p0 41/41。HC-P0-1+2（`4820d11`）：`GameState.emperorLocation` + `Faction.politicalStage` 字段+Zod+24项测试。 |
+| **Session 188 文档同步** | Q1~Q11 批准 + 8 文档同步（1 commit `0ce044e`）；README 吕布四页签截图替换。 |
 | **Session 184 已完成** | 全项目美术总监审查（纯文档零代码）：TOP10 问题清单（4×P0/4×P1/2×P2）+ 新建 `docs/design/ArtDirection.md` 视觉唯一真源 + 头像 A′+C+B 重建与分级策展方案。**待拍板**：美术实装批次（高收益首批=色板 token 化+金石组件库+战斗层换色+头像管线接通）与 R3 的先后次序由用户定。 |
 | **Session 185 已完成** | 美术第一梯队 Step 1 色板 token 化 + 跳色统一（4 commit）。Tailwind 注册 ink/paper/seal/gold + military/civil/personnel/intel 语义别名；MapCanvas 14 处裸 hex 收口至 canvasTokens.ts；左栏 9 + 右栏 4 section 跳色改语义色；07 §一废止说明。Headless 5 张截图存 `docs/screenshots/session-184-color-tokens/`。**遗留并存**（Step 4 收口）：25 文件 200+ 处 amber-/stone- 直写类名 + AccSection 旧 accent 键。**下一 Step**：Step 2 战斗层换色 / Step 3 工程残留清理 / Step 4 金石组件库，三者与 R3 的次序待用户定。 |
 | **Session 186 已完成** | 体力基础值缩放（吕布168→100，STAMINA_SCALE_FACTOR=100/168）+ 行动次数系统 actionsPerMonth（月度重置1，与体力独立）+ 体力消耗不对称 deriveRole/staminaCost（本行×1.0跨界×1.5）+ staminaEffectFactor（<10→0.6/<30→0.8/≥30→1.0）。4 commit；17 项新单测；存档兼容 optional 字段处理。 |

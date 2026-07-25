@@ -3762,3 +3762,13 @@
 - 同步：HANDOFF §1 会话/玩法下一步 + §8 Next；本进度双写。
 
 *v13.6 | 2026-07-25 | Session 188 续 · 霸府/称王/称帝 Q1~Q11 已批准 + 文档同步；下一步 HC-P0 启动*
+
+### Session 188 续：HC-P0-1 + HC-P0-2 + HC-P0-3 实施完成
+
+- **HC-P0-1 + HC-P0-2**（1 commit `4820d11`）：地基字段——`GameState.emperorLocation`（汉帝所在地，Q1 方案A）+ `Faction.politicalStage` 政治阶段状态机 + `controlsEmperor` 纯函数 + Zod/初始化/存档兼容 + 24 项测试全过。详见 HC-P0-1+2 完成报告。
+- **HC-P0-3**（1 commit `67d0aba`）：开霸府操作——`Faction.politicalTitle`（Q7 方案B）+ `politicalStageChangedYear` 字段、`establishHegemony` 引擎（前置校验 controlsEmperor+vassal→转移+actionLog）、`POST /hegemony/establish` 路由、LeftPanel 君主折叠项开府按钮+头衔展示、OfficerDetail 头衔追加。verify-hc-p0 41/41 + 全量回归零破坏 + Headless Chrome 实测(董卓政权开霸府→头衔变"丞相"+actionLog 记录)。
+- **README 截图替换**：原 4 张武将对比图（吕布/关羽/诸葛亮/曹操）替换为吕布详情页四页签截图（属性/家族/装备/列传）。
+- **代码最新**：`67d0aba`（本地领先 origin/main 多 commit）。
+- **下一步**：HC-P0-4（霸府专属官职最小切片）。
+
+*v13.7 | 2026-07-25 | Session 188 续 · HC-P0-1/2/3 实施完成 + README 吕布四页签截图替换；下一步 HC-P0-4 霸府官职最小切片*
