@@ -3730,3 +3730,18 @@
 - 同步：HANDOFF §1 会话/代码最新 + §8 Next；本进度双写。
 
 *v13.4 | 2026-07-25 | Session 187 · 体力并入六维区块统一进度条展示完成（1 commit）；R3 仍为玩法下一步*
+
+## 2026-07-25 — Session 188（君主身份特例 UI + 记录城市设施构想）
+
+- Phase: **UI 实装 + 设计文档 + 构想登记**（用户指派两个并行任务 + 一条构想记录）
+- 任务1 君主身份特例切片 A+B（1 commit `655a929`）：
+  - 切片 A 设计文档定稿：04 §3.8 新增「君主身份特例」章节（忠诚度/拉拢记录/功绩三项规则 + 历史沉淀前瞻原则）+ §6.5 功绩系统君主特例注记；03 Officer 类型 loyalty/merit/beauties 字段注释补君主占位说明；07 §11.1.4 W4 补君主特例 UI 规则；12 S11/S12 要点补君主特例标注
+  - 切片 B UI 实装：OfficerDetail.tsx 加 realmStats useMemo（派生城池数/总兵力/总金/总粮，从已有数据派生不新建统一进度计算），君主 aside 显势力综合国力指标、隐藏忠诚/功绩、隐藏拉拢记录区块；OfficerRosterPanel.tsx 君主行显「君主」字样替代「忠 N」，低忠诚警报对君主不触发
+  - 修复真实 bug：首次把 useMemo 放在 early return 之后导致 Rules of Hooks 违反（React "Rendered more hooks than during the previous render"），Headless 实测 console errors 抓出，已修正 useMemo 移到 early return 之前
+  - 验证：typecheck/lint 全过；shared test 189/189；回归 validate-data + campaign 62/62 + save-battlefield-instance 45/45 + personnel 32/32 + family 32/32；Headless Chrome 实测曹操（君主）详情页显城池17/总兵力85000/总金38080/总粮55290 无忠诚/功绩/拉拢记录，司马懿（普通武将）详情页忠诚80/功绩0/拉拢记录正常显示无变化（截图 docs/screenshots/session-188-monarch-detail-caocao.png）
+  - **未做切片 C**（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩），留待下一轮单独验证回归后落地，不与本次 UI 改动混提交
+- 任务2 霸府/称王/称帝主线审计与设计（**进行中，本轮未完成**）：4 条审计线已并行派出（汉献帝数据表示 / 官职系统结构 / 外交势力性质修正 / tag 体系与对汉室态度），结果回来后写 docs/27-hegemony-court-design.md（审计+设计+开放问题清单），单独 commit
+- 构想登记：城市设施系统（商铺/米铺/铁匠铺/书馆/医官/马馆等，分级可升级有上限，产出与城市特产/规模关联），用户 Session 188 提出，**仅记录构想未审计**，排在霸府主线 docs/27 完成后启动审计。登记位置：HANDOFF §6.7 未来构想登记（待审计）
+- 同步：HANDOFF §6.7 新增未来构想登记区 + 本进度双写。
+
+*v13.5 | 2026-07-25 | Session 188 · 君主特例 UI 切片 A+B 完成（1 commit `655a929`）；城市设施构想登记；霸府主线审计进行中；R3 仍为玩法下一步*
