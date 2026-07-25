@@ -213,6 +213,11 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
                     <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
                   </section>
+                  <section>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">拉拢记录</h3>
+                    <Info label="赏赐美人" value={String(officer.beauties.length)} />
+                    <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
+                  </section>
                 </div>
               </div>
             )}
@@ -222,12 +227,6 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                 <section>
                   <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
                   <Info label="正妻" value={wife ?? '—'} />
-                </section>
-
-                <section>
-                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">人事拉拢</h3>
-                  <Info label="赏赐美人" value={String(officer.beauties.length)} />
-                  <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
                 </section>
 
                 <section>
