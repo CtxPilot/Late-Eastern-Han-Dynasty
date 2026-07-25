@@ -8,7 +8,6 @@ type CrownShape = 'royal' | 'warrior' | 'scholar' | 'guan';
 type BeardShape = 'short' | 'long' | 'goatee' | 'wild';
 
 type PortraitPreset = {
-  image?: string;
   courtesy: string;
   clan: string;
   title: string;
@@ -75,10 +74,10 @@ export const BEARD_PATHS: Record<BeardShape, string> = {
 };
 
 const HERO_PRESETS: Record<number, PortraitPreset> = {
-  1: { image: '/portraits/cao_cao.png', courtesy: '孟德', clan: '沛国曹氏', title: '魏武挥鞭', role: '雄主', quote: '设奇策，挟天子，定北方', ink: '#1e2a3d', seal: '#7a2820', face: 'round', crown: 'royal', beard: 'short' },
-  4: { image: '/portraits/zhuge_liang.png', courtesy: '孔明', clan: '琅琊诸葛氏', title: '卧龙经略', role: '军师', quote: '隆中定策，鞠躬尽瘁', ink: '#2d4a3a', seal: '#6a3528', face: 'long', crown: 'scholar', beard: 'goatee' },
-  5: { image: '/portraits/lv_bu.png', courtesy: '奉先', clan: '五原郡吕氏', title: '虓虎无双', role: '飞将', quote: '辕门射戟，勇冠并州', ink: '#4a1d2a', seal: '#a01820', face: 'sharp', crown: 'warrior', beard: 'wild' },
-  6: { image: '/portraits/guan_yu.png', courtesy: '云长', clan: '河东关氏', title: '威震华夏', role: '名将', quote: '忠义凛然，水淹七军', ink: '#1e3a2d', seal: '#7a2818', face: 'square', crown: 'guan', beard: 'long' },
+  1: { courtesy: '孟德', clan: '沛国曹氏', title: '魏武挥鞭', role: '雄主', quote: '设奇策，挟天子，定北方', ink: '#1e2a3d', seal: '#7a2820', face: 'round', crown: 'royal', beard: 'short' },
+  4: { courtesy: '孔明', clan: '琅琊诸葛氏', title: '卧龙经略', role: '军师', quote: '隆中定策，鞠躬尽瘁', ink: '#2d4a3a', seal: '#6a3528', face: 'long', crown: 'scholar', beard: 'goatee' },
+  5: { courtesy: '奉先', clan: '五原郡吕氏', title: '虓虎无双', role: '飞将', quote: '辕门射戟，勇冠并州', ink: '#4a1d2a', seal: '#a01820', face: 'sharp', crown: 'warrior', beard: 'wild' },
+  6: { courtesy: '云长', clan: '河东关氏', title: '威震华夏', role: '名将', quote: '忠义凛然，水淹七军', ink: '#1e3a2d', seal: '#7a2818', face: 'square', crown: 'guan', beard: 'long' },
 };
 
 /**
@@ -140,8 +139,8 @@ export function OfficerPortrait({ officer, compact = false }: { officer: Officer
 
   return (
     <div className={`officer-portrait ${compact ? 'officer-portrait--compact' : ''}`} style={{ '--portrait-ink': p.ink, '--portrait-seal': p.seal } as React.CSSProperties} aria-label={`${officer.name}${p.courtesy ? `，字${p.courtesy}` : ''}头像`}>
-      {p.image ? <img className="portrait-image" src={p.image} alt="" aria-hidden="true" /> : <svg viewBox="0 0 120 150" role="img" aria-hidden="true">
-        <defs><filter id={`rough-${officer.id}`}><feTurbulence baseFrequency="0.035" numOctaves="3" seed={officer.id} result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.3"/></filter></defs>
+      <svg viewBox="0 0 120 150" role="img" aria-hidden="true">
+        <defs><filter id={`rough-${officer.id}`}><feTurbulence baseFrequency="0.035" numOctaves={3} seed={officer.id} result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale={1.3}/></filter></defs>
         <path className="portrait-halo" d="M22 130 Q16 80 33 39 Q60 8 87 39 Q104 80 98 130Z" />
         <g filter={`url(#rough-${officer.id})`}>
           <path className="portrait-robe" d="M20 150 Q25 105 48 91 L72 91 Q95 105 100 150Z" />
@@ -153,8 +152,7 @@ export function OfficerPortrait({ officer, compact = false }: { officer: Officer
           <path className="portrait-beard" d={BEARD_PATHS[p.beard]} />
           <path className="portrait-faint" d="M43 112 L60 132 77 112 M60 132 V150" />
         </g>
-      </svg>}
-      {!compact && <><span className="portrait-clan">{p.clan}</span><span className="portrait-seal">{officer.name}</span><span className="portrait-ribbon" /></>}
+      </svg>
     </div>
   );
 }
