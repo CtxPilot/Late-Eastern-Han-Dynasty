@@ -3554,6 +3554,10 @@ interface Faction {
 
 ## 三十六、势力特点
 
+> **HC-P0-6 运行时定值**：开霸府获得皇权100（上限100），每季度恢复10；伪诏宣战
+> 消耗40并冷却8季，可跳过普通关系前置直接置为战争。目标君主或所属核心武将带
+> “匡扶汉室”tag 时发起方声望-30。该动作惩罚独立于尚未实装的双边汉室态度匹配修正。
+
 > 每个势力拥有独特的核心理念与修正词条，决定其玩法风格。
 > 命名规则：四字为主，出典可考（如「虓虎之勇」），不与已有技能/兵种名重复。
 
@@ -4353,7 +4357,7 @@ interface Faction {
 | §八 外交 | **扩展**。外交权重加成修正因子接入 `calculateAllianceChance` + diplomacy.ts 公式（Q3 方向已批准，数值待调参）；伪诏宣战（Q4）为霸府主动能力 |
 | §36 势力特点 | **分离**（Q10）。`FactionTrait` 势力性格（曹操唯才是举）与 `politicalStage` 政治阶段（诸侯→霸府→王→帝）维度独立，不合并 |
 
-### 40.3 新字段设计记录（未实装）
+### 40.3 新字段状态记录
 
 | 字段 | 所属类型 | Q | 说明 |
 |:----:|:----:|:-:|------|
@@ -4361,7 +4365,8 @@ interface Faction {
 | `politicalStage` | Faction | Q5 | `'vassal'\|'hegemon'\|'king'\|'emperor'` 状态机 |
 | `politicalTitle` | Faction | Q7 | 政治头衔，与 politicalStage 一一对应 |
 | `politicalStageChangedYear` | Faction | — | 开府/称王/称帝年份记录 |
-| `imperialAuthority` | Faction | Q4 | 皇权点数（伪诏宣战消耗） |
+| `imperialAuthority` | Faction | Q4 | ✅ HC-P0-6：皇权点数（0~100） |
+| `imperialDecreeCooldown` | Faction | Q4 | ✅ HC-P0-6：伪诏宣战剩余冷却季数 |
 | `tags` | Faction | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等） |
 | `hegemonyPosition` | Officer | Q2 | 霸府/王国/帝国专属官职独立轨道 |
 

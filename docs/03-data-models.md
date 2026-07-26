@@ -781,7 +781,9 @@ export interface Faction {
   politicalStage?: 'vassal' | 'hegemon' | 'king' | 'emperor';  // 政治阶段状态机，默认 vassal
   politicalTitle?: string;                                      // 政治头衔（与 politicalStage 一一对应，Q7 方案B）
   politicalStageChangedYear?: number;                           // 开府/称王/称帝年份记录
-  // imperialAuthority?: number;                                   // 皇权点数（霸府伪诏宣战消耗，Q4，HC-P0-6 未实装）
+  fame?: number;                                                  // 势力声望 0~1000；新局100，旧存档缺失按0
+  imperialAuthority?: number;                                     // 皇权点数 0~100；开府100，季度+10
+  imperialDecreeCooldown?: number;                                // 伪诏宣战剩余冷却季数
   // tags?: string[];                                              // 势力级叙事立场 tag（Q5 两者并用：匡扶汉室/篡汉/割据等）
 }
 

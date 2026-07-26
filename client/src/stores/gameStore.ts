@@ -92,6 +92,7 @@ interface Store {
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
   establishHegemony: () => Promise<void>;
+  falseDecreeWar: (targetFactionId: number) => Promise<void>;
   giftBeautyDip: (targetFactionId: number, amount?: number) => Promise<void>;
   plantFemale: (targetFactionId: number) => Promise<void>;
   formAlliance: (targetFactionId: number) => Promise<void>;
@@ -563,6 +564,16 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '开霸府成功' });
     } catch (e) {
       set({ error: errMsg(e, '开霸府失败'), loading: false });
+    }
+  },
+
+  falseDecreeWar: async (targetFactionId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.falseDecreeWar(targetFactionId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '伪诏宣战成功' });
+    } catch (e) {
+      set({ error: errMsg(e, '伪诏宣战失败'), loading: false });
     }
   },
 

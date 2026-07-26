@@ -84,7 +84,7 @@ import {
 } from '../engine/personnel.js';
 import { grantBattleIntel } from '../engine/intel.js';
 import { formAlliance, giftBeautyStock, tributeGold } from '../engine/diplomacy.js';
-import { establishHegemony } from '../engine/hegemony.js';
+import { declareWarByFalseDecree, establishHegemony } from '../engine/hegemony.js';
 import { launchPlot } from '../engine/plot.js';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
 import {
@@ -243,6 +243,7 @@ function buildGameState(
       officerIds,
       isPlayer: fid === playerFactionId,
       isAlive: true,
+      fame: 100,
       politicalStage: 'vassal',
     };
   }
@@ -554,6 +555,17 @@ export function doAlliance(targetFactionId: number): GameState {
 export function doEstablishHegemony(): GameState {
   return withLock(() => {
     currentGame = establishHegemony(getGame(), getGame().playerFactionId);
+    return getClientGame();
+  });
+}
+
+export function doFalseDecreeWar(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = declareWarByFalseDecree(
+      getGame(),
+      getGame().playerFactionId,
+      targetFactionId,
+    );
     return getClientGame();
   });
 }

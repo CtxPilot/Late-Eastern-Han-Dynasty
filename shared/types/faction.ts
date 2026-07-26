@@ -29,6 +29,8 @@ export interface Faction {
   officerIds: number[];
   isPlayer: boolean;
   isAlive: boolean;
+  /** 势力声望（0~1000）；旧存档缺失时相关结算按 0 兜底。 */
+  fame?: number;
   /**
    * 政治阶段（docs/26，HC-P0-2）。optional 追加，旧存档无此字段时按 'vassal' 兜底。
    * 不升 schema 版本，沿用 activeBattlefieldInstance 无损追加经验。
@@ -42,4 +44,8 @@ export interface Faction {
   politicalTitle?: string;
   /** 开府/称王/称帝的年份记录（docs/26，HC-P0-3）。 */
   politicalStageChangedYear?: number;
+  /** 皇权点数（0~100），霸府能力资源；诸侯按 0 处理。 */
+  imperialAuthority?: number;
+  /** 伪诏宣战剩余冷却季数；每逢季度开始减 1。 */
+  imperialDecreeCooldown?: number;
 }

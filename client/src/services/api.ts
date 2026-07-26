@@ -631,3 +631,8 @@ export async function establishHegemony(): Promise<GameState> {
   const { data } = await http.post<GameState>('/hegemony/establish');
   return data;
 }
+
+export async function falseDecreeWar(targetFactionId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/hegemony/false-decree-war', { targetFactionId });
+  return data;
+}

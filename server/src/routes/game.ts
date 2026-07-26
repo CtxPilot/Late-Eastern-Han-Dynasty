@@ -367,6 +367,14 @@ gameRouter.post('/hegemony/establish', (_req, res) => {
   }
 });
 
+gameRouter.post('/hegemony/false-decree-war', (req, res) => {
+  try {
+    res.json(gameService.doFalseDecreeWar(Number(req.body.targetFactionId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'false decree war failed' });
+  }
+});
+
 gameRouter.post('/battle/start', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);

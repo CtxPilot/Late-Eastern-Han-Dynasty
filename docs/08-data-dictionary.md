@@ -1006,7 +1006,9 @@ Phase 4 — 特殊人物审核
 | `politicalStage` | Faction | `'vassal'\|'hegemon'\|'king'\|'emperor'?` | Q5 | ✅ HC-P0-2 | 政治阶段状态机，默认 vassal |
 | `politicalTitle` | Faction | `string?` | Q7 | ✅ HC-P0-3 | 政治头衔，与 politicalStage 一一对应（vassal→无/hegemon→丞相大将军/king→X王/emperor→X帝） |
 | `politicalStageChangedYear` | Faction | `number?` | — | ✅ HC-P0-3 | 开府/称王/称帝年份记录 |
-| `imperialAuthority` | Faction | `number?` | Q4 | ⏳ HC-P0-6 | 皇权点数（霸府伪诏宣战消耗） |
+| `fame` | Faction | `number?` | — | ✅ HC-P0-6 | 势力声望 0~1000；新局100，旧存档缺失按0 |
+| `imperialAuthority` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 皇权点数 0~100；开府100、季度+10、伪诏消耗40 |
+| `imperialDecreeCooldown` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 伪诏宣战剩余冷却季数；使用后8，每季度-1 |
 | `tags` | Faction | `string[]?` | Q5 | ⏳ 后续 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
 | `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2 | ✅ HC-P0-4 | 霸府专属官职独立轨道（grandCommander 大司马/regentSecretary 录尚书事/grandCaptain 都督中外诸军事/none），非霸府势力武将该字段恒为空/none；3 官职均势力唯一，仅 `politicalStage !== 'vassal'` 势力可任命 |
 

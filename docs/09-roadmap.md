@@ -69,7 +69,7 @@
 
 | ID | 范围 | 验收标准 |
 |:--:|------|------|
-| HC-P0 | 挟天子判定 + 霸府最小原型 | 控制汉帝（Q1 方案A `emperorLocation`）→开府（`politicalStage='hegemon'`）→霸府官职最小切片（Q2 方案B `hegemonyPosition`，先 2~3 个）→外交权重加成（Q3 方向）→伪诏宣战（Q4 方向）。存档 optional 追加不破坏 verify-save-*。Headless 全流程 |
+| HC-P0 | ✅ 挟天子判定 + 霸府最小原型 | HC-P0-1~6 全部完成：控制汉帝→开府→霸府官职→外交加成→伪诏宣战；optional 存档字段兼容，verify-hc-p0 101/101，Headless 全流程通过 |
 | HC-P1 | 称王 + 王国官职 | 势力规模门槛（Q6 按剧本相对化）→称王（`politicalStage='king'`）→王官扩展（5~8 个）→爵位上限提升→外交权重再加成 |
 | HC-P2 | 称帝 + 帝国 + 天命 | 更高门槛→称帝（`politicalStage='emperor'`）→帝国官职全开→天命/年号/国号（Q8 可选）→禅让事件链（Q9 可选，称帝先只支持自主称帝路径）→最高外交权重+天命压制 |
 

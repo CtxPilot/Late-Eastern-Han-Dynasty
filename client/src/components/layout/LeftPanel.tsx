@@ -48,6 +48,7 @@ export function LeftPanel() {
   const endTurn = useGameStore((s) => s.endTurn);
   const tribute = useGameStore((s) => s.tribute);
   const establishHegemony = useGameStore((s) => s.establishHegemony);
+  const falseDecreeWar = useGameStore((s) => s.falseDecreeWar);
   const giftBeautyDip = useGameStore((s) => s.giftBeautyDip);
   const plantFemale = useGameStore((s) => s.plantFemale);
   const formAlliance = useGameStore((s) => s.formAlliance);
@@ -288,6 +289,16 @@ export function LeftPanel() {
             const ruler = game.officers[faction.rulerId];
             const stage = faction.politicalStage ?? 'vassal';
             const controlsHan = controlsEmperor(game, fid);
+            const authority = faction.imperialAuthority ?? 0;
+            const decreeCooldown = faction.imperialDecreeCooldown ?? 0;
+            const decreeReason =
+              stage === 'vassal'
+                ? '需先开霸府'
+                : authority < 40
+                  ? `皇权不足（需40，当前${authority}）`
+                  : decreeCooldown > 0
+                    ? `冷却中（剩余${decreeCooldown}季）`
+                    : null;
             return (
               <div className="px-2 py-1 space-y-1">
                 {ruler && (
@@ -308,7 +319,33 @@ export function LeftPanel() {
                   <div className="text-[10px] text-stone-600 px-2">未控制汉献帝（需占领汉帝所在城池）</div>
                 )}
                 {stage !== 'vassal' && (
-                  <div className="text-[10px] text-stone-600 px-2">已{stage === 'hegemon' ? '开霸府' : stage === 'king' ? '称王' : '称帝'}</div>
+                  <>
+                    <div className="text-[10px] text-stone-500 px-2">
+                      皇权 {authority}/100 · 伪诏冷却 {decreeCooldown > 0 ? `${decreeCooldown}季` : '就绪'}
+                    </div>
+                    <div className="px-2 pt-1 space-y-1">
+                      {Object.values(game.factions)
+                        .filter((target) => target.id !== fid && target.isAlive)
+                        .map((target) => {
+                          const relation = findDiplomacy(game.diplomacy, fid, target.id)?.relation as string | undefined;
+                          const reason = relation === 'war' ? '已交战' : decreeReason;
+                          return (
+                            <button
+                              key={target.id}
+                              type="button"
+                              data-testid={`btn-false-decree-${target.id}`}
+                              disabled={loading || reason != null}
+                              title={reason ?? `消耗40皇权，对${target.name}直接宣战；冷却8季`}
+                              onClick={() => void falseDecreeWar(target.id)}
+                              className="w-full rounded border border-red-900/60 px-2 py-1 text-left text-[10px] text-red-200 hover:bg-red-950/50 disabled:text-stone-600 disabled:opacity-60"
+                            >
+                              伪诏宣战 · {target.name}
+                              {reason ? <span className="ml-1 text-stone-600">（{reason}）</span> : null}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </>
                 )}
                 <MenuBtn
                   label="结束回合"

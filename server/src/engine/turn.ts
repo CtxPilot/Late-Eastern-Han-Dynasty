@@ -27,6 +27,7 @@ import { tickFollowCheck } from './family.js';
 import { tickChildrenAppear } from './child.js';
 import { tickEvents } from './event.js';
 import { syncFactionResources } from './economy.js';
+import { tickImperialAuthorityQuarter } from './hegemony.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -227,6 +228,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickEvents(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
+  if (isQuarterStart) nextState = tickImperialAuthorityQuarter(nextState);
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {
     ...nextState,

@@ -30,7 +30,14 @@ import {
   type SaveEnvelopeV1,
 } from '@leh/shared';
 import { createGame, getGame, doEstablishHegemony, doTribute } from '../services/game.js';
-import { establishHegemony } from '../engine/hegemony.js';
+import {
+  FALSE_DECREE_COOLDOWN_QUARTERS,
+  FALSE_DECREE_COST,
+  HAN_LOYALIST_FAME_PENALTY,
+  declareWarByFalseDecree,
+  establishHegemony,
+  tickImperialAuthorityQuarter,
+} from '../engine/hegemony.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { getRuntimeRngState } from '../runtime-rng.js';
 
@@ -420,6 +427,58 @@ check('霸府献美友好增量 > 诸侯', hegemonGiftFav > vassalGiftFav);
 // 9f. RNG 边界：结盟成功率判定依然走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点
 // （由 verify-negotiation-r2 既有 20 项断言已隐式覆盖，此处仅确认 hegemonyModifier 不引入新随机源）
 check('hegemonyModifier 是确定性纯函数（无 RNG）', hegemonyAllianceModifier('hegemon') === 5);
+
+// ── 10. HC-P0-6 伪诏宣战 ──
+console.log('\n— HC-P0-6 伪诏宣战 —');
+createGame(1, 1);
+const base = structuredClone(getGame());
+let rejected = '';
+try { declareWarByFalseDecree(base, 1, 3); } catch (e) { rejected = (e as Error).message; }
+check('诸侯状态尝试伪诏宣战被拒绝', rejected.includes('尚未开霸府'));
+
+const hegemon = establishHegemony(base, 1);
+check('开府赋予100皇权', hegemon.factions[1].imperialAuthority === 100);
+const lowAuthority = structuredClone(hegemon);
+lowAuthority.factions[1].imperialAuthority = FALSE_DECREE_COST - 1;
+rejected = '';
+try { declareWarByFalseDecree(lowAuthority, 1, 3); } catch (e) { rejected = (e as Error).message; }
+check('皇权不足时被拒绝', rejected.includes('皇权点数不足'));
+
+const cooled = structuredClone(hegemon);
+cooled.factions[1].imperialDecreeCooldown = 1;
+rejected = '';
+try { declareWarByFalseDecree(cooled, 1, 3); } catch (e) { rejected = (e as Error).message; }
+check('冷却期内即使皇权充足仍被拒绝', rejected.includes('冷却中'));
+
+const loyalistTarget = Object.values(hegemon.factions).find((f) =>
+  f.id !== 1 && f.isAlive && f.officerIds.some((id) => hegemon.officers[id]?.tags?.includes('匡扶汉室')),
+);
+const ordinaryTarget = Object.values(hegemon.factions).find((f) =>
+  f.id !== 1 && f.isAlive && !f.officerIds.some((id) => hegemon.officers[id]?.tags?.includes('匡扶汉室')),
+);
+check('测试场景存在匡扶汉室目标势力', loyalistTarget != null);
+check('测试场景存在非匡扶汉室目标势力', ordinaryTarget != null);
+
+if (loyalistTarget) {
+  const beforeFame = hegemon.factions[1].fame ?? 0;
+  const after = declareWarByFalseDecree(hegemon, 1, loyalistTarget.id);
+  check('成功后目标关系设为war', findDiplomacy(after.diplomacy, 1, loyalistTarget.id)?.relation === 'war');
+  check('成功后皇权正确扣除40', after.factions[1].imperialAuthority === 100 - FALSE_DECREE_COST);
+  check('成功后触发8季冷却', after.factions[1].imperialDecreeCooldown === FALSE_DECREE_COOLDOWN_QUARTERS);
+  check('对匡扶汉室势力声望-30', after.factions[1].fame === beforeFame - HAN_LOYALIST_FAME_PENALTY);
+  const saved = parseCurrentSaveEnvelope(envelopeFor(after)).snapshot;
+  check('存档往返保留皇权', saved.factions[1].imperialAuthority === after.factions[1].imperialAuthority);
+  check('存档往返保留冷却计时器', saved.factions[1].imperialDecreeCooldown === FALSE_DECREE_COOLDOWN_QUARTERS);
+  const quarter = tickImperialAuthorityQuarter(after);
+  check('季度恢复10皇权', quarter.factions[1].imperialAuthority === 70);
+  check('季度推进后冷却减1', quarter.factions[1].imperialDecreeCooldown === 7);
+}
+
+if (ordinaryTarget) {
+  const beforeFame = hegemon.factions[1].fame ?? 0;
+  const after = declareWarByFalseDecree(hegemon, 1, ordinaryTarget.id);
+  check('对非匡扶汉室势力无声望惩罚', after.factions[1].fame === beforeFame);
+}
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

@@ -801,6 +801,14 @@ POST   /api/v1/games/:id/faction/cultural-policy
    Response: { faction: Faction }
 ```
 
+### HC-P0-6 伪诏宣战
+
+`POST /api/game/hegemony/false-decree-war`
+
+请求体：`{ targetFactionId: number }`。服务端校验已开府、皇权≥40、冷却为0、目标存活且
+尚未交战；成功返回完整 `GameState`，目标关系直接设为 `war`，皇权扣40、冷却置8季，
+必要时声望扣30。失败返回 400 与可直接用于禁用态/错误提示的原因文案。
+
 ---
 
-*文档版本: v3.1 | 2026-07-23 | Session 162 独立郡域战场规划端点登记*
+*文档版本: v3.2 | 2026-07-26 | Session 189 HC-P0-6 伪诏宣战端点*
