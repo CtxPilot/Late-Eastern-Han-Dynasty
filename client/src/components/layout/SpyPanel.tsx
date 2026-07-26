@@ -287,10 +287,10 @@ export function SpyPanel() {
         category="谍报"
         command={
           confirmAction === 'recruit'
-            ? '招募密探'
+            ? `确认招募密探：${recruitCityId != null ? game.cities[recruitCityId]?.name ?? '未选城池' : '未选城池'}`
             : confirmAction === 'train-female'
-              ? '训练女间谍'
-              : `派出${MISSION_LABEL[missionType] ?? missionType}任务`
+              ? `确认训练女间谍：${recruitCityId != null ? game.cities[recruitCityId]?.name ?? '未选城池' : '未选城池'}`
+              : `确认派出${MISSION_LABEL[missionType] ?? missionType}：${selectedAgent?.name ?? '未选密探'}→${targetCityId !== '' ? game.cities[Number(targetCityId)]?.name ?? '未选目标' : '未选目标'}`
         }
         summary={
           confirmAction === 'mission'
@@ -322,6 +322,26 @@ export function SpyPanel() {
         loading={loading}
         danger={confirmAction === 'mission'}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const city = recruitCityId == null ? null : latest?.cities[recruitCityId];
+          if (!latest || !city || city.ruler !== latest.playerFactionId) return '执行城池已失效，请返回修改。';
+          if (confirmAction === 'recruit') {
+            return city.gold >= 120 && city.food >= 60 ? null : '招募资源已不足（至少需金120、粮60）。';
+          }
+          if (confirmAction === 'train-female') {
+            if ((latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 2) return '美女库存不足（需2）。';
+            return city.gold >= 100 ? null : `城中金钱不足（需100，当前${city.gold}）。`;
+          }
+          if (confirmAction === 'mission') {
+            const agent = agentId ? latest.intel?.agents?.[agentId] : null;
+            if (!agent || agent.factionId !== latest.playerFactionId) return '所选密探已失效。';
+            if (agent.status !== SpyStatus.IDLE || agent.cooldownMonths > 0) return `密探当前不可派遣（状态${STATUS_LABEL[agent.status] ?? agent.status}，冷却${agent.cooldownMonths}月）。`;
+            const target = targetCityId === '' ? null : latest.cities[Number(targetCityId)];
+            return target && target.ruler !== latest.playerFactionId ? null : '任务目标已失效。';
+          }
+          return '谍报草稿已失效，请返回修改。';
+        }}
         onCancel={() => setConfirmAction(null)}
         onConfirm={async () => {
           if (confirmAction === 'recruit' && recruitCityId != null) await recruitSpies(recruitCityId);
@@ -335,7 +355,7 @@ export function SpyPanel() {
       <CommandConfirmDialog
         open={confirmCaptive != null}
         category="谍报"
-        command={confirmCaptive?.action === 'execute' ? '处决俘虏' : '释放俘虏'}
+        command={`${confirmCaptive?.action === 'execute' ? '确认处决俘虏' : '确认释放俘虏'}：${confirmCaptive ? game.intel.agents[confirmCaptive.agentId]?.name ?? '未知俘虏' : '未知俘虏'}`}
         summary={
           confirmCaptive?.action === 'execute'
             ? '处决会永久移除该密探，无法撤销。'
@@ -360,6 +380,15 @@ export function SpyPanel() {
         loading={loading}
         danger={confirmCaptive?.action === 'execute'}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || !confirmCaptive) return '俘虏处置草稿已失效，请返回修改。';
+          const captive = latest.intel?.agents?.[confirmCaptive.agentId];
+          return captive?.status === SpyStatus.CAPTIVE &&
+            captive.captiveByFactionId === latest.playerFactionId
+            ? null
+            : '该密探已不在本势力俘虏名单中。';
+        }}
         onCancel={() => setConfirmCaptive(null)}
         onConfirm={async () => {
           if (!confirmCaptive) return;

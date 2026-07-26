@@ -518,12 +518,12 @@ export function CampaignPanel() {
         category="战役"
         command={
           confirm === 'start'
-            ? '编成出征'
+            ? `确认编成出征：${selectedCityId != null ? game.cities[selectedCityId]?.name ?? '未选出发城' : '未选出发城'}→${targetNodeId !== '' ? game.cities[Number(targetNodeId)]?.name ?? '未选目标' : '未选目标'}`
             : confirm === 'assault'
-              ? '发动强攻'
+              ? `确认发动强攻：${selectedArmy?.name ?? '未选军队'}`
               : confirm === 'surrender'
-                ? '劝降守军'
-                : '撤退'
+                ? `确认劝降守军：${selectedArmy?.name ?? '未选军队'}`
+                : `确认撤退：${selectedArmy?.name ?? '未选军队'}`
         }
         summary={
           confirm === 'start'
@@ -562,6 +562,29 @@ export function CampaignPanel() {
         loading={loading}
         danger={confirm === 'assault' || confirm === 'start'}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || !confirm) return '战役草稿已失效，请返回修改。';
+          if (confirm === 'start') {
+            if (selectedCityId == null || commanderId === '' || targetNodeId === '') return '出征编成不完整。';
+            const city = latest.cities[selectedCityId];
+            const commander = latest.officers[Number(commanderId)];
+            const target = latest.cities[Number(targetNodeId)];
+            if (!city || city.ruler !== latest.playerFactionId) return '出发城归属已经变化。';
+            if (!commander || commander.faction !== latest.playerFactionId || commander.location !== selectedCityId || commander.status !== 'active') {
+              return '主将已不在出发城或不再可用。';
+            }
+            if (!target || target.ruler === latest.playerFactionId) return '目标城已经失效。';
+            if (city.troops < troopCount || city.food < food) return `出发城资源已变化（现有兵${city.troops}、粮${city.food}）。`;
+            return null;
+          }
+          const army = latest.campaignArmies.find((item) => item.id === selectedArmyId);
+          if (!army || army.factionId !== latest.playerFactionId) return '所选军队已不存在或归属已经变化。';
+          if (confirm === 'assault' && army.phase !== 'sieging' && army.phase !== 'engaged') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能强攻。`;
+          if (confirm === 'surrender' && army.phase !== 'sieging') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能劝降。`;
+          if (confirm === 'retreat' && army.phase !== 'marching' && army.phase !== 'garrison') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能撤退。`;
+          return null;
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm === 'start') await handleStart();

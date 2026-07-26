@@ -67,7 +67,7 @@ export function BeautyPanel() {
       <CommandConfirmDialog
         open={confirmOpen}
         category="人事"
-        command="赏赐美人"
+        command={`确认赏赐美人：${officerId != null ? game.officers[officerId]?.name ?? '未选武将' : '未选武将'}`}
         summary="从势力美女库存赏赐一人，以提高武将忠诚。"
         items={[
           { label: '执行者', value: game.officers[game.factions[game.playerFactionId]?.rulerId]?.name ?? '君主' },
@@ -78,6 +78,14 @@ export function BeautyPanel() {
         ]}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const target = officerId == null ? null : latest?.officers[officerId];
+          if (!latest || !target || target.faction !== latest.playerFactionId) return '赏赐目标已失效，请返回修改。';
+          return (latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 1
+            ? '美女库存不足（需1）。'
+            : null;
+        }}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={async () => {
           if (officerId == null) return;

@@ -238,7 +238,11 @@ export function PlotPanel() {
       <CommandConfirmDialog
         open={confirmOpen}
         category="计略"
-        command={`发起${PLOT_LABEL[plotType] ?? plotType}`}
+        command={`确认发起${PLOT_LABEL[plotType] ?? plotType}：${
+          isDiscord
+            ? targetFactionId !== '' ? game.factions[Number(targetFactionId)]?.name ?? '未选目标' : '未选目标'
+            : targetCityId !== '' ? game.cities[Number(targetCityId)]?.name ?? '未选目标' : '未选目标'
+        }`}
         summary="计谋会立即扣除资源并进入准备或结算流程，失败时资源不返还。"
         items={[
           {
@@ -263,6 +267,23 @@ export function PlotPanel() {
         ]}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest) return '计谋草稿已失效，请返回修改。';
+          const ownCities = Object.values(latest.cities).filter((city) => city.ruler === latest.playerFactionId);
+          const hasGold = (cost: number) => ownCities.some((city) => city.gold >= cost);
+          if (isHoney) {
+            if ((latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 2) return '美女库存不足（需2）。';
+            if (!hasGold(150)) return '没有己方城池能够支付金150。';
+          }
+          if (isDiscord && !hasGold(200)) return '没有己方城池能够支付金200。';
+          if (isFalse && !hasGold(120)) return '没有己方城池能够支付金120。';
+          if (isDiscord) return targetFactionId !== '' && latest.factions[Number(targetFactionId)]?.isAlive ? null : '目标势力已失效。';
+          const target = targetCityId === '' ? null : latest.cities[Number(targetCityId)];
+          if (!target) return '目标城池已失效。';
+          if (isEmpty && (target.ruler !== latest.playerFactionId || target.troops >= 3500 || target.food < 150)) return '空城疑兵目标已不满足己方寡兵与粮草门槛。';
+          return null;
+        }}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={async () => {
           if (isHoney && targetCityId !== '') {

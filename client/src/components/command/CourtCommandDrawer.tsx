@@ -243,7 +243,7 @@ export function CourtCommandDrawer({
       <CommandConfirmDialog
         open={reviewOpen && draft?.commandId === 'establish-hegemony'}
         category="朝廷"
-        command="开霸府"
+        command={`确认开霸府：${model.faction.name}`}
         summary="开霸府后政治阶段永久改变，当前版本不可撤销。确认迎奉天子、自领丞相？"
         items={[
           { label: '政治阶段', value: '诸侯 → 霸府', tone: 'warning' },
@@ -255,6 +255,15 @@ export function CourtCommandDrawer({
         loading={loading}
         danger
         error={error}
+        fallbackFocusSelector='[data-testid="command-domain-court"]'
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const latestModel = latest ? buildCourtViewModel(latest) : null;
+          if (!latestModel) return '朝廷状态已失效，请返回修改。';
+          if (latestModel.stage !== 'vassal') return '政治阶段已经变化，不能重复开霸府。';
+          if (!latestModel.controlsHan) return '已不再控制汉献帝，不能开霸府。';
+          return null;
+        }}
         onCancel={() => setReviewOpen(false)}
         onConfirm={async () => {
           await establishHegemony();
@@ -266,7 +275,7 @@ export function CourtCommandDrawer({
       <CommandConfirmDialog
         open={reviewOpen && draft?.commandId === 'false-decree'}
         category="朝廷"
-        command="伪诏宣战"
+        command={`确认伪诏宣战：${selectedTarget?.faction.name ?? '未选目标'}`}
         summary="将绕过常规外交前置，立即与目标势力进入战争状态。"
         items={[
           { label: '目标势力', value: selectedTarget?.faction.name ?? '—' },
@@ -278,6 +287,15 @@ export function CourtCommandDrawer({
         loading={loading}
         danger
         error={error}
+        fallbackFocusSelector='[data-testid="command-domain-court"]'
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const latestModel = latest ? buildCourtViewModel(latest) : null;
+          const latestTarget = latestModel?.targets.find(
+            ({ faction }) => faction.id === targetFactionId,
+          );
+          return latestTarget?.disabledReason ?? (!latestTarget ? '目标势力已失效，请返回修改。' : null);
+        }}
         onCancel={() => setReviewOpen(false)}
         onConfirm={async () => {
           if (!selectedTarget || selectedTarget.disabledReason) return;

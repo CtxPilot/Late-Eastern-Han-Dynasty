@@ -115,7 +115,7 @@ export function PersonnelPanel() {
       <CommandConfirmDialog
         open={confirm?.type === 'search'}
         category="人事"
-        command="搜索人才"
+        command={`确认搜索人才：${searchCity?.name ?? '未选城池'}`}
         summary="派员访求在野人才或遗落宝物。"
         items={[
           { label: '执行地', value: searchCity?.name ?? '—' },
@@ -126,6 +126,12 @@ export function PersonnelPanel() {
         ]}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const city = searchCityId == null ? null : latest?.cities[searchCityId];
+          if (!latest || !city || city.ruler !== latest.playerFactionId) return '搜索城池已失效，请返回修改。';
+          return city.gold < 80 ? `城中金钱不足（需80，当前${city.gold}）。` : null;
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (searchCityId == null) return;
@@ -136,7 +142,7 @@ export function PersonnelPanel() {
       <CommandConfirmDialog
         open={confirm?.type === 'recruit'}
         category="人事"
-        command="登用武将"
+        command={`确认登用：${confirm?.type === 'recruit' ? confirm.officer.name : '未选武将'}`}
         summary="遣使劝说在野武将归属本势力。"
         items={confirm?.type === 'recruit' ? [
           { label: '执行者', value: ruler?.name ?? '君主府' },
@@ -154,6 +160,16 @@ export function PersonnelPanel() {
         ] : []}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || confirm?.type !== 'recruit') return '登用草稿已失效，请返回修改。';
+          const officer = latest.officers[confirm.officer.id];
+          if (!officer || officer.faction != null || officer.status !== OfficerStatus.FREE) return '目标已不再是在野可登用状态。';
+          const canPay = Object.values(latest.cities).some(
+            (city) => city.ruler === latest.playerFactionId && city.gold >= 200,
+          );
+          return canPay ? null : '没有己方城池能够支付登用所需金200。';
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm?.type !== 'recruit') return;

@@ -268,7 +268,7 @@ export function AppointPanel() {
       <CommandConfirmDialog
         open={confirmOpen}
         category="人事"
-        command={position === 'none' ? '解除官职' : '任命官职'}
+        command={`${position === 'none' ? '确认解职' : '确认任命'}：${officer?.name ?? '未选武将'} · ${labels[position] ?? position}`}
         summary="官职变更会立即生效；取消可返回并保留当前选择。"
         items={[
           { label: '执行者', value: game.officers[game.factions[game.playerFactionId]?.rulerId]?.name ?? '君主' },
@@ -279,6 +279,22 @@ export function AppointPanel() {
         ]}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || officerId === '') return '任命草稿已失效，请返回修改。';
+          const latestOfficer = latest.officers[officerId];
+          if (!latestOfficer || latestOfficer.faction !== latest.playerFactionId || latestOfficer.status !== OfficerStatus.ACTIVE) {
+            return '目标武将已不处于本势力在职状态。';
+          }
+          if (track === 'hegemony' && (latest.factions[latest.playerFactionId]?.politicalStage ?? 'vassal') === 'vassal') {
+            return '政治阶段已经变化，霸府官职目前不可任命。';
+          }
+          if (position !== 'none' && (!req || !meetsPositionReq(latestOfficer.stats, req))) return '目标武将已不满足该官职门槛。';
+          if (needsCity && (cityId == null || latestOfficer.location !== cityId || latest.cities[cityId]?.ruler !== latest.playerFactionId)) {
+            return '任职城或武将所在地已经变化。';
+          }
+          return null;
+        }}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={async () => {
           if (officerId === '') return;

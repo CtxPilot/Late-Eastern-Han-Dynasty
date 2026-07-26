@@ -420,7 +420,7 @@ export function RightPanel() {
       <CommandConfirmDialog
         open={confirmMarch}
         category="军事"
-        command="出征攻城"
+        command={`确认出征攻城：${selected?.name ?? '未选目标'}`}
         summary="军队将立即离城出征并进入战斗结算；兵力、粮草及武将状态可能发生不可逆变化。"
         items={[
           { label: '目标城', value: selected?.name ?? '—' },
@@ -435,6 +435,15 @@ export function RightPanel() {
         loading={loading}
         danger
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || selectedCityId == null) return '出征目标已失效，请返回修改。';
+          const target = latest.cities[selectedCityId];
+          if (!target || target.ruler === latest.playerFactionId) return '目标已不是可攻打的他方城池。';
+          return canAttemptMarchTo(latest.cities, latest.playerFactionId, target.id)
+            ? null
+            : '当前已无道路邻接且兵力足够的己方城，不能出征。';
+        }}
         onCancel={() => setConfirmMarch(false)}
         onConfirm={async () => {
           await marchOnCity();

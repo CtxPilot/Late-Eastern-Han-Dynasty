@@ -357,7 +357,7 @@ export function FamilyPanel() {
       <CommandConfirmDialog
         open={confirmMarry}
         category="家族"
-        command="赐婚 / 婚配"
+        command={`确认婚配：${selected?.name ?? '未选女眷'} × ${officerId != null ? game.officers[officerId]?.name ?? '未选武将' : '未选武将'}`}
         summary="婚配会立即建立正妻关系并消耗金钱；当前版本没有离婚或撤销流程。"
         items={[
           { label: '女眷', value: selected?.name ?? '—' },
@@ -369,6 +369,18 @@ export function FamilyPanel() {
         loading={loading}
         danger
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || selectedFemaleId == null || officerId == null) return '婚配草稿已失效，请返回修改。';
+          const female = latest.females[selectedFemaleId];
+          const officer = latest.officers[officerId];
+          if (!female || female.husbandId != null) return '女眷婚姻状态已经变化。';
+          if (!officer || officer.faction !== latest.playerFactionId) return '目标武将已不属于本势力。';
+          const canPay = Object.values(latest.cities).some(
+            (city) => city.ruler === latest.playerFactionId && city.gold >= 300,
+          );
+          return canPay ? null : '没有己方城池能够支付婚配所需金300。';
+        }}
         onCancel={() => setConfirmMarry(false)}
         onConfirm={async () => {
           if (selectedFemaleId == null || officerId == null) return;

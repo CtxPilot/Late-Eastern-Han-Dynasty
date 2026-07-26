@@ -17,6 +17,7 @@ import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import { OPEN_LEGACY_PERSONNEL_EVENT } from '../command/commandNavigation';
+import { getFactionResourceTotals } from '../../utils/factionResources';
 
 type AccordionKey =
   | 'campaign'
@@ -100,6 +101,26 @@ export function LeftPanel() {
   const toggle = (k: AccordionKey) => {
     clearError();
     setOpen((prev) => (prev === k ? null : k));
+  };
+  const validateDiplomacyReview = () => {
+    const latest = useGameStore.getState().game;
+    if (!latest || !confirm || !('factionId' in confirm)) return '外交草稿已失效，请返回修改。';
+    const target = latest.factions[confirm.factionId];
+    if (!target?.isAlive) return '目标势力已不存在或已经灭亡。';
+    const link = findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id);
+    const relation = (link?.relation as string) ?? 'neutral';
+    const resources = getFactionResourceTotals(latest, latest.playerFactionId);
+    if (confirm.type === 'tribute' && resources.gold < 200) return `金钱不足（需200，当前${resources.gold}）。`;
+    if (confirm.type === 'gift-beauty') {
+      if (relation === 'war') return '双方已经交战，不能献美。';
+      if ((latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 1) return '美女库存不足（需1）。';
+    }
+    if (confirm.type === 'plant-female') {
+      if ((latest.intel?.plantableBeauty?.[target.id] ?? 0) < 1) return '点化额度已经失效（需先献美）。';
+      if ((target.beautyStock ?? 0) < 1) return '目标势力美女库存已空，无法点化。';
+      if (resources.gold < 80) return `金钱不足（需80，当前${resources.gold}）。`;
+    }
+    return null;
   };
 
   return (
@@ -429,10 +450,10 @@ export function LeftPanel() {
         category={confirm?.type === 'plant-female' ? '谍报' : '外交'}
         command={
           confirm?.type === 'tribute'
-            ? '进贡'
+            ? `确认进贡：${game.factions[confirm.factionId]?.name ?? '未知势力'}`
             : confirm?.type === 'gift-beauty'
-              ? '献美'
-              : '点化女间谍'
+              ? `确认献美：${game.factions[confirm.factionId]?.name ?? '未知势力'}`
+              : `确认点化女间谍：${confirm && 'factionId' in confirm ? game.factions[confirm.factionId]?.name ?? '未知势力' : '未知势力'}`
         }
         summary={
           confirm?.type === 'tribute'
@@ -472,6 +493,7 @@ export function LeftPanel() {
         }
         loading={loading}
         error={error}
+        validateBeforeConfirm={validateDiplomacyReview}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (!confirm || confirm.type === 'alliance' || confirm.type === 'establish-hegemony' || confirm.type === 'false-decree') return;
@@ -484,7 +506,7 @@ export function LeftPanel() {
       <CommandConfirmDialog
         open={confirm?.type === 'alliance'}
         category="外交"
-        command="缔结盟约"
+        command={`确认结盟：${confirm?.type === 'alliance' ? game.factions[confirm.factionId]?.name ?? '未知势力' : '未知势力'}`}
         summary="结盟交涉无论成败都会立即消耗金钱，并消费一次外交判定。"
         items={confirm?.type === 'alliance' ? (() => {
           const target = game.factions[confirm.factionId];
@@ -499,6 +521,19 @@ export function LeftPanel() {
         })() : []}
         loading={loading}
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || confirm?.type !== 'alliance') return '结盟草稿已失效，请返回修改。';
+          const target = latest.factions[confirm.factionId];
+          if (!target?.isAlive) return '目标势力已不存在或已经灭亡。';
+          const link = findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id);
+          const relation = (link?.relation as string) ?? 'neutral';
+          if (relation === 'war') return '双方已经交战，不能结盟。';
+          if (relation === 'allied') return '双方已经是同盟。';
+          if ((link?.favorability ?? 0) < 30) return `友好不足（需≥30，当前${link?.favorability ?? 0}）。`;
+          const gold = getFactionResourceTotals(latest, latest.playerFactionId).gold;
+          return gold < 500 ? `金钱不足（需500，当前${gold}）。` : null;
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm?.type !== 'alliance') return;
@@ -509,7 +544,7 @@ export function LeftPanel() {
       <CommandConfirmDialog
         open={confirm?.type === 'establish-hegemony'}
         category="朝廷"
-        command="开霸府"
+        command={`确认开霸府：${game.factions[game.playerFactionId]?.name ?? '本势力'}`}
         summary="开霸府后政治阶段永久改变，当前版本不可撤销。确认迎奉天子、自领丞相？"
         items={[
           { label: '政治阶段', value: '诸侯 → 霸府', tone: 'warning' },
@@ -521,6 +556,13 @@ export function LeftPanel() {
         loading={loading}
         danger
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest) return '朝廷状态已失效，请返回修改。';
+          const faction = latest.factions[latest.playerFactionId];
+          if ((faction?.politicalStage ?? 'vassal') !== 'vassal') return '政治阶段已经变化，不能重复开霸府。';
+          return controlsEmperor(latest, latest.playerFactionId) ? null : '已不再控制汉献帝，不能开霸府。';
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm?.type !== 'establish-hegemony') return;
@@ -531,7 +573,7 @@ export function LeftPanel() {
       <CommandConfirmDialog
         open={confirm?.type === 'false-decree'}
         category="朝廷"
-        command="伪诏宣战"
+        command={`确认伪诏宣战：${confirm?.type === 'false-decree' ? game.factions[confirm.factionId]?.name ?? '未知势力' : '未知势力'}`}
         summary="将绕过常规外交前置，立即与目标势力进入战争状态。"
         items={confirm?.type === 'false-decree' ? [
           { label: '目标势力', value: game.factions[confirm.factionId]?.name ?? '—' },
@@ -543,6 +585,19 @@ export function LeftPanel() {
         loading={loading}
         danger
         error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || confirm?.type !== 'false-decree') return '伪诏草稿已失效，请返回修改。';
+          const faction = latest.factions[latest.playerFactionId];
+          const target = latest.factions[confirm.factionId];
+          if (!target?.isAlive) return '目标势力已不存在或已经灭亡。';
+          if ((faction?.politicalStage ?? 'vassal') === 'vassal') return '需先开霸府。';
+          if ((faction?.imperialAuthority ?? 0) < 40) return `皇权不足（需40，当前${faction?.imperialAuthority ?? 0}）。`;
+          if ((faction?.imperialDecreeCooldown ?? 0) > 0) return `伪诏仍在冷却（剩余${faction?.imperialDecreeCooldown}季）。`;
+          return findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id)?.relation === 'war'
+            ? '双方已经交战。'
+            : null;
+        }}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (confirm?.type !== 'false-decree') return;
