@@ -849,6 +849,11 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 
 **Session 161 当前能力**：AI 出征、袭扰和自动战斗胜败已写入既有 `GameState.actionLog`，分别使用 `ai_war_report` / `ai_battle_report`；玩家可在右栏「行动日志」看到“某势力自某城出征/袭扰/攻城胜败”的月度简讯。未新建通知面板；类型着色、自动顶滚与更完整战报筛选仍属于本 W2。
 
+**Session 201 战役面板可用性收口**：出征目标下拉只列当前出发城官道直邻的非己方城市；
+切换出发城或权威状态变化后，已失效目标草稿自动清空，终审提交前仍再次检查邻接。Army
+处于同一 `garrison` 权威阶段时，己方城显示“驻守（己方城池）”，非己方非敌对城显示
+“暂驻（友方/中立/非己方城池）”，避免将借道待命误读为城池易主。
+
 **落地方案**：
 - `client/src/hooks/useAnimatedNumber.ts`（~30 行）：`useRef(cur)` + `requestAnimationFrame` easeOutCubic 插值 + `setDisplay` 每帧 setState。卸载 `cancelAnimationFrame`。挂到 TopBar 金/粮/兵/美女/城数 5 个数字。
 - EventLog 增强（改 `RightPanel.tsx:388-403`）：按 `action.type` 着色（famine→橙、ai_placeholder→灰、event→金、end_turn→琥珀、battle→红、civil→青）；新条目 `animate-[fadeIn_0.3s]`（tailwind.config.js 加 fadeIn keyframes）；自动顶滚 `scrollTo({top:0, behavior:'smooth'})`；显示条数 12→20。

@@ -3899,13 +3899,15 @@ Part II 保留原§一~§八 战术战斗要素 · §九~§十一 参考保留*
 >
 > 战役层引擎最小切片已实装（`server/src/engine/campaign.ts` + `shared/types/campaign.ts`）：
 > - §十二 节点：`buildCampaignNodes`/`syncNodesFromCities` 从城池生成 30 节点
-> - §十三 Army 编成：`startCampaign` 主将+副将+参谋+Squad 五部阵位；校验邻接/兵粮/智力≥85
+> - §十三 Army 编成：`startCampaign` 主将+副将+参谋+Squad 五部阵位；校验邻接/兵粮/智力≥85；
+>   出征面板的目标候选按当前出发城官道直邻过滤，不再聚合势力全部前线
 > - §十三 行军：`tickCampaignMarch` 逐节点推进 + 补给消耗 + 缺粮士气降 + 经己方城补粮
 > - §十三 路径：`planPath` BFS 道路邻接最短路径
 > - §十四 总军师：`GrandStrategist` 数据、任命/解职、态势切换、献策引擎、对决与月度维护已实装；献策服务/UI 接线后置
 > - §十五 设施：`buildStructure` 即时建造（简化）；大型器械回合消耗后置
 > - §十三.6 参谋行动：`advisorAction` 激励/陷阱/撤退休整/斥候 已实装
 > - §十六 状态机：marching→sieging→assaulting→garrison/retreating 转换完整
+>   （UI 对己方城显示“驻守”，对非己方非敌对城显示“暂驻”，不改变底层 `garrison` 阶段）
 > - §十六.5 劝降：`trySiegeSurrender` 围城回合+魅力差+上限60%
 > - §十六.6 强攻：`assault` 调 `runAutoBattle` 攻城修正
 > - §十七 自动战斗：`runAutoBattle` 战力公式+多回合推演+单挑事件+伤亡判定+郡国归属(0-A简化)

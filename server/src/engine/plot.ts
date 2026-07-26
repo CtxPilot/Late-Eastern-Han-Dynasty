@@ -350,7 +350,7 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
             message: `${plot.result?.message ?? plotTypeLabel(plot.type)}（效果结束）`,
           },
         });
-        messages.push(`${plotTypeLabel(plot.type)}效果结束`);
+        messages.push(`${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：${plotTypeLabel(plot.type)}效果结束`);
       } else {
         nextPlots.push({ ...plot, monthsLeft: left });
       }
@@ -370,7 +370,7 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
     diplomacy = result.diplomacy;
     factions = result.factions;
     intel = result.intel;
-    messages.push(result.message);
+    messages.push(`${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：${result.message}`);
 
     if (result.enterActive) {
       nextPlots.push({

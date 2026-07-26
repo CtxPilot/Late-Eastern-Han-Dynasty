@@ -20,6 +20,7 @@
 import {
   OfficerStatus,
   areCitiesRoadAdjacent,
+  isFriendlyOrBetter,
   isHostileOrAtWar,
   roadNeighbors,
   UnitType,
@@ -410,7 +411,14 @@ export function tickCampaignMarch(state: GameState): GameState {
         logs.push(`${a.name} 抵达 ${target.name}，进入围城`);
       } else {
         armies[i] = { ...a, phase: 'garrison', currentNodeId: a.targetNodeId ?? a.currentNodeId };
-        logs.push(`${a.name} 到达 ${target?.name ?? '目的地'}，驻守待命`);
+        const stayLabel =
+          target?.ruler === a.factionId
+            ? '驻守己方城池'
+            : target?.ruler != null &&
+                isFriendlyOrBetter(state.diplomacy, a.factionId, target.ruler)
+              ? '暂驻友方城池'
+              : '暂驻非敌对城池';
+        logs.push(`${a.name} 到达 ${target?.name ?? '目的地'}，${stayLabel}待命`);
       }
       continue;
     }

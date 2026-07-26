@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useMemo, useState } from 'react';
-import { FORMATION_LABEL, FormationType, UnitType, type CampaignArmy } from '@leh/shared';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  FORMATION_LABEL,
+  FormationType,
+  UnitType,
+  type CampaignArmy,
+} from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { campaignArmyPhaseLabel, campaignTargetsFromCity } from './CampaignPanel.helpers';
 
 const PHASE_LABEL: Record<string, string> = {
-  garrison: '驻守',
   marching: '行军',
   engaged: '野战',
   sieging: '围城',
@@ -74,32 +79,16 @@ export function CampaignPanel() {
     return game.campaignArmies.filter((a) => a.factionId === game.playerFactionId);
   }, [game]);
 
-  const enemyCities = useMemo(() => {
-    if (!game) return [];
-    // 目标候选：与任意己方城道路邻接的非己方城（含迷雾城 ruler=null）
-    // 服务端用真源校验 ruler==null 会拒绝，UI 仍列出供玩家尝试
-    const myIds = Object.values(game.cities)
-      .filter((c) => c.ruler === game.playerFactionId)
-      .map((c) => c.id);
-    const adjacentEnemyIds = new Set<number>();
-    const nodes = game.campaignNodes ?? [];
-    for (const node of nodes) {
-      if (myIds.includes(node.id)) {
-        for (const adj of node.adjacentNodeIds) {
-          if (!myIds.includes(adj)) adjacentEnemyIds.add(adj);
-        }
-      }
+  const targetCities = useMemo(
+    () => (game ? campaignTargetsFromCity(game, selectedCityId) : []),
+    [game, selectedCityId],
+  );
+
+  useEffect(() => {
+    if (targetNodeId !== '' && !targetCities.some((city) => city.id === targetNodeId)) {
+      setTargetNodeId('');
     }
-    // 若节点表为空（旧缓存），退化为列出所有非己方城
-    if (nodes.length === 0) {
-      return Object.values(game.cities)
-        .filter((c) => c.ruler !== game.playerFactionId)
-        .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
-    }
-    return Object.values(game.cities)
-      .filter((c) => adjacentEnemyIds.has(c.id) && c.ruler !== game.playerFactionId)
-      .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
-  }, [game]);
+  }, [targetCities, targetNodeId]);
 
   /** 当前选中城市的可出征武将 */
   const availableOfficers = useMemo(() => {
@@ -247,7 +236,7 @@ export function CampaignPanel() {
                 className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
               >
                 <option value="">选择目标</option>
-                {enemyCities.map((c) => (
+                {targetCities.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}（兵{c.troops}）
                   </option>
@@ -340,7 +329,9 @@ export function CampaignPanel() {
                 >
                   <div className="flex justify-between">
                     <span className="font-medium">{a.name}</span>
-                    <span className="text-stone-500">{PHASE_LABEL[a.phase] ?? a.phase}</span>
+                    <span className="text-stone-500">
+                      {campaignArmyPhaseLabel(game, a, PHASE_LABEL)}
+                    </span>
                   </div>
                   <div className="text-stone-500 mt-0.5">
                     {node?.name ?? a.currentNodeId} · 兵{a.troops}/{a.maxTroops} · 粮{a.food} · 士{a.morale}
@@ -575,6 +566,9 @@ export function CampaignPanel() {
               return '主将已不在出发城或不再可用。';
             }
             if (!target || target.ruler === latest.playerFactionId) return '目标城已经失效。';
+            if (!campaignTargetsFromCity(latest, selectedCityId).some((item) => item.id === target.id)) {
+              return `${city.name} 与 ${target.name} 无官道直达，请返回修改目标。`;
+            }
             if (city.troops < troopCount || city.food < food) return `出发城资源已变化（现有兵${city.troops}、粮${city.food}）。`;
             return null;
           }

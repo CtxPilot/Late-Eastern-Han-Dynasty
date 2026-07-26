@@ -601,6 +601,10 @@ console.log('\n16. 外交关系过滤');
     state.campaignArmies.find((a) => a.factionId === 2)?.phase === 'garrison',
     '友好 Army 共处同城不触发野战/围城',
   );
+  assert(
+    state.actionLog.some((log) => log.message.includes('暂驻友方城池待命')),
+    '友好 Army 抵达日志明确显示暂驻而非己方驻守',
+  );
 }
 
 // --- 17. 敌对野战结算：参战 Army 各最多回写一次 ---

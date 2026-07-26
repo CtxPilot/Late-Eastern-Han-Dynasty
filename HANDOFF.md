@@ -9,9 +9,9 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 199 完成：CMD-P4**。旧“君主”手风琴及其开府/伪诏确认分支已原子删除；底部朝廷抽屉成为唯一入口，仓库内 Headless 验收覆盖取消/确认与旧 DOM 消失 |
+| 会话 | **Session 201 完成：英雄集结排查三项问题收口**。出征目标按当前出发城邻接过滤；己方驻守与非己方暂驻文案分离；多方计谋月结逐条标施计势力 |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S199 CMD-P4 朝廷入口原子切换** + S198 统一终审 + S197 朝廷抽屉业务接线 + S196 通用命令坞壳层 + S194 行政面板体验收口 + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 |
+| 代码最新 | **S201 英雄集结体验收口** + S199 CMD-P4 朝廷入口原子切换 + S198 统一终审 + S197 朝廷抽屉业务接线 + S196 通用命令坞壳层 + S194 行政面板体验收口 + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 |
 | 文档最新 | 07 §12/§13.4、26 霸府 UI 路径、Session 195 计划与 Session 196 基线均已同步 CMD-P4 完成状态 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
 | 玩法下一步 | CMD-P0～P4 最小安全闭环已完成；等待用户另行指派 CMD-P5 复盘，不自动迁移军事/人事/外交。HC-P1/R3 仍保持未启动。 |
@@ -20,6 +20,9 @@ CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 7
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
 另有 `pnpm verify-cmd-p4-headless`：旧君主 DOM=0、开府/伪诏取消与确认、皇权/冷却/战争、
 官制跳人事、控制台错误=0。
+
+Session 201 回归基线：shared 197/197、client 14/14、Campaign 71/71、plot/spy RNG 34/34、
+HC-P0 101/101，根目录 31 个非浏览器 `verify-*` 全过；typecheck/lint/data/build 全绿。
 
 ---
 
@@ -357,6 +360,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 |:------:|------|
 | **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
 | **Session 199 CMD-P0～P4 已完成** | §12 最小安全闭环已收官：通用壳层、朝廷抽屉、统一终审、旧君主入口原子下线及仓库内 Headless 路径均已完成。P5 复盘是独立后续任务；其他命令域尚未迁移。 |
+| **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
 | **Session 196 CMD-P1 已完成** | 通用 `CommandDock`/`CommandDrawer`/`CommandShell` + 瞬时草稿 reducer 已挂入 world；九类均为原面板/设计中说明，无业务提交入口。client 7/7 + shared 197/197 + 31个根 verify + HC-P0 101/101 全绿。下一步 CMD-P2。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |

@@ -132,6 +132,37 @@ const plotResults = plotCheck.result.plots;
 assert(plotResults.length === 4, '美人计、离间计、假情报、空城疑兵必须全部进入结算');
 assert(plotResults.every((plot) => plot.stage !== PlotStage.PREP && plot.result != null), '四类计谋必须各自产生持久化结果');
 assert(plotCheck.consumed >= 8, '四类计谋的成功与识破至少应消费 8 次随机数');
+const plotResolveLog = plotCheck.result.actionLog.find((log) => log.type === 'plot_resolve')?.message ?? '';
+assert(
+  plotResolveLog.includes(`${initial.factions[initial.playerFactionId].name}：`),
+  '每条计谋月结日志必须标明发起势力',
+);
+assert(
+  plotResolveLog.split('；').every((part) => part.startsWith('【计谋】') || part.includes('军：')),
+  '同月多条计谋结果分段后必须各自保留主体',
+);
+
+const playerPlot = launchCheck.result.plots[0];
+if (!playerPlot) throw new Error('计谋主体日志夹具生成失败');
+const enemyPlot = {
+  ...playerPlot,
+  id: `${playerPlot.id}-enemy`,
+  casterFactionId: enemyFactionId,
+  targetFactionId: initial.playerFactionId,
+};
+const multiFactionResult = tickPlotsMonth(
+  { ...prepared, plots: [playerPlot, enemyPlot] },
+  () => 0.99,
+);
+const multiFactionLog = multiFactionResult.actionLog.find((log) => log.type === 'plot_resolve')?.message ?? '';
+assert(
+  multiFactionLog.includes(`${initial.factions[initial.playerFactionId].name}：离间计失败`),
+  '玩家势力计谋失败日志必须标明玩家势力',
+);
+assert(
+  multiFactionLog.includes(`${initial.factions[enemyFactionId].name}：离间计失败`),
+  '同月另一势力计谋失败日志必须标明对应施计势力',
+);
 
 resetRuntimeRng(0x1707_0002);
 const femaleCheck = verifyRoundTrip(
@@ -232,4 +263,4 @@ const rumorCheck = verifyRoundTrip(
 );
 assert(/离间|流言/.test(rumorCheck.result.actionLog[0]?.message ?? ''), '离间流言必须落到第三方友好或目标城民忠路径');
 
-console.log(`plot/spy deterministic continuation verification passed: ${passed}/30`);
+console.log(`plot/spy deterministic continuation verification passed: ${passed}/34`);
