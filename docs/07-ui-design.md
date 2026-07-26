@@ -123,7 +123,7 @@
 │  └─结盟    │                          │                        │
 │            │                          │                        │
 │  君主      │                          │                        │
-│  └─结束回合│                          │                        │
+│  └─朝廷状态│                          │                        │
 │            │                          │                        │
 │  己方城池  │                          │                        │
 │  └─快捷列表│                          │                        │
@@ -142,7 +142,7 @@
     家族（女眷 / 姻亲·子女待/已登场 / 婚配 / 在野跟随；无父辈·无独立子女 tab）
     人事（搜索/登用 + 任命三轨 AppointPanel + 美女库存赏赐）
     外交（各势力进贡/献美/点化女间谍/结盟按钮）
-    君主（结束回合）
+    君主（政治阶段 / 皇权 / 朝廷操作；结束回合仅在 TopBar）
     己方城池（快捷列表，点击跳转地图）
   - 内政/军事操作在右侧 RightPanel，左侧不重复
 ```
@@ -341,7 +341,8 @@ Layer 3 — 特效
 
 > **当前 Demo（Session 170 / R2）**：LeftPanel 每个可交涉势力显示由共享
 > `calculateAllianceChance()` 算出的结盟率；按钮提示同一使者魅力和整数百分比。友好不足 30
-> 时仍可预览概率，但服务端拒绝提交。人事面板的每名在野将与终审窗同样显示以君主为说客的
+> 或处于战争时，结盟按钮前端直接禁用并在正文/title 显示原因，不计算、不展示成功率，也不能
+> 打开终审窗；只有全部硬门槛通过后才显示概率并允许提交。人事面板的每名在野将与终审窗同样显示以君主为说客的
 > `calculateRecruitChance()`，确认时显式提交该君主 ID，确保预览与权威结算一致。
 
 ```
@@ -463,7 +464,7 @@ App.tsx
 │   │   ├── AccSection·外交
 │   │   │   └── 各势力进贡/献美/点化/结盟
 │   │   ├── AccSection·君主
-│   │   │   ├── 结束回合
+│   │   │   ├── 政治阶段 / 皇权 / 朝廷操作（结束回合仅保留 TopBar 入口）
 │   │   │   └── 委任军团 → DelegationPanel（子菜单，§10.7）
 │   │   └── AccSection·己方城池
 │   │       └── 快捷列表(点击跳转)
@@ -880,7 +881,7 @@ AccSection·君主
 - `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。
 - `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
 - `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
-- **君主身份特例 UI（Session 188 实装）**：判定 `isRuler = game.factions[officer.faction]?.rulerId === officer.id`。君主身份时：OfficerDetail aside 不渲染"忠诚"与"功绩"条目，"拉拢记录"整个区块不渲染；功绩位置改为**势力综合国力派生指标**（城池数/总兵力/总金/总粮，从 `game.cities` + `game.factions` 已有数据派生，不新建统一进度计算）。OfficerRosterPanel 名册行右上"忠 N"对君主替换为"君主"字样，低忠诚红框警报对君主天然不触发（君主恒为占位 100）。规则真源见 04 §3.8。引擎守卫（拒绝给君主赏赐美人/赐婚/改功绩）属切片 C，留待后续 Session。
+- **君主身份特例 UI（Session 188 实装，Session 194 资源真源修正）**：判定 `isRuler = game.factions[officer.faction]?.rulerId === officer.id`。君主身份时：OfficerDetail aside 不渲染"忠诚"与"功绩"条目，"拉拢记录"整个区块不渲染；功绩位置改为**势力综合国力派生指标**（城池数/总兵力/总金/总粮）。其中金粮兵与 TopBar 统一调用 `getFactionResourceTotals()`，从当前 `game.cities` 所属城池即时汇总，禁止读取回合末才同步的 `faction.gold/food` 作为实时展示。OfficerRosterPanel 名册行右上"忠 N"对君主替换为"君主"字样，低忠诚红框警报对君主天然不触发（君主恒为占位 100）。规则真源见 04 §3.8。引擎守卫（拒绝给君主赏赐美人/赐婚/改功绩）属切片 C，留待后续 Session。
 - `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片，Session 166 素材替换）：吕布、关羽、诸葛亮、曹操改用工程内金石水墨 PNG，继续叠加氏族题签、朱砂姓名印与印绶色条；其余人物仍按属性与 ID 生成稳定 SVG/CSS 默认轮廓。`avatarGene` 尚未落库，四张位图也只是重点人物替换，**不得误记为 P5-10 全量完成**。
 - **抽象头像的目标不是写实，而是符号化辨识**：每名重点人物只强化 1~2 个有历史/文本依据的轮廓符号（冠式、胡须、眉眼、持物或官印），其余细节服从统一几何语法。辨识度须通过不显示姓名的快速识别测试验证，不能仅凭维护者主观判断。
 - 四名现有切片的符号基线：吕布=双翎武冠+锐脸/虬髯；关羽=方脸+长髯；诸葛亮=文冠+长脸/山羊胡；曹操=王者冠式+圆脸/短髯。后续不得直接照搬现代影视、动漫或商业游戏的专有服饰与构图。
@@ -1343,6 +1344,17 @@ P1 南郡最小画面应包含：
 满足条件时先进入统一终审窗，列明目标、皇权40、战争关系、8季冷却及可能的声望−30，确认后
 才提交，仍不复用普通宣战前置。
 
+### 13.5 行政面板状态反馈收口（Session 194）
+
+- 外交结盟：`war`、已同盟或友好 `<30` 均在列表层禁用；禁用按钮正文与 title 必须显示
+  具体原因。硬门槛未通过时不展示成功率，也不能打开终审窗。
+- 谍报派遣：按钮必须以“当前选中者确属可派遣空闲名单”为准；无空闲特工、旧选择已进入
+  冷却/任务中、未选目标城时均禁用并显示原因。特工状态变化后自动清除失效选择。
+- 错误归属：切换左栏一级折叠项或选择城池时清除上一操作的全局错误，避免外交失败提示
+  残留到谍报/人事等无关面板；当前终审窗内的错误仍按既有规则保留至取消或重试。
+- 君主折叠项不再重复提供“结束回合”；唯一入口为 TopBar。政治阶段、皇权、开霸府与
+  伪诏宣战等朝廷内容保持原位。
+
 ---
 
-*文档版本: v4.2 | 2026-07-26 | Session 191 高风险操作统一终审安全补丁*
+*文档版本: v4.3 | 2026-07-26 | Session 194 行政面板体验问题收口*

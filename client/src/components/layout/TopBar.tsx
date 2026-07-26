@@ -3,6 +3,7 @@
 
 import { Season } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { getFactionResourceTotals } from '../../utils/factionResources';
 
 const SEASON_LABEL: Record<number, string> = {
   [Season.SPRING]: '春',
@@ -23,19 +24,10 @@ export function TopBar() {
 
   const hasPendingEvent = (game.pendingEvents?.length ?? 0) > 0;
   const faction = game.factions[game.playerFactionId];
-  // 金/粮/兵：从己方城池汇总（城池为资源真源）
-  let gold = 0;
-  let food = 0;
-  let troops = 0;
-  let cityCount = 0;
-  for (const c of Object.values(game.cities)) {
-    if (c.ruler === game.playerFactionId) {
-      cityCount += 1;
-      troops += c.troops;
-      gold += c.gold;
-      food += c.food;
-    }
-  }
+  const { gold, food, troops, cityCount } = getFactionResourceTotals(
+    game,
+    game.playerFactionId,
+  );
 
   const season = SEASON_LABEL[game.season] ?? '';
 

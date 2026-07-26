@@ -31,6 +31,7 @@ interface Store {
   selectedUnitId: string | null;
   moveRange: string[];
   error: string | null;
+  clearError: () => void;
   loading: boolean;
   /** short UI feedback for last successful action */
   lastActionOk: string | null;
@@ -177,6 +178,7 @@ export const useGameStore = create<Store>((set, get) => ({
   grandStrategist: null,
   grandStrategistModifiers: null,
   grandStrategistLoading: false,
+  clearError: () => set({ error: null }),
 
   pushSceneFrame: (frame) => set((s) => { const stack = pushScene(s.sceneStack, frame); return { sceneStack: stack, screen: screenOf(stack) }; }),
   popSceneFrame: () => set((s) => { const stack = popScene(s.sceneStack); return { sceneStack: stack, screen: screenOf(stack) }; }),
@@ -287,7 +289,7 @@ export const useGameStore = create<Store>((set, get) => ({
 
   openScenarioSelect: () => set({ sceneStack: replaceStack({ scene: 'scenario' }), screen: 'scenario', error: null }),
 
-  selectCity: (id) => set({ selectedCityId: id, lastActionOk: null }),
+  selectCity: (id) => set({ selectedCityId: id, lastActionOk: null, error: null }),
 
   focusMapOnCity: (id) => set({ selectedCityId: id, mapFocusCityId: id, lastActionOk: null }),
 

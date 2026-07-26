@@ -93,6 +93,21 @@ export function SpyPanel() {
   );
 
   const selectedAgent = agentId ? game.intel?.agents?.[agentId] : undefined;
+  const selectedIdleAgent = idleAgents.find((a) => a.id === agentId);
+  const missionDisabledReason =
+    idleAgents.length === 0
+      ? '暂无可派遣特工（休整或任务中的密探不可派出）'
+      : !selectedIdleAgent
+        ? '请选择一名空闲特工'
+        : targetCityId === ''
+          ? '请选择目标城'
+          : null;
+
+  useEffect(() => {
+    if (agentId && !idleAgents.some((agent) => agent.id === agentId)) {
+      setAgentId('');
+    }
+  }, [agentId, idleAgents]);
 
   // Reset missionType to RECON when switching agents or if current type is invalid for the selected agent
   useEffect(() => {
@@ -205,12 +220,18 @@ export function SpyPanel() {
         <button
           type="button"
           data-testid="btn-spy-mission"
-          disabled={loading || !agentId || targetCityId === ''}
+          disabled={loading || missionDisabledReason != null}
+          title={missionDisabledReason ?? undefined}
           className="w-full px-2 py-1.5 rounded border border-amber-800 bg-amber-950/40 text-amber-100 disabled:opacity-40"
           onClick={() => setConfirmAction('mission')}
         >
           派出（{MISSION_LABEL[missionType] ?? missionType}）
         </button>
+        {missionDisabledReason && (
+          <p className="px-1 text-[10px] text-stone-500" data-testid="spy-mission-disabled-reason">
+            {missionDisabledReason}
+          </p>
+        )}
       </div>
 
       <div className="border-t border-stone-800 pt-1.5 space-y-1">

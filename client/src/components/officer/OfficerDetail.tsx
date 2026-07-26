@@ -15,6 +15,7 @@ import {
   type Officer,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { getFactionResourceTotals } from '../../utils/factionResources';
 import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
 
@@ -113,13 +114,12 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
     if (!officer || officer.faction == null) return null;
     const fid = officer.faction;
     if (game.factions[fid]?.rulerId !== officer.id) return null;
-    const owned = Object.values(game.cities).filter((c) => c.ruler === fid);
-    const faction = game.factions[fid];
+    const totals = getFactionResourceTotals(game, fid);
     return {
-      cityCount: owned.length,
-      totalTroops: owned.reduce((sum, c) => sum + (c.troops ?? 0), 0),
-      totalGold: faction?.gold ?? 0,
-      totalFood: faction?.food ?? 0,
+      cityCount: totals.cityCount,
+      totalTroops: totals.troops,
+      totalGold: totals.gold,
+      totalFood: totals.food,
     };
   }, [game.cities, game.factions, officer]);
 

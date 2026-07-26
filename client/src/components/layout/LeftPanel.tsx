@@ -46,7 +46,7 @@ export function LeftPanel() {
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const selectCity = useGameStore((s) => s.selectCity);
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
-  const endTurn = useGameStore((s) => s.endTurn);
+  const clearError = useGameStore((s) => s.clearError);
   const tribute = useGameStore((s) => s.tribute);
   const establishHegemony = useGameStore((s) => s.establishHegemony);
   const falseDecreeWar = useGameStore((s) => s.falseDecreeWar);
@@ -87,8 +87,10 @@ export function LeftPanel() {
   const selected = selectedCityId != null ? game.cities[selectedCityId] : null;
   const isPlayerCity = selected != null && selected.ruler === game.playerFactionId;
 
-  const toggle = (k: AccordionKey) =>
+  const toggle = (k: AccordionKey) => {
+    clearError();
     setOpen((prev) => (prev === k ? null : k));
+  };
 
   return (
     <aside
@@ -213,10 +215,19 @@ export function LeftPanel() {
                 const atWar = rel === 'war';
                 const plantable =
                   game.intel?.plantableBeauty?.[f.id] ?? 0;
+                const allianceEligible = !atWar && rel !== 'allied' && fav >= 30;
                 const alliance =
-                  !atWar && rel !== 'allied'
+                  allianceEligible
                     ? calculateAllianceChance(game, f.id)
                     : null;
+                const allianceDisabledReason =
+                  rel === 'allied'
+                    ? '已同盟'
+                    : atWar
+                      ? '交战中不可结盟'
+                      : fav < 30
+                        ? `友好不足（需≥30，当前${fav}）`
+                        : null;
                 return (
                   <div
                     key={f.id}
@@ -269,16 +280,21 @@ export function LeftPanel() {
                       </button>
                       <button
                         type="button"
-                        disabled={loading || rel === 'allied'}
+                        disabled={loading || allianceDisabledReason != null}
                         className="flex-1 min-w-[3.5rem] px-1.5 py-1 rounded border border-sky-900/60 text-[10px] text-sky-100 hover:bg-sky-950 disabled:opacity-40"
                         title={
-                          alliance
+                          allianceEligible && alliance
                             ? `500金，友好≥30；使者魅力${alliance.envoyCharisma}，成功率${Math.round(alliance.chance)}%`
-                            : '500金，友好≥30'
+                            : allianceDisabledReason ?? '500金，友好≥30'
                         }
                         onClick={() => setConfirm({ type: 'alliance', factionId: f.id })}
                       >
                         {rel === 'allied' ? '已同盟' : '结盟'}
+                        {allianceDisabledReason && rel !== 'allied' ? (
+                          <span className="block text-[9px] text-stone-500">
+                            {allianceDisabledReason}
+                          </span>
+                        ) : null}
                       </button>
                     </div>
                   </div>
@@ -358,13 +374,6 @@ export function LeftPanel() {
                     </div>
                   </>
                 )}
-                <MenuBtn
-                  label="结束回合"
-                  hint="收获+AI"
-                  disabled={loading}
-                  onClick={() => void endTurn()}
-                  emphasize
-                />
               </div>
             );
           })()}

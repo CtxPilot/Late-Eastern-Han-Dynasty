@@ -3947,3 +3947,34 @@
   typecheck、lint、build、SPDX。生产构建仅保留既有 >500kB chunk 警告，无失败。
 
 *v14.2 | 2026-07-26 | Session 193 · 战役权威状态完整性修复*
+
+### Session 194 — Session 190/192 审查归档 + 剩余体验问题收口
+
+- **审查归档**：两份审查报告与对应 52 张截图原样纳入版本控制：
+  `docs/reviews/session-190-map-admin-ui-ia-audit.md`、
+  `docs/reviews/session-192-190-demo-full-flow-audit.md`、
+  `docs/screenshots/session-190-ui-ia-audit/`、
+  `docs/screenshots/session-192-190-demo-flow-audit/`。
+- **君主资源真源**：新增 `getFactionResourceTotals()`，TopBar 与 OfficerDetail 君主简册
+  共用当前所属城池的金/粮/兵/城池数即时汇总；不再读回合末才同步的
+  `faction.gold/food`。Headless 实测开发农业后两处同时由 2280 变 2180。
+- **外交门禁**：结盟在战争、已同盟或友好 `<30` 时前端禁用并显示具体原因；硬门槛未通过
+  不计算/展示成功率、不能打开终审。英雄集结曹操实测孙权友好0禁用且无概率；两次进贡到30
+  后恢复可用，列表与终审一致显示64%。
+- **谍报门禁**：派出按钮改以当前选中者是否仍在 `idleAgents` 为准；进入冷却/任务中时
+  自动清失效选择，无可用特工或未选目标均禁用并显示原因。190孙坚真实招募、连续探秘至失败，
+  密探进入 `recovering · 冷2` 后按钮禁用。
+- **错误生命周期**：新增 `clearError()`，切换左栏一级面板和选择城池时清除上一操作错误。
+  Headless 以金80进贡触发“金钱不足”，切到谍报后 TopBar 与新面板均无残留错误。
+- **君主入口去重**：移除君主折叠项内“结束回合”，只保留 TopBar；孙坚君主面板仍正常显示
+  君主姓名与汉帝控制门禁，全页面结束回合按钮计数为1。
+- **孙坚列传结论**：四页签与缺省态正常，列传页明确显示“暂无列传记载”；这是 Session 172
+  仅覆盖吕布/关羽/诸葛亮/曹操四个原型的已知内容范围，不是渲染 bug，本轮不制造传记内容。
+- **Headless 证据**：`docs/screenshots/session-194-experience-fixes/` 共6张，覆盖190孙坚开局、资源同步、
+  结盟硬门禁、密探冷却、君主入口去重与低友好门禁；全程无新增控制台异常。
+- **全量回归**：shared 197/197、validate-data、Campaign 70/70、AI军事29/29、
+  HC-P0 101/101、negotiation 40/40、scenario-events 32、turn-cadence 28/28、
+  march-fog 7/7、battle-commanders；全部既有 save、RNG、AI decision 系列；
+  typecheck、lint、build、SPDX 全绿。build 仅保留既有 >500kB chunk 警告。
+
+*v14.3 | 2026-07-26 | Session 194 · 190展示流程体验问题收口*
