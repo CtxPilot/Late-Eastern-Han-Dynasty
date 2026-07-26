@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 195 完成：§12 命令坞最小安全闭环规划（纯文档）**。拍板建议为通用命令坞/抽屉壳层先行、朝廷首迁、现有终审原位升级、按域原子删除旧入口；等待用户确认后实施 |
+| 会话 | **Session 196 进行中：CMD-P0 已完成**。§12 实施规格已固化；旧“君主→开府/伪诏”1440×900 Headless 基线与4张截图已归档；下一步仅实现 CMD-P1 通用壳层 |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **S194 行政面板体验收口** + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 |
 | 文档最新 | 07 已同步资源真源、结盟/谍报禁用态、错误生命周期与结束回合唯一入口；Session 190/192 审查报告及截图已归档 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | 等待用户确认 Session 195 规划；确认后先执行 CMD-P0+P1（规格固化/测试基线 + 通用命令坞壳层），不顺手迁移其他域。HC-P1/R3 仍保持未启动。 |
+| 玩法下一步 | 当前任务继续 CMD-P1：通用 `CommandDock`/`CommandDrawer`/草稿状态机与单测；不接朝廷业务、不升级终审、不删除旧入口。HC-P1/R3 仍保持未启动。 |
 
 ---
 
@@ -348,6 +348,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 |:------:|------|
 | **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
 | **Session 195 待批准实施** | §12 最小安全闭环规划已完成：CMD-P0 规格/基线 → P1 通用壳层 → P2 朝廷抽屉 → P3 统一终审升级 → P4 原子切换 → P5 复盘，预计2～4 Session。首批只迁政治状态/汉帝控制/皇权冷却/开府/伪诏；官制只读总览跳人事唯一写入口；其他域不迁。详见 `docs/reviews/session-195-command-dock-minimum-safe-loop-plan.md`。 |
+| **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
 | **Session 188 HC-P0-5 已完成** | HC-P0-5 霸府外交权重加成（1 commit 待提交）：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3，称王/称帝分档预留）+ `calculateAllianceChance` 接入结盟成功率修正 + `AllianceChanceBreakdown.hegemonyModifier` 字段 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
