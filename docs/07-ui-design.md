@@ -915,6 +915,8 @@ AccSection·君主
 - 烽火特效：目标城 `Circle` + `Konva.Animation` 粒子（复用粒子系统）。
 - "是否攻城"弹窗：DOM modal（仿 EventDialog），围城状态触发。
 - 行军箭头：Konva `Arrow` 沿 path。
+- 阵型名称统一读取 `shared/labels.ts` 的 `FORMATION_LABEL`；武将简册、战役编成/Army
+  详情、标准模式不得本地维护映射。ID 6 固定为“锋矢阵”，ID 16 固定为“冲阵”。
 
 #### §11.2.3 W7 二级战术串联
 

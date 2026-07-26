@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useMemo, useState } from 'react';
-import { FormationType, UnitType, type CampaignArmy } from '@leh/shared';
+import { FORMATION_LABEL, FormationType, UnitType, type CampaignArmy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
@@ -272,11 +272,16 @@ export function CampaignPanel() {
                   onChange={(e) => setFormation(Number(e.target.value))}
                   className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
                 >
-                  <option value={FormationType.WEDGE}>锋矢</option>
-                  <option value={FormationType.SQUARE}>方阵</option>
-                  <option value={FormationType.CRANE_WING}>鹤翼</option>
-                  <option value={FormationType.FISH_SCALE}>鱼鳞</option>
-                  <option value={FormationType.ARROWHEAD}>冲阵</option>
+                  {[
+                    FormationType.WEDGE,
+                    FormationType.SQUARE,
+                    FormationType.CRANE_WING,
+                    FormationType.FISH_SCALE,
+                    FormationType.ARROWHEAD,
+                    FormationType.CHARGE,
+                  ].map((id) => (
+                    <option key={id} value={id}>{FORMATION_LABEL[id]}</option>
+                  ))}
                 </select>
               </Field>
             </div>
@@ -600,14 +605,7 @@ function bar(value: number, max: number): string {
 }
 
 function formationLabel(f: number): string {
-  const labels: Record<number, string> = {
-    [FormationType.SQUARE]: '方阵',
-    [FormationType.WEDGE]: '锋矢',
-    [FormationType.CRANE_WING]: '鹤翼',
-    [FormationType.FISH_SCALE]: '鱼鳞',
-    [FormationType.ARROWHEAD]: '冲阵',
-  };
-  return labels[f] ?? `阵${f}`;
+  return FORMATION_LABEL[f] ?? `阵${f}`;
 }
 
 function structLabel(t: string): string {

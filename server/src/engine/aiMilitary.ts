@@ -5,12 +5,11 @@
  * S15 军事 AI：外交过滤、君主激进度、边境袭扰与 CampaignArmy 出征。
  */
 import {
-  DipRelation,
   FormationType,
   OfficerStatus,
   UnitType,
   canMarchAlongRoad,
-  findDiplomacy,
+  isHostileOrAtWar,
   type GameState,
   type Officer,
 } from '@leh/shared';
@@ -52,8 +51,7 @@ function pushLog(
 
 /** 军事行动仅允许战争/敌对关系；缺失关系按中立处理。 */
 export function canAiAttackFaction(state: GameState, attackerId: number, defenderId: number): boolean {
-  const relation = findDiplomacy(state.diplomacy, attackerId, defenderId)?.relation ?? DipRelation.NEUTRAL;
-  return relation === DipRelation.WAR || relation === DipRelation.HOSTILE;
+  return isHostileOrAtWar(state.diplomacy, attackerId, defenderId);
 }
 
 /** 君主野心为主、统率为辅，派生 0.75~1.35 的军事激进度。 */

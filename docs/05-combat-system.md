@@ -3487,10 +3487,13 @@ interface FactionState {
   ✓ 调整 Squad 阵位
 
 自动事件：
-  目标节点有敌方 Army → 进入野战接战
-  目标节点有敌方关隘 → 到达后进入围城
+  目标节点有外交关系为 hostile / war 的 Army → 进入野战接战
+  目标节点有外交关系为 hostile / war 的关隘/城池 → 到达后进入围城
   敌 Army 在中途节点拦截 → 进入野战接战
   经过己方城 → 自动补粮（取该城库存 50%）
+
+外交链缺失按 neutral；neutral / friendly / allied 势力可在同一节点共处，不互相触发
+野战、围城或强攻。该规则与 S15 AI 军事目标过滤共用 `isHostileOrAtWar` 真源。
 
 补给消耗：
   每回合粮耗 = floor(troops/100) × 3 × 地形系数
@@ -3505,6 +3508,10 @@ interface FactionState {
   1. 先判定先锋对决（双方先锋将智力/武力较量）
   2. 进入自动战斗结算（§十七）
   3. 结算后根据结果进入战后阶段
+
+权威回写约束：结算前先按攻守双方 Army ID 从 `campaignArmies` 摘除参战对象，再按战果
+分别回写至多一次；任何胜负/残军组合都不得产生重复 Army ID。完整 `GameStateSchema`
+同时把 Army ID 全局唯一作为存档/权威状态门禁。
 
 特殊规则：
   - 守方可选"避战撤退"（组织度 -20，保留兵力进入相邻节点）

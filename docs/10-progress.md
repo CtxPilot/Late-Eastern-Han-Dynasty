@@ -3917,3 +3917,33 @@
   均通过。`verify-geo-google` 是外部 Google 地理接口人工校验项，不属于离线全量套件，未运行。
 
 *v14.1 | 2026-07-26 | Session 191 · 高风险操作二次确认完成*
+
+### Session 193 — 战役外交判定 + Army ID 复制污染修复
+
+- **根因 1（外交）**：`campaign.ts` 的行军相遇与强攻目标只比较 `factionId`，未读取
+  `diplomacy`；因此 S15 AI 虽不会主动攻击盟友，两支已出征 Army 同节点时仍会被战役状态机
+  强制判为野战。新增 shared `isHostileOrAtWar`，AI 与战役行军/围城/劝降/强攻统一复用：
+  仅 `hostile/war` 可交战，缺失链按 `neutral`，`neutral/friendly/allied` 可同节点共处。
+- **根因 2（Army 复制）**：战后数组只先过滤攻方；攻胜且守方有残兵时再次 push 守方，
+  导致守方重复；攻败分支则先 push 退回攻方、return 时又追加一次 `updatedArmy`，导致攻方
+  重复。因此它是任何野战都可能触发的独立广泛 bug，不是同盟误判专属。现改为先同时摘除
+  攻守双方 ID，再按战果各回写至多一次；完整 `GameStateSchema` 新增 Army ID 全局唯一门禁。
+- **死锁结论**：Session 192 的“孙坚驻守敌属洛阳但不能围城”由错误盟友野战及错误 field
+  battle 结算共同造成；根因修复后孙坚/曹操均保持对董卓洛阳的 `sieging`，可正常强攻，
+  不再进入彼此野战或生成重复 ID，无需另加死锁特判。
+- **阵型标签**：CampaignPanel 编成下拉与 Army 详情、StandardModePanel 全部改读
+  `shared/labels.ts` `FORMATION_LABEL`，OfficerDetail 已使用同一真源；id 6=锋矢阵、
+  id 16=冲阵。新增 shared 标签单测。
+- **确定性验证**：shared 197/197；`verify-campaign` 70/70（新增 allied/friendly 共处、
+  hostile 接战、攻守 ID 唯一与 Schema 拒绝重复 ID）；`verify-ai-military-rng` 29/29；
+  typecheck/lint 通过。
+- **Headless Chrome**：190《关东义兵》真实点击选择孙坚→编成孙坚/孙策、重骑、冲阵16、
+  3000兵/1200粮→确认出征→结束回合；权威状态显示孙坚军与曹操军同时在洛阳、均围攻董卓，
+  孙曹关系 allied，Army ID 无重复，页面无“进入野战”，控制台无 React duplicate-key。
+  截图：`docs/screenshots/session-193-campaign-integrity-fix/`。
+- **全量回归**：全部绿色——shared 197/197、validate-data、Campaign 70/70、AI 军事
+  29/29、HC-P0 101/101、negotiation 40/40、scenario-events 32、turn-cadence
+  28/28、march-fog 7/7、battle-commanders；全部既有 save、RNG、AI decision 系列；
+  typecheck、lint、build、SPDX。生产构建仅保留既有 >500kB chunk 警告，无失败。
+
+*v14.2 | 2026-07-26 | Session 193 · 战役权威状态完整性修复*

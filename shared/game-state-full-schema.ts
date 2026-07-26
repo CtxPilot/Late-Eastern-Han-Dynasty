@@ -80,6 +80,13 @@ export const GameStateSchema = z
     const spyIds = new Set(Object.keys(state.intel.agents));
 
     requireRef(factionIds.has(state.playerFactionId), ['playerFactionId'], '玩家势力不存在', ctx);
+    if (campaignArmyIds.size !== state.campaignArmies.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['campaignArmies'],
+        message: '战役 Army ID 必须全局唯一',
+      });
+    }
 
     Object.values(state.factions).forEach((faction) => {
       const base = ['factions', faction.id] as (string | number)[];

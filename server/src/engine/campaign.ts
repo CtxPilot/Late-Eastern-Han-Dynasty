@@ -20,6 +20,7 @@
 import {
   OfficerStatus,
   areCitiesRoadAdjacent,
+  isHostileOrAtWar,
   roadNeighbors,
   UnitType,
   type AutoBattleResult,
@@ -399,7 +400,12 @@ export function tickCampaignMarch(state: GameState): GameState {
     if (a.path.length === 0) {
       // 到达目标 → 视目标归属决定驻守/围城/野战
       const target = state.cities[a.targetNodeId ?? a.currentNodeId];
-      if (target && target.ruler != null && target.ruler !== a.factionId) {
+      if (
+        target &&
+        target.ruler != null &&
+        target.ruler !== a.factionId &&
+        isHostileOrAtWar(state.diplomacy, a.factionId, target.ruler)
+      ) {
         armies[i] = { ...a, phase: 'sieging', currentNodeId: a.targetNodeId ?? a.currentNodeId };
         logs.push(`${a.name} 抵达 ${target.name}，进入围城`);
       } else {
@@ -437,12 +443,17 @@ export function tickCampaignMarch(state: GameState): GameState {
       (other) =>
         other.id !== a.id &&
         other.factionId !== a.factionId &&
+        isHostileOrAtWar(state.diplomacy, a.factionId, other.factionId) &&
         other.currentNodeId === nextNodeId &&
         other.phase !== 'retreating',
     );
     // 目标节点为敌方城 → 围城
     const targetCity = state.cities[nextNodeId];
-    const isEnemyCity = targetCity && targetCity.ruler != null && targetCity.ruler !== a.factionId;
+    const isEnemyCity =
+      targetCity &&
+      targetCity.ruler != null &&
+      targetCity.ruler !== a.factionId &&
+      isHostileOrAtWar(state.diplomacy, a.factionId, targetCity.ruler);
 
     // 经过己方城 → 自动补粮（取该城库存 50%）
     if (targetCity && targetCity.ruler === a.factionId && restPath.length > 0) {
@@ -819,7 +830,11 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
 
   const targetCity = state.cities[army.targetNodeId ?? army.currentNodeId];
   if (!targetCity) throw new Error('围城目标不存在');
-  if (targetCity.ruler == null || targetCity.ruler === army.factionId) {
+  if (
+    targetCity.ruler == null ||
+    targetCity.ruler === army.factionId ||
+    !isHostileOrAtWar(state.diplomacy, army.factionId, targetCity.ruler)
+  ) {
     throw new Error('目标非敌方');
   }
 
@@ -896,8 +911,22 @@ export function assaultForFaction(
 
   // 查找同节点敌方 Army
   const enemyArmy = state.campaignArmies.find(
-    (a) => a.id !== army.id && a.factionId !== army.factionId && a.currentNodeId === targetId,
+    (a) =>
+      a.id !== army.id &&
+      a.factionId !== army.factionId &&
+      isHostileOrAtWar(state.diplomacy, army.factionId, a.factionId) &&
+      a.currentNodeId === targetId,
   );
+  if (
+    !enemyArmy &&
+    (
+      targetCity.ruler == null ||
+      targetCity.ruler === army.factionId ||
+      !isHostileOrAtWar(state.diplomacy, army.factionId, targetCity.ruler)
+    )
+  ) {
+    throw new Error('目标非敌方');
+  }
 
   const result = runAutoBattle(
     state,
@@ -963,7 +992,13 @@ function applyBattleResultToState(
   let cities = { ...state.cities };
   let officers = { ...state.officers };
   let factions = { ...state.factions };
-  const armies = state.campaignArmies.filter((a) => a.id !== army.id);
+  // 两支参战 Army 都先从权威数组移除，随后按战果各自最多回写一次。
+  // 旧逻辑只移除攻方，防守方残军 push 后与原对象并存，且攻方战败分支还会重复回写攻方。
+  const participantIds = new Set([
+    army.id,
+    ...(resolution.enemyArmyId ? [resolution.enemyArmyId] : []),
+  ]);
+  const armies = state.campaignArmies.filter((a) => !participantIds.has(a.id));
 
   // 更新攻方 Army
   const updatedArmy: CampaignArmy = {
@@ -1101,7 +1136,7 @@ function applyBattleResultToState(
       armies.push({ ...updatedArmy, phase: 'garrison', currentNodeId: army.fromNodeId, targetNodeId: undefined, path: [] });
     }
     return pushLog(
-      { ...state, cities, officers, factions, campaignArmies: [...armies, ...(result.attackerRemaining > MIN_CAMPAIGN_TROOPS ? [updatedArmy] : [])] },
+      { ...state, cities, officers, factions, campaignArmies: armies },
       'campaign_defeat',
       `${army.name} 战败，残部 ${result.attackerRemaining} 退回`,
     );

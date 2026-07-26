@@ -84,6 +84,16 @@ export function isFriendlyOrBetter(
   );
 }
 
+/** 军事敌对判定真源：仅 hostile / war 可触发势力间交战；缺失关系按 neutral。 */
+export function isHostileOrAtWar(
+  links: DiplomacyLink[],
+  a: FactionId,
+  b: FactionId,
+): boolean {
+  const relation = findDiplomacy(links, a, b)?.relation as string | undefined;
+  return relation === DipRelation.HOSTILE || relation === DipRelation.WAR;
+}
+
 export function intelStillValid(
   entry: CityIntelEntry,
   year: number,

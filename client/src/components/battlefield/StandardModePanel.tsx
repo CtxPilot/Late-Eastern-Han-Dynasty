@@ -11,7 +11,7 @@
  * - 回合执行与结果展示
  */
 import { useState } from 'react';
-import { FormationType } from '@leh/shared';
+import { FORMATION_LABEL } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 
 /** 战术动作中文名 */
@@ -25,25 +25,6 @@ const ACTION_NAMES: Record<string, string> = {
   initiate_duel: '发起单挑',
   retreat_prep: '撤退准备',
   counter_stratagem: '计略防御',
-};
-
-/** 阵型中文名 */
-const FORMATION_NAMES: Record<number, string> = {
-  [FormationType.SQUARE]: '方阵',
-  [FormationType.CIRCLE]: '圆阵',
-  [FormationType.WEDGE]: '锋矢',
-  [FormationType.GOOSE]: '雁行',
-  [FormationType.CRANE_WING]: '鹤翼',
-  [FormationType.FISH_SCALE]: '鱼鳞',
-  [FormationType.ARROWHEAD]: '冲阵',
-  [FormationType.CRESCENT]: '偃月',
-  [FormationType.LONG_SNAKE]: '长蛇',
-  [FormationType.YOKE]: '衡轭',
-  [FormationType.SPARSE]: '疏阵',
-  [FormationType.DENSE]: '数阵',
-  [FormationType.HOOK]: '钩形',
-  [FormationType.MYSTERIOUS]: '玄襄',
-  [FormationType.CHARIOT_WHEEL]: '车悬',
 };
 
 /** 可用战术动作列表（0-A 简化） */
@@ -118,7 +99,7 @@ export function StandardModePanel() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-400">阵型</span>
-              <span>{FORMATION_NAMES[melee.attackerFormation] ?? melee.attackerFormation}</span>
+              <span>{FORMATION_LABEL[melee.attackerFormation] ?? melee.attackerFormation}</span>
             </div>
           </div>
         </div>
@@ -135,7 +116,7 @@ export function StandardModePanel() {
             </div>
             <div className="flex justify-between">
               <span className="text-stone-400">阵型</span>
-              <span>{FORMATION_NAMES[melee.defenderFormation] ?? melee.defenderFormation}</span>
+              <span>{FORMATION_LABEL[melee.defenderFormation] ?? melee.defenderFormation}</span>
             </div>
           </div>
         </div>

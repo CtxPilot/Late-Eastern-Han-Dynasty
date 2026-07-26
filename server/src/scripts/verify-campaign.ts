@@ -7,7 +7,9 @@
  */
 import {
   CivilPosition,
+  DipRelation,
   FormationType,
+  GameStateSchema,
   GrowthPotential,
   Ideal,
   LocalPosition,
@@ -183,7 +185,9 @@ function baseState(): GameState {
     activeBattles: [],
     activeBattlefield: null,
     activeMelee: null,
-    diplomacy: [],
+    diplomacy: [
+      { factionA: 1, factionB: 2, relation: DipRelation.HOSTILE, favorability: -50 },
+    ],
     intel: emptyIntel(),
     plots: [],
     completedEvents: [],
@@ -546,6 +550,98 @@ console.log('\n15. 单挑事件触发');
     triggeredCount += result.duels.length;
   }
   assert(triggeredCount > 0, `50 次模拟中单挑触发 ${triggeredCount} 次（关羽武差大）`);
+}
+
+// --- 16. 外交关系过滤：友军共处不触发野战 ---
+console.log('\n16. 外交关系过滤');
+{
+  let state = { ...baseState(), campaignNodes: buildCampaignNodes(baseState()) };
+  state = {
+    ...state,
+    diplomacy: [
+      { factionA: 1, factionB: 2, relation: DipRelation.ALLIED, favorability: 80 },
+    ],
+  };
+  const started = startCampaign(state, {
+    commanderId: 6, subCommanderIds: [],
+    fromNodeId: 15, targetNodeId: 13,
+    unitType: UnitType.HEAVY_CAVALRY, formation: FormationType.WEDGE,
+    troopCount: 2000, food: 800,
+  });
+  const alliedArmy: import('@leh/shared').CampaignArmy = {
+    id: 'allied-army', factionId: 1, name: '曹仁军', commanderId: 13, subCommanderIds: [],
+    unitType: UnitType.HEAVY_INFANTRY, formation: FormationType.SQUARE,
+    currentNodeId: 13, path: [], phase: 'garrison',
+    troops: 2500, maxTroops: 2500, food: 800, maxFood: 800,
+    morale: 70, organization: 70, experience: 0, fatigue: 0,
+    squads: [], structures: [],
+  };
+  state = tickCampaignMarch({
+    ...started.state,
+    campaignArmies: [...started.state.campaignArmies, alliedArmy],
+  });
+  state = tickCampaignMarch(state);
+  const playerArmy = state.campaignArmies.find((a) => a.factionId === 2)!;
+  assert(playerArmy.phase === 'garrison', '同盟 Army 共处同城不触发野战/围城');
+  assert(!state.actionLog.some((log) => log.message.includes('进入野战')), '同盟相遇无野战日志');
+
+  state = {
+    ...state,
+    diplomacy: [
+      { factionA: 1, factionB: 2, relation: DipRelation.FRIENDLY, favorability: 40 },
+    ],
+    campaignArmies: state.campaignArmies.map((a) =>
+      a.factionId === 2 ? { ...a, phase: 'marching' as const, currentNodeId: 15, path: [13] } : a
+    ),
+    actionLog: [],
+  };
+  state = tickCampaignMarch(state);
+  state = tickCampaignMarch(state);
+  assert(
+    state.campaignArmies.find((a) => a.factionId === 2)?.phase === 'garrison',
+    '友好 Army 共处同城不触发野战/围城',
+  );
+}
+
+// --- 17. 敌对野战结算：参战 Army 各最多回写一次 ---
+console.log('\n17. 敌对野战残军回写唯一性');
+{
+  let state = { ...baseState(), campaignNodes: buildCampaignNodes(baseState()) };
+  const started = startCampaign(state, {
+    commanderId: 6, subCommanderIds: [],
+    fromNodeId: 15, targetNodeId: 13,
+    unitType: UnitType.HEAVY_CAVALRY, formation: FormationType.WEDGE,
+    troopCount: 3000, food: 1000,
+  });
+  const defender: import('@leh/shared').CampaignArmy = {
+    id: 'hostile-defender', factionId: 1, name: '曹仁军', commanderId: 13, subCommanderIds: [],
+    unitType: UnitType.HEAVY_INFANTRY, formation: FormationType.SQUARE,
+    currentNodeId: 13, path: [], phase: 'garrison',
+    troops: 3000, maxTroops: 3000, food: 1000, maxFood: 1000,
+    morale: 70, organization: 70, experience: 0, fatigue: 0,
+    squads: [], structures: [],
+  };
+  state = tickCampaignMarch({
+    ...started.state,
+    campaignArmies: [...started.state.campaignArmies, defender],
+  });
+  const attacker = state.campaignArmies.find((a) => a.factionId === 2)!;
+  assert(attacker.phase === 'engaged', 'hostile 关系 Army 相遇正常触发野战');
+  const outcome = assault(state, attacker.id, () => 0.5);
+  const ids = outcome.state.campaignArmies.map((a) => a.id);
+  assert(new Set(ids).size === ids.length, '野战结算后 CampaignArmy ID 全局唯一');
+  assert(ids.filter((id) => id === attacker.id).length <= 1, '攻方残军最多回写一次');
+  assert(ids.filter((id) => id === defender.id).length <= 1, '守方残军最多回写一次');
+  const survivor = outcome.state.campaignArmies[0];
+  if (survivor) {
+    const polluted = {
+      ...outcome.state,
+      campaignArmies: [...outcome.state.campaignArmies, { ...survivor }],
+    };
+    assert(!GameStateSchema.safeParse(polluted).success, '完整 GameState Schema 拒绝重复 Army ID');
+  } else {
+    assert(false, '野战后应至少存在一支残军供唯一性 Schema 测试');
+  }
 }
 
 console.log(`\n=== 结果: ${pass} passed, ${fail} failed ===\n`);
