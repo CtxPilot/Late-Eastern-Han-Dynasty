@@ -4,7 +4,8 @@
 > 依据：`07-ui-design.md` §12、Session 190 信息架构审查、Session 191 高风险终审补丁、
 > Session 194 体验问题收口及当前 React 实现。  
 > 规划状态：**CMD-P0～P4 已于 Session 196～199 全部完成**。本文件保留原规划与验收口径；
-> CMD-P5 复盘仍是独立后续任务，不在本次闭环内自动启动。
+> CMD-P5 已于 Session 202 完成，结论与下一域计划见
+> `session-202-cmd-p5-next-domain-review-and-plan.md`；下一迁移域建议为人事（CMD-P6～P10）。
 
 ## 一、决策摘要
 
