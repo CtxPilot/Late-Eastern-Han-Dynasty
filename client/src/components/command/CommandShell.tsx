@@ -9,6 +9,7 @@ import {
   INITIAL_COMMAND_SHELL_STATE,
   type CommandDomain,
 } from './commandShellState';
+import { CourtCommandDrawer } from './CourtCommandDrawer';
 
 export function CommandShell() {
   const [state, dispatch] = useReducer(commandShellReducer, INITIAL_COMMAND_SHELL_STATE);
@@ -25,10 +26,16 @@ export function CommandShell() {
           onClose={closeDrawer}
           triggerElement={triggerRefs.current[activeItem.domain]}
         >
-          <p>{activeItem.reason}。</p>
-          <p className="mt-2 text-stone-600">
-            通用容器已就位；本阶段不复制旧操作，也不提供可提交的占位命令。
-          </p>
+          {activeItem.domain === 'court' ? (
+            <CourtCommandDrawer shellState={state} dispatch={dispatch} />
+          ) : (
+            <>
+              <p>{activeItem.reason}。</p>
+              <p className="mt-2 text-stone-600">
+                通用容器已就位；本阶段不复制旧操作，也不提供可提交的占位命令。
+              </p>
+            </>
+          )}
         </CommandDrawer>
       ) : null}
       <div className="overflow-x-auto">

@@ -21,7 +21,7 @@ export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
   { domain: 'intel', label: '情报', availability: 'legacy', reason: '仍在左侧谍报面板' },
   { domain: 'farming', label: '屯田', availability: 'planned', reason: '设计中，尚未提供运行时入口' },
   { domain: 'family', label: '家族', availability: 'legacy', reason: '仍在左侧家族面板' },
-  { domain: 'court', label: '朝廷', availability: 'legacy', reason: '仍在左侧君主面板，CMD-P2 迁入' },
+  { domain: 'court', label: '朝廷', availability: 'available', reason: '朝廷功能已接入；旧君主入口过渡保留至 CMD-P4' },
 ] as const;
 
 export function CommandDock({
@@ -62,7 +62,11 @@ export function CommandDock({
             >
               <span className="block">{item.label}</span>
               <span className="mt-0.5 block text-[9px] text-stone-500">
-                {item.availability === 'planned' ? '设计中' : '原面板'}
+                {item.availability === 'available'
+                  ? '可用'
+                  : item.availability === 'planned'
+                    ? '设计中'
+                    : '原面板'}
               </span>
             </button>
           );

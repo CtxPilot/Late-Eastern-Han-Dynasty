@@ -4034,3 +4034,28 @@
   与 Headless 路径（CMD-P4）。
 
 *v14.6 | 2026-07-26 | Session 196 · CMD-P1 通用命令坞/抽屉/草稿壳层完成*
+
+### Session 197 — CMD-P2 朝廷抽屉完整接入
+
+- **业务接线**：朝廷抽屉接入君主姓名、政治头衔/阶段、汉帝所在与控制状态、皇权/伪诏冷却；
+  全部直接从当前 `GameState` 派生，复用 shared `controlsEmperor()` / `findDiplomacy()`，未新增
+  权威字段或独立业务缓存。
+- **草稿与终审**：开霸府、伪诏目标均进入 CMD-P1 朝廷草稿；继续复用既有
+  `CommandConfirmDialog` 和 store `establishHegemony()` / `falseDecreeWar()`。取消保留草稿，
+  成功清理草稿；CMD-P3 的焦点圈定/统一终审升级未提前实施。
+- **官制边界**：只读总览固定展示大司马、录尚书事、都督中外诸军事及任职者；跳转按钮通过
+  UI 导航事件打开旧人事折叠，任命写操作仍只有 `AppointPanel`，未在朝廷复制。
+- **新旧并存**：按本轮批准策略，旧“君主”暂不删除/禁用；两边均读写同一 Zustand 权威
+  `game` 快照，双入口不拥有各自缓存。仅作为 CMD-P2 验证期状态，CMD-P4 必须原子下线旧入口。
+- **确定性测试**：客户端新增 3 项朝廷 view-model 测试，覆盖政统/汉帝同源派生、伪诏
+  皇权/冷却/战争门禁和三官职只读任职者；client 累计 3 文件10项。
+- **Headless 基线对照**：英雄集结曹操真实点击新朝廷开府取消/确认（诸侯保持→霸府、皇权100），
+  再用新入口伪诏取消/确认（草稿保留→皇权60、冷却8季）；旧君主即时显示丞相/60/8季，
+  官制跳转成功展开人事，全程零控制台错误。
+- **全量回归**：shared 197/197、client 10/10、HC-P0 101/101、Campaign 70/70、
+  AI军事29/29、negotiation 40/40、scenario-events 32、turn-cadence 28/28，以及根目录全部
+  31 个 `verify-*`（存档/RNG/AI decision/迷雾/守将）均通过；typecheck、lint、validate-data、
+  build、SPDX 全绿，build 仅既有 >500kB chunk 警告。
+- **边界**：未删除旧君主（CMD-P4）、未升级 `CommandConfirmDialog`（CMD-P3）、未接其他命令域。
+
+*v14.7 | 2026-07-26 | Session 197 · CMD-P2 朝廷业务完整接线*

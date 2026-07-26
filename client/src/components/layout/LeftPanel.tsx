@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { calculateAllianceChance, findDiplomacy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { controlsEmperor } from '@leh/shared';
@@ -16,6 +16,7 @@ import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { OPEN_LEGACY_PERSONNEL_EVENT } from '../command/commandNavigation';
 
 type AccordionKey =
   | 'campaign'
@@ -65,6 +66,15 @@ export function LeftPanel() {
     | { type: 'false-decree'; factionId: number }
     | null
   >(null);
+
+  useEffect(() => {
+    const openPersonnel = () => {
+      clearError();
+      setOpen('personnel');
+    };
+    window.addEventListener(OPEN_LEGACY_PERSONNEL_EVENT, openPersonnel);
+    return () => window.removeEventListener(OPEN_LEGACY_PERSONNEL_EVENT, openPersonnel);
+  }, [clearError]);
 
   const familyCount = useMemo(() => {
     if (!game) return 0;
