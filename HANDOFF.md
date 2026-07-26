@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 194 完成：Session 190/192 审查归档与剩余体验问题收口**。君主资源与 TopBar 同源；结盟/密探禁用态补硬门槛与原因；跨面板错误清理；君主重复结束回合移除；孙坚缺传记确认是正常缺省态 |
+| 会话 | **Session 195 完成：§12 命令坞最小安全闭环规划（纯文档）**。拍板建议为通用命令坞/抽屉壳层先行、朝廷首迁、现有终审原位升级、按域原子删除旧入口；等待用户确认后实施 |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **S194 行政面板体验收口** + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 |
 | 文档最新 | 07 已同步资源真源、结盟/谍报禁用态、错误生命周期与结束回合唯一入口；Session 190/192 审查报告及截图已归档 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | HC-P0 已收尾；等待用户选择 HC-P1（称王）或既有 R3（S10 单挑四倾向）。君主特例切片 C（引擎守卫）仍可独立推进。 |
+| 玩法下一步 | 等待用户确认 Session 195 规划；确认后先执行 CMD-P0+P1（规格固化/测试基线 + 通用命令坞壳层），不顺手迁移其他域。HC-P1/R3 仍保持未启动。 |
 
 ---
 
@@ -333,7 +333,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | `docs/11-context-management.md` | 适性 S~NONE 系数 |
 | `docs/04-game-systems.md` | 规则大全 |
 | `docs/06-api-design.md` | 含 `/battle/fire` + `/battle/ability` |
-| `docs/07-ui-design.md` | UI 设计（**v3.4：武将名册/详情 + 人事终审窗已实装；§12 其余命令 UI 仍设计中**） |
+| `docs/07-ui-design.md` | UI 设计（**v3.4：武将名册/详情 + 人事终审窗已实装；§12 其余命令 UI 仍设计中；Session 195 详细实施计划见 reviews**） |
 | `docs/15-linux-ui-spec.md` | **v1.0** Linux UI 与跨平台字体规范（Session 102 新建） |
 | `docs/16-demo-build-playbook.md` | 0-A Demo 12回合流程；严格标注已验证、引擎受阻、替代展示与设计中能力 |
 | `docs/24-character-expression-system-design.md` | S23 人物状态表情系统设计（Session 172；3 原型占位，程序化 SVG 分层；状态→图层映射纯函数 + 背景色调层） |
@@ -347,6 +347,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 优先级 | 事项 |
 |:------:|------|
 | **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
+| **Session 195 待批准实施** | §12 最小安全闭环规划已完成：CMD-P0 规格/基线 → P1 通用壳层 → P2 朝廷抽屉 → P3 统一终审升级 → P4 原子切换 → P5 复盘，预计2～4 Session。首批只迁政治状态/汉帝控制/皇权冷却/开府/伪诏；官制只读总览跳人事唯一写入口；其他域不迁。详见 `docs/reviews/session-195-command-dock-minimum-safe-loop-plan.md`。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
 | **Session 188 HC-P0-5 已完成** | HC-P0-5 霸府外交权重加成（1 commit 待提交）：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3，称王/称帝分档预留）+ `calculateAllianceChance` 接入结盟成功率修正 + `AllianceChanceBreakdown.hegemonyModifier` 字段 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
