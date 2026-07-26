@@ -10,7 +10,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b --noEmit",
     "lint": "tsc -b --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",
@@ -29,6 +30,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vitest": "^4.1.10"
   }
 }

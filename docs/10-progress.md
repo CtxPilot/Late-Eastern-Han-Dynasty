@@ -4013,3 +4013,24 @@
 - **边界**：本子项纯规格/测试基线，不改运行时代码、不接朝廷新入口、不升级终审组件。
 
 *v14.5 | 2026-07-26 | Session 196 · CMD-P0 规格与迁移前基线完成*
+
+### Session 196 — CMD-P1 通用命令坞壳层
+
+- **通用容器**：新增 `CommandDock`（九类固定入口+独立进行占位）、`CommandDrawer`（标题/
+  状态/滚动正文/显式收起/焦点进入与返回/Esc）和 `CommandShell`，挂在 world `GameLayout`
+  底部。九类当前只显示“仍在原面板”，屯田显示“设计中”；不提供业务按钮，“进行”禁用并明确
+  仍使用 TopBar，故与旧手风琴并存且无第二套写入口。
+- **草稿状态机**：新增纯 reducer，统一管理 `activeDomain`、`activeCommand`、逐域 draft；
+  同域关闭/显式关闭清草稿，切域清前域草稿，参数更新合并，提交成功清对应草稿，跨局 `reset`
+  清全部瞬时状态。草稿不进入 GameState/存档/API。
+- **测试基线**：客户端引入 Vitest 并接入根 `pnpm test`。2文件7项覆盖空壳九类渲染、
+  active domain 展开语义、抽屉空态/关闭控件，以及开关、切域、草稿合并、提交清理、跨局重置。
+- **真实交互**：Headless Chrome 在现有游戏中依次点击九类并逐个收起；每项均展开对应抽屉，
+  旧“君主”入口仍存在，伪诏旧按钮仍为唯一业务入口，验证过渡期互不干扰。
+- **全量回归**：`pnpm test` 为 shared 197/197 + client 7/7；typecheck/lint/build/
+  validate-data 全绿（build 仅既有 >500kB warning）；根目录 31 个 `verify-*` 脚本全部退出0，
+  另补 server `verify-hc-p0` 101/101 与 `verify-geo-google` 通过。
+- **边界**：未接朝廷业务（CMD-P2）、未改 `CommandConfirmDialog`（CMD-P3）、未删除/迁移旧入口
+  与 Headless 路径（CMD-P4）。
+
+*v14.6 | 2026-07-26 | Session 196 · CMD-P1 通用命令坞/抽屉/草稿壳层完成*

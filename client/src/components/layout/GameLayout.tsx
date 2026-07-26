@@ -6,8 +6,9 @@ import { LeftPanel } from './LeftPanel';
 import { RightPanel } from './RightPanel';
 import { MapCanvas } from '../map/MapCanvas';
 import { EventDialog } from '../events/EventDialog';
+import { CommandShell } from '../command/CommandShell';
 
-/** P1-06 主三栏布局：TopBar + LeftPanel | MapCanvas | RightPanel + 事件弹窗 */
+/** P1-06 主三栏布局 + CMD-P1 通用命令坞壳层；旧面板在逐域迁移期间继续保留 */
 export function GameLayout() {
   return (
     <div className="h-full flex flex-col bg-stone-950" data-testid="game-layout">
@@ -19,6 +20,7 @@ export function GameLayout() {
         </main>
         <RightPanel />
       </div>
+      <CommandShell />
       <EventDialog />
     </div>
   );
