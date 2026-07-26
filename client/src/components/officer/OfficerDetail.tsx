@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
   FORMATION_LABEL,
+  HEGEMONY_LABELS,
+  HegemonyPosition,
   IDEAL_LABEL,
   LOCAL_LABELS,
   MILITARY_LABELS,
@@ -209,6 +211,9 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                       <Info label="地方" value={LOCAL_LABELS[officer.localPosition]} />
                       <Info label="武官" value={MILITARY_LABELS[officer.militaryPosition]} />
                       <Info label="爵位" value={NOBILITY_LABEL[officer.nobilityRank] ?? String(officer.nobilityRank)} />
+                      {officer.hegemonyPosition && officer.hegemonyPosition !== HegemonyPosition.NONE && (
+                        <Info label="霸府" value={HEGEMONY_LABELS[officer.hegemonyPosition]} />
+                      )}
                     </div>
                   </section>
 

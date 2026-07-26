@@ -171,10 +171,10 @@ gameRouter.post('/personnel/recruit', (req, res) => {
   }
 });
 
-/** S11/S12 任命：三轨 { officerId, track, position, cityId? } */
+/** S11/S12 任命：三轨 + 霸府 { officerId, track, position, cityId? } */
 gameRouter.post('/personnel/appoint', (req, res) => {
   try {
-    const track = String(req.body.track) as 'civil' | 'local' | 'military';
+    const track = String(req.body.track) as 'civil' | 'local' | 'military' | 'hegemony';
     res.json(
       gameService.doAppoint(
         Number(req.body.officerId),

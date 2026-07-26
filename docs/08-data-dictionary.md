@@ -998,16 +998,16 @@ Phase 4 — 特殊人物审核
 
 ### 3. 霸府/称王/称帝主线新字段（docs/26，Session 188 Q1~Q11 已批准，设计阶段未实装）
 
-**新增字段**（实装时加到 `shared/types/`，均为 optional 追加，存档兼容方案参照 `activeBattlefieldInstance` 无损追加经验）：
+**新增字段**（实装进度：HC-P0-1/2/3/4 已完成；HC-P0-5/6 待启动。均为 optional 追加，存档兼容方案参照 `activeBattlefieldInstance` 无损追加经验）：
 
-| 字段 | 所属类型 | 类型 | Q | 说明 |
-|------|:----:|------|:-:|------|
-| `emperorLocation` | GameState | `number \| null?` | Q1 | 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移 |
-| `politicalStage` | Faction | `'vassal'\|'hegemon'\|'king'\|'emperor'?` | Q5 | 政治阶段状态机，默认 vassal |
-| `politicalTitle` | Faction | `string?` | Q7 | 政治头衔，与 politicalStage 一一对应（vassal→无/hegemon→丞相大将军/king→X王/emperor→X帝） |
-| `politicalStageChangedYear` | Faction | `number?` | — | 开府/称王/称帝年份记录 |
-| `imperialAuthority` | Faction | `number?` | Q4 | 皇权点数（霸府伪诏宣战消耗） |
-| `tags` | Faction | `string[]?` | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
-| `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2 | 霸府/王国/帝国专属官职独立轨道，非霸府势力为空 |
+| 字段 | 所属类型 | 类型 | Q | 实装 | 说明 |
+|------|:----:|------|:-:|:----:|------|
+| `emperorLocation` | GameState | `number \| null?` | Q1 | ✅ HC-P0-1 | 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移 |
+| `politicalStage` | Faction | `'vassal'\|'hegemon'\|'king'\|'emperor'?` | Q5 | ✅ HC-P0-2 | 政治阶段状态机，默认 vassal |
+| `politicalTitle` | Faction | `string?` | Q7 | ✅ HC-P0-3 | 政治头衔，与 politicalStage 一一对应（vassal→无/hegemon→丞相大将军/king→X王/emperor→X帝） |
+| `politicalStageChangedYear` | Faction | `number?` | — | ✅ HC-P0-3 | 开府/称王/称帝年份记录 |
+| `imperialAuthority` | Faction | `number?` | Q4 | ⏳ HC-P0-6 | 皇权点数（霸府伪诏宣战消耗） |
+| `tags` | Faction | `string[]?` | Q5 | ⏳ 后续 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
+| `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2 | ✅ HC-P0-4 | 霸府专属官职独立轨道（grandCommander 大司马/regentSecretary 录尚书事/grandCaptain 都督中外诸军事/none），非霸府势力武将该字段恒为空/none；3 官职均势力唯一，仅 `politicalStage !== 'vassal'` 势力可任命 |
 
 **规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。设计真源 `docs/26-hegemony-court-design.md`，实装分期 HC-P0/P1/P2。

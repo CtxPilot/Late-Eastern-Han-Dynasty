@@ -7,12 +7,13 @@
  */
 import {
   CivilPosition,
+  HegemonyPosition,
   LocalPosition,
   MilitaryPosition,
 } from './enums/index.js';
 import type { OfficerStats } from './types/common.js';
 
-export type PositionTrack = 'civil' | 'local' | 'military';
+export type PositionTrack = 'civil' | 'local' | 'military' | 'hegemony';
 
 export interface PositionReq {
   leadership?: number;
@@ -49,6 +50,13 @@ export const MILITARY_LABELS: Record<MilitaryPosition, string> = {
   [MilitaryPosition.COLONEL]: '校尉',
   [MilitaryPosition.GENERAL]: '将军',
   [MilitaryPosition.GRAND_GENERAL]: '大将军',
+};
+
+export const HEGEMONY_LABELS: Record<HegemonyPosition, string> = {
+  [HegemonyPosition.NONE]: '无',
+  [HegemonyPosition.GRAND_COMMANDER]: '大司马',
+  [HegemonyPosition.REGENT_SECRETARY]: '录尚书事',
+  [HegemonyPosition.GRAND_CAPTAIN]: '都督中外诸军事',
 };
 
 export const CIVIL_REQ: Partial<Record<CivilPosition, PositionReq>> = {
@@ -92,6 +100,29 @@ export const MILITARY_REQ: Partial<Record<MilitaryPosition, PositionReq>> = {
   },
 };
 
+/**
+ * 霸府专属官职门槛（docs/26 Q2 方案B，HC-P0-4）。
+ * 三档均为霸府核心权力顶点，参照大将军/军师/丞相/都督采用势力唯一。
+ * 门槛与最高级武官/文官持平，确保仅顶级武将可任。
+ */
+export const HEGEMONY_REQ: Partial<Record<HegemonyPosition, PositionReq>> = {
+  [HegemonyPosition.GRAND_COMMANDER]: {
+    leadership: 85,
+    war: 75,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.REGENT_SECRETARY]: {
+    politics: 80,
+    intelligence: 75,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.GRAND_CAPTAIN]: {
+    leadership: 85,
+    war: 80,
+    uniqueFaction: true,
+  },
+};
+
 export function meetsPositionReq(stats: OfficerStats, req: PositionReq): boolean {
   if (req.leadership != null && stats.leadership < req.leadership) return false;
   if (req.war != null && stats.war < req.war) return false;
@@ -115,5 +146,6 @@ export function positionLabel(
 ): string {
   if (track === 'civil') return CIVIL_LABELS[position as CivilPosition] ?? position;
   if (track === 'local') return LOCAL_LABELS[position as LocalPosition] ?? position;
-  return MILITARY_LABELS[position as MilitaryPosition] ?? position;
+  if (track === 'military') return MILITARY_LABELS[position as MilitaryPosition] ?? position;
+  return HEGEMONY_LABELS[position as HegemonyPosition] ?? position;
 }

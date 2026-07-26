@@ -4,10 +4,13 @@
 import { useMemo, useState } from 'react';
 import {
   CivilPosition,
+  HegemonyPosition,
   LocalPosition,
   MilitaryPosition,
   OfficerStatus,
   CIVIL_LABELS,
+  HEGEMONY_LABELS,
+  HEGEMONY_REQ,
   LOCAL_LABELS,
   MILITARY_LABELS,
   CIVIL_REQ,
@@ -41,6 +44,12 @@ const MIL_OPTS = [
   MilitaryPosition.GENERAL,
   MilitaryPosition.GRAND_GENERAL,
   MilitaryPosition.NONE,
+];
+const HEG_OPTS = [
+  HegemonyPosition.GRAND_COMMANDER,
+  HegemonyPosition.REGENT_SECRETARY,
+  HegemonyPosition.GRAND_CAPTAIN,
+  HegemonyPosition.NONE,
 ];
 
 /**
@@ -83,16 +92,33 @@ export function AppointPanel() {
       ? selectedCityId
       : playerCities[0]?.id;
 
+  const factionStage = game.factions[game.playerFactionId]?.politicalStage ?? 'vassal';
+  const canHegemony = factionStage !== 'vassal';
+
   const opts: string[] =
-    track === 'civil' ? CIVIL_OPTS : track === 'local' ? LOCAL_OPTS : MIL_OPTS;
+    track === 'civil'
+      ? CIVIL_OPTS
+      : track === 'local'
+        ? LOCAL_OPTS
+        : track === 'military'
+          ? MIL_OPTS
+          : HEG_OPTS;
   const labels: Record<string, string> =
     track === 'civil'
       ? CIVIL_LABELS
       : track === 'local'
         ? LOCAL_LABELS
-        : MILITARY_LABELS;
+        : track === 'military'
+          ? MILITARY_LABELS
+          : HEGEMONY_LABELS;
   const reqMap: Partial<Record<string, PositionReq>> =
-    track === 'civil' ? CIVIL_REQ : track === 'local' ? LOCAL_REQ : MILITARY_REQ;
+    track === 'civil'
+      ? CIVIL_REQ
+      : track === 'local'
+        ? LOCAL_REQ
+        : track === 'military'
+          ? MILITARY_REQ
+          : HEGEMONY_REQ;
   const req: PositionReq | null =
     position === 'none' ? null : (reqMap[position] ?? null);
   const needsCity = req?.needsCity === true;
@@ -108,13 +134,16 @@ export function AppointPanel() {
       ? CIVIL_LABELS[officer.civilPosition]
       : track === 'local'
         ? LOCAL_LABELS[officer.localPosition]
-        : MILITARY_LABELS[officer.militaryPosition]
+        : track === 'military'
+          ? MILITARY_LABELS[officer.militaryPosition]
+          : HEGEMONY_LABELS[officer.hegemonyPosition ?? HegemonyPosition.NONE]
     : '—';
 
   return (
     <div className="px-2 space-y-2 text-[11px]" data-testid="appoint-panel">
       <p className="text-stone-500 px-1 leading-snug">
         三轨官职可兼任。太守须在目标城；大将军/军师/丞相/都督势力唯一。
+        {canHegemony && ' 霸府官职（大司马/录尚书事/都督中外诸军事）势力唯一，仅霸府阶段可任。'}
       </p>
 
       <label className="block space-y-0.5">
@@ -141,7 +170,11 @@ export function AppointPanel() {
         <div className="text-[10px] text-stone-500 px-0.5">
           现职：文{CIVIL_LABELS[officer.civilPosition]} / 地
           {LOCAL_LABELS[officer.localPosition]} / 武
-          {MILITARY_LABELS[officer.militaryPosition]} · 所在
+          {MILITARY_LABELS[officer.militaryPosition]}
+          {officer.hegemonyPosition && officer.hegemonyPosition !== HegemonyPosition.NONE
+            ? ` / 霸${HEGEMONY_LABELS[officer.hegemonyPosition]}`
+            : ''}
+          {' · 所在'}
           {officer.location != null
             ? game.cities[officer.location]?.name ?? officer.location
             : '—'}
@@ -149,12 +182,18 @@ export function AppointPanel() {
       )}
 
       <div className="flex gap-1">
-        {(
-          [
-            ['military', '武官'],
-            ['local', '地方'],
-            ['civil', '文官'],
-          ] as const
+        {(canHegemony
+          ? ([
+              ['military', '武官'],
+              ['local', '地方'],
+              ['civil', '文官'],
+              ['hegemony', '霸府'],
+            ] as const)
+          : ([
+              ['military', '武官'],
+              ['local', '地方'],
+              ['civil', '文官'],
+            ] as const)
         ).map(([k, lab]) => (
           <button
             key={k}
@@ -172,7 +211,9 @@ export function AppointPanel() {
                   ? CivilPosition.CLERK
                   : k === 'local'
                     ? LocalPosition.PREFECT
-                    : MilitaryPosition.CAPTAIN,
+                    : k === 'military'
+                      ? MilitaryPosition.CAPTAIN
+                      : HegemonyPosition.GRAND_COMMANDER,
               );
             }}
           >

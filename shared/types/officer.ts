@@ -5,6 +5,7 @@ import type {
   CeilingAttribute,
   GrowthPotential,
   Ideal,
+  HegemonyPosition,
   OfficerStatus,
   Personality,
   UnitProficiency,
@@ -82,6 +83,8 @@ export interface Officer extends OfficerStatic {
   localPosition: LocalPosition;
   militaryPosition: MilitaryPosition;
   nobilityRank: NobilityRank;
+  /** 霸府专属官职（docs/26 Q2 方案B，HC-P0-4 独立轨道）。非霸府势力武将该字段恒为空/none。 */
+  hegemonyPosition?: HegemonyPosition;
   merit: number;
   stamina: number;
   /** 每月可用行动次数（独立于体力）：决定"本月还能否发起新动作"，默认 1，可被技能/特性/装备加成突破。月度重置。 */

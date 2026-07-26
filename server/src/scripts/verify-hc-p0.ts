@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * HC-P0-1 + HC-P0-2 + HC-P0-3 确定性验证（docs/26 霸府/称王/称帝主线地基+开府）。
+ * HC-P0-1 + HC-P0-2 + HC-P0-3 + HC-P0-4 确定性验证（docs/26 霸府/称王/称帝主线地基+开府+霸府官职）。
  *
  * 覆盖：
  * 1. 两个剧本开局 emperorLocation 指向洛阳(id=1) + 所有势力 politicalStage='vassal'
@@ -11,12 +11,14 @@
  * 4. 旧存档降级（无 emperorLocation + 无 politicalStage → parse 通过，字段 undefined 不报错）
  * 5. GameStateSchema.strict() 接受新字段（ROOT_KEYS 已加 emperorLocation）
  * 6. HC-P0-3 开霸府操作：前置校验（未控制汉帝/已开府/已是王帝拒绝）+ 状态转移 + actionLog + 存档往返
+ * 7. HC-P0-4 霸府专属官职：前置校验（诸侯状态拒绝）+ 任命成功（字段写入）+ 势力唯一性（替换旧任）+ 存档往返 + 解职
  *
  * Run: pnpm verify-hc-p0
  */
 import {
   CURRENT_SAVE_SCHEMA_VERSION,
   GameStateSchema,
+  HegemonyPosition,
   parseCurrentSaveEnvelope,
   controlsEmperor,
   type GameState,
@@ -24,6 +26,7 @@ import {
 } from '@leh/shared';
 import { createGame, getGame, doEstablishHegemony } from '../services/game.js';
 import { establishHegemony } from '../engine/hegemony.js';
+import { appointOfficer } from '../engine/appoint.js';
 import { getRuntimeRngState } from '../runtime-rng.js';
 
 let passed = 0;
@@ -213,6 +216,111 @@ try {
   serviceRepeatRejected = (e as Error).message.includes('已是霸府');
 }
 check('service 层重复开府被拒绝（currentGame 已是霸府）', serviceRepeatRejected);
+
+// ── 8. HC-P0-4 霸府专属官职 ──
+console.log('\n— HC-P0-4 霸府专属官职 —');
+
+// 8a. 前置：诸侯状态势力尝试任命霸府官职应被拒绝
+// 190 剧本选曹操（faction 1）→ 开局 politicalStage='vassal'，未开府
+createGame(2, 1);
+let vassalAppointRejected = false;
+let vassalAppointError = '';
+try {
+  appointOfficer(getGame(), 9, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+} catch (e) {
+  vassalAppointRejected = true;
+  vassalAppointError = (e as Error).message;
+}
+check('诸侯状态势力任命霸府官职被拒绝', vassalAppointRejected);
+check('拒绝信息含"仍是诸侯"', vassalAppointError.includes('仍是诸侯'));
+
+// 8b. 前置：无效霸府官职值应被拒绝
+createGame(1, 1);
+let invalidPositionRejected = false;
+try {
+  appointOfficer(getGame(), 9, 'hegemony', 'invalidHegemonyPos');
+} catch (e) {
+  invalidPositionRejected = (e as Error).message.includes('无效官职');
+}
+check('无效霸府官职值被拒绝', invalidPositionRejected);
+
+// 8c. 任命成功：英雄集结曹操（faction 1 占洛阳→控制汉帝），开霸府后任命霸府官职
+createGame(1, 1);
+doEstablishHegemony();
+// 夏侯惇 id=9 (统85 武90) 满足大司马 (统85 武75) 与都督中外诸军事 (统85 武80)
+const afterAppoint1 = appointOfficer(getGame(), 9, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+check('霸府状态势力任命大司马成功', afterAppoint1.officers[9].hegemonyPosition === HegemonyPosition.GRAND_COMMANDER);
+check('任命大司马后 actionLog 含 appoint', afterAppoint1.actionLog.some((l) => l.type === 'appoint' && l.message.includes('大司马')));
+
+// 8d. 唯一性：同一势力重复任命同一霸府官职给另一武将，旧任者应被替换为 NONE
+// 曹仁 id=101 (统90 武86) 也满足大司马门槛 → 任命给曹仁应清除夏侯惇的大司马
+const afterAppoint2 = appointOfficer(afterAppoint1, 101, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+check('唯一性：重复任命同一霸府官职，新任者字段写入', afterAppoint2.officers[101].hegemonyPosition === HegemonyPosition.GRAND_COMMANDER);
+check('唯一性：旧任者夏侯惇 hegemonyPosition 被清为 NONE', afterAppoint2.officers[9].hegemonyPosition === HegemonyPosition.NONE);
+
+// 8e. 唯一性：已是该霸府官职的武将重复任命应被拒绝
+let sameAppointRejected = false;
+try {
+  appointOfficer(afterAppoint2, 101, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+} catch (e) {
+  sameAppointRejected = (e as Error).message.includes('已是该霸府官职');
+}
+check('已是该霸府官职时重复任命被拒绝', sameAppointRejected);
+
+// 8f. 不同霸府官职可并存：夏侯惇任都督中外诸军事 (统85武80) + 曹仁任大司马
+const afterAppoint3 = appointOfficer(afterAppoint2, 9, 'hegemony', HegemonyPosition.GRAND_CAPTAIN);
+check('不同霸府官职可并存：夏侯惇任都督中外诸军事', afterAppoint3.officers[9].hegemonyPosition === HegemonyPosition.GRAND_CAPTAIN);
+check('不同霸府官职并存：曹仁仍任大司马', afterAppoint3.officers[101].hegemonyPosition === HegemonyPosition.GRAND_COMMANDER);
+
+// 8g. 解职：position=none 应清空 hegemonyPosition
+const afterDismiss = appointOfficer(afterAppoint3, 9, 'hegemony', HegemonyPosition.NONE);
+check('解职霸府官职后 hegemonyPosition === NONE', afterDismiss.officers[9].hegemonyPosition === HegemonyPosition.NONE);
+check('解职后 actionLog 含解职记录', afterDismiss.actionLog.some((l) => l.type === 'appoint' && l.message.includes('解职') && l.message.includes('霸府')));
+
+// 8h. 属性不足者任命应被拒绝
+// 典韦 id=13 (统70 武97) 武满足大司马但统70<85 → 应被拒绝
+let weakRejected = false;
+let weakError = '';
+try {
+  appointOfficer(afterDismiss, 13, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+} catch (e) {
+  weakRejected = true;
+  weakError = (e as Error).message;
+}
+check('属性不足者任命霸府官职被拒绝', weakRejected);
+check('拒绝信息含"属性不足"', weakError.includes('属性不足'));
+
+// 8i. 存档往返一致性：霸府官职字段序列化/反序列化保留
+createGame(1, 1);
+doEstablishHegemony();
+const hegemonyAppointState = appointOfficer(getGame(), 9, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
+const hegemonyAppointSave = envelopeFor(hegemonyAppointState);
+const hegemonyAppointParsed = parseCurrentSaveEnvelope(hegemonyAppointSave);
+check('霸府官职存档往返后字段保留 === GRAND_COMMANDER', hegemonyAppointParsed.snapshot.officers[9].hegemonyPosition === HegemonyPosition.GRAND_COMMANDER);
+check('霸府官职存档往返后 GameStateSchema 通过', GameStateSchema.safeParse(hegemonyAppointParsed.snapshot).success);
+
+// 8j. 旧存档降级（无 hegemonyPosition 字段）
+const legacyHegemonySave = structuredClone(hegemonyAppointSave);
+for (const oid of Object.keys(legacyHegemonySave.snapshot.officers)) {
+  delete (legacyHegemonySave.snapshot.officers[Number(oid)] as { hegemonyPosition?: unknown }).hegemonyPosition;
+}
+let legacyHegemonyParsed: GameState | null = null;
+let legacyHegemonyError: Error | null = null;
+try {
+  legacyHegemonyParsed = parseCurrentSaveEnvelope(legacyHegemonySave).snapshot;
+} catch (error) {
+  legacyHegemonyError = error as Error;
+}
+check('旧存档（无 hegemonyPosition）parse 不报错', legacyHegemonyError === null && legacyHegemonyParsed != null);
+if (legacyHegemonyParsed) {
+  check('旧存档降级后 hegemonyPosition === undefined', legacyHegemonyParsed.officers[9]?.hegemonyPosition === undefined);
+  check('旧存档降级后 GameStateSchema 通过', GameStateSchema.safeParse(legacyHegemonyParsed).success);
+}
+
+// 8k. HegemonyPosition 非法值被 Zod 拒绝
+const badHegemony = structuredClone(getGame());
+(badHegemony.officers[9] as { hegemonyPosition?: unknown }).hegemonyPosition = 'invalidHegemony';
+check('hegemonyPosition 非法值被 Zod 拒绝', !GameStateSchema.safeParse(badHegemony).success);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

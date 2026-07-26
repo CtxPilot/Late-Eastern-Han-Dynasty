@@ -3772,3 +3772,56 @@
 - **下一步**：HC-P0-4（霸府专属官职最小切片）。
 
 *v13.7 | 2026-07-25 | Session 188 续 · HC-P0-1/2/3 实施完成 + README 吕布四页签截图替换；下一步 HC-P0-4 霸府官职最小切片*
+
+### Session 188 续：HC-P0-4 霸府专属官职最小切片实施完成
+
+- **范围**：按已批准 Q2 方案B（独立轨道 `Officer.hegemonyPosition?`）落地 3 个霸府专属官职，验证任命引擎支持新轨道。明确不做：称王/称帝阶段官职扩展（HC-P1/P2）、外交权重加成（HC-P0-5）、伪诏宣战（HC-P0-6）。
+- **选定 3 个霸府官职及史料依据**（0-A 精简，不追求覆盖全部历史霸府官衔）：
+  - **大司马 `grandCommander`**（统≥85 武≥75，势力唯一）：汉末最高军政官之一，董卓自任大司马（《后汉书·董卓列传》）
+  - **录尚书事 `regentSecretary`**（政≥80 智≥75，势力唯一）：东汉霸府"录尚书事"掌中枢机要，曹操、司马懿均任（《晋书·职官志》）
+  - **都督中外诸军事 `grandCaptain`**（统≥85 武≥80，势力唯一）：魏晋霸府军事最高官职，统内外诸军（《三国志·魏书》）
+- **唯一性规则**：参照现有四轨"大将军/军师/丞相/都督势力唯一"规则，3 个霸府官职均采用**势力唯一**约束——同一势力同一霸府官职仅一人担任，重复任命会自动替换旧任者（清为 NONE），与现有四轨唯一性逻辑一致。不同霸府官职之间可并存（如夏侯惇任都督中外诸军事 + 曹仁任大司马）。
+- **任命引擎扩展摘要**（`server/src/engine/appoint.ts`）：
+  - `PositionTrack` 类型从 `'civil' | 'local' | 'military'` 扩展为含 `'hegemony'`
+  - `getReq` / `isValidPosition` / `clearExclusive` / 主写入分支 / trackLabel 全部加 hegemony 分支
+  - **前置校验**：仅 `politicalStage !== 'vassal'`（即已开霸府/称王/称帝）的势力才能任命霸府官职，诸侯状态拒绝（错误信息"当前势力仍是诸侯，无法任命霸府官职（需先开霸府）"）
+  - 解职（position='none'）同样支持，清空 hegemonyPosition 至 NONE
+- **数据层**：
+  - `HegemonyPosition` 枚举新增于 `shared/enums/index.ts`（4 取值：NONE/GRAND_COMMANDER/REGENT_SECRETARY/GRAND_CAPTAIN）
+  - `Officer.hegemonyPosition?: HegemonyPosition` optional 字段（`shared/types/officer.ts`）
+  - `HEGEMONY_LABELS` / `HEGEMONY_REQ` 门槛表（`shared/positions.ts`），均参照现有四轨 `uniqueFaction: true` 模式
+  - Zod schema `OfficerRuntimeSchema` 加 `hegemonyPosition: z.nativeEnum(HegemonyPosition).optional()`（`shared/game-state-entity-schema.ts`），不升 schema 版本
+- **UI 展示位置**（决策：仅在该武将实际拥有霸府官职时显示霸府展示位）：
+  - `OfficerDetail.tsx` 属性页签"官职"区块：仅当 `officer.hegemonyPosition && !== NONE` 时渲染 `<Info label="霸府" value={...} />`，不显示空槽。理由：OfficerDetail 是只读详情页，空槽会让用户误以为可点击任命；霸府官职是稀有条件性字段（非霸府势力武将该字段恒空），展示"霸府：无"会与"诸侯势力武将不该有霸府槽"语义冲突；与四轨"爵位/文/地/武"展示恒定不同（四轨对每个武将都存在）
+  - `AppointPanel.tsx`：新增"霸府"轨道按钮（仅当 `factionStage !== 'vassal'` 时显示），官职下拉显示 4 项含门槛标注（"大司马 · 统≥85 武≥75"等），复用现有 CommandConfirmDialog 终审窗
+- **服务层透传**：`doAppoint` / `/personnel/appoint` 路由 track 类型扩展含 'hegemony'，client `api.appointOfficer` + `gameStore.appointOfficer` 类型同步
+- **确定性测试**（`verify-hc-p0.ts` 扩展，17 项新增断言，共 61/61）：
+  - 8a 诸侯状态势力任命霸府官职被拒绝（"仍是诸侯"）
+  - 8b 无效霸府官职值被拒绝（"无效官职"）
+  - 8c 霸府状态势力任命大司马成功（字段写入 GRAND_COMMANDER）
+  - 8d 唯一性：重复任命同一霸府官职给另一武将，旧任者被清为 NONE、新任者字段写入
+  - 8e 已是该霸府官职时重复任命被拒绝（"已是该霸府官职"）
+  - 8f 不同霸府官职可并存（夏侯惇任都督中外诸军事 + 曹仁仍任大司马）
+  - 8g 解职霸府官职（position='none）后 hegemonyPosition === NONE
+  - 8h 属性不足者任命被拒绝（"属性不足"）
+  - 8i 存档往返一致性（hegemonyPosition 序列化/反序列化保留）
+  - 8j 旧存档降级（无 hegemonyPosition 字段 → parse 不报错，字段 undefined）
+  - 8k HegemonyPosition 非法值被 Zod 拒绝
+- **Headless Chrome 端到端验证**（4 张截图存 `docs/screenshots/session-188-hc-p0-4/`）：
+  - 1️⃣ 190 关东义兵选董卓政权→君主折叠项"开霸府"按钮→点击后 politicalTitle 变"丞相"、状态"已开霸府"
+  - 2️⃣ 人事面板"任命"子区，"霸府"轨道按钮可见且选中后下拉显示 3 官职+解职
+  - 3️⃣ 选吕布+大司马+确认下令后 actionLog "任命 吕布 为大司马（忠诚+5）"，吕布忠诚从 90→95
+  - 4️⃣ 点开吕布详情页，官职区块显示"霸府 大司马"
+  - API 端独立验证：唯一性（董卓属性不足被拒）+ 解职 + 前置拒绝（诸侯状态势力被拒）全过
+- **全量回归零破坏**：
+  - `pnpm test` 196/196（shared 18 测试文件）
+  - `pnpm validate-data` 全过
+  - `verify-hc-p0` 61/61（HC-P0-4 新增 17 项）
+  - `verify-save-*` 系列（entities/game-state/migration/campaign/battlefield-instance/battle/diplomacy/intel/plot）全过
+  - `verify-*-rng` 系列（battle/duel/civil/plot-spy/personnel/family/beauty/grand-strategist/ai-military）全过
+  - `verify-march-fog` 7/7、`verify-battle-commanders` 通过、`verify-turn-cadence` 28/28、`verify-scenario-events` 32 项、`verify-negotiation-r2` 20/20
+  - typecheck/lint/build 全模块通过
+- **明确不做**：称王/称帝阶段官职扩展（HC-P1/P2 范围）；外交权重加成（HC-P0-5）；伪诏宣战（HC-P0-6）；不覆盖历史全部霸府官衔，3 个验证机制即可
+- **下一步**：HC-P0-5（霸府外交权重加成）或 HC-P0-6（伪诏宣战），由用户派发
+
+*v13.8 | 2026-07-26 | Session 188 续 · HC-P0-4 霸府专属官职最小切片实施完成（3 官职+任命引擎+UI+17 项测试+Headless 端到端）；下一步 HC-P0-5/6*

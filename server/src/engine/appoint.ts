@@ -7,6 +7,7 @@
  */
 import {
   CivilPosition,
+  HegemonyPosition,
   LocalPosition,
   MilitaryPosition,
   OfficerStatus,
@@ -14,6 +15,7 @@ import {
   meetsPositionReq,
   positionLabel,
   CIVIL_REQ,
+  HEGEMONY_REQ,
   LOCAL_REQ,
   MILITARY_REQ,
   type GameState,
@@ -49,14 +51,16 @@ function getReq(track: PositionTrack, position: string): PositionReq | null {
   if (position === 'none') return null;
   if (track === 'civil') return CIVIL_REQ[position as CivilPosition] ?? null;
   if (track === 'local') return LOCAL_REQ[position as LocalPosition] ?? null;
-  return MILITARY_REQ[position as MilitaryPosition] ?? null;
+  if (track === 'military') return MILITARY_REQ[position as MilitaryPosition] ?? null;
+  return HEGEMONY_REQ[position as HegemonyPosition] ?? null;
 }
 
 function isValidPosition(track: PositionTrack, position: string): boolean {
   if (position === 'none') return true;
   if (track === 'civil') return Object.values(CivilPosition).includes(position as CivilPosition);
   if (track === 'local') return Object.values(LocalPosition).includes(position as LocalPosition);
-  return Object.values(MilitaryPosition).includes(position as MilitaryPosition);
+  if (track === 'military') return Object.values(MilitaryPosition).includes(position as MilitaryPosition);
+  return Object.values(HegemonyPosition).includes(position as HegemonyPosition);
 }
 
 function clearExclusive(
@@ -77,6 +81,8 @@ function clearExclusive(
       next[o.id] = { ...o, civilPosition: CivilPosition.NONE };
     } else if (track === 'military' && o.militaryPosition === position) {
       next[o.id] = { ...o, militaryPosition: MilitaryPosition.NONE };
+    } else if (track === 'hegemony' && o.hegemonyPosition === position) {
+      next[o.id] = { ...o, hegemonyPosition: HegemonyPosition.NONE };
     } else if (track === 'local' && o.localPosition === position) {
       if (position === LocalPosition.PREFECT) {
         if (cityId != null && o.location === cityId) {
@@ -101,7 +107,7 @@ export function appointOfficer(
   position: string,
   cityId?: number,
 ): GameState {
-  if (!['civil', 'local', 'military'].includes(track)) {
+  if (!['civil', 'local', 'military', 'hegemony'].includes(track)) {
     throw new Error('无效官职轨道');
   }
   if (!isValidPosition(track, position)) {
@@ -122,6 +128,13 @@ export function appointOfficer(
 
   if (!isDismiss) {
     if (!req) throw new Error('该官职不可任命');
+    if (track === 'hegemony') {
+      // HC-P0-4 前置：仅霸府/王/帝阶段势力可任命霸府官职
+      const stage = state.factions[state.playerFactionId]?.politicalStage ?? 'vassal';
+      if (stage === 'vassal') {
+        throw new Error('当前势力仍是诸侯，无法任命霸府官职（需先开霸府）');
+      }
+    }
     if (!meetsPositionReq(officer.stats, req)) {
       throw new Error(
         `${officer.name} 属性不足（需 ${formatReq(req)}）`,
@@ -171,11 +184,16 @@ export function appointOfficer(
     if (!isDismiss && cityId != null) {
       updated.location = cityId;
     }
-  } else {
+  } else if (track === 'military') {
     if (current.militaryPosition === position) {
       throw new Error('已是该武官职');
     }
     updated.militaryPosition = position as MilitaryPosition;
+  } else {
+    if (current.hegemonyPosition === position) {
+      throw new Error('已是该霸府官职');
+    }
+    updated.hegemonyPosition = position as HegemonyPosition;
   }
 
   updated.loyalty = Math.min(
@@ -218,7 +236,7 @@ export function appointOfficer(
 
   const label = positionLabel(track, position);
   const trackLabel =
-    track === 'civil' ? '文官' : track === 'local' ? '地方' : '武官';
+    track === 'civil' ? '文官' : track === 'local' ? '地方' : track === 'military' ? '武官' : '霸府';
   const msg = isDismiss
     ? `解职 ${updated.name} 的${trackLabel}职（忠诚${loyaltyDelta}）`
     : `任命 ${updated.name} 为${label}（忠诚+${loyaltyDelta}）`;

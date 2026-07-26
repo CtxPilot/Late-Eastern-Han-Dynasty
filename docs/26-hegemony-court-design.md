@@ -1,6 +1,6 @@
 # 霸府 / 称王 / 称帝主线设计：挟天子→开霸府→称王→称帝
 
-> 状态：**已批准，进入 HC-P0 实施**（Session 188 用户批准 Q1~Q11）— 本轮只做文档同步，不写引擎代码、不建 Schema 实现。
+> 状态：**已批准，进入 HC-P0 实施**（Session 188 用户批准 Q1~Q11）— HC-P0-1/2/3/4 已完成（emperorLocation 字段 + politicalStage 字段 + 开霸府操作 + 霸府专属官职最小切片），HC-P0-5/6 待启动。
 > 范围：提出"挟天子 → 开霸府 → 称王 → 称帝"这条可选、可停留的政治进阶路线。只有控制汉献帝的势力才有资格开府；后续阶段可自主选择推进或维持现状。
 > 前置：
 > - `docs/04-game-systems.md` §3.8 君主身份特例（Session 188 规则定稿，`Faction.rulerId` 派生判定，身份转变机制当前不存在）
@@ -225,12 +225,12 @@ interface Faction {
 
 | 子项 | 内容 | 验收标准 |
 |:----:|------|------|
-| HC-P0-1 | 汉献帝控制权判定（Q1 拍板后选方案） | 占领对应城池/触发迎奉事件后，势力获得"控制汉帝"状态，UI 可见 |
-| HC-P0-2 | `Faction.politicalStage` 字段 + 存档兼容 | optional 追加，旧存档加载无破坏，verify-save-* 全过 |
-| HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | 操作后 politicalStage='hegemon'，UI 君主头衔变化，actionLog 记录 |
-| HC-P0-4 | 霸府专属官职最小切片（Q2 拍板后选方案，先 2~3 个官职） | 任命引擎支持新官职，UI 展示，任命/解职流程通 |
-| HC-P0-5 | 霸府外交权重加成 | `calculateAllianceChance` + diplomacy.ts 公式接入修正，verify-negotiation-r2 回归 |
-| HC-P0-6 | 伪诏宣战能力（Q4 拍板后） | 霸府势力可对任意势力宣战，消耗 imperialAuthority，冷却机制 |
+| HC-P0-1 | 汉献帝控制权判定（Q1 拍板后选方案） | ✅ 已完成：`GameState.emperorLocation` 字段 + `controlsEmperor` 纯函数 + Zod + 24 项测试 |
+| HC-P0-2 | `Faction.politicalStage` 字段 + 存档兼容 | ✅ 已完成：optional 追加 + Zod + 旧存档降级兼容 |
+| HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | ✅ 已完成：`establishHegemony` 引擎 + `POST /hegemony/establish` 路由 + LeftPanel 君主折叠项开府按钮 + OfficerDetail 头衔展示 |
+| HC-P0-4 | 霸府专属官职最小切片（Q2 方案B，先 2~3 个官职） | ✅ 已完成：`Officer.hegemonyPosition?` 独立轨道 + `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝 + 势力唯一）+ AppointPanel 霸府轨道按钮 + OfficerDetail 官职区块条件展示 + verify-hc-p0 61/61 + Headless 端到端 |
+| HC-P0-5 | 霸府外交权重加成 | ⏳ 待启动：`calculateAllianceChance` + diplomacy.ts 公式接入修正，verify-negotiation-r2 回归 |
+| HC-P0-6 | 伪诏宣战能力（Q4 拍板后） | ⏳ 待启动：霸府势力可对任意势力宣战，消耗 imperialAuthority，冷却机制 |
 
 **HC-P0 验收基线**：玩家控制汉帝 → 开霸府 → 任命霸府官职 → 外交权重可见提升 → 伪诏宣战一次。Headless Chrome 实测全流程。
 
@@ -289,7 +289,7 @@ interface Faction {
 
 **已批准：方案 A**。理由：方案 B 的"占领=控制"过于粗糙（董卓迁都长安后汉帝在长安，但占领长安的未必是董卓的继承者）；方案 C 工作量过大且汉帝作为武将不参与任何武将系统（不出战/不登用/不赏赐），用武将实体承载是过度设计。方案 A 的"汉帝所在地"字段最直接，且汉帝迁移（洛阳→长安→许都）通过事件改字段即可。
 
-### Q2 霸府/王国/帝国专属官职如何接入现有官职体系 — **已批准：方案 B**
+### Q2 霸府/王国/帝国专属官职如何接入现有官职体系 — **已批准：方案 B（HC-P0-4 已实装）**
 
 | 方案 | 描述 | 优点 | 缺点 | 改动风险 |
 |:----:|------|------|------|:------:|
@@ -297,7 +297,15 @@ interface Faction {
 | B | 新增独立 `Officer.hegemonyPosition?: HegemonyPosition` 轨道 | 霸府官职与普通官职分离清晰；非霸府势力该字段为空 | 新字段 + 任命引擎扩展 + UI 展示新轨道 | 中 |
 | C | 复用 `NobilityRank` 爵位轨道（king=王、新增 emperor=帝） | 爵位轨道本就承载政治身份 | 爵位与官职语义混淆；霸府官职（大司马/录尚书事）不是爵位 | 高 |
 
-**已批准：方案 B**。理由：霸府官职（大司马/录尚书事/都督中外诸军事）与普通官职（丞相/都督/大将军）语义不同——前者是"特权官职"，只有霸府/王/帝阶段可任命。独立轨道分离清晰，且非霸府势力该字段为空不影响现有任命流程。方案 A 污染通用枚举，方案 C 爵位与官职混淆。
+**已批准：方案 B（HC-P0-4 已实装）**。理由：霸府官职（大司马/录尚书事/都督中外诸军事）与普通官职（丞相/都督/大将军）语义不同——前者是"特权官职"，只有霸府/王/帝阶段可任命。独立轨道分离清晰，且非霸府势力该字段为空不影响现有任命流程。方案 A 污染通用枚举，方案 C 爵位与官职混淆。
+
+**HC-P0-4 实装要点**（Session 188 续）：
+- 0-A 精简 3 档霸府官职：`grandCommander` 大司马（统≥85 武≥75）、`regentSecretary` 录尚书事（政≥80 智≥75）、`grandCaptain` 都督中外诸军事（统≥85 武≥80）
+- 3 官职均参照"大将军/军师/丞相/都督势力唯一"采用 `uniqueFaction: true`
+- 前置：仅 `politicalStage !== 'vassal'` 势力可任命（诸侯状态拒绝）
+- `PositionTrack` 扩展含 `'hegemony'`，`appoint.ts` 全部分支加 hegemony 路径
+- UI：AppointPanel 新增"霸府"轨道按钮（仅霸府阶段势力可见）+ OfficerDetail 官职区块条件展示
+- 17 项新增确定性测试 + Headless Chrome 端到端验证（董卓开霸府→任命吕布大司马→OfficerDetail 展示"霸府 大司马"）
 
 ### Q3 霸府/称王/称帝的外交权重加成数值类别 — **方向已批准，具体数值待实战调参，不阻塞 HC-P0 启动**
 
@@ -403,4 +411,4 @@ Q1~Q11 已全部批准（Session 188）。下一步启动 **HC-P0 实施**（挟
 
 ---
 
-*v1.1 | Session 188 | 霸府/称王/称帝主线 Q1~Q11 已批准，进入 HC-P0 实施*
+*v1.2 | 2026-07-26 | Session 188 续 · 霸府/称王/称帝 Q1~Q11 已批准，HC-P0-1/2/3/4 已完成，HC-P0-5/6 待启动*

@@ -185,10 +185,10 @@ export async function recruitOfficer(
   return data;
 }
 
-/** S11/S12 任命三轨 */
+/** S11/S12 任命三轨 + 霸府 */
 export async function appointOfficer(
   officerId: number,
-  track: 'civil' | 'local' | 'military',
+  track: 'civil' | 'local' | 'military' | 'hegemony',
   position: string,
   cityId?: number,
 ): Promise<GameState> {

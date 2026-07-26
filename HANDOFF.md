@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 188 完成（君主身份特例 UI + 城市设施构想 + 霸府主线 Q1~Q11 批准 + HC-P0-1/2/3 实施）**：HC-P0-1（emperorLocation 字段） + HC-P0-2（politicalStage 字段） + HC-P0-3（开霸府操作引擎+API+UI+头衔展示）。**下一步 HC-P0-4（霸府专属官职最小切片）** |
+| 会话 | **Session 188 完成（君主身份特例 UI + 城市设施构想 + 霸府主线 Q1~Q11 批准 + HC-P0-1/2/3/4 实施）**：HC-P0-1（emperorLocation 字段） + HC-P0-2（politicalStage 字段） + HC-P0-3（开霸府操作引擎+API+UI+头衔展示） + **HC-P0-4（霸府专属官职最小切片：3 官职独立轨道+任命引擎+UI+17 项测试+Headless 端到端）**。**下一步 HC-P0-5/6（外交权重加成/伪诏宣战）** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S188 HC-P0-1~3（emperorLocation + politicalStage + 开霸府）** + 君主特例 UI + S187 体力并入六维 + S186 体力缩放 + 行动次数 + 不对称消耗 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
-| 文档最新 | **`26-hegemony-court-design.md` v1.1（Q1~Q11 已批准，HC-P0 实施中）** + 04 §3.8 君主特例 + §四十 霸府主线引用 + 03 新字段设计记录 + 08 新字段数据字典 + 09 HC-P0/P1/P2 分期 + 12 S08/S11/S12 深化标注 |
+| 代码最新 | **S188 HC-P0-1~4（emperorLocation + politicalStage + 开霸府 + 霸府专属官职 HegemonyPosition 独立轨道）** + 君主特例 UI + S187 体力并入六维 + S186 体力缩放 + 行动次数 + 不对称消耗 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 + 武将详情四页签 + SVG头像 + BF-P3 AI决策RNG + S185 色板token化 |
+| 文档最新 | **`26-hegemony-court-design.md` v1.1（Q1~Q11 已批准，HC-P0 实施中，HC-P0-1/2/3/4 已完成）** + 04 §3.8 君主特例 + §四十 霸府主线引用 + 03 新字段设计记录（含 hegemonyPosition） + 08 新字段数据字典 + 09 HC-P0/P1/P2 分期 + 12 S08/S11/S12 深化标注 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | **HC-P0-4（霸府专属官职最小切片，Q2 方案B `Officer.hegemonyPosition?` 独立轨道，先 2~3 个霸府官职+任命引擎+UI）**。君主特例切片 C（引擎守卫）与 HC-P0 可并行。R3（S10 单挑四倾向）保持待启动。 |
+| 玩法下一步 | **HC-P0-5（霸府外交权重加成）或 HC-P0-6（伪诏宣战）**，由用户派发。君主特例切片 C（引擎守卫）与 HC-P0 可并行。R3（S10 单挑四倾向）保持待启动。 |
 
 ---
 
@@ -346,9 +346,10 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（下一步启动）** | **HC-P0-4：霸府专属官职最小切片**（docs/26 Q2 方案B `Officer.hegemonyPosition?` 独立轨道，先 2~3 个霸府官职+任命引擎+UI 展示）。Q7 方案B `politicalTitle` 已接入，下一步扩展官职系统。 |
+| **1（下一步启动）** | **HC-P0-5：霸府外交权重加成** 或 **HC-P0-6：伪诏宣战能力**（docs/26 Q3/Q4 方向已批准，数值待实战调参）。HC-P0-1~4 已完成（emperorLocation + politicalStage + 开霸府操作 + 霸府专属官职独立轨道）。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
+| **Session 188 HC-P0-4 已完成** | HC-P0-4 霸府专属官职（1 commit 待提交）：`Officer.hegemonyPosition?` 独立轨道（Q2 方案B）+ `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `HEGEMONY_LABELS/REQ` 门槛表（均势力唯一）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝）+ `/personnel/appoint` 路由透传 + `AppointPanel.tsx` 霸府轨道按钮（仅霸府阶段势力显示）+ `OfficerDetail.tsx` 官职区块条件展示 + verify-hc-p0 61/61（17 项新增）+ Headless Chrome 端到端（董卓开霸府→任命吕布大司马→OfficerDetail 展示）。 |
 | **Session 188 HC-P0-1~3 已完成** | HC-P0-3 开霸府操作（1 commit `67d0aba`）：`Faction.politicalTitle` + `politicalStageChangedYear` 字段、`establishHegemony` 引擎（前置校验 controlsEmperor+vassal→转移+actionLog）、`POST /hegemony/establish` 路由、LeftPanel 君主折叠项开府按钮+头衔展示、OfficerDetail 头衔追加、verify-hc-p0 41/41。HC-P0-1+2（`4820d11`）：`GameState.emperorLocation` + `Faction.politicalStage` 字段+Zod+24项测试。 |
 | **Session 188 文档同步** | Q1~Q11 批准 + 8 文档同步（1 commit `0ce044e`）；README 吕布四页签截图替换。 |
 | **Session 184 已完成** | 全项目美术总监审查（纯文档零代码）：TOP10 问题清单（4×P0/4×P1/2×P2）+ 新建 `docs/design/ArtDirection.md` 视觉唯一真源 + 头像 A′+C+B 重建与分级策展方案。**待拍板**：美术实装批次（高收益首批=色板 token 化+金石组件库+战斗层换色+头像管线接通）与 R3 的先后次序由用户定。 |

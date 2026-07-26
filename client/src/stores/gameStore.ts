@@ -65,7 +65,7 @@ interface Store {
   recruitOfficer: (officerId: number, recruiterId?: number) => Promise<void>;
   appointOfficer: (
     officerId: number,
-    track: 'civil' | 'local' | 'military',
+    track: 'civil' | 'local' | 'military' | 'hegemony',
     position: string,
     cityId?: number,
   ) => Promise<void>;

@@ -358,3 +358,18 @@ export type FactionId = number;
 
 /** Common skill ids used in 0-A (30 generic). Full SkillType expands in 0-B. */
 export type SkillType = string;
+
+/**
+ * 霸府专属官职（docs/26 Q2 方案B 独立轨道，HC-P0-4）。
+ * 与四轨官职（文/地方/武/爵位）并存且互不污染；仅霸府/王/帝阶段势力可任命。
+ * 0-A 精简 3 档，均为汉末曹魏霸府典型官衔：
+ * - GRAND_COMMANDER 大司马：汉末最高军政官之一，董卓自任大司马
+ * - REGENT_SECRETARY 录尚书事：东汉霸府"录尚书事"掌中枢机要，曹操、司马懿均任
+ * - GRAND_CAPTAIN 都督中外诸军事：魏晋霸府军事最高官职，统内外诸军
+ */
+export enum HegemonyPosition {
+  NONE = 'none',
+  GRAND_COMMANDER = 'grandCommander',
+  REGENT_SECRETARY = 'regentSecretary',
+  GRAND_CAPTAIN = 'grandCaptain',
+}
