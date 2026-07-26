@@ -227,12 +227,16 @@ interface Faction {
 |:----:|------|------|
 | HC-P0-1 | 汉献帝控制权判定（Q1 拍板后选方案） | ✅ 已完成：`GameState.emperorLocation` 字段 + `controlsEmperor` 纯函数 + Zod + 24 项测试 |
 | HC-P0-2 | `Faction.politicalStage` 字段 + 存档兼容 | ✅ 已完成：optional 追加 + Zod + 旧存档降级兼容 |
-| HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | ✅ 已完成：`establishHegemony` 引擎 + `POST /hegemony/establish` 路由 + LeftPanel 君主折叠项开府按钮 + OfficerDetail 头衔展示 |
+| HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | ✅ 已完成：`establishHegemony` 引擎 + `POST /hegemony/establish` 路由 + 底部朝廷命令抽屉开府入口 + OfficerDetail 头衔展示 |
 | HC-P0-4 | 霸府专属官职最小切片（Q2 方案B，先 2~3 个官职） | ✅ 已完成：`Officer.hegemonyPosition?` 独立轨道 + `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝 + 势力唯一）+ AppointPanel 霸府轨道按钮 + OfficerDetail 官职区块条件展示 + verify-hc-p0 61/61 + Headless 端到端 |
 | HC-P0-5 | 霸府外交权重加成 | ✅ 已完成：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3）+ `calculateAllianceChance` 接入结盟成功率修正 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
-| HC-P0-6 | 伪诏宣战能力 | ✅ 已完成：开府100皇权、季度+10（上限100）、消耗40、冷却8季；绕过关系前置直设war；目标君主或所属核心武将含“匡扶汉室”时发起方声望-30；君主折叠项 UI + 存档往返 + verify-hc-p0 101/101 + Headless |
+| HC-P0-6 | 伪诏宣战能力 | ✅ 已完成：开府100皇权、季度+10（上限100）、消耗40、冷却8季；绕过关系前置直设war；目标君主或所属核心武将含“匡扶汉室”时发起方声望-30；朝廷抽屉唯一 UI + 存档往返 + verify-hc-p0 101/101 + Headless |
 
 **HC-P0 验收基线**：玩家控制汉帝 → 开霸府 → 任命霸府官职 → 外交权重可见提升 → 伪诏宣战一次。Headless Chrome 实测全流程。
+
+**CMD-P4 UI 路径（Session 199）**：上述开府与伪诏操作统一从
+`底部命令坞 → 朝廷 → 大事/诏令 → 统一终审` 完成；左栏旧“君主”手风琴已从 DOM 删除。
+霸府官制在朝廷只读总览，并跳往既有人事任命唯一写入口。
 
 ### HC-P1（称王 + 王国官职体系）
 

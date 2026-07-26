@@ -8,7 +8,7 @@ import { MapCanvas } from '../map/MapCanvas';
 import { EventDialog } from '../events/EventDialog';
 import { CommandShell } from '../command/CommandShell';
 
-/** P1-06 主三栏布局 + CMD-P1 通用命令坞壳层；旧面板在逐域迁移期间继续保留 */
+/** P1-06 主三栏布局 + 命令坞；朝廷已迁移，其余领域在过渡期保留旧面板。 */
 export function GameLayout() {
   return (
     <div className="h-full flex flex-col bg-stone-950" data-testid="game-layout">

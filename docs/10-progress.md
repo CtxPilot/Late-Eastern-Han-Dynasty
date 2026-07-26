@@ -4078,3 +4078,28 @@
 - **边界**：未删除旧君主入口、未迁移其他功能域、未实施CMD-P4。
 
 *v14.8 | 2026-07-26 | Session 198 · CMD-P3 统一终审升级*
+
+### Session 199 — CMD-P4 原子切换与 Headless 路径迁移
+
+- **原子下线**：从 `LeftPanel` 删除 `monarch` accordion key、旧“君主”整段 JSX、
+  开霸府/伪诏确认分支及重复 store action 绑定；不是 CSS 隐藏或运行时开关。朝廷命令坞改标
+  “朝廷功能唯一入口”，其他未迁移领域继续保留原面板。
+- **功能完整性**：新朝廷抽屉继续覆盖君主/政治阶段与头衔、汉帝所在与控制、皇权/冷却、
+  开霸府、伪诏宣战、霸府三官职只读总览及跳往既有人事任命；业务字段、store action/API
+  与 CMD-P2 保持不变。
+- **测试路径迁移**：确认 `server/src/scripts/verify-hc-p0.ts` 101 项是服务端确定性套件，
+  不含 UI 选择器；此前 Session 194/HC-P0 浏览器脚本未入库。新增可重复执行的
+  `scripts/verify-cmd-p4-headless.mjs` 与根命令 `pnpm verify-cmd-p4-headless`，固定使用
+  `command-domain-court`、`command-court-*`、`command-confirm-*`，并硬断言旧“君主”
+  精确按钮不存在、旧 `btn-false-decree-*` 数量为0。缺入口、无目标或断言不符均抛错，
+  不存在选择器失效后跳过。
+- **Headless 实测**：英雄集结曹操真实完成开府取消/确认、伪诏取消/确认；结果
+  `vassal→hegemon`、皇权 `100→60`、冷却 `0→8`、目标关系 `war`；官制跳人事正常，
+  流程前后旧入口均为0，控制台错误0。
+- **全量回归**：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
+  AI军事29/29、negotiation 40/40、scenario-events32、turn-cadence28/28，以及根目录原有
+  31 个 `verify-*`（全部存档/RNG/AI decision/迷雾/守将）均退出0；typecheck、lint、
+  validate-data、build、SPDX 全绿。build 仅既有 >500kB chunk warning。
+- **边界**：未启动 CMD-P5，未迁移军事/人事/外交等其他领域。
+
+*v14.9 | 2026-07-26 | Session 199 · CMD-P4 朝廷唯一入口切换完成*

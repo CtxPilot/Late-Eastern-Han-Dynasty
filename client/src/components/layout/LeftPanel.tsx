@@ -4,7 +4,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { calculateAllianceChance, findDiplomacy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
-import { controlsEmperor } from '@leh/shared';
 import { BeautyPanel } from './BeautyPanel';
 import { FamilyPanel } from './FamilyPanel';
 import { SpyPanel } from './SpyPanel';
@@ -27,7 +26,6 @@ type AccordionKey =
   | 'plot'
   | 'strategist'
   | 'diplomacy'
-  | 'monarch'
   | 'cities'
   | null;
 
@@ -50,8 +48,6 @@ export function LeftPanel() {
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
   const clearError = useGameStore((s) => s.clearError);
   const tribute = useGameStore((s) => s.tribute);
-  const establishHegemony = useGameStore((s) => s.establishHegemony);
-  const falseDecreeWar = useGameStore((s) => s.falseDecreeWar);
   const giftBeautyDip = useGameStore((s) => s.giftBeautyDip);
   const plantFemale = useGameStore((s) => s.plantFemale);
   const formAlliance = useGameStore((s) => s.formAlliance);
@@ -63,8 +59,6 @@ export function LeftPanel() {
     | { type: 'tribute'; factionId: number }
     | { type: 'gift-beauty'; factionId: number }
     | { type: 'plant-female'; factionId: number }
-    | { type: 'establish-hegemony' }
-    | { type: 'false-decree'; factionId: number }
     | null
   >(null);
 
@@ -335,82 +329,6 @@ export function LeftPanel() {
         </AccSection>
 
         <AccSection
-          title="君主"
-          open={open === 'monarch'}
-          onToggle={() => toggle('monarch')}
-        >
-          {(() => {
-            if (!game) return null;
-            const fid = game.playerFactionId;
-            const faction = game.factions[fid];
-            if (!faction) return null;
-            const ruler = game.officers[faction.rulerId];
-            const stage = faction.politicalStage ?? 'vassal';
-            const controlsHan = controlsEmperor(game, fid);
-            const authority = faction.imperialAuthority ?? 0;
-            const decreeCooldown = faction.imperialDecreeCooldown ?? 0;
-            const decreeReason =
-              stage === 'vassal'
-                ? '需先开霸府'
-                : authority < 40
-                  ? `皇权不足（需40，当前${authority}）`
-                  : decreeCooldown > 0
-                    ? `冷却中（剩余${decreeCooldown}季）`
-                    : null;
-            return (
-              <div className="px-2 py-1 space-y-1">
-                {ruler && (
-                  <div className="text-[11px] text-stone-400">
-                    {ruler.name}
-                    {faction.politicalTitle ? <span className="ml-1 text-amber-300">· {faction.politicalTitle}</span> : null}
-                  </div>
-                )}
-                {stage === 'vassal' && controlsHan && (
-                  <MenuBtn
-                    label="开霸府"
-                    hint="迎奉天子·自立丞相"
-                    disabled={loading}
-                    onClick={() => setConfirm({ type: 'establish-hegemony' })}
-                  />
-                )}
-                {stage === 'vassal' && !controlsHan && (
-                  <div className="text-[10px] text-stone-600 px-2">未控制汉献帝（需占领汉帝所在城池）</div>
-                )}
-                {stage !== 'vassal' && (
-                  <>
-                    <div className="text-[10px] text-stone-500 px-2">
-                      皇权 {authority}/100 · 伪诏冷却 {decreeCooldown > 0 ? `${decreeCooldown}季` : '就绪'}
-                    </div>
-                    <div className="px-2 pt-1 space-y-1">
-                      {Object.values(game.factions)
-                        .filter((target) => target.id !== fid && target.isAlive)
-                        .map((target) => {
-                          const relation = findDiplomacy(game.diplomacy, fid, target.id)?.relation as string | undefined;
-                          const reason = relation === 'war' ? '已交战' : decreeReason;
-                          return (
-                            <button
-                              key={target.id}
-                              type="button"
-                              data-testid={`btn-false-decree-${target.id}`}
-                              disabled={loading || reason != null}
-                              title={reason ?? `消耗40皇权，对${target.name}直接宣战；冷却8季`}
-                              onClick={() => setConfirm({ type: 'false-decree', factionId: target.id })}
-                              className="w-full rounded border border-red-900/60 px-2 py-1 text-left text-[10px] text-red-200 hover:bg-red-950/50 disabled:text-stone-600 disabled:opacity-60"
-                            >
-                              伪诏宣战 · {target.name}
-                              {reason ? <span className="ml-1 text-stone-600">（{reason}）</span> : null}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })()}
-        </AccSection>
-
-        <AccSection
           title="己方城池"
           badge={playerCities.length}
           accent="civil"
@@ -496,7 +414,7 @@ export function LeftPanel() {
         validateBeforeConfirm={validateDiplomacyReview}
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
-          if (!confirm || confirm.type === 'alliance' || confirm.type === 'establish-hegemony' || confirm.type === 'false-decree') return;
+          if (!confirm || confirm.type === 'alliance') return;
           if (confirm.type === 'tribute') await tribute(confirm.factionId);
           if (confirm.type === 'gift-beauty') await giftBeautyDip(confirm.factionId, 1);
           if (confirm.type === 'plant-female') await plantFemale(confirm.factionId);
@@ -541,103 +459,6 @@ export function LeftPanel() {
           if (!useGameStore.getState().error) setConfirm(null);
         }}
       />
-      <CommandConfirmDialog
-        open={confirm?.type === 'establish-hegemony'}
-        category="朝廷"
-        command={`确认开霸府：${game.factions[game.playerFactionId]?.name ?? '本势力'}`}
-        summary="开霸府后政治阶段永久改变，当前版本不可撤销。确认迎奉天子、自领丞相？"
-        items={[
-          { label: '政治阶段', value: '诸侯 → 霸府', tone: 'warning' },
-          { label: '政治头衔', value: '丞相' },
-          { label: '皇权', value: '获得初始皇权 100' },
-          { label: '解锁', value: '霸府官职、伪诏宣战、外交加成' },
-          { label: '可否撤销', value: '不可撤销', tone: 'warning' },
-        ]}
-        loading={loading}
-        danger
-        error={error}
-        validateBeforeConfirm={() => {
-          const latest = useGameStore.getState().game;
-          if (!latest) return '朝廷状态已失效，请返回修改。';
-          const faction = latest.factions[latest.playerFactionId];
-          if ((faction?.politicalStage ?? 'vassal') !== 'vassal') return '政治阶段已经变化，不能重复开霸府。';
-          return controlsEmperor(latest, latest.playerFactionId) ? null : '已不再控制汉献帝，不能开霸府。';
-        }}
-        onCancel={() => setConfirm(null)}
-        onConfirm={async () => {
-          if (confirm?.type !== 'establish-hegemony') return;
-          await establishHegemony();
-          if (!useGameStore.getState().error) setConfirm(null);
-        }}
-      />
-      <CommandConfirmDialog
-        open={confirm?.type === 'false-decree'}
-        category="朝廷"
-        command={`确认伪诏宣战：${confirm?.type === 'false-decree' ? game.factions[confirm.factionId]?.name ?? '未知势力' : '未知势力'}`}
-        summary="将绕过常规外交前置，立即与目标势力进入战争状态。"
-        items={confirm?.type === 'false-decree' ? [
-          { label: '目标势力', value: game.factions[confirm.factionId]?.name ?? '—' },
-          { label: '立即消耗', value: '皇权 40', tone: 'warning' },
-          { label: '外交后果', value: '双方关系立即变为战争', tone: 'warning' },
-          { label: '冷却', value: '8 季' },
-          { label: '额外风险', value: '若目标匡扶汉室，声望 −30' },
-        ] : []}
-        loading={loading}
-        danger
-        error={error}
-        validateBeforeConfirm={() => {
-          const latest = useGameStore.getState().game;
-          if (!latest || confirm?.type !== 'false-decree') return '伪诏草稿已失效，请返回修改。';
-          const faction = latest.factions[latest.playerFactionId];
-          const target = latest.factions[confirm.factionId];
-          if (!target?.isAlive) return '目标势力已不存在或已经灭亡。';
-          if ((faction?.politicalStage ?? 'vassal') === 'vassal') return '需先开霸府。';
-          if ((faction?.imperialAuthority ?? 0) < 40) return `皇权不足（需40，当前${faction?.imperialAuthority ?? 0}）。`;
-          if ((faction?.imperialDecreeCooldown ?? 0) > 0) return `伪诏仍在冷却（剩余${faction?.imperialDecreeCooldown}季）。`;
-          return findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id)?.relation === 'war'
-            ? '双方已经交战。'
-            : null;
-        }}
-        onCancel={() => setConfirm(null)}
-        onConfirm={async () => {
-          if (confirm?.type !== 'false-decree') return;
-          await falseDecreeWar(confirm.factionId);
-          if (!useGameStore.getState().error) setConfirm(null);
-        }}
-      />
     </aside>
-  );
-}
-
-function MenuBtn({
-  label,
-  hint,
-  disabled,
-  onClick,
-  emphasize,
-}: {
-  label: string;
-  hint?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  emphasize?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`w-full text-left px-3 py-1.5 border-b border-stone-900/80 ${
-        disabled
-          ? 'text-stone-600 cursor-not-allowed'
-          : emphasize
-            ? 'text-amber-200 hover:bg-amber-950/40'
-            : 'text-stone-300 hover:bg-stone-900'
-      }`}
-      title={hint}
-    >
-      {label}
-      {hint && <span className="text-stone-600 ml-1 text-[10px]">{hint}</span>}
-    </button>
   );
 }

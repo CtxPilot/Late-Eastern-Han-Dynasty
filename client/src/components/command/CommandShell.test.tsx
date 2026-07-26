@@ -30,13 +30,13 @@ describe('command shell components', () => {
   it('renders the reusable drawer empty state and explicit close control', () => {
     const html = renderToStaticMarkup(
       <CommandDrawer title="朝廷" availability="legacy" onClose={() => undefined}>
-        <p>仍在左侧君主面板。</p>
+        <p>朝廷命令统一从此处下达。</p>
       </CommandDrawer>,
     );
 
     expect(html).toContain('data-testid="command-drawer"');
     expect(html).toContain('仍在原面板');
     expect(html).toContain('data-testid="command-drawer-close"');
-    expect(html).toContain('仍在左侧君主面板');
+    expect(html).toContain('朝廷命令统一从此处下达');
   });
 });

@@ -64,3 +64,12 @@
 
 实测结果：四张截图成功保存；开府取消无状态变化、确认后变为霸府且皇权 100；伪诏取消不扣皇权；
 浏览器脚本未观察到控制台错误。迁移后以相同权威断言逐项对比，而不是只比较截图。
+
+## 五、CMD-P4 迁移结果（Session 199）
+
+基线路径已迁为：
+`command-domain-court → command-court-establish-hegemony / command-court-false-decree-* → command-confirm-*`。
+可重复脚本为 `scripts/verify-cmd-p4-headless.mjs`。脚本完整提交开府与伪诏，断言
+`vassal→hegemon`、皇权 `100→60`、冷却 `0→8`、目标关系 `war`、官制跳往人事，并在流程
+前后两次断言旧“君主”按钮不存在、`btn-false-decree-*` 数量为 0。所有缺失目标或选择器均
+直接抛错，没有条件跳过分支。

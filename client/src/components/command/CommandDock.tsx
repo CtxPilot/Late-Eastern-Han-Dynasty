@@ -21,7 +21,7 @@ export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
   { domain: 'intel', label: '情报', availability: 'legacy', reason: '仍在左侧谍报面板' },
   { domain: 'farming', label: '屯田', availability: 'planned', reason: '设计中，尚未提供运行时入口' },
   { domain: 'family', label: '家族', availability: 'legacy', reason: '仍在左侧家族面板' },
-  { domain: 'court', label: '朝廷', availability: 'available', reason: '朝廷功能已接入；旧君主入口过渡保留至 CMD-P4' },
+  { domain: 'court', label: '朝廷', availability: 'available', reason: '朝廷功能唯一入口' },
 ] as const;
 
 export function CommandDock({

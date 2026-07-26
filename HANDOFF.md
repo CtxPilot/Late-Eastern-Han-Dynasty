@@ -9,15 +9,17 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 198 完成：CMD-P3**。`CommandConfirmDialog` 原位升级统一终审：焦点圈定/归还、对象化唯一标题、提交前状态再校验；旧君主验证期保留且与朝廷抽屉数据同源 |
+| 会话 | **Session 199 完成：CMD-P4**。旧“君主”手风琴及其开府/伪诏确认分支已原子删除；底部朝廷抽屉成为唯一入口，仓库内 Headless 验收覆盖取消/确认与旧 DOM 消失 |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **S197 CMD-P2 朝廷抽屉业务接线** + S196 CMD-P1 通用命令坞壳层 + S194 行政面板体验收口 + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 + 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 |
-| 文档最新 | 07 已同步资源真源、结盟/谍报禁用态、错误生命周期与结束回合唯一入口；Session 190/192 审查报告及截图已归档 |
+| 代码最新 | **S199 CMD-P4 朝廷入口原子切换** + S198 统一终审 + S197 朝廷抽屉业务接线 + S196 通用命令坞壳层 + S194 行政面板体验收口 + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 |
+| 文档最新 | 07 §12/§13.4、26 霸府 UI 路径、Session 195 计划与 Session 196 基线均已同步 CMD-P4 完成状态 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | 等用户指派 CMD-P4：原子删除旧“君主”并迁移 Headless 固定路径。当前新旧朝廷入口暂时双活但同读写一份权威状态，禁止延长至 CMD-P4 之后。HC-P1/R3 仍保持未启动。 |
+| 玩法下一步 | CMD-P0～P4 最小安全闭环已完成；等待用户另行指派 CMD-P5 复盘，不自动迁移军事/人事/外交。HC-P1/R3 仍保持未启动。 |
 
-CMD-P2 回归基线：shared 197/197、client 10/10、HC-P0 101/101、Campaign 70/70、
+CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
+另有 `pnpm verify-cmd-p4-headless`：旧君主 DOM=0、开府/伪诏取消与确认、皇权/冷却/战争、
+官制跳人事、控制台错误=0。
 
 ---
 
@@ -35,6 +37,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # 谈判公式: pnpm verify-negotiation-r2 # 登用/结盟边界、单调、seed、UI同源 20/20
 # BF-P0 南郡: pnpm --filter @leh/shared test -- schema.test.ts
 # 单元测试: pnpm test
+# CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
 ```
 
 首次进入先选择剧本与势力；当前有英雄集结和190《关东义兵》四槽切片。硬刷新 `Ctrl+Shift+R`。
@@ -353,7 +356,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 优先级 | 事项 |
 |:------:|------|
 | **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
-| **Session 195 待批准实施** | §12 最小安全闭环规划已完成：CMD-P0 规格/基线 → P1 通用壳层 → P2 朝廷抽屉 → P3 统一终审升级 → P4 原子切换 → P5 复盘，预计2～4 Session。首批只迁政治状态/汉帝控制/皇权冷却/开府/伪诏；官制只读总览跳人事唯一写入口；其他域不迁。详见 `docs/reviews/session-195-command-dock-minimum-safe-loop-plan.md`。 |
+| **Session 199 CMD-P0～P4 已完成** | §12 最小安全闭环已收官：通用壳层、朝廷抽屉、统一终审、旧君主入口原子下线及仓库内 Headless 路径均已完成。P5 复盘是独立后续任务；其他命令域尚未迁移。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
 | **Session 196 CMD-P1 已完成** | 通用 `CommandDock`/`CommandDrawer`/`CommandShell` + 瞬时草稿 reducer 已挂入 world；九类均为原面板/设计中说明，无业务提交入口。client 7/7 + shared 197/197 + 31个根 verify + HC-P0 101/101 全绿。下一步 CMD-P2。 |
 | **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |

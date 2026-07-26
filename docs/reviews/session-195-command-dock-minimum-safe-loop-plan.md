@@ -3,7 +3,8 @@
 > 范围：S20 前端体验；只规划“通用命令坞壳层 + 朝廷抽屉 + 统一终审”的首批渐进迁移。  
 > 依据：`07-ui-design.md` §12、Session 190 信息架构审查、Session 191 高风险终审补丁、
 > Session 194 体验问题收口及当前 React 实现。  
-> 本轮为规划文档，**不修改运行时代码，不宣称架构已经实装**。
+> 规划状态：**CMD-P0～P4 已于 Session 196～199 全部完成**。本文件保留原规划与验收口径；
+> CMD-P5 复盘仍是独立后续任务，不在本次闭环内自动启动。
 
 ## 一、决策摘要
 
@@ -292,7 +293,7 @@ type CommandShellState = {
 - `Esc`、焦点圈定与焦点恢复符合契约；危险操作 Enter 不提交；
 - 现有高风险确认浏览器冒烟与相关全量测试无回归。
 
-### CMD-P4：原子切换、旧入口下线与测试迁移（0.5 Session）
+### CMD-P4：原子切换、旧入口下线与测试迁移（✅ Session 199 完成）
 
 **产出**
 
@@ -308,6 +309,12 @@ type CommandShellState = {
 - 朝廷官制可到达人事任命，完成霸府官职任命后回到朝廷总览状态即时更新；
 - 旧“君主”路径测试全部改为新路径，无依赖滚动坐标；
 - 全量测试套件、typecheck、lint、build、Headless Chrome 全绿。
+
+**完成记录**：`LeftPanel` 的 `monarch` accordion key、整段君主 JSX、开府/伪诏本地
+confirm 分支与重复 store action 绑定在同一提交删除；新朝廷抽屉成为唯一写入口。新增仓库内
+`scripts/verify-cmd-p4-headless.mjs`，固定使用 `command-domain-court`、
+`command-court-establish-hegemony`、`command-court-false-decree-*` 与
+`command-confirm-*`，并把“旧君主按钮/旧伪诏选择器数量必须为零”设为硬断言，不允许静默跳过。
 
 ### CMD-P5：首批复盘与后续迁移门禁（文档，0.25 Session）
 

@@ -43,6 +43,7 @@
     "verify-battle-commanders": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-battle-commanders",
     "verify-turn-cadence": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-turn-cadence",
     "verify-negotiation-r2": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-negotiation-r2",
+    "verify-cmd-p4-headless": "node scripts/verify-cmd-p4-headless.mjs",
     "test": "pnpm --filter @leh/shared test && pnpm --filter @leh/client test",
     "spdx": "node scripts/add-spdx-headers.mjs"
   },
