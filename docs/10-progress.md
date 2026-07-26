@@ -3825,3 +3825,45 @@
 - **下一步**：HC-P0-5（霸府外交权重加成）或 HC-P0-6（伪诏宣战），由用户派发
 
 *v13.8 | 2026-07-26 | Session 188 续 · HC-P0-4 霸府专属官职最小切片实施完成（3 官职+任命引擎+UI+17 项测试+Headless 端到端）；下一步 HC-P0-5/6*
+
+### Session 188 续：HC-P0-5 霸府外交权重加成实施完成
+
+- **范围**：按已批准 Q3 方向（霸府势力发起外交操作时获得加成），落结盟成功率修正 + 进贡/献美友好增量放大，验证 negotiation.ts + diplomacy.ts 架构可注入"势力性质修正"参数。明确不做：对汉室态度匹配修正（后续子项）；伪诏宣战（HC-P0-6）。
+- **加成方向选定**：选"开府势力自己发起外交操作时获得加成"（任务推荐方向）。理由：04§36.2 曹操"挟天子令诸侯"+30 外交权重基调本意是"霸府势力主动外交优势"；双向修正（其他势力对霸府态度变化）更复杂，留后续迭代。HC-P0 阶段只做发起方单边修正。
+- **选定修正系数**（参照 04§36.2 +30 基调，落在 Q3 批准区间内）：
+  - **结盟成功率修正 hegemonyAllianceModifier**（百分点加成）：
+    - vassal/undefined = 0（基线）
+    - hegemon = +5（落在 Q3 批准的霸府 +5~10 区间下沿，作为初始值，后续可调参）
+    - king = +8（HC-P1 未实装转移，但分档结构预留避免后续改函数签名）
+    - emperor = +12（HC-P2 未实装转移，分档预留）
+  - **进贡/献美友好增量倍数 hegemonyFavorMultiplier**：
+    - vassal/undefined = 1.0
+    - hegemon = ×1.1（落在 Q3 批准的 ×1.1~1.2 区间下沿）
+    - king = ×1.2（分档预留）
+    - emperor = ×1.3（分档预留）
+  - 分档单调：vassal < hegemon < king < emperor，避免后续调参破坏单调性
+- **calculateAllianceChance 改动摘要**（`shared/negotiation.ts`）：
+  - 新增纯函数 `hegemonyAllianceModifier(stage)` 与 `hegemonyFavorMultiplier(stage)`，集中一处便于后续调参
+  - `calculateAllianceChance` 内部读取发起方 `state.factions[sourceFactionId]?.politicalStage`，在公式末项加 `hegemonyModifier` 百分点
+  - `AllianceChanceBreakdown` 接口加 `hegemonyModifier: number` 字段（UI 可展示修正来源）
+  - 公式：`35 + favorability*0.35 + reputationDiff/100 + charisma*0.15 + commonEnemy + treaty + hegemonyModifier`，仍只 clamp 一次
+- **diplomacy.ts 改动摘要**（`server/src/engine/diplomacy.ts`）：
+  - `tributeGold`：友好增量从 `TRIBUTE_FAVOR` 改为 `Math.round(TRIBUTE_FAVOR * hegemonyFavorMultiplier(self.politicalStage))`（vassal=15, hegemon=17, king=18, emperor=20）
+  - `giftBeautyStock`：友好增量从 `GIFT_BEAUTY_FAVOR_PER * n` 改为 `Math.round(GIFT_BEAUTY_FAVOR_PER * n * multiplier)`（vassal=12, hegemon=13, king=14, emperor=15）
+  - `formAlliance`：无需改动，已通过 `calculateAllianceChance` 间接接入修正
+- **称王/称帝分档结构**：是。即使 HC-P1/P2 转移操作未实装，修正系数的分档结构（king=+8、emperor=+12、×1.2、×1.3）现在一并设计，避免后续再改函数签名。测试 9c/分档单调断言验证 king > hegemon、emperor > king。
+- **确定性测试**：
+  - `verify-negotiation-r2.ts` 既有 20 项断言**全部不变**（vassal 状态 hegemonModifier=0，既有公式结果完全不变），新增 20 项 HC-P0-5 修正断言（分档函数边界值 + 霸府 vs 诸侯结盟成功率对比 + 分档单调 + 进贡/献美放大 + 纯函数确定性），共 40/40
+  - `verify-hc-p0.ts` 扩展 25 项 HC-P0-5 断言（9a~9f：分档函数边界 + 诸侯 vs 霸府结盟成功率 + 分档单调 + 进贡放大 + 献美放大 + RNG 边界确认），共 86/86
+- **RNG 边界确认**：结盟成功率判定依然走既有权威 `xorshift32-v1`（R2 已收口），本轮只在概率计算公式里加修正系数，不引入新随机源，不改变 RNG 消费点位。verify-negotiation-r2 既有"结盟成功/失败只消费一次权威随机数"断言仍通过。
+- **全量回归零破坏**：
+  - `pnpm test` 196/196
+  - `pnpm lint` 全模块通过
+  - `validate-data` 全过
+  - `verify-hc-p0` 86/86（HC-P0-5 新增 25 项）
+  - `verify-negotiation-r2` 40/40（既有 20 项不变，新增 20 项 HC-P0-5 修正断言）
+  - 所有 verify-save-* / verify-*-rng / verify-march-fog / verify-battle-commanders / verify-turn-cadence / verify-scenario-events / verify-personnel-rng / verify-campaign 全过
+- **明确不做**：对汉室态度匹配修正（04§36.2 提到的另一修正类别，留后续子项或 HC-P1）；伪诏宣战（HC-P0-6，下一步）；不实现双向修正（其他势力对霸府态度变化），HC-P0 阶段只做发起方单边修正
+- **下一步**：HC-P0-6（伪诏宣战能力，Q4 方向已批准，消耗 imperialAuthority 皇权点数 + 冷却机制），由用户派发
+
+*v13.9 | 2026-07-26 | Session 188 续 · HC-P0-5 霸府外交权重加成实施完成（结盟+5/进贡×1.1/献美×1.1，分档预留 king/emperor，40+25 项测试）；下一步 HC-P0-6 伪诏宣战*

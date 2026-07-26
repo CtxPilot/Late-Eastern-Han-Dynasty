@@ -1,6 +1,6 @@
 # 霸府 / 称王 / 称帝主线设计：挟天子→开霸府→称王→称帝
 
-> 状态：**已批准，进入 HC-P0 实施**（Session 188 用户批准 Q1~Q11）— HC-P0-1/2/3/4 已完成（emperorLocation 字段 + politicalStage 字段 + 开霸府操作 + 霸府专属官职最小切片），HC-P0-5/6 待启动。
+> 状态：**已批准，进入 HC-P0 实施**（Session 188 用户批准 Q1~Q11）— HC-P0-1/2/3/4/5 已完成（emperorLocation 字段 + politicalStage 字段 + 开霸府操作 + 霸府专属官职最小切片 + 霸府外交权重加成），HC-P0-6 待启动。
 > 范围：提出"挟天子 → 开霸府 → 称王 → 称帝"这条可选、可停留的政治进阶路线。只有控制汉献帝的势力才有资格开府；后续阶段可自主选择推进或维持现状。
 > 前置：
 > - `docs/04-game-systems.md` §3.8 君主身份特例（Session 188 规则定稿，`Faction.rulerId` 派生判定，身份转变机制当前不存在）
@@ -229,7 +229,7 @@ interface Faction {
 | HC-P0-2 | `Faction.politicalStage` 字段 + 存档兼容 | ✅ 已完成：optional 追加 + Zod + 旧存档降级兼容 |
 | HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | ✅ 已完成：`establishHegemony` 引擎 + `POST /hegemony/establish` 路由 + LeftPanel 君主折叠项开府按钮 + OfficerDetail 头衔展示 |
 | HC-P0-4 | 霸府专属官职最小切片（Q2 方案B，先 2~3 个官职） | ✅ 已完成：`Officer.hegemonyPosition?` 独立轨道 + `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝 + 势力唯一）+ AppointPanel 霸府轨道按钮 + OfficerDetail 官职区块条件展示 + verify-hc-p0 61/61 + Headless 端到端 |
-| HC-P0-5 | 霸府外交权重加成 | ⏳ 待启动：`calculateAllianceChance` + diplomacy.ts 公式接入修正，verify-negotiation-r2 回归 |
+| HC-P0-5 | 霸府外交权重加成 | ✅ 已完成：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3）+ `calculateAllianceChance` 接入结盟成功率修正 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
 | HC-P0-6 | 伪诏宣战能力（Q4 拍板后） | ⏳ 待启动：霸府势力可对任意势力宣战，消耗 imperialAuthority，冷却机制 |
 
 **HC-P0 验收基线**：玩家控制汉帝 → 开霸府 → 任命霸府官职 → 外交权重可见提升 → 伪诏宣战一次。Headless Chrome 实测全流程。
@@ -307,14 +307,24 @@ interface Faction {
 - UI：AppointPanel 新增"霸府"轨道按钮（仅霸府阶段势力可见）+ OfficerDetail 官职区块条件展示
 - 17 项新增确定性测试 + Headless Chrome 端到端验证（董卓开霸府→任命吕布大司马→OfficerDetail 展示"霸府 大司马"）
 
-### Q3 霸府/称王/称帝的外交权重加成数值类别 — **方向已批准，具体数值待实战调参，不阻塞 HC-P0 启动**
+### Q3 霸府/称王/称帝的外交权重加成数值类别 — **方向已批准，HC-P0-5 已实装霸府阶段（称王/称帝分档预留）**
 
-**设计方向**（数值待拍板）：
-- 霸府：外交权重 +20~30（参照 04 §36.2 曹操"挟天子令诸侯"+30），结盟成功率 +5~10%，进贡/献美友好增量 ×1.1~1.2
-- 称王：在霸府基础上再 +10~20，结盟成功率再 +5%
-- 称帝：最高外交权重 +30~50，对未称帝势力有"天命压制"修正（对方外交阻力 +10~20%）
+**已实装数值**（HC-P0-5，Session 188 续，落在 Q3 批准区间内作为初始值，后续可调参）：
+- **结盟成功率修正 hegemonyAllianceModifier**（百分点加成，仅发起方）：
+  - vassal/undefined = 0（基线）
+  - hegemon = +5（Q3 批准区间 +5~10 下沿）
+  - king = +8（分档预留，HC-P1 未实装转移）
+  - emperor = +12（分档预留，HC-P2 未实装转移）
+- **进贡/献美友好增量倍数 hegemonyFavorMultiplier**（仅发起方）：
+  - vassal/undefined = ×1.0
+  - hegemon = ×1.1（Q3 批准区间 ×1.1~1.2 下沿）
+  - king = ×1.2（分档预留）
+  - emperor = ×1.3（分档预留）
+- **加成方向**：仅"开府势力自己发起外交操作时获得加成"（单边修正）。04§36.2 曹操"挟天子令诸侯"+30 外交权重基调本意是霸府势力主动外交优势；双向修正（其他势力对霸府态度变化）更复杂，留后续迭代。
+- **分档单调**：vassal < hegemon < king < emperor，避免后续调参破坏单调性。
+- **实现位置**：`shared/negotiation.ts` 集中两个分档纯函数；`calculateAllianceChance` 公式末项加 `hegemonyModifier`；`diplomacy.ts` `tributeGold`/`giftBeautyStock` 友好增量乘以 `hegemonyFavorMultiplier`。`formAlliance` 通过 `calculateAllianceChance` 间接接入。RNG 边界：结盟判定仍走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点。
 
-**开放问题**：数值是否区分玩家/AI 势力？AI 称帝后是否对玩家有过度压制？（属 S15 AI 深化，留后续）
+**开放问题**（数值是否区分玩家/AI 势力？AI 称帝后是否对玩家有过度压制？）仍属 S15 AI 深化，留后续。**对汉室态度匹配修正**（04§36.2 提到的另一修正类别）本轮不做，留后续子项或 HC-P1。
 
 ### Q4 伪诏宣战能力的具体机制 — **方向已批准，具体数值待实战调参，不阻塞 HC-P0 启动**
 
@@ -411,4 +421,4 @@ Q1~Q11 已全部批准（Session 188）。下一步启动 **HC-P0 实施**（挟
 
 ---
 
-*v1.2 | 2026-07-26 | Session 188 续 · 霸府/称王/称帝 Q1~Q11 已批准，HC-P0-1/2/3/4 已完成，HC-P0-5/6 待启动*
+*v1.3 | 2026-07-26 | Session 188 续 · 霸府/称王/称帝 Q1~Q11 已批准，HC-P0-1/2/3/4/5 已完成，HC-P0-6 待启动*

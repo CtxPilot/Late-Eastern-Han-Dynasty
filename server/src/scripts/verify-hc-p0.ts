@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * HC-P0-1 + HC-P0-2 + HC-P0-3 + HC-P0-4 确定性验证（docs/26 霸府/称王/称帝主线地基+开府+霸府官职）。
+ * HC-P0-1 + HC-P0-2 + HC-P0-3 + HC-P0-4 + HC-P0-5 确定性验证（docs/26 霸府/称王/称帝主线地基+开府+霸府官职+外交权重）。
  *
  * 覆盖：
  * 1. 两个剧本开局 emperorLocation 指向洛阳(id=1) + 所有势力 politicalStage='vassal'
@@ -12,6 +12,7 @@
  * 5. GameStateSchema.strict() 接受新字段（ROOT_KEYS 已加 emperorLocation）
  * 6. HC-P0-3 开霸府操作：前置校验（未控制汉帝/已开府/已是王帝拒绝）+ 状态转移 + actionLog + 存档往返
  * 7. HC-P0-4 霸府专属官职：前置校验（诸侯状态拒绝）+ 任命成功（字段写入）+ 势力唯一性（替换旧任）+ 存档往返 + 解职
+ * 8. HC-P0-5 霸府外交权重加成：结盟成功率修正 + 进贡/献美友好增量放大 + 分档预留（king/emperor）
  *
  * Run: pnpm verify-hc-p0
  */
@@ -19,12 +20,16 @@ import {
   CURRENT_SAVE_SCHEMA_VERSION,
   GameStateSchema,
   HegemonyPosition,
+  calculateAllianceChance,
+  findDiplomacy,
+  hegemonyAllianceModifier,
+  hegemonyFavorMultiplier,
   parseCurrentSaveEnvelope,
   controlsEmperor,
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
-import { createGame, getGame, doEstablishHegemony } from '../services/game.js';
+import { createGame, getGame, doEstablishHegemony, doTribute } from '../services/game.js';
 import { establishHegemony } from '../engine/hegemony.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { getRuntimeRngState } from '../runtime-rng.js';
@@ -321,6 +326,100 @@ if (legacyHegemonyParsed) {
 const badHegemony = structuredClone(getGame());
 (badHegemony.officers[9] as { hegemonyPosition?: unknown }).hegemonyPosition = 'invalidHegemony';
 check('hegemonyPosition 非法值被 Zod 拒绝', !GameStateSchema.safeParse(badHegemony).success);
+
+// ── 9. HC-P0-5 霸府外交权重加成 ──
+console.log('\n— HC-P0-5 霸府外交权重加成 —');
+
+// 9a. 分档函数边界值
+check('hegemonyAllianceModifier vassal=0', hegemonyAllianceModifier('vassal') === 0);
+check('hegemonyAllianceModifier hegemon=+5', hegemonyAllianceModifier('hegemon') === 5);
+check('hegemonyAllianceModifier king=+8', hegemonyAllianceModifier('king') === 8);
+check('hegemonyAllianceModifier emperor=+12', hegemonyAllianceModifier('emperor') === 12);
+check('hegemonyAllianceModifier undefined=0', hegemonyAllianceModifier(undefined) === 0);
+check('hegemonyFavorMultiplier vassal=1.0', hegemonyFavorMultiplier('vassal') === 1.0);
+check('hegemonyFavorMultiplier hegemon=1.1', hegemonyFavorMultiplier('hegemon') === 1.1);
+check('hegemonyFavorMultiplier king=1.2', hegemonyFavorMultiplier('king') === 1.2);
+check('hegemonyFavorMultiplier emperor=1.3', hegemonyFavorMultiplier('emperor') === 1.3);
+check('hegemonyFavorMultiplier undefined=1.0', hegemonyFavorMultiplier(undefined) === 1.0);
+
+// 9b. 诸侯状态 vs 霸府状态结盟成功率对比
+// 英雄集结 faction 1 占洛阳=控制汉帝，可开霸府；faction 3 是另一存活势力
+createGame(1, 1);
+const vassalChance = calculateAllianceChance(getGame(), 3).chance;
+check('诸侯状态结盟成功率可计算', vassalChance >= 5 && vassalChance <= 90);
+// 开霸府后同样条件结盟成功率应严格更高（或都被 clamp 到 90 上界）
+doEstablishHegemony();
+const hegemonBreakdown = calculateAllianceChance(getGame(), 3);
+check('霸府状态 breakdown.hegemonyModifier === 5', hegemonBreakdown.hegemonyModifier === 5);
+check('霸府状态结盟成功率 ≥ 诸侯状态', hegemonBreakdown.chance >= vassalChance);
+// 若未触上界，差值应恰好为 +5
+if (vassalChance < 90) {
+  check('霸府状态结盟成功率 = 诸侯+5（未触上界）', hegemonBreakdown.chance === Math.min(90, vassalChance + 5));
+}
+
+// 9c. 分档单调：hegemon < king < emperor（修改 politicalStage 模拟）
+const kingChanceState = structuredClone(getGame());
+(kingChanceState.factions[1] as { politicalStage?: string }).politicalStage = 'king';
+const kingChance = calculateAllianceChance(kingChanceState, 3);
+check('称王状态 hegemonyModifier === 8', kingChance.hegemonyModifier === 8);
+check('称王状态结盟成功率 ≥ 霸府', kingChance.chance >= hegemonBreakdown.chance);
+
+const emperorChanceState = structuredClone(getGame());
+(emperorChanceState.factions[1] as { politicalStage?: string }).politicalStage = 'emperor';
+const emperorChance = calculateAllianceChance(emperorChanceState, 3);
+check('称帝状态 hegemonyModifier === 12', emperorChance.hegemonyModifier === 12);
+check('称帝状态结盟成功率 ≥ 称王', emperorChance.chance >= kingChance.chance);
+
+// 9d. 进贡友好增量：霸府状态比诸侯放大（×1.1）
+createGame(1, 1);
+doTribute(3);
+const vassalTributeFav = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability ?? 0;
+check('诸侯进贡友好增量=15（基线）', vassalTributeFav === 15);
+
+createGame(1, 1);
+doEstablishHegemony();
+doTribute(3);
+const hegemonTributeFav = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability ?? 0;
+check('霸府进贡友好增量=round(15×1.1)=17（放大生效）', hegemonTributeFav === 17);
+check('霸府进贡友好增量 > 诸侯', hegemonTributeFav > vassalTributeFav);
+
+// 9e. 献美友好增量：霸府状态比诸侯放大（×1.1）
+createGame(1, 1);
+// 准备 beautyStock
+const giftPrepState = structuredClone(getGame());
+giftPrepState.factions[1].beautyStock = 10;
+// 用 restore 模拟（这里直接 createGame 后手动设 beautyStock 通过 service 不可达，
+// 改用 doGiftBeautyDip 会消耗 stock，先保证有库存）
+// 实际验证：vassal 献美 ×1 → +12，hegemon 献美 ×1 → +13
+// 由于 service 层 doGiftBeautyDip 依赖 currentGame，直接用引擎层 giftBeautyStock 验证
+import { giftBeautyStock as engineGiftBeauty } from '../engine/diplomacy.js';
+
+createGame(1, 1);
+const vassalGiftState = structuredClone(getGame());
+vassalGiftState.factions[1].beautyStock = 10;
+const vassalGiftAfter = engineGiftBeauty(vassalGiftState, 3, 1);
+const vassalGiftFav = findDiplomacy(vassalGiftAfter.diplomacy, 1, 3)?.favorability ?? 0;
+check('诸侯献美×1 友好增量=12（基线）', vassalGiftFav === 12);
+
+// 霸府献美
+createGame(1, 1);
+doEstablishHegemony();
+const hegemonGiftState = structuredClone(getGame());
+hegemonGiftState.factions[1].beautyStock = 10;
+// 重置双边友好为 0 以便观察增量
+hegemonGiftState.diplomacy = hegemonGiftState.diplomacy.map((l) =>
+  (l.factionA === 1 && l.factionB === 3) || (l.factionA === 3 && l.factionB === 1)
+    ? { ...l, favorability: 0 }
+    : l,
+);
+const hegemonGiftAfter = engineGiftBeauty(hegemonGiftState, 3, 1);
+const hegemonGiftFav = findDiplomacy(hegemonGiftAfter.diplomacy, 1, 3)?.favorability ?? 0;
+check('霸府献美×1 友好增量=round(12×1.1)=13（放大生效）', hegemonGiftFav === 13);
+check('霸府献美友好增量 > 诸侯', hegemonGiftFav > vassalGiftFav);
+
+// 9f. RNG 边界：结盟成功率判定依然走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点
+// （由 verify-negotiation-r2 既有 20 项断言已隐式覆盖，此处仅确认 hegemonyModifier 不引入新随机源）
+check('hegemonyModifier 是确定性纯函数（无 RNG）', hegemonyAllianceModifier('hegemon') === 5);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

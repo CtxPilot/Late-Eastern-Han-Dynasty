@@ -9,6 +9,7 @@ import {
   DipRelation,
   calculateAllianceChance,
   findDiplomacy,
+  hegemonyFavorMultiplier,
   type DiplomacyLink,
   type GameState,
 } from '@leh/shared';
@@ -81,7 +82,7 @@ function upsertLink(
   });
 }
 
-/** 进贡：抬友好度；友好≥30 时可进一步结盟 */
+/** 进贡：抬友好度；友好≥30 时可进一步结盟。HC-P0-5：发起方霸府/王/帝阶段友好增量按倍数放大。 */
 export function tributeGold(state: GameState, targetFactionId: number): GameState {
   if (targetFactionId === state.playerFactionId) throw new Error('不能向本势力进贡');
   if (!state.factions[targetFactionId]) throw new Error('目标势力不存在');
@@ -89,10 +90,12 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
   const cities = payFromAnyPlayerCity(state, TRIBUTE_GOLD);
   const link = findDiplomacy(state.diplomacy, state.playerFactionId, targetFactionId);
   const prevFav = link?.favorability ?? 0;
-  const nextFav = Math.min(100, prevFav + TRIBUTE_FAVOR);
+  const favorGain = Math.round(TRIBUTE_FAVOR * hegemonyFavorMultiplier(
+    state.factions[state.playerFactionId]?.politicalStage,
+  ));
+  const nextFav = Math.min(100, prevFav + favorGain);
   let relation = (link?.relation as string) ?? DipRelation.NEUTRAL;
   if (relation === DipRelation.WAR || relation === 'war') {
-    // 战争中进贡：略缓，仍 hostile 向
     relation = DipRelation.HOSTILE;
   } else if (nextFav >= 30 && relation !== DipRelation.ALLIED && relation !== 'allied') {
     relation = DipRelation.FRIENDLY;
@@ -121,6 +124,7 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
 /**
  * 外交献美（S08∩S09）：己方 beautyStock −n → 对方 +n，友好 +12×n
  * 累计 plantableBeauty，可供「点化女间谍」
+ * HC-P0-5：发起方霸府/王/帝阶段友好增量按 hegemonyFavorMultiplier 放大。
  */
 export function giftBeautyStock(
   state: GameState,
@@ -147,7 +151,8 @@ export function giftBeautyStock(
     throw new Error('交战中无法献美（请先停战）');
   }
 
-  const favorGain = GIFT_BEAUTY_FAVOR_PER * n;
+  const multiplier = hegemonyFavorMultiplier(self.politicalStage);
+  const favorGain = Math.round(GIFT_BEAUTY_FAVOR_PER * n * multiplier);
   const prevFav = link?.favorability ?? 0;
   const nextFav = Math.min(100, prevFav + favorGain);
   let relation = rel;
@@ -169,7 +174,6 @@ export function giftBeautyStock(
     relation: relation as DiplomacyLink['relation'],
   });
 
-  // 掩护线：累计可点化额度
   const intel = state.intel ?? { cities: {}, agents: {}, cityDefense: {}, nextAgentSeq: 1, recentMissions: [], plantableBeauty: {} };
   const plantable = { ...(intel.plantableBeauty ?? {}) };
   plantable[targetFactionId] = (plantable[targetFactionId] ?? 0) + n;

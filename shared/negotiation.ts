@@ -2,6 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { DipRelation, OfficerStatus } from './enums/index.js';
+import type { PoliticalStage } from './types/faction.js';
 import type { GameState } from './types/game.js';
 import type { Officer } from './types/officer.js';
 
@@ -14,6 +15,37 @@ export function clampNegotiationChance(chance: number): number {
     NEGOTIATION_CHANCE_MIN,
     Math.min(NEGOTIATION_CHANCE_MAX, chance),
   );
+}
+
+/**
+ * 霸府/称王/称帝外交权重分档修正（docs/26 Q3 已批准方向，HC-P0-5）。
+ * 仅对"发起操作的势力自身"应用——开府势力自己发起结盟/进贡/献美时获得加成。
+ * 04§36.2 曹操"挟天子令诸侯"+30 外交权重基调；此处结盟成功率加成落在 Q3 批准区间
+ * （霸府 +5~10），称王/称帝留更高档位分档结构（即使转移操作未实装，避免后续再改函数签名）。
+ * @returns 结盟成功率百分点修正（vassal/undefined=0，hegemon=+5，king=+8，emperor=+12）
+ */
+export function hegemonyAllianceModifier(stage: PoliticalStage | undefined): number {
+  switch (stage) {
+    case 'hegemon': return 5;
+    case 'king': return 8;
+    case 'emperor': return 12;
+    default: return 0;
+  }
+}
+
+/**
+ * 霸府/称王/称帝 进贡/献美友好增量倍数（docs/26 Q3，HC-P0-5）。
+ * 同样仅对发起方应用——开府势力进贡/献美的友好增量按此倍数放大。
+ * 落在 Q3 批准区间（霸府 ×1.1~1.2），称王/称帝预留更高倍数分档。
+ * @returns 友好增量倍数（vassal/undefined=1.0，hegemon=1.1，king=1.2，emperor=1.3）
+ */
+export function hegemonyFavorMultiplier(stage: PoliticalStage | undefined): number {
+  switch (stage) {
+    case 'hegemon': return 1.1;
+    case 'king': return 1.2;
+    case 'emperor': return 1.3;
+    default: return 1.0;
+  }
 }
 
 /** S11 登用率：所有加减项均为百分点，最终只 clamp 一次。 */
@@ -46,6 +78,8 @@ export interface AllianceChanceBreakdown {
   reputationDifference: number;
   commonEnemyModifier: number;
   treatyModifier: number;
+  /** HC-P0-5：发起方政治阶段（霸府/王/帝）带来的成功率百分点修正，vassal=0。 */
+  hegemonyModifier: number;
 }
 
 function isWarRelation(relation: string): boolean {
@@ -111,6 +145,7 @@ function haveCommonEnemy(
 /**
  * S08 结盟成功率。声望字段尚未进入当前 Demo Faction，故双方声望暂按 0；
  * 共同敌人 +10 点，既有 friendly 条约态 +5 点，戒备/利益冲突留 0。
+ * HC-P0-5：发起方政治阶段（霸府/王/帝）按 hegemonyAllianceModifier 加百分点。
  */
 export function calculateAllianceChance(
   state: GameState,
@@ -136,6 +171,9 @@ export function calculateAllianceChance(
     bilateral.relation === 'friendly'
       ? 5
       : 0;
+  const hegemonyModifier = hegemonyAllianceModifier(
+    state.factions[sourceFactionId]?.politicalStage,
+  );
 
   const chance = clampNegotiationChance(
     35 +
@@ -143,7 +181,8 @@ export function calculateAllianceChance(
       reputationDifference / 100 +
       envoy.stats.charisma * 0.15 +
       commonEnemyModifier +
-      treatyModifier,
+      treatyModifier +
+      hegemonyModifier,
   );
 
   return {
@@ -154,5 +193,6 @@ export function calculateAllianceChance(
     reputationDifference,
     commonEnemyModifier,
     treatyModifier,
+    hegemonyModifier,
   };
 }
