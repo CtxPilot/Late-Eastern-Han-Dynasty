@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { FormationType, UnitType, type CampaignArmy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 const PHASE_LABEL: Record<string, string> = {
   garrison: '驻守',
@@ -48,6 +49,7 @@ const STRUCTURE_OPTIONS: Array<{ value: string; label: string; cost: number; tur
 export function CampaignPanel() {
   const game = useGameStore((s) => s.game);
   const loading = useGameStore((s) => s.loading);
+  const error = useGameStore((s) => s.error);
   const lastBattleResult = useGameStore((s) => s.lastBattleResult);
   const campaignStart = useGameStore((s) => s.campaignStart);
   const campaignBuild = useGameStore((s) => s.campaignBuild);
@@ -65,6 +67,7 @@ export function CampaignPanel() {
   const [formation, setFormation] = useState<number>(FormationType.WEDGE);
   const [selectedArmyId, setSelectedArmyId] = useState<string>('');
   const [showBattleReport, setShowBattleReport] = useState(false);
+  const [confirm, setConfirm] = useState<'start' | 'assault' | 'surrender' | 'retreat' | null>(null);
 
   const myArmies = useMemo<CampaignArmy[]>(() => {
     if (!game) return [];
@@ -298,7 +301,7 @@ export function CampaignPanel() {
             <button
               type="button"
               disabled={loading || !commanderId || !targetNodeId}
-              onClick={() => void handleStart()}
+              onClick={() => setConfirm('start')}
               className="w-full px-2 py-1 rounded border border-amber-700 text-amber-100 bg-amber-950/40 hover:bg-amber-900/40 disabled:opacity-40"
             >
               出征
@@ -400,18 +403,18 @@ export function CampaignPanel() {
           <div className="grid grid-cols-2 gap-1 pt-1">
             {selectedArmy.phase === 'sieging' && (
               <>
-                <OpBtn label="强攻" hint="自动战斗结算" onClick={() => void handleAssault()} disabled={loading} />
-                <OpBtn label="劝降" hint="概率投降" onClick={() => void handleSurrender()} disabled={loading} />
+                <OpBtn label="强攻" hint="自动战斗结算" onClick={() => setConfirm('assault')} disabled={loading} />
+                <OpBtn label="劝降" hint="概率投降" onClick={() => setConfirm('surrender')} disabled={loading} />
               </>
             )}
             {selectedArmy.phase === 'engaged' && (
-              <OpBtn label="强攻" hint="野战结算" onClick={() => void handleAssault()} disabled={loading} />
+              <OpBtn label="强攻" hint="野战结算" onClick={() => setConfirm('assault')} disabled={loading} />
             )}
             {(selectedArmy.phase === 'marching' || selectedArmy.phase === 'garrison') && (
               <OpBtn
                 label="撤退"
                 hint="士气-10"
-                onClick={() => void campaignRetreat(selectedArmy.id)}
+                onClick={() => setConfirm('retreat')}
                 disabled={loading}
               />
             )}
@@ -505,6 +508,64 @@ export function CampaignPanel() {
           </div>
         </div>
       )}
+      <CommandConfirmDialog
+        open={confirm != null}
+        category="战役"
+        command={
+          confirm === 'start'
+            ? '编成出征'
+            : confirm === 'assault'
+              ? '发动强攻'
+              : confirm === 'surrender'
+                ? '劝降守军'
+                : '撤退'
+        }
+        summary={
+          confirm === 'start'
+            ? '兵力、粮草与参战武将将从出发城转入战役军队。'
+            : confirm === 'assault'
+              ? '将立即进行自动战斗结算，可能造成大量伤亡或改变城池归属。'
+              : confirm === 'surrender'
+                ? '将立即进行劝降判定；成功会改变目标城归属。'
+                : '军队将撤回最近己方节点并损失士气。'
+        }
+        items={
+          confirm === 'start'
+            ? [
+                { label: '出发城', value: selectedCityId != null ? game.cities[selectedCityId]?.name ?? '—' : '—' },
+                { label: '目标城', value: targetNodeId !== '' ? game.cities[Number(targetNodeId)]?.name ?? '—' : '—' },
+                { label: '主将', value: commanderId !== '' ? game.officers[Number(commanderId)]?.name ?? '—' : '—' },
+                { label: '调拨兵力', value: String(troopCount), tone: 'warning' },
+                { label: '携带粮草', value: String(food), tone: 'warning' },
+              ]
+            : [
+                { label: '军队', value: selectedArmy?.name ?? '—' },
+                { label: '当前位置', value: currentNode?.name ?? '—' },
+                { label: '当前兵力', value: String(selectedArmy?.troops ?? 0) },
+                {
+                  label: '立即后果',
+                  value:
+                    confirm === 'assault'
+                      ? '自动战斗结算，可能伤亡或易主'
+                      : confirm === 'surrender'
+                        ? '消费一次劝降判定，成功则目标城易主'
+                        : '撤回己方节点，士气 −10',
+                  tone: 'warning',
+                },
+              ]
+        }
+        loading={loading}
+        danger={confirm === 'assault' || confirm === 'start'}
+        error={error}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          if (confirm === 'start') await handleStart();
+          if (confirm === 'assault') await handleAssault();
+          if (confirm === 'surrender') await handleSurrender();
+          if (confirm === 'retreat' && selectedArmy) await campaignRetreat(selectedArmy.id);
+          if (!useGameStore.getState().error) setConfirm(null);
+        }}
+      />
     </div>
   );
 }

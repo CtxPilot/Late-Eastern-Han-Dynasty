@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SpyMissionType, SpyStatus } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 const STATUS_LABEL: Record<string, string> = {
   idle: '空闲',
@@ -38,10 +39,16 @@ export function SpyPanel() {
   const unstationCounter = useGameStore((s) => s.unstationCounter);
   const resolveCaptive = useGameStore((s) => s.resolveCaptive);
   const loading = useGameStore((s) => s.loading);
+  const error = useGameStore((s) => s.error);
 
   const [agentId, setAgentId] = useState<string>('');
   const [missionType, setMissionType] = useState<string>(SpyMissionType.RECON);
   const [targetCityId, setTargetCityId] = useState<number | ''>('');
+  const [confirmCaptive, setConfirmCaptive] = useState<{
+    agentId: string;
+    action: 'execute' | 'release';
+  } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'recruit' | 'train-female' | 'mission' | null>(null);
 
   const myAgents = useMemo(() => {
     if (!game?.intel?.agents) return [];
@@ -107,7 +114,7 @@ export function SpyPanel() {
         data-testid="btn-spy-recruit"
         disabled={loading || recruitCityId == null}
         className="w-full px-2 py-1.5 rounded border border-violet-800 bg-violet-950/50 text-violet-100 disabled:opacity-40"
-        onClick={() => recruitCityId != null && void recruitSpies(recruitCityId)}
+        onClick={() => setConfirmAction('recruit')}
       >
         在
         {recruitCityId != null ? game.cities[recruitCityId]?.name : '—'}
@@ -120,7 +127,7 @@ export function SpyPanel() {
         disabled={loading || recruitCityId == null || !canTrainFemale}
         className="w-full px-2 py-1.5 rounded border border-pink-800 bg-pink-950/40 text-pink-100 disabled:opacity-40"
         title={`需美女≥2 + 金≥100（当前美女 ${beautyStock}）`}
-        onClick={() => recruitCityId != null && void trainFemaleSpy(recruitCityId)}
+        onClick={() => setConfirmAction('train-female')}
       >
         训练女间谍（美女2+金100）
       </button>
@@ -200,11 +207,7 @@ export function SpyPanel() {
           data-testid="btn-spy-mission"
           disabled={loading || !agentId || targetCityId === ''}
           className="w-full px-2 py-1.5 rounded border border-amber-800 bg-amber-950/40 text-amber-100 disabled:opacity-40"
-          onClick={() => {
-            if (agentId && targetCityId !== '') {
-              void spyMission(agentId, missionType, Number(targetCityId));
-            }
-          }}
+          onClick={() => setConfirmAction('mission')}
         >
           派出（{MISSION_LABEL[missionType] ?? missionType}）
         </button>
@@ -243,14 +246,14 @@ export function SpyPanel() {
               <button
                 type="button"
                 className="px-1.5 py-0.5 rounded border border-red-900 text-red-200 text-[10px]"
-                onClick={() => void resolveCaptive(c.id, 'execute')}
+                onClick={() => setConfirmCaptive({ agentId: c.id, action: 'execute' })}
               >
                 处决
               </button>
               <button
                 type="button"
                 className="px-1.5 py-0.5 rounded border border-stone-600 text-stone-300 text-[10px]"
-                onClick={() => void resolveCaptive(c.id, 'release')}
+                onClick={() => setConfirmCaptive({ agentId: c.id, action: 'release' })}
               >
                 释放
               </button>
@@ -258,6 +261,91 @@ export function SpyPanel() {
           ))}
         </div>
       )}
+      <CommandConfirmDialog
+        open={confirmAction != null}
+        category="谍报"
+        command={
+          confirmAction === 'recruit'
+            ? '招募密探'
+            : confirmAction === 'train-female'
+              ? '训练女间谍'
+              : `派出${MISSION_LABEL[missionType] ?? missionType}任务`
+        }
+        summary={
+          confirmAction === 'mission'
+            ? '密探会立即进入任务状态，并承担暴露、被捕或阵亡风险。'
+            : '训练会立即扣除资源并生成新的谍报人员。'
+        }
+        items={[
+          {
+            label: '执行地',
+            value: recruitCityId != null ? game.cities[recruitCityId]?.name ?? '—' : '—',
+          },
+          ...(confirmAction === 'mission'
+            ? [
+                { label: '密探', value: selectedAgent?.name ?? '—' },
+                {
+                  label: '目标城',
+                  value: targetCityId !== '' ? game.cities[Number(targetCityId)]?.name ?? '—' : '—',
+                },
+                { label: '风险', value: '可能暴露、被捕或阵亡', tone: 'warning' as const },
+              ]
+            : [
+                {
+                  label: '立即消耗',
+                  value: confirmAction === 'train-female' ? '美女库存 2、金 100' : '每名金 120、粮 60（本次招募 1～3 名）',
+                  tone: 'warning' as const,
+                },
+              ]),
+        ]}
+        loading={loading}
+        danger={confirmAction === 'mission'}
+        error={error}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={async () => {
+          if (confirmAction === 'recruit' && recruitCityId != null) await recruitSpies(recruitCityId);
+          if (confirmAction === 'train-female' && recruitCityId != null) await trainFemaleSpy(recruitCityId);
+          if (confirmAction === 'mission' && agentId && targetCityId !== '') {
+            await spyMission(agentId, missionType, Number(targetCityId));
+          }
+          if (!useGameStore.getState().error) setConfirmAction(null);
+        }}
+      />
+      <CommandConfirmDialog
+        open={confirmCaptive != null}
+        category="谍报"
+        command={confirmCaptive?.action === 'execute' ? '处决俘虏' : '释放俘虏'}
+        summary={
+          confirmCaptive?.action === 'execute'
+            ? '处决会永久移除该密探，无法撤销。'
+            : '释放会立即将该密探交还原势力并改变双方友好。'
+        }
+        items={[
+          {
+            label: '俘虏',
+            value: confirmCaptive ? game.intel.agents[confirmCaptive.agentId]?.name ?? '—' : '—',
+          },
+          {
+            label: '处置',
+            value: confirmCaptive?.action === 'execute' ? '永久处决' : '释放并交还',
+            tone: 'warning',
+          },
+          {
+            label: '外交后果',
+            value: confirmCaptive?.action === 'execute' ? '友好 −10' : '友好 +5',
+          },
+          { label: '可否撤销', value: '不可撤销', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger={confirmCaptive?.action === 'execute'}
+        error={error}
+        onCancel={() => setConfirmCaptive(null)}
+        onConfirm={async () => {
+          if (!confirmCaptive) return;
+          await resolveCaptive(confirmCaptive.agentId, confirmCaptive.action);
+          if (!useGameStore.getState().error) setConfirmCaptive(null);
+        }}
+      />
     </div>
   );
 }

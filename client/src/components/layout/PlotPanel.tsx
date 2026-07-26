@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { PlotStage, PlotType, SpyStatus } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 const PLOT_LABEL: Record<string, string> = {
   honeyTrap: '美人计',
@@ -19,11 +20,13 @@ export function PlotPanel() {
   const game = useGameStore((s) => s.game);
   const launchPlot = useGameStore((s) => s.launchPlot);
   const loading = useGameStore((s) => s.loading);
+  const error = useGameStore((s) => s.error);
 
   const [plotType, setPlotType] = useState<string>(PlotType.HONEY_TRAP);
   const [targetCityId, setTargetCityId] = useState<number | ''>('');
   const [targetFactionId, setTargetFactionId] = useState<number | ''>('');
   const [agentId, setAgentId] = useState<string>('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const myPlots = useMemo(() => {
     if (!game?.plots) return [];
@@ -217,26 +220,7 @@ export function PlotPanel() {
           data-testid="btn-plot-launch"
           disabled={loading || !canLaunch}
           className="w-full px-2 py-1.5 rounded border border-amber-800 bg-amber-950/40 text-amber-100 disabled:opacity-40"
-          onClick={() => {
-            if (isHoney && targetCityId !== '') {
-              void launchPlot(PlotType.HONEY_TRAP, {
-                targetCityId: Number(targetCityId),
-                agentId: agentId || undefined,
-              });
-            } else if (isDiscord && targetFactionId !== '') {
-              void launchPlot(PlotType.SOW_DISCORD, {
-                targetFactionId: Number(targetFactionId),
-              });
-            } else if (isFalse && targetCityId !== '') {
-              void launchPlot(PlotType.FALSE_INTEL, {
-                targetCityId: Number(targetCityId),
-              });
-            } else if (isEmpty && targetCityId !== '') {
-              void launchPlot(PlotType.EMPTY_FORT, {
-                targetCityId: Number(targetCityId),
-              });
-            }
-          }}
+          onClick={() => setConfirmOpen(true)}
         >
           发起{PLOT_LABEL[plotType] ?? plotType}
         </button>
@@ -251,6 +235,57 @@ export function PlotPanel() {
           </p>
         )}
       </div>
+      <CommandConfirmDialog
+        open={confirmOpen}
+        category="计略"
+        command={`发起${PLOT_LABEL[plotType] ?? plotType}`}
+        summary="计谋会立即扣除资源并进入准备或结算流程，失败时资源不返还。"
+        items={[
+          {
+            label: '目标',
+            value: isDiscord
+              ? targetFactionId !== '' ? game.factions[Number(targetFactionId)]?.name ?? '—' : '—'
+              : targetCityId !== '' ? game.cities[Number(targetCityId)]?.name ?? '—' : '—',
+          },
+          {
+            label: '立即消耗',
+            value: isHoney
+              ? '美女库存 2、金 150'
+              : isDiscord
+                ? '金 200'
+                : isFalse
+                  ? '金 120'
+                  : '粮 150',
+            tone: 'warning',
+          },
+          { label: '结算', value: isEmpty ? '立即布置防御效果' : '进入准备／成功率判定' },
+          { label: '失败后果', value: '已消耗资源不返还' },
+        ]}
+        loading={loading}
+        error={error}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={async () => {
+          if (isHoney && targetCityId !== '') {
+            await launchPlot(PlotType.HONEY_TRAP, {
+              targetCityId: Number(targetCityId),
+              agentId: agentId || undefined,
+            });
+          } else if (isDiscord && targetFactionId !== '') {
+            await launchPlot(PlotType.SOW_DISCORD, {
+              targetFactionId: Number(targetFactionId),
+            });
+          } else if (isFalse && targetCityId !== '') {
+            await launchPlot(PlotType.FALSE_INTEL, {
+              targetCityId: Number(targetCityId),
+            });
+          } else if (isEmpty && targetCityId !== '') {
+            await launchPlot(PlotType.EMPTY_FORT, {
+              targetCityId: Number(targetCityId),
+            });
+          }
+          if (!useGameStore.getState().error) setConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

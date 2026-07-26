@@ -9,7 +9,7 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 189 完成：HC-P0-6 伪诏宣战 + HC-P0 整体收尾**。皇权100/季度+10/消耗40/冷却8季；对匡扶汉室目标声望-30；引擎/API/君主折叠 UI/存档全部接入；verify-hc-p0 101/101、全量回归、Headless 实点通过。**HC-P0-1~6 阶段性完成** |
+| 会话 | **Session 191 完成：高风险不可逆操作统一二次确认**。复用 `CommandConfirmDialog` 覆盖外交/朝廷/军事/计略/谍报/婚配高风险入口；核心四项 Headless 取消+确认实测、离线全量回归通过；不改菜单架构。HC-P0-1~6 仍为阶段性完成 |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **S189 HC-P0-1~6 完整闭环**（汉帝控制+政治阶段+开府+霸府官职+外交加成+伪诏宣战；fame/imperialAuthority/cooldown optional 存档字段）+ 既有 S15/S10/S06 + 223武将 + 三层战斗 + 总军师 + S23表情 + BF-P2 |
 | 文档最新 | **`26-hegemony-court-design.md` HC-P0 阶段性完成** + 03/04/06/07/08/09 同步 HC-P0-6 字段、规则、API、UI、路线图 |
@@ -351,6 +351,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
 | **Session 188 HC-P0-5 已完成** | HC-P0-5 霸府外交权重加成（1 commit 待提交）：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3，称王/称帝分档预留）+ `calculateAllianceChance` 接入结盟成功率修正 + `AllianceChanceBreakdown.hegemonyModifier` 字段 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
 | **Session 189 HC-P0-6 已完成** | 皇权100/季度+10/消耗40/冷却8季；对匡扶汉室目标声望-30；引擎/API/君主 UI/存档；verify-hc-p0 101/101 + 全量回归 + Headless 实点。HC-P0 阶段性完成。 |
+| **Session 191 已完成** | 旧手风琴高风险安全补丁：进贡/献美/点化/结盟、开霸府/伪诏、两套出征与战役强攻/劝降/撤退、计谋、密探高风险操作、俘虏处置、婚配统一接 `CommandConfirmDialog`；核心四项 Headless 取消+确认通过，离线全量回归绿色。 |
 | **Session 188 HC-P0-4 已完成** | HC-P0-4 霸府专属官职（`d558eb5`）：`Officer.hegemonyPosition?` 独立轨道（Q2 方案B）+ `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `HEGEMONY_LABELS/REQ` 门槛表（均势力唯一）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝）+ `/personnel/appoint` 路由透传 + `AppointPanel.tsx` 霸府轨道按钮（仅霸府阶段势力显示）+ `OfficerDetail.tsx` 官职区块条件展示 + verify-hc-p0 61/61（17 项新增）+ Headless Chrome 端到端（董卓开霸府→任命吕布大司马→OfficerDetail 展示）。 |
 | **Session 188 HC-P0-1~3 已完成** | HC-P0-3 开霸府操作（1 commit `67d0aba`）：`Faction.politicalTitle` + `politicalStageChangedYear` 字段、`establishHegemony` 引擎（前置校验 controlsEmperor+vassal→转移+actionLog）、`POST /hegemony/establish` 路由、LeftPanel 君主折叠项开府按钮+头衔展示、OfficerDetail 头衔追加、verify-hc-p0 41/41。HC-P0-1+2（`4820d11`）：`GameState.emperorLocation` + `Faction.politicalStage` 字段+Zod+24项测试。 |
 | **Session 188 文档同步** | Q1~Q11 批准 + 8 文档同步（1 commit `0ce044e`）；README 吕布四页签截图替换。 |

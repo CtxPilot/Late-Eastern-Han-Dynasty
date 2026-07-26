@@ -15,6 +15,7 @@ import {
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { AccSection } from '../ui/AccSection';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 type RightAcc =
   | 'basic'
@@ -42,6 +43,7 @@ export function RightPanel() {
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   const [open, setOpen] = useState<RightAcc>(null);
+  const [confirmMarch, setConfirmMarch] = useState(false);
 
   if (!game) return null;
 
@@ -352,7 +354,7 @@ export function RightPanel() {
                 disabled={!canMarch}
                 danger
                 title={marchHint}
-                onClick={() => void marchOnCity()}
+                onClick={() => setConfirmMarch(true)}
               >
                 出征攻城
               </ActBtn>
@@ -415,6 +417,30 @@ export function RightPanel() {
           </div>
         </div>
       )}
+      <CommandConfirmDialog
+        open={confirmMarch}
+        category="军事"
+        command="出征攻城"
+        summary="军队将立即离城出征并进入战斗结算；兵力、粮草及武将状态可能发生不可逆变化。"
+        items={[
+          { label: '目标城', value: selected?.name ?? '—' },
+          {
+            label: '出征来源',
+            value: marchFromWithTroops.map((id) => game.cities[id]?.name).filter(Boolean).join('、') || '—',
+          },
+          { label: '最低兵力', value: '自动选择邻接己方城，至少 1000 兵' },
+          { label: '军事后果', value: '立即进入攻城／战斗流程', tone: 'warning' },
+          { label: '风险', value: '可能损失兵力、粮草，败退或改变城池归属', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger
+        error={error}
+        onCancel={() => setConfirmMarch(false)}
+        onConfirm={async () => {
+          await marchOnCity();
+          if (!useGameStore.getState().error) setConfirmMarch(false);
+        }}
+      />
     </aside>
   );
 }

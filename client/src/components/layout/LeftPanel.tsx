@@ -15,6 +15,7 @@ import { OfficerRosterPanel } from './OfficerRosterPanel';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 type AccordionKey =
   | 'campaign'
@@ -53,7 +54,17 @@ export function LeftPanel() {
   const plantFemale = useGameStore((s) => s.plantFemale);
   const formAlliance = useGameStore((s) => s.formAlliance);
   const loading = useGameStore((s) => s.loading);
+  const error = useGameStore((s) => s.error);
   const [open, setOpen] = useState<AccordionKey>(null);
+  const [confirm, setConfirm] = useState<
+    | { type: 'alliance'; factionId: number }
+    | { type: 'tribute'; factionId: number }
+    | { type: 'gift-beauty'; factionId: number }
+    | { type: 'plant-female'; factionId: number }
+    | { type: 'establish-hegemony' }
+    | { type: 'false-decree'; factionId: number }
+    | null
+  >(null);
 
   const familyCount = useMemo(() => {
     if (!game) return 0;
@@ -232,7 +243,7 @@ export function LeftPanel() {
                         disabled={loading}
                         className="flex-1 min-w-[3.5rem] px-1.5 py-1 rounded border border-amber-900/60 text-[10px] text-amber-100 hover:bg-amber-950 disabled:opacity-40"
                         title="200金，友好+15"
-                        onClick={() => void tribute(f.id)}
+                        onClick={() => setConfirm({ type: 'tribute', factionId: f.id })}
                       >
                         进贡
                       </button>
@@ -242,7 +253,7 @@ export function LeftPanel() {
                         disabled={loading || beautyStock < 1 || atWar}
                         className="flex-1 min-w-[3.5rem] px-1.5 py-1 rounded border border-rose-900/60 text-[10px] text-rose-100 hover:bg-rose-950 disabled:opacity-40"
                         title="献美×1：友好+12，需美女库存≥1"
-                        onClick={() => void giftBeautyDip(f.id, 1)}
+                        onClick={() => setConfirm({ type: 'gift-beauty', factionId: f.id })}
                       >
                         献美
                       </button>
@@ -252,7 +263,7 @@ export function LeftPanel() {
                         disabled={loading || plantable < 1}
                         className="flex-1 min-w-[3.5rem] px-1.5 py-1 rounded border border-pink-900/60 text-[10px] text-pink-100 hover:bg-pink-950 disabled:opacity-40"
                         title="点化女间谍：需先献美，耗金80"
-                        onClick={() => void plantFemale(f.id)}
+                        onClick={() => setConfirm({ type: 'plant-female', factionId: f.id })}
                       >
                         点化
                       </button>
@@ -265,7 +276,7 @@ export function LeftPanel() {
                             ? `500金，友好≥30；使者魅力${alliance.envoyCharisma}，成功率${Math.round(alliance.chance)}%`
                             : '500金，友好≥30'
                         }
-                        onClick={() => void formAlliance(f.id)}
+                        onClick={() => setConfirm({ type: 'alliance', factionId: f.id })}
                       >
                         {rel === 'allied' ? '已同盟' : '结盟'}
                       </button>
@@ -312,7 +323,7 @@ export function LeftPanel() {
                     label="开霸府"
                     hint="迎奉天子·自立丞相"
                     disabled={loading}
-                    onClick={() => void establishHegemony()}
+                    onClick={() => setConfirm({ type: 'establish-hegemony' })}
                   />
                 )}
                 {stage === 'vassal' && !controlsHan && (
@@ -336,7 +347,7 @@ export function LeftPanel() {
                               data-testid={`btn-false-decree-${target.id}`}
                               disabled={loading || reason != null}
                               title={reason ?? `消耗40皇权，对${target.name}直接宣战；冷却8季`}
-                              onClick={() => void falseDecreeWar(target.id)}
+                              onClick={() => setConfirm({ type: 'false-decree', factionId: target.id })}
                               className="w-full rounded border border-red-900/60 px-2 py-1 text-left text-[10px] text-red-200 hover:bg-red-950/50 disabled:text-stone-600 disabled:opacity-60"
                             >
                               伪诏宣战 · {target.name}
@@ -390,6 +401,136 @@ export function LeftPanel() {
           </div>
         </AccSection>
       </div>
+      <CommandConfirmDialog
+        open={
+          confirm?.type === 'tribute' ||
+          confirm?.type === 'gift-beauty' ||
+          confirm?.type === 'plant-female'
+        }
+        category={confirm?.type === 'plant-female' ? '谍报' : '外交'}
+        command={
+          confirm?.type === 'tribute'
+            ? '进贡'
+            : confirm?.type === 'gift-beauty'
+              ? '献美'
+              : '点化女间谍'
+        }
+        summary={
+          confirm?.type === 'tribute'
+            ? '将立即支付金钱以改善双方关系。'
+            : confirm?.type === 'gift-beauty'
+              ? '将永久转移一份美女库存给目标势力。'
+              : '将消耗献美积累的点化额度与目标美女库存，生成一名女间谍。'
+        }
+        items={
+          confirm &&
+          (confirm.type === 'tribute' ||
+            confirm.type === 'gift-beauty' ||
+            confirm.type === 'plant-female')
+            ? [
+                { label: '目标势力', value: game.factions[confirm.factionId]?.name ?? '—' },
+                {
+                  label: '立即消耗',
+                  value:
+                    confirm.type === 'tribute'
+                      ? '金 200'
+                      : confirm.type === 'gift-beauty'
+                        ? '美女库存 1'
+                        : '金 80、点化额度 1、目标美女库存 1',
+                  tone: 'warning',
+                },
+                {
+                  label: '主要效果',
+                  value:
+                    confirm.type === 'tribute'
+                      ? '友好 +15（霸府阶段按外交加成修正）'
+                      : confirm.type === 'gift-beauty'
+                        ? '友好 +12（霸府阶段按外交加成修正），获得点化额度 1'
+                        : '生成女间谍并进入己方谍报体系',
+                },
+              ]
+            : []
+        }
+        loading={loading}
+        error={error}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          if (!confirm || confirm.type === 'alliance' || confirm.type === 'establish-hegemony' || confirm.type === 'false-decree') return;
+          if (confirm.type === 'tribute') await tribute(confirm.factionId);
+          if (confirm.type === 'gift-beauty') await giftBeautyDip(confirm.factionId, 1);
+          if (confirm.type === 'plant-female') await plantFemale(confirm.factionId);
+          if (!useGameStore.getState().error) setConfirm(null);
+        }}
+      />
+      <CommandConfirmDialog
+        open={confirm?.type === 'alliance'}
+        category="外交"
+        command="缔结盟约"
+        summary="结盟交涉无论成败都会立即消耗金钱，并消费一次外交判定。"
+        items={confirm?.type === 'alliance' ? (() => {
+          const target = game.factions[confirm.factionId];
+          const chance = calculateAllianceChance(game, confirm.factionId);
+          return [
+            { label: '目标势力', value: target?.name ?? '—' },
+            { label: '立即消耗', value: '金 500', tone: 'warning' as const },
+            { label: '成功率', value: `${Math.round(chance.chance)}%` },
+            { label: '成功后果', value: '双方关系变为同盟，共享部分城池情报' },
+            { label: '失败后果', value: '金钱不返还' },
+          ];
+        })() : []}
+        loading={loading}
+        error={error}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          if (confirm?.type !== 'alliance') return;
+          await formAlliance(confirm.factionId);
+          if (!useGameStore.getState().error) setConfirm(null);
+        }}
+      />
+      <CommandConfirmDialog
+        open={confirm?.type === 'establish-hegemony'}
+        category="朝廷"
+        command="开霸府"
+        summary="开霸府后政治阶段永久改变，当前版本不可撤销。确认迎奉天子、自领丞相？"
+        items={[
+          { label: '政治阶段', value: '诸侯 → 霸府', tone: 'warning' },
+          { label: '政治头衔', value: '丞相' },
+          { label: '皇权', value: '获得初始皇权 100' },
+          { label: '解锁', value: '霸府官职、伪诏宣战、外交加成' },
+          { label: '可否撤销', value: '不可撤销', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger
+        error={error}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          if (confirm?.type !== 'establish-hegemony') return;
+          await establishHegemony();
+          if (!useGameStore.getState().error) setConfirm(null);
+        }}
+      />
+      <CommandConfirmDialog
+        open={confirm?.type === 'false-decree'}
+        category="朝廷"
+        command="伪诏宣战"
+        summary="将绕过常规外交前置，立即与目标势力进入战争状态。"
+        items={confirm?.type === 'false-decree' ? [
+          { label: '目标势力', value: game.factions[confirm.factionId]?.name ?? '—' },
+          { label: '立即消耗', value: '皇权 40', tone: 'warning' },
+          { label: '外交后果', value: '双方关系立即变为战争', tone: 'warning' },
+          { label: '冷却', value: '8 季' },
+          { label: '额外风险', value: '若目标匡扶汉室，声望 −30' },
+        ] : []}
+        loading={loading}
+        danger
+        error={error}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          if (confirm?.type !== 'false-decree') return;
+          await falseDecreeWar(confirm.factionId);
+          if (!useGameStore.getState().error) setConfirm(null);
+        }}
+      />
     </aside>
   );
 }

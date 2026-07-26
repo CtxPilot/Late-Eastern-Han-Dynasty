@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { MaritalStatus, OfficerStatus, panelStatsDisplay, type ChildBirthDef } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
+import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 type ChildBrief = Pick<
   ChildBirthDef,
@@ -29,9 +30,11 @@ export function FamilyPanel() {
   const marry = useGameStore((s) => s.marry);
   const followCheck = useGameStore((s) => s.followCheck);
   const loading = useGameStore((s) => s.loading);
+  const error = useGameStore((s) => s.error);
   const [selectedFemaleId, setSelectedFemaleId] = useState<number | null>(null);
   const [officerId, setOfficerId] = useState<number | null>(null);
   const [tab, setTab] = useState<'roster' | 'branches' | 'marry'>('roster');
+  const [confirmMarry, setConfirmMarry] = useState(false);
 
   const females = useMemo(() => {
     if (!game) return [];
@@ -299,11 +302,7 @@ export function FamilyPanel() {
                 ? 'bg-amber-950 border-amber-700 text-amber-100 hover:bg-amber-900'
                 : 'bg-stone-900 border-stone-700 text-stone-600 cursor-not-allowed'
             }`}
-            onClick={() => {
-              if (selectedFemaleId != null && officerId != null) {
-                void marry(selectedFemaleId, officerId);
-              }
-            }}
+            onClick={() => setConfirmMarry(true)}
           >
             赐婚 / 婚配
           </button>
@@ -355,6 +354,28 @@ export function FamilyPanel() {
           );
         })()}
       </div>
+      <CommandConfirmDialog
+        open={confirmMarry}
+        category="家族"
+        command="赐婚 / 婚配"
+        summary="婚配会立即建立正妻关系并消耗金钱；当前版本没有离婚或撤销流程。"
+        items={[
+          { label: '女眷', value: selected?.name ?? '—' },
+          { label: '夫君', value: officerId != null ? game.officers[officerId]?.name ?? '—' : '—' },
+          { label: '立即消耗', value: '金 300', tone: 'warning' },
+          { label: '主要收益', value: '武将忠诚 +18，建立姻亲支' },
+          { label: '可否撤销', value: '当前版本不可撤销', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger
+        error={error}
+        onCancel={() => setConfirmMarry(false)}
+        onConfirm={async () => {
+          if (selectedFemaleId == null || officerId == null) return;
+          await marry(selectedFemaleId, officerId);
+          if (!useGameStore.getState().error) setConfirmMarry(false);
+        }}
+      />
     </div>
   );
 }
