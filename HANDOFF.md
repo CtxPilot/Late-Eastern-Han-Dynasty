@@ -9,7 +9,7 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 205：HC-P1-3 王国官职 + CMD-P8 招贤写流程迁移完成** |
+| 会话 | **Session 206：HC-P1-3 + CMD-P8 全仓文档进度同步完成** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **HC-P1-3 王国六职** + **CMD-P8 命令坞人事招贤写流程** + CMD-P7 只读名册 |
 | 文档最新 | `28-hc-p1-king-design.md` 的 HC-P1-1/2/3 已实施；人事抽屉“名册/招贤”已接入 |
@@ -27,6 +27,9 @@ HC-P0 101/101，根目录 31 个非浏览器 `verify-*` 全过；typecheck/lint/
 CMD-P8 回归基线：shared 197/197、client 19/19、根目录 33 个非浏览器 `verify-*` 全过；
 Campaign 71/71、人事32/32、negotiation 40/40、turn-cadence 28/28、存档迁移19/19；
 CMD-P7/P8 Headless 与 typecheck/lint/data/build 全绿。
+
+Session 206 仅同步文档口径：`08/09/12/26` 已从“HC-P1 尚未开工、CMD 人事待迁移”更新为
+HC-P1-1～3、CMD-P6～8 已完成；无运行时代码变化，沿用 Session 205 全量回归结果。
 
 ---
 

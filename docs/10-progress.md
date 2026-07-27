@@ -4278,3 +4278,20 @@
 - **Next（CMD 线）**：CMD-P9 任官、赏罚与朝廷/人物简册跨域导航迁移。
 
 *v15.8 | 2026-07-27 | Session 205 · CMD-P8 完成*
+
+### Session 206 — HC-P1-3 + CMD-P8 全仓文档进度同步
+
+- **路线图收口**：`09-roadmap.md` 将 HC-P1 从“尚未开工/K1～K8 待拍板”更新为
+  P1-1～3 已完成，下一项 P1-4；P1-5/P1-6 边界与 `28-hc-p1-king-design.md` 对齐。
+- **旧设计同步**：`26-hegemony-court-design.md` 的实施前建议表改为当前六子任务拆分，
+  明确相对门槛、原子称王、王国六职均已实装。
+- **模型真源同步**：`08-data-dictionary.md` 补记 `politicalStageAgeMonths`、
+  `kingdomName`、王国六职枚举扩展及两项剧本可选配置，移除“设计阶段未实装”旧口径。
+- **系统图同步**：`12-system-map.md` 的 S11/S12/S20 更新为 HC-P1-1～3、
+  CMD-P6～8 已完成，并明确下一步为 HC-P1-4、CMD-P9/P10。
+- **核对结果**：全仓搜索未再发现把 HC-P1-3、CMD-P8 当作当前待办的非历史性表述；
+  Session 203～205 日志中的“当时下一步/当时 disabled”保留为历史记录。
+- **范围**：纯文档同步，无运行时代码变化；`git diff --check` 通过，沿用 Session 205
+  shared 197/197、client 19/19、33 个非浏览器 verify 与 CMD-P7/P8 Headless 全绿基线。
+
+*v15.9 | 2026-07-27 | Session 206 · 全仓文档进度同步*

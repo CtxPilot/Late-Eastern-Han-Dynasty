@@ -996,9 +996,9 @@ Phase 4 — 特殊人物审核
 
 ---
 
-### 3. 霸府/称王/称帝主线新字段（docs/26，Session 188 Q1~Q11 已批准，设计阶段未实装）
+### 3. 霸府/称王/称帝主线新字段（docs/26/28，HC-P0 与 HC-P1-1～3 已实装）
 
-**新增字段**（实装进度：HC-P0-1/2/3/4 已完成；HC-P0-5/6 待启动。均为 optional 追加，存档兼容方案参照 `activeBattlefieldInstance` 无损追加经验）：
+**新增字段**（均为 optional 追加且未提升 schema 版本；旧存档按各字段契约降级）：
 
 | 字段 | 所属类型 | 类型 | Q | 实装 | 说明 |
 |------|:----:|------|:-:|:----:|------|
@@ -1006,10 +1006,16 @@ Phase 4 — 特殊人物审核
 | `politicalStage` | Faction | `'vassal'\|'hegemon'\|'king'\|'emperor'?` | Q5 | ✅ HC-P0-2 | 政治阶段状态机，默认 vassal |
 | `politicalTitle` | Faction | `string?` | Q7 | ✅ HC-P0-3 | 政治头衔，与 politicalStage 一一对应（vassal→无/hegemon→丞相大将军/king→X王/emperor→X帝） |
 | `politicalStageChangedYear` | Faction | `number?` | — | ✅ HC-P0-3 | 开府/称王/称帝年份记录 |
+| `politicalStageAgeMonths` | Faction | `number?` | K2 | ✅ HC-P1-1 | 当前政治阶段持续月数；阶段转移归零，非 vassal 每次完整月结 +1，旧档缺失按0 |
+| `kingdomName` | Faction | `string?` | K4 | ✅ HC-P1-2 | 首次称王确认后固定的王号；迁都或失地不自动改变 |
 | `fame` | Faction | `number?` | — | ✅ HC-P0-6 | 势力声望 0~1000；新局100，旧存档缺失按0 |
 | `imperialAuthority` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 皇权点数 0~100；开府100、季度+10、伪诏消耗40 |
 | `imperialDecreeCooldown` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 伪诏宣战剩余冷却季数；使用后8，每季度-1 |
 | `tags` | Faction | `string[]?` | Q5 | ⏳ 后续 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
-| `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2 | ✅ HC-P0-4 | 霸府专属官职独立轨道（grandCommander 大司马/regentSecretary 录尚书事/grandCaptain 都督中外诸军事/none），非霸府势力武将该字段恒为空/none；3 官职均势力唯一，仅 `politicalStage !== 'vassal'` 势力可任命 |
+| `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2/K5 | ✅ HC-P0-4 + HC-P1-3 | 单值朝职轨道：霸府三职加王国六职；三职可由 hegemon/king/emperor 任命，六职仅 king/emperor；每职势力唯一，同一人物改任会覆盖旧朝职 |
+
+**剧本可选配置**：`ScenarioStatic.kingRequirements?.minCities`（正整数）用于覆写相对城池门槛；
+`ScenarioFactionSetup.preferredKingdomName?` 提供王号首选。两者均已在 HC-P1-1/2 实装并由严格
+Zod 校验。
 
 **规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。设计真源 `docs/26-hegemony-court-design.md`，实装分期 HC-P0/P1/P2。
