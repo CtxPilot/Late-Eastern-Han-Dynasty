@@ -632,6 +632,12 @@ export async function establishHegemony(): Promise<GameState> {
   return data;
 }
 
+/** HC-P1-2 引擎/API/store 接入；UI 命令留 HC-P1-5。 */
+export async function proclaimKing(kingdomName: string): Promise<GameState> {
+  const { data } = await http.post<GameState>('/hegemony/proclaim-king', { kingdomName });
+  return data;
+}
+
 export async function falseDecreeWar(targetFactionId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/hegemony/false-decree-war', { targetFactionId });
   return data;

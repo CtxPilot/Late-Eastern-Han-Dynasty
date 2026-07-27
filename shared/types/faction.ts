@@ -49,6 +49,11 @@ export interface Faction {
    * 开府/称王/称帝时归零；旧存档缺失时按 0 处理。
    */
   politicalStageAgeMonths?: number;
+  /**
+   * 首次称王时确定并固定的王号（不含“王”字）。
+   * optional 追加，旧存档缺失不改变既有阶段语义。
+   */
+  kingdomName?: string;
   /** 皇权点数（0~100），霸府能力资源；诸侯按 0 处理。 */
   imperialAuthority?: number;
   /** 伪诏宣战剩余冷却季数；每逢季度开始减 1。 */

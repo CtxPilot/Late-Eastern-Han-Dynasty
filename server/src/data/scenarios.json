@@ -13,8 +13,9 @@
         "color": "#4a6fa5",
         "rulerId": 1,
         "capitalCityId": 1,
-        "mode": "territorial",
-        "headquartersLabel": "洛阳"
+      "mode": "territorial",
+      "headquartersLabel": "洛阳",
+      "preferredKingdomName": "魏"
       },
       {
         "id": 2,
@@ -22,8 +23,9 @@
         "color": "#3d8b5a",
         "rulerId": 2,
         "capitalCityId": 19,
-        "mode": "territorial",
-        "headquartersLabel": "成都"
+      "mode": "territorial",
+      "headquartersLabel": "成都",
+      "preferredKingdomName": "汉中"
       },
       {
         "id": 3,
@@ -31,8 +33,9 @@
         "color": "#c44b4b",
         "rulerId": 3,
         "capitalCityId": 17,
-        "mode": "territorial",
-        "headquartersLabel": "建业"
+      "mode": "territorial",
+      "headquartersLabel": "建业",
+      "preferredKingdomName": "吴"
       },
       {
         "id": 4,
@@ -40,8 +43,9 @@
         "color": "#8b5a9e",
         "rulerId": 5,
         "capitalCityId": 9,
-        "mode": "territorial",
-        "headquartersLabel": "下邳"
+      "mode": "territorial",
+      "headquartersLabel": "下邳",
+      "preferredKingdomName": "温"
       }
     ],
     "eventIds": [],
@@ -431,8 +435,9 @@
         "color": "#496b88",
         "rulerId": 1,
         "capitalCityId": 7,
-        "mode": "expeditionary",
-        "headquartersLabel": "陈留募兵处",
+      "mode": "expeditionary",
+      "headquartersLabel": "陈留募兵处",
+      "preferredKingdomName": "魏",
         "historicalNote": "曹操在陈留散家财、合义兵；据点是补给席位，不等同陈留郡归曹操所有。"
       },
       {
@@ -461,8 +466,9 @@
         "color": "#6f445e",
         "rulerId": 112,
         "capitalCityId": 1,
-        "mode": "territorial",
-        "headquartersLabel": "洛阳"
+      "mode": "territorial",
+      "headquartersLabel": "洛阳",
+      "preferredKingdomName": "凉"
       }
     ],
     "eventIds": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123],

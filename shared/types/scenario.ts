@@ -22,6 +22,8 @@ export interface ScenarioFactionSetup {
   mode: 'territorial' | 'expeditionary' | 'hosted';
   headquartersLabel: string;
   historicalNote?: string;
+  /** 称王时优先提供的策划王号；仍须通过运行局唯一性校验。 */
+  preferredKingdomName?: string;
 }
 
 export interface ScenarioOfficerPosition {

@@ -84,7 +84,7 @@ import {
 } from '../engine/personnel.js';
 import { grantBattleIntel } from '../engine/intel.js';
 import { formAlliance, giftBeautyStock, tributeGold } from '../engine/diplomacy.js';
-import { declareWarByFalseDecree, establishHegemony } from '../engine/hegemony.js';
+import { declareWarByFalseDecree, establishHegemony, proclaimKing } from '../engine/hegemony.js';
 import { launchPlot } from '../engine/plot.js';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
 import {
@@ -555,6 +555,14 @@ export function doAlliance(targetFactionId: number): GameState {
 export function doEstablishHegemony(): GameState {
   return withLock(() => {
     currentGame = establishHegemony(getGame(), getGame().playerFactionId);
+    return getClientGame();
+  });
+}
+
+/** HC-P1-2：服务层只编排权威 proclaimKing；withLock 拦截并发朝廷写操作。 */
+export function doProclaimKing(kingdomName: string): GameState {
+  return withLock(() => {
+    currentGame = proclaimKing(getGame(), getGame().playerFactionId, kingdomName);
     return getClientGame();
   });
 }

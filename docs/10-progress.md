@@ -4198,3 +4198,26 @@
   HC-P0 101/101、turn-cadence 28/28、存档迁移 19/19 与根目录全部非浏览器 `verify-*` 通过。
 
 *v15.4 | 2026-07-27 | Session 203 · HC-P1-1 完成*
+
+### Session 204 — HC-P1-2 称王状态转移与王号
+
+- **王号决策树**：新增 `ScenarioFactionSetup.preferredKingdomName?`，0-A 配置曹操→魏、
+  刘备→汉中、孙权→吴、吕布→温、董卓→凉；`getKingdomNameCandidates` 再按首都所属州
+  提供稳定地理候选，最后以势力名去后缀回退。只允许有限候选，不接受自由文本。
+- **唯一性与固定**：新增 `Faction.kingdomName?` optional 字段，不升 schema 版本；王号只在
+  同一运行局其他存活势力间判重，冲突返回候选二，不自动拼数字或君主姓氏。成功后王号固定，
+  迁都/失地不重算。
+- **原子状态转移**：新增 `proclaimKing(state, factionId, kingdomName)`，先复验势力存在/存活、
+  必须为 hegemon、城市门槛、阶段年龄≥12、皇权≥80和王号，再一次性扣皇权80并写
+  `king`、`{王号}王`、王号、阶段年份、年龄0及日志；不要求继续控制汉帝。所有前置失败、
+  冲突和重复提交均不修改输入快照。
+- **权威写链路**：服务层 `doProclaimKing`、`POST /api/game/hegemony/proclaim-king` 和
+  Zustand `proclaimKing` 只编排权威函数；服务层请求锁排斥同时提交的写操作。本轮没有新增
+  UI，朝廷抽屉称王草稿/终审留 HC-P1-5。
+- **确定性验收**：新增 `pnpm verify-hc-p1-2`，36/36 覆盖五项剧本配置、配置/地理候选、
+  每项前置错误、唯一性候选二、失败原子性、K8、成功字段、重复提交、完整 Schema、
+  存档往返与服务编排。
+- **回归**：专项、typecheck、validate-data 已通过；全量结果随本批统一回归补录。
+- **Next（HC 线）**：HC-P1-3 王国官职；不得把 HC-P1-2 的 API/store 接入误报为 UI 已完成。
+
+*v15.5 | 2026-07-27 | Session 204 · HC-P1-2 完成*

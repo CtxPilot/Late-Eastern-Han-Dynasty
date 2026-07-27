@@ -3,7 +3,7 @@
 
 /**
  * 霸府/称王/称帝主线引擎（docs/26，HC-P0~P2）。
- * 本轮（HC-P0-3）只实现"开霸府"状态转移；称王/称帝留 HC-P1/P2。
+ * HC-P0 实现开霸府；HC-P1-1/2 实现称王门槛、王号与状态转移；称帝留 HC-P2。
  */
 import {
   DipRelation,
@@ -38,8 +38,69 @@ export interface KingRequirements {
   cityCount: KingRequirement<number>;
   politicalStageAgeMonths: KingRequirement<number>;
   imperialAuthority: KingRequirement<number>;
+  kingdomNameCandidates: KingdomNameCandidate[];
   contestableCityCount: number;
   allPassed: boolean;
+}
+
+export interface KingdomNameCandidate {
+  name: string;
+  source: 'scenario' | 'geography' | 'faction';
+  available: boolean;
+}
+
+const PROVINCE_KINGDOM_NAMES: Record<string, string[]> = {
+  司隶: ['雒', '河南'],
+  豫州: ['豫', '陈'],
+  冀州: ['冀', '赵'],
+  兖州: ['兖', '魏'],
+  徐州: ['徐', '彭城'],
+  青州: ['齐', '青'],
+  荆州: ['楚', '荆'],
+  扬州: ['吴', '越'],
+  益州: ['蜀', '汉中'],
+  凉州: ['凉', '西凉'],
+  并州: ['晋', '并'],
+  幽州: ['燕', '幽'],
+  交州: ['越', '交'],
+};
+
+function isKingdomNameUsed(state: GameState, factionId: number, name: string): boolean {
+  return Object.values(state.factions).some(
+    (other) => other.id !== factionId && other.isAlive && other.kingdomName === name,
+  );
+}
+
+/** K4：剧本策划配置 → 称王时首都地理 → 势力名去后缀，去重后形成有限候选。 */
+export function getKingdomNameCandidates(
+  state: GameState,
+  factionId: number,
+): KingdomNameCandidate[] {
+  const scenario = staticData.scenarios.find((candidate) => candidate.id === state.scenarioId);
+  if (!scenario) throw new Error(`剧本 ${state.scenarioId} 不存在`);
+  const faction = state.factions[factionId];
+  if (!faction) return [];
+
+  const setup = scenario.factionSetups.find((candidate) => candidate.id === factionId);
+  const capital = state.cities[faction.capitalCityId];
+  const raw: Array<{ name: string; source: KingdomNameCandidate['source'] }> = [];
+  if (setup?.preferredKingdomName) {
+    raw.push({ name: setup.preferredKingdomName, source: 'scenario' });
+  }
+  for (const name of PROVINCE_KINGDOM_NAMES[capital?.province ?? ''] ?? []) {
+    raw.push({ name, source: 'geography' });
+  }
+  const factionFallback = faction.name.replace(/(?:义兵|河内军|鲁阳军|政权|势力|军)$/u, '');
+  if (factionFallback) raw.push({ name: factionFallback, source: 'faction' });
+
+  const seen = new Set<string>();
+  return raw
+    .filter(({ name }) => name.length > 0 && name.length <= 4 && !seen.has(name) && seen.add(name))
+    .map(({ name, source }) => ({
+      name,
+      source,
+      available: !isKingdomNameUsed(state, factionId, name),
+    }));
 }
 
 /**
@@ -106,9 +167,75 @@ export function getKingRequirements(state: GameState, factionId: number): KingRe
     cityCount,
     politicalStageAgeMonths,
     imperialAuthority,
+    kingdomNameCandidates: getKingdomNameCandidates(state, factionId),
     contestableCityCount,
     allPassed: checks.every((requirement) => requirement.passed),
   };
+}
+
+/**
+ * HC-P1-2 称王权威状态转移。
+ *
+ * 所有校验先于克隆和写入完成；任一失败均返回异常且不修改输入快照。
+ * 不要求继续控制汉帝。王号只允许从当前剧本/地理生成的有限候选中选择。
+ */
+export function proclaimKing(
+  state: GameState,
+  factionId: number,
+  kingdomName: string,
+): GameState {
+  const requirements = getKingRequirements(state, factionId);
+  const faction = state.factions[factionId];
+  if (!requirements.factionExists.passed || !faction) throw new Error('势力不存在');
+  if (!requirements.factionAlive.passed) throw new Error('势力已灭亡，无法称王');
+  if (!requirements.politicalStage.passed) {
+    const stage = faction.politicalStage ?? 'vassal';
+    if (stage === 'vassal') throw new Error('尚未开霸府，不可跳级称王');
+    throw new Error(stage === 'king' ? '已经称王，不可重复提交' : '已经称帝，不可重复称王');
+  }
+  if (!requirements.cityCount.passed) {
+    throw new Error(
+      `城池不足（需 ${requirements.cityCount.threshold}，当前 ${requirements.cityCount.current}）`,
+    );
+  }
+  if (!requirements.politicalStageAgeMonths.passed) {
+    throw new Error(
+      `霸府沉淀不足（需 ${requirements.politicalStageAgeMonths.threshold} 月，当前 ${requirements.politicalStageAgeMonths.current} 月）`,
+    );
+  }
+  if (!requirements.imperialAuthority.passed) {
+    throw new Error(
+      `皇权点数不足（需 ${requirements.imperialAuthority.threshold}，当前 ${requirements.imperialAuthority.current}）`,
+    );
+  }
+
+  const candidate = requirements.kingdomNameCandidates.find(({ name }) => name === kingdomName);
+  if (!candidate) throw new Error('王号不合法，请从剧本提供的有限候选中选择');
+  if (!candidate.available) {
+    const alternative = requirements.kingdomNameCandidates.find(({ available }) => available);
+    const suffix = alternative ? `；可选候选号「${alternative.name}」` : '；当前无可用候选';
+    throw new Error(`王号「${kingdomName}」已被其他存活势力占用${suffix}`);
+  }
+
+  const authority = faction.imperialAuthority ?? 0;
+  const factions = {
+    ...state.factions,
+    [factionId]: {
+      ...faction,
+      imperialAuthority: authority - KING_IMPERIAL_AUTHORITY_REQUIRED,
+      politicalStage: 'king' as PoliticalStage,
+      politicalTitle: `${kingdomName}王`,
+      kingdomName,
+      politicalStageChangedYear: state.currentYear,
+      politicalStageAgeMonths: 0,
+    },
+  };
+  return pushLog(
+    state,
+    'king_proclaimed',
+    `${faction.name}称${kingdomName}王（领有${requirements.cityCount.current}城，皇权-${KING_IMPERIAL_AUTHORITY_REQUIRED}）`,
+    { factions },
+  );
 }
 
 function pushLog(

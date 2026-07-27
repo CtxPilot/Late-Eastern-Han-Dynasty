@@ -4368,6 +4368,7 @@ interface Faction {
 | `politicalTitle` | Faction | Q7 | 政治头衔，与 politicalStage 一一对应 |
 | `politicalStageChangedYear` | Faction | — | 开府/称王/称帝年份记录 |
 | `politicalStageAgeMonths` | Faction | — | ✅ HC-P1-1：当前阶段完整维持月数；阶段转移归零，非诸侯每次完整月结 +1，旧档缺失按 0 |
+| `kingdomName` | Faction | K4 | ✅ HC-P1-2：首次称王写入并固定的王号，不含“王”字；存活势力间唯一 |
 | `imperialAuthority` | Faction | Q4 | ✅ HC-P0-6：皇权点数（0~100） |
 | `imperialDecreeCooldown` | Faction | Q4 | ✅ HC-P0-6：伪诏宣战剩余冷却季数 |
 | `tags` | Faction | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等） |
@@ -4384,6 +4385,13 @@ HC-P1-1 已落地称王门槛查询地基：城市门槛优先读取剧本
 `kingRequirements.minCities`，否则按开局争夺城市数
 `max(3, ceil(contestableCityCount × 25%))` 计算；另返回势力存活、霸府阶段、阶段年龄
 `12` 月和皇权 `80` 的当前值、门槛与通过状态。这里只提供查询与计时，不执行称王状态转移。
+
+HC-P1-2 已落地称王权威转移：王号候选按
+`ScenarioFactionSetup.preferredKingdomName → 称王时首都所属州地理号 → 势力名去后缀`
+生成有限列表；只允许选择列表内且未被其他存活势力占用的王号，冲突返回候选二，不自动添加数字
+或君主姓氏。`proclaimKing` 在一次写入前完整复验存活、`hegemon`、城市、12月、皇权80与王号，
+成功扣80并写 `king`、`{王号}王`、固定王号、阶段年份和年龄0；不要求继续控制汉帝。
+服务层请求锁负责排斥同时提交的朝廷写操作，失败不会部分扣费或改头衔。
 - **HC-P2**（称帝 + 帝国 + 天命）：更高门槛→称帝→帝国官职全开→天命/年号/国号→禅让事件（Q8/Q9 可选增强）
 
 详见 `docs/26-hegemony-court-design.md` §六。

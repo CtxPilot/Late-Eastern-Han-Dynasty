@@ -782,6 +782,7 @@ export interface Faction {
   politicalTitle?: string;                                      // 政治头衔（与 politicalStage 一一对应，Q7 方案B）
   politicalStageChangedYear?: number;                           // 开府/称王/称帝年份记录
   politicalStageAgeMonths?: number;                             // 当前阶段完整维持月数；转移归零，旧档缺失按0
+  kingdomName?: string;                                        // 首次称王写入并固定（不含“王”字）；旧档可缺失
   fame?: number;                                                  // 势力声望 0~1000；新局100，旧存档缺失按0
   imperialAuthority?: number;                                     // 皇权点数 0~100；开府100，季度+10
   imperialDecreeCooldown?: number;                                // 伪诏宣战剩余冷却季数
@@ -1384,6 +1385,7 @@ export interface ScenarioFactionSetup {
   mode: 'territorial' | 'expeditionary' | 'hosted';
   headquartersLabel: string;
   historicalNote?: string;
+  preferredKingdomName?: string; // 剧本策划首选王号；称王时仍校验运行局唯一性
 }
 
 export interface Scenario {

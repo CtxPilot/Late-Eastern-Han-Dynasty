@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 203：CMD-P6 人事基线 + HC-P1-1 称王门槛与阶段年龄地基完成** |
+| 会话 | **Session 204：HC-P1-2 称王状态转移与王号完成；CMD-P7 并行实施中** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **HC-P1-1 称王门槛/阶段年龄地基** + S201 英雄集结体验收口 + S199 CMD-P4 朝廷入口原子切换 + S189 HC-P0-1~6 完整闭环 |
-| 文档最新 | CMD-P6 已固化人事基线；K1～K8 已拍板，`28-hc-p1-king-design.md` 的 HC-P1-1 已实施 |
+| 代码最新 | **HC-P1-2 王号候选/唯一性 + proclaimKing + API/store** + HC-P1-1 门槛/阶段年龄地基 |
+| 文档最新 | `28-hc-p1-king-design.md` 的 HC-P1-1/2 已实施；称王 UI 仍留 HC-P1-5 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
 | 玩法下一步 | HC-P1 下一项为 P1-2 称王状态转移与王号；CMD 下一项为 P7 名册只读迁移。两线继续独立推进。 |
 
@@ -43,6 +43,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
 # CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
 # 称王门槛/阶段年龄: pnpm verify-hc-p1-1   # 15项断言
+# 称王状态转移/王号: pnpm verify-hc-p1-2  # 36项断言
 ```
 
 首次进入先选择剧本与势力；当前有英雄集结和190《关东义兵》四槽切片。硬刷新 `Ctrl+Shift+R`。

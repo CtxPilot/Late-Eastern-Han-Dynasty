@@ -178,6 +178,7 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     politicalTitle: z.string().optional(),
     politicalStageChangedYear: z.number().int().optional(),
     politicalStageAgeMonths: z.number().int().nonnegative().optional(),
+    kingdomName: z.string().min(1).optional(),
     imperialAuthority: z.number().int().min(0).max(100).optional(),
     imperialDecreeCooldown: z.number().int().nonnegative().optional(),
   })

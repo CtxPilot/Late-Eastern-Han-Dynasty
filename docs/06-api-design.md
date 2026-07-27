@@ -809,6 +809,16 @@ POST   /api/v1/games/:id/faction/cultural-policy
 尚未交战；成功返回完整 `GameState`，目标关系直接设为 `war`，皇权扣40、冷却置8季，
 必要时声望扣30。失败返回 400 与可直接用于禁用态/错误提示的原因文案。
 
+### HC-P1-2 称王
+
+`POST /api/game/hegemony/proclaim-king`
+
+请求体：`{ kingdomName: string }`。服务端在请求锁内只编排权威
+`proclaimKing(state, playerFactionId, kingdomName)`：重新校验势力存活、霸府阶段、城池门槛、
+阶段年龄12月、皇权80及有限王号候选/运行局唯一性；成功返回完整 `GameState`，扣皇权80并写入
+`politicalStage='king'`、`politicalTitle='{王号}王'`、固定 `kingdomName`、阶段年份和年龄0。
+任何失败返回400且权威状态零副作用。客户端 API/store 已接入，朝廷抽屉入口与终审留 HC-P1-5。
+
 ---
 
 *文档版本: v3.2 | 2026-07-26 | Session 189 HC-P0-6 伪诏宣战端点*

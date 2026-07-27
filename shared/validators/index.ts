@@ -481,6 +481,7 @@ export const ScenarioStaticSchema = z.object({
     mode: z.enum(['territorial', 'expeditionary', 'hosted']),
     headquartersLabel: z.string().min(1),
     historicalNote: z.string().optional(),
+    preferredKingdomName: z.string().min(1).max(4).optional(),
   })).min(1),
   eventIds: z.array(z.number().int().positive()),
   availableOfficerIds: z.array(z.number().int().positive()).min(1),

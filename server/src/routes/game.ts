@@ -367,6 +367,14 @@ gameRouter.post('/hegemony/establish', (_req, res) => {
   }
 });
 
+gameRouter.post('/hegemony/proclaim-king', (req, res) => {
+  try {
+    res.json(gameService.doProclaimKing(String(req.body.kingdomName ?? '')));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'proclaim king failed' });
+  }
+});
+
 gameRouter.post('/hegemony/false-decree-war', (req, res) => {
   try {
     res.json(gameService.doFalseDecreeWar(Number(req.body.targetFactionId)));
