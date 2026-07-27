@@ -232,6 +232,17 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {
     ...nextState,
+    factions: Object.fromEntries(
+      Object.entries(nextState.factions).map(([id, faction]) => [
+        id,
+        (faction.politicalStage ?? 'vassal') === 'vassal'
+          ? faction
+          : {
+              ...faction,
+              politicalStageAgeMonths: (faction.politicalStageAgeMonths ?? 0) + 1,
+            },
+      ]),
+    ),
     officers: Object.fromEntries(
       Object.entries(nextState.officers).map(([id, o]) => [
         id,

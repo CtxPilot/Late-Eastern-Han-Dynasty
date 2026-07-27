@@ -3,7 +3,7 @@
 > 系统归属：S08 外交 / S11 人事 / S12 官职爵位的既有深化。
 > 上游：`docs/26-hegemony-court-design.md` 已批准 Q1～Q11，HC-P0-1～6 已完成。
 > UI 前提：CMD-P4 已下线旧“君主”手风琴；HC-P1 从第一天起只接底部命令坞“朝廷”抽屉。
-> 本文状态：**实施前设计建议，待开放问题拍板；本轮不写代码。**
+> 本文状态：K1～K8 已批准；**HC-P1-1 门槛与阶段年龄地基已实装**，HC-P1-2～4 待实施。
 
 ## 一、设计结论
 
@@ -295,6 +295,18 @@ HC-P1 先提供引擎能力，但不让 AI 自动称王。AI 何时使用称王�
 
 **产出**：剧本相对门槛查询、`politicalStageAgeMonths`、可选剧本覆写字段、Zod/存档迁移。
 **验收**：190=3城、英雄集结=8城；月份推进/阶段重置准确；旧存档按0月降级；非法配置拒绝。
+
+**实施状态（Session 203 · 已完成）**：
+
+- `getKingRequirements(state, factionId)` 为只读权威查询，按剧本开局
+  `cityOwnership` 固定争夺城市总数；返回势力存在/存活、霸府阶段、城市、阶段年龄、皇权各项
+  `current/threshold/passed` 与总通过状态；
+- `Faction.politicalStageAgeMonths?` optional 追加，不升 schema 版本；开府归零，
+  非 `vassal` 势力每次完整月结后 +1，旧档缺失查询按0、首次月结从0推进到1；
+- `ScenarioStatic.kingRequirements?.minCities` optional 追加；Zod 要求严格对象内的正整数；
+- 专项 `pnpm verify-hc-p1-1` 15/15，覆盖 190=3、英雄集结=8、剧本覆写、阶段重置/月进、
+  旧档降级与非法配置拒绝；
+- 边界不变：未实现称王状态转移、王号、王国官职或爵位收口。
 
 ### HC-P1-2：称王状态转移与王号
 

@@ -4177,3 +4177,24 @@
 - **Next（CMD 线）**：CMD-P7 仅迁名册与人物简册只读路径，不创建招贤/任官/赏罚第二写入口。
 
 *v15.3 | 2026-07-27 | Session 203 · CMD-P6 人事迁移前基线*
+
+### Session 203 — HC-P1-1 称王门槛与阶段年龄地基
+
+- **权威门槛查询**：新增 `getKingRequirements(state, factionId)` 只读函数；根据
+  `GameState.scenarioId` 定位剧本，以开局 `startState.cityOwnership` 固定争夺城市总数，
+  城市门槛按 `scenario.kingRequirements?.minCities ??
+  max(3, ceil(contestableCityCount × 0.25))`。查询返回势力存在/存活、霸府阶段、城市数、
+  阶段年龄与皇权各自的当前值/门槛/是否通过，以及 `allPassed`。
+- **阶段年龄**：`Faction.politicalStageAgeMonths?` optional 追加且不升 schema 版本；
+  开府时归零，每次完整月结后所有非 `vassal` 势力 +1，旧存档缺失时查询按0、首次月结从0到1。
+  本子任务未实现称王/称帝转移；后续转移须沿用同一归零契约。
+- **剧本覆写与校验**：`ScenarioStatic.kingRequirements?.minCities` optional 追加；
+  `ScenarioStaticSchema` 使用 strict 对象并只接受正整数，零、负数、小数及未知字段均拒绝。
+- **确定性验收**：新增 `pnpm verify-hc-p1-1`，15/15 覆盖关东义兵7城→门槛3、
+  英雄集结30城→门槛8、剧本覆写、开府归零、1/12月推进、诸侯不推进、旧档Schema兼容/降级和非法配置。
+- **范围边界**：未实现 HC-P1-2 称王状态转移/王号、HC-P1-3 王国官职、
+  HC-P1-4 爵位收口；没有新增 UI 或 API。
+- **回归**：typecheck、lint、validate-data、build、shared 197/197、client 14/14、
+  HC-P0 101/101、turn-cadence 28/28、存档迁移 19/19 与根目录全部非浏览器 `verify-*` 通过。
+
+*v15.4 | 2026-07-27 | Session 203 · HC-P1-1 完成*

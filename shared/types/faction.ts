@@ -44,6 +44,11 @@ export interface Faction {
   politicalTitle?: string;
   /** 开府/称王/称帝的年份记录（docs/26，HC-P0-3）。 */
   politicalStageChangedYear?: number;
+  /**
+   * 当前政治阶段已经完整维持的月数（docs/28，HC-P1-1）。
+   * 开府/称王/称帝时归零；旧存档缺失时按 0 处理。
+   */
+  politicalStageAgeMonths?: number;
   /** 皇权点数（0~100），霸府能力资源；诸侯按 0 处理。 */
   imperialAuthority?: number;
   /** 伪诏宣战剩余冷却季数；每逢季度开始减 1。 */

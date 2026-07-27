@@ -491,6 +491,9 @@ export const ScenarioStaticSchema = z.object({
   scopeNote: z.string().optional(),
   playableFactions: z.array(z.number()),
   recommendedFaction: z.number().optional(),
+  kingRequirements: z.object({
+    minCities: z.number().int().positive(),
+  }).strict().optional(),
 });
 
 export const ScenariosFileSchema = z.array(ScenarioStaticSchema);

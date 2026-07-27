@@ -781,6 +781,7 @@ export interface Faction {
   politicalStage?: 'vassal' | 'hegemon' | 'king' | 'emperor';  // 政治阶段状态机，默认 vassal
   politicalTitle?: string;                                      // 政治头衔（与 politicalStage 一一对应，Q7 方案B）
   politicalStageChangedYear?: number;                           // 开府/称王/称帝年份记录
+  politicalStageAgeMonths?: number;                             // 当前阶段完整维持月数；转移归零，旧档缺失按0
   fame?: number;                                                  // 势力声望 0~1000；新局100，旧存档缺失按0
   imperialAuthority?: number;                                     // 皇权点数 0~100；开府100，季度+10
   imperialDecreeCooldown?: number;                                // 伪诏宣战剩余冷却季数
@@ -809,6 +810,10 @@ export interface TechnologyLevel {
   naval: number;          // 1~5
 }
 ```
+
+剧本静态类型可选追加 `kingRequirements?: { minCities: number }`。`minCities` 必须为正整数；
+缺失时称王城市门槛取开局 `startState.cityOwnership` 的争夺城市总数，按
+`max(3, ceil(contestableCityCount × 0.25))` 计算。该字段与阶段月龄均不提升存档 schema 版本。
 
 ---
 

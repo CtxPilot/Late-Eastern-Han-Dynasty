@@ -13,6 +13,7 @@ import {
   type GameState,
   type PoliticalStage,
 } from '@leh/shared';
+import { staticData } from '../data/loader.js';
 
 /** 霸府阶段头衔文案。汉末霸府典型为丞相（曹操迎帝都许后任丞相）。 */
 const HEGEMON_TITLE = '丞相';
@@ -21,6 +22,94 @@ export const IMPERIAL_AUTHORITY_QUARTERLY_RECOVERY = 10;
 export const FALSE_DECREE_COST = 40;
 export const FALSE_DECREE_COOLDOWN_QUARTERS = 8;
 export const HAN_LOYALIST_FAME_PENALTY = 30;
+export const KING_STAGE_MONTHS_REQUIRED = 12;
+export const KING_IMPERIAL_AUTHORITY_REQUIRED = 80;
+
+export interface KingRequirement<T> {
+  current: T;
+  threshold: T;
+  passed: boolean;
+}
+
+export interface KingRequirements {
+  factionExists: KingRequirement<boolean>;
+  factionAlive: KingRequirement<boolean>;
+  politicalStage: KingRequirement<string>;
+  cityCount: KingRequirement<number>;
+  politicalStageAgeMonths: KingRequirement<number>;
+  imperialAuthority: KingRequirement<number>;
+  contestableCityCount: number;
+  allPassed: boolean;
+}
+
+/**
+ * HC-P1-1 称王门槛权威查询。只读取输入状态与只读剧本静态数据，不修改状态。
+ *
+ * 城池门槛固定取开局纳入争夺的城市数，避免随灭国或当前地图状态漂移：
+ * scenario.kingRequirements?.minCities
+ *   ?? Math.max(3, Math.ceil(contestableCityCount * 0.25))
+ */
+export function getKingRequirements(state: GameState, factionId: number): KingRequirements {
+  const scenario = staticData.scenarios.find((candidate) => candidate.id === state.scenarioId);
+  if (!scenario) throw new Error(`剧本 ${state.scenarioId} 不存在`);
+
+  const faction = state.factions[factionId];
+  const contestableCityCount = Object.keys(scenario.startState.cityOwnership).length;
+  const cityThreshold = scenario.kingRequirements?.minCities
+    ?? Math.max(3, Math.ceil(contestableCityCount * 0.25));
+  const factionExists = {
+    current: faction !== undefined,
+    threshold: true,
+    passed: faction !== undefined,
+  };
+  const factionAlive = {
+    current: faction?.isAlive ?? false,
+    threshold: true,
+    passed: faction?.isAlive === true,
+  };
+  const politicalStage = {
+    current: faction?.politicalStage ?? 'vassal',
+    threshold: 'hegemon',
+    passed: faction?.politicalStage === 'hegemon',
+  };
+  const cityCountValue = faction?.cityIds.length ?? 0;
+  const cityCount = {
+    current: cityCountValue,
+    threshold: cityThreshold,
+    passed: cityCountValue >= cityThreshold,
+  };
+  const stageAgeValue = faction?.politicalStageAgeMonths ?? 0;
+  const politicalStageAgeMonths = {
+    current: stageAgeValue,
+    threshold: KING_STAGE_MONTHS_REQUIRED,
+    passed: stageAgeValue >= KING_STAGE_MONTHS_REQUIRED,
+  };
+  const authorityValue = faction?.imperialAuthority ?? 0;
+  const imperialAuthority = {
+    current: authorityValue,
+    threshold: KING_IMPERIAL_AUTHORITY_REQUIRED,
+    passed: authorityValue >= KING_IMPERIAL_AUTHORITY_REQUIRED,
+  };
+  const checks = [
+    factionExists,
+    factionAlive,
+    politicalStage,
+    cityCount,
+    politicalStageAgeMonths,
+    imperialAuthority,
+  ];
+
+  return {
+    factionExists,
+    factionAlive,
+    politicalStage,
+    cityCount,
+    politicalStageAgeMonths,
+    imperialAuthority,
+    contestableCityCount,
+    allPassed: checks.every((requirement) => requirement.passed),
+  };
+}
 
 function pushLog(
   state: GameState,
@@ -79,6 +168,7 @@ export function establishHegemony(state: GameState, factionId: number): GameStat
       politicalStage: 'hegemon' as PoliticalStage,
       politicalTitle: HEGEMON_TITLE,
       politicalStageChangedYear: state.currentYear,
+      politicalStageAgeMonths: 0,
       imperialAuthority: IMPERIAL_AUTHORITY_MAX,
       imperialDecreeCooldown: 0,
     },

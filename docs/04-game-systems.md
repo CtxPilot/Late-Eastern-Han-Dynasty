@@ -4367,6 +4367,7 @@ interface Faction {
 | `politicalStage` | Faction | Q5 | `'vassal'\|'hegemon'\|'king'\|'emperor'` 状态机 |
 | `politicalTitle` | Faction | Q7 | 政治头衔，与 politicalStage 一一对应 |
 | `politicalStageChangedYear` | Faction | — | 开府/称王/称帝年份记录 |
+| `politicalStageAgeMonths` | Faction | — | ✅ HC-P1-1：当前阶段完整维持月数；阶段转移归零，非诸侯每次完整月结 +1，旧档缺失按 0 |
 | `imperialAuthority` | Faction | Q4 | ✅ HC-P0-6：皇权点数（0~100） |
 | `imperialDecreeCooldown` | Faction | Q4 | ✅ HC-P0-6：伪诏宣战剩余冷却季数 |
 | `tags` | Faction | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等） |
@@ -4378,6 +4379,11 @@ interface Faction {
 
 - **HC-P0**（挟天子判定 + 霸府最小原型）：控制汉帝→开府→霸府官职最小切片→外交权重→伪诏宣战
 - **HC-P1**（称王 + 王国官职）：势力规模门槛→称王→王官扩展→爵位上限提升
+
+HC-P1-1 已落地称王门槛查询地基：城市门槛优先读取剧本
+`kingRequirements.minCities`，否则按开局争夺城市数
+`max(3, ceil(contestableCityCount × 25%))` 计算；另返回势力存活、霸府阶段、阶段年龄
+`12` 月和皇权 `80` 的当前值、门槛与通过状态。这里只提供查询与计时，不执行称王状态转移。
 - **HC-P2**（称帝 + 帝国 + 天命）：更高门槛→称帝→帝国官职全开→天命/年号/国号→禅让事件（Q8/Q9 可选增强）
 
 详见 `docs/26-hegemony-court-design.md` §六。

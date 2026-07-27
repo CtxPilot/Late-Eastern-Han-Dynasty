@@ -85,4 +85,8 @@ export interface ScenarioStatic {
   scopeNote?: string;
   playableFactions: number[];
   recommendedFaction?: number;
+  /** 称王门槛的剧本级可选覆写；缺失时按争夺城市数的 25%（至少 3 城）计算。 */
+  kingRequirements?: {
+    minCities: number;
+  };
 }
