@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 204：HC-P1-2 称王状态转移与王号完成；CMD-P7 并行实施中** |
+| 会话 | **Session 204：HC-P1-2 称王状态转移与王号 + CMD-P7 人事只读名册完成** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **HC-P1-2 王号候选/唯一性 + proclaimKing + API/store** + HC-P1-1 门槛/阶段年龄地基 |
-| 文档最新 | `28-hc-p1-king-design.md` 的 HC-P1-1/2 已实施；称王 UI 仍留 HC-P1-5 |
+| 代码最新 | **CMD-P7 命令坞人事只读名册** + HC-P1-2 王号候选/唯一性 + proclaimKing + API/store |
+| 文档最新 | 人事抽屉“名册”已接入，招贤/任官/赏罚仍留后续；`28-hc-p1-king-design.md` 的 HC-P1-1/2 已实施 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | HC-P1 下一项为 P1-2 称王状态转移与王号；CMD 下一项为 P7 名册只读迁移。两线继续独立推进。 |
+| 玩法下一步 | HC-P1 下一项为 P1-3 王国官职；CMD 下一项为 P8 招贤写流程。两线继续独立推进。 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -42,6 +42,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # 单元测试: pnpm test
 # CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
 # CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
+# CMD-P7 人事只读名册（同上；含100/1000条合成夹具）: pnpm verify-cmd-p7-headless
 # 称王门槛/阶段年龄: pnpm verify-hc-p1-1   # 15项断言
 # 称王状态转移/王号: pnpm verify-hc-p1-2  # 36项断言
 ```

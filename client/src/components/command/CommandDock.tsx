@@ -15,7 +15,7 @@ export type CommandDockItem = {
 export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
   { domain: 'civil', label: '内政', availability: 'legacy', reason: '仍在右侧城池面板' },
   { domain: 'military', label: '军事', availability: 'legacy', reason: '仍在战役与城池面板' },
-  { domain: 'personnel', label: '人事', availability: 'legacy', reason: '仍在左侧人事面板' },
+  { domain: 'personnel', label: '人事', availability: 'available', reason: '名册只读浏览已接入；写操作仍在原面板' },
   { domain: 'diplomacy', label: '外交', availability: 'legacy', reason: '仍在左侧外交面板' },
   { domain: 'strategy', label: '计略', availability: 'legacy', reason: '仍在左侧计谋面板' },
   { domain: 'intel', label: '情报', availability: 'legacy', reason: '仍在左侧谍报面板' },

@@ -10,6 +10,7 @@ import {
   type CommandDomain,
 } from './commandShellState';
 import { CourtCommandDrawer } from './CourtCommandDrawer';
+import { PersonnelRosterDrawer } from './PersonnelRosterDrawer';
 
 export function CommandShell() {
   const [state, dispatch] = useReducer(commandShellReducer, INITIAL_COMMAND_SHELL_STATE);
@@ -28,6 +29,8 @@ export function CommandShell() {
         >
           {activeItem.domain === 'court' ? (
             <CourtCommandDrawer shellState={state} dispatch={dispatch} />
+          ) : activeItem.domain === 'personnel' ? (
+            <PersonnelRosterDrawer />
           ) : (
             <>
               <p>{activeItem.reason}。</p>

@@ -45,6 +45,7 @@
     "verify-negotiation-r2": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-negotiation-r2",
     "verify-cmd-p4-headless": "node scripts/verify-cmd-p4-headless.mjs",
     "verify-cmd-p6-headless": "node scripts/verify-cmd-p6-headless.mjs",
+    "verify-cmd-p7-headless": "node scripts/verify-cmd-p7-headless.mjs",
     "verify-hc-p1-1": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-hc-p1-1",
     "verify-hc-p1-2": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-hc-p1-2",
     "test": "pnpm --filter @leh/shared test && pnpm --filter @leh/client test",
