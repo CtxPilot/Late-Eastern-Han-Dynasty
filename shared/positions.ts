@@ -20,6 +20,7 @@ export interface PositionReq {
   war?: number;
   intelligence?: number;
   politics?: number;
+  charisma?: number;
   /** 一势力唯一 */
   uniqueFaction?: boolean;
   /** 一城唯一（需 cityId） */
@@ -57,6 +58,12 @@ export const HEGEMONY_LABELS: Record<HegemonyPosition, string> = {
   [HegemonyPosition.GRAND_COMMANDER]: '大司马',
   [HegemonyPosition.REGENT_SECRETARY]: '录尚书事',
   [HegemonyPosition.GRAND_CAPTAIN]: '都督中外诸军事',
+  [HegemonyPosition.KINGDOM_CHANCELLOR]: '王国相',
+  [HegemonyPosition.KINGDOM_INTERIOR_MINISTER]: '内史',
+  [HegemonyPosition.KINGDOM_COMMANDANT]: '中尉',
+  [HegemonyPosition.KINGDOM_GENTLEMAN_STEWARD]: '郎中令',
+  [HegemonyPosition.KINGDOM_AGRICULTURE_MINISTER]: '大司农',
+  [HegemonyPosition.KINGDOM_COACH_MINISTER]: '太仆',
 };
 
 export const CIVIL_REQ: Partial<Record<CivilPosition, PositionReq>> = {
@@ -121,13 +128,57 @@ export const HEGEMONY_REQ: Partial<Record<HegemonyPosition, PositionReq>> = {
     war: 80,
     uniqueFaction: true,
   },
+  [HegemonyPosition.KINGDOM_CHANCELLOR]: {
+    politics: 85,
+    intelligence: 80,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.KINGDOM_INTERIOR_MINISTER]: {
+    politics: 80,
+    charisma: 70,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.KINGDOM_COMMANDANT]: {
+    leadership: 80,
+    war: 75,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.KINGDOM_GENTLEMAN_STEWARD]: {
+    leadership: 75,
+    charisma: 75,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.KINGDOM_AGRICULTURE_MINISTER]: {
+    politics: 80,
+    intelligence: 75,
+    uniqueFaction: true,
+  },
+  [HegemonyPosition.KINGDOM_COACH_MINISTER]: {
+    leadership: 75,
+    politics: 70,
+    uniqueFaction: true,
+  },
 };
+
+export const KINGDOM_POSITIONS = [
+  HegemonyPosition.KINGDOM_CHANCELLOR,
+  HegemonyPosition.KINGDOM_INTERIOR_MINISTER,
+  HegemonyPosition.KINGDOM_COMMANDANT,
+  HegemonyPosition.KINGDOM_GENTLEMAN_STEWARD,
+  HegemonyPosition.KINGDOM_AGRICULTURE_MINISTER,
+  HegemonyPosition.KINGDOM_COACH_MINISTER,
+] as const;
+
+export function isKingdomPosition(position: string): position is HegemonyPosition {
+  return (KINGDOM_POSITIONS as readonly string[]).includes(position);
+}
 
 export function meetsPositionReq(stats: OfficerStats, req: PositionReq): boolean {
   if (req.leadership != null && stats.leadership < req.leadership) return false;
   if (req.war != null && stats.war < req.war) return false;
   if (req.intelligence != null && stats.intelligence < req.intelligence) return false;
   if (req.politics != null && stats.politics < req.politics) return false;
+  if (req.charisma != null && stats.charisma < req.charisma) return false;
   return true;
 }
 
@@ -137,6 +188,7 @@ export function formatReq(req: PositionReq): string {
   if (req.war != null) parts.push(`武≥${req.war}`);
   if (req.intelligence != null) parts.push(`智≥${req.intelligence}`);
   if (req.politics != null) parts.push(`政≥${req.politics}`);
+  if (req.charisma != null) parts.push(`魅≥${req.charisma}`);
   return parts.join(' ') || '无门槛';
 }
 

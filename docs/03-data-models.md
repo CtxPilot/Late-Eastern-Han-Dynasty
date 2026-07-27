@@ -609,8 +609,8 @@ export interface Officer {
   beauties: number[];           // 赏赐美人（非婚配）女性 id（君主身份恒为空，见 04 §3.8）
   beautyMaintenance?: number;   // 月均美人供养费（全量未做）
 
-  // 霸府/称王/称帝主线（docs/26，Session 188 Q2 已批准方案B，HC-P0-4 已实装）
-  hegemonyPosition?: HegemonyPosition;  // 霸府专属官职独立轨道（grandCommander/regentSecretary/grandCaptain/none），非霸府势力武将该字段恒为空/none
+  // 霸府/称王/称帝主线（docs/26/28，HC-P0-4 + HC-P1-3 已实装）
+  hegemonyPosition?: HegemonyPosition;  // 朝职单值轨道：霸府3职+王国6职+none；任新职替换本人旧朝职
 
   // 出身标签 & 关系
   tags: OfficerTag[];

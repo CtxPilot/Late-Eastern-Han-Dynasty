@@ -362,7 +362,7 @@ export type SkillType = string;
 /**
  * 霸府专属官职（docs/26 Q2 方案B 独立轨道，HC-P0-4）。
  * 与四轨官职（文/地方/武/爵位）并存且互不污染；仅霸府/王/帝阶段势力可任命。
- * 0-A 精简 3 档，均为汉末曹魏霸府典型官衔：
+ * HC-P0 为霸府 3 职；HC-P1-3 在同一单值轨道追加王国 6 职。
  * - GRAND_COMMANDER 大司马：汉末最高军政官之一，董卓自任大司马
  * - REGENT_SECRETARY 录尚书事：东汉霸府"录尚书事"掌中枢机要，曹操、司马懿均任
  * - GRAND_CAPTAIN 都督中外诸军事：魏晋霸府军事最高官职，统内外诸军
@@ -372,4 +372,10 @@ export enum HegemonyPosition {
   GRAND_COMMANDER = 'grandCommander',
   REGENT_SECRETARY = 'regentSecretary',
   GRAND_CAPTAIN = 'grandCaptain',
+  KINGDOM_CHANCELLOR = 'kingdomChancellor',
+  KINGDOM_INTERIOR_MINISTER = 'kingdomInteriorMinister',
+  KINGDOM_COMMANDANT = 'kingdomCommandant',
+  KINGDOM_GENTLEMAN_STEWARD = 'kingdomGentlemanSteward',
+  KINGDOM_AGRICULTURE_MINISTER = 'kingdomAgricultureMinister',
+  KINGDOM_COACH_MINISTER = 'kingdomCoachMinister',
 }

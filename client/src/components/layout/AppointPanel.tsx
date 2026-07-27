@@ -11,6 +11,7 @@ import {
   CIVIL_LABELS,
   HEGEMONY_LABELS,
   HEGEMONY_REQ,
+  KINGDOM_POSITIONS,
   LOCAL_LABELS,
   MILITARY_LABELS,
   CIVIL_REQ,
@@ -102,7 +103,15 @@ export function AppointPanel() {
         ? LOCAL_OPTS
         : track === 'military'
           ? MIL_OPTS
-          : HEG_OPTS;
+          : factionStage === 'king' || factionStage === 'emperor'
+            ? [
+                HegemonyPosition.GRAND_COMMANDER,
+                HegemonyPosition.REGENT_SECRETARY,
+                HegemonyPosition.GRAND_CAPTAIN,
+                ...KINGDOM_POSITIONS,
+                HegemonyPosition.NONE,
+              ]
+            : HEG_OPTS;
   const labels: Record<string, string> =
     track === 'civil'
       ? CIVIL_LABELS
@@ -143,7 +152,7 @@ export function AppointPanel() {
     <div className="px-2 space-y-2 text-[11px]" data-testid="appoint-panel">
       <p className="text-stone-500 px-1 leading-snug">
         三轨官职可兼任。太守须在目标城；大将军/军师/丞相/都督势力唯一。
-        {canHegemony && ' 霸府官职（大司马/录尚书事/都督中外诸军事）势力唯一，仅霸府阶段可任。'}
+        {canHegemony && ' 霸府三职势力唯一；称王后追加六个王国官职，同一人物在本轨道只能保留一职。'}
       </p>
 
       <label className="block space-y-0.5">
@@ -172,7 +181,7 @@ export function AppointPanel() {
           {LOCAL_LABELS[officer.localPosition]} / 武
           {MILITARY_LABELS[officer.militaryPosition]}
           {officer.hegemonyPosition && officer.hegemonyPosition !== HegemonyPosition.NONE
-            ? ` / 霸${HEGEMONY_LABELS[officer.hegemonyPosition]}`
+            ? ` / 朝${HEGEMONY_LABELS[officer.hegemonyPosition]}`
             : ''}
           {' · 所在'}
           {officer.location != null
@@ -187,7 +196,7 @@ export function AppointPanel() {
               ['military', '武官'],
               ['local', '地方'],
               ['civil', '文官'],
-              ['hegemony', '霸府'],
+              ['hegemony', '朝职'],
             ] as const)
           : ([
               ['military', '武官'],

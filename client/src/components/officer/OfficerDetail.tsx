@@ -212,7 +212,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                       <Info label="武官" value={MILITARY_LABELS[officer.militaryPosition]} />
                       <Info label="爵位" value={NOBILITY_LABEL[officer.nobilityRank] ?? String(officer.nobilityRank)} />
                       {officer.hegemonyPosition && officer.hegemonyPosition !== HegemonyPosition.NONE && (
-                        <Info label="霸府" value={HEGEMONY_LABELS[officer.hegemonyPosition]} />
+                        <Info label="朝职" value={HEGEMONY_LABELS[officer.hegemonyPosition]} />
                       )}
                     </div>
                   </section>

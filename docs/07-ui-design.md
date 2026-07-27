@@ -878,6 +878,10 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 
 **实现进度（Session 122/124）**：`OfficerRosterPanel`、`OfficerDetail`、低忠诚红框及人事操作统一终审窗已实装并完成浏览器实测。Session 124 将详情升级为金石水墨人物简册，并为吕布、关羽、诸葛亮、曹操制作首批差异化程序化头像与“名将试册”快捷入口。派系面板、外交雷达、财政飘字、行政总署完整重组仍未实现；§35 财政税收俸禄仍为纯设计。
 
+**HC-P1-3 朝职显示**：既有 `AppointPanel` 在霸府阶段只列霸府三职，`king/emperor` 阶段追加
+王国相、内史、中尉、郎中令、大司农、太仆六职；人物简册统一以“朝职”显示当前单值，
+避免把王国官误标成霸府官。CMD-P9 前该旧面板仍是唯一任命写入口，朝廷官制总览留 HC-P1-5。
+
 **落地方案**（纯前端可视化，不动服务端/数据模型）：
 - `client/src/lib/factionInner.ts`（~50 行）：派系判定纯函数，按 `tags` 社会出身分组（士族/豪强/寒门/平民/宗室/边地），§4.5.2 规则（≥3 成派、领袖=官职最高）。`useMemo` 依赖 `game.officers`。
 - `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。

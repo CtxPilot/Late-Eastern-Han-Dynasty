@@ -13,6 +13,7 @@ import {
   OfficerStatus,
   formatReq,
   meetsPositionReq,
+  isKingdomPosition,
   positionLabel,
   CIVIL_REQ,
   HEGEMONY_REQ,
@@ -129,10 +130,12 @@ export function appointOfficer(
   if (!isDismiss) {
     if (!req) throw new Error('该官职不可任命');
     if (track === 'hegemony') {
-      // HC-P0-4 前置：仅霸府/王/帝阶段势力可任命霸府官职
       const stage = state.factions[state.playerFactionId]?.politicalStage ?? 'vassal';
       if (stage === 'vassal') {
         throw new Error('当前势力仍是诸侯，无法任命霸府官职（需先开霸府）');
+      }
+      if (isKingdomPosition(position) && stage === 'hegemon') {
+        throw new Error('当前仅为霸府，无法任命王国官职（需先称王）');
       }
     }
     if (!meetsPositionReq(officer.stats, req)) {
@@ -191,7 +194,7 @@ export function appointOfficer(
     updated.militaryPosition = position as MilitaryPosition;
   } else {
     if (current.hegemonyPosition === position) {
-      throw new Error('已是该霸府官职');
+      throw new Error(isKingdomPosition(position) ? '已是该王国官职' : '已是该霸府官职');
     }
     updated.hegemonyPosition = position as HegemonyPosition;
   }
@@ -236,7 +239,15 @@ export function appointOfficer(
 
   const label = positionLabel(track, position);
   const trackLabel =
-    track === 'civil' ? '文官' : track === 'local' ? '地方' : track === 'military' ? '武官' : '霸府';
+    track === 'civil'
+      ? '文官'
+      : track === 'local'
+        ? '地方'
+        : track === 'military'
+          ? '武官'
+          : isKingdomPosition(isDismiss ? (current.hegemonyPosition ?? '') : position)
+            ? '王国'
+            : '霸府';
   const msg = isDismiss
     ? `解职 ${updated.name} 的${trackLabel}职（忠诚${loyaltyDelta}）`
     : `任命 ${updated.name} 为${label}（忠诚+${loyaltyDelta}）`;
