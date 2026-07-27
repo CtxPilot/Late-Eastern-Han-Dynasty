@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 202 完成：CMD-P5 复盘 + HC-P1 称王实施前设计**（纯规划、零运行时代码） |
+| 会话 | **Session 203：CMD-P6 人事迁移前审计与 Headless 基线**（零运行时行为变化） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
 | 代码最新 | **S201 英雄集结体验收口** + S199 CMD-P4 朝廷入口原子切换 + S198 统一终审 + S197 朝廷抽屉业务接线 + S196 通用命令坞壳层 + S194 行政面板体验收口 + S193 战役完整性修复 + S189 HC-P0-1~6 完整闭环 |
-| 文档最新 | Session 202 推荐人事为下一迁移域（CMD-P6～P10）；新增 `28-hc-p1-king-design.md`，K1～K8 待拍板 |
+| 文档最新 | CMD-P6 已固化旧人事入口清单、四分面与可复现 Headless 基线；HC-P1 设计见 `28-hc-p1-king-design.md` |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
 | 玩法下一步 | CMD-P5 已完成，建议下一迁移域为人事；HC-P1 已完成实施前设计但尚未启动代码，先等待 K1～K8 拍板。R3 仍未启动。 |
 
@@ -41,6 +41,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # BF-P0 南郡: pnpm --filter @leh/shared test -- schema.test.ts
 # 单元测试: pnpm test
 # CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
+# CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
 ```
 
 首次进入先选择剧本与势力；当前有英雄集结和190《关东义兵》四槽切片。硬刷新 `Ctrl+Shift+R`。
@@ -359,7 +360,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 优先级 | 事项 |
 |:------:|------|
 | **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
-| **Session 202 CMD-P0～P5 已完成** | §12 朝廷最小安全闭环已收官：通用壳层、朝廷抽屉、统一终审、旧君主入口原子下线、仓库内 Headless 路径与P5复盘均完成。下一迁移域推荐人事（CMD-P6～P10）；其他命令域尚未迁移。 |
+| **Session 203 CMD-P6 已完成** | 人事旧入口、权威/草稿/门槛/终审/action/API 清单与 1440×900 Headless 基线已仓库化；分面固定为“名册｜招贤｜任官｜赏罚”，调动仅设计中。下一步 CMD-P7 只迁名册读路径；旧手风琴仍是唯一生产入口。 |
 | **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
 | **Session 196 CMD-P1 已完成** | 通用 `CommandDock`/`CommandDrawer`/`CommandShell` + 瞬时草稿 reducer 已挂入 world；九类均为原面板/设计中说明，无业务提交入口。client 7/7 + shared 197/197 + 31个根 verify + HC-P0 101/101 全绿。下一步 CMD-P2。 |

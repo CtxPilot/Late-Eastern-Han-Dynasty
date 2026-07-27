@@ -1295,6 +1295,12 @@ type CommandShellState = {
   实施。外交第二、军事第三；在各自原子切换前仍使用现有面板。
 - 完整复盘、候选比较和验收标准见
   `docs/reviews/session-202-cmd-p5-next-domain-review-and-plan.md`。
+- Session 203 CMD-P6 已固化迁移前基线：人事抽屉分面为
+  `名册｜招贤｜任官｜赏罚`；“调动”未实装，仅为设计中概念，不提供假入口。名册继续复用唯一
+  `OfficerDetail`；招贤承接人才搜索/登用；任官承接文官/地方/武官/霸府四轨；赏罚当前只承接
+  已实装的美女库存赏赐。朝廷官制跳转的目标语义是“人事·任官（霸府轨道意图）”，人物简册
+  快捷入口只传 officer id 与分面意图，不复制表单。完整入口/action/错误断言见
+  `docs/reviews/session-203-cmd-p6-personnel-baseline.md`。
 
 ### 12.3 文教、声教、学派与技艺
 
