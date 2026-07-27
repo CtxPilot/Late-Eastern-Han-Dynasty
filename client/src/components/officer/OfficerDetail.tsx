@@ -69,13 +69,21 @@ const UNIT_NAME: Record<string, string> = {
   yellowTurban: '黄巾兵',
 };
 
-/** 装备 5 槽（07-ui-design:195 规划，Officer.equipped 代码未实装，占位展示） */
+/** 装备 8 槽 + 2 消耗品快捷槽（04-game-systems.md §12.1 设计，代码未实装，占位展示） */
 const EQUIP_SLOTS = [
   { key: 'weaponPrimary', label: '主武器' },
   { key: 'weaponSecondary', label: '副武器' },
-  { key: 'armor', label: '盔甲' },
-  { key: 'mount', label: '坐骑' },
-  { key: 'auxiliary', label: '辅助' },
+  { key: 'helmet',      label: '兜鍪/冠' },
+  { key: 'armor',       label: '铠甲' },
+  { key: 'robe',        label: '战袍/绶带' },
+  { key: 'mount',       label: '坐骑' },
+  { key: 'tome',        label: '兵书/典籍' },
+  { key: 'seal',        label: '配饰/印信' },
+] as const;
+
+const CONSUMABLE_SLOTS = [
+  { key: 'consumable1', label: '消耗·甲' },
+  { key: 'consumable2', label: '消耗·乙' },
 ] as const;
 
 type Tab = 'stats' | 'family' | 'equipment' | 'biography';
@@ -331,12 +339,24 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
 
             {tab === 'equipment' && (
               <div className="space-y-4">
-                <p className="text-[10px] text-stone-600">装备系统待实装（Officer.equipped 5 槽代码未实装，0-B 技术债 D-0B-7），当前仅展示占位槽位</p>
+                <p className="text-[10px] text-stone-600">装备系统待实装（Officer.equipped 8+2 槽代码未实装，0-B 技术债 D-0B-7），当前仅展示占位槽位</p>
+
+                <h3 className="text-xs tracking-widest text-amber-500">装备（8格）</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {EQUIP_SLOTS.map((slot) => (
                     <div key={slot.key} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2">
                       <div className="text-[10px] text-stone-500">{slot.label}</div>
                       <div className="text-stone-600 text-xs mt-1">未装备</div>
+                    </div>
+                  ))}
+                </div>
+
+                <h3 className="mt-4 text-xs tracking-widest text-amber-500">消耗品快捷槽（2格·数量可叠加）</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {CONSUMABLE_SLOTS.map((slot) => (
+                    <div key={slot.key} className="rounded border border-amber-900/30 bg-stone-900/50 px-3 py-2">
+                      <div className="text-[10px] text-stone-500">{slot.label}</div>
+                      <div className="text-stone-600 text-xs mt-1">—</div>
                     </div>
                   ))}
                 </div>
