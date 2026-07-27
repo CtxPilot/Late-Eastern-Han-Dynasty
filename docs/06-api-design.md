@@ -129,6 +129,8 @@ POST   /api/game/personnel/gift-beauty { femaleId, officerId }  // 赏赐 100金
 POST   /api/game/personnel/join-faction  { officerId, factionId, cityId? }  // S18 跟随：入势力，妻跟随
 POST   /api/game/personnel/search          { cityId }              // S11 搜索：己方城 80金
 POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 登用在野男将 200金；R2 UI 显式提交君主并显示共享成功率
+  // CMD-P8：命令坞“招贤”与过渡期旧人事入口复用上述两个端点和同一 store action；
+  // UI 只保存城市/候选草稿，确认前重校验，未新增 API 或业务缓存。
 POST   /api/game/personnel/appoint         { officerId, track: civil|local|military, position, cityId? }
                                       // S11/S12 任命；position=none 解职；太守等 needsCity
 POST   /api/game/personnel/release-officer { officerId }  // S18 跟随：释放为在野

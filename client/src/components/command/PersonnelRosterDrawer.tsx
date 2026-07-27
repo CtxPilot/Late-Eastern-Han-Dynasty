@@ -6,6 +6,7 @@ import type { GameState, Officer } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { OfficerDetail } from '../officer/OfficerDetail';
 import { OfficerPortrait } from '../officer/OfficerPortrait';
+import { PersonnelRecruitDrawer } from './PersonnelRecruitDrawer';
 
 export type PersonnelRosterSort = 'name' | 'leadership' | 'war' | 'intelligence' | 'loyalty';
 export type PersonnelRosterScope = 'all' | 'active' | 'free';
@@ -67,6 +68,7 @@ export function PersonnelRosterDrawer() {
   const [scope, setScope] = useState<PersonnelRosterScope>('all');
   const [sort, setSort] = useState<PersonnelRosterSort>('leadership');
   const [selected, setSelected] = useState<Officer | null>(null);
+  const [facet, setFacet] = useState<'roster' | 'recruitment'>('roster');
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
 
   const source = useMemo(() => {
@@ -90,14 +92,17 @@ export function PersonnelRosterDrawer() {
   if (!game) return <p data-testid="personnel-roster-empty">尚未载入剧本。</p>;
 
   return (
-    <div className="flex h-[min(36rem,calc(100vh-12rem))] min-h-0 flex-1 flex-col" data-testid="command-personnel-roster">
+    <div className="flex h-[min(36rem,calc(100vh-12rem))] min-h-0 flex-1 flex-col" data-testid="command-personnel-drawer">
       <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="人事分面">
-        <button type="button" aria-current="page" className="border border-amber-700 bg-amber-950/50 py-1.5 text-amber-100">名册</button>
-        {['招贤', '任官', '赏罚'].map((label) => (
+        <button type="button" data-testid="command-personnel-facet-roster" aria-current={facet === 'roster' ? 'page' : undefined} onClick={() => setFacet('roster')} className={`border py-1.5 ${facet === 'roster' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>名册</button>
+        <button type="button" data-testid="command-personnel-facet-recruitment" aria-current={facet === 'recruitment' ? 'page' : undefined} onClick={() => setFacet('recruitment')} className={`border py-1.5 ${facet === 'recruitment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>招贤</button>
+        {['任官', '赏罚'].map((label) => (
           <button key={label} type="button" disabled title="后续迁移阶段接入" className="border border-stone-800 py-1.5 text-stone-600">{label}</button>
         ))}
       </nav>
 
+      {facet === 'recruitment' ? <PersonnelRecruitDrawer /> : (
+      <div className="flex min-h-0 flex-1 flex-col" data-testid="command-personnel-roster">
       <div className="mb-2 grid grid-cols-2 gap-2" data-testid="personnel-roster-summary">
         <div className="border border-stone-800 bg-stone-900/60 px-2 py-1.5"><span className="text-stone-500">在职</span><strong className="float-right text-amber-200">{summary.active}</strong></div>
         <div className="border border-stone-800 bg-stone-900/60 px-2 py-1.5"><span className="text-stone-500">在野</span><strong className="float-right text-amber-200">{summary.free}</strong></div>
@@ -143,6 +148,8 @@ export function PersonnelRosterDrawer() {
         setSelected(null);
         requestAnimationFrame(() => selectedTrigger.current?.focus());
       }} />
+      </div>
+      )}
     </div>
   );
 }

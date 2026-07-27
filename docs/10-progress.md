@@ -4257,3 +4257,24 @@
 - **Next（HC 线）**：HC-P1-4 王命封爵与爵位语义收口。
 
 *v15.7 | 2026-07-27 | Session 205 · HC-P1-3 完成*
+
+### Session 205 — CMD-P8 招贤写流程迁移
+
+- **同源迁移**：命令坞人事抽屉启用“招贤”，搜索/登用继续复用既有 Zustand action、
+  `/personnel/search|recruit` API、服务端权威 PRNG 与 shared 成功率公式；无 API、引擎、
+  schema 或存档改动。旧手风琴暂留作过渡对照。
+- **草稿/终审**：搜索城市与登用候选保持客户端草稿；取消只关闭统一 `CommandConfirmDialog`
+  并保留草稿，成功关闭终审并清除草稿。服务端失败时终审/草稿不丢失，错误原地展示。
+- **门槛重校验**：送审前明确无候选、无执行者、金不足三类禁用原因；搜索确认前复验执行者、
+  城池归属和金80，登用确认前复验 `FREE`/无势力与任一己方城金200。
+- **Headless**：1440×900 下旧/新搜索入口各1；搜索取消/成功、草稿清除；三类禁用全覆盖
+  （无执行者使用 DEV-only 派生夹具，不写权威状态）；释放夏侯惇后固定种子由曹操真实成功登用，
+  断言势力/状态；过期候选显示服务端错误且保留终审；控制台错误0。
+- **范围**：任官/赏罚仍 disabled，留 CMD-P9；旧入口删除留 CMD-P10。
+- **回归**：shared 197/197、client 19/19、根目录 33 个非浏览器 `verify-*` 全过，
+  其中 Campaign 71/71、人事确定性32/32、negotiation 40/40、turn-cadence 28/28、
+  存档迁移19/19；CMD-P7/P8 Headless、typecheck、lint、validate-data、build、diff-check 全绿。
+  build 仅保留既有 `>500 kB` chunk warning。
+- **Next（CMD 线）**：CMD-P9 任官、赏罚与朝廷/人物简册跨域导航迁移。
+
+*v15.8 | 2026-07-27 | Session 205 · CMD-P8 完成*

@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 205：HC-P1-3 王国官职完成** |
+| 会话 | **Session 205：HC-P1-3 王国官职 + CMD-P8 招贤写流程迁移完成** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **22 大** |
-| 代码最新 | **HC-P1-3 王国六职** + CMD-P7 命令坞人事只读名册 + HC-P1-2 称王转移 |
-| 文档最新 | `28-hc-p1-king-design.md` 的 HC-P1-1/2/3 已实施；朝廷官制总览留 HC-P1-5 |
+| 代码最新 | **HC-P1-3 王国六职** + **CMD-P8 命令坞人事招贤写流程** + CMD-P7 只读名册 |
+| 文档最新 | `28-hc-p1-king-design.md` 的 HC-P1-1/2/3 已实施；人事抽屉“名册/招贤”已接入 |
 | 本交接用途 | 190四槽技术切片已可运行；0-A验收基线仍为30武将；0-B继续暂缓；**README 吕布四页签截图已替换** |
-| 玩法下一步 | HC-P1 下一项为 P1-4 王命封爵与爵位语义收口；CMD 下一项为 P8 招贤写流程。 |
+| 玩法下一步 | HC-P1 下一项为 P1-4 王命封爵与爵位语义收口；CMD 下一项为 P9 任官/赏罚与跨域跳转。 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -23,6 +23,10 @@ AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lin
 
 Session 201 回归基线：shared 197/197、client 14/14、Campaign 71/71、plot/spy RNG 34/34、
 HC-P0 101/101，根目录 31 个非浏览器 `verify-*` 全过；typecheck/lint/data/build 全绿。
+
+CMD-P8 回归基线：shared 197/197、client 19/19、根目录 33 个非浏览器 `verify-*` 全过；
+Campaign 71/71、人事32/32、negotiation 40/40、turn-cadence 28/28、存档迁移19/19；
+CMD-P7/P8 Headless 与 typecheck/lint/data/build 全绿。
 
 ---
 
@@ -43,6 +47,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
 # CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
 # CMD-P7 人事只读名册（同上；含100/1000条合成夹具）: pnpm verify-cmd-p7-headless
+# CMD-P8 招贤写流程（同上；取消/成功/失败+三类禁用）: pnpm verify-cmd-p8-headless
 # 称王门槛/阶段年龄: pnpm verify-hc-p1-1   # 15项断言
 # 称王状态转移/王号: pnpm verify-hc-p1-2  # 36项断言
 # 王国六职: pnpm verify-hc-p1-3             # 41项断言
