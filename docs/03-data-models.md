@@ -777,7 +777,7 @@ export interface Faction {
   technology: TechnologyLevel;
   activePolicy: string | null;
 
-  // 霸府/称王/称帝主线（docs/26，Session 188 Q1~Q11 已批准，HC-P0-2/3 已实装，HC-P0-4 已实装）
+  // 霸府/称王/称帝主线（docs/26/28，Session 188 Q1~Q11 已批准；HC-P0-2/3/4/5/6 已实装；HC-P1-1/2/3 已实装）
   politicalStage?: 'vassal' | 'hegemon' | 'king' | 'emperor';  // 政治阶段状态机，默认 vassal
   politicalTitle?: string;                                      // 政治头衔（与 politicalStage 一一对应，Q7 方案B）
   politicalStageChangedYear?: number;                           // 开府/称王/称帝年份记录
