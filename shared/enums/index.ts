@@ -289,10 +289,13 @@ export enum MilitaryPosition {
 
 export enum NobilityRank {
   NONE = 'none',
-  MARQUIS = 'marquis',
+  GUANNEI_MARQUIS = 'guanneiMarquis',
+  TING_MARQUIS = 'tingMarquis',
+  XIANG_MARQUIS = 'xiangMarquis',
+  XIAN_MARQUIS = 'xianMarquis',
   DUKE = 'duke',
-  PRINCE = 'prince',
   KING = 'king',
+  EMPEROR = 'emperor',
 }
 
 export enum ArmyStatus {

@@ -62,6 +62,24 @@ describe('current save migration dispatch', () => {
     expect(migrateSaveEnvelopeToCurrent(envelope)).toBe(envelope);
   });
 
+  it('maps the legacy five-rank nobility strings before strict snapshot validation', () => {
+    const envelope = {
+      ...validEnvelope(),
+      snapshot: {
+        officers: {
+          1: { nobilityRank: 'none' },
+          2: { nobilityRank: 'marquis' },
+          3: { nobilityRank: 'duke' },
+          4: { nobilityRank: 'prince' },
+          5: { nobilityRank: 'king' },
+        },
+      },
+    };
+    const migrated = migrateSaveEnvelopeToCurrent(envelope) as typeof envelope;
+    expect(Object.values(migrated.snapshot.officers).map((officer) => officer.nobilityRank))
+      .toEqual(['none', 'xianMarquis', 'duke', 'king', 'emperor']);
+  });
+
   it('rejects missing, legacy, future, and non-numeric versions', () => {
     for (const schemaVersion of [undefined, 0, 2, '1']) {
       const input = schemaVersion === undefined

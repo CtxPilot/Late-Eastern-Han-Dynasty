@@ -230,15 +230,18 @@ export enum MilitaryPosition {
 }
 
 export enum NobilityRank {
-  NONE = 0,
-  GUANNEI_MARQUIS,   // 关内侯（无封地，不世袭）
-  TING_MARQUIS,      // 亭侯
-  XIANG_MARQUIS,     // 乡侯
-  XIAN_MARQUIS,      // 县侯（列侯最高等）
-  DUKE,              // 公
-  KING,              // 王
-  EMPEROR,           // 皇帝
+  NONE = 'none',
+  GUANNEI_MARQUIS = 'guanneiMarquis',
+  TING_MARQUIS = 'tingMarquis',
+  XIANG_MARQUIS = 'xiangMarquis',
+  XIAN_MARQUIS = 'xianMarquis',
+  DUKE = 'duke',
+  KING = 'king',
+  EMPEROR = 'emperor',
 }
+
+// 旧 v1 五级存档：none→none、marquis→xianMarquis、
+// duke→duke、prince→king、king→emperor（严格 Schema 校验前幂等迁移）
 
 // ========================
 // 单挑

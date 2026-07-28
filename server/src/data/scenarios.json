@@ -150,7 +150,7 @@
           "officerId": 2,
           "cityId": 14,
           "factionId": 2,
-          "nobilityRank": "prince",
+          "nobilityRank": "king",
           "loyalty": 100
         },
         {
@@ -192,7 +192,7 @@
           "officerId": 3,
           "cityId": 17,
           "factionId": 3,
-          "nobilityRank": "prince",
+          "nobilityRank": "king",
           "loyalty": 100
         },
         {

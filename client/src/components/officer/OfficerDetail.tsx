@@ -39,10 +39,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 const NOBILITY_LABEL: Record<string, string> = {
   none: '无',
-  marquis: '侯',
+  guanneiMarquis: '关内侯',
+  tingMarquis: '亭侯',
+  xiangMarquis: '乡侯',
+  xianMarquis: '县侯',
   duke: '公',
-  prince: '王',
-  king: '皇帝',
+  king: '王',
+  emperor: '皇帝',
 };
 
 const SKILL_NAME: Record<string, string> = {

@@ -42,6 +42,45 @@ function readSaveSchemaVersion(input: unknown): unknown {
     : undefined;
 }
 
+const LEGACY_NOBILITY_RANK_MAP = {
+  none: 'none',
+  marquis: 'xianMarquis',
+  duke: 'duke',
+  prince: 'king',
+  king: 'emperor',
+} as const;
+
+/**
+ * K6 方案 A：v1 早期存档曾使用五级字符串枚举。由于存档版本仍为 v1，
+ * 在严格 GameState 校验前做幂等字段迁移；新七级值原样保留。
+ */
+function migrateLegacyNobilityRanks(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const envelope = input as { snapshot?: unknown };
+  if (typeof envelope.snapshot !== 'object' || envelope.snapshot === null) return input;
+  const snapshot = envelope.snapshot as { officers?: unknown };
+  if (typeof snapshot.officers !== 'object' || snapshot.officers === null) return input;
+
+  let changed = false;
+  const officers = Object.fromEntries(
+    Object.entries(snapshot.officers).map(([id, value]) => {
+      if (typeof value !== 'object' || value === null) return [id, value];
+      const officer = value as { nobilityRank?: unknown };
+      const mapped =
+        typeof officer.nobilityRank === 'string'
+          ? LEGACY_NOBILITY_RANK_MAP[
+              officer.nobilityRank as keyof typeof LEGACY_NOBILITY_RANK_MAP
+            ]
+          : undefined;
+      if (!mapped || mapped === officer.nobilityRank) return [id, value];
+      changed = true;
+      return [id, { ...officer, nobilityRank: mapped }];
+    }),
+  );
+  if (!changed) return input;
+  return { ...envelope, snapshot: { ...snapshot, officers } };
+}
+
 /**
  * 将任意已解析的存档信封分派到当前版本。
  *
@@ -53,7 +92,7 @@ export function migrateSaveEnvelopeToCurrent(input: unknown): unknown {
 
   switch (version) {
     case CURRENT_SAVE_SCHEMA_VERSION:
-      return input;
+      return migrateLegacyNobilityRanks(input);
     default:
       throw new UnsupportedSaveVersionError(version);
   }

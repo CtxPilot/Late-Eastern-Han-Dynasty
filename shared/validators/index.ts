@@ -31,6 +31,16 @@ const UnitTypeSchema = z.enum([
 ]);
 
 const UnitProficiencySchema = z.enum(['S', 'A', 'B', 'C', 'NONE']);
+const NobilityRankSchema = z.enum([
+  'none',
+  'guanneiMarquis',
+  'tingMarquis',
+  'xiangMarquis',
+  'xianMarquis',
+  'duke',
+  'king',
+  'emperor',
+]);
 const TerrainTypeSchema = z.enum([
   'plain',
   'forest',
@@ -447,7 +457,7 @@ export const ScenarioStaticSchema = z.object({
         civilPosition: z.string().optional(),
         localPosition: z.string().optional(),
         militaryPosition: z.string().optional(),
-        nobilityRank: z.string().optional(),
+        nobilityRank: NobilityRankSchema.optional(),
         merit: z.number().optional(),
         loyalty: z.number().min(0).max(100),
       }),

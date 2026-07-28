@@ -23,6 +23,7 @@
     "expression.ts",
     "scenes.ts",
     "hegemony.ts",
+    "nobility.ts",
     "battlefield-instance-schema.ts",
     "nanjun-battlefield.ts",
     "save.ts",
