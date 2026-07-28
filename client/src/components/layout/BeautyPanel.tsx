@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { OfficerStatus } from '@leh/shared';
 
 /**
  * S09 美女资源：仅势力库存赏赐
@@ -20,7 +21,7 @@ export function BeautyPanel() {
   const officers = useMemo(() => {
     if (!game) return [];
     return Object.values(game.officers)
-      .filter((o) => o.faction === game.playerFactionId)
+      .filter((o) => o.faction === game.playerFactionId && o.status === OfficerStatus.ACTIVE)
       .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
   }, [game]);
 
@@ -81,7 +82,7 @@ export function BeautyPanel() {
         validateBeforeConfirm={() => {
           const latest = useGameStore.getState().game;
           const target = officerId == null ? null : latest?.officers[officerId];
-          if (!latest || !target || target.faction !== latest.playerFactionId) return '赏赐目标已失效，请返回修改。';
+          if (!latest || !target || target.faction !== latest.playerFactionId || target.status !== OfficerStatus.ACTIVE) return '赏赐目标已不处于本势力在职状态。';
           return (latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 1
             ? '美女库存不足（需1）。'
             : null;

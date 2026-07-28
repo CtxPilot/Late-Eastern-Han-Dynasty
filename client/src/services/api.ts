@@ -201,6 +201,14 @@ export async function appointOfficer(
   return data;
 }
 
+export async function grantNobility(officerId: number, targetRank: string): Promise<GameState> {
+  const { data } = await http.post<GameState>('/court/grant-nobility', {
+    officerId,
+    targetRank,
+  });
+  return data;
+}
+
 export async function recruitSpies(cityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/intel/recruit', { cityId });
   return data;

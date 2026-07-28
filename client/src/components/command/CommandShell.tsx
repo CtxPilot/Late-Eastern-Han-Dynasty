@@ -30,7 +30,7 @@ export function CommandShell() {
           {activeItem.domain === 'court' ? (
             <CourtCommandDrawer shellState={state} dispatch={dispatch} />
           ) : activeItem.domain === 'personnel' ? (
-            <PersonnelRosterDrawer />
+            <PersonnelRosterDrawer shellState={state} />
           ) : (
             <>
               <p>{activeItem.reason}。</p>

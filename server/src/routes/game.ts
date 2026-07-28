@@ -188,6 +188,19 @@ gameRouter.post('/personnel/appoint', (req, res) => {
   }
 });
 
+gameRouter.post('/court/grant-nobility', (req, res) => {
+  try {
+    res.json(
+      gameService.doGrantNobility(
+        Number(req.body.officerId),
+        String(req.body.targetRank) as import('@leh/shared').NobilityRank,
+      ),
+    );
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'grant nobility failed' });
+  }
+});
+
 gameRouter.get('/march/can-reach/:targetCityId', (req, res) => {
   try {
     res.json({ ok: gameService.canMarchTo(Number(req.params.targetCityId)) });

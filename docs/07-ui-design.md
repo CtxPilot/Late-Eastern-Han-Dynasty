@@ -1322,6 +1322,14 @@ type CommandShellState = {
   快照复验执行者、城池、资源和候选状态。失败保留终审与草稿并展示服务端错误。旧手风琴在
   CMD-P10 前暂留作对照；任官/赏罚仍 disabled，未提前迁移。完整验收见
   `docs/reviews/session-205-cmd-p8-recruitment-migration.md`。
+- Session 210 CMD-P9 已启用“任官/赏罚”分面。任官直接复用既有 `AppointPanel` 与唯一
+  `appointOfficer` 引擎，包含文官/地方/武官/霸府/王国五轨、草稿、统一终审及确认前复验；
+  赏罚复用 `BeautyPanel` 与 `rewardBeautyStock`，没收/俘虏录用仅标设计中且无按钮。
+- 朝廷“前往人事·任命”改由命令壳 `select-command` 携带
+  `{facet:'appointment', track:'hegemony'}`，直接定位任官朝职轨道，不再依赖临时 DOM 事件。
+  旧手风琴仍保留至 CMD-P10 原子切换。
+- HC-P1-4“王命·封爵”展示受封者、旧爵→新爵、皇权与不可撤销，复用
+  `CommandConfirmDialog danger` 深红重大终审（Enter 不触发确认），确认前读取最新状态复验。
 
 ### 12.3 文教、声教、学派与技艺
 

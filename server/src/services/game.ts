@@ -109,6 +109,7 @@ import {
 } from '../engine/grandStrategist.js';
 import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
+import { grantNobility } from '../engine/nobility.js';
 import { broadcast } from '../ws/broadcast.js';
 import { resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
 import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateNanjunBattlefield } from '@leh/shared';
@@ -522,6 +523,18 @@ export function doAppoint(
       track,
       position,
       cityId != null ? cityId : undefined,
+    );
+    return getClientGame();
+  });
+}
+
+export function doGrantNobility(officerId: number, targetRank: NobilityRank): GameState {
+  return withLock(() => {
+    currentGame = grantNobility(
+      getGame(),
+      getGame().playerFactionId,
+      officerId,
+      targetRank,
     );
     return getClientGame();
   });

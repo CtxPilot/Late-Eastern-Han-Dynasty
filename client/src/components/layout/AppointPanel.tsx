@@ -56,15 +56,29 @@ const HEG_OPTS = [
 /**
  * S11/S12 任命：三轨官职（0-A 精简）
  */
-export function AppointPanel() {
+export function AppointPanel({
+  initialTrack = 'military',
+  initialOfficerId,
+}: {
+  initialTrack?: PositionTrack;
+  initialOfficerId?: number;
+} = {}) {
   const game = useGameStore((s) => s.game);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const appointOfficer = useGameStore((s) => s.appointOfficer);
   const loading = useGameStore((s) => s.loading);
 
-  const [officerId, setOfficerId] = useState<number | ''>('');
-  const [track, setTrack] = useState<PositionTrack>('military');
-  const [position, setPosition] = useState<string>(MilitaryPosition.CAPTAIN);
+  const [officerId, setOfficerId] = useState<number | ''>(initialOfficerId ?? '');
+  const [track, setTrack] = useState<PositionTrack>(initialTrack);
+  const [position, setPosition] = useState<string>(
+    initialTrack === 'civil'
+      ? CivilPosition.CLERK
+      : initialTrack === 'local'
+        ? LocalPosition.PREFECT
+        : initialTrack === 'hegemony'
+          ? HegemonyPosition.GRAND_COMMANDER
+          : MilitaryPosition.CAPTAIN,
+  );
   const [confirmOpen, setConfirmOpen] = useState(false);
   const error = useGameStore((s) => s.error);
 

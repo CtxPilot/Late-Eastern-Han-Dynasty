@@ -80,4 +80,20 @@ describe('commandShellReducer', () => {
     });
     expect(commandShellReducer(state, { type: 'reset' })).toBe(INITIAL_COMMAND_SHELL_STATE);
   });
+
+  it('carries a formal cross-drawer appointment intent without copying form state', () => {
+    const state = commandShellReducer(INITIAL_COMMAND_SHELL_STATE, {
+      type: 'select-command',
+      domain: 'personnel',
+      commandId: 'appoint',
+      parameters: { facet: 'appointment', track: 'hegemony', officerId: 9 },
+    });
+    expect(state.activeDomain).toBe('personnel');
+    expect(state.activeCommand).toBe('appoint');
+    expect(state.draftByDomain.personnel?.parameters).toEqual({
+      facet: 'appointment',
+      track: 'hegemony',
+      officerId: 9,
+    });
+  });
 });

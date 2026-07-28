@@ -7,12 +7,15 @@ import {
   findDiplomacy,
   HEGEMONY_LABELS,
   HegemonyPosition,
+  NOBILITY_LABELS,
+  NobilityRank,
+  OfficerStatus,
+  nextNobilityRank,
   type GameState,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction, CommandShellState } from './commandShellState';
-import { openLegacyPersonnelPanel } from './commandNavigation';
 
 const STAGE_LABEL = {
   vassal: '诸侯',
@@ -76,6 +79,34 @@ export function buildCourtViewModel(game: GameState) {
           officer.faction === factionId && officer.hegemonyPosition === position,
       ),
     })),
+    nobilityCandidates: Object.values(game.officers)
+      .filter(
+        (officer) =>
+          officer.faction === factionId &&
+          officer.id !== faction.rulerId &&
+          officer.status === OfficerStatus.ACTIVE,
+      )
+      .map((officer) => {
+        const nextRank = nextNobilityRank(officer.nobilityRank);
+        const eligibleRank =
+          nextRank != null && nextRank !== NobilityRank.KING && nextRank !== NobilityRank.EMPEROR
+            ? nextRank
+            : null;
+        const cost = eligibleRank === NobilityRank.DUKE ? 20 : 10;
+        return {
+          officer,
+          nextRank: eligibleRank,
+          cost,
+          disabledReason:
+            stage !== 'king' && stage !== 'emperor'
+              ? '需先称王'
+              : eligibleRank == null
+                ? '已达臣属上限“公”'
+                : authority < cost
+                  ? `皇权不足（需${cost}）`
+                  : null,
+        };
+      }),
   };
 }
 
@@ -89,6 +120,7 @@ export function CourtCommandDrawer({
   const game = useGameStore((state) => state.game);
   const establishHegemony = useGameStore((state) => state.establishHegemony);
   const falseDecreeWar = useGameStore((state) => state.falseDecreeWar);
+  const grantNobility = useGameStore((state) => state.grantNobility);
   const loading = useGameStore((state) => state.loading);
   const error = useGameStore((state) => state.error);
   const clearError = useGameStore((state) => state.clearError);
@@ -101,6 +133,11 @@ export function CourtCommandDrawer({
       : null;
   const selectedTarget = model?.targets.find(
     ({ faction }) => faction.id === targetFactionId,
+  );
+  const nobilityOfficerId =
+    typeof draft?.parameters.officerId === 'number' ? draft.parameters.officerId : null;
+  const selectedNobility = model?.nobilityCandidates.find(
+    ({ officer }) => officer.id === nobilityOfficerId,
   );
 
   if (!game || !model) return <p>尚未载入朝廷状态。</p>;
@@ -150,6 +187,53 @@ export function CourtCommandDrawer({
               {model.cooldown > 0 ? `${model.cooldown}季` : '就绪'}
             </dd>
           </dl>
+        </section>
+
+        <section className="border-t border-stone-800 pt-3">
+          <h3 className="text-[11px] tracking-widest text-rose-300">王命 · 封爵</h3>
+          <p className="mt-1 text-[10px] leading-relaxed text-stone-600">
+            仅限同势力在职臣属；逐级晋升，最高至公，爵位终身不可撤销。
+          </p>
+          <select
+            data-testid="command-court-nobility-officer"
+            value={nobilityOfficerId ?? ''}
+            disabled={loading || (model.stage !== 'king' && model.stage !== 'emperor')}
+            onChange={(event) => {
+              clearError();
+              dispatch({
+                type: 'select-command',
+                domain: 'court',
+                commandId: 'grant-nobility',
+                parameters: { officerId: Number(event.target.value) },
+              });
+            }}
+            className="mt-2 w-full border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200 disabled:text-stone-600"
+          >
+            <option value="">选择受封者</option>
+            {model.nobilityCandidates.map(({ officer, nextRank, disabledReason }) => (
+              <option key={officer.id} value={officer.id}>
+                {officer.name} · {NOBILITY_LABELS[officer.nobilityRank]} →
+                {nextRank ? NOBILITY_LABELS[nextRank] : '已达上限'}
+                {disabledReason ? `（${disabledReason}）` : ''}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            data-testid="command-court-nobility-review"
+            disabled={loading || !selectedNobility || selectedNobility.disabledReason != null}
+            onClick={() => {
+              clearError();
+              setReviewOpen(true);
+            }}
+            className="mt-2 w-full border border-red-900 bg-red-950/20 px-3 py-2 text-left text-red-200 hover:bg-red-950/50 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
+          >
+            送交重大终审
+            <span className="ml-2 text-[10px] text-stone-500">
+              {selectedNobility?.disabledReason ??
+                (selectedNobility ? `皇权 ${selectedNobility.cost} · 不可撤销` : '尚未选择受封者')}
+            </span>
+          </button>
         </section>
 
         <section className="border-t border-stone-800 pt-3">
@@ -230,8 +314,12 @@ export function CourtCommandDrawer({
             type="button"
             data-testid="command-court-open-personnel"
             onClick={() => {
-              openLegacyPersonnelPanel();
-              dispatch({ type: 'close-drawer' });
+              dispatch({
+                type: 'select-command',
+                domain: 'personnel',
+                commandId: 'appoint',
+                parameters: { facet: 'appointment', track: 'hegemony' },
+              });
             }}
             className="mt-2 w-full border border-stone-700 px-3 py-2 text-left text-stone-300 hover:border-amber-800"
           >
@@ -240,6 +328,45 @@ export function CourtCommandDrawer({
         </section>
       </div>
 
+      <CommandConfirmDialog
+        open={reviewOpen && draft?.commandId === 'grant-nobility'}
+        category="朝廷 · 重大王命"
+        command={`确认封爵：${selectedNobility?.officer.name ?? '未选受封者'}`}
+        summary="爵位为终身制，当前版本没有撤爵或降爵接口；确认后不可撤销。"
+        items={[
+          { label: '受封者', value: selectedNobility?.officer.name ?? '—' },
+          {
+            label: '爵位变更',
+            value: selectedNobility?.nextRank
+              ? `${NOBILITY_LABELS[selectedNobility.officer.nobilityRank]} → ${NOBILITY_LABELS[selectedNobility.nextRank]}`
+              : '—',
+            tone: 'warning',
+          },
+          { label: '立即消耗', value: `皇权 ${selectedNobility?.cost ?? '—'}`, tone: 'warning' },
+          { label: '可否撤销', value: '不可撤销', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger
+        error={error}
+        fallbackFocusSelector='[data-testid="command-domain-court"]'
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const latestModel = latest ? buildCourtViewModel(latest) : null;
+          const latestCandidate = latestModel?.nobilityCandidates.find(
+            ({ officer }) => officer.id === nobilityOfficerId,
+          );
+          return latestCandidate?.disabledReason ??
+            (!latestCandidate?.nextRank ? '受封者或爵位状态已失效，请返回修改。' : null);
+        }}
+        onCancel={() => setReviewOpen(false)}
+        onConfirm={async () => {
+          if (!selectedNobility?.nextRank || selectedNobility.disabledReason) return;
+          await grantNobility(selectedNobility.officer.id, selectedNobility.nextRank);
+          if (useGameStore.getState().error) return;
+          setReviewOpen(false);
+          dispatch({ type: 'submit-succeeded', domain: 'court' });
+        }}
+      />
       <CommandConfirmDialog
         open={reviewOpen && draft?.commandId === 'establish-hegemony'}
         category="朝廷"

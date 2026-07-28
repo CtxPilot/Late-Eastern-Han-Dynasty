@@ -7,6 +7,9 @@ import { useGameStore } from '../../stores/gameStore';
 import { OfficerDetail } from '../officer/OfficerDetail';
 import { OfficerPortrait } from '../officer/OfficerPortrait';
 import { PersonnelRecruitDrawer } from './PersonnelRecruitDrawer';
+import { AppointPanel } from '../layout/AppointPanel';
+import { BeautyPanel } from '../layout/BeautyPanel';
+import type { CommandShellState } from './commandShellState';
 
 export type PersonnelRosterSort = 'name' | 'leadership' | 'war' | 'intelligence' | 'loyalty';
 export type PersonnelRosterScope = 'all' | 'active' | 'free';
@@ -62,13 +65,21 @@ function fixtureCount(): number | null {
   return requested === '100' || requested === '1000' ? Number(requested) : null;
 }
 
-export function PersonnelRosterDrawer() {
+export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShellState }) {
   const game = useGameStore((state) => state.game);
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<PersonnelRosterScope>('all');
   const [sort, setSort] = useState<PersonnelRosterSort>('leadership');
   const [selected, setSelected] = useState<Officer | null>(null);
-  const [facet, setFacet] = useState<'roster' | 'recruitment'>('roster');
+  const intendedFacet =
+    shellState.activeCommand === 'appoint'
+      ? 'appointment'
+      : shellState.activeCommand === 'reward'
+        ? 'reward'
+        : null;
+  const [facet, setFacet] = useState<'roster' | 'recruitment' | 'appointment' | 'reward'>(
+    intendedFacet ?? 'roster',
+  );
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
 
   const source = useMemo(() => {
@@ -96,12 +107,33 @@ export function PersonnelRosterDrawer() {
       <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="人事分面">
         <button type="button" data-testid="command-personnel-facet-roster" aria-current={facet === 'roster' ? 'page' : undefined} onClick={() => setFacet('roster')} className={`border py-1.5 ${facet === 'roster' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>名册</button>
         <button type="button" data-testid="command-personnel-facet-recruitment" aria-current={facet === 'recruitment' ? 'page' : undefined} onClick={() => setFacet('recruitment')} className={`border py-1.5 ${facet === 'recruitment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>招贤</button>
-        {['任官', '赏罚'].map((label) => (
-          <button key={label} type="button" disabled title="后续迁移阶段接入" className="border border-stone-800 py-1.5 text-stone-600">{label}</button>
-        ))}
+        <button type="button" data-testid="command-personnel-facet-appointment" aria-current={facet === 'appointment' ? 'page' : undefined} onClick={() => setFacet('appointment')} className={`border py-1.5 ${facet === 'appointment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>任官</button>
+        <button type="button" data-testid="command-personnel-facet-reward" aria-current={facet === 'reward' ? 'page' : undefined} onClick={() => setFacet('reward')} className={`border py-1.5 ${facet === 'reward' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>赏罚</button>
       </nav>
 
-      {facet === 'recruitment' ? <PersonnelRecruitDrawer /> : (
+      {facet === 'recruitment' ? <PersonnelRecruitDrawer /> : facet === 'appointment' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto" data-testid="command-personnel-appointment">
+          <AppointPanel
+            initialTrack={
+              shellState.draftByDomain.personnel?.parameters.track === 'hegemony'
+                ? 'hegemony'
+                : 'military'
+            }
+            initialOfficerId={
+              typeof shellState.draftByDomain.personnel?.parameters.officerId === 'number'
+                ? shellState.draftByDomain.personnel.parameters.officerId
+                : undefined
+            }
+          />
+        </div>
+      ) : facet === 'reward' ? (
+        <div className="min-h-0 flex-1 overflow-y-auto" data-testid="command-personnel-reward">
+          <BeautyPanel />
+          <p className="px-2 pt-3 text-[10px] text-stone-600">
+            没收、俘虏录用尚在设计中，本阶段不提供操作入口。
+          </p>
+        </div>
+      ) : (
       <div className="flex min-h-0 flex-1 flex-col" data-testid="command-personnel-roster">
       <div className="mb-2 grid grid-cols-2 gap-2" data-testid="personnel-roster-summary">
         <div className="border border-stone-800 bg-stone-900/60 px-2 py-1.5"><span className="text-stone-500">在职</span><strong className="float-right text-amber-200">{summary.active}</strong></div>

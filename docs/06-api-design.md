@@ -133,6 +133,8 @@ POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 �
   // UI 只保存城市/候选草稿，确认前重校验，未新增 API 或业务缓存。
 POST   /api/game/personnel/appoint         { officerId, track: civil|local|military, position, cityId? }
                                       // S11/S12 任命；position=none 解职；太守等 needsCity
+POST   /api/game/court/grant-nobility      { officerId, targetRank }
+                                      // HC-P1-4 王命封爵；逐级且臣属最高公
 POST   /api/game/personnel/release-officer { officerId }  // S18 跟随：释放为在野
 POST   /api/game/personnel/follow-check  {}  // S18 跟随：手动触发投奔检定
 
@@ -211,6 +213,10 @@ POST   /api/v1/games/:id/officers/:officerId/appoint
 Demo 实际 `POST /api/game/personnel/appoint` 的 `track='hegemony'` 继续编排同一任命引擎。
 HC-P1-3 后 `position` 可取霸府三职或王国六职；王国六职仅允许 `king/emperor`，均为势力唯一，
 同一人物的新朝职覆盖旧 `hegemonyPosition`。服务/API/store 不另建王国任命旁路。
+
+HC-P1-4 `POST /court/grant-nobility` 只编排权威 `grantNobility`。`targetRank` 必须等于受封者
+当前爵位的下一等级；服务端拒绝诸侯/霸府阶段、君主、异势力、非在职、越级、超过公及皇权不足。
+成功原子写爵位、扣皇权并记录 `grant_nobility`；不存在撤销端点。
 
 ### 2.4 军事
 

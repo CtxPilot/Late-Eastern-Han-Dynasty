@@ -70,6 +70,7 @@ interface Store {
     position: string,
     cityId?: number,
   ) => Promise<void>;
+  grantNobility: (officerId: number, targetRank: string) => Promise<void>;
   recruitSpies: (cityId: number) => Promise<void>;
   trainFemaleSpy: (cityId: number) => Promise<void>;
   spyMission: (
@@ -467,6 +468,16 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '任命完成' });
     } catch (e) {
       set({ error: errMsg(e, '任命失败'), loading: false });
+    }
+  },
+
+  grantNobility: async (officerId, targetRank) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.grantNobility(officerId, targetRank);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '封爵完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '封爵失败'), loading: false });
     }
   },
 
