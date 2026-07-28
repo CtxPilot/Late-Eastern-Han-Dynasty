@@ -4398,3 +4398,21 @@
 - **Next**：CMD-P10 人事旧入口原子切换。
 
 *v15.15 | 2026-07-28 | Session 212 · HC-P1 完成*
+
+### Session 213 — CMD-P10 人事旧入口原子切换
+
+- **原子下线**：物理删除 `LeftPanel` 旧“人事”手风琴及其名册、搜索/登用、任官、美女赏赐
+  JSX，同时删除旧 `leh:open-legacy-personnel` 兼容事件；不是 CSS 隐藏。服务端规则、
+  Zustand action、API、概率、成本、官职门槛和存档结构均未改变。
+- **唯一入口**：命令坞人事抽屉正式成为 `名册｜招贤｜任官｜赏罚` 唯一入口；朝廷官制继续
+  通过命令壳草稿意图直达“人事·任官·朝职”。未实装的没收、俘虏录用仍无按钮。
+- **仓库化验收**：新增 `pnpm verify-cmd-p10-headless`。1440×900 实测旧人事 DOM=0，
+  名册→人物简册、搜索取消不变/确认写 `personnel_search`、0-A 招贤空状态、武官任命写
+  `appoint`、赏罚入口唯一、朝廷往返后任官逻辑仍唯一，console error=0。
+- **验证**：shared 198/198、client 20/20、37 个根目录非浏览器 `verify-*` 全过（含
+  人事确定续玩32/32、存档迁移19/19、Campaign 71/71、HC-P1总链20/20）；
+  typecheck、lint、validate-data、build、diff-check 全绿。build 仅既有 `>500 kB` warning。
+- **Next（CMD 线）**：按 CMD-P5 已定顺序，下一迁移域为外交；先建立旧外交入口与权威写路径基线，
+  不直接删除旧入口。
+
+*v15.16 | 2026-07-28 | Session 213 · CMD-P10 完成*

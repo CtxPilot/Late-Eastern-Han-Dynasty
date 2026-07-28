@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 212：HC-P1-6 称王总验收** |
+| 会话 | **Session 213：CMD-P10 人事旧入口原子切换** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **HC-P1-1～6 全部完成；两剧本/新旧档/仓库化 Headless 总验收 + 首都失守君主迁移护栏** |
-| 文档最新 | `05/06/07/09/10/12/26/28` 已同步 HC-P1 完成状态、验收基线与占城不变量 |
-| 本交接用途 | HC-P1 已收尾；CMD-P9 人事写流程仍在 CMD-P10 前与旧手风琴并存对照 |
-| 玩法下一步 | CMD-P10 人事旧入口原子切换。 |
+| 代码最新 | **CMD-P6～10 全部完成；旧人事手风琴与兼容事件物理删除，命令坞人事抽屉为唯一入口** |
+| 文档最新 | `06/07/10/12` 已同步人事唯一入口、跨域导航与 CMD-P10 Headless 验收口径 |
+| 本交接用途 | HC-P1 与 CMD 人事迁移均已收尾；不得恢复旧人事入口或复制业务表单 |
+| 玩法下一步 | 按 CMD-P5 顺序进入外交域，但必须先建立迁移前基线。 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -45,6 +45,11 @@ Session 212 基线：`verify-hc-p1` 20/20，英雄集结与190沿官道攻城称
 流落在野、导致存档非法的边界。shared 198/198、client 20/20、37 个非浏览器 verify、
 typecheck/lint/data/build/diff-check 全绿；仅既有大 chunk warning。
 
+Session 213 基线：`verify-cmd-p10-headless` 在 1440×900 下确认旧人事 DOM=0，名册详情、
+搜索取消/确认、任官、赏罚唯一入口与朝廷→人事·任官·朝职往返全过，console error=0；
+旧兼容导航事件已删除。shared 198/198、client 20/20、37 个非浏览器 verify、typecheck、
+lint、validate-data、build、diff-check 全绿；仅既有大 chunk warning。
+
 ---
 
 ## 2. 怎么跑
@@ -65,6 +70,7 @@ pnpm --filter @leh/shared build && pnpm dev
 # CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
 # CMD-P7 人事只读名册（同上；含100/1000条合成夹具）: pnpm verify-cmd-p7-headless
 # CMD-P8 招贤写流程（同上；取消/成功/失败+三类禁用）: pnpm verify-cmd-p8-headless
+# CMD-P10 人事原子切换（需先启动 dev 与 1440×900 CDP 9238）: pnpm verify-cmd-p10-headless
 # 称王门槛/阶段年龄: pnpm verify-hc-p1-1   # 15项断言
 # 称王状态转移/王号: pnpm verify-hc-p1-2  # 36项断言
 # 王国六职: pnpm verify-hc-p1-3             # 41项断言
@@ -100,7 +106,7 @@ pnpm --filter @leh/shared build && pnpm dev
 | S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30/30）；L2 11计/L3 8国策仍设计；AI 发起决策仍属 S15 |
 | S18 | 家族 | **M+** | 跟随/默认忠诚接权威 PRNG，确定续玩 32/32；婚配与固定子女登场零随机；父辈/族谱 ❌ |
 | S19 | **单挑大会** | **D** | §8.17 独立锦标赛：赛制/押注/称号/叙事/数据结构设计完成，引擎待实现 |
-| S20 | **前端体验** | **S/D** | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报及人事统一终审窗；Session 124 将详情升级为人物简册，并加入吕布/关羽/诸葛亮/曹操首批程序化头像与快捷入口。W4 其余子项与 W1~W3 仍为设计中，详见 `07-ui-design.md` §11.1.4/§12 |
+| S20 | **前端体验** | **S/M** | CMD-P0～P10 已完成命令壳、朝廷域及人事域迁移；人事抽屉为名册/招贤/五轨任官/赏罚唯一入口。外交等其他域与 W1～W4 未完成项仍待实施，详见 `07-ui-design.md` §11.1.4/§12 |
 | S21 | **战争四层串联** | **D** | 行政大地图→郡域战场→局部交战→单挑演出；自动/标准/六角微操为三种交战结算模式 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体 Ma Shan Zheng，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字重扩展。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
 
@@ -314,7 +320,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 0-B 全量 | **暂缓** |
 | 存档 SQLite | 未做 |
 | **190全势力开局** | 当前只有董卓/袁绍/曹操/孙坚四槽技术切片；约30势力名单、营地/寄驻/从属军和全量事件池未入库 |
-| **S20 前端体验** | S/D：Session 122 已实装武将名册/详情、低忠诚警报与首批人事终审窗；S20-W4 其余子项及 W1~W3 待续 |
+| **S20 前端体验** | S/M：CMD-P0～P10 已完成命令壳、朝廷与人事域迁移；外交等其他域及 S20-W4/W1～W3 未完成项待续 |
 | **S21 战争四层串联** | Session 100 技术储备方案完成；Session 168 统一为四层/三模式，实装仍拆 W6~W9 |
 | **S22 美术基调·金石水墨免版权** | Session 101 最高准则固化 + 方案设计完成，实装拆 3 子 Session（P5-10a/b/c，Phase 5 排定） |
 | **D-0B-1~13 技术债** | 0-B 扩容前必须先清（store 拆分/LOD 拖拽冻结/useMemo/viewport culling/矢量州界/screen 状态机/appearance+avatarGene 全量填写/吕布服务端无双/§35 财政俸禄/PCG 底图替换/activeStrategem 字段/S17 L2 水攻伏兵引擎/UI 字体白名单扫描） |

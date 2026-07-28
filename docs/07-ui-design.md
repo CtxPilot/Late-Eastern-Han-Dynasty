@@ -1328,6 +1328,11 @@ type CommandShellState = {
 - 朝廷“前往人事·任命”改由命令壳 `select-command` 携带
   `{facet:'appointment', track:'hegemony'}`，直接定位任官朝职轨道，不再依赖临时 DOM 事件。
   旧手风琴仍保留至 CMD-P10 原子切换。
+- Session 213 CMD-P10 已完成按域原子切换：`LeftPanel` 中旧“人事”手风琴、旧名册/
+  搜索/任官/赏罚 JSX 及兼容导航事件均已物理删除，不以 CSS 隐藏。命令坞人事抽屉成为
+  `名册｜招贤｜任官｜赏罚` 唯一生产入口；朝廷官制继续通过壳状态携带
+  `{facet:'appointment', track:'hegemony'}` 往返。浏览器验收必须断言旧人事 DOM=0、
+  当前分面每类提交入口恰为1、名册→详情→搜索→任官→朝廷往返完整且 console error=0。
 - HC-P1-4“王命·封爵”展示受封者、旧爵→新爵、皇权与不可撤销，复用
   `CommandConfirmDialog danger` 深红重大终审（Enter 不触发确认），确认前读取最新状态复验。
 
@@ -1508,4 +1513,4 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
 
 ---
 
-*文档版本: v4.6 | 2026-07-28 | Session 212 HC-P1 仓库化 Headless 验收*
+*文档版本: v4.7 | 2026-07-28 | Session 213 CMD-P10 人事旧入口原子切换*

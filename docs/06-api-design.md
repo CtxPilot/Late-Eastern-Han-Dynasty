@@ -129,8 +129,9 @@ POST   /api/game/personnel/gift-beauty { femaleId, officerId }  // 赏赐 100金
 POST   /api/game/personnel/join-faction  { officerId, factionId, cityId? }  // S18 跟随：入势力，妻跟随
 POST   /api/game/personnel/search          { cityId }              // S11 搜索：己方城 80金
 POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 登用在野男将 200金；R2 UI 显式提交君主并显示共享成功率
-  // CMD-P8：命令坞“招贤”与过渡期旧人事入口复用上述两个端点和同一 store action；
-  // UI 只保存城市/候选草稿，确认前重校验，未新增 API 或业务缓存。
+  // CMD-P10：命令坞“人事”已成为名册/招贤/任官/赏罚唯一入口；
+  // 搜索、登用仍复用上述端点和同一 store action。UI 只保存城市/候选草稿，
+  // 确认前重校验，未新增 API 或业务缓存；旧人事手风琴已物理删除。
 POST   /api/game/personnel/appoint         { officerId, track: civil|local|military, position, cityId? }
                                       // S11/S12 任命；position=none 解职；太守等 needsCity
 POST   /api/game/court/grant-nobility      { officerId, targetRank }
@@ -843,4 +844,4 @@ HC-P1-6 没有新增业务端点；仓库化 `verify-hc-p1-headless` 只串联�
 
 ---
 
-*文档版本: v3.4 | 2026-07-28 | Session 212 HC-P1 公开 API 全链验收*
+*文档版本: v3.5 | 2026-07-28 | Session 213 CMD-P10 人事唯一入口收口*

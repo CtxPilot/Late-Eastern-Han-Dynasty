@@ -48,6 +48,7 @@
     "verify-cmd-p7-headless": "node scripts/verify-cmd-p7-headless.mjs",
     "verify-cmd-p8-headless": "node scripts/verify-cmd-p8-headless.mjs",
     "verify-cmd-p9-headless": "node scripts/verify-cmd-p9-headless.mjs",
+    "verify-cmd-p10-headless": "node scripts/verify-cmd-p10-headless.mjs",
     "verify-hc-p1-headless": "node scripts/verify-hc-p1-headless.mjs",
     "verify-hc-p1-1": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-hc-p1-1",
     "verify-hc-p1-2": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-hc-p1-2",

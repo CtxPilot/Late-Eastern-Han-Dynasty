@@ -1,26 +1,20 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { calculateAllianceChance, findDiplomacy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
-import { BeautyPanel } from './BeautyPanel';
 import { FamilyPanel } from './FamilyPanel';
 import { SpyPanel } from './SpyPanel';
 import { PlotPanel } from './PlotPanel';
-import { PersonnelPanel } from './PersonnelPanel';
-import { AppointPanel } from './AppointPanel';
-import { OfficerRosterPanel } from './OfficerRosterPanel';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
-import { OPEN_LEGACY_PERSONNEL_EVENT } from '../command/commandNavigation';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 
 type AccordionKey =
   | 'campaign'
-  | 'personnel'
   | 'family'
   | 'intel'
   | 'plot'
@@ -61,15 +55,6 @@ export function LeftPanel() {
     | { type: 'plant-female'; factionId: number }
     | null
   >(null);
-
-  useEffect(() => {
-    const openPersonnel = () => {
-      clearError();
-      setOpen('personnel');
-    };
-    window.addEventListener(OPEN_LEGACY_PERSONNEL_EVENT, openPersonnel);
-    return () => window.removeEventListener(OPEN_LEGACY_PERSONNEL_EVENT, openPersonnel);
-  }, [clearError]);
 
   const familyCount = useMemo(() => {
     if (!game) return 0;
@@ -182,37 +167,6 @@ export function LeftPanel() {
           onToggle={() => toggle('family')}
         >
           <FamilyPanel />
-        </AccSection>
-
-        <AccSection
-          title="人事"
-          badge={beautyStock > 0 ? `美${beautyStock}` : undefined}
-          accent="personnel"
-          open={open === 'personnel'}
-          onToggle={() => toggle('personnel')}
-        >
-          <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
-            武将名册
-          </div>
-          <OfficerRosterPanel />
-          <div className="border-t border-stone-800 mt-0.5 pt-0.5">
-            <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
-              搜索与登用
-            </div>
-          <PersonnelPanel />
-          </div>
-          <div className="border-t border-stone-800 mt-0.5 pt-0.5">
-            <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
-              任命
-            </div>
-            <AppointPanel />
-          </div>
-          <div className="border-t border-stone-800 mt-0.5 pt-0.5">
-            <div className="px-3 py-1 text-[10px] text-rose-400/80 font-medium">
-              美女资源
-            </div>
-            <BeautyPanel />
-          </div>
         </AccSection>
 
         <AccSection
