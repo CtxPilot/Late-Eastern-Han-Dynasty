@@ -9,10 +9,10 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 213：CMD-P10 人事旧入口原子切换** |
+| 会话 | **Session 214：全量文档进度同步** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
 | 代码最新 | **CMD-P6～10 全部完成；旧人事手风琴与兼容事件物理删除，命令坞人事抽屉为唯一入口** |
-| 文档最新 | `06/07/10/12` 已同步人事唯一入口、跨域导航与 CMD-P10 Headless 验收口径 |
+| 文档最新 | `01/06/07/08/09/10/12/26` 及 CMD 规划/基线报告已同步 HC-P1、CMD-P10 完成状态 |
 | 本交接用途 | HC-P1 与 CMD 人事迁移均已收尾；不得恢复旧人事入口或复制业务表单 |
 | 玩法下一步 | 按 CMD-P5 顺序进入外交域，但必须先建立迁移前基线。 |
 
@@ -49,6 +49,9 @@ Session 213 基线：`verify-cmd-p10-headless` 在 1440×900 下确认旧人事 
 搜索取消/确认、任官、赏罚唯一入口与朝廷→人事·任官·朝职往返全过，console error=0；
 旧兼容导航事件已删除。shared 198/198、client 20/20、37 个非浏览器 verify、typecheck、
 lint、validate-data、build、diff-check 全绿；仅既有大 chunk warning。
+
+Session 214 仅做全量文档进度同步，无运行时代码、数据、Schema、API 或测试逻辑变化；
+沿用 Session 213 全量回归基线。
 
 ---
 
@@ -371,7 +374,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 |------|------|
 | `HANDOFF.md` | 本文件 |
 | `docs/10-progress.md` | 任务表 + 会话日志 |
-| `docs/12-system-map.md` | **23 系统**（v8.3：Session 172 新增 S23 人物状态表情系统，挂 S22 美术基调 C 层状态化扩展；含 S22 与 D-0B-13） |
+| `docs/12-system-map.md` | **23 系统**（v8.9：HC-P1 与 CMD-P10 完成；命令坞人事抽屉为唯一入口） |
 | `docs/02-architecture.md` | **v2.0** 架构总图 + 20引擎 + 5战斗子模块 + 数据流 + shared工具链（Session 75 全面重写） |
 | `docs/05-combat-system.md` | §5.4 战法+三级水军 · §5.5 **主副将与参谋编成**+爵位加成 · §七 计策 · §6 暴击反击连击(战场) · §8 单挑经典化设计(§8.1~8.16 核心三角+叙事+**宿命对决详表**) |
 | `docs/00-dev-constitution.md` | 开发总则（**v1.6 §十一 美术与版权铁律**） |
@@ -379,7 +382,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | `docs/11-context-management.md` | 适性 S~NONE 系数 |
 | `docs/04-game-systems.md` | 规则大全 |
 | `docs/06-api-design.md` | 含 `/battle/fire` + `/battle/ability` |
-| `docs/07-ui-design.md` | UI 设计（**v3.4：武将名册/详情 + 人事终审窗已实装；§12 其余命令 UI 仍设计中；Session 195 详细实施计划见 reviews**） |
+| `docs/07-ui-design.md` | UI 设计（**v4.7：命令壳、朝廷域、人事域迁移完成；外交等其余命令域待续**） |
 | `docs/15-linux-ui-spec.md` | **v1.0** Linux UI 与跨平台字体规范（Session 102 新建） |
 | `docs/16-demo-build-playbook.md` | 0-A Demo 12回合流程；严格标注已验证、引擎受阻、替代展示与设计中能力 |
 | `docs/24-character-expression-system-design.md` | S23 人物状态表情系统设计（Session 172；3 原型占位，程序化 SVG 分层；状态→图层映射纯函数 + 背景色调层） |
@@ -392,7 +395,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（待用户选择）** | **HC-P0-1~6 已全部完成**。下一主线可选 HC-P1（称王+王国官职），或回到既有 R3（S10 单挑四倾向）；不得自行并行开启。 |
+| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P6～10 均已完成**。按 CMD-P5 既定顺序，下一迁移域为外交；必须先建立迁移前字段/action/API/Headless 基线，不得直接原子切换。 |
 | **Session 203 CMD-P6 已完成** | 人事旧入口、权威/草稿/门槛/终审/action/API 清单与 1440×900 Headless 基线已仓库化；分面固定为“名册｜招贤｜任官｜赏罚”，调动仅设计中。下一步 CMD-P7 只迁名册读路径；旧手风琴仍是唯一生产入口。 |
 | **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
