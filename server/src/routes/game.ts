@@ -380,6 +380,14 @@ gameRouter.post('/hegemony/establish', (_req, res) => {
   }
 });
 
+gameRouter.get('/hegemony/king-requirements', (_req, res) => {
+  try {
+    res.json(gameService.getCurrentKingRequirements());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get king requirements failed' });
+  }
+});
+
 gameRouter.post('/hegemony/proclaim-king', (req, res) => {
   try {
     res.json(gameService.doProclaimKing(String(req.body.kingdomName ?? '')));

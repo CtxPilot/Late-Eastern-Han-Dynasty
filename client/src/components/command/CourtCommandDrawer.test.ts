@@ -6,7 +6,7 @@ import { DipRelation, HegemonyPosition, type GameState } from '@leh/shared';
 import { buildCourtViewModel } from './CourtCommandDrawer';
 
 function makeGame(overrides?: {
-  stage?: 'vassal' | 'hegemon';
+  stage?: 'vassal' | 'hegemon' | 'king';
   authority?: number;
   cooldown?: number;
   relation?: DipRelation;
@@ -22,8 +22,8 @@ function makeGame(overrides?: {
         name: '曹操军',
         rulerId: 1,
         politicalStage: stage,
-        politicalTitle: stage === 'hegemon' ? '丞相' : undefined,
-        imperialAuthority: overrides?.authority ?? (stage === 'hegemon' ? 100 : 0),
+        politicalTitle: stage === 'hegemon' ? '丞相' : stage === 'king' ? '魏王' : undefined,
+        imperialAuthority: overrides?.authority ?? (stage === 'vassal' ? 0 : 100),
         imperialDecreeCooldown: overrides?.cooldown ?? 0,
       },
       2: { id: 2, name: '孙坚军', rulerId: 2, isAlive: true },
@@ -81,13 +81,13 @@ describe('buildCourtViewModel (CMD-P2)', () => {
     ).toBeNull();
   });
 
-  it('shows all three hegemony offices and their current holders without creating appointment state', () => {
+  it('derives the complete three hegemony plus six kingdom office overview without creating appointment state', () => {
     const offices = buildCourtViewModel(makeGame({ stage: 'hegemon' }))?.offices;
 
-    expect(offices).toHaveLength(3);
+    expect(offices).toHaveLength(9);
     expect(offices?.find((office) => office.position === HegemonyPosition.GRAND_CAPTAIN)?.holder?.name)
       .toBe('夏侯惇');
-    expect(offices?.filter((office) => officerIsVacant(office.holder))).toHaveLength(2);
+    expect(offices?.filter((office) => officerIsVacant(office.holder))).toHaveLength(8);
   });
 });
 

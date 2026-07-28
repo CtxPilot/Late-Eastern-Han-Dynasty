@@ -823,14 +823,21 @@ POST   /api/v1/games/:id/faction/cultural-policy
 
 ### HC-P1-2 称王
 
+`GET /api/game/hegemony/king-requirements`
+
+返回当前玩家势力的权威称王门槛、当前值、是否通过、剧本争夺城池总数，以及有限王号候选与
+运行局占用状态。HC-P1-5 朝廷抽屉在载入及权威 `GameState` 更新后重新读取；该端点只读，
+不取得写锁、不修改状态。
+
 `POST /api/game/hegemony/proclaim-king`
 
 请求体：`{ kingdomName: string }`。服务端在请求锁内只编排权威
 `proclaimKing(state, playerFactionId, kingdomName)`：重新校验势力存活、霸府阶段、城池门槛、
 阶段年龄12月、皇权80及有限王号候选/运行局唯一性；成功返回完整 `GameState`，扣皇权80并写入
 `politicalStage='king'`、`politicalTitle='{王号}王'`、固定 `kingdomName`、阶段年份和年龄0。
-任何失败返回400且权威状态零副作用。客户端 API/store 已接入，朝廷抽屉入口与终审留 HC-P1-5。
+任何失败返回400且权威状态零副作用。HC-P1-5 已将其接入朝廷称王草稿与深红重大终审；
+客户端终审先按最新快照复核阶段、城池、沉淀、皇权和王号占用，服务端提交时仍执行最终权威校验。
 
 ---
 
-*文档版本: v3.2 | 2026-07-26 | Session 189 HC-P0-6 伪诏宣战端点*
+*文档版本: v3.3 | 2026-07-28 | Session 211 HC-P1-5 称王门槛查询与朝廷接入*

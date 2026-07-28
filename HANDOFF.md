@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 210：HC-P1-4 王命封爵 + CMD-P9 任官赏罚迁移** |
+| 会话 | **Session 211：HC-P1-5 外交分档与朝廷 UI** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **HC-P1-4 完整七级爵位 + 王命封爵**；**CMD-P9 人事五轨任官/赏罚 + 正式跨抽屉导航** |
-| 文档最新 | `03/04/06/07/28` 已同步爵位迁移、封爵规则/API/深红终审及 CMD-P9 信息架构 |
-| 本交接用途 | 旧五级存档兼容、臣属逐级封爵；人事写流程在 CMD-P10 前与旧手风琴并存对照 |
-| 玩法下一步 | HC-P1-5 外交分档与朝廷 UI；CMD-P10 人事旧入口原子切换。 |
+| 代码最新 | **HC-P1-5 权威称王进度/王号/终审 + 九职阶段总览 + king 外交分档确认** |
+| 文档最新 | `06/07/09/12/26/28` 已同步 HC-P1-5 门槛 API、朝廷交互、完成状态与验收边界 |
+| 本交接用途 | HC-P1-1～5 已完成；CMD-P9 人事写流程仍在 CMD-P10 前与旧手风琴并存对照 |
+| 玩法下一步 | HC-P1-6 确定性/存档/仓库化 Headless 总验收；随后 CMD-P10 人事旧入口原子切换。 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -34,6 +34,10 @@ HC-P1-1～3、CMD-P6～8 已完成；无运行时代码变化，沿用 Session 2
 Session 210 回归基线：shared 198/198、client 20/20、根 35 个非浏览器 `verify-*` 全过；
 HC-P1-4 26/26；CMD-P8/P9 Headless 全绿（1440×900，正式跨抽屉跳转、任官取消/确认、
 赏罚边界、console error=0）；typecheck/lint/data/build/diff-check 全绿。
+
+Session 211 增量基线：`verify-hc-p1-5` 12/12；shared 198/198、client 20/20；
+typecheck/lint/build/diff-check 全绿。1440×900 Headless 实测朝廷政治进程、称王门槛 API、
+王号候选与王国官职阶段隐藏，console error=0。完整跨12月/攻城链留 HC-P1-6。
 
 ---
 

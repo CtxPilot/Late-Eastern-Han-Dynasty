@@ -646,6 +646,28 @@ export async function proclaimKing(kingdomName: string): Promise<GameState> {
   return data;
 }
 
+export interface KingRequirementsDto {
+  factionExists: { current: boolean; threshold: boolean; passed: boolean };
+  factionAlive: { current: boolean; threshold: boolean; passed: boolean };
+  politicalStage: { current: string; threshold: string; passed: boolean };
+  cityCount: { current: number; threshold: number; passed: boolean };
+  politicalStageAgeMonths: { current: number; threshold: number; passed: boolean };
+  imperialAuthority: { current: number; threshold: number; passed: boolean };
+  kingdomNameCandidates: Array<{
+    name: string;
+    source: 'scenario' | 'geography' | 'faction';
+    available: boolean;
+  }>;
+  contestableCityCount: number;
+  allPassed: boolean;
+}
+
+/** HC-P1-5 朝廷称王进度与有限王号候选。 */
+export async function getKingRequirements(): Promise<KingRequirementsDto> {
+  const { data } = await http.get<KingRequirementsDto>('/hegemony/king-requirements');
+  return data;
+}
+
 export async function falseDecreeWar(targetFactionId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/hegemony/false-decree-war', { targetFactionId });
   return data;

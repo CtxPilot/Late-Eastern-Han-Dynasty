@@ -84,7 +84,12 @@ import {
 } from '../engine/personnel.js';
 import { grantBattleIntel } from '../engine/intel.js';
 import { formAlliance, giftBeautyStock, tributeGold } from '../engine/diplomacy.js';
-import { declareWarByFalseDecree, establishHegemony, proclaimKing } from '../engine/hegemony.js';
+import {
+  declareWarByFalseDecree,
+  establishHegemony,
+  getKingRequirements,
+  proclaimKing,
+} from '../engine/hegemony.js';
 import { launchPlot } from '../engine/plot.js';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
 import {
@@ -570,6 +575,11 @@ export function doEstablishHegemony(): GameState {
     currentGame = establishHegemony(getGame(), getGame().playerFactionId);
     return getClientGame();
   });
+}
+
+/** HC-P1-5：朝廷抽屉只读称王门槛；候选与阈值始终来自权威引擎。 */
+export function getCurrentKingRequirements() {
+  return getKingRequirements(getGame(), getGame().playerFactionId);
 }
 
 /** HC-P1-2：服务层只编排权威 proclaimKing；withLock 拦截并发朝廷写操作。 */
