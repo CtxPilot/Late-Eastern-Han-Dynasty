@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 211：HC-P1-5 外交分档与朝廷 UI** |
+| 会话 | **Session 212：HC-P1-6 称王总验收** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **HC-P1-5 权威称王进度/王号/终审 + 九职阶段总览 + king 外交分档确认** |
-| 文档最新 | `06/07/09/12/26/28` 已同步 HC-P1-5 门槛 API、朝廷交互、完成状态与验收边界 |
-| 本交接用途 | HC-P1-1～5 已完成；CMD-P9 人事写流程仍在 CMD-P10 前与旧手风琴并存对照 |
-| 玩法下一步 | HC-P1-6 确定性/存档/仓库化 Headless 总验收；随后 CMD-P10 人事旧入口原子切换。 |
+| 代码最新 | **HC-P1-1～6 全部完成；两剧本/新旧档/仓库化 Headless 总验收 + 首都失守君主迁移护栏** |
+| 文档最新 | `05/06/07/09/10/12/26/28` 已同步 HC-P1 完成状态、验收基线与占城不变量 |
+| 本交接用途 | HC-P1 已收尾；CMD-P9 人事写流程仍在 CMD-P10 前与旧手风琴并存对照 |
+| 玩法下一步 | CMD-P10 人事旧入口原子切换。 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -38,6 +38,12 @@ HC-P1-4 26/26；CMD-P8/P9 Headless 全绿（1440×900，正式跨抽屉跳转、
 Session 211 增量基线：`verify-hc-p1-5` 12/12；shared 198/198、client 20/20；
 typecheck/lint/build/diff-check 全绿。1440×900 Headless 实测朝廷政治进程、称王门槛 API、
 王号候选与王国官职阶段隐藏，console error=0。完整跨12月/攻城链留 HC-P1-6。
+
+Session 212 基线：`verify-hc-p1` 20/20，英雄集结与190沿官道攻城称王、新旧档往返全过；
+1440×900 仓库化 Headless 实际推进12月并完成称王重大终审、任王国相、封关内侯、进贡
+`+18`，旧君主入口0、console error=0。总验收同时修复敌方首都失守但势力尚存时君主错误
+流落在野、导致存档非法的边界。shared 198/198、client 20/20、37 个非浏览器 verify、
+typecheck/lint/data/build/diff-check 全绿；仅既有大 chunk warning。
 
 ---
 

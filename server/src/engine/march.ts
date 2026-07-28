@@ -284,6 +284,37 @@ export function settleBattle(
     cities[targetId] = nextTarget;
     const factions = recomputeFactionCities(cities, state.factions);
 
+    // 首都失守但势力尚存时，君主必须随新首都迁移，不能与普通败将一起流落在野。
+    // 否则会形成“存活势力的 rulerId 不属于本势力”的非法状态，后续存档无法通过 Schema。
+    if (prevRuler != null && factions[prevRuler]?.isAlive) {
+      const survivingFaction = factions[prevRuler];
+      const ruler = officers[survivingFaction.rulerId];
+      if (ruler && ruler.faction !== prevRuler) {
+        const fallbackCapital = survivingFaction.capitalCityId;
+        officers[ruler.id] = {
+          ...ruler,
+          faction: prevRuler,
+          status: OfficerStatus.ACTIVE,
+          location: fallbackCapital,
+          loyalty: Math.max(50, ruler.loyalty),
+        };
+        const fallbackCity = cities[fallbackCapital];
+        if (fallbackCity && !fallbackCity.officers.includes(ruler.id)) {
+          cities[fallbackCapital] = {
+            ...fallbackCity,
+            officers: [...fallbackCity.officers, ruler.id],
+          };
+        }
+        const freedIndex = freedIds.indexOf(ruler.id);
+        if (freedIndex >= 0) {
+          freedIds.splice(freedIndex, 1);
+          freed.splice(freedIndex, 1);
+          nextTarget.officers = nextTarget.officers.filter((id) => id !== ruler.id);
+          cities[targetId] = nextTarget;
+        }
+      }
+    }
+
     // 更新势力武将列表（释放者踢出）
     const nextFactions = { ...factions };
     if (prevRuler != null && nextFactions[prevRuler]) {
