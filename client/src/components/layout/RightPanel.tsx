@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import {
-  areCitiesRoadAdjacent,
-  canAttemptMarchTo,
   ensureDemographics,
   foodNeedBreakdown,
   formatEconomyForView,
   formatTroopsForView,
   getCityVisibility,
   maxConscriptable,
-  playerCitiesAdjacentTo,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { AccSection } from '../ui/AccSection';
-import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
 type RightAcc =
   | 'basic'
@@ -33,54 +29,20 @@ export function RightPanel() {
   const game = useGameStore((s) => s.game);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const selectCity = useGameStore((s) => s.selectCity);
-  const develop = useGameStore((s) => s.develop);
-  const conscript = useGameStore((s) => s.conscript);
-  const relief = useGameStore((s) => s.relief);
-  const trainTroops = useGameStore((s) => s.trainTroops);
-  const seekBeauty = useGameStore((s) => s.seekBeauty);
-  const marchOnCity = useGameStore((s) => s.marchOnCity);
   const lastAction = useGameStore((s) => s.lastActionOk);
-  const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   const [open, setOpen] = useState<RightAcc>(null);
-  const [confirmMarch, setConfirmMarch] = useState(false);
 
   if (!game) return null;
 
   const selected = selectedCityId != null ? game.cities[selectedCityId] : null;
   const isPlayerCity = selected != null && selected.ruler === game.playerFactionId;
-  const canAct = isPlayerCity && !loading;
   const vis = selected ? getCityVisibility(game, selected.id) : null;
   const seekLeft =
     selected != null && (isPlayerCity || vis?.showEconomy)
       ? (selected.beautySeekLeft ?? 0)
       : null;
   const playerBeauty = game.factions[game.playerFactionId]?.beautyStock ?? 0;
-  const canSeekBeauty =
-    canAct && (selected?.beautySeekLeft ?? 0) >= 1 && (selected?.gold ?? 0) >= 60;
-  const playerCityIds = Object.values(game.cities)
-    .filter((c) => c.ruler === game.playerFactionId)
-    .map((c) => c.id);
-  const adjacentFrom =
-    selected != null ? playerCitiesAdjacentTo(playerCityIds, selected.id) : [];
-  const marchFromWithTroops = adjacentFrom.filter(
-    (id) => (game.cities[id]?.troops ?? 0) >= 1000,
-  );
-  const canMarch =
-    selected != null &&
-    !loading &&
-    canAttemptMarchTo(game.cities, game.playerFactionId, selected.id);
-  const marchHint = (() => {
-    if (!selected || isPlayerCity) return '请选择他方城';
-    if (adjacentFrom.length === 0) return '无官道邻接己方城，不可出征';
-    if (marchFromWithTroops.length === 0) {
-      const names = adjacentFrom.map((id) => game.cities[id]?.name).join('、');
-      return `邻接 ${names} 兵力不足（需≥1000）`;
-    }
-    const names = marchFromWithTroops.map((id) => game.cities[id]?.name).join('、');
-    return `可自 ${names} 出征（道路邻接）`;
-  })();
-
   const d = selected && vis?.showDemographics ? ensureDemographics(selected) : null;
   const br =
     selected && d && vis?.showDemographics
@@ -279,48 +241,9 @@ export function RightPanel() {
             open={open === 'civil'}
             onToggle={() => toggle('civil')}
           >
-            <div className="px-2 flex flex-wrap gap-1.5">
-              <ActBtn
-                testId="btn-develop-farm"
-                disabled={!canAct}
-                title="100金 → 农业↑"
-                onClick={() => void develop('farm')}
-              >
-                开发农业
-              </ActBtn>
-              <ActBtn
-                testId="btn-develop-commerce"
-                disabled={!canAct}
-                title="100金 → 商业↑"
-                onClick={() => void develop('commerce')}
-              >
-                开发商业
-              </ActBtn>
-              <ActBtn
-                testId="btn-develop-wall"
-                disabled={!canAct}
-                title="120金 → 城防↑"
-                onClick={() => void develop('wall')}
-              >
-                修筑城墙
-              </ActBtn>
-              <ActBtn
-                testId="btn-relief"
-                disabled={!canAct}
-                title="150粮 → 民心↑"
-                onClick={() => void relief()}
-              >
-                施米
-              </ActBtn>
-              <ActBtn
-                testId="btn-seek-beauty"
-                disabled={!canSeekBeauty}
-                title="60金；成功：势力美女+1、本城可寻−1"
-                onClick={() => void seekBeauty()}
-              >
-                寻访
-              </ActBtn>
-            </div>
+            <p className="px-3 mt-1 text-[10px] text-stone-600">
+              城市治理与 S09 宫廷人脉寻访请使用底部命令坞“内政”。
+            </p>
             {!isPlayerCity && (
               <p className="px-3 mt-1 text-[10px] text-stone-600">内政仅己方城可用</p>
             )}
@@ -332,49 +255,9 @@ export function RightPanel() {
             open={open === 'military'}
             onToggle={() => toggle('military')}
           >
-            <div className="px-2 flex flex-wrap gap-1.5">
-              <ActBtn
-                testId="btn-conscript"
-                disabled={!canAct}
-                title="80金+120粮 → 兵力↑"
-                onClick={() => void conscript()}
-              >
-                征兵
-              </ActBtn>
-              <ActBtn
-                testId="btn-train"
-                disabled={!canAct}
-                title="60粮 → 士气↑"
-                onClick={() => void trainTroops()}
-              >
-                训练
-              </ActBtn>
-              <ActBtn
-                testId="btn-march"
-                disabled={!canMarch}
-                danger
-                title={marchHint}
-                onClick={() => setConfirmMarch(true)}
-              >
-                出征攻城
-              </ActBtn>
-            </div>
-            {!isPlayerCity && (
-              <p className="px-3 mt-1 text-[10px] text-stone-500 leading-snug">
-                {marchHint}
-                {vis?.kind === 'fog' && (
-                  <span className="block text-amber-700/80 mt-0.5">
-                    情报未明：左侧「谍报」派密探探秘，或外交结盟共享部分信息。
-                  </span>
-                )}
-                {selected &&
-                  !playerCityIds.some((id) => areCitiesRoadAdjacent(id, selected.id)) && (
-                    <span className="block text-amber-700/80 mt-0.5">
-                      仅道路邻接城可出征/派密探。
-                    </span>
-                  )}
-              </p>
-            )}
+            <p className="px-3 mt-1 text-[10px] text-stone-600">
+              征兵、训练、编成与军令请使用底部命令坞“军事”。
+            </p>
             <div className="px-2 mt-2">
               <button
                 type="button"
@@ -417,76 +300,7 @@ export function RightPanel() {
           </div>
         </div>
       )}
-      <CommandConfirmDialog
-        open={confirmMarch}
-        category="军事"
-        command={`确认出征攻城：${selected?.name ?? '未选目标'}`}
-        summary="军队将立即离城出征并进入战斗结算；兵力、粮草及武将状态可能发生不可逆变化。"
-        items={[
-          { label: '目标城', value: selected?.name ?? '—' },
-          {
-            label: '出征来源',
-            value: marchFromWithTroops.map((id) => game.cities[id]?.name).filter(Boolean).join('、') || '—',
-          },
-          { label: '最低兵力', value: '自动选择邻接己方城，至少 1000 兵' },
-          { label: '军事后果', value: '立即进入攻城／战斗流程', tone: 'warning' },
-          { label: '风险', value: '可能损失兵力、粮草，败退或改变城池归属', tone: 'warning' },
-        ]}
-        loading={loading}
-        danger
-        error={error}
-        validateBeforeConfirm={() => {
-          const latest = useGameStore.getState().game;
-          if (!latest || selectedCityId == null) return '出征目标已失效，请返回修改。';
-          const target = latest.cities[selectedCityId];
-          if (!target || target.ruler === latest.playerFactionId) return '目标已不是可攻打的他方城池。';
-          return canAttemptMarchTo(latest.cities, latest.playerFactionId, target.id)
-            ? null
-            : '当前已无道路邻接且兵力足够的己方城，不能出征。';
-        }}
-        onCancel={() => setConfirmMarch(false)}
-        onConfirm={async () => {
-          await marchOnCity();
-          if (!useGameStore.getState().error) setConfirmMarch(false);
-        }}
-      />
     </aside>
-  );
-}
-
-function ActBtn({
-  children,
-  onClick,
-  disabled,
-  title,
-  testId,
-  danger,
-}: {
-  children: ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  title?: string;
-  testId?: string;
-  danger?: boolean;
-}) {
-  const base = danger
-    ? 'bg-red-950 border-red-700 text-red-100 hover:bg-red-900'
-    : 'bg-amber-900 border-amber-600 text-amber-100 hover:bg-amber-800';
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      disabled={disabled}
-      title={title}
-      className={`px-2.5 py-1 rounded border text-xs ${
-        disabled
-          ? 'bg-stone-900 border-stone-700 text-stone-500 cursor-not-allowed'
-          : base
-      }`}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 }
 

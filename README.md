@@ -37,7 +37,8 @@ Important limitations:
 - AI domestic behavior and several campaign calculations remain deliberately simplified.
 - Save/load, full historical scenarios, delegated armies, private retinues, farming colonies, full formation progression, and the duel tournament are not implemented.
 - Several systems documented in `docs/` are designs or technical reserves; they are explicitly marked as such.
-- Automated tests currently focus on 100 shared contract/pure-function tests plus dedicated engine verification scripts; this is not full end-to-end coverage.
+- Automated tests currently include 198 shared contract/pure-function tests and 31 client model/component tests,
+  plus dedicated engine and browser verification scripts; this is not full end-to-end coverage.
 
 For the precise playable path and known boundaries, see [Demo build and playbook](docs/16-demo-build-playbook.md). For implementation maturity by system, see [System map](docs/12-system-map.md).
 

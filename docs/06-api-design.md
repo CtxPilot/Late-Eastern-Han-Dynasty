@@ -120,8 +120,23 @@ POST   /api/game/civil/develop-farm  { cityId }   // 兼容
 POST   /api/game/civil/conscript     { cityId }   // 扣 adultMale，见 04§28
 POST   /api/game/civil/relief        { cityId }   // 施米
 POST   /api/game/civil/train         { cityId }   // 士气
+// CMD-P20：征兵/训练玩家 UI 统一迁入“军事·军备”，显式选择己方 cityId；
+// 右栏旧提交按钮已删除。两条命令进入统一终审，并在确认前复验城市归属、金粮、
+// 可征成年男丁或最低驻军。复用以上端点，请求/响应、权威 RNG、数值与 Schema 均未变化。
+// CMD-P21：军事域总验收确认以上军备端点与 campaign 端点均只有命令坞玩家入口；
+// /march 仍仅供 S21 现有场景兼容调用，无玩家 UI。总验收没有新增或修改端点。
+// CMD-P22：内政迁移前审计确认 develop/relief 属 S03；现有右栏四按钮均点击即提交，
+// 尚无统一终审。下一阶段只读总览不会新增端点；写链迁移继续复用以上 API。
+// CMD-P23：内政只读抽屉直接读取当前 GameState 的己方城市列表与城市字段，不新增 API；
+// 四分面无提交入口，右栏旧写链保持不变。CMD-P24 才迁移 develop/relief。
+// CMD-P24：develop/relief 玩家入口迁入命令坞对应分面并统一终审，显式提交 cityId；
+// 确认前复验归属和100/100/120金或150粮。复用既有端点，API/响应/权威 RNG 均不变。
 POST   /api/game/civil/seek-beauty       { cityId }           // 寻访：60金；成功 stock+1 可寻−1
 POST   /api/game/civil/search-beauty     { cityId }           // 兼容 → seek-beauty
+// 注意：seek-beauty 路由前缀为历史兼容，业务引擎真源是 S09 beauty.ts，不属于 S03；
+// CMD-P25：用户批准在“内政·总览”提供明确标注为“S09 宫廷人脉”的跨系统入口；
+// 统一终审并显式提交 cityId，确认前复验归属、可寻次数≥1与金≥60。右栏旧入口删除。
+// 仅迁移玩家 UI；端点、beauty.ts 权威引擎、成功率、数值与响应均未变化。
 POST   /api/game/personnel/reward-beauty { officerId, amount? } // 赏赐美女库存→忠诚
 
 POST   /api/game/personnel/marry       { femaleId, officerId }  // 婚配 300金
@@ -149,6 +164,8 @@ POST   /api/game/intel/captive         { agentId, action: hold|execute|release|e
 
 POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|emptyFort|..., targetFactionId?, targetCityId?, targetOfficerId?, agentId? }
                                      // L1 战术计谋：honeyTrap(美人计)·sowDiscord(离间)·falseIntel(假情报)·emptyFort(空城)
+                                     // CMD-P28：四计新抽屉复用本端点；旧左栏入口迁移期保留到 P29
+                                     // 客户端终审前复验上限/情报/盟友/资源/目标，服务端仍作最终权威校验
                                      // L2 战略计谋：undermine(釜底抽薪)·lureOut(调虎离山)·feint(暗渡陈仓)·bluff(树上开花)
                                      //             instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
                                      //             watchFire(隔岸观火)·swapPillar(偷梁换柱)·edict(借尸还魂)·killChicken(指桑骂槐)
@@ -168,12 +185,29 @@ POST   /api/game/diplomacy/tribute     { targetFactionId }  // 进贡 200金，�
 POST   /api/game/diplomacy/gift-beauty { targetFactionId, amount? }  // 献美：beauty−n/对方+n，友好+12×n（1~5）
 POST   /api/game/diplomacy/alliance    { targetFactionId }  // 结盟 500金，友好≥30；R2 权威概率判定，成败均扣金
 
+// CMD-P13：命令坞外交“交涉”已复用 tribute / gift-beauty 两条既有端点及统一终审；
+// CMD-P14：命令坞“盟约”复用 alliance 端点、shared 成功率和权威 RNG。均未新增 API；
+// CMD-P15：旧外交入口已删除；/intel/plant-female 在谍报面板成为点化唯一入口。
+// 客户端仅复验目标存活、plantable 与己方金钱；受迷雾裁剪的敌方 beauty 由服务端权威校验。
+
 POST   /api/game/march               { targetCityId, fromCityId?, troopCount? }
   → { game, battle }  // 须道路邻接；默认邻接己方城；服务端以未脱敏权威状态校验目标归属/守军
                     // battle.units[].commanderName 是正式交战后揭示的姓名快照；
                     // 不要求 game.officers 放宽非交战区域的 S06 迷雾
 GET    /api/game/march/suggest-from/:targetCityId → { fromCityId }
 GET    /api/game/march/can-reach/:targetCityId → { ok: boolean }
+// CMD-P16：上述旧简化出征与 /campaign/start 完整 Campaign Army 编成是两套生产链；
+// 本轮只审计并建立浏览器基线。军事命令坞写按钮仍为0，未新增/改动任何端点；
+// P18 前必须先决定归并与兼容下线路径，禁止把两套出征同时迁入新抽屉。
+// CMD-P17：军事命令坞的军备/编成/军令/战报仅从现有 GameState 与 lastBattleResult
+// 派生只读摘要；未调用或新增军事 API，新写按钮仍为0，旧入口仍是唯一提交路径。
+// CMD-P18：玩家正式出征已统一到 /campaign/start；命令坞“军事·编成”复用该端点与
+// campaignStart store action。右栏 /march 玩家按钮和左栏旧编成表单均已删除。
+// /march 暂保留给 S21 engageJiangling 兼容适配，不再是玩家 UI 生产入口；本轮无端点变更。
+// CMD-P19：/campaign/assault、/campaign/surrender、/campaign/retreat、
+// /campaign/build、/campaign/advisor 及对应 store action 统一由“军事·军令”调用。
+// 左栏战役写按钮已删除；所有动作进入统一终审并在提交前复验最新阶段/参谋/资源。
+// 本轮复用既有端点，无请求、响应、Schema、规则或数值变化。
 POST   /api/game/battle/start        { cityId, fromCityId? }  // 兼容，内部走出征
 POST   /api/game/battle/move|attack|fire|finish-player|enemy-phase
   // fire: { attackerId, targetId } 火计，耗气30
@@ -842,6 +876,10 @@ POST   /api/v1/games/:id/faction/cultural-policy
 HC-P1-6 没有新增业务端点；仓库化 `verify-hc-p1-headless` 只串联上述公开 API：
 开府、结束回合、称王、任官、封爵与进贡，验证不存在测试专用写接口。
 
+CMD-P28 没有新增或修改接口。命令坞四计继续复用既有
+`POST /api/game/plot/launch` 与完整 `GameState` 响应；客户端终审前的上限、情报、盟友、
+资源与目标条件复验只提供即时反馈，服务端 S17 引擎仍是最终权威。
+
 ---
 
-*文档版本: v3.5 | 2026-07-28 | Session 213 CMD-P10 人事唯一入口收口*
+*文档版本: v4.9 | 2026-07-30 | Session 233 CMD-P28 后现行接口口径同步*

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SpyMissionType, SpyStatus } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { getFactionResourceTotals } from '../../utils/factionResources';
 
 const STATUS_LABEL: Record<string, string> = {
   idle: '空闲',
@@ -34,6 +35,7 @@ export function SpyPanel() {
   const selectedCityId = useGameStore((s) => s.selectedCityId);
   const recruitSpies = useGameStore((s) => s.recruitSpies);
   const trainFemaleSpy = useGameStore((s) => s.trainFemaleSpy);
+  const plantFemale = useGameStore((s) => s.plantFemale);
   const spyMission = useGameStore((s) => s.spyMission);
   const stationCounter = useGameStore((s) => s.stationCounter);
   const unstationCounter = useGameStore((s) => s.unstationCounter);
@@ -49,6 +51,8 @@ export function SpyPanel() {
     action: 'execute' | 'release';
   } | null>(null);
   const [confirmAction, setConfirmAction] = useState<'recruit' | 'train-female' | 'mission' | null>(null);
+  const [plantTargetId, setPlantTargetId] = useState<number | ''>('');
+  const [confirmPlantTargetId, setConfirmPlantTargetId] = useState<number | null>(null);
 
   const myAgents = useMemo(() => {
     if (!game?.intel?.agents) return [];
@@ -74,6 +78,18 @@ export function SpyPanel() {
     return Object.values(game.cities)
       .filter((c) => c.ruler !== game.playerFactionId)
       .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
+  }, [game]);
+
+  const plantTargets = useMemo(() => {
+    if (!game) return [];
+    return Object.values(game.factions)
+      .filter((faction) => faction.id !== game.playerFactionId && faction.isAlive)
+      .map((faction) => ({
+        faction,
+        plantable: game.intel?.plantableBeauty?.[faction.id] ?? 0,
+      }))
+      .filter((target) => target.plantable > 0)
+      .sort((a, b) => a.faction.name.localeCompare(b.faction.name, 'zh'));
   }, [game]);
 
   if (!game) return null;
@@ -146,6 +162,41 @@ export function SpyPanel() {
       >
         训练女间谍（美女2+金100）
       </button>
+
+      <div className="border border-pink-950/80 bg-pink-950/15 px-2 py-1.5 space-y-1" data-testid="intel-plant-female-section">
+        <div className="text-pink-300">策反点化</div>
+        <p className="text-[10px] leading-snug text-stone-500">
+          外交献美积累点化额度后，可在情报域策反目标美女为女间谍。
+        </p>
+        <select
+          data-testid="intel-plant-female-target"
+          className="w-full rounded border border-stone-700 bg-stone-900 px-1 py-1 text-stone-200"
+          value={plantTargetId}
+          onChange={(event) => setPlantTargetId(event.target.value ? Number(event.target.value) : '')}
+        >
+          <option value="">选择有点化额度的势力…</option>
+          {plantTargets.map(({ faction, plantable }) => (
+            <option key={faction.id} value={faction.id}>
+              {faction.name}（额度 {plantable}）
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          data-testid="intel-plant-female"
+          disabled={loading || plantTargetId === ''}
+          className="w-full rounded border border-pink-800 bg-pink-950/40 px-2 py-1.5 text-pink-100 disabled:opacity-40"
+          title={plantTargetId === '' ? '需先在外交域向目标献美' : '耗金80、点化额度1、目标美女库存1'}
+          onClick={() => plantTargetId !== '' && setConfirmPlantTargetId(plantTargetId)}
+        >
+          点化女间谍（金80）
+        </button>
+        {plantTargets.length === 0 ? (
+          <p className="text-[10px] text-stone-600" data-testid="intel-plant-female-empty">
+            暂无额度；请先从命令坞“外交 → 交涉”献美。
+          </p>
+        ) : null}
+      </div>
 
       <div className="max-h-32 overflow-y-auto space-y-0.5">
         {myAgents.length === 0 && (
@@ -282,6 +333,40 @@ export function SpyPanel() {
           ))}
         </div>
       )}
+      <CommandConfirmDialog
+        open={confirmPlantTargetId != null}
+        category="谍报"
+        command={`确认点化女间谍：${confirmPlantTargetId != null ? game.factions[confirmPlantTargetId]?.name ?? '未知势力' : '未知势力'}`}
+        summary="将消耗献美积累的点化额度与目标美女库存，生成一名己方女间谍。"
+        items={[
+          {
+            label: '目标势力',
+            value: confirmPlantTargetId != null ? game.factions[confirmPlantTargetId]?.name ?? '—' : '—',
+          },
+          { label: '立即消耗', value: '金 80、点化额度 1、目标美女库存 1', tone: 'warning' },
+          { label: '主要效果', value: '生成女间谍并进入己方谍报体系' },
+        ]}
+        loading={loading}
+        error={error}
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          if (!latest || confirmPlantTargetId == null) return '点化草稿已失效，请返回修改。';
+          const target = latest.factions[confirmPlantTargetId];
+          if (!target?.isAlive) return '目标势力已不存在或已经灭亡。';
+          if ((latest.intel?.plantableBeauty?.[target.id] ?? 0) < 1) return '点化额度已经失效（需先献美）。';
+          const gold = getFactionResourceTotals(latest, latest.playerFactionId).gold;
+          return gold < 80 ? `金钱不足（需80，当前${gold}）。` : null;
+        }}
+        onCancel={() => setConfirmPlantTargetId(null)}
+        onConfirm={async () => {
+          if (confirmPlantTargetId == null) return;
+          await plantFemale(confirmPlantTargetId);
+          if (!useGameStore.getState().error) {
+            setConfirmPlantTargetId(null);
+            setPlantTargetId('');
+          }
+        }}
+      />
       <CommandConfirmDialog
         open={confirmAction != null}
         category="谍报"

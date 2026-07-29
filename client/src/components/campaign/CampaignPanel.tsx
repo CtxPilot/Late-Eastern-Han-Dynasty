@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useEffect, useMemo, useState } from 'react';
-import {
-  FORMATION_LABEL,
-  FormationType,
-  UnitType,
-  type CampaignArmy,
-} from '@leh/shared';
+import { useMemo, useState } from 'react';
+import { FORMATION_LABEL, type CampaignArmy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
-import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
-import { campaignArmyPhaseLabel, campaignTargetsFromCity } from './CampaignPanel.helpers';
+import { campaignArmyPhaseLabel } from './CampaignPanel.helpers';
 
 const PHASE_LABEL: Record<string, string> = {
   marching: '行军',
@@ -34,127 +28,25 @@ const UNIT_LABEL: Record<string, string> = {
   heavyNavy: '楼船',
 };
 
-const STRUCTURE_OPTIONS: Array<{ value: string; label: string; cost: number; turns: number }> = [
-  { value: 'camp', label: '营寨', cost: 100, turns: 1 },
-  { value: 'ram', label: '冲车', cost: 300, turns: 2 },
-  { value: 'ladder', label: '云梯', cost: 200, turns: 2 },
-  { value: 'siege_tower', label: '井阑', cost: 400, turns: 3 },
-  { value: 'catapult', label: '投石车', cost: 500, turns: 3 },
-  { value: 'supply_depot', label: '粮仓', cost: 150, turns: 1 },
-  { value: 'palisade', label: '栅栏', cost: 80, turns: 1 },
-  { value: 'trench', label: '壕沟', cost: 60, turns: 1 },
-];
-
 /**
  * 战役层面板（05 §十三~§十七）
- * - 编成出征（主将+副将+参谋+Squad 五部阵位）
- * - Army 列表与操作（行军/扎营/建造/强攻/劝降/撤退/参谋行动）
+ * - Army 只读列表与详情；所有写军令已迁入“军事·军令”
  * - 战斗报告弹窗（自动结算结果）
  */
 export function CampaignPanel() {
   const game = useGameStore((s) => s.game);
-  const loading = useGameStore((s) => s.loading);
-  const error = useGameStore((s) => s.error);
   const lastBattleResult = useGameStore((s) => s.lastBattleResult);
-  const campaignStart = useGameStore((s) => s.campaignStart);
-  const campaignBuild = useGameStore((s) => s.campaignBuild);
-  const campaignAssault = useGameStore((s) => s.campaignAssault);
-  const campaignSiegeSurrender = useGameStore((s) => s.campaignSiegeSurrender);
-  const campaignRetreat = useGameStore((s) => s.campaignRetreat);
-  const campaignAdvisorAction = useGameStore((s) => s.campaignAdvisorAction);
-  const selectedCityId = useGameStore((s) => s.selectedCityId);
-
-  const [commanderId, setCommanderId] = useState<number | ''>('');
-  const [targetNodeId, setTargetNodeId] = useState<number | ''>('');
-  const [troopCount, setTroopCount] = useState<number>(5000);
-  const [food, setFood] = useState<number>(1500);
-  const [unitType, setUnitType] = useState<string>(UnitType.HEAVY_CAVALRY);
-  const [formation, setFormation] = useState<number>(FormationType.WEDGE);
   const [selectedArmyId, setSelectedArmyId] = useState<string>('');
   const [showBattleReport, setShowBattleReport] = useState(false);
-  const [confirm, setConfirm] = useState<'start' | 'assault' | 'surrender' | 'retreat' | null>(null);
 
   const myArmies = useMemo<CampaignArmy[]>(() => {
     if (!game) return [];
     return game.campaignArmies.filter((a) => a.factionId === game.playerFactionId);
   }, [game]);
 
-  const targetCities = useMemo(
-    () => (game ? campaignTargetsFromCity(game, selectedCityId) : []),
-    [game, selectedCityId],
-  );
-
-  useEffect(() => {
-    if (targetNodeId !== '' && !targetCities.some((city) => city.id === targetNodeId)) {
-      setTargetNodeId('');
-    }
-  }, [targetCities, targetNodeId]);
-
-  /** 当前选中城市的可出征武将 */
-  const availableOfficers = useMemo(() => {
-    if (!game || selectedCityId == null) return [];
-    return Object.values(game.officers).filter(
-      (o) =>
-        o.faction === game.playerFactionId &&
-        o.location === selectedCityId &&
-        o.status === 'active',
-    );
-  }, [game, selectedCityId]);
-
-  /** 选中城市中可作为副将的武将（排除主将） */
-  const availableSubs = useMemo(() => {
-    if (!game || selectedCityId == null) return [];
-    return availableOfficers.filter((o) => o.id !== commanderId);
-  }, [game, selectedCityId, availableOfficers, commanderId]);
-
-  /** 可作参谋的武将（智力≥85） */
-  const availableAdvisors = useMemo(() => {
-    return availableSubs.filter((o) => o.stats.intelligence >= 85);
-  }, [availableSubs]);
-
-  const [subIds, setSubIds] = useState<number[]>([]);
-  const [advisorId, setAdvisorId] = useState<number | ''>('');
-
   const selectedArmy = myArmies.find((a) => a.id === selectedArmyId) ?? null;
 
   if (!game) return null;
-
-  const toggleSub = (id: number) => {
-    setSubIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
-
-  const handleStart = async () => {
-    if (selectedCityId == null || !commanderId || !targetNodeId) return;
-    const army = await campaignStart({
-      commanderId: Number(commanderId),
-      subCommanderIds: subIds,
-      advisorId: advisorId !== '' ? Number(advisorId) : undefined,
-      fromNodeId: selectedCityId,
-      targetNodeId: Number(targetNodeId),
-      unitType,
-      formation,
-      troopCount,
-      food,
-    });
-    if (army) {
-      setSelectedArmyId(army.id);
-      setCommanderId('');
-      setSubIds([]);
-      setAdvisorId('');
-      setTargetNodeId('');
-    }
-  };
-
-  const handleAssault = async () => {
-    if (!selectedArmyId) return;
-    await campaignAssault(selectedArmyId);
-    setShowBattleReport(true);
-  };
-
-  const handleSurrender = async () => {
-    if (!selectedArmyId) return;
-    await campaignSiegeSurrender(selectedArmyId);
-  };
 
   const currentNode = selectedArmy
     ? game.cities[selectedArmy.currentNodeId]
@@ -163,146 +55,8 @@ export function CampaignPanel() {
   return (
     <div className="text-[11px] text-stone-300 leading-snug">
       <p className="px-3 py-1 text-[10px] text-stone-500 border-b border-stone-900">
-        战役层：编成 → 行军 → 自动战斗结算。先选己方城，再选主将/副将/参谋。
+        战役层军团只读摘要；编成与全部军令请使用底部命令坞“军事”。
       </p>
-
-      {/* 编成表单 */}
-      <div className="px-3 py-2 border-b border-stone-800 space-y-1.5">
-        <div className="text-amber-400/80 font-medium">出征编成</div>
-        {selectedCityId == null ? (
-          <p className="text-stone-600">请先在地图或下方选择己方城</p>
-        ) : (
-          <>
-            <div>
-              <label className="text-stone-500">出发城：</label>
-              <span className="text-stone-200">{game.cities[selectedCityId]?.name}</span>
-              <span className="text-stone-600 ml-1">
-                （兵 {game.cities[selectedCityId]?.troops}，粮 {game.cities[selectedCityId]?.food}）
-              </span>
-            </div>
-            <Field label="主将">
-              <select
-                value={commanderId}
-                onChange={(e) => setCommanderId(e.target.value ? Number(e.target.value) : '')}
-                className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-              >
-                <option value="">选择主将</option>
-                {availableOfficers.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}（统{o.stats.leadership} 武{o.stats.war}）
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="副将">
-              <div className="flex flex-wrap gap-1">
-                {availableSubs.slice(0, 4).map((o) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => toggleSub(o.id)}
-                    className={`px-1.5 py-0.5 rounded border text-[10px] ${
-                      subIds.includes(o.id)
-                        ? 'border-amber-500 bg-amber-950 text-amber-100'
-                        : 'border-stone-700 bg-stone-900 text-stone-400'
-                    }`}
-                  >
-                    {o.name}
-                  </button>
-                ))}
-                {availableSubs.length === 0 && (
-                  <span className="text-stone-600">无可用副将</span>
-                )}
-              </div>
-            </Field>
-            <Field label="参谋（智≥85）">
-              <select
-                value={advisorId}
-                onChange={(e) => setAdvisorId(e.target.value ? Number(e.target.value) : '')}
-                className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-              >
-                <option value="">无参谋</option>
-                {availableAdvisors.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}（智{o.stats.intelligence}）
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="目标城">
-              <select
-                value={targetNodeId}
-                onChange={(e) => setTargetNodeId(e.target.value ? Number(e.target.value) : '')}
-                className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-              >
-                <option value="">选择目标</option>
-                {targetCities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}（兵{c.troops}）
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-2 gap-1">
-              <Field label="兵种">
-                <select
-                  value={unitType}
-                  onChange={(e) => setUnitType(e.target.value)}
-                  className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-                >
-                  {Object.entries(UNIT_LABEL).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="阵型">
-                <select
-                  value={formation}
-                  onChange={(e) => setFormation(Number(e.target.value))}
-                  className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-                >
-                  {[
-                    FormationType.WEDGE,
-                    FormationType.SQUARE,
-                    FormationType.CRANE_WING,
-                    FormationType.FISH_SCALE,
-                    FormationType.ARROWHEAD,
-                    FormationType.CHARGE,
-                  ].map((id) => (
-                    <option key={id} value={id}>{FORMATION_LABEL[id]}</option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              <Field label="兵力">
-                <input
-                  type="number"
-                  value={troopCount}
-                  onChange={(e) => setTroopCount(Number(e.target.value))}
-                  className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-                />
-              </Field>
-              <Field label="携粮">
-                <input
-                  type="number"
-                  value={food}
-                  onChange={(e) => setFood(Number(e.target.value))}
-                  className="bg-stone-900 border border-stone-700 rounded px-1 py-0.5 w-full"
-                />
-              </Field>
-            </div>
-            <button
-              type="button"
-              disabled={loading || !commanderId || !targetNodeId}
-              onClick={() => setConfirm('start')}
-              className="w-full px-2 py-1 rounded border border-amber-700 text-amber-100 bg-amber-950/40 hover:bg-amber-900/40 disabled:opacity-40"
-            >
-              出征
-            </button>
-          </>
-        )}
-      </div>
 
       {/* Army 列表 */}
       <div className="px-3 py-2 border-b border-stone-800">
@@ -395,59 +149,7 @@ export function CampaignPanel() {
             )}
           </div>
 
-          {/* 操作按钮 */}
-          <div className="grid grid-cols-2 gap-1 pt-1">
-            {selectedArmy.phase === 'sieging' && (
-              <>
-                <OpBtn label="强攻" hint="自动战斗结算" onClick={() => setConfirm('assault')} disabled={loading} />
-                <OpBtn label="劝降" hint="概率投降" onClick={() => setConfirm('surrender')} disabled={loading} />
-              </>
-            )}
-            {selectedArmy.phase === 'engaged' && (
-              <OpBtn label="强攻" hint="野战结算" onClick={() => setConfirm('assault')} disabled={loading} />
-            )}
-            {(selectedArmy.phase === 'marching' || selectedArmy.phase === 'garrison') && (
-              <OpBtn
-                label="撤退"
-                hint="士气-10"
-                onClick={() => setConfirm('retreat')}
-                disabled={loading}
-              />
-            )}
-            {selectedArmy.advisorId != null && (
-              <>
-                <OpBtn label="激励" hint="士气+15" onClick={() => void campaignAdvisorAction(selectedArmy.id, 'inspire')} disabled={loading} />
-                <OpBtn label="陷阱" hint="智力≥90" onClick={() => void campaignAdvisorAction(selectedArmy.id, 'trap')} disabled={loading} />
-                <OpBtn label="休整" hint="疲劳-30" onClick={() => void campaignAdvisorAction(selectedArmy.id, 'retreat')} disabled={loading} />
-                <OpBtn label="斥候" hint="视野+1" onClick={() => void campaignAdvisorAction(selectedArmy.id, 'scout')} disabled={loading} />
-              </>
-            )}
-          </div>
-
-          {/* 建造设施 */}
-          {(selectedArmy.phase === 'sieging' || selectedArmy.phase === 'garrison') && (
-            <div className="pt-1">
-              <div className="text-stone-500 mb-0.5">建造设施：</div>
-              <div className="flex flex-wrap gap-1">
-                {STRUCTURE_OPTIONS.map((s) => {
-                  const isBuilding = selectedArmy.structures.some((st) => st.buildProgress < 1);
-                  const disabled = loading || isBuilding;
-                  return (
-                    <button
-                      key={s.value}
-                      type="button"
-                      disabled={disabled}
-                      title={`${s.label}：金${s.cost}，${s.turns}回合`}
-                      onClick={() => void campaignBuild(selectedArmy.id, s.value)}
-                      className="px-1.5 py-0.5 rounded border border-stone-700 bg-stone-900 text-stone-300 text-[10px] hover:bg-stone-800 disabled:opacity-40"
-                    >
-                      {s.label} ({s.cost}金/{s.turns}t)
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <p className="pt-1 text-[10px] text-stone-600">此处不再提供状态变更按钮。</p>
         </div>
       )}
 
@@ -504,114 +206,7 @@ export function CampaignPanel() {
           </div>
         </div>
       )}
-      <CommandConfirmDialog
-        open={confirm != null}
-        category="战役"
-        command={
-          confirm === 'start'
-            ? `确认编成出征：${selectedCityId != null ? game.cities[selectedCityId]?.name ?? '未选出发城' : '未选出发城'}→${targetNodeId !== '' ? game.cities[Number(targetNodeId)]?.name ?? '未选目标' : '未选目标'}`
-            : confirm === 'assault'
-              ? `确认发动强攻：${selectedArmy?.name ?? '未选军队'}`
-              : confirm === 'surrender'
-                ? `确认劝降守军：${selectedArmy?.name ?? '未选军队'}`
-                : `确认撤退：${selectedArmy?.name ?? '未选军队'}`
-        }
-        summary={
-          confirm === 'start'
-            ? '兵力、粮草与参战武将将从出发城转入战役军队。'
-            : confirm === 'assault'
-              ? '将立即进行自动战斗结算，可能造成大量伤亡或改变城池归属。'
-              : confirm === 'surrender'
-                ? '将立即进行劝降判定；成功会改变目标城归属。'
-                : '军队将撤回最近己方节点并损失士气。'
-        }
-        items={
-          confirm === 'start'
-            ? [
-                { label: '出发城', value: selectedCityId != null ? game.cities[selectedCityId]?.name ?? '—' : '—' },
-                { label: '目标城', value: targetNodeId !== '' ? game.cities[Number(targetNodeId)]?.name ?? '—' : '—' },
-                { label: '主将', value: commanderId !== '' ? game.officers[Number(commanderId)]?.name ?? '—' : '—' },
-                { label: '调拨兵力', value: String(troopCount), tone: 'warning' },
-                { label: '携带粮草', value: String(food), tone: 'warning' },
-              ]
-            : [
-                { label: '军队', value: selectedArmy?.name ?? '—' },
-                { label: '当前位置', value: currentNode?.name ?? '—' },
-                { label: '当前兵力', value: String(selectedArmy?.troops ?? 0) },
-                {
-                  label: '立即后果',
-                  value:
-                    confirm === 'assault'
-                      ? '自动战斗结算，可能伤亡或易主'
-                      : confirm === 'surrender'
-                        ? '消费一次劝降判定，成功则目标城易主'
-                        : '撤回己方节点，士气 −10',
-                  tone: 'warning',
-                },
-              ]
-        }
-        loading={loading}
-        danger={confirm === 'assault' || confirm === 'start'}
-        error={error}
-        validateBeforeConfirm={() => {
-          const latest = useGameStore.getState().game;
-          if (!latest || !confirm) return '战役草稿已失效，请返回修改。';
-          if (confirm === 'start') {
-            if (selectedCityId == null || commanderId === '' || targetNodeId === '') return '出征编成不完整。';
-            const city = latest.cities[selectedCityId];
-            const commander = latest.officers[Number(commanderId)];
-            const target = latest.cities[Number(targetNodeId)];
-            if (!city || city.ruler !== latest.playerFactionId) return '出发城归属已经变化。';
-            if (!commander || commander.faction !== latest.playerFactionId || commander.location !== selectedCityId || commander.status !== 'active') {
-              return '主将已不在出发城或不再可用。';
-            }
-            if (!target || target.ruler === latest.playerFactionId) return '目标城已经失效。';
-            if (!campaignTargetsFromCity(latest, selectedCityId).some((item) => item.id === target.id)) {
-              return `${city.name} 与 ${target.name} 无官道直达，请返回修改目标。`;
-            }
-            if (city.troops < troopCount || city.food < food) return `出发城资源已变化（现有兵${city.troops}、粮${city.food}）。`;
-            return null;
-          }
-          const army = latest.campaignArmies.find((item) => item.id === selectedArmyId);
-          if (!army || army.factionId !== latest.playerFactionId) return '所选军队已不存在或归属已经变化。';
-          if (confirm === 'assault' && army.phase !== 'sieging' && army.phase !== 'engaged') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能强攻。`;
-          if (confirm === 'surrender' && army.phase !== 'sieging') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能劝降。`;
-          if (confirm === 'retreat' && army.phase !== 'marching' && army.phase !== 'garrison') return `军队阶段已变为${PHASE_LABEL[army.phase] ?? army.phase}，不能撤退。`;
-          return null;
-        }}
-        onCancel={() => setConfirm(null)}
-        onConfirm={async () => {
-          if (confirm === 'start') await handleStart();
-          if (confirm === 'assault') await handleAssault();
-          if (confirm === 'surrender') await handleSurrender();
-          if (confirm === 'retreat' && selectedArmy) await campaignRetreat(selectedArmy.id);
-          if (!useGameStore.getState().error) setConfirm(null);
-        }}
-      />
     </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="text-stone-500 text-[10px]">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-function OpBtn({ label, hint, onClick, disabled }: { label: string; hint?: string; onClick: () => void; disabled?: boolean }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="px-1.5 py-1 rounded border border-amber-900/60 text-amber-100 bg-stone-900 hover:bg-amber-950/40 disabled:opacity-40 text-[10px]"
-      title={hint}
-    >
-      {label}
-    </button>
   );
 }
 

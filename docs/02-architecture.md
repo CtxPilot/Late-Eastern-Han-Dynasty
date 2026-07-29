@@ -499,9 +499,11 @@ server/src/data/loader.ts
 
 ---
 
-## 附：S20/S21 前端体验技术储备（Session 122 部分实装）
+## 附：S20/S21 前端体验技术储备（Session 232 部分实装）
 
-> 本节源自 Session 100 技术储备；现统一编号为 S20-W1~W4 / S21-W6~W9。Session 122 已实装 `OfficerDetail`、`OfficerRosterPanel` 与统一人事终审窗，其余仍为规划。详见 `docs/07-ui-design.md` §11~§12。
+> 本节源自 Session 100 技术储备；现统一编号为 S20-W1~W4 / S21-W6~W9。至 Session 232，
+> 命令坞壳与朝廷、人事、外交、军事、内政五域原子迁移已完成，计略四计写链已迁入但旧入口
+> 待 P29 下线；W1～W3 与 W4 其余增强仍按表中状态推进。详见 `docs/07-ui-design.md` §11~§12。
 
 ### 新增前端组件清单（实装状态）
 
@@ -518,6 +520,11 @@ server/src/data/loader.ts
 | `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报（✅ Session 122） | S20-W4 |
 | `OfficerPortrait` | `client/src/components/officer/OfficerPortrait.tsx` | 程序化人物头像；四名代表人物手工预设 + 其他武将稳定默认轮廓（✅ Session 124 简化切片） | S20-W4 / S22 |
 | `CommandConfirmDialog` | `client/src/components/ui/CommandConfirmDialog.tsx` | 状态变更命令统一终审窗（✅ Session 122，人事首批接入） | S20-W4/§12 |
+| `CommandDock` / `CommandShell` | `client/src/components/command/` | 九域命令坞、抽屉状态机与跨域导航（✅ CMD-P0～P28 持续实装） | S20-W4/§12 |
+| `DiplomacyOverviewDrawer` | `client/src/components/command/DiplomacyOverviewDrawer.tsx` | 外交三分面、交涉/盟约写链（✅ CMD-P12～P15） | S20-W4/§12 |
+| `MilitaryOverviewDrawer` | `client/src/components/command/MilitaryOverviewDrawer.tsx` | 军备/编成/军令/战报唯一入口（✅ CMD-P17～P21） | S20-W4/§12 |
+| `CivilOverviewDrawer` | `client/src/components/command/CivilOverviewDrawer.tsx` | S03 内政写链与 S09 跨系统寻访（✅ CMD-P23～P25） | S20-W4/§12 |
+| `StrategyOverviewDrawer` | `client/src/components/command/StrategyOverviewDrawer.tsx` | S17 四计态势、草稿、终审与记录（✅ CMD-P27～P28；旧入口待 P29） | S20-W4/§12 |
 | `RadarChart` | `client/src/components/ui/RadarChart.tsx` | 纯 SVG 手写外交雷达 | S20-W4 |
 | `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |
 | `DuelStage` | `client/src/components/battle/DuelStage.tsx` | 单挑 Konva 演出层（混合范式） | S21-W9 |
@@ -571,4 +578,4 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.7 | 最后更新: 2026-07-23 | Session 162 独立郡域战场权威状态与场景栈批准*
+*文档版本: v2.8 | 最后更新: 2026-07-30 | Session 233 S20 命令坞实装状态同步*

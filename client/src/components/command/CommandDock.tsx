@@ -13,11 +13,11 @@ export type CommandDockItem = {
 };
 
 export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
-  { domain: 'civil', label: '内政', availability: 'legacy', reason: '仍在右侧城池面板' },
-  { domain: 'military', label: '军事', availability: 'legacy', reason: '仍在战役与城池面板' },
+  { domain: 'civil', label: '内政', availability: 'available', reason: '城市四分面只读总览；写操作暂留右侧' },
+  { domain: 'military', label: '军事', availability: 'available', reason: '军备、编成出征与战役军令唯一入口' },
   { domain: 'personnel', label: '人事', availability: 'available', reason: '名册、招贤、任官、赏罚唯一入口' },
-  { domain: 'diplomacy', label: '外交', availability: 'legacy', reason: '仍在左侧外交面板' },
-  { domain: 'strategy', label: '计略', availability: 'legacy', reason: '仍在左侧计谋面板' },
+  { domain: 'diplomacy', label: '外交', availability: 'available', reason: '势力、交涉与盟约唯一入口' },
+  { domain: 'strategy', label: '计略', availability: 'available', reason: '态势、发起条件与进行中记录只读可用；写操作仍在左侧' },
   { domain: 'intel', label: '情报', availability: 'legacy', reason: '仍在左侧谍报面板' },
   { domain: 'farming', label: '屯田', availability: 'planned', reason: '设计中，尚未提供运行时入口' },
   { domain: 'family', label: '家族', availability: 'legacy', reason: '仍在左侧家族面板' },

@@ -52,11 +52,11 @@ interface Store {
   endTurn: () => Promise<void>;
   chooseEvent: (eventId: number, choiceIndex: number) => Promise<void>;
   developFarm: () => Promise<void>;
-  develop: (kind: 'farm' | 'commerce' | 'wall') => Promise<void>;
-  conscript: () => Promise<void>;
-  relief: () => Promise<void>;
-  trainTroops: () => Promise<void>;
-  seekBeauty: () => Promise<void>;
+  develop: (kind: 'farm' | 'commerce' | 'wall', cityId?: number) => Promise<void>;
+  conscript: (cityId?: number) => Promise<void>;
+  relief: (cityId?: number) => Promise<void>;
+  trainTroops: (cityId?: number) => Promise<void>;
+  seekBeauty: (cityId?: number) => Promise<void>;
   /** @deprecated use seekBeauty */
   searchBeauty: () => Promise<void>;
   rewardBeautyStock: (officerId: number, amount?: number) => Promise<void>;
@@ -331,8 +331,8 @@ export const useGameStore = create<Store>((set, get) => ({
     await get().develop('farm');
   },
 
-  develop: async (kind) => {
-    const id = get().selectedCityId;
+  develop: async (kind, cityId) => {
+    const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
       return;
@@ -347,8 +347,8 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  conscript: async () => {
-    const id = get().selectedCityId;
+  conscript: async (cityId) => {
+    const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
       return;
@@ -362,8 +362,8 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  relief: async () => {
-    const id = get().selectedCityId;
+  relief: async (cityId) => {
+    const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
       return;
@@ -377,8 +377,8 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  trainTroops: async () => {
-    const id = get().selectedCityId;
+  trainTroops: async (cityId) => {
+    const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
       return;
@@ -392,8 +392,8 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  seekBeauty: async () => {
-    const id = get().selectedCityId;
+  seekBeauty: async (cityId) => {
+    const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
       return;

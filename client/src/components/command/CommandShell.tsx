@@ -11,6 +11,10 @@ import {
 } from './commandShellState';
 import { CourtCommandDrawer } from './CourtCommandDrawer';
 import { PersonnelRosterDrawer } from './PersonnelRosterDrawer';
+import { DiplomacyOverviewDrawer } from './DiplomacyOverviewDrawer';
+import { MilitaryOverviewDrawer } from './MilitaryOverviewDrawer';
+import { CivilOverviewDrawer } from './CivilOverviewDrawer';
+import { StrategyOverviewDrawer } from './StrategyOverviewDrawer';
 
 export function CommandShell() {
   const [state, dispatch] = useReducer(commandShellReducer, INITIAL_COMMAND_SHELL_STATE);
@@ -27,10 +31,18 @@ export function CommandShell() {
           onClose={closeDrawer}
           triggerElement={triggerRefs.current[activeItem.domain]}
         >
-          {activeItem.domain === 'court' ? (
+          {activeItem.domain === 'civil' ? (
+            <CivilOverviewDrawer />
+          ) : activeItem.domain === 'strategy' ? (
+            <StrategyOverviewDrawer />
+          ) : activeItem.domain === 'court' ? (
             <CourtCommandDrawer shellState={state} dispatch={dispatch} />
           ) : activeItem.domain === 'personnel' ? (
             <PersonnelRosterDrawer shellState={state} />
+          ) : activeItem.domain === 'diplomacy' ? (
+            <DiplomacyOverviewDrawer />
+          ) : activeItem.domain === 'military' ? (
+            <MilitaryOverviewDrawer />
           ) : (
             <>
               <p>{activeItem.reason}。</p>
