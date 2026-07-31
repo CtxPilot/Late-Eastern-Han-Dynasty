@@ -10,9 +10,9 @@
  *    - 相性差<20 且邻接 → 20% 投奔
  *    - 理想一致(benevolence) → 40% 投奔
  *    - 血亲在目标势力 → 50% 召唤
- * 2. 女角随男跟随：男将加入势力时
- *    - 其妻(husbandId/wifeId关联)自动跟随入势力 + 迁移到男将所在城
- * 3. 主将易主：占城后败方武将释放 → 其妻若有则跟随流落
+ * 2. 家眷随男跟随：男将加入势力时
+ *    - 正妻(husbandId)与随侍(giftedToOfficerId)自动跟随入势力 + 迁移到男将所在城
+ * 3. 主将易主：占城后败方武将释放 → 其家眷若有则跟随流落
  */
 import {
   OfficerStatus,
@@ -37,8 +37,8 @@ function pushLog(
   };
 }
 
-/** 找武将的妻子（FemaleCharacter.husbandId 指向该将，或 Officer.wifeId 指向女角） */
-function findWivesOfOfficer(state: GameState, officerId: number) {
+/** 找武将的随迁家眷：正妻或明确系于该将的随侍。 */
+function findDependentsOfOfficer(state: GameState, officerId: number) {
   const females = Object.values(state.females);
   return females.filter(
     (f) => f.husbandId === officerId || f.giftedToOfficerId === officerId,
@@ -88,13 +88,13 @@ export function joinFaction(
     };
   }
 
-  // 女角跟随：其妻自动入势力 + 迁移
+  // 家眷跟随：正妻与随侍自动入势力 + 迁移
   let females = { ...state.females };
-  const wives = findWivesOfOfficer({ ...state, officers }, officerId);
-  for (const wife of wives) {
-    if (wife.factionId !== factionId) {
-      females[wife.id] = {
-        ...wife,
+  const dependents = findDependentsOfOfficer({ ...state, officers }, officerId);
+  for (const dependent of dependents) {
+    if (dependent.factionId !== factionId) {
+      females[dependent.id] = {
+        ...dependent,
         factionId,
         locationId: targetCity.id,
       };
@@ -146,12 +146,12 @@ export function releaseOfficer(state: GameState, officerId: number): GameState {
     }
   }
 
-  // 妻子跟随流落（factionId=null）但保持 locationId
+  // 家眷跟随流落（factionId=null）但保持 locationId
   let females = { ...state.females };
-  const wives = findWivesOfOfficer({ ...state, officers }, officerId);
-  for (const wife of wives) {
-    females[wife.id] = {
-      ...wife,
+  const dependents = findDependentsOfOfficer({ ...state, officers }, officerId);
+  for (const dependent of dependents) {
+    females[dependent.id] = {
+      ...dependent,
       factionId: null,
     };
   }
@@ -255,15 +255,20 @@ export function tickFollowCheck(state: GameState, rng: () => number): GameState 
         `${officer.name} 因${result.reason}投奔${facName}`,
       );
 
-      // Check if wives followed
+      // 记录正妻/随侍随迁
       const afterFemales = s.females;
-      const wives = Object.values(beforeFemales).filter(
+      const dependents = Object.values(beforeFemales).filter(
         (f) => f.husbandId === officer.id || f.giftedToOfficerId === officer.id,
       );
-      for (const wife of wives) {
-        const after = afterFemales[wife.id];
-        if (after && after.factionId === result.factionId && wife.factionId !== result.factionId) {
-          messages.push(`${wife.name} 随夫君入府`);
+      for (const dependent of dependents) {
+        const after = afterFemales[dependent.id];
+        if (
+          after
+          && after.factionId === result.factionId
+          && dependent.factionId !== result.factionId
+        ) {
+          const role = dependent.husbandId === officer.id ? '正妻' : '随侍';
+          messages.push(`${dependent.name} 以${role}身份随迁入府`);
         }
       }
     }

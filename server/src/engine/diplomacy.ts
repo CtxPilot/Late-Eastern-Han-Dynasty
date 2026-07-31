@@ -2,8 +2,8 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * Demo 外交：进贡、献美、缔结盟约（与谍报盟友可见联动）
- * 献美 S08∩S09：转移 beautyStock，抬友好（非历史女角）
+ * Demo 外交：进贡、宫廷牵线、缔结盟约（与谍报盟友可见联动）
+ * 宫廷交涉 S08∩S09：转移 courtNetwork，抬友好（非历史女角）
  */
 import {
   DipRelation,
@@ -19,7 +19,7 @@ export const TRIBUTE_GOLD = 200;
 export const TRIBUTE_FAVOR = 15;
 export const ALLIANCE_GOLD = 500;
 export const ALLIANCE_MIN_FAVOR = 30;
-/** 献美：每点 beauty 友好增量 */
+/** 宫廷牵线：每点人脉友好增量 */
 export const GIFT_BEAUTY_FAVOR_PER = 12;
 export const GIFT_BEAUTY_MAX = 5;
 
@@ -122,7 +122,7 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
 }
 
 /**
- * 外交献美（S08∩S09）：己方 beautyStock −n → 对方 +n，友好 +12×n
+ * 外交牵线（S08∩S09）：己方 courtNetwork −n → 对方 +n，友好 +12×n
  * 累计 plantableBeauty，可供「点化女间谍」
  * HC-P0-5：发起方霸府/王/帝阶段友好增量按 hegemonyFavorMultiplier 放大。
  */
@@ -132,23 +132,23 @@ export function giftBeautyStock(
   amount = 1,
 ): GameState {
   const fid = state.playerFactionId;
-  if (targetFactionId === fid) throw new Error('不能向本势力献美');
+  if (targetFactionId === fid) throw new Error('不能向本势力牵线');
   const target = state.factions[targetFactionId];
   if (!target?.isAlive) throw new Error('目标势力不存在或已灭亡');
 
   const n = Math.floor(amount);
-  if (!Number.isFinite(n) || n < 1) throw new Error('献美数量须为正整数');
-  if (n > GIFT_BEAUTY_MAX) throw new Error(`单次最多献美 ${GIFT_BEAUTY_MAX}`);
+  if (!Number.isFinite(n) || n < 1) throw new Error('牵线数量须为正整数');
+  if (n > GIFT_BEAUTY_MAX) throw new Error(`单次最多牵线 ${GIFT_BEAUTY_MAX}`);
 
   const self = state.factions[fid];
   if (!self) throw new Error('本势力不存在');
-  const stock = self.beautyStock ?? 0;
+  const stock = self.courtNetwork ?? 0;
   if (stock < n) throw new Error(`美女资源不足（需 ${n}，当前 ${stock}）`);
 
   const link = findDiplomacy(state.diplomacy, fid, targetFactionId);
   const rel = (link?.relation as string) ?? DipRelation.NEUTRAL;
   if (rel === DipRelation.WAR || rel === 'war') {
-    throw new Error('交战中无法献美（请先停战）');
+    throw new Error('交战中无法牵线（请先停战）');
   }
 
   const multiplier = hegemonyFavorMultiplier(self.politicalStage);
@@ -162,10 +162,10 @@ export function giftBeautyStock(
 
   const factions = {
     ...state.factions,
-    [fid]: { ...self, beautyStock: stock - n },
+    [fid]: { ...self, courtNetwork: stock - n },
     [targetFactionId]: {
       ...target,
-      beautyStock: (target.beautyStock ?? 0) + n,
+      courtNetwork: (target.courtNetwork ?? 0) + n,
     },
   };
 
@@ -181,7 +181,7 @@ export function giftBeautyStock(
   return pushLog(
     state,
     'gift_beauty_dip',
-    `向 ${target.name} 献美 ×${n}（友好 ${prevFav}→${nextFav}；己方库存 ${stock}→${stock - n}；可点化 ${plantable[targetFactionId]}）`,
+    `向 ${target.name} 宫廷牵线 ×${n}（友好 ${prevFav}→${nextFav}；己方人脉 ${stock}→${stock - n}；掩护额度 ${plantable[targetFactionId]}）`,
     {
       factions,
       diplomacy,

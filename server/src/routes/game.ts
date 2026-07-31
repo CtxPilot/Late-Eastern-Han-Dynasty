@@ -36,6 +36,14 @@ gameRouter.get('/state', (_req, res) => {
   }
 });
 
+gameRouter.get('/civil/budget', (_req, res) => {
+  try {
+    res.json(gameService.getAnnualBudget());
+  } catch (e) {
+    res.status(404).json({ error: e instanceof Error ? e.message : 'no budget' });
+  }
+});
+
 gameRouter.post('/end-turn', (_req, res) => {
   try {
     res.json(gameService.endTurn());
@@ -68,7 +76,9 @@ gameRouter.post('/civil/develop', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);
     const kind = String(req.body.kind ?? 'farm') as 'farm' | 'commerce' | 'wall';
-    res.json(gameService.doDevelop(cityId, kind));
+    const officerId = Number(req.body.officerId);
+    if (!Number.isInteger(officerId)) throw new Error('必须指派本城武将');
+    res.json(gameService.doDevelop(cityId, kind, officerId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'develop failed' });
   }
@@ -350,7 +360,7 @@ gameRouter.post('/diplomacy/tribute', (req, res) => {
   }
 });
 
-/** S08∩S09 献美：转移 beautyStock，友好+12/点 */
+/** S08∩S09 宫廷牵线：转移 courtNetwork，友好+12/点（旧路由名兼容） */
 gameRouter.post('/diplomacy/gift-beauty', (req, res) => {
   try {
     res.json(
@@ -509,8 +519,13 @@ gameRouter.post('/battle/finish-player', (_req, res) => {
 /** S10 §8 玩家发起单挑 */
 gameRouter.post('/battle/duel/challenge', (req, res) => {
   try {
-    const { challengerUnitId, targetUnitId } = req.body as { challengerUnitId: string; targetUnitId: string };
-    res.json(gameService.battleChallengeDuel(challengerUnitId, targetUnitId));
+    const { challengerUnitId, targetUnitId, stance } = req.body as {
+      challengerUnitId: string;
+      targetUnitId: string;
+      stance?: import('@leh/shared').DuelStance;
+    };
+    if (!['assault', 'steady', 'bait', 'delegate'].includes(stance ?? '')) throw new Error('单挑倾向无效');
+    res.json(gameService.battleChallengeDuel(challengerUnitId, targetUnitId, stance!));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'duel challenge failed' });
   }
@@ -692,7 +707,11 @@ gameRouter.post('/battlefield/exit', (_req, res) => {
 /** 进入南郡郡域战场：生成 BattlefieldInstance 并写入 GameState.activeBattlefieldInstance */
 gameRouter.post('/battlefield-instance/enter', (_req, res) => {
   try {
-    res.json(gameService.enterNanjunBattlefield());
+    const commandery = (_req.body as { commandery?: unknown })?.commandery;
+    if (commandery !== undefined && commandery !== 'nanjun' && commandery !== 'yingchuan') {
+      return res.status(400).json({ error: 'commandery must be nanjun or yingchuan' });
+    }
+    res.json(gameService.enterNanjunBattlefield(commandery));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield instance enter failed' });
   }
@@ -728,6 +747,49 @@ gameRouter.post('/battlefield-instance/engage-county', (req, res) => {
   }
 });
 
+gameRouter.post('/battlefield-instance/duel/start', (req, res) => {
+  try {
+    const { kind, nodeId, stance } = req.body as {
+      kind: 'formation_front' | 'city_front';
+      nodeId: string;
+      stance?: import('@leh/shared').DuelStance;
+    };
+    if (kind !== 'formation_front' && kind !== 'city_front') {
+      return res.status(400).json({ error: 'kind 必须是 formation_front 或 city_front' });
+    }
+    if (!['assault', 'steady', 'bait', 'delegate'].includes(stance ?? 'delegate')) {
+      return res.status(400).json({ error: '无效单挑倾向' });
+    }
+    res.json(gameService.startBattlefieldDuel(kind, String(nodeId), stance));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield duel start failed' });
+  }
+});
+
+gameRouter.post('/battlefield-instance/duel/step', (_req, res) => {
+  try {
+    res.json(gameService.stepBattlefieldDuel());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield duel step failed' });
+  }
+});
+
+gameRouter.post('/battlefield-instance/duel/skip', (_req, res) => {
+  try {
+    res.json(gameService.skipBattlefieldDuel());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield duel skip failed' });
+  }
+});
+
+gameRouter.post('/battlefield-instance/duel/close', (_req, res) => {
+  try {
+    res.json(gameService.closeBattlefieldDuel());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield duel close failed' });
+  }
+});
+
 // ====== 白刃战 API（05 §二十 Tier II） ======
 
 /** 发起白刃战 */
@@ -748,6 +810,19 @@ gameRouter.get('/melee', (_req, res) => {
     res.json(m);
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'melee get failed' });
+  }
+});
+
+/** 从同一交战快照选择自动、标准或六角微操；选定后不可改选。 */
+gameRouter.post('/melee/mode', (req, res) => {
+  try {
+    const mode = String(req.body.mode);
+    if (!['auto', 'standard', 'tactical'].includes(mode)) {
+      return res.status(400).json({ error: 'mode 必须是 auto、standard 或 tactical' });
+    }
+    res.json(gameService.meleeSelectMode(mode as import('@leh/shared').MeleeEntryMode));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee mode failed' });
   }
 });
 

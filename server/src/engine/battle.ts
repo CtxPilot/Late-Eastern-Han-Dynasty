@@ -901,6 +901,7 @@ export function challengeDuel(
   targetUnitId: string,
   state: GameState,
   rng: import('../battle/duel.js').DuelRng,
+  stance: import('@leh/shared').DuelStance = 'delegate',
 ): { battle: BattleState; accepted: boolean } {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   if (battle.duel) throw new Error('已有进行中的单挑');
@@ -949,7 +950,7 @@ export function challengeDuel(
   const spentUnits = battle.units.map((u) =>
     u.id === atkUnit.id ? { ...u, energy: energy - DUEL_CHALLENGE_COST } : u,
   );
-  const duel = createDuel(battle.id, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
+  const duel = createDuel(battle.id, challenger, defender, DEFAULT_DUEL_CONFIG, rng, stance);
   return {
     battle: {
       ...battle,

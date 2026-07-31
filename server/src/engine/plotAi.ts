@@ -87,7 +87,7 @@ export function aiPlotTurn(
   }
 
   // 美人计
-  if ((faction.beautyStock ?? 0) >= 2) {
+  if ((faction.courtNetwork ?? 0) >= 2) {
     const richCity = myCities.find((c) => c.gold >= 150);
     if (richCity) {
       const detailedEnemy = Object.entries(intel?.cities ?? {}).find(

@@ -2,27 +2,29 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * Demo 内政引擎（即时结算简化版）
+ * R5 持续内政引擎
  * 征兵扣成年男；与人口结构/粮耗挂钩
- * 美女寻访见 engine/beauty.ts（S09）
+ * 宫廷人脉地方结交见 engine/beauty.ts（S09；旧文件名兼容）
  */
 import {
   ensureDemographics,
   maxConscriptable,
   withSyncedPopulation,
   type City,
+  type DevelopmentProject,
+  type DevelopmentProjectKind,
   type GameState,
 } from '@leh/shared';
 
-export type DevelopKind = 'farm' | 'commerce' | 'wall';
+export type DevelopKind = DevelopmentProjectKind;
 
-const DEVELOP: Record<
+export const DEVELOPMENT_PROJECTS: Record<
   DevelopKind,
-  { cost: number; label: string; stat: 'farm' | 'commerce' | 'wall'; gainMin: number; gainMax: number }
+  { totalGoldCost: number; label: string; stat: DevelopKind; totalMonths: number; gain: number }
 > = {
-  farm: { cost: 100, label: '农业', stat: 'farm', gainMin: 20, gainMax: 30 },
-  commerce: { cost: 100, label: '商业', stat: 'commerce', gainMin: 18, gainMax: 28 },
-  wall: { cost: 120, label: '城防', stat: 'wall', gainMin: 15, gainMax: 25 },
+  farm: { totalGoldCost: 300, label: '农业', stat: 'farm', totalMonths: 9, gain: 100 },
+  commerce: { totalGoldCost: 400, label: '商业', stat: 'commerce', totalMonths: 6, gain: 100 },
+  wall: { totalGoldCost: 500, label: '城防', stat: 'wall', totalMonths: 12, gain: 100 },
 };
 
 function requirePlayerCity(state: GameState, cityId: number): City {
@@ -53,42 +55,127 @@ function pushLog(
   };
 }
 
-function randGain(min: number, max: number, rng: () => number): number {
-  return min + Math.floor(rng() * (max - min + 1));
-}
-
-/** 开发农业 / 商业 / 城防 */
+/** 启动农业 / 商业 / 城防持续项目；首付总成本 1/3。 */
 export function developCity(
   state: GameState,
   cityId: number,
   kind: DevelopKind,
-  rng: () => number,
+  assignedOfficerId: number,
 ): GameState {
-  const conf = DEVELOP[kind];
+  const conf = DEVELOPMENT_PROJECTS[kind];
   if (!conf) throw new Error('未知开发类型');
   const city = requirePlayerCity(state, cityId);
-  if (city.gold < conf.cost) throw new Error('金钱不足');
-
-  const gain = randGain(conf.gainMin, conf.gainMax, rng);
-  const prev = city.stats[conf.stat];
-  const nextStat = Math.min(999, prev + gain);
+  if (city.activeDevelopment) throw new Error('该城已有持续开发项目');
+  const officer = state.officers[assignedOfficerId];
+  if (!officer || officer.faction !== state.playerFactionId || officer.location !== cityId) {
+    throw new Error('指派武将不在本城或不属己方');
+  }
+  if (officer.status !== 'active') throw new Error('指派武将当前不可执行内政');
+  const initialCost = Math.ceil(conf.totalGoldCost / 3);
+  if (city.gold < initialCost) throw new Error('金钱不足');
+  const project: DevelopmentProject = {
+    kind,
+    assignedOfficerId,
+    totalMonths: conf.totalMonths,
+    remainingMonths: conf.totalMonths,
+    totalGoldCost: conf.totalGoldCost,
+    goldPaid: initialCost,
+    pausedMonths: 0,
+    progressLostMonths: 0,
+    status: 'active',
+  };
   const nextCity: City = {
     ...city,
-    gold: city.gold - conf.cost,
-    stats: { ...city.stats, [conf.stat]: nextStat },
+    gold: city.gold - initialCost,
+    activeDevelopment: project,
   };
 
   return pushLog(
     state,
-    `develop_${kind}`,
-    `${city.name} 开发${conf.label} +${gain}（${prev}→${nextStat}，花费${conf.cost}金）`,
+    `development_start_${kind}`,
+    `${city.name} 启动${conf.label}持续开发（${conf.totalMonths}个月，首付${initialCost}金）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
 }
 
 /** 兼容旧 API */
-export function developFarm(state: GameState, cityId: number, rng: () => number): GameState {
-  return developCity(state, cityId, 'farm', rng);
+export function developFarm(state: GameState, cityId: number, assignedOfficerId: number): GameState {
+  return developCity(state, cityId, 'farm', assignedOfficerId);
+}
+
+function monthlyInstallment(project: DevelopmentProject): number {
+  const monthsAfterThis = Math.max(0, project.remainingMonths - 1);
+  return Math.ceil((project.totalGoldCost - project.goldPaid) / Math.max(1, monthsAfterThis + 1));
+}
+
+/** 每月推进一个城市项目；资源或人员条件不满足即暂停并应用中断损失。 */
+export function tickDevelopmentProject(state: GameState, city: City): { city: City; note?: string } {
+  const project = city.activeDevelopment;
+  if (!project) return { city };
+  const officer = state.officers[project.assignedOfficerId];
+  const isDeployed = state.campaignArmies.some((army) =>
+    army.commanderId === project.assignedOfficerId
+    || army.subCommanderIds.includes(project.assignedOfficerId)
+    || army.advisorId === project.assignedOfficerId
+    || army.subAdvisorId === project.assignedOfficerId);
+  const officerAvailable =
+    officer?.faction === city.ruler
+    && officer.location === city.id
+    && officer.status === 'active'
+    && !isDeployed;
+  const installment = monthlyInstallment(project);
+  const canPay = city.gold >= installment;
+  if (!officerAvailable || !canPay) {
+    const pausedMonths = project.pausedMonths + 1;
+    let remainingMonths = project.remainingMonths;
+    let progressLostMonths = project.progressLostMonths;
+    if (pausedMonths === 3) {
+      const completed = project.totalMonths - remainingMonths;
+      const lost = Math.min(completed, Math.max(1, Math.ceil(completed * 0.25)));
+      remainingMonths += lost;
+      progressLostMonths += lost;
+    } else if (pausedMonths > 3) {
+      const completed = project.totalMonths - remainingMonths;
+      if (completed > 0) {
+        remainingMonths += 1;
+        progressLostMonths += 1;
+      }
+    }
+    return {
+      city: {
+        ...city,
+        activeDevelopment: {
+          ...project,
+          status: 'paused',
+          pausedMonths,
+          remainingMonths: Math.min(project.totalMonths, remainingMonths),
+          progressLostMonths,
+        },
+      },
+      note: `${city.name}${DEVELOPMENT_PROJECTS[project.kind].label}项目暂停（${!officerAvailable ? '人员不可用' : '月费不足'}）`,
+    };
+  }
+  const remainingMonths = project.remainingMonths - 1;
+  const goldPaid = project.goldPaid + installment;
+  if (remainingMonths > 0) {
+    return {
+      city: {
+        ...city,
+        gold: city.gold - installment,
+        activeDevelopment: { ...project, remainingMonths, goldPaid, pausedMonths: 0, status: 'active' },
+      },
+    };
+  }
+  const conf = DEVELOPMENT_PROJECTS[project.kind];
+  return {
+    city: {
+      ...city,
+      gold: city.gold - installment,
+      stats: { ...city.stats, [conf.stat]: Math.min(999, city.stats[conf.stat] + conf.gain) },
+      activeDevelopment: undefined,
+    },
+    note: `${city.name}${conf.label}持续开发完成，${conf.label}+${conf.gain}`,
+  };
 }
 
 /**

@@ -28,6 +28,7 @@ import { tickChildrenAppear } from './child.js';
 import { tickEvents } from './event.js';
 import { syncFactionResources } from './economy.js';
 import { tickImperialAuthorityQuarter } from './hegemony.js';
+import { tickDevelopmentProject } from './civil.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -79,7 +80,7 @@ function applyFamineDeaths(d: CityDemographics, deaths: number): CityDemographic
 }
 
 /** 一城月结：自然人口 → 产耗粮 */
-function settleCityMonthDetailed(
+export function settleCityMonthDetailed(
   city: City,
   season: Season,
 ): {
@@ -164,19 +165,32 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
 
   const cities: GameState['cities'] = { ...state.cities };
   const famineNotes: string[] = [];
+  const developmentNotes: string[] = [];
+  let playerProjectCost = 0;
+  let playerAdministrativeCost = 0;
   let playerFoodNeed = 0;
   let playerFoodProd = 0;
   let playerBirths = 0;
   let playerElderDeaths = 0;
   let playerToAdult = 0;
 
-  for (const city of Object.values(state.cities)) {
+  const administrationOrdinals = new Map<number, number>();
+  for (const city of Object.values(state.cities).sort((a, b) => a.id - b.id)) {
+    const ordinal = city.ruler == null ? 0 : (administrationOrdinals.get(city.ruler) ?? 0);
+    if (city.ruler != null) administrationOrdinals.set(city.ruler, ordinal + 1);
+    const administrativeCost = ordinal * 5;
+    const afterAdministration = { ...city, gold: Math.max(0, city.gold - administrativeCost) };
+    const projectResult = tickDevelopmentProject(state, afterAdministration);
+    if (projectResult.note) developmentNotes.push(projectResult.note);
+    const projectCost = Math.max(0, afterAdministration.gold - projectResult.city.gold);
     const beforeFood = city.food;
-    const result = settleCityMonthDetailed(city, season);
+    const result = settleCityMonthDetailed(projectResult.city, season);
     cities[city.id] = result.city;
     if (result.famineNote) famineNotes.push(result.famineNote);
 
     if (city.ruler === state.playerFactionId) {
+      playerProjectCost += projectCost;
+      playerAdministrativeCost += Math.min(city.gold, administrativeCost);
       const need = cityFoodNeed(result.city, season);
       playerFoodNeed += need;
       playerFoodProd += result.city.food - beforeFood + need;
@@ -206,7 +220,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
 
   const ecoMsg =
     playerFoodNeed > 0
-      ? `${currentYear}年${currentMonth}月（${seasonLabel}）— 回合结束（耗粮约${playerFoodNeed}，产粮约${Math.max(0, Math.floor(playerFoodProd))}；新生${playerBirths}，成丁${playerToAdult}，老故${playerElderDeaths}）`
+      ? `${currentYear}年${currentMonth}月（${seasonLabel}）— 回合结束（耗粮约${playerFoodNeed}，产粮约${Math.max(0, Math.floor(playerFoodProd))}；项目${playerProjectCost}金，行政${playerAdministrativeCost}金；新生${playerBirths}，成丁${playerToAdult}，老故${playerElderDeaths}）`
       : `${currentYear}年${currentMonth}月（${seasonLabel}）— 回合结束`;
 
   let nextState: GameState = afterAi;
@@ -280,6 +294,12 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
         year: currentYear,
         month: currentMonth,
         type: 'famine',
+        message,
+      })),
+      ...developmentNotes.slice(0, 8).map((message) => ({
+        year: currentYear,
+        month: currentMonth,
+        type: 'development_project',
         message,
       })),
       ...ai.decisions.map((d) => ({

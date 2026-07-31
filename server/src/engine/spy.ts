@@ -43,7 +43,7 @@ export const MAX_ROSTER = 8;
 /** 女间谍训练成本（§30.5）：美女 2 + 金 100 */
 export const FEMALE_SPY_BEAUTY_COST = 2;
 export const FEMALE_SPY_GOLD_COST = 100;
-/** 献美点化：扣对方 1 点 beauty + 己方金 80 */
+/** 人脉掩护：扣对方 1 点 courtNetwork + 己方金 80 */
 export const PLANT_FEMALE_GOLD = 80;
 
 const MISSION_GOLD: Record<string, number> = {
@@ -326,7 +326,7 @@ export function trainFemaleSpy(
 
   const faction = state.factions[fid];
   if (!faction) throw new Error('势力不存在');
-  if ((faction.beautyStock ?? 0) < FEMALE_SPY_BEAUTY_COST) {
+  if ((faction.courtNetwork ?? 0) < FEMALE_SPY_BEAUTY_COST) {
     throw new Error(`美女资源不足（需 ${FEMALE_SPY_BEAUTY_COST}）`);
   }
   if (city.gold < FEMALE_SPY_GOLD_COST) {
@@ -368,7 +368,7 @@ export function trainFemaleSpy(
     ...state.factions,
     [fid]: {
       ...faction,
-      beautyStock: (faction.beautyStock ?? 0) - FEMALE_SPY_BEAUTY_COST,
+      courtNetwork: (faction.courtNetwork ?? 0) - FEMALE_SPY_BEAUTY_COST,
     },
   };
   const cities = {
@@ -388,8 +388,8 @@ export function trainFemaleSpy(
 }
 
 /**
- * 献美→点化女间谍（S07∩S08∩S09 掩护线）
- * 条件：对目标势力 plantableBeauty≥1；对方 beautyStock≥1；编制有空；己方城有金 80
+ * 宫廷牵线→人脉掩护女间谍（S07∩S08∩S09）
+ * 条件：对目标势力 plantableBeauty≥1；对方 courtNetwork≥1；编制有空；己方城有金 80
  * 效果：plantable−1、对方 beauty−1、生成己方女间谍（home=己方城，cover=对方）
  */
 export function plantFemaleFromGift(
@@ -407,9 +407,9 @@ export function plantFemaleFromGift(
   const plantable = intel.plantableBeauty ?? {};
   const left = plantable[targetFactionId] ?? 0;
   if (left < 1) {
-    throw new Error(`无可点化额度（需先向 ${target.name} 献美）`);
+    throw new Error(`无人脉掩护额度（需先向 ${target.name} 宫廷牵线）`);
   }
-  if ((target.beautyStock ?? 0) < 1) {
+  if ((target.courtNetwork ?? 0) < 1) {
     throw new Error(`${target.name} 后宫库存已空，无法点化`);
   }
 
@@ -466,7 +466,7 @@ export function plantFemaleFromGift(
     ...state.factions,
     [targetFactionId]: {
       ...target,
-      beautyStock: (target.beautyStock ?? 0) - 1,
+      courtNetwork: (target.courtNetwork ?? 0) - 1,
     },
   };
   const cities = {

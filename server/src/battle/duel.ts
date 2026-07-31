@@ -33,6 +33,7 @@ import {
   type DuelInjury,
   type DuelResult,
   type DuelRound,
+  type DuelStance,
   type DuelState,
 } from '@leh/shared';
 
@@ -229,6 +230,9 @@ function resolveClash(atk: DuelCommand, def: DuelCommand): ClashResult {
     // 牵制克必杀 → 必杀伤害 -50%, 牵制方正常计算
     return { ...base, finisherResolved: true, defDamageMod: -0.5 };
   }
+  if (atk === DuelCommand.FINISHER && def === DuelCommand.RESTRAIN) {
+    return { ...base, finisherResolved: true };
+  }
   if (atk === DuelCommand.FINISHER && def === DuelCommand.FIERCE_ATTACK) {
     // 必杀克猛攻 → 必中 + 猛攻方防御 -20% 已含在指令修正
     return { ...base, atkDamageMod: 0.3, finisherIgnoresDodge: true };
@@ -422,6 +426,7 @@ function aiCommand(
   foe: DuelCombatantState,
   foeLast: DuelCommand | null,
   unique: UniqueId,
+  stance: DuelStance,
   rng: DuelRng,
 ): DuelCommand {
   const p = officer.hidden.personality;
@@ -429,6 +434,7 @@ function aiCommand(
 
   // 专属风格调整
   weights = applyUniqueWeights(weights, unique);
+  weights = applyStanceWeights(weights, stance);
 
   // 动态调整 (§8.13.2)
   if (foeLast === DuelCommand.FINISHER) weights = bump(weights, DuelCommand.RESTRAIN, 30);
@@ -454,6 +460,32 @@ function aiCommand(
   }
 
   return pickWeighted(weights, rng);
+}
+
+function applyStanceWeights(
+  weights: [DuelCommand, number][],
+  stance: DuelStance,
+): [DuelCommand, number][] {
+  switch (stance) {
+    case 'assault':
+      return bump(bump(bump(weights, DuelCommand.FIERCE_ATTACK, 25), DuelCommand.FINISHER, 20), DuelCommand.PARRY, -10);
+    case 'steady':
+      return bump(bump(bump(bump(weights, DuelCommand.PARRY, 35), DuelCommand.RESTRAIN, 30), DuelCommand.PROBE, 20), DuelCommand.FINISHER, -15);
+    case 'bait':
+      return bump(bump(bump(bump(weights, DuelCommand.PROBE, 40), DuelCommand.DODGE, 35), DuelCommand.RESTRAIN, 20), DuelCommand.FIERCE_ATTACK, -15);
+    case 'delegate':
+      return weights;
+  }
+}
+
+/** AI chooses without observing the opponent's submitted stance. */
+export function chooseDuelStance(officer: Officer, rng: DuelRng): DuelStance {
+  const p = officer.hidden.personality;
+  if (p === Personality.RECKLESS) return rng() < 0.8 ? 'assault' : 'delegate';
+  if (p === Personality.CAUTIOUS || p === Personality.CALM) return rng() < 0.65 ? 'steady' : 'bait';
+  if (officer.hidden.strategy >= 70) return rng() < 0.6 ? 'bait' : 'steady';
+  if (p === Personality.BRAVE || p === Personality.BOLD) return rng() < 0.6 ? 'assault' : 'delegate';
+  return 'delegate';
 }
 
 function baseWeights(p: Personality): [DuelCommand, number][] {
@@ -630,9 +662,9 @@ function resolveOutcome(
   isFatedKill: boolean,
   rng: DuelRng,
 ): { outcome: DuelResult['outcome']; epilogue: string } {
-  // 无双 → 不会被斩/俘
+  // 传奇保护只改写败后处置，不改写 HP 胜负。
   if (loserUnique === 'wushuang' && !isFatedKill) {
-    return { outcome: 'escaped', epilogue: `${loserOff.name} 借赤兔马之速，扬长而去——天下无双，不败于此。` };
+    return { outcome: 'escaped', epilogue: `${loserOff.name} 单挑落败，身负重伤，借赤兔马之速撤回本阵。` };
   }
   // 历史宿命 → 必斩
   if (isFatedKill) {
@@ -686,6 +718,8 @@ export function createDuel(
   defender: Officer,
   cfg: DuelEngineConfig,
   rng: DuelRng,
+  challengerStance: DuelStance = 'delegate',
+  defenderStance?: DuelStance,
 ): DuelState {
   const uniqueAtk = uniqueOf(challenger);
   const uniqueDef = uniqueOf(defender);
@@ -722,6 +756,10 @@ export function createDuel(
     preDuelDone: true,
     dialogueLog: dialogs,
     roundHistory: [],
+    stances: {
+      [challenger.id]: challengerStance,
+      [defender.id]: defenderStance ?? chooseDuelStance(defender, rng),
+    },
     autoResolve: true,
     speedMode: 'full',
   };
@@ -748,8 +786,8 @@ export function stepDuel(
   const secondWeapon = resolveWeapon(secondOff);
 
   // 选指令
-  const firstCmd = aiCommand(firstOff, firstC, secondC, secondC.lastCommand, firstUnique, rng);
-  const secondCmd = aiCommand(secondOff, secondC, firstC, firstC.lastCommand, secondUnique, rng);
+  const firstCmd = aiCommand(firstOff, firstC, secondC, secondC.lastCommand, firstUnique, state.stances[firstId] ?? 'delegate', rng);
+  const secondCmd = aiCommand(secondOff, secondC, firstC, firstC.lastCommand, secondUnique, state.stances[secondId] ?? 'delegate', rng);
 
   // 解算: 先手方攻击后手方, 然后后手方攻击先手方 (若仍存活)
   const round = resolveExchange(firstId, secondId, firstCmd, secondCmd, firstOff, secondOff, firstC, secondC, firstWeapon, secondWeapon, firstUnique, secondUnique, state.round + 1, rng);
@@ -812,7 +850,11 @@ function resolveExchange(
 
   // 先手 → 后手
   {
-    const clash = resolveClash(firstCmd, secondCmd);
+    let clash = resolveClash(firstCmd, secondCmd);
+    // 吕布面对必杀有额外 20% 化解率；失败时不附送减伤。
+    if (firstCmd === DuelCommand.FINISHER && secondUnique === 'wushuang' && rng() < 0.2) {
+      clash = { ...clash, finisherResolved: true };
+    }
     const { damage, hit } = computeDamage(firstOff, secondOff, firstC, firstCmd, firstWeapon, clash, rng);
     hits[firstId] = hit;
     // 暴击
@@ -831,8 +873,9 @@ function resolveExchange(
     // 连击 (专属)
     if (hit && (firstUnique === 'wushuang' || firstUnique === 'tianyi' || firstUnique === 'longdan' || firstUnique === 'wusheng')) {
       const chains = computeChain(firstUnique, finalDmg, firstOff, firstWeapon, rng);
-      chainHits[firstId] = chains.hits;
-      hpAfter[secondId] = Math.max(0, hpAfter[secondId] - chains.totalExtra);
+      const capped = capChainDamage(firstUnique, finalDmg, chains.hits, secondC.maxHp);
+      chainHits[firstId] = capped.hits;
+      hpAfter[secondId] = Math.max(0, hpAfter[secondId] - capped.totalExtra);
     }
 
     // 格挡反手 (后手方若选格挡且未被周旋克)
@@ -864,7 +907,10 @@ function resolveExchange(
 
   // 后手 → 先手 (若后手存活且非纯防御被秒)
   if (!defeated && hpAfter[secondId] > 0 && secondCmd !== DuelCommand.PARRY && secondCmd !== DuelCommand.DODGE) {
-    const clash2 = resolveClash(secondCmd, firstCmd);
+    let clash2 = resolveClash(secondCmd, firstCmd);
+    if (secondCmd === DuelCommand.FINISHER && firstUnique === 'wushuang' && rng() < 0.2) {
+      clash2 = { ...clash2, finisherResolved: true };
+    }
     const { damage, hit } = computeDamage(secondOff, firstOff, { ...secondC, hp: hpAfter[secondId] }, secondCmd, secondWeapon, clash2, rng);
     hits[secondId] = hit;
     let crit = false;
@@ -910,6 +956,23 @@ function resolveExchange(
   };
 }
 
+function capChainDamage(
+  unique: UniqueId,
+  baseDamage: number,
+  hits: number[],
+  defenderMaxHp: number,
+): { hits: number[]; totalExtra: number } {
+  if (unique !== 'wushuang') return { hits, totalExtra: hits.reduce((sum, hit) => sum + hit, 0) };
+  // 单回合最多削去对手最大生命的 75%，避免三连绕过任何反制直接满血秒杀。
+  let remaining = Math.max(0, Math.floor(defenderMaxHp * 0.75) - baseDamage);
+  const cappedHits = hits.map((hit) => {
+    const capped = Math.max(0, Math.min(hit, remaining));
+    remaining -= capped;
+    return capped;
+  }).filter((hit) => hit > 0);
+  return { hits: cappedHits, totalExtra: cappedHits.reduce((sum, hit) => sum + hit, 0) };
+}
+
 function computeChain(
   unique: UniqueId,
   baseDmg: number,
@@ -917,10 +980,10 @@ function computeChain(
   weapon: WeaponProfile,
   rng: DuelRng,
 ): { hits: number[]; totalExtra: number } {
-  // 吕布 三连击 (第二×0.7, 第三×0.5); 天义 二连 (第二×0.8); 龙胆 累加概率; 武圣 击败后连击(此处简化)
+  // 吕布 R3 三连衰减；后续击不会递归触发连击。
   if (unique === 'wushuang') {
-    const h2 = Math.max(1, Math.round(baseDmg * 0.7 * (0.9 + rng() * 0.2)));
-    const h3 = Math.max(1, Math.round(baseDmg * 0.5 * (0.9 + rng() * 0.2)));
+    const h2 = Math.max(1, Math.round(baseDmg * 0.55 * (0.9 + rng() * 0.2)));
+    const h3 = Math.max(1, Math.round(baseDmg * 0.35 * (0.9 + rng() * 0.2)));
     return { hits: [h2, h3], totalExtra: h2 + h3 };
   }
   if (unique === 'tianyi') {
@@ -970,7 +1033,7 @@ function finalizeDuel(
 
   if (cHp <= 0 && dHp <= 0) draw = true;
   else if (cHp <= 0) { winnerOff = defender; loserOff = challenger; winnerId = defender.id; loserId = challenger.id; }
-  else if (dHp <= 0) { winnerOff = challenger; loserOff = defender; winnerId = challenger.id; loserId = challenger.id; }
+  else if (dHp <= 0) { winnerOff = challenger; loserOff = defender; winnerId = challenger.id; loserId = defender.id; }
   else draw = true; // 回合耗尽
 
   if (draw) {

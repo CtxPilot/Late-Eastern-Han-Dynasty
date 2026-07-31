@@ -283,6 +283,8 @@ export function createMeleeState(
     defenderArmyId,
     attackerFactionId,
     defenderFactionId,
+    entryMode: null,
+    settlementApplied: false,
     round: 0,
     maxRounds: MAX_MELEE_ROUNDS,
     attackerTroops,

@@ -9,7 +9,7 @@ import {
   OfficerStatus,
   Season,
   TerrainType,
-  beautySeekLeftFromFemales,
+  initialCourtNetworkOpportunities,
   calcStaminaMax,
   emptyIntel,
   maskGameStateForPlayer,
@@ -102,6 +102,7 @@ import {
   unstationCounter,
 } from '../engine/spy.js';
 import { syncFactionResources } from '../engine/economy.js';
+import { buildAnnualBudget } from '../engine/budget.js';
 import { extractBattlefieldNodes, generateBattlefield, tickBattlefieldMarch } from '../engine/battlefield.js';
 import { applyMeleeRoundResult, createMeleeState, getTacticalActionCost, refreshMeleeState, runMeleeRound } from '../engine/meleeRound.js';
 import {
@@ -116,8 +117,9 @@ import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { grantNobility } from '../engine/nobility.js';
 import { broadcast } from '../ws/broadcast.js';
-import { resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
-import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateNanjunBattlefield } from '@leh/shared';
+import { getRuntimeRngState, resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
+import { createDuel, DEFAULT_DUEL_CONFIG, runDuelToCompletion, stepDuel } from '../battle/duel.js';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldDuelContext, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type DuelStance, type MeleeEntryMode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateNanjunBattlefield, generateCommanderyBattlefield, yingchuan190 } from '@leh/shared';
 
 let currentGame: GameState | null = null;
 // Sec-6: 简单请求锁，防止并发操作导致状态不一致
@@ -210,7 +212,11 @@ function buildGameState(
       food: 3000 + c.initialStats.farm,
       population,
       demographics,
-      beautySeekLeft: beautySeekLeftFromFemales(demographics.adultFemale),
+      courtNetworkOpportunities: initialCourtNetworkOpportunities({
+        isCapital: c.isCapital,
+        commerce: c.initialStats.commerce,
+        morale: 70,
+      }),
       troops: 5000,
       troopsMorale: 70,
       officers: cityOfficers,
@@ -244,7 +250,7 @@ function buildGameState(
       headquartersLabel: setup.headquartersLabel,
       gold: 5000,
       food: 8000,
-      beautyStock: 0,
+      courtNetwork: 0,
       cityIds,
       officerIds,
       isPlayer: fid === playerFactionId,
@@ -427,14 +433,23 @@ export function doEventChoice(eventId: number, choiceIndex: number): GameState {
 
 export function doDevelopFarm(cityId: number): GameState {
   return withLock(() => {
-    currentGame = developFarm(getGame(), cityId, runtimeRandom);
+    const officerId = getGame().cities[cityId]?.officers[0];
+    if (officerId == null) throw new Error('本城没有可指派武将');
+    currentGame = developFarm(getGame(), cityId, officerId);
     return getClientGame();
   });
 }
 
-export function doDevelop(cityId: number, kind: DevelopKind): GameState {
+export function getAnnualBudget() {
+  const game = getGame();
+  return buildAnnualBudget(game, game.playerFactionId);
+}
+
+export function doDevelop(cityId: number, kind: DevelopKind, officerId?: number): GameState {
   return withLock(() => {
-    currentGame = developCity(getGame(), cityId, kind, runtimeRandom);
+    const assignedOfficerId = officerId ?? getGame().cities[cityId]?.officers[0];
+    if (assignedOfficerId == null) throw new Error('本城没有可指派武将');
+    currentGame = developCity(getGame(), cityId, kind, assignedOfficerId);
     return getClientGame();
   });
 }
@@ -474,7 +489,7 @@ export function doRewardBeautyStock(officerId: number, amount?: number): GameSta
   });
 }
 
-/** 占城抢夺美女（内部） */
+/** 占城接管地方人脉（内部） */
 export function applyLootBeauty(cityId: number, attackerFactionId: number): void {
   withLock(() => {
     currentGame = lootBeautyOnCapture(getGame(), cityId, attackerFactionId, runtimeRandom);
@@ -615,7 +630,7 @@ export function doTrainFemaleSpy(cityId: number): GameState {
   });
 }
 
-/** 献美→点化女间谍 */
+/** 宫廷牵线→人脉掩护女间谍 */
 export function doPlantFemale(targetFactionId: number, homeCityId?: number): GameState {
   return withLock(() => {
     currentGame = plantFemaleFromGift(getGame(), targetFactionId, runtimeRandom, homeCityId);
@@ -838,11 +853,15 @@ export function battleFinishPlayer(): BattleState {
 }
 
 /** S10 §8 玩家发起单挑 */
-export function battleChallengeDuel(challengerUnitId: string, targetUnitId: string): BattleState {
+export function battleChallengeDuel(
+  challengerUnitId: string,
+  targetUnitId: string,
+  stance: import('@leh/shared').DuelStance,
+): BattleState {
   return withLock(() => {
     const activeBattle = getActiveBattle();
     if (!activeBattle) throw new Error('无战斗');
-    const { battle, accepted } = challengeDuel(activeBattle, challengerUnitId, targetUnitId, getGame(), runtimeRandom);
+    const { battle, accepted } = challengeDuel(activeBattle, challengerUnitId, targetUnitId, getGame(), runtimeRandom, stance);
     if (!accepted) {
       commitActiveBattle(battle);
       return battle;
@@ -898,6 +917,35 @@ export function exitBattle(): GameState {
     const state = getGame();
     const battle = getActiveBattle(state);
     if (!battle) return getClientGame();
+    const tacticalMelee = state.activeMelee?.entryMode === 'tactical'
+      && state.activeMelee.tacticalBattleId === battle.id
+      ? state.activeMelee
+      : null;
+    if (tacticalMelee) {
+      if (battle.phase !== 'over') throw new Error('六角微操尚未结束，不能提前结算');
+      const attackerTroops = battle.units
+        .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
+        .reduce((sum, unit) => sum + unit.troopCount, 0);
+      const defenderTroops = battle.units
+        .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && !unit.isRetreated)
+        .reduce((sum, unit) => sum + unit.troopCount, 0);
+      const resolved: MeleeState = {
+        ...tacticalMelee,
+        attackerTroops,
+        defenderTroops,
+        attackerMorale: battle.units.find((unit) => unit.side === 'attacker')?.morale ?? 0,
+        defenderMorale: battle.units.find((unit) => unit.side === 'defender')?.morale ?? 0,
+        phase: battle.winner === 'attacker' ? 'attacker_victory' : 'defender_victory',
+        eventLog: [...tacticalMelee.eventLog, `六角微操结算：${battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
+      };
+      const withoutBattle = {
+        ...state,
+        activeBattles: state.activeBattles.filter((item) => item.id !== battle.id),
+        activeMelee: resolved,
+      };
+      currentGame = applyMeleeSettlement(withoutBattle, resolved);
+      return getClientGame();
+    }
     let nextState = state;
     if (!battle.settled && battle.fromCityId != null) {
       nextState = settleBattle(state, battle, runtimeRandom);
@@ -1141,7 +1189,7 @@ export function battlefieldExit(): GameState {
  * runtimeRandom（xorshift32-v1），不得引入 Math.random()——参见
  * docs/21-battlefield-scene-design.md §九 RNG 与确定性。
  */
-export function enterNanjunBattlefield(): GameState {
+export function enterNanjunBattlefield(commandery: 'nanjun' | 'yingchuan' = 'nanjun'): GameState {
   return withLock(() => {
     const state = getGame();
     if (state.activeBattlefield) {
@@ -1155,15 +1203,28 @@ export function enterNanjunBattlefield(): GameState {
     const armyIds = state.campaignArmies
       .filter((army) => army.factionId === attackerFactionId)
       .map((army) => army.id);
-    const now = Date.now();
-    const instance = generateNanjunBattlefield({
-      instanceId: `bf-nanjun-${now}`,
-      warId: `war-nanjun-${now}`,
+    const beforeRng = getRuntimeRngState();
+    const stableSuffix = `${state.currentYear}-${state.currentMonth}-${beforeRng.draws}`;
+    const common = {
+      instanceId: `bf-nanjun-${stableSuffix}`,
+      warId: `war-nanjun-${stableSuffix}`,
       attackerFactionId,
       defenderFactionId: defenderFaction.id,
       armyIds,
-      rngDrawStart: 0,
-    });
+      rngDrawStart: beforeRng.draws,
+      scenarioDateAtCreation: `${state.currentYear}-${String(state.currentMonth).padStart(2, '0')}`,
+      dynamic: { rng: runtimeRandom, currentMonth: state.currentMonth },
+    };
+    const instance = commandery === 'yingchuan'
+      ? generateCommanderyBattlefield({
+        ...common,
+        instanceId: `bf-yingchuan-${stableSuffix}`,
+        warId: `war-yingchuan-${stableSuffix}`,
+        bundle: yingchuan190,
+        templateId: 'yingchuan-190',
+        entryNodeIds: ['yingchuan_xiangcheng', 'yingchuan_changshe'],
+      })
+      : generateNanjunBattlefield(common);
     currentGame = { ...state, activeBattlefieldInstance: instance };
     return getClientGame();
   });
@@ -1180,6 +1241,189 @@ export function exitNanjunBattlefield(): GameState {
 /** 获取当前郡域战场实例（如有）。 */
 export function getBattlefieldInstance(): BattlefieldInstance | null {
   return getGame().activeBattlefieldInstance ?? null;
+}
+
+function pickBattlefieldDuelOfficer(
+  state: GameState,
+  factionId: number,
+  preferredId?: number,
+): Officer {
+  const candidates = Object.values(state.officers)
+    .filter((officer) => officer.faction === factionId && officer.status === OfficerStatus.ACTIVE)
+    .sort((a, b) => b.stats.war - a.stats.war || a.id - b.id);
+  const preferred = preferredId == null ? undefined : candidates.find((officer) => officer.id === preferredId);
+  const picked = preferred ?? candidates[0];
+  if (!picked) throw new Error('该势力没有可参与单挑的武将');
+  return picked;
+}
+
+/** BF-P4：从郡域层发起阵前/城下挑战，完整 DuelState 由既有 S10 引擎创建。 */
+export function startBattlefieldDuel(
+  kind: BattlefieldDuelContext['kind'],
+  nodeId: string,
+  stance: DuelStance = 'delegate',
+): GameState {
+  return withLock(() => {
+    const state = getGame();
+    const inst = state.activeBattlefieldInstance;
+    if (!inst || inst.phase !== 'active') throw new Error('没有活跃郡域战场');
+    if (inst.activeDuel) throw new Error('已有进行中的阵前单挑');
+    const node = inst.nodeStates.find((item) => item.nodeId === nodeId);
+    if (!node) throw new Error('单挑节点不在当前战场');
+    if (kind === 'city_front' && nodeId !== inst.targetSeatNodeId) throw new Error('城下挑战只能在郡治发起');
+    if (kind === 'formation_front' && !inst.entryNodeIds.includes(nodeId)) throw new Error('阵前挑战只能在战场入口发起');
+    const seatDefenderFactionId = inst.nodeStates.find((item) => item.nodeId === inst.targetSeatNodeId)?.rulerFactionId;
+    const fallbackDefenderFactionId = Object.values(state.factions)
+      .find((faction) => faction.id !== state.playerFactionId && faction.isAlive)?.id;
+    const defenderFactionId = node.rulerFactionId != null && node.rulerFactionId !== state.playerFactionId
+      ? node.rulerFactionId
+      : seatDefenderFactionId ?? fallbackDefenderFactionId;
+    if (defenderFactionId == null || defenderFactionId === state.playerFactionId) throw new Error('该节点没有敌方守军');
+
+    const attackerArmy = state.campaignArmies
+      .filter((army) => army.factionId === state.playerFactionId && army.troops > 0)
+      .sort((a, b) => a.id.localeCompare(b.id))[0];
+    const challenger = pickBattlefieldDuelOfficer(state, state.playerFactionId, attackerArmy?.commanderId);
+    const defender = pickBattlefieldDuelOfficer(state, defenderFactionId);
+    const duel = createDuel(`${inst.id}:${kind}:${nodeId}`, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom, stance);
+    const activeDuel: BattlefieldDuelContext = {
+      kind,
+      nodeId,
+      ...(attackerArmy ? { attackerArmyId: attackerArmy.id } : {}),
+      challengerId: challenger.id,
+      defenderId: defender.id,
+      duel,
+      settlementApplied: false,
+    };
+    currentGame = { ...state, activeBattlefieldInstance: { ...inst, activeDuel } };
+    return getClientGame();
+  });
+}
+
+function settleBattlefieldDuel(state: GameState, context: BattlefieldDuelContext): GameState {
+  const result = context.duel.result;
+  const inst = state.activeBattlefieldInstance;
+  if (!inst || !result || context.settlementApplied) return state;
+  const challengerWon = result.winnerId === context.challengerId && result.outcome !== 'draw';
+  const officers = { ...state.officers };
+  const factions = { ...state.factions };
+  let cities = state.cities;
+  const winner = officers[result.winnerId];
+  const loser = officers[result.loserId];
+  const loserFaction = loser?.faction == null ? undefined : factions[loser.faction];
+  if (loser && loserFaction?.rulerId === loser.id
+    && (result.outcome === 'killed' || result.outcome === 'captured' || result.outcome === 'surrendered')) {
+    const successor = Object.values(officers)
+      .filter((officer) => officer.id !== loser.id
+        && officer.faction === loser.faction
+        && officer.status === OfficerStatus.ACTIVE)
+      .sort((a, b) => b.stats.leadership - a.stats.leadership || a.id - b.id)[0];
+    if (!successor) throw new Error('势力君主单挑败亡但无可用继承者');
+    factions[loserFaction.id] = { ...loserFaction, rulerId: successor.id };
+  }
+  if (winner) officers[winner.id] = { ...winner, merit: (winner.merit ?? 0) + result.meritReward };
+  if (loser) {
+    if (result.outcome === 'killed') {
+      officers[loser.id] = { ...loser, status: OfficerStatus.DEAD, faction: null, location: null, stamina: 0 };
+      if (loserFaction) {
+        factions[loserFaction.id] = {
+          ...factions[loserFaction.id],
+          officerIds: factions[loserFaction.id].officerIds.filter((id) => id !== loser.id),
+        };
+      }
+      cities = Object.fromEntries(Object.entries(state.cities).map(([id, city]) => [
+        id,
+        city.officers.includes(loser.id)
+          ? { ...city, officers: city.officers.filter((officerId) => officerId !== loser.id) }
+          : city,
+      ]));
+    } else if (result.outcome === 'captured' || result.outcome === 'surrendered') {
+      officers[loser.id] = { ...loser, status: OfficerStatus.PRISONER };
+    } else {
+      officers[loser.id] = { ...loser, stamina: Math.max(1, loser.stamina - 20) };
+    }
+  }
+  const campaignArmies = state.campaignArmies.map((army) => {
+    if (army.id !== context.attackerArmyId) return army;
+    const delta = challengerWon ? result.moraleChange.winner : result.moraleChange.loser;
+    return { ...army, morale: Math.max(0, Math.min(100, army.morale + delta)) };
+  });
+  const nodeStates = inst.nodeStates.map((node) =>
+    node.nodeId === context.nodeId && challengerWon
+      ? { ...node, garrison: Math.max(0, Math.floor(node.garrison * 0.85)) }
+      : node,
+  );
+  const settledContext = { ...context, settlementApplied: true };
+  const label = context.kind === 'city_front' ? '城下' : '阵前';
+  return {
+    ...state,
+    officers,
+    factions,
+    cities,
+    campaignArmies,
+    activeBattlefieldInstance: { ...inst, nodeStates, activeDuel: settledContext },
+    actionLog: [{
+      year: state.currentYear,
+      month: state.currentMonth,
+      type: 'battlefield_duel',
+      message: `${label}单挑：${result.epilogue}${challengerWon ? '；守军震动，驻军-15%' : ''}`,
+    }, ...state.actionLog].slice(0, 80),
+  };
+}
+
+export function stepBattlefieldDuel(): GameState {
+  return withLock(() => {
+    const state = getGame();
+    const inst = state.activeBattlefieldInstance;
+    const context = inst?.activeDuel;
+    if (!inst || !context) throw new Error('没有进行中的阵前单挑');
+    if (context.duel.phase === 'resolved') {
+      currentGame = settleBattlefieldDuel(state, context);
+      return getClientGame();
+    }
+    const challenger = state.officers[context.challengerId];
+    const defender = state.officers[context.defenderId];
+    if (!challenger || !defender) throw new Error('单挑武将不存在');
+    const duel = stepDuel(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom);
+    const next = { ...context, duel };
+    const nextState = { ...state, activeBattlefieldInstance: { ...inst, activeDuel: next } };
+    currentGame = duel.phase === 'resolved' ? settleBattlefieldDuel(nextState, next) : nextState;
+    return getClientGame();
+  });
+}
+
+export function skipBattlefieldDuel(): GameState {
+  return withLock(() => {
+    const state = getGame();
+    const inst = state.activeBattlefieldInstance;
+    const context = inst?.activeDuel;
+    if (!inst || !context) throw new Error('没有进行中的阵前单挑');
+    if (context.duel.phase === 'resolved') {
+      currentGame = settleBattlefieldDuel(state, context);
+      return getClientGame();
+    }
+    const challenger = state.officers[context.challengerId];
+    const defender = state.officers[context.defenderId];
+    if (!challenger || !defender) throw new Error('单挑武将不存在');
+    const duel = runDuelToCompletion(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom);
+    const next = { ...context, duel };
+    currentGame = settleBattlefieldDuel(
+      { ...state, activeBattlefieldInstance: { ...inst, activeDuel: next } },
+      next,
+    );
+    return getClientGame();
+  });
+}
+
+export function closeBattlefieldDuel(): GameState {
+  return withLock(() => {
+    const state = getGame();
+    const inst = state.activeBattlefieldInstance;
+    if (!inst?.activeDuel) throw new Error('没有可关闭的阵前单挑');
+    if (!inst.activeDuel.settlementApplied) throw new Error('单挑尚未结算');
+    currentGame = { ...state, activeBattlefieldInstance: { ...inst, activeDuel: undefined } };
+    return getClientGame();
+  });
 }
 
 /**
@@ -1325,6 +1569,71 @@ export function getMelee(): MeleeState | null {
   return getGame().activeMelee;
 }
 
+function applyMeleeSettlement(state: GameState, melee: MeleeState): GameState {
+  if (melee.settlementApplied || melee.phase === 'active') return state;
+  return {
+    ...state,
+    campaignArmies: state.campaignArmies.map((army) => {
+      if (army.id === melee.attackerArmyId) {
+        return { ...army, troops: melee.attackerTroops, morale: melee.attackerMorale };
+      }
+      if (army.id === melee.defenderArmyId) {
+        return { ...army, troops: melee.defenderTroops, morale: melee.defenderMorale };
+      }
+      return army;
+    }),
+    activeMelee: { ...melee, settlementApplied: true },
+  };
+}
+
+/** 从同一白刃战快照选择唯一结算模式；重复提交同一模式幂等，不得改选。 */
+export function meleeSelectMode(
+  mode: MeleeEntryMode,
+): { game: GameState; melee: MeleeState; battle?: BattleState } {
+  return withLock(() => {
+    const state = getGame();
+    const melee = state.activeMelee;
+    if (!melee) throw new Error('没有活跃白刃战');
+    if (melee.entryMode && melee.entryMode !== mode) throw new Error('本次交战已经选择其他结算模式');
+    if (melee.settlementApplied) return { game: getClientGame(), melee };
+    if (melee.entryMode === mode) {
+      const battle = melee.tacticalBattleId
+        ? state.activeBattles.find((item) => item.id === melee.tacticalBattleId)
+        : undefined;
+      return { game: getClientGame(), melee, ...(battle ? { battle } : {}) };
+    }
+
+    let selected: MeleeState = { ...melee, entryMode: mode };
+    if (mode === 'auto') {
+      const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
+      const intelligence = atkArmy ? state.officers[atkArmy.commanderId]?.stats.intelligence ?? 50 : 50;
+      while (selected.phase === 'active') {
+        const result = runMeleeRound(selected, { type: 'normal_attack' }, intelligence);
+        selected = applyMeleeRoundResult(selected, result, 0);
+      }
+      currentGame = applyMeleeSettlement({ ...state, activeMelee: selected }, selected);
+      return { game: getClientGame(), melee: getGame().activeMelee! };
+    }
+
+    if (mode === 'tactical') {
+      const battlefield = state.activeBattlefield;
+      if (!battlefield) throw new Error('六角微操必须归属于活跃战场');
+      const battle = createBattle(state, battlefield.targetCityId, {
+        attackTroops: melee.attackerTroops,
+        defendTroops: melee.defenderTroops,
+        attackMorale: melee.attackerMorale,
+        defendMorale: melee.defenderMorale,
+      });
+      selected = { ...selected, tacticalBattleId: battle.id };
+      currentGame = { ...state, activeMelee: selected, activeBattles: [...state.activeBattles, battle] };
+      return { game: getClientGame(), melee: selected, battle };
+    }
+
+    currentGame = { ...state, activeMelee: selected };
+    return { game: getClientGame(), melee: selected };
+  });
+}
+
 /** 执行一回合白刃战 */
 export function meleeRound(
   actionType: string,
@@ -1333,6 +1642,7 @@ export function meleeRound(
     const state = getGame();
     const melee = state.activeMelee;
     if (!melee) throw new Error('没有活跃白刃战');
+    if (melee.entryMode !== 'standard') throw new Error('只有标准模式可提交逐回合战术');
     if (melee.phase !== 'active') throw new Error('白刃战已结束');
     const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
     const atkCommander = atkArmy ? state.officers[atkArmy.commanderId] : undefined;
@@ -1345,26 +1655,9 @@ export function meleeRound(
     const result = runMeleeRound(melee, action, atkCommander?.stats.intelligence ?? 50);
 
     const nextMelee = applyMeleeRoundResult(melee, result, cost);
-    currentGame = { ...state, activeMelee: nextMelee };
-
-    // 如果战斗结束，同步回战场地图数据
-    if (result.phase !== 'active' && state.activeBattlefield) {
-      const atkRemaining = result.attackerTroopsAfter;
-      const defRemaining = result.defenderTroopsAfter;
-
-      currentGame = {
-        ...getGame(),
-        campaignArmies: getGame().campaignArmies.map((a) => {
-          if (a.id === nextMelee.attackerArmyId) {
-            return { ...a, troops: atkRemaining, morale: result.attackerMoraleAfter };
-          }
-          if (a.id === nextMelee.defenderArmyId) {
-            return { ...a, troops: defRemaining, morale: result.defenderMoraleAfter };
-          }
-          return a;
-        }),
-      };
-    }
+    currentGame = result.phase === 'active'
+      ? { ...state, activeMelee: nextMelee }
+      : applyMeleeSettlement({ ...state, activeMelee: nextMelee }, nextMelee);
 
     return { game: getClientGame(), result, melee: getGame().activeMelee! };
   });

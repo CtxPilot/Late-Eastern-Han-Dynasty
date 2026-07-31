@@ -336,7 +336,7 @@ export function settleBattle(
     );
     // 占城：拆敌反间驻守
     after = clearCityCounterOnCapture(after, targetId);
-    // 抢夺美女资源（势力 stock↑，可寻↓，民忠↓）
+    // 接管地方人脉（势力库存↑，城市机会↓，民忠↓）
     after = lootBeautyOnCapture(after, targetId, battle.attackerFaction, rng);
     after = syncFactionResources(after);
     return after;

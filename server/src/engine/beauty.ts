@@ -2,15 +2,13 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * S09 美女资源：势力库存 + 城可寻次数
+ * S09 宫廷人脉：势力库存 + 城市结交机会
  * 04§30 定稿
  */
 import {
   BEAUTY_LOOT,
   BEAUTY_REWARD,
   BEAUTY_SEEK,
-  beautySeekLeftFromFemales,
-  ensureDemographics,
   OfficerStatus,
   type GameState,
 } from '@leh/shared';
@@ -36,15 +34,15 @@ function pushLog(
   };
 }
 
-function ensureFactionBeauty(f: GameState['factions'][number]) {
+function ensureFactionNetwork(f: GameState['factions'][number]) {
   return {
     ...f,
-    beautyStock: f.beautyStock ?? 0,
+    courtNetwork: f.courtNetwork ?? 0,
   };
 }
 
 /**
- * 寻访：己方城；成功势力 stock+1、城 seekLeft−1
+ * 地方结交：己方城；成功势力人脉+1、城市机会−1
  */
 export function seekBeauty(
   state: GameState,
@@ -57,19 +55,15 @@ export function seekBeauty(
   if (!city) throw new Error('城市不存在');
   if (city.ruler !== fid) throw new Error('非己方城市');
 
-  const seekLeft = city.beautySeekLeft ?? 0;
+  const seekLeft = city.courtNetworkOpportunities ?? 0;
   if (seekLeft < BEAUTY_SEEK.seekCost) {
-    throw new Error(`${city.name} 可寻次数已尽`);
+    throw new Error(`${city.name} 人脉机会已尽`);
   }
   if (city.gold < BEAUTY_SEEK.goldCost) {
     throw new Error(`金钱不足（需 ${BEAUTY_SEEK.goldCost}）`);
   }
 
-  const d = ensureDemographics(city);
-  // 女成越多略易成功
-  const popBonus = Math.min(0.2, d.adultFemale / 50000);
-  const successRate = Math.min(0.92, BEAUTY_SEEK.baseSuccess + popBonus);
-  const success = rng() < successRate;
+  const success = rng() < BEAUTY_SEEK.baseSuccess;
 
   const cities = {
     ...state.cities,
@@ -83,30 +77,30 @@ export function seekBeauty(
     return pushLog(
       state,
       'beauty_seek',
-      `${city.name} 寻访未果（耗金 ${BEAUTY_SEEK.goldCost}，可寻次数未扣）`,
+      `${city.name} 结交未果（耗金 ${BEAUTY_SEEK.goldCost}，人脉机会未扣）`,
       { cities },
     );
   }
 
   const nextCity = {
     ...cities[cityId],
-    beautySeekLeft: seekLeft - BEAUTY_SEEK.seekCost,
+    courtNetworkOpportunities: seekLeft - BEAUTY_SEEK.seekCost,
   };
   cities[cityId] = nextCity;
 
-  const fac = ensureFactionBeauty(state.factions[fid]);
+  const fac = ensureFactionNetwork(state.factions[fid]);
   const factions = {
     ...state.factions,
     [fid]: {
       ...fac,
-      beautyStock: fac.beautyStock + BEAUTY_SEEK.stockGain,
+      courtNetwork: fac.courtNetwork + BEAUTY_SEEK.stockGain,
     },
   };
 
   return pushLog(
     state,
     'beauty_seek',
-    `${city.name} 寻访成功：势力美女 +${BEAUTY_SEEK.stockGain}（可寻 ${seekLeft}→${nextCity.beautySeekLeft}，耗金 ${BEAUTY_SEEK.goldCost}）`,
+    `${city.name} 结交成功：宫廷人脉 +${BEAUTY_SEEK.stockGain}（机会 ${seekLeft}→${nextCity.courtNetworkOpportunities}，耗金 ${BEAUTY_SEEK.goldCost}）`,
     { cities, factions },
   );
 }
@@ -128,9 +122,9 @@ export function rewardBeautyStock(
   if (officer.faction !== fid) throw new Error('非己方武将');
   if (officer.status !== OfficerStatus.ACTIVE) throw new Error('武将非现役');
 
-  const fac = ensureFactionBeauty(state.factions[fid]);
-  if (fac.beautyStock < amount) {
-    throw new Error(`美女库存不足（需 ${amount}，当前 ${fac.beautyStock}）`);
+  const fac = ensureFactionNetwork(state.factions[fid]);
+  if (fac.courtNetwork < amount) {
+    throw new Error(`宫廷人脉不足（需 ${amount}，当前 ${fac.courtNetwork}）`);
   }
 
   const loyaltyGain = BEAUTY_REWARD.loyaltyGain * amount;
@@ -145,14 +139,14 @@ export function rewardBeautyStock(
     ...state.factions,
     [fid]: {
       ...fac,
-      beautyStock: fac.beautyStock - amount,
+      courtNetwork: fac.courtNetwork - amount,
     },
   };
 
   return pushLog(
     state,
     'beauty_reward',
-    `赏赐美女×${amount} 予 ${officer.name}（忠诚+${loyaltyGain}，库存 ${fac.beautyStock}→${fac.beautyStock - amount}）`,
+    `动用人脉×${amount} 笼络 ${officer.name}（忠诚+${loyaltyGain}，库存 ${fac.courtNetwork}→${fac.courtNetwork - amount}）`,
     { officers, factions },
   );
 }
@@ -169,7 +163,7 @@ export function lootBeautyOnCapture(
 ): GameState {
   const city = state.cities[cityId];
   if (!city) return state;
-  const seekLeft = city.beautySeekLeft ?? 0;
+  const seekLeft = city.courtNetworkOpportunities ?? 0;
   if (seekLeft <= 0) {
     // 仍可降一点民忠表示劫掠
     const moraleLoss = 5;
@@ -203,7 +197,7 @@ export function lootBeautyOnCapture(
     ...state.cities,
     [cityId]: {
       ...city,
-      beautySeekLeft: seekLeft - gain,
+      courtNetworkOpportunities: seekLeft - gain,
       stats: {
         ...city.stats,
         morale: Math.max(10, (city.stats.morale ?? 70) - moraleLoss),
@@ -214,22 +208,20 @@ export function lootBeautyOnCapture(
   const facRaw = state.factions[attackerFactionId];
   if (!facRaw) return { ...state, cities };
 
-  const fac = ensureFactionBeauty(facRaw);
+  const fac = ensureFactionNetwork(facRaw);
 
   const factions = {
     ...state.factions,
     [attackerFactionId]: {
       ...fac,
-      beautyStock: (fac.beautyStock ?? 0) + gain,
+      courtNetwork: (fac.courtNetwork ?? 0) + gain,
     },
   };
 
   return pushLog(
     state,
     'beauty_loot',
-    `攻占 ${city.name} 抢夺美女 +${gain}（可寻 −${gain}，民忠 −${moraleLoss}）`,
+    `攻占 ${city.name} 接管地方人脉 +${gain}（机会 −${gain}，民忠 −${moraleLoss}）`,
     { cities, factions },
   );
 }
-
-export { beautySeekLeftFromFemales };

@@ -223,12 +223,12 @@ export function launchPlot(
 
   const factions = { ...state.factions };
   if (cost.beauty) {
-    if ((faction.beautyStock ?? 0) < cost.beauty) {
+    if ((faction.courtNetwork ?? 0) < cost.beauty) {
       throw new Error(`美女资源不足（需 ${cost.beauty}）`);
     }
     factions[fid] = {
       ...faction,
-      beautyStock: (faction.beautyStock ?? 0) - cost.beauty,
+      courtNetwork: (faction.courtNetwork ?? 0) - cost.beauty,
     };
   }
 

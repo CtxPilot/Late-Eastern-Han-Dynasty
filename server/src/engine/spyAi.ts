@@ -143,11 +143,11 @@ export function aiIntelTurn(
     }
   }
 
-  // 3a) AI 寻访美女：beautyStock < 4 时尝试在有余量的城寻访（解 B-6 死锁）
+  // 3a) AI 结交人脉：courtNetwork < 4 时尝试在有机会的城行动
   const faction2 = s.factions[factionId];
-  if (faction2 && (faction2.beautyStock ?? 0) < 4 && decisionRng() < 0.5) {
+  if (faction2 && (faction2.courtNetwork ?? 0) < 4 && decisionRng() < 0.5) {
     const seekCity = myCities.find(
-      (c) => (c.beautySeekLeft ?? 0) >= 1 && c.gold >= 60,
+      (c) => (c.courtNetworkOpportunities ?? 0) >= 1 && c.gold >= 60,
     );
     if (seekCity) {
       try {
@@ -158,8 +158,8 @@ export function aiIntelTurn(
     }
   }
 
-  // 3b) AI 训练女间谍：beautyStock ≥ 4 且有空编制时
-  if (faction2 && (faction2.beautyStock ?? 0) >= 4 && aliveCount(s, factionId) < cap) {
+  // 3b) AI 训练女间谍：courtNetwork ≥ 4 且有空编制时
+  if (faction2 && (faction2.courtNetwork ?? 0) >= 4 && aliveCount(s, factionId) < cap) {
     const richCity = myCities.find((c) => c.gold >= 100);
     if (richCity && decisionRng() < 0.5) {
       try {
