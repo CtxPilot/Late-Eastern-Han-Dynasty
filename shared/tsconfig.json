@@ -28,6 +28,7 @@
     "battlefield-instance-schema.ts",
     "nanjun-battlefield.ts",
     "commandery-battlefield.ts",
+    "commandery-templates.ts",
     "save.ts",
     "rng.ts",
     "game-state-schema.ts",

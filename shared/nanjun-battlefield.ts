@@ -11,8 +11,8 @@
  * 江陵为 seat（守方据点），其余县中立（rulerFactionId=null）；routeStates 含全 11 路线。
  */
 
-import { nanjun190 } from './data/historical-geography/index.js';
 import { generateCommanderyBattlefield } from './commandery-battlefield.js';
+import { getCommanderyTemplate } from './commandery-templates.js';
 import { BATTLEFIELD_TEMPLATE_VERSION, type BattlefieldInstance } from './types/battlefield-instance.js';
 
 const NANJUN_TEMPLATE_ID = 'nanjun-190';
@@ -32,14 +32,14 @@ export interface GenerateNanjunBattlefieldOpts {
   dynamic?: { rng: () => number; currentMonth: number };
 }
 
-const NANJUN_ENTRY_NODES = ['nanjun_dangyang', 'nanjun_zhijiang'];
-
 export function generateNanjunBattlefield(opts: GenerateNanjunBattlefieldOpts): BattlefieldInstance {
+  const template = getCommanderyTemplate('nanjun');
+  if (!template) throw new Error('南郡战场模板未登记于 commandery-templates.ts');
   return generateCommanderyBattlefield({
     ...opts,
-    bundle: nanjun190,
+    bundle: template.bundle,
     templateId: NANJUN_TEMPLATE_ID,
-    entryNodeIds: NANJUN_ENTRY_NODES,
+    entryNodeIds: template.entryNodeIds,
   });
 }
 

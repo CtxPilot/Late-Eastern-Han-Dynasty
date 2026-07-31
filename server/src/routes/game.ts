@@ -3,6 +3,7 @@
 
 import { Router, type Router as ExpressRouter } from 'express';
 import type { EventSourceClass } from '@leh/shared';
+import { getCommanderyIds } from '@leh/shared';
 import * as gameService from '../services/game.js';
 
 export const gameRouter: ExpressRouter = Router();
@@ -704,14 +705,14 @@ gameRouter.post('/battlefield/exit', (_req, res) => {
 
 // ====== 郡域战场实例 API（BF-P2 Q10 Tier II 郡域层） ======
 
-/** 进入南郡郡域战场：生成 BattlefieldInstance 并写入 GameState.activeBattlefieldInstance */
+/** 进入郡域战场：生成 BattlefieldInstance 并写入 GameState.activeBattlefieldInstance */
 gameRouter.post('/battlefield-instance/enter', (_req, res) => {
   try {
     const commandery = (_req.body as { commandery?: unknown })?.commandery;
-    if (commandery !== undefined && commandery !== 'nanjun' && commandery !== 'yingchuan') {
-      return res.status(400).json({ error: 'commandery must be nanjun or yingchuan' });
+    if (commandery !== undefined && !getCommanderyIds().includes(commandery as string)) {
+      return res.status(400).json({ error: `commandery must be one of ${getCommanderyIds().join(', ')}` });
     }
-    res.json(gameService.enterNanjunBattlefield(commandery));
+    res.json(gameService.enterNanjunBattlefield(commandery as string | undefined));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'battlefield instance enter failed' });
   }

@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
-import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN } from '@leh/shared';
+import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
@@ -19,7 +19,7 @@ interface Store {
   clearSceneStack: () => void;
 
   battlefieldInstance: BattlefieldInstance | null;
-  enterNanjunBattlefield: (commandery?: 'nanjun' | 'yingchuan') => Promise<void>;
+  enterNanjunBattlefield: (commandery?: string) => Promise<void>;
   exitNanjunBattlefield: () => Promise<void>;
   engageJiangling: () => Promise<void>;
   engageCounty: (countyId: string) => Promise<void>;
@@ -202,16 +202,17 @@ export const useGameStore = create<Store>((set, get) => ({
         throw new Error('服务端未返回郡域战场实例');
       }
       const after = pushScene(get().sceneStack, { scene: 'battlefield', battlefieldId: inst.id });
+      const label = getCommanderyLabel(commandery) ?? commandery;
       set({
         game,
         battlefieldInstance: inst,
         sceneStack: after,
         screen: screenOf(after),
         loading: false,
-        lastActionOk: `进入${commandery === 'yingchuan' ? '颍川' : '南郡'}战场`,
+        lastActionOk: `进入${label}战场`,
       });
     } catch (e) {
-      set({ error: errMsg(e, '进入南郡战场失败'), loading: false });
+      set({ error: errMsg(e, `进入${getCommanderyLabel(commandery) ?? commandery}战场失败`), loading: false });
     }
   },
 

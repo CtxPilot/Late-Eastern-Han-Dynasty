@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { FIRST_BATCH_COUNTY_IDS, type DuelStance } from '@leh/shared';
+import { FIRST_BATCH_COUNTY_IDS, getCommanderyLabelByTemplateId, type DuelStance } from '@leh/shared';
 import { DuelPanel } from '../battle/DuelPanel';
 
 export function BattlefieldSceneView() {
@@ -21,8 +21,10 @@ export function BattlefieldSceneView() {
   const [duelStance, setDuelStance] = useState<DuelStance>('delegate');
   if (!inst || !game) return null;
   const seat = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  const commanderyName = getCommanderyLabelByTemplateId(inst.templateId) ?? '未知郡';
+  // 江陵席城按钮与首批可攻打县门禁仍为南郡专属（engageCounty 的 FIRST_BATCH_COUNTY_IDS
+  // 全局门禁未按郡拆分），先按 templateId 识别；待 BF-P5 郡级可攻打清单落地后随目录迁移。
   const isNanjun = inst.templateId === 'nanjun-190';
-  const commanderyName = isNanjun ? '南郡' : '颍川郡';
   const playerFactionId = game.playerFactionId;
   const firstBatch = FIRST_BATCH_COUNTY_IDS as readonly string[];
 

@@ -119,7 +119,7 @@ import { grantNobility } from '../engine/nobility.js';
 import { broadcast } from '../ws/broadcast.js';
 import { getRuntimeRngState, resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
 import { createDuel, DEFAULT_DUEL_CONFIG, runDuelToCompletion, stepDuel } from '../battle/duel.js';
-import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldDuelContext, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type DuelStance, type MeleeEntryMode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateNanjunBattlefield, generateCommanderyBattlefield, yingchuan190 } from '@leh/shared';
+import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldDuelContext, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type DuelStance, type MeleeEntryMode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateCommanderyBattlefield, getCommanderyIds, getCommanderyTemplate } from '@leh/shared';
 
 let currentGame: GameState | null = null;
 // Sec-6: 简单请求锁，防止并发操作导致状态不一致
@@ -1177,23 +1177,30 @@ export function battlefieldExit(): GameState {
 // ====== 郡域战场实例（Tier II；BF-P2 Q10） ======
 
 /**
- * 进入南郡郡域战场：从 shared 纯函数生成 BattlefieldInstance 并写入
+ * 进入郡域战场：从 shared 郡国模板目录生成 BattlefieldInstance 并写入
  * GameState.activeBattlefieldInstance。与 activeBattlefield（Tier I 大地图层）
  * 场景栈互斥；进入时必须保证 activeBattlefield 为 null。
  * 互斥护栏在 Zod 层（GameStateBattleSchema superRefine）兜底；本函数额外断言
  * 以便在写入前快速失败。
  *
- * RNG 边界（为 BF-P3 预留）：generateNanjunBattlefield 是零 RNG 纯函数
+ * 郡国由模板目录 `COMMANDERY_TEMPLATES`（shared/commandery-templates.ts）驱动，
+ * 新增郡国无需改动本函数；未登记 id 直接抛错。
+ *
+ * RNG 边界（为 BF-P3 预留）：generateCommanderyBattlefield 是零 RNG 纯函数
  * （静态模板生成不消费随机数）；当前 enterNanjunBattlefield 不注入 RNG。
  * 未来 BF-P3 实施"动态部署/遭遇/AI 行动"扩展点时，须显式注入权威
  * runtimeRandom（xorshift32-v1），不得引入 Math.random()——参见
  * docs/21-battlefield-scene-design.md §九 RNG 与确定性。
  */
-export function enterNanjunBattlefield(commandery: 'nanjun' | 'yingchuan' = 'nanjun'): GameState {
+export function enterNanjunBattlefield(commandery = 'nanjun'): GameState {
   return withLock(() => {
     const state = getGame();
     if (state.activeBattlefield) {
       throw new Error('已有进行中的 Tier I 大地图战场；先退出再进入郡域战场');
+    }
+    const template = getCommanderyTemplate(commandery);
+    if (!template) {
+      throw new Error(`未知郡国模板：${commandery}（已登记：${getCommanderyIds().join('、')}）`);
     }
     const attackerFactionId = state.playerFactionId;
     const defenderFaction = Object.values(state.factions).find(
@@ -1205,26 +1212,19 @@ export function enterNanjunBattlefield(commandery: 'nanjun' | 'yingchuan' = 'nan
       .map((army) => army.id);
     const beforeRng = getRuntimeRngState();
     const stableSuffix = `${state.currentYear}-${state.currentMonth}-${beforeRng.draws}`;
-    const common = {
-      instanceId: `bf-nanjun-${stableSuffix}`,
-      warId: `war-nanjun-${stableSuffix}`,
+    const instance = generateCommanderyBattlefield({
+      instanceId: `${template.instancePrefix}-${stableSuffix}`,
+      warId: `${template.warPrefix}-${stableSuffix}`,
+      bundle: template.bundle,
+      templateId: template.templateId,
       attackerFactionId,
       defenderFactionId: defenderFaction.id,
       armyIds,
+      entryNodeIds: template.entryNodeIds,
       rngDrawStart: beforeRng.draws,
       scenarioDateAtCreation: `${state.currentYear}-${String(state.currentMonth).padStart(2, '0')}`,
       dynamic: { rng: runtimeRandom, currentMonth: state.currentMonth },
-    };
-    const instance = commandery === 'yingchuan'
-      ? generateCommanderyBattlefield({
-        ...common,
-        instanceId: `bf-yingchuan-${stableSuffix}`,
-        warId: `war-yingchuan-${stableSuffix}`,
-        bundle: yingchuan190,
-        templateId: 'yingchuan-190',
-        entryNodeIds: ['yingchuan_xiangcheng', 'yingchuan_changshe'],
-      })
-      : generateNanjunBattlefield(common);
+    });
     currentGame = { ...state, activeBattlefieldInstance: instance };
     return getClientGame();
   });

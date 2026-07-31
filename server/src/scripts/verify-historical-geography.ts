@@ -4,35 +4,29 @@
 /**
  * 郡国模板逐郡校验脚本（BF-P5 录入/校勘工具）。
  *
- * 遍历所有已注册的 HistoricalGeographyBundle，对每个跑 Zod schema 校验
- * + preview 一致性检查（两次调用 deep-equal，锁零 RNG）。
+ * 遍历 `COMMANDERY_TEMPLATES`（shared 模板目录，唯一真源）中所有已登记模板，
+ * 对每个跑 Zod schema 校验 + preview 一致性检查（两次调用 deep-equal，锁零 RNG）。
+ * 新增郡国只需在目录登记即可自动纳入校验。
  *
  * 用法：pnpm verify-historical-geography
  */
 
-import {
-  HistoricalGeographyBundleSchema,
-  nanjun190,
-  yingchuan190,
-} from '@leh/shared';
+import { HistoricalGeographyBundleSchema, COMMANDERY_TEMPLATES } from '@leh/shared';
 import { createHistoricalGeographyPreview } from '@leh/shared';
-import type { HistoricalGeographyBundle } from '@leh/shared';
 
-/** 所有已注册的郡国模板 bundle。新增模板在此数组追加即可自动纳入校验。 */
-const bundles: Array<{ label: string; bundle: HistoricalGeographyBundle }> = [
-  { label: '南郡 190', bundle: nanjun190 },
-  { label: '颍川 190', bundle: yingchuan190 },
-];
+/** 已登记郡国模板：直接遍历 shared 目录，保证与运行时同一真源。 */
+const entries = Object.values(COMMANDERY_TEMPLATES);
 
 let passed = 0;
 let failed = 0;
 
-for (const { label, bundle } of bundles) {
+for (const entry of entries) {
+  const { id, label, bundle } = entry;
   // Zod schema 校验
   const result = HistoricalGeographyBundleSchema.safeParse(bundle);
   if (!result.success) {
     failed++;
-    console.log(`FAIL ${label}: ${result.error.issues.length} issue(s)`);
+    console.log(`FAIL ${id} (${label}): ${result.error.issues.length} issue(s)`);
     for (const issue of result.error.issues.slice(0, 10)) {
       console.log(`  [${issue.path.join('.')}] ${issue.message}`);
     }
@@ -47,13 +41,13 @@ for (const { label, bundle } of bundles) {
   const preview2 = createHistoricalGeographyPreview(bundle);
   if (JSON.stringify(preview1) !== JSON.stringify(preview2)) {
     failed++;
-    console.log(`FAIL ${label}: preview not deterministic`);
+    console.log(`FAIL ${id} (${label}): preview not deterministic`);
     continue;
   }
 
   passed++;
   console.log(
-    `OK   ${label} (${bundle.counties.length} counties, ${bundle.routes.length} routes, ${bundle.landmarks.length} landmarks)`,
+    `OK   ${label} (${id}): ${bundle.counties.length} counties, ${bundle.routes.length} routes, ${bundle.landmarks.length} landmarks`,
   );
 }
 

@@ -572,8 +572,8 @@ export async function battlefieldExit(): Promise<GameState> {
 
 // ====== 郡域战场实例 API（BF-P2 Q10 Tier II 郡域层） ======
 
-/** 进入南郡郡域战场：服务端生成 BattlefieldInstance 并写入 GameState */
-export async function enterNanjunBattlefield(commandery: 'nanjun' | 'yingchuan' = 'nanjun'): Promise<GameState> {
+/** 进入郡域战场：服务端生成 BattlefieldInstance 并写入 GameState（郡 id 见 shared 模板目录） */
+export async function enterNanjunBattlefield(commandery = 'nanjun'): Promise<GameState> {
   const { data } = await http.post<GameState>('/battlefield-instance/enter', { commandery });
   return data;
 }

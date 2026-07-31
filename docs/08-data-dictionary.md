@@ -972,6 +972,12 @@ Phase 4 — 特殊人物审核
 `CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器。南郡与颍川
 均已迁移至 seed 生成，`pnpm verify-historical-geography` 逐郡校验。
 
+**BF-P5 郡国模板目录（Session 255 新增）**：`shared/commandery-templates.ts` 为运行时
+郡国战场模板的唯一登记入口（bundle/templateId/entryNodeIds/instancePrefix/warPrefix/
+UI 标签）。orchestrator `enterNanjunBattlefield`、路由校验、`verify-historical-geography`
+逐郡校验与前端标签均从此目录驱动；新增第三郡只需登记一条目录条目，并保证
+`entryNodeIds` 引用模板内县节点即可。南郡兼容包装 `generateNanjunBattlefield` 亦从目录取数。
+
 | Seed 类型 | 核心字段 | 说明 |
 |------|------|------|
 | `CommanderySeed` | id/name/province/seatCountyId/worldCityId/scenarioYear/sourceRefs/counties/landmarks?/routes?/autoFillRoads? | 郡国聚合入口；`autoFillRoads` 控制是否从县邻接自动派生 road 路径（缺省 true；南郡水路为主设 false） |
