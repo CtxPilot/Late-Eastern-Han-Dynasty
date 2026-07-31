@@ -945,26 +945,41 @@ Phase 4 — 特殊人物审核
 ## 十五、郡县历史地理模板（规划）
 
 > **状态：BF-P0 已完成；南郡首批采用类型化 TS 静态常量。** 实施以
-> `docs/21-battlefield-scene-design.md` 的 P0～P6 为准；P1 尚未接入运行时。
+> `docs/21-battlefield-scene-design.md` 的 P0～P6 为准；BF-P1～P3 已接运行时，
+> BF-P4 当前完成第二郡核心、待单挑链收口。
 
 规划静态数据集：
 
 | 数据集 | 记录语义 | P0 | P6 / 0-B 目标 |
 |------|------|:--:|:--:|
-| `commanderies` | 郡国定义、治所、年代有效期、模板版本与来源 | **南郡 190 切片 1 条已完成** | **105 个郡国** |
-| `counties` | 属县/侯国/前沿节点、郡内相对位置、置信度与来源 | **南郡 16 个战场县节点已完成；史载 17 城，襄阳另作边界入口** | 随 105 郡国逐批补齐；全量县总数待后续校勘，不预设 |
-| `historicalRoutes` | 郡内道路、水路、关渡及季节性 | **南郡 11 条已完成** | 随模板覆盖扩展 |
-| `battlefieldLandmarks` | 河湖、山口、渡桥、港口等地貌锚点 | **南郡 10 条已完成** | 随模板覆盖扩展 |
+| `commanderies` | 郡国定义、治所、年代有效期、模板版本与来源 | **南郡、颍川 190 切片共 2 条已完成** | **105 个郡国** |
+| `counties` | 属县/侯国/前沿节点、郡内相对位置、置信度与来源 | **南郡 16 + 颍川 17 = 33 个战场县节点已完成** | 随 105 郡国逐批补齐；全量县总数待后续校勘，不预设 |
+| `historicalRoutes` | 郡内道路、水路、关渡及季节性 | **南郡 11 + 颍川 29 = 40 条已完成** | 随模板覆盖扩展 |
+| `battlefieldLandmarks` | 河湖、山口、渡桥、港口等地貌锚点 | **南郡 10 + 颍川 4 = 14 条已完成** | 随模板覆盖扩展 |
 
 **105 口径说明（数字真源）**：`cities.json` 的 0-B 目标仍为 **105 个行政大地图治所节点**，每个节点代表一个郡国；独立战场的 `CommanderyDefinition` 全量目标亦为与这些治所一一关联的 **105 个郡国模板**。这不是“105 城 + 另加 105 郡国”，也不代表县级节点只有 105 个。县级总记录数须在 P0/P4 校勘与 Schema 验证后另行登记，当前不得估填。
 
 每条历史地理记录必须带稳定 ID、年代有效期（适用时）、`sourceRefs` 与 `attested | approximate | inferred` 置信度。静态县名、隶属、相对位置与路线骨架不得由 RNG 补齐；动态部署等随机点只允许消费服务端权威 `xorshift32-v1`。
 
 **BF-P0 现状（Session 163）**：正式 Schema 与南郡数据位于
-`shared/data/historical-geography/`。17 是南郡 190 年史载城数；按“大地图战略节点与史实
+`shared/data/historical-geography/`。17 是南郡 190 年史载城数；按”大地图战略节点与史实
 郡县分离”原则，襄阳保留为独立大地图节点，南郡战场只生成其余 16 个县节点，并以北津
 边界入口指向襄阳。该数字不得外推为 105 郡国全量县数。`cities.json` 江陵
 `countyCount` 已清理旧占位值并更新为史料摘要 17；此字段当前不参与战场节点生成或数值公式。
+
+**BF-P5 Seed 层（Session 253 新增）**：为简化录入流程，在 Zod schema（校验层）之上新增
+**seed 层**（`shared/data/historical-geography/seed-schema.ts`），提供人友好的
+`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器。南郡与颍川
+均已迁移至 seed 生成，`pnpm verify-historical-geography` 逐郡校验。
+
+| Seed 类型 | 核心字段 | 说明 |
+|------|------|------|
+| `CommanderySeed` | id/name/province/seatCountyId/worldCityId/scenarioYear/sourceRefs/counties/landmarks?/routes?/autoFillRoads? | 郡国聚合入口；`autoFillRoads` 控制是否从县邻接自动派生 road 路径（缺省 true；南郡水路为主设 false） |
+| `CountySeed` | id/name/x/y/adjacent/role?/terrain?/landmarks?/confidence?/sourceRefs? | `role` 可选 seat/county/marquisate/frontier（缺省 county）；`terrain` 可选8种地形标签（缺省 plain） |
+| `LandmarkSeed` | id/name/kind/geometry/tacticalTags?/confidence?/sourceRefs? | 实体嵌入式地标（消灭旧「seed只放id、实体另写」半自动模式）；`geometry` 支持 point/polyline/polygon |
+| `RouteSeed` | id/from/to/kind?/movementCost?/seasonal?/confidence?/sourceRefs? | 显式 per-edge 路径覆盖；端点可引用县 id 或地标 id；缺省回退 road/1/all/inferred |
+
+数字真源：南郡 16 县 + 10 地标 + 11 路线；颍川 17 县 + 4 地标 + 29 路线；合计 33 县、14 地标、40 路线。
 
 ---
 

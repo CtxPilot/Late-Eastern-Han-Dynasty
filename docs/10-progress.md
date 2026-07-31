@@ -4737,4 +4737,348 @@
   typecheck/lint/test/data/build/Headless 全绿结果，本轮追加文档与差异检查。
 - **Next（CMD 线）**：CMD-P29 跨情报导航、旧 `PlotPanel` 物理删除与计略原子总验收。
 
-*v15.36 | 2026-07-30 | Session 233 · CMD-P28 后全量文档同步*
+### Session 234 — CMD-P29 计略原子切换与跨情报导航总验收
+
+- **原子切换**：左栏旧 `PlotPanel` 已从组件树与源码物理删除；旧面板 DOM 与
+  `btn-plot-launch` 均为0，命令坞“计略”成为 S17 四计唯一玩家提交入口。
+- **跨域导航**：“计略·发起”新增“前往情报·探秘”，通过命令壳
+  `select-command → intel/recon` 正式切域；不复制 S07 探秘、女间谍或任务写链。
+- **范围**：复用现有 API/引擎；无规则、数值、RNG、Schema 或存档变化。
+- **验证**：client 31/31、client typecheck、全仓 lint、validate-data、diff-check 全绿；
+  plot/spy 34/34。`verify-cmd-p29-headless` 在 1440×900 实测旧 DOM=0、四计完整、新写
+  入口1、跨情报切域、离间取消/确认（扣金200、生成 `sowDiscord / prep`）、进行中即时
+  同步，console error=0。
+- **Next（CMD 线）**：保持 S20，CMD-P30 先审计 S07 情报现有招募、训练、派遣、俘虏
+  处置与 S17 边界并建立 Headless 基线；不在审计轮迁移写链。
+
+*v15.37 | 2026-07-30 | Session 234 · CMD-P29 计略原子切换*
+
+### Session 235 — CMD-P30 情报迁移前审计与 Headless 基线
+
+- **范围**：继续 S20，只审计 S07 情报旧入口，不迁移、不删除任何生产写链。
+- **边界**：固化普通招募、女间谍训练、献美点化、派遣任务、驻守/撤回反间、俘虏处置
+  六类写链；S17 四计、S08 献美、S09 寻访不进入情报表单。
+- **迁移序列**：后续固定 `态势｜人员｜任务｜反间`；P31 只读，P32 迁人员建设，
+  P33 迁任务/反间/俘虏，P34 原子切换与 `intel/recon` 落点总验收。
+- **验证**：`verify-cmd-p30-headless` 在 1440×900 实测旧 `SpyPanel` 1、招募/训练/
+  点化/派遣核心入口各1、命令坞新写入口0；招募取消状态不变，确认新增密探1名并扣金120/
+  粮60、写 `spy_recruit`，console error=0。脚本语法、client typecheck、diff-check 全绿。
+- **Next（CMD 线）**：CMD-P31 只接情报四分面与同源只读摘要；旧 `SpyPanel` 继续唯一写入口。
+
+*v15.38 | 2026-07-30 | Session 235 · CMD-P30 情报迁移前基线*
+
+### Session 236 — CMD-P31 情报四分面只读态势
+
+- **只读抽屉**：命令坞情报升级为可用，固定 `态势｜人员｜任务｜反间` 四分面。
+- **同源与迷雾**：新增 `buildIntelOverview`，从玩家收到的裁剪 `GameState` 派生密探
+  容量/状态、城情报、己方任务、己方反间、己方扣押敌谍与点化额度，并再次按玩家归属过滤。
+- **跨域落点**：计略传入的 `intel/recon` 意图进入任务分面；本轮仅说明迁移期落点。
+- **边界**：新写入口0；旧 `SpyPanel` 及 S07 六类写链不变，无 API、引擎、规则、数值、
+  RNG、Schema 或存档变化。
+- **验证**：shared 198/198、client 32/32；client typecheck、全仓 lint、validate-data、
+  build、diff-check 全绿（build 仅既有大 chunk warning）。
+  `verify-cmd-p31-headless` 在 1440×900 实测四分面各1、新写入口0、旧四核心写入口各1；
+  从旧入口确认招募1名密探后，新人员摘要即时同步，console error=0。
+- **Next（CMD 线）**：CMD-P32 迁普通招募、女间谍训练、献美点化三条人员建设写链；
+  任务、反间、俘虏处置留 P33。
+
+*v15.39 | 2026-07-30 | Session 236 · CMD-P31 情报四分面只读态势*
+
+### Session 237 — CMD-P32 情报人员建设写链迁移
+
+- **迁移**：普通招募、女间谍训练、献美点化进入“情报·人员”，旧面板对应控件归零。
+- **草稿与终审**：显式选城/点化目标，统一 `CommandConfirmDialog`；确认前按最新状态
+  复验实际招募批次与成本、编制、美女库存、点化额度和单城支付能力。
+- **迷雾边界**：实测发现敌方美女库存被客户端裁剪为0；移除越权前端门禁，该条件继续由
+  服务端权威复验。未改 API、引擎、规则、数值、RNG、Schema 或存档。
+- **保留范围**：派遣任务、驻守/撤回反间、俘虏处置仍由旧 `SpyPanel` 提交，留 P33。
+- **验证**：shared 198/198、client 33/33、plot/spy 34/34；lint、validate-data、build、
+  diff-check 全绿（build 仅既有大 chunk warning）。`verify-cmd-p32-headless` 在 1440×900
+  实测旧三入口0、新三入口各1、旧派遣1；招募取消不变，确认招募1名，训练与点化各生成
+  1名女间谍、额度−1，三类日志正确，console error=0。
+- **Next（CMD 线）**：CMD-P33 迁派遣任务、驻守/撤回反间与俘虏处置，统一终审与复验。
+
+*v15.40 | 2026-07-30 | Session 237 · CMD-P32 情报人员建设迁移*
+
+### Session 238 — CMD-P33 情报任务/反间/俘虏写链迁移
+
+- **迁移**：五类任务派遣进入“情报·任务”；驻防/撤防与俘虏处决/释放进入“情报·反间”。
+- **草稿与复验**：任务显式选择空闲密探、类型、敌城，复验人员状态/冷却、女间谍专属、
+  非探秘盟友门禁、官道邻接和邻接城支付；反间与俘虏复验城池、人员及扣押归属。
+- **旧壳边界**：旧 `SpyPanel` 写控件全部归零，仅暂留只读名册，物理删除留 P34。
+- **运行时边界**：复用既有 store/API/S07 权威引擎；无规则、数值、RNG、Schema 或存档变化。
+- **验证**：shared 198/198、client 34/34、plot/spy 34/34；lint、validate-data、build、
+  diff-check 全绿（仅既有大 chunk warning）。`verify-cmd-p33-headless` 在 1440×900
+  实点驻防、撤防、任务取消/确认，确认后取得下邳详报；旧面板按钮/选择器0，新三入口各1，
+  俘虏空态正确，console error=0。俘虏有数据操作由模型测试覆盖，未加入测试后门。
+- **Next（CMD 线）**：CMD-P34 物理删除旧 `SpyPanel`，复验 `intel/recon` 落点与情报
+  全链唯一入口，完成原子切换总验收。
+
+*v15.41 | 2026-07-30 | Session 238 · CMD-P33 情报任务/反间/俘虏迁移*
+
+### Session 239 — CMD-P34 情报原子切换总验收
+
+- **原子切换**：物理删除 `SpyPanel.tsx`，左栏删除谍报折叠项、import 与状态；旧源码、
+  `spy-panel` DOM、左栏谍报入口和旧任务入口均归零。
+- **唯一入口**：命令坞“情报”成为 S07 人员三链、五类任务、反间驻防/撤防和俘虏
+  处决/释放唯一玩家入口；命令坞说明同步收口。
+- **跨域落点**：从“计略·发起”实际点击“前往情报·探秘”，确认进入 `intel/recon`
+  任务分面且可直接选择密探/敌城提交探秘。
+- **边界**：仅删除迁移壳并新增验收；无 API、服务端引擎、规则、数值、RNG、Schema 或存档变化。
+- **验证**：shared 198/198、client 34/34、plot/spy 34/34；lint、validate-data、build、
+  diff-check 全绿（仅既有大 chunk warning）。`verify-cmd-p34-headless` 在 1440×900
+  实点新入口招募、计略跨域探秘、驻防与撤防，四类权威日志正确；旧 DOM 全0，各新入口
+  唯一，console error=0。俘虏有数据链沿用 P33 模型覆盖，未加入测试后门。
+- **Next（CMD 线）**：保持 S20，建议 CMD-P35 先做家族迁移前审计与 Headless 基线；
+  屯田仍无运行时，禁止以农业开发冒充。
+
+*v15.42 | 2026-07-30 | Session 239 · CMD-P34 情报原子切换总验收*
+
+### Session 240 — CMD-P35 家族迁移前审计与 Headless 基线
+
+- **范围**：继续 S20，只审计 S18 旧家族入口，不迁移、不删除任何生产写链。
+- **链路**：固化女眷、姻亲/固定子女读链，婚配与手动跟随两条玩家写链，以及月度投奔、
+  S11 登用触发妻随夫、释放随迁、开局/年度子女登场四类共享结算。
+- **边界**：S09 宫廷人脉库存不产生历史女角；`/personnel/*` 路由前缀不改变婚配/跟随
+  的 S18 归属；父辈族谱、随机出生、纳妾/离婚/继承均未实装。
+- **审计发现**：`findWivesOfOfficer()` 现把 `giftedToOfficerId` 也纳入随迁，与“妻随夫”
+  注释存在语义差。本轮不静默改规则；P37 前须拍板保留随侍随迁或收窄正式婚姻并补回归。
+- **迁移序列**：P36 `总览｜姻亲｜婚配｜跟随` 只读；P37 迁婚配/手动跟随并统一终审；
+  P38 删除旧 `FamilyPanel`，复验跨 S11/年度共享结算与唯一入口。
+- **验证**：`verify-cmd-p35-headless` 在 1440×900 实测旧面板1、婚配/跟随入口各1、
+  命令坞新写入口0；蔡琰×荀彧婚配取消后完整状态不变，确认扣金300、忠诚+18封顶、
+  双向关系与 `marry` 日志正确，console error=0。家族确定续玩32/32、shared 198/198、
+  client 34/34、typecheck/lint/data/build 全绿（仅既有大 chunk warning）。
+- **Next（CMD 线）**：CMD-P36 只接家族四分面与同源只读摘要，旧 `FamilyPanel` 继续唯一写入口。
+
+*v15.43 | 2026-07-30 | Session 240 · CMD-P35 家族迁移前基线*
+
+### Session 241 — CMD-P36 家族四分面只读摘要
+
+- **只读抽屉**：命令坞家族升级为可用，固定 `总览｜姻亲｜婚配｜跟随` 四分面。
+- **同源边界**：新增 `buildFamilyOverview()`，只从玩家收到的 `GameState` 与剧本
+  `childrenCatalog` 派生玩家女角、姻亲/固定子女、婚配候选与在野跟随条件；不读取 S09 库存。
+- **迁移边界**：新写入口0；旧 `FamilyPanel` 的婚配与手动跟随各1且仍为唯一提交入口；
+  API、引擎、规则、数值、RNG、Schema、存档及随侍随迁既有语义均未改。
+- **验证**：`verify-cmd-p36-headless` 在 1440×900 实测四分面各1、新写入口0、旧婚配/
+  跟随入口各1；从旧面板完成婚配后，新婚配候选从1降至0并即时出现荀彧姻亲支，
+  `marry` 日志正确、console error=0。shared 198/198、client 35/35、family RNG 32/32、
+  typecheck/lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+- **Next（CMD 线）**：CMD-P37 前先拍板 `giftedToOfficerId` 是否随侍随迁，再迁婚配与
+  手动跟随并统一终审；旧面板在完成前继续唯一写入口。
+
+*v15.44 | 2026-07-30 | Session 241 · CMD-P36 家族四分面只读摘要*
+
+### Session 242 — CMD-P37 家族婚配/手动跟随写链迁移
+
+- **语义拍板**：用户批准推荐方案，保留 `giftedToOfficerId` 随侍随迁；引擎注释、函数名、
+  日志与 UI 统一使用“家眷/正妻/随侍”，不改变既有存档行为。
+- **写链迁移**：婚配与手动跟随检查进入命令坞家族对应分面并统一终审；旧 `FamilyPanel`
+  两个写入口归零，只读壳留 P38 删除。
+- **复验与随机边界**：婚配复验女角归属/婚姻/随侍、武将归属/正妻与支付能力；跟随复验
+  在野候选，终审明确确认才消费权威 RNG、且可能无人投奔。
+- **验证**：1440×900 Headless 实测旧入口0/0、新入口各1，两链取消均保持权威状态，
+  婚配确认建立双向关系，跟随确认完成，console error=0。family RNG 36/36、client 36/36、
+  typecheck/lint 全绿；未改 API、规则数值、RNG 算法、Schema 或存档契约。
+- **Next（CMD 线）**：CMD-P38 物理删除旧 `FamilyPanel` 与左栏家族折叠项，复验 S11
+  登用/释放家眷同步、年度固定子女及唯一入口，完成家族域原子切换。
+
+*v15.45 | 2026-07-30 | Session 242 · CMD-P37 家族写链迁移*
+
+### Session 243 — CMD-P38 家族原子切换总验收
+
+- **原子切换**：物理删除 `FamilyPanel.tsx`；左栏删除家族 import、计数、折叠状态与挂载，
+  旧源码、左栏按钮及 `family-panel` DOM 全部归零。
+- **唯一入口**：命令坞家族四分面成为 S18 女角、姻亲/固定子女、婚配与手动跟随唯一
+  玩家入口；没有复制 S11 加入/释放或年度子女共享结算。
+- **验证**：`verify-cmd-p38-headless` 在 1440×900 实测旧入口/DOM 0/0、四分面各1、
+  婚配入口唯一，蔡琰×荀彧婚配成功，释放/重新加入时正妻正确随迁，console error=0。
+  child engine 4/4、family RNG 36/36、shared 198/198、client 36/36，typecheck/lint/data/
+  build/diff-check 全绿（仅既有大 chunk warning）。
+- **边界**：无 API、规则数值、RNG、Schema 或存档变化；屯田没有运行时，不冒充迁移。
+- **Next**：CMD-P0～38 的现有运行时域迁移阶段完成。开启新的玩法/大系统前由用户按
+  `12-system-map.md` 拍板优先级；既有候选包括 R3 单挑倾向、公平性或其他已登记系统。
+
+*v15.46 | 2026-07-30 | Session 243 · CMD-P38 家族原子切换总验收*
+
+### Session 244 — R3 S10 单挑四倾向与吕布公平性
+
+- **四倾向权威链**：`DuelStance` 与双方 `stances` 快照进入共享类型、Zod 存档校验、
+  challenge API、服务端引擎和 DuelPanel；玩家选择强攻/持重/诱敌/委任，AI 在不可读取
+  玩家选择的前提下独立决策，倾向真实改变七指令权重。
+- **吕布规则内最强但可败**：三连衰减改为 0.55/0.35，单回合伤害上限 75%，受必杀
+  额外 20% 化解；传奇保护只把败后斩俘改为重伤撤退，不改写 HP 胜负。并修复原有
+  “挑战方胜时 loserId 误写挑战方”缺陷。
+- **恢复与 UI**：进行中六角战斗刷新后恢复 BattleView；发起单挑时四倾向按钮可选，
+  演出面板显示双方权威倾向；非法/缺失倾向由服务端 400 拒绝。
+- **验证**：`verify-duel` 专项覆盖四倾向分布、5000 seed 吕布真实败局和重伤撤退；
+  `verify-duel-rng` 3/3、战斗存档 Schema 7/7。`verify-duel-r3-headless` 在
+  1440×900 实点四倾向并选择诱敌，非法倾向 400、console error=0。
+- **Next**：R3 完成；按一致性修复基线进入 R4 前，先读取
+  `docs/23-design-consistency-remediation.md` 的 R4 边界，不并行开启其他大系统。
+
+*v15.47 | 2026-07-30 | Session 244 · R3 S10 单挑四倾向与吕布公平性*
+
+### Session 245 — R4 S21 战争四层/三模式权威映射
+
+- **统一命名**：战争口径固定为行政大地图→郡域战场→局部交战→单挑演出四层；局部交战
+  三入口固定为自动 `auto`、标准 `standard`、六角微操 `tactical`，清理 `micro/tactical`
+  混用。
+- **唯一模式与幂等回写**：`MeleeState` 记录 `entryMode / settlementApplied /
+  tacticalBattleId`；同一快照只能选一种模式，重复提交同一模式幂等，改选被拒绝。
+  自动由服务端推演到底，标准逐回合，六角复用现有 BattleState；三者统一回写 CampaignArmy。
+- **UI 与恢复**：入口弹窗三项均为真实按钮；标准选定后才开放逐回合指令，六角结束返回
+  白刃战结果。刷新恢复活跃六角、白刃战或战场中的最深场景。
+- **验证**：`verify-melee-modes` 10/10，分别验证三入口选定、单次回写、重复幂等和禁止
+  改选；`verify-save-battle` 24/24。shared 198/198、client 36/36、typecheck 全绿。
+- **边界**：R4 只完成命名、状态选择和结算映射；郡域全量、标准模式内容深度与县级主动
+  AI 仍按既有后续阶段，不冒充完成。
+- **Next**：R4 完成；下一次只读取并实施 R5 S03/S04 持续内政与年度预算，不并行开 R6。
+
+*v15.48 | 2026-07-30 | Session 245 · R4 S21 战争四层/三模式权威映射*
+
+### Session 246 — R5 S03/S04 持续内政与年度预算
+
+- **持续项目**：农业/商业/城防从即时随机增益迁为9/6/12月项目，总成本300/400/500金；
+  一城一项，启动需本城可用武将并支付1/3首付，余款逐月支付。
+- **暂停损失**：武将调离/出征、城市易主或金不足时不推进；前2个暂停月保留进度，第3月
+  损失已完成进度25%，其后每月损失1月，禁止免费推进。
+- **年度预算**：新增12月金粮投影与只读 API/UI，列明民军粮耗、项目余款及递增行政费；
+  俸禄、未发生战争损失明确列0，不伪造尚未实装规则。
+- **验证**：R5 专项17/17（含真实月结算及1/3/10城预算）；civil RNG 9/9；
+  turn-cadence 28/28、完整存档10/10；shared 198/198、client 36/36，typecheck/lint/
+  validate-data/build/diff-check 全绿，仅既有大 chunk warning。
+- **Next**：R5 完成；下一次只处理 R6 S15 多线 AI 与公平难度，不并行启动 R7。
+
+*v15.49 | 2026-07-30 | Session 246 · R5 S03/S04 持续内政与年度预算*
+
+### Session 247 — R6 S15 多线 AI 与公平难度
+
+- **双线计划**：每势力主动攻击 Army 硬上限由1改为2；实际须有不同前线源城、未出征
+  主将、至少3500可出征兵和足够粮草。同一源城同月不可重复发军，候选平分按 ID 稳定排序。
+- **防守与撤退**：源城至少留500兵，并提高到相邻最大敌军25%；围城/接战军遇外交转
+  非敌对、粮不足两个月，或兵力低于守军55%时撤回原出发城、士气-10并写军情。
+- **公平边界**：不修改任何武将五维，不生成隐藏兵力/资源或战斗倍率。四档开局难度 UI
+  尚未实装，本轮先完成无作弊的标准公平基线；县级主动 AI、Army—县映射、真实路径补给、
+  郡域迷雾和完整副将/兵种择优仍明确后置。
+- **验证**：`verify-ai-military-rng` 由29扩至38/38，实际执行双线 CampaignArmy 创建、
+  不同源城、守备保留、第三线拦截、缺粮撤退、五维不变和同 seed 状态一致；既有外交、
+  出征/围城/战报、袭扰与存档恢复断言全部保持通过。Campaign 71/71、战役存档9/9、
+  回合节拍28/28、shared 198/198、client 36/36，typecheck/lint/validate-data/build/
+  diff-check 全绿；仅既有大 chunk warning。
+- **Next**：R6 最低验收完成；下一次只处理 R7 S09 宫廷人脉语义与字段迁移。
+
+*v15.50 | 2026-07-30 | Session 247 · R6 S15 多线 AI 与公平难度*
+
+### Session 248 — R7 S09 宫廷人脉语义与字段迁移
+
+- **权威字段迁移**：`Faction.beautyStock` → `courtNetwork`，
+  `City.beautySeekLeft/beautyPool` → `courtNetworkOpportunities`；类型、Zod、开局、
+  引擎、迷雾、AI、外交、谍报、计谋、客户端和测试夹具全部同步，新状态不写旧键。
+- **旧档兼容**：v1 加载迁移器在严格 Schema 前幂等改名并删除旧键；迁移/恢复专项
+  23/23，验证旧值保留、新快照无旧字段。
+- **人口脱钩**：删除成年女性换算常量/函数及成功率加成；开局机会改由商业、民心、首都
+  地位派生，地方结交固定65%基础成功率且不修改人口四桶。历史女角来源和 S18 边界不变。
+- **语义/UI**：顶栏、城情、内政、计略、情报、外交及笼络全部使用“宫廷人脉/城市机会/
+  地方结交/战后接管”；旧 API 路径仅作兼容，不再代表女性实体。
+- **验证**：S09 25/25、存档迁移23/23、计谋谍报34/34、外交40/40、AI谍报4/4、
+  Campaign 71/71；shared 194/194、client 36/36，typecheck/lint/data/build 全绿。
+  1440×900 Headless 实点地方结交：扣金60、人脉+1/机会−1、人口不变、旧字段0、
+  console error=0。仅既有大 chunk warning。
+- **Next**：R7 完成；下一次只处理 R8 跨系统成长入口收敛与24回合情景平衡。
+
+*v15.51 | 2026-07-30 | Session 248 · R7 S09 宫廷人脉语义与字段迁移*
+
+### Session 249 — R8 成长入口收敛与24回合情景平衡
+
+- **四入口收敛**：人物详情把经验、功绩、技能等级/使用次数归入“人物成长”，已掌握
+  阵型归入“阵型精通”；军事首分面改为“军团战备”；CampaignArmy 详情改为“战役态势”
+  并显示现有经验、补给、组织和疲劳。
+- **诚实边界**：未新增 Schema、API、资源、RNG 或升级按钮；属性/技能自动升级、
+  `meritLevel` 和阵型双轴成长仍未实装。
+- **24回合验收**：新增固定3城/10将夹具，调用真实持续开发、征兵、训练、赈济、
+  `advanceTurn` 和两次 `runAutoBattle`；24个月每月都有至少两项可行选择，并记录所选
+  与放弃项。专项54/54，两战均产生伤亡。
+- **验证**：client 36/36、Campaign 71/71、turn cadence 28/28、typecheck/lint/data/
+  build/diff-check 全绿；1440×900 Headless 实际打开四入口，console error=0。仅既有
+  大 chunk warning。
+- **Next**：R1～R8 一致性修复主线完成。下一任务须按 `12-system-map.md` 选择已登记系统。
+
+*v15.52 | 2026-07-30 | Session 249 · R8 成长入口与24回合情景平衡*
+
+### Session 250 — BF-P3 动态战况与权威 RNG 收口
+
+- 南郡实例按月份生成天气；Army 稳定排序后部署到合法入口，并生成侦察、伏击与遭遇顺序。
+- 新增可选 `dynamicSituation`，旧存档兼容；生成审计记录 drawStart/drawEnd 与决策清单。
+- 南郡 UI 显示动态战况及 RNG 审计。
+- 验证：动态专项13/13、郡域存档/攻县45/45、AI保存点整场复现4/4；1440×900 实际
+  创建游戏并点击进入南郡，动态摘要可见、console error=0。shared 194/194、client 36/36；
+  typecheck/lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+- 边界：天气/伏击当前不修改战斗数值；县级主动 AI 与 Tier II 郡域迷雾仍后置。
+- **Next**：进入 BF-P4 第二郡与地形对照；先拍板颍川（推荐）或汉中，再录数据。
+
+*v15.53 | 2026-07-30 | Session 250 · BF-P3 动态战况与权威 RNG*
+### Session 251 — BF-P4 颍川第二郡对照核心（进行中）
+
+- **S21/S10 单系统推进**：新增颍川 190 模板 17 县/29 条全陆路/4 地貌锚点，以阳翟为郡治；
+  县名据《后汉书·郡国二》，坐标与路线明确为 approximate/inferred 人工相对布局。
+- **通用生成器**：新增 `generateCommanderyBattlefield`，南郡旧包装同步复用；生成逻辑无郡名
+  分支，静态生成零 RNG，动态战况继续显式注入权威 RNG。
+- **API/UI**：进入端点支持 `nanjun | yingchuan` 且缺省兼容南郡；地图右上双入口，页面标题、
+  郡治、入口县及计数从实例派生；颍川不开放南郡县攻打按钮。
+- **数字真源**：当前登记 2 郡、33 县、40 路线、14 地貌锚点。
+- **验证**：相关 shared 55/55；typecheck/lint/validate-data/build、BF-P3 13/13、存档/县攻打
+  45/45 全绿。1440×900 浏览器实点颍川→退出→南郡，分别显示 17/29/阳翟与 16/11/江陵，
+  console error=0；仅既有大 chunk warning。
+- **诚实边界**：城下/阵前单挑共享 duel 引擎与结果回写尚未实施，BF-P4 保持 `[~]`。
+- **Next**：继续 BF-P4 单挑触发与回写，完成后再做 P4 总验收；不得提前进入 BF-P5。
+
+*v15.54 | 2026-07-30 | Session 251 · BF-P4 颍川第二郡对照核心*
+
+### Session 252 — BF-P4 阵前/城下单挑收口
+
+- **共享引擎**：郡域入口“阵前挑战”和郡治“城下挑战”直接复用 S10
+  `createDuel / stepDuel / runDuelToCompletion` 与既有 `DuelPanel`；没有复制指令、
+  伤害、受伤、倾向或 RNG 逻辑。
+- **存档与幂等**：`BattlefieldInstance.activeDuel?` 保存语境、节点、双方、完整
+  `DuelState` 和 `settlementApplied`；旧档可缺省，运行时 Schema 严格校验。
+- **结果回写**：统一写回胜方功绩、败方死亡/被俘/体力、挑战方 Army 士气；挑战方获胜
+  时目标守军震动、驻军-15%。重复 step/skip 不重复结算，结算后显式返回郡域战场。
+- **确定性修复**：实例 `scenarioDateAtCreation` 改由场景年月显式注入，移除生成器
+  `new Date()` 的毫秒级非确定性；静态测试默认使用稳定 slice id。
+- **验证**：BF-P4 duel 专项20/20；shared 198/198、client 36/36；typecheck/lint/
+  validate-data/build/diff-check 全绿。1440×900 实点颍川阵前逐回合+跳过、城下跳过、
+  返回战场及颍川→南郡往返，console error=0；仅既有大 chunk warning。
+- **结论/Next**：BF-P4 `[x]`。下一阶段按依赖进入 BF-P5；先做录入/校勘工具与
+  CampaignArmy—县节点位置映射，再批量增加核心战线模板。
+
+*v15.55 | 2026-07-31 | Session 252 · BF-P4 阵前/城下单挑收口*
+
+### Session 253 — BF-P5 录入/校勘工具（第一步）
+
+- **Seed Schema 核心**：新建 `shared/data/historical-geography/seed-schema.ts`，导出增强
+  录入类型（`CountyRole`/`TerrainTag`/`LandmarkKind`/`RouteKind` 等 7 种类型 +
+  `CommanderySeed`/`CountySeed`/`LandmarkSeed`/`RouteSeed` 四接口）与纯函数构建器
+  `buildHistoricalGeographyBundle`。构建器补全 Zod 强制字段（confidence='approximate'、
+  terrain=['plain']、role='county'、kind='road'、movementCost=1 等缺省值）并自校验。
+- **两郡迁移**：南郡与颍川均已迁移到 `CommanderySeed` + `buildHistoricalGeographyBundle`
+  生成；南郡 `autoFillRoads: false`（11条显式路径含8条 river），颍川 `autoFillRoads: true`
+  （29条 road 从 adjacency 自动派生）。导出 bundle 对象逐字段等价。
+- **校验脚本**：新建 `server/src/scripts/verify-historical-geography.ts`，遍历所有
+  registered bundle 跑 Zod schema + preview 一致性检查（两次调用 deep-equal，零 RNG）。
+  注册 npm script 在 server 与 root 两层 package.json。
+- **单元测试**：新建 `shared/data/historical-geography/seed-schema.test.ts`（16/16），
+  覆盖合法构建（最小2县/显式角色地形/三种 geometry/显式 route 覆盖/autoFillRoads 合并/
+  确定性 preview）、非法构建（缺 seat/邻接不对称/端点不存在/safe 模式）、等价性
+  （两郡不变量+preview 确定性+角色分布）。
+- **文档同步**：`08-data-dictionary.md` 新增 seed 层字段表与数字真源；`09-roadmap.md`
+  BF-P5 行标注"录入/校勘工具第一步已完成"；本日志 + HANDOFF 双写。
+- **验证**：shared build/typecheck 214/214 全过；`pnpm verify-historical-geography` 两郡 OK
+  （南郡 16 counties/11 routes/10 landmarks，颍川 17 counties/29 routes/4 landmarks）；
+  `pnpm validate-data` 基线不变。
+- **简化/占位标注**：本次是工具基建，不录入第三郡（需用户提供史料）；不改运行时战斗/
+  存档逻辑；Army—县位置映射、orchestrator 去硬编码、郡域迷雾、年代覆写均留后续 BF-P5
+  子步骤。
+- **Next**：继续 BF-P5 剩余子步骤——Army—县位置映射或第三郡录入（需用户提供史料）。
+
+*v15.56 | 2026-07-31 | Session 253 · BF-P5 录入/校勘工具第一步*

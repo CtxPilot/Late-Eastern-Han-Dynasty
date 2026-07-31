@@ -131,13 +131,13 @@ POST   /api/game/civil/train         { cityId }   // 士气
 // 四分面无提交入口，右栏旧写链保持不变。CMD-P24 才迁移 develop/relief。
 // CMD-P24：develop/relief 玩家入口迁入命令坞对应分面并统一终审，显式提交 cityId；
 // 确认前复验归属和100/100/120金或150粮。复用既有端点，API/响应/权威 RNG 均不变。
-POST   /api/game/civil/seek-beauty       { cityId }           // 寻访：60金；成功 stock+1 可寻−1
+POST   /api/game/civil/seek-beauty       { cityId }           // 兼容路由：地方结交；60金；成功 courtNetwork+1、城市机会−1
 POST   /api/game/civil/search-beauty     { cityId }           // 兼容 → seek-beauty
 // 注意：seek-beauty 路由前缀为历史兼容，业务引擎真源是 S09 beauty.ts，不属于 S03；
 // CMD-P25：用户批准在“内政·总览”提供明确标注为“S09 宫廷人脉”的跨系统入口；
-// 统一终审并显式提交 cityId，确认前复验归属、可寻次数≥1与金≥60。右栏旧入口删除。
-// 仅迁移玩家 UI；端点、beauty.ts 权威引擎、成功率、数值与响应均未变化。
-POST   /api/game/personnel/reward-beauty { officerId, amount? } // 赏赐美女库存→忠诚
+// 统一终审并显式提交 cityId，确认前复验归属、人脉机会≥1与金≥60。右栏旧入口删除。
+// R7 已将权威字段迁为 courtNetwork/courtNetworkOpportunities；旧路由名暂作客户端兼容。
+POST   /api/game/personnel/reward-beauty { officerId, amount? } // 兼容路由：动用宫廷人脉→忠诚
 
 POST   /api/game/personnel/marry       { femaleId, officerId }  // 婚配 300金
 POST   /api/game/personnel/gift-beauty { femaleId, officerId }  // 赏赐 100金
@@ -153,18 +153,41 @@ POST   /api/game/court/grant-nobility      { officerId, targetRank }
                                       // HC-P1-4 王命封爵；逐级且臣属最高公
 POST   /api/game/personnel/release-officer { officerId }  // S18 跟随：释放为在野
 POST   /api/game/personnel/follow-check  {}  // S18 跟随：手动触发投奔检定
+// CMD-P35：婚配与手动跟随虽沿用 personnel 路由，业务归属均为 S18；命令坞家族新写入口为0。
+// join-faction/release-officer 是 S11/占城等流程调用的关系同步能力，不作为家族 UI 命令复制。
+// 子女登场是开局/年度共享结算，无独立 API。后续迁移继续复用现有端点与权威 RNG。
+// CMD-P36：命令坞家族四分面只从当前 GameState + /static children 摘要派生，
+// 无请求、无提交；上述既有端点仍只由旧 FamilyPanel/共享流程调用。
+// CMD-P37：marry 与 follow-check 玩家入口迁入 FamilyOverviewDrawer 并统一终审；
+// 确认前复验最新婚姻/随侍/正妻/支付或在野候选状态，旧 FamilyPanel 写入口归零。
+// 用户批准保留 giftedToOfficerId 随侍随迁；仅修正语义命名并补回归，端点契约不变。
+// CMD-P38：旧 FamilyPanel 与左栏入口物理删除；marry/follow-check 仅余命令坞玩家入口。
+// join-faction/release-officer 与子女年度结算仍为共享流程，不新增或复制玩家按钮。
 
 POST   /api/game/intel/recruit         { cityId }  // 招募：人数/等级∝男成+驻军
-POST   /api/game/intel/recruit-female  { cityId }  // 训练女间谍：耗 beauty2+金100，agentKind='female'
-POST   /api/game/intel/plant-female    { targetFactionId, homeCityId? }  // 献美点化：plantable≥1+对方beauty≥1+金80
+POST   /api/game/intel/recruit-female  { cityId }  // 训练女间谍：耗 courtNetwork 2+金100，agentKind='female'
+POST   /api/game/intel/plant-female    { targetFactionId, homeCityId? }  // 牵线点化：plantable≥1+对方courtNetwork≥1+金80
 POST   /api/game/intel/mission         { agentId, type: recon|sabotage|assassinate|pillowTalk|sowDiscord, targetCityId }  // pillowTalk/sowDiscord 仅限女间谍
 POST   /api/game/intel/station         { agentId, cityId }  // 驻守反间
 POST   /api/game/intel/unstation       { cityId }
 POST   /api/game/intel/captive         { agentId, action: hold|execute|release|exchange }
 
+// CMD-P30：上述 S07 端点继续由左栏 SpyPanel 唯一调用，命令坞情报新写入口为0。
+// CMD-P31：IntelOverviewDrawer 仅消费已迷雾裁剪的 /game/state，不新增端点；
+// 上述写端点仍由 SpyPanel 唯一调用，待 P32/P33 分批迁移。
+// CMD-P32：/intel/recruit、/intel/recruit-female、/intel/plant-female 的玩家入口已迁至
+// IntelOverviewDrawer“人员”；端点与引擎契约不变。敌方 courtNetwork 受迷雾裁剪，
+// plant-female 的目标库存条件只由服务端权威复验。
+// CMD-P33：/intel/mission、/intel/station、/intel/unstation、/intel/captive 的玩家入口已迁至
+// IntelOverviewDrawer“任务/反间”；五类任务、驻防/撤防与处决/释放统一终审并复验最新状态。
+// CMD-P34：旧 SpyPanel 源码/DOM 已删除；上述 S07 端点仅由 IntelOverviewDrawer 玩家入口调用。
+// 计略跨域 intel/recon 只切换到任务分面，不新增或复制 API。
+// 本轮只迁移入口、草稿、终审与确认前复验，不改端点、引擎、RNG 或存档契约。
+// /intel/plant-female 是 S07∩S08∩S09 交叉链；外交只积累额度，情报负责点化。
+
 POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|emptyFort|..., targetFactionId?, targetCityId?, targetOfficerId?, agentId? }
                                      // L1 战术计谋：honeyTrap(美人计)·sowDiscord(离间)·falseIntel(假情报)·emptyFort(空城)
-                                     // CMD-P28：四计新抽屉复用本端点；旧左栏入口迁移期保留到 P29
+                                     // CMD-P29：四计仅由命令坞抽屉复用本端点；旧左栏入口已删除
                                      // 客户端终审前复验上限/情报/盟友/资源/目标，服务端仍作最终权威校验
                                      // L2 战略计谋：undermine(釜底抽薪)·lureOut(调虎离山)·feint(暗渡陈仓)·bluff(树上开花)
                                      //             instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
@@ -216,8 +239,8 @@ POST   /api/game/battle/ability   { attackerId, targetId, abilityId }  // S10 �
 POST   /api/game/battle/exit         → GameState  // 结算占城或残兵回流
 ```
 
-征兵响应中的人口变化：`demographics.adultMale` 下降、`population` 同步、`beautyPool` 随女成重算。  
-搜罗美人：`adultFemale −400`、`beautyPool −1`、`gold −80`；可能写入 `females[id].factionId`。  
+征兵响应中的人口变化：`demographics.adultMale` 下降、`population` 同步；S09 人脉不变。
+地方结交只消耗金和 `courtNetworkOpportunities`，不扣成年女性、不生成历史女角。
 出征胜：目标 `ruler` 改玩家、残兵驻防、敌同城武将→在野、**全部存活攻方主将**迁入、拆敌反间；败/撤：部分兵力回 `fromCityId`。  
 进贡/结盟/回合末：扣 **城金** 后 `syncFactionResources` 写回 `faction.gold/food`。
 
@@ -312,10 +335,9 @@ POST   /api/v1/games/:id/battles/:battleId/tactic
 
 POST   /api/v1/games/:id/battles/:battleId/duel/challenge
    发起单挑 ✅ 已实装（Session 88）
-   当前 Body: { challengerUnitId, targetUnitId }
-   目标 Body: { challengerUnitId, targetUnitId, stance: 'assault'|'steady'|'bait'|'delegate' }（未实装）
+   Body: { challengerUnitId, targetUnitId, stance: 'assault'|'steady'|'bait'|'delegate' } ✅ R3 已实装
    Response: { duelState: DuelState }
-   说明: 发起方消耗20气力；target自动/拒绝见 §8.3.2；接受后引擎自动推进首回合
+   说明: 发起方消耗20气力；非法/缺失 stance 返回400；target自动/拒绝见 §8.3.2；接受后引擎自动推进首回合
 
 POST   /api/v1/games/:id/battles/:battleId/duel/respond
    回应单挑挑战（目标规则允许玩家应战时选择倾向；当前 0-A 仍由 challenge 内部自动处理）
@@ -405,6 +427,7 @@ POST /api/v1/games/:id/battlefields/:battlefieldId/settle
 - `settlementId` 必须幂等；一支 Army 不得同时属于两个活动战场。
 - P2 起 `BattlefieldInstance` / `Encounter` 进入完整 `GameState` 快照；场景栈、镜头和动画不进入 API 存档负载。
 - P3 所有动态生成及战场 AI 行动选择统一消费权威 `xorshift32-v1`，禁止客户端或端点私建随机源。
+- Session 250：进入南郡端点响应中的实例可含 `dynamicSituation` 与完整生成审计；无新增端点。
 
 ### 2.6 外交
 
@@ -883,3 +906,35 @@ CMD-P28 没有新增或修改接口。命令坞四计继续复用既有
 ---
 
 *文档版本: v4.9 | 2026-07-30 | Session 233 CMD-P28 后现行接口口径同步*
+
+Session 245 新增 `POST /api/game/melee/mode`，请求 `{ mode: 'auto'|'standard'|'tactical' }`。
+缺失或非法模式返回 400；已选其他模式返回 400；重复提交同一模式幂等返回当前结果。
+自动模式在该请求内完成推演与 Army 回写；标准模式后续只允许 `/melee/round`；六角模式
+返回关联 `battle`，完成后由既有 `/battle/exit` 幂等回写白刃战与 Army。
+
+Session 246 将 `POST /api/game/civil/develop` 请求改为
+`{ cityId, kind: 'farm'|'commerce'|'wall', officerId }`。成功只启动持续项目并扣首付，
+不再即时增加开发度；项目冲突、非己方城、武将不可用或首付不足返回400。旧
+`/civil/develop-farm` 仅作兼容入口，自动使用本城首名武将。
+
+新增只读 `GET /api/game/civil/budget`，返回当前玩家势力12月预算：
+`cityCount / goldIncome / foodProduced / civilianAndMilitaryFood / projectGold /
+administrativeGold / salaryGold / warLossGold / netGold / netFood / notes`。
+
+### Session 251 · BF-P4 郡域战场选择
+
+`POST /api/game/battlefield-instance/enter` 新增可选请求体
+`{ commandery: 'nanjun' | 'yingchuan' }`；省略时保持旧行为进入南郡，非法值返回 400。
+响应仍为同一 `GameState.activeBattlefieldInstance` 契约，不新增存档字段。颍川实例使用
+`yingchuan-190`，南郡旧客户端与旧存档无需迁移。
+
+### Session 252 · BF-P4 阵前/城下单挑
+
+- `POST /api/game/battlefield-instance/duel/start`
+  `{ kind: 'formation_front'|'city_front', nodeId, stance }`
+- `POST /api/game/battlefield-instance/duel/step`
+- `POST /api/game/battlefield-instance/duel/skip`
+- `POST /api/game/battlefield-instance/duel/close`
+
+四端点都返回最新 `GameState`。start 校验入口/郡治语境与敌方；step/skip 统一消费权威
+RNG，完成时幂等回写；close 只允许已结算上下文。重复 skip 不会二次回写。

@@ -79,3 +79,55 @@
 | Zod、交叉引用、有效期、坐标、邻接对称性 | 达成；专用测试覆盖合法与非法样本 |
 | 同一模板预览稳定、零 RNG | 达成；只读 preview 仅排序复制，无 RNG 依赖 |
 | CREDITS 史料与地理来源登记 | 达成 |
+
+## 七、Seed 录入规约（BF-P5 通用化）
+
+> 本节从南郡与颍川的实际录入经验中提取通用流程，供后续郡国录入参考。
+> 完整类型定义见 `shared/data/historical-geography/seed-schema.ts`。
+
+### 7.1 文件结构
+
+每个郡国一个 TS 文件：`shared/data/historical-geography/<commandery>-<year>.ts`。文件导出
+`<commandery><year>: HistoricalGeographyBundle`，内部用 `CommanderySeed` +
+`buildHistoricalGeographyBundle(seed, sources)` 构建。
+
+### 7.2 录入步骤
+
+1. **创建 CommanderySeed 壳**：填 id/name/province/seatCountyId/worldCityId/scenarioYear/sourceRefs。
+2. **逐县录入 CountySeed**：
+   - `id` 使用语义化稳定 ID（如 `nanjun_jiangling`）。
+   - `role` 按史料选择：`seat`（郡治）、`county`（一般县）、`marquisate`（侯国）、`frontier`（边县/边界节点）。
+   - `terrain` 从 8 种标签中选取（缺省 plain）。
+   - `adjacent` 列出邻接县 ID，需双向对称。
+3. **录入 LandmarkSeed（若有）**：
+   - `geometry` 支持三种：`point`（关隘/渡口）、`polyline`（河流，≥2 点）、`polygon`（山脉/沼泽，≥3 点）。
+   - `tacticalTags` 可标记 `boundary_entry` 等战场语义。
+4. **配置路径**：
+   - 纯陆路郡：不设 `routes`，`autoFillRoads` 缺省 true → 构建器从 adjacency 自动派生 road 路径。
+   - 水路/关渡郡（如南郡）：显式录入 `RouteSeed[]`，设 `autoFillRoads: false`。
+   - 混合郡：显式录入特殊路径，`autoFillRoads: true` 让构建器补全剩余 road。
+   - `RouteSeed.from/to` 可引用县 id 或地标 id。
+5. **补充 `HistoricalSource[]`**：每条必含 id/title/volume/entry/edition/url/accessedAt。
+6. **运行校验**：`pnpm verify-historical-geography` 确认 OK + preview 一致。
+7. **在 `index.ts` 注册**：将新 bundle 加入聚合导出数组，并同步更新 `verify-historical-geography.ts`
+   的 bundles 数组。
+
+### 7.3 命名规约
+
+| 元素 | ID 格式 | 示例 |
+|------|------|------|
+| 郡 | `<province>_<commandery>_<year>` | `jing_nanjun_190` |
+| 县 | `<commandery>_<county>` | `nanjun_jiangling` |
+| 地标 | `<commandery>_<landmark>` | `nanjun_xiangyang_ferry` |
+| 路径（自动） | `road_<from>__<to>` | `road_yingchuan_a__yingchuan_b` |
+| 路径（显式） | `route_<descriptor>` | `route_yangtze_wu_zigui` |
+| 史源 | `src_<序号或缩写>` | `src_xuhanshujunzhi` |
+
+### 7.4 校验脚本
+
+```bash
+pnpm verify-historical-geography
+```
+
+输出 `OK <郡名> (N counties, M routes, K landmarks)` 或 `FAIL`。退出码 1 表示失败。
+新增郡国只需在 `verify-historical-geography.ts` 的 `bundles` 数组追加即可自动纳入。

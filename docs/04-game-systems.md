@@ -328,7 +328,7 @@ Game Loop:
 
 ### 3.5 人才自动跟随 — **已实现（原型）**
 
-> **已落地**：`server/src/engine/family.ts` · `tickFollowCheck()` 月度检定 · `joinFaction()` / `releaseOfficer()` · `POST /personnel/follow-check` · FamilyPanel 在野武将列表。
+> **已落地**：`server/src/engine/family.ts` · `tickFollowCheck()` 月度检定 · `joinFaction()` / `releaseOfficer()` · `POST /personnel/follow-check` · 命令坞家族“跟随”分面。
 
 ```
 特定武将在满足条件时自动投奔，不需搜索：
@@ -388,7 +388,7 @@ Game Loop:
 - `pnpm verify-negotiation-r2`（20/20）另覆盖登用/结盟公式边界、单调性、固定 seed、单次 RNG
   消费，以及日志/UI 共享百分比。界面默认明确提交君主为登用说客，消除旧 UI 显示君主、
   服务端却可能自动改用同城武将的预览偏差。
-- 当前赏赐美人/美女库存与三轨任命都是确定性即时结算，不消费 RNG；完整“赏金/宝物赏赐”仍是设计稿，尚无随机奖励内容可测试。当前也没有 S15 AI 调用搜索/登用共享结算函数，因此本轮不存在 AI 决策随机保留点。
+- 当前宫廷人脉笼络与三轨任命都是确定性即时结算，不消费 RNG；完整“赏金/宝物赏赐”仍是设计稿，尚无随机奖励内容可测试。当前也没有 S15 AI 调用搜索/登用共享结算函数，因此本轮不存在 AI 决策随机保留点。
 
 ### 3.8 君主身份特例（Session 188 规则定稿）
 
@@ -1369,7 +1369,7 @@ d≤5格损耗5% → 10格12% → 15格25% → >15格40%。雨季冬季+5%。
 - ✅ 登场年 `appearYear` → 动态生成武将入库（不依赖 0-A officers.json 预置 950–954）
 - ✅ 正妻婚配时叠 `motherBonus`（属性 + extraSkills）；未婚 → 在野、无母教
 - ✅ 写入 `city.officers` / `faction.officerIds`；父 `bloodline` 回写子 id
-- ✅ `Scenario.childEventIds` 隔离动态补登；`FamilyPanel` 只显示当前剧本白名单中的待登场/已登场子女
+- ✅ `Scenario.childEventIds` 隔离动态补登；命令坞家族只显示当前剧本白名单中的待登场/已登场子女
 - ❌ 独立子女 tab、父辈/族谱、全量 50+ 表、特性天赋母教（后置）
 - ✅ Session 154 确认当前子女不是程序化随机生成：5 名子女的身份、出生/登场年、基础属性与母教均来自固定 `ChildBirthDef`；当前模型没有性别字段或性别抽签，登场不消费 RNG；存档恢复结果已纳入家族确定性检查。
 
@@ -1757,14 +1757,11 @@ S15 每月只把 `war` / `hostile` 关系视为合法军事目标；缺失外交
 
 军事激进度不新增势力静态字段，暂由君主数据派生：`clamp(0.75 + 野心×0.03 + 统率×0.0015, 0.75, 1.35)`。它同时修正出征与袭扰意愿；参数集中于 `AI_MILITARY_CONFIG`，方便驻军差异化与难度系统落地后重调。当前门槛为出发城扣除 500 留守后至少可出 3500 兵，且出发城兵力不低于目标的 0.9 倍；这只是 0-A 统一 5000 驻军下的可玩基线，不是最终平衡值。
 
-占城意图通过后不再即时改城：AI 使用与玩家同一 `CampaignArmy` 数据、编成扣兵粮、官道路经、月度行军、围城和 `runAutoBattle` / 战后结算链。相邻城本月出征后抵达围城，下一月由 AI 自动强攻，因此权威状态中存在可被后续拦截系统利用的窗口。当前每势力同时只主动维持一支非驻守/非撤退攻击 Army；副将、参谋、兵种择优、多线协同与撤围外交响应仍后置。
+占城意图通过后不再即时改城：AI 使用与玩家同一 `CampaignArmy` 数据、编成扣兵粮、官道路经、月度行军、围城和 `runAutoBattle` / 战后结算链。R6 起每势力最多同时维持两条主动战线；实际数量仍受不同前线源城、未出征主将、最低 3500 出征兵、携粮和动态守备预备队约束，同一源城同月不会重复出军。源城除固定 500 守备外，还须保留相邻最大敌军 25% 的预备队。
 
-**目标规则（未实装）**：一支攻击 Army 的限制只是 0-A 安全阀。正式 AI 的同时战线数由
-可用主将、前线城市、粮道和预备兵力共同决定，并必须保留守备、识别外交变化、在补给恶化时撤围。
-反滚雪球同时接入跨城行政成本、占领整合期与补给线压力。实施顺序见
-`23-design-consistency-remediation.md` R5/R6。
+围城/接战军会在外交已转非敌对、现粮不足维持两个月，或兵力低于目标守军 55% 时撤回原出发城，士气 -10 并写军情；否则才自动强攻。候选、军团与武将排序均以稳定 ID 处理平分，军事决策和结算继续共用回合权威 RNG。该公平基线不修改武将五维，也不提供隐藏兵力；完整副将/参谋与兵种择优、占领整合期、Army—郡域县位置映射、真实路径补给和郡域迷雾仍后置。
 
-AI 军事随机不再保留 `Math.random()` 默认源：出征/袭扰决定、自动战斗与伤亡全部使用回合注入的权威 `xorshift32-v1`。`pnpm verify-ai-military-rng` 以 29/29 覆盖外交排除、激进度上下界、CampaignArmy 全链、军情/胜败战报，以及保存恢复后的决策与结算复现。
+AI 军事随机不再保留 `Math.random()` 默认源：出征/袭扰决定、自动战斗与伤亡全部使用回合注入的权威 `xorshift32-v1`。`pnpm verify-ai-military-rng` 以 38/38 覆盖外交排除、激进度、CampaignArmy 全链、双线/守备/撤退、公平五维与固定 seed 复现。
 
 ---
 
@@ -2472,15 +2469,12 @@ interface Officer {
 | **成年女** | `adultFemale` | 15~59 岁女性 | **生育**、劳动；不得换算为 S09 库存 |
 | **儿童** | `child` | 0~14 岁 | 未来劳动力；**新生只入此桶**；不征兵 |
 | **老人** | `elder` | 60+ | 轻劳动；**自然衰老死亡主因** |
-| **旧兼容字段** | `beautyPool` | 现有 Demo 的遗留派生值 | **待迁移删除；不得作为目标规则** |
 
 ```
 总人口 total = adultMale + adultFemale + child + elder
 population ≡ total（写路径必须改桶 → withSyncedPopulation）
 
-// 旧 Demo（待 R7 删除）
-beautyPool = floor(adultFemale * BEAUTY_PER_ADULT_FEMALE)
-// 该换算不再是有效设计；任何新代码不得依赖它
+// R7 已删除 adultFemale → S09 的全部换算
 ```
 
 **开局拆分默认比**（`DEFAULT_DEMO_RATIO`，与代码一致）：
@@ -2572,7 +2566,7 @@ actualGain  = min(request, maxConscript,
 | **民心/施米** | 施米按 total 耗粮；民心低 → birthMod↓、叛乱↑、征兵抗性↑ |
 | **卫生/瘟疫** | 卫生低时 elder/child 死亡率↑；男成染疫影响征兵池 |
 | **迁民/招抚** | 流民包按比例拆四桶迁入；战乱城输出流民 |
-| **宫廷人脉** | 与人口脱钩；旧 Demo 的 `beautyPool ∝ adultFemale` 和扣女成逻辑待 R7 迁移 |
+| **宫廷人脉** | 与人口脱钩；R7 已删除旧 `beautyPool ∝ adultFemale` 与扣女成逻辑 |
 | **城等/上限** | `maxPopulation` 约束 total；设施（粮仓/医馆）改耗粮与死亡率 |
 | **AI** | AI 征兵保留 `reservedLabor`；饥荒时优先停征兵、施米 |
 
@@ -2588,20 +2582,19 @@ export interface CityDemographics {
 }
 // City.demographics: CityDemographics  // 运行时必填
 // City.population: number              // ≡ sum
-// City.beautyPool: number              // 旧兼容字段，待 R7 迁移
+// City.courtNetworkOpportunities: number // 与人口无关
 
 // shared/demographics.ts — 公式与工具
 //   splitDemographics / ensureDemographics / withSyncedPopulation
 //   ageDemographicsTick / cityFoodNeed / laborForce / maxConscriptable
-//   beautyPoolFromFemales              // 旧兼容函数，待 R7 删除
 // server/src/engine/turn.ts — 每月：年龄推移 → 产粮耗粮 → 饥荒
-// server/src/engine/civil.ts — 征兵扣 adultMale；旧 searchBeauty 扣女成逻辑待 R7 删除
+// server/src/engine/civil.ts — 征兵只扣 adultMale
 ```
 
 **不变量**：
 1. 四桶 ≥ 0  
 2. `population === sum(四桶)`  
-3. S09 迁移后不存在 `adultFemale → 宫廷人脉` 换算；迁移前旧字段只作兼容
+3. 不存在 `adultFemale → 宫廷人脉` 换算
 4. 征兵不得使 `adultMale < 0`  
 5. 增长阶段 `population ≤ maxPopulation`
 
@@ -2612,8 +2605,8 @@ export interface CityDemographics {
 | **D0 设计** | 本文 + 03/08 | [x] |
 | **D1 数据壳** | 开局拆分 + UI 四桶 | [x] |
 | **D2 征兵** | 扣男成 + 可征上限 | [x] |
-| **D3 增长+经济** | 生育/衰老 + 结构粮耗 + 劳力农产；旧 S09 派生仍待拆除 | [~] |
-| **D4 深耦合** | 瘟疫/屠城/俘获/伤兵回流；**搜罗美人 Demo 已切片** | [~] |
+| **D3 增长+经济** | 生育/衰老 + 结构粮耗 + 劳力农产；S09 派生已拆除 | [~] |
+| **D4 深耦合** | 瘟疫/屠城/俘获/伤兵回流 | [~] |
 
 ### 28.6 UI（RightPanel 已实现）
 
@@ -2635,11 +2628,7 @@ export interface CityDemographics {
 - 不做精确 0~100 岁年龄金字塔（比例推移即可）  
 - 童桶暂不拆童男/童女（成丁时再按 112:100 分配）  
 - 女成不征兵（历史简化）  
-- 人口与 **美女库存** 脱钩见 §30；旧「搜罗出历史女」为债
-
-### 28.8a 旧 Demo 搜罗（**债 · 违反 §30，待删**）
-
-`searchBeauty` 耗池+女成并可能刷出具名女 → 重构为：寻访只加 beauty 库存；具名女只走人事/事件/跟随。
+- 人口与 **宫廷人脉** 脱钩见 §30；地方结交不会生成历史女角
 
 ### 28.8b 旧 Demo 婚配/赏赐
 
@@ -2673,9 +2662,6 @@ export interface CityDemographics {
 | `FOOD_EAT.child` | 0.018 | 儿童 |
 | `FOOD_EAT.elder` | 0.024 | 老人 |
 | `TROOP_FOOD_EAT` | 0.055 | 驻军 |
-| `BEAUTY_PER_ADULT_FEMALE` | 1/400 | **旧 Demo 兼容常量，R7 删除** |
-| `BEAUTY_SEARCH.goldCost` | 80 | 搜罗耗金（**旧 Demo，将被 §30 取代**） |
-| `BEAUTY_SEARCH.poolCost` | 1 | 搜罗耗池（旧） |
 
 ---
 
@@ -2754,7 +2740,7 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 
 ### 29.7 AI（对称）
 
-每月：处置俘虏 → 边境/首都驻守反间 → 编制不足则招募 → **beautyStock≥4 且有空编制时训练女间谍** → 邻接敌城：有 detailed 情报时女间谍优先枕边风/离间，男特工破坏/刺杀。不作弊全知。
+每月：处置俘虏 → 边境/首都驻守反间 → 编制不足则招募 → **courtNetwork≥4 且有空编制时训练女间谍** → 邻接敌城：有 detailed 情报时女间谍优先枕边风/离间，男特工破坏/刺杀。不作弊全知。
 
 ### 29.8 未做
 
@@ -2776,15 +2762,15 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 
 ## 三十、宫廷人脉与历史女角 / 家族
 
-> **Session 168 语义修订已批准，运行时待 R7 迁移**。
-> 系统 ID：`S09` 宫廷人脉（旧字段仍名 `beauty*`）· `S18` **家族**（历史女角·婚姻·子女）· 交叉 `S07/S08/S17`。
+> **Session 248：R7 运行时字段与语义迁移完成**。
+> 系统 ID：`S09` 宫廷人脉 · `S18` **家族**（历史女角·婚姻·子女）· 交叉 `S07/S08/S17`。
 
 ### 30.1 三条线绝不混用
 
-| | **宫廷人脉（旧字段 beauty）** | **历史女角** | **家族 Family** |
+| | **宫廷人脉** | **历史女角** | **家族 Family** |
 |--|---------------------|--------------|-----------------|
 | 本质 | 赏赐、牵线、谍报掩护与宫廷交涉的机会库存 | 具名人物 | 血缘/姻亲网络（含女角、子女、相关男） |
-| 数据 | `Faction.beautyStock` | `females.json` | 关系图 + 子女事件；女角挂家族 |
+| 数据 | `Faction.courtNetwork` | `females.json` | 关系图 + 子女事件；女角挂家族 |
 | 获得 | 市井声望/豪族往来/宴饮/战后接管/事件 | **见 30.6**（非人事、非 S09） | 婚配、生育、事件 |
 | 用途 | 赏赐忠诚、献美、女间谍、美人计 | 婚姻、六维、子女母教 | 忠诚绑定、跟随、外交联姻 |
 | 工作/出战 | — | **除祝融外不可**像男将一样工作/出战 | — |
@@ -2808,16 +2794,17 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 
 | 字段 | 归属 | 含义 |
 |------|------|------|
-| `Faction.beautyStock` | **势力** | 旧字段名；目标语义为可赏赐、牵线、掩护和交涉的人脉机会 |
-| `City.beautySeekLeft` | **城** | 旧字段名；目标语义为本城尚可建立的人脉机会 |
+| `Faction.courtNetwork` | **势力** | 可用于笼络、牵线、掩护和交涉的人脉库存 |
+| `City.courtNetworkOpportunities` | **城** | 本城尚可建立的人脉机会 |
 
-- 两套账分开：势力库存 ≠ 城可寻次数。  
-- 城市机会由文化、商业、民心、豪族关系、设施和事件初始化/恢复，**不得读取成年女性数量**。
-- **旧** `beautyPool` 强制同步、扣成年女性和“抢夺女性”的语义均为 R7 技术债。
+- 两套账分开：势力库存 ≠ 城市机会。
+- 当前开局机会 = `max(1, 1 + floor(commerce/250) + morale≥75?1:0 + isCapital?2:0)`；
+  **不得读取成年女性数量**。文化、豪族、设施和事件修正仍后置。
+- 旧 `beautyStock/beautySeekLeft/beautyPool` 仅在 v1 存档加载迁移器中读取；新状态不写旧键。
 
 ### 30.3 宫廷人脉：获得（目标规则；数值待 R7 平衡）
 
-| 方式 | 势力 beautyStock | 城 beautySeekLeft | 民忠 |
+| 方式 | 势力 courtNetwork | 城 courtNetworkOpportunities | 民忠 |
 |------|------------------|-------------------|------|
 | **寻访成功** | **+1** | **−1**（扣 1 次可寻） | 不降 |
 | **寻访失败** | +0 | **不扣** | 不降 |
@@ -2829,9 +2816,9 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 **寻访（定稿）**
 
 ```
-条件：己方城；beautySeekLeft ≥ 1；耗金（草案 50~80）
-成功 → faction.beautyStock += 1
-       city.beautySeekLeft  -= 1   // 「扣1」= 潜在可寻次数 −1
+条件：己方城；courtNetworkOpportunities ≥ 1；耗金 60
+成功 → faction.courtNetwork += 1
+       city.courtNetworkOpportunities -= 1
 失败 → stock 不变；seekLeft 不变（可再试，只耗金）
 // 不产生历史女角
 ```
@@ -2840,13 +2827,13 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 
 ```
 来源 A — 攻占城池：
-  gain = min(1+random(0~1), target.beautySeekLeft)  // 1~2，且不超过机会
-  attacker.beautyStock += gain
-  target.beautySeekLeft -= gain
+  gain = min(random(2~4), target.courtNetworkOpportunities)
+  attacker.courtNetwork += gain
+  target.courtNetworkOpportunities -= gain
   target.stats.morale  -= 10~20
 
 来源 B — 密探经营（可选）：
-  gain = min(1~2, target.beautySeekLeft)
+  gain = min(1~2, target.courtNetworkOpportunities)
   同上；暴露则友好/信誉下降
 ```
 
@@ -2860,31 +2847,31 @@ batch = clamp(1, 3, floor(laborPool / 8000))   // 再受编制空位截断
 
 ```
 POST /diplomacy/gift-beauty { targetFactionId, amount? }
-条件：目标存活、非本势力、非交战；amount 1~5 正整数；己方 beautyStock ≥ n
+条件：目标存活、非本势力、非交战；amount 1~5 正整数；己方 courtNetwork ≥ n
 效果：
-  player.beautyStock  -= n
-  target.beautyStock  += n
+  player.courtNetwork  -= n
+  target.courtNetwork  += n
   友好 +12×n（cap 100）；友好≥30 且非同盟 → relation=friendly
   代码：diplomacy.giftBeautyStock · LeftPanel「献美」
 // 点化女间谍掩护线：见 §30.5（Session 58 已实现）
 ```
 
-### 30.4 美女资源：赏赐
+### 30.4 宫廷人脉：笼络
 
 | 项 | 规则（草案） |
 |----|----------------|
-| 指令 | 人事/君主：选武将，耗 1（或 n）beauty |
+| 指令 | 人事/君主：选武将，耗 1（或 n）courtNetwork |
 | 效果 | 忠诚 +8~20（随 n、武将性格：贪财/好色修正） |
 | 上限 | 同将同季次数限制；过度赏赐声望微损（可选） |
 | 与历史女 | **无关**；赏赐不产生具名女 |
 
 ### 30.5 女间谍（S07 ∩ S09）— **已实现**
 
-**定位**：用美女资源「养」出的特种谍报单位，不是历史女角。
+**定位**：用宫廷人脉提供掩护的特种谍报单位，不是历史女角。
 
 ```
 训练女间谍：
-  耗 beauty 2 + 金 100 + 1 空闲编制
+  耗 courtNetwork 2 + 金 100 + 1 空闲编制
   生成 SpyAgent，标记 agentKind: 'female'
   技能倾向：recon/lethal/tradecraft 偏高（base 30+rank×8+额外），sabotage 偏低（15~35）
   专属任务（仅限 agentKind==='female'）：
@@ -2900,8 +2887,8 @@ POST /diplomacy/gift-beauty { targetFactionId, amount? }
 > **已落地**：`SpyAgent.agentKind` · `trainFemaleSpy()` · `POST /intel/recruit-female` · SpyPanel ♀标记+任务选项 · spyAi 女间谍训练/派遣。
 
 **掩护线（与外交）— 已实现 Demo**：  
-1. 外交献美 → `intel.plantableBeauty[targetFid] += n`（对方 beautyStock 也 +n）  
-2. `POST /intel/plant-female` 点化：扣 plantable 1 + 对方 beauty 1 + 己方金 80 → 生成己方女间谍（`coverIdentity=对方后宫`）  
+1. 外交牵线（旧 API 名 gift-beauty）→ `intel.plantableBeauty[targetFid] += n`（对方 courtNetwork 也 +n）
+2. `POST /intel/plant-female` 点化：扣 plantable 1 + 对方 courtNetwork 1 + 己方金 80 → 生成己方女间谍（`coverIdentity=对方后宫`）
 代码：`spy.plantFemaleFromGift` · `diplomacy.giftBeautyStock` 写 plantable · LeftPanel「点化」
 
 ### 30.6 历史女角：如何进入势力（定稿 · 禁止人事/美女）
@@ -2932,10 +2919,10 @@ POST /diplomacy/gift-beauty { targetFactionId, amount? }
   ├─ 婚姻（仅历史女角）                 ✅ 婚配 Demo
   ├─ 子女与母教                         ✅ P4-05 最小切片（appearYear 登场+母教）
   ├─ 父辈 / 族谱                        ❌ 无 UI；Officer 无 fatherId/motherId
-  └─ 跟随规则（妻随夫）                 ✅ family.ts 已实现
+  └─ 跟随规则（正妻/随侍随所系武将）     ✅ family.ts 已实现
 ```
 
-> **已落地**：`family.ts` 跟随；`child.ts` 子女登场；`FamilyPanel` 女眷/姻亲/婚配 + 登场状态。  
+> **已落地**：`family.ts` 跟随；`child.ts` 子女登场；`FamilyOverviewDrawer` 女角/姻亲/婚配/跟随 + 子女登场状态。
 > **未落地**：父辈/族谱 UI；女角 `fatherId`/`motherId` 0-A 多空；武将系统化父子字段。
 > **随机性边界（Session 154）**：婚配是确定性赐婚，没有匹配/成功率随机；子女是固定史实/演义表，没有随机出生或属性继承，当前也没有性别字段/抽签；祝融 `canCommand` 是静态唯一权限。S18 的随机仅为在野跟随检定与未指定忠诚的入势力结算，现已接入权威 PRNG。S09 `beauty.ts` 不产生历史女角、不调用 S18，三处寻访/攻占抢夺随机留作独立 S09 收口。
 
@@ -2945,8 +2932,26 @@ POST /diplomacy/gift-beauty { targetFactionId, amount? }
 | 工作 | 女角不做开发/征兵/出征主将；**祝融**例外可出战 |
 | 六维影响力 | 通过丈夫/所在城间接生效（非亲自点按钮做内政） |
 | UI（实际） | 女眷 / 姻亲（子女待登场·已登场）/ 婚配 / 在野跟随；**无**独立子女/父辈 tab |
-| UI（设计目标） | 族谱 / 女眷 / 子女；与「美女库存」分栏 |
+| UI（设计目标） | 族谱 / 女眷 / 子女；与「宫廷人脉」分栏 |
 | 与出身关系网 | 04§4 相性/血缘可并入家族边 |
+
+**CMD-P35 迁移审计（Session 240）**：现行玩家写链仅婚配与手动跟随检查；月度投奔、
+人事登用后的妻随夫、释放后的随迁和固定子女登场均为共享结算，不得复制成家族按钮。
+`family.ts` 当前把 `giftedToOfficerId` 也计入随迁集合，与旧“妻随夫”注释存在语义差。
+Session 242 用户批准保留既有“随侍随迁”，统一命名为家眷随迁并补引擎回归，不改变存档行为。
+
+**CMD-P36 只读迁移（Session 241）**：命令坞家族已提供 `总览｜姻亲｜婚配｜跟随`
+四分面；全部从玩家 `GameState` 与剧本白名单 `childrenCatalog` 派生，新写入口为0。
+婚配与手动跟随仍由旧 `FamilyPanel` 唯一提交；旧入口婚配后新候选与姻亲摘要即时同步。
+
+**CMD-P37 写链迁移（Session 242）**：婚配与手动跟随已迁入命令坞家族分面并统一终审；
+旧面板写入口归零。婚配确认前复验女角归属/婚姻/随侍关系、武将归属/正妻及支付能力；
+手动跟随确认前复验在野候选，并明确消费权威 RNG、可能无人投奔。正妻与随侍均随所系
+武将加入、迁城或流落，新增确定续玩回归，未改 API、规则数值、RNG 算法、Schema 或存档。
+
+**CMD-P38 原子切换（Session 243）**：旧 `FamilyPanel` 源码、左栏折叠项与 DOM 归零；
+命令坞成为 S18 唯一玩家入口。浏览器实测婚配及 S11 释放/重新加入时的正妻随迁；
+`verify-family-rng` 36/36 覆盖正妻/随侍，`verify-child-engine` 4/4 覆盖固定子女共享结算。
 
 #### 30.7.1 父辈模型待补
 
@@ -2961,10 +2966,10 @@ POST /diplomacy/gift-beauty { targetFactionId, amount? }
 
 | UI | 内容 |
 |----|------|
-| 顶栏「美女 n」 | 势力 **beautyStock** |
-| 城「可寻次数」 | beautySeekLeft |
+| 顶栏「人脉 n」 | 势力 **courtNetwork** |
+| 城「人脉机会」 | courtNetworkOpportunities |
 | 人事·历史女角/家族 | 具名女 + 婚配（非搜索登用女） |
-| 内政「寻访」 | 只加库存 |
+| 内政「地方结交」 | 只加人脉库存，不生成历史女角 |
 
 ---
 
@@ -4467,3 +4472,28 @@ HC-P1-3 已在既有 `hegemonyPosition` 单值轨道追加六个王国官职：�
 ---
 
 *文档版本: v4.9 | 2026-07-25 | Session 188 君主特例 UI + 霸府/称王/称帝主线 Q1~Q11 已批准*
+
+### Session 246 · R5 运行时定值
+
+| 项目 | 工期 | 总金耗 | 首付 | 完成收益 |
+|------|:---:|------:|-----:|---------:|
+| 农业 | 9月 | 300 | 100 | 农业+100 |
+| 商业 | 6月 | 400 | 134 | 商业+100 |
+| 城防 | 12月 | 500 | 167 | 城防+100 |
+
+一城同时至多一个项目。启动时指派本城己方可用武将并支付向上取整的1/3首付，余款在每月
+推进前按剩余月数均摊；钱不够、武将调离/出征或城市易主时暂停且不推进。暂停前2个月保留
+进度，第3个月损失已完成进度的25%（至少1月），之后每月再损失1月，最多退回项目起点。
+
+年度预算按当前人口、驻军和开发度投影12个月。行政成本按同势力城市 ID 排序，首城0，
+第二城5、第三城10金/月，依次递增。俸禄和未发生的战争损失尚未实装，预算列0并注明边界。
+
+### Session 249 · R8 成长入口与24回合情景平衡
+
+R8 不新增成长资源或升级规则。人物经验、功绩、技能等级/使用次数统一由“人物成长”解释；
+城市兵力、士气、金粮和可征人口统一由“军团战备”解释；已掌握阵型统一由“阵型精通”
+解释；CampaignArmy 的阶段、兵粮、士气、组织、疲劳和经验统一由“战役态势”解释。
+
+固定情景使用3座玩家城市、10名玩家武将，真实推进24个月；每月从开发、征兵、训练、
+赈济、蓄势中的当前可行项作选择，并记录至少一项机会成本；第8、18月调用权威自动战斗。
+专项54/54。功绩等级、属性/技能自动升级、阵型双轴成长仍未实装。

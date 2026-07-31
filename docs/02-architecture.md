@@ -231,10 +231,7 @@ Late-Eastern-Han-Dynasty/
 │       │   │   ├── RightPanel.tsx   # 右侧城详面板
 │       │   │   ├── AppointPanel.tsx # 任命面板
 │       │   │   ├── BeautyPanel.tsx  # 美女资源面板
-│       │   │   ├── FamilyPanel.tsx  # 家族面板
-│       │   │   ├── PersonnelPanel.tsx # 人事面板
-│       │   │   ├── PlotPanel.tsx    # 计谋面板
-│       │   │   └── SpyPanel.tsx     # 谍报面板
+│       │   │   └── PersonnelPanel.tsx # 人事兼容组件
 │       │   ├── map/
 │       │   │   ├── WorldMap.tsx     # 地图容器
 │       │   │   ├── MapCanvas.tsx    # Canvas 渲染
@@ -282,10 +279,10 @@ GameLayout
 ├── LeftPanel            # 政务菜单 (AccSection 折叠)
 │   ├── 人事 → PersonnelPanel / AppointPanel / BeautyPanel
 │   ├── 外交 → 势力列表 + 进贡/结盟/献美按钮
-│   ├── 谍报 → SpyPanel
-│   ├── 计谋 → PlotPanel
-│   ├── 家族 → FamilyPanel
+│   ├── 计略 → CommandShell / StrategyOverviewDrawer（唯一入口）
+│   ├── 家族 → CommandShell / FamilyOverviewDrawer（四分面与唯一写入口）
 │   └── 己方城池列表
+├── CommandShell         # 底部九域命令坞；情报与家族均为唯一入口
 ├── WorldMap             # 大地图 (Konva)
 │   └── MapCanvas        # 底图层 + 城市标记层
 └── RightPanel           # 城池详情
@@ -502,8 +499,8 @@ server/src/data/loader.ts
 ## 附：S20/S21 前端体验技术储备（Session 232 部分实装）
 
 > 本节源自 Session 100 技术储备；现统一编号为 S20-W1~W4 / S21-W6~W9。至 Session 232，
-> 命令坞壳与朝廷、人事、外交、军事、内政五域原子迁移已完成，计略四计写链已迁入但旧入口
-> 待 P29 下线；W1～W3 与 W4 其余增强仍按表中状态推进。详见 `docs/07-ui-design.md` §11~§12。
+> 命令坞壳与朝廷、人事、外交、军事、内政、计略六域原子迁移已完成；W1～W3 与 W4
+> 其余增强仍按表中状态推进。详见 `docs/07-ui-design.md` §11~§12。
 
 ### 新增前端组件清单（实装状态）
 
@@ -520,11 +517,13 @@ server/src/data/loader.ts
 | `OfficerRosterPanel` | `client/src/components/layout/OfficerRosterPanel.tsx` | 己方在职武将列表 + 忠诚度警报（✅ Session 122） | S20-W4 |
 | `OfficerPortrait` | `client/src/components/officer/OfficerPortrait.tsx` | 程序化人物头像；四名代表人物手工预设 + 其他武将稳定默认轮廓（✅ Session 124 简化切片） | S20-W4 / S22 |
 | `CommandConfirmDialog` | `client/src/components/ui/CommandConfirmDialog.tsx` | 状态变更命令统一终审窗（✅ Session 122，人事首批接入） | S20-W4/§12 |
-| `CommandDock` / `CommandShell` | `client/src/components/command/` | 九域命令坞、抽屉状态机与跨域导航（✅ CMD-P0～P28 持续实装） | S20-W4/§12 |
+| `CommandDock` / `CommandShell` | `client/src/components/command/` | 九域命令坞、抽屉状态机与跨域导航（✅ CMD-P0～P29 持续实装） | S20-W4/§12 |
 | `DiplomacyOverviewDrawer` | `client/src/components/command/DiplomacyOverviewDrawer.tsx` | 外交三分面、交涉/盟约写链（✅ CMD-P12～P15） | S20-W4/§12 |
 | `MilitaryOverviewDrawer` | `client/src/components/command/MilitaryOverviewDrawer.tsx` | 军备/编成/军令/战报唯一入口（✅ CMD-P17～P21） | S20-W4/§12 |
 | `CivilOverviewDrawer` | `client/src/components/command/CivilOverviewDrawer.tsx` | S03 内政写链与 S09 跨系统寻访（✅ CMD-P23～P25） | S20-W4/§12 |
-| `StrategyOverviewDrawer` | `client/src/components/command/StrategyOverviewDrawer.tsx` | S17 四计态势、草稿、终审与记录（✅ CMD-P27～P28；旧入口待 P29） | S20-W4/§12 |
+| `StrategyOverviewDrawer` | `client/src/components/command/StrategyOverviewDrawer.tsx` | S17 四计态势、草稿、终审、记录与跨情报导航（✅ CMD-P27～P29；唯一入口） | S20-W4/§12 |
+| `IntelOverviewDrawer` | `client/src/components/command/IntelOverviewDrawer.tsx` | S07 玩家可见情报四分面与全部玩家写链（P34 唯一入口） | S20-W4/§12 |
+| `FamilyOverviewDrawer` | `client/src/components/command/FamilyOverviewDrawer.tsx` | S18 四分面、婚配/手动跟随草稿、统一终审与最新状态复验（P37） | S20-W4/§12 |
 | `RadarChart` | `client/src/components/ui/RadarChart.tsx` | 纯 SVG 手写外交雷达 | S20-W4 |
 | `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |
 | `DuelStage` | `client/src/components/battle/DuelStage.tsx` | 单挑 Konva 演出层（混合范式） | S21-W9 |

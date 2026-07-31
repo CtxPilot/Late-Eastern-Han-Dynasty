@@ -643,11 +643,11 @@ export interface CityStats {
 /**
  * 城市人口结构（见 04-game-systems §28；实现 shared/demographics.ts）
  * total = adultMale + adultFemale + child + elder
- * City.population ≡ total；City.beautyPool 是旧 Demo 兼容字段，R7 后不得由 adultFemale 派生
+ * City.population ≡ total；S09 宫廷人脉与人口完全脱钩
  */
 export interface CityDemographics {
   adultMale: number;    // 成年男 — 征兵池、粮耗最高、劳力主力
-  adultFemale: number;  // 成年女 — 生育/劳动；决定 beautyPool
+  adultFemale: number;  // 成年女 — 生育/劳动；不产生 S09 库存
   child: number;        // 儿童 — 新生只入此桶
   elder: number;        // 老人 — 自然衰老死亡主因
 }
@@ -670,11 +670,8 @@ export interface City {
   population: number;
   /** 人口四桶（Demo 运行时必填；开局由 total 按 DEFAULT_DEMO_RATIO 拆分） */
   demographics: CityDemographics;
-  /**
-   * 美女/美人资源量 = floor(adultFemale / 400)
-   * 人口结算后强制同步；日后搜罗美人消耗此池
-   */
-  beautyPool: number;
+  /** 城市尚可建立的宫廷人脉机会；由商业、民心、首都地位派生，与人口无关 */
+  courtNetworkOpportunities: number;
   troops: number;
   troopsMorale: number;
   officers: number[];
@@ -1583,8 +1580,8 @@ export interface BattleActionResult {
 > - 新增 `DuelCombatantState`（每方运行时快照，含 sneakUsed/consecutiveBlocks/lastCommand）
 > - `DuelState.combatants: Record<number, DuelCombatantState>` 取代 `hp/energy/injury` 平铺字段
 > - 新增 `DuelEngineConfig`（maxRounds/baseHp/challengeEnergyCost 可调）
-> - **目标差异（Session 168 已批准、未实装）**：增加 `DuelStance` 与双方 stance 快照；
->   吕布传奇保护改为“败而重伤撤退”，不得改写胜负。
+> - **R3（Session 244）已实装**：增加 `DuelStance` 与双方 `stances` 权威快照；
+>   吕布传奇保护改为“败而重伤撤退”，不再改写或掩盖胜负。
 
 ```typescript
 export type DuelPhase = 'pre_duel' | 'dueling' | 'resolving' | 'resolved';
@@ -1636,7 +1633,7 @@ export interface DuelState {
   dialogueLog: DuelDialog[];
   roundHistory: DuelRound[];
   injury: Record<number, DuelInjury | null>;
-  stance: Record<number, DuelStance>; // 目标字段；服务端权威记录
+  stances: Record<number, DuelStance>; // 已实装；双方开战前权威快照
   autoResolve: boolean;
   turnOrder: number[];       // [先手Id, 后手Id]
   result?: DuelResult;
@@ -2188,7 +2185,7 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 `shared/game-state-full-schema.ts` 将上述七个切片组合为严格 `GameStateSchema`：根字段禁止遗漏或混入瞬态字段，并统一校验城市、势力、武将、女性角色、战役节点、CampaignArmy、三级战斗、外交、谍报和计谋的跨切片引用；事件完成/待处理/失效三账本不得交叉。组合层复用各切片 Schema，不复制域内规则。`BattleUnit.armyId` 是六角战斗内部编组 ID，不是旧 `GameState.armys` 外键；出征后 `Officer.location` 可保留行政归属，因此城市驻留清单只采用“清单内武将必须指向本城”的单向一致性约束。`pnpm verify-save-game-state` 覆盖两剧本、真实计谋和 7 类非法跨引用/根字段，10/10；三级战斗验证另以真实进行中状态确认完整 Schema，24/24。
 
-**当前持久化边界（Session 157）**：已采用“完整保存进行中战斗 + 确定性续玩”方案。六角战斗、战场地图、白刃战均以 `GameState` 为权威真源；v1 信封保存 `xorshift32-v1` 的内部寄存器与消费计数。玩家、共享结算及 AI 行动后的持久化结算均已接入该权威流；项目自身只在 S15 的三个 AI 文件保留独立决策随机，因此当前保证“同一已选行动后的结算可确定续玩”，不保证读档后的 AI 行为/整回合完全复现。生产存取入口和实际存储介质仍未完成。
+**当前持久化边界（Session 247）**：已采用“完整保存进行中战斗 + 确定性续玩”方案。六角战斗、战场地图、白刃战均以 `GameState` 为权威真源；v1 信封保存 `xorshift32-v1` 的内部寄存器与消费计数。S15 军事目标、双线编成、撤退、自动战斗与伤亡均使用同一权威流，同保存点可复现；谍报/计谋 AI 的是否行动与目标选择仍保留各自决策边界，因此尚不承诺整个 AI 回合逐字节复现。生产存取入口和实际存储介质仍未完成。
 
 后续加载顺序固定为：解析 JSON → 识别版本/迁移 → 当前信封校验 → 当前快照 Schema 校验 → 重建非持久化运行时上下文。连接、动画、选择框、网络重试等瞬态状态不得加入信封。
 
@@ -2322,6 +2319,34 @@ P0 定稿相对草案补充：
 - `Encounter` 是郡域战场与自动/标准/六角三种接战入口的共同边界，三者输出统一结果后再回写战场实例。
 - 所有动态随机函数显式注入权威 `xorshift32-v1`；静态模板解析零 RNG 消费。P3 进一步将战场 AI 行动选择纳入同一权威流，实现整场复现。
 
+#### BF-P3 动态战况快照（Session 250）
+
+`BattlefieldInstance.dynamicSituation?` 无损追加为可选字段，包含 `weather`、稳定排序生成
+的 `deployments`、双方侦察、`ambush` 与 `encounterOrder`。旧存档可缺省；新实例用
+`generationAudit` 记录随机消费与决策。静态模板不传 `dynamic` 时仍为零 RNG 消费。
+
+BF-P4 起实例生成真源为 `generateCommanderyBattlefield({ bundle, templateId,
+entryNodeIds, ... })`：生成器只读取 `HistoricalGeographyBundle` 与显式入口，不按南郡/
+颍川名称分支。南郡旧包装函数继续保留，既有 `templateId=nanjun-190`、版本 1 和存档结构
+不变；颍川使用 `templateId=yingchuan-190`、阳翟郡治、襄城/长社入口。
+
+BF-P4 为 `BattlefieldInstance` 无损追加可选 `activeDuel?: BattlefieldDuelContext`：
+记录 `kind / nodeId / attackerArmyId? / challengerId / defenderId / duel /
+settlementApplied`。其中 `duel` 直接嵌入既有 `DuelState` 并由同一运行时 Schema 校验；
+旧存档可缺省。`settlementApplied` 保证重试 step/skip 不重复修改驻军、Army 士气或武将。
+
 ---
 
 *文档版本: v4.7 | 2026-07-23 | Session 164 大地图节点与史实郡县口径分离*
+
+Session 245（R4）为 `MeleeState` 增加 `entryMode: auto | standard | tactical | null`、
+`settlementApplied` 与六角模式 `tacticalBattleId`。模式一经选定不可改选；三种路径都以
+同一白刃战快照作为输入，并由 `settlementApplied` 保证 CampaignArmy 兵力、士气只写回一次。
+
+### Session 246 · R5 DevelopmentProject
+
+`City.activeDevelopment?` 是一城唯一的持续开发项目，字段为：
+`kind / assignedOfficerId / totalMonths / remainingMonths / totalGoldCost / goldPaid /
+pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段表示没有项目；
+实体组合 Schema 校验指派武将引用存在。既有 `developmentProgress` 三数字段继续保留作
+静态数据兼容，不再承担 R5 项目权威状态。

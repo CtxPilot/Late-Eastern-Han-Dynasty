@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 233：全量文档同步并提交** |
+| 会话 | **Session 253：BF-P5 录入/校勘工具（第一步）** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **CMD-P0～28 完成；计略四计写链已迁入新抽屉** |
-| 文档最新 | 全仓当前状态已同步至 CMD-P28；历史会话口径按原时点保留 |
-| 本交接用途 | CMD-P29 计略原子切换与跨情报导航 |
-| 玩法下一步 | 保持 S20；补计略→情报导航，删除旧 PlotPanel，完成四计总验收。 |
+| 代码最新 | **BF-P5 录入/校勘工具第一步已完成：**seed-schema.ts + 两郡迁移 + verify 脚本 + 16 单元测试 |
+| 文档最新 | 当前状态已同步至 Session 253 / BF-P5 录入工具 `[x]`；历史会话口径按原时点保留 |
+| 本交接用途 | BF-P5 录入/校勘工具完成后的下一子步骤选择 |
+| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：Army—县位置映射、第三郡录入（需用户提供史料）、orchestrator 去硬编码、郡域迷雾 |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -132,6 +132,63 @@ Session 233 仅做全量文档同步：修正 `01` 当前总览、`02` S20 组�
 现行入口注释、README 测试规模、HANDOFF 文档地图与进度版本；无运行时代码/规则变化，
 沿用 Session 232 全量验证结果。
 
+Session 234 增量：计略“前往情报·探秘”正式切到 `intel/recon` 导航意图，左栏旧
+`PlotPanel` 源码与 DOM 归零，四计仅余命令坞一个提交入口。`verify-cmd-p29-headless`
+在 1440×900 实测跨域导航、离间取消/确认、扣金200、`sowDiscord / prep` 与进行中同步，
+console error=0；client 31/31、plot/spy 34/34、typecheck/lint/data/diff-check 全绿。
+
+Session 235 无业务行为变化：审计 S07 普通招募、女间谍训练、献美点化、任务、反间与
+俘虏处置，并固定后续四分面迁移顺序。`verify-cmd-p30-headless` 在 1440×900 实测旧
+`SpyPanel` 1、四个核心写入口各1、命令坞新写入口0；招募取消不变，确认新增密探1名、
+扣金120/粮60并写 `spy_recruit`，console error=0。
+
+Session 236 增量：client 新增情报只读模型测试；`verify-cmd-p31-headless` 在 1440×900
+确认四分面各1、新写入口0、旧四核心写入口各1；从旧入口确认招募1名密探后，新人员摘要
+即时同步，console error=0。shared 198/198、client 32/32、typecheck、lint、data、
+build、diff-check 全绿（仅既有大 chunk warning）。
+
+Session 237 增量：普通招募、女间谍训练、献美点化迁入“情报·人员”，旧三入口归零。
+`verify-cmd-p32-headless` 实测新三入口各1、招募取消不变，确认招募1名，训练与点化各
+生成1名女间谍、额度−1，旧派遣仍1，console error=0。shared 198/198、client 33/33、
+plot/spy 34/34、lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+
+Session 238 增量：五类任务、驻防/撤防、俘虏处决/释放迁入“情报·任务/反间”，旧
+`SpyPanel` 按钮与选择器归零，仅留只读名册。`verify-cmd-p33-headless` 实点驻防、撤防、
+探秘取消/确认并取得下邳详报，俘虏空态正确，console error=0。shared 198/198、
+client 34/34、plot/spy 34/34、lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+
+Session 239 增量：旧 `SpyPanel` 源码、左栏谍报折叠项与 DOM 归零，命令坞情报成为
+S07 全链唯一玩家入口。`verify-cmd-p34-headless` 实点新入口招募、计略→`intel/recon`
+探秘、驻防与撤防，四类日志正确，各新入口唯一，console error=0。shared 198/198、
+client 34/34、plot/spy 34/34、lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+
+Session 240 无业务行为变化：审计 S18 女眷、姻亲/固定子女、婚配、手动/月度跟随及
+S11 登用/释放关系同步，固定 P36～38 顺序。`verify-cmd-p35-headless` 在 1440×900
+实测旧面板1、婚配/跟随入口各1、新写入口0；婚配取消状态不变，确认扣金300并建立
+双向关系，console error=0。family RNG 32/32、shared 198/198、client 34/34、
+typecheck/lint/data/build 全绿（仅既有大 chunk warning）。
+
+Session 241 增量：命令坞家族新增 `总览｜姻亲｜婚配｜跟随` 四分面与纯派生读模型，
+新写入口0，旧婚配/跟随仍各1。`verify-cmd-p36-headless` 实际从旧入口婚配后确认新
+婚配候选1→0、荀彧姻亲支即时出现，console error=0。shared 198/198、client 35/35、
+family RNG 32/32、typecheck/lint/data/build/diff-check 全绿（仅既有大 chunk warning）。
+
+Session 242 增量：用户批准保留 `giftedToOfficerId` 随侍随迁，统一家眷语义并将 family
+RNG 回归扩至36/36；婚配与手动跟随迁入命令坞统一终审，旧写入口0。Headless 实测两链
+取消状态不变、婚配双向关系与跟随确认，console error=0；旧只读壳留 P38。
+
+Session 243 增量：物理删除旧 `FamilyPanel` 与左栏家族折叠；命令坞家族成为唯一入口。
+Headless 实测旧入口/DOM 0/0、唯一婚配、释放/重新加入时正妻随迁，console error=0；
+child engine 4/4、family RNG 36/36、shared 198/198、client 36/36、全仓检查绿色。
+
+Session 253 增量：BF-P5 录入/校勘工具第一步。新建 `shared/data/historical-geography/
+seed-schema.ts`（`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器 +
+7 种类型 + 4 接口）；南郡/颍川均迁移至 seed 生成，导出 bundle 逐字段等价；新建
+`server/src/scripts/verify-historical-geography.ts`（两郡 OK + preview 一致性）并在
+server/root 两层注册 npm script；新建 `seed-schema.test.ts` 16/16。docs/08 新增 seed
+层字段表，docs/09 BF-P5 标"录入工具第一步已完成"，docs/10 + HANDOFF 双写。shared 214/214、
+typecheck/build/validate-data 全绿。Army—县映射、orchestrator 去硬编码、郡域迷雾留后续。
+
 ---
 
 ## 2. 怎么跑
@@ -143,10 +200,11 @@ pnpm --filter @leh/shared build && pnpm dev
 # 场景事件: pnpm verify-scenario-events   # 32项断言
 # 迷雾出征: pnpm verify-march-fog        # 7项权威边界断言
 # 战斗守将: pnpm verify-battle-commanders # 全剧本/玩家视角关联与交战揭示边界
-# AI 军事: pnpm verify-ai-military-rng # 外交/激进度/Army/战报/确定续玩 29/29
+# AI 军事: pnpm verify-ai-military-rng # 双线/守备/撤退/公平/确定续玩 38/38
 # 回合节拍: pnpm verify-turn-cadence # 连续12回合，月/季/年 28/28
 # 谈判公式: pnpm verify-negotiation-r2 # 登用/结盟边界、单调、seed、UI同源 20/20
 # BF-P0 南郡: pnpm --filter @leh/shared test -- schema.test.ts
+# BF-P4 两郡浏览器验收（需 dev + 1440×900 CDP 9238）: pnpm verify-bf-p4-headless
 # 单元测试: pnpm test
 # CMD-P4 浏览器验收（需先启动 dev 与 CDP 9234）: pnpm verify-cmd-p4-headless
 # CMD-P6 旧人事基线（需先启动 dev 与 1440×900 CDP 9234）: pnpm verify-cmd-p6-headless
@@ -171,25 +229,25 @@ pnpm --filter @leh/shared build && pnpm dev
 |:--:|------|:------:|-----------|
 | S01 | 回合 | **M+** | `turn.ts`；1回合=1月，季度首月/年度显式节拍；12回合验证28/28；全势力金粮同步 |
 | S02 | 地图 | M | Natural Earth；官道；LOD |
-| S03 | 内政 | M | 农/商/城、征兵、训练、施米均接权威 PRNG，确定续玩 12/12；文化/工艺/交通/卫生、**军屯/民屯未实装** |
-| S04 | 人口经济 | M | 四桶 demographics + 粮耗 |
+| S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；文化/工艺/交通/卫生、**军屯/民屯未实装** |
+| S04 | 人口经济 | **M+** | 四桶 demographics + 民军粮耗 + 12月金粮预算 + 递增多城行政成本；俸禄仍未实装 |
 | S05 | 军事 | M+ | 邻接出征→战→占城；战役 Army 主/副将/参谋；**爵位加成未接入** |
 | S06 | 迷雾 | **M+** | UI + 服务端 `maskGameStateForPlayer` |
 | S07 | 谍报 | M+ | 招募/女间谍训练/献美点化/任务结算接权威 PRNG；枕边风与离间流言确定续玩；四面楚歌未实装 |
 | S08 | 外交 | M+ | 进贡/献美；R2 结盟共享百分点公式+权威 RNG+UI 同源；声望/戒备仍按0的 Demo |
-| S09 | 宫廷人脉（迁移中） | **M+/D** | 目标语义已与女性人口脱钩；当前旧 `beauty*` 运行时仍待 R7 迁移 |
+| S09 | **宫廷人脉** | **M+** | `courtNetwork/courtNetworkOpportunities` 已实装；与成年女性人口脱钩；旧 v1 `beauty*` 无损迁移；历史女角边界不变 |
 | S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗与完整单挑均统一权威 PRNG，确定续玩 5/5 + 3/3；其余三层战斗、战役 Army 与设计边界保持不变 |
 | S11 | 人事 | **M+** | 搜索/登用接权威 PRNG，确定续玩 32/32；R2 修复义理/野心 100 倍量纲错误并与 UI 同源；现有赏赐/任命确定性 |
 | S12 | 官职功绩体力 | **S/M** | 精简任命；meritLevel 未实现；体力完整 |
 | S13 | 宝物 | S | 薄 |
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
-| S15 | AI | M+ | 内政占位 + 谍报/计谋 + **外交过滤/君主激进度/真实 CampaignArmy 出征占城/战报** + 总军师自动态势；军事决策与结算统一权威 RNG |
+| S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；县级主动 AI 与郡域补给/迷雾后置 |
 | S16 | 剧本/存档 | **M/D** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；所有行动后结算 RNG 已收口；S15 行为复现、生产存取与 SQLite 未做 |
 | S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30/30）；L2 11计/L3 8国策仍设计；AI 发起决策仍属 S15 |
-| S18 | 家族 | **M+** | 跟随/默认忠诚接权威 PRNG，确定续玩 32/32；婚配与固定子女登场零随机；父辈/族谱 ❌ |
+| S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；父辈/族谱 ❌ |
 | S19 | **单挑大会** | **D** | §8.17 独立锦标赛：赛制/押注/称号/叙事/数据结构设计完成，引擎待实现 |
-| S20 | **前端体验** | **M** | CMD-P0～P28 完成；五域已原子迁移，计略四计写链已迁入；下一步 P29 原子切换。详见 `07-ui-design.md` §11.1.4/§12 |
-| S21 | **战争四层串联** | **D** | 行政大地图→郡域战场→局部交战→单挑演出；自动/标准/六角微操为三种交战结算模式 |
+| S20 | **前端体验** | **M+** | CMD-P0～P38 完成；现有运行时域命令坞迁移阶段收口，家族旧壳归零；屯田仍设计中。详见 `07-ui-design.md` §11.1.4/§12 |
+| S21 | **战争四层串联** | **S/M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体 Ma Shan Zheng，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字重扩展。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
 
 ### 关键路径
@@ -453,7 +511,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 |------|------|
 | `HANDOFF.md` | 本文件 |
 | `docs/10-progress.md` | 任务表 + 会话日志 |
-| `docs/12-system-map.md` | **23 系统**（v10.8：HC-P1 与 CMD-P0～28 完成；计略待 P29 原子切换） |
+| `docs/12-system-map.md` | **23 系统**（v11.6：HC-P1 与 CMD-P0～36 完成；下一步家族写链迁移） |
 | `docs/02-architecture.md` | **v2.0** 架构总图 + 20引擎 + 5战斗子模块 + 数据流 + shared工具链（Session 75 全面重写） |
 | `docs/05-combat-system.md` | §5.4 战法+三级水军 · §5.5 **主副将与参谋编成**+爵位加成 · §七 计策 · §6 暴击反击连击(战场) · §8 单挑经典化设计(§8.1~8.16 核心三角+叙事+**宿命对决详表**) |
 | `docs/00-dev-constitution.md` | 开发总则（**v1.6 §十一 美术与版权铁律**） |
@@ -461,7 +519,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | `docs/11-context-management.md` | 适性 S~NONE 系数 |
 | `docs/04-game-systems.md` | 规则大全 |
 | `docs/06-api-design.md` | 含 `/battle/fire` + `/battle/ability` |
-| `docs/07-ui-design.md` | UI 设计（**v6.3：五域原子迁移完成；计略 CMD-P28 四计写链已迁入**） |
+| `docs/07-ui-design.md` | UI 设计（**v6.9：情报原子切换完成**） |
 | `docs/15-linux-ui-spec.md` | **v1.0** Linux UI 与跨平台字体规范（Session 102 新建） |
 | `docs/16-demo-build-playbook.md` | 0-A Demo 12回合流程；严格标注已验证、引擎受阻、替代展示与设计中能力 |
 | `docs/24-character-expression-system-design.md` | S23 人物状态表情系统设计（Session 172；3 原型占位，程序化 SVG 分层；状态→图层映射纯函数 + 背景色调层） |
@@ -474,7 +532,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～28 均已完成**。保持 S20；CMD-P29 增加计略→情报正式跨域导航，物理删除旧 `PlotPanel` 并完成四计原子总验收；`/march` 兼容适配留 S21。 |
+| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～38 均已完成**。CMD 现有运行时域迁移阶段收口；下一大系统须按 `12-system-map.md` 由用户拍板，屯田仍设计中不得伪造。 |
 | **Session 203 CMD-P6 已完成** | 人事旧入口、权威/草稿/门槛/终审/action/API 清单与 1440×900 Headless 基线已仓库化；分面固定为“名册｜招贤｜任官｜赏罚”，调动仅设计中。下一步 CMD-P7 只迁名册读路径；旧手风琴仍是唯一生产入口。 |
 | **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
@@ -512,14 +570,61 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 ## 9. Session 168～171 一致性修复（实施前必读）
 
 - 批准基线：`docs/23-design-consistency-remediation.md`，R1～R8 必须逐项实现、验证和双写文档。
-- R1/R2 已完成；R3～R8 尚未迁移。不得把单挑倾向、吕布新规则、S09 宫廷人脉或公平难度
-  误报为已实装。
+- R1～R8 已完成；R8 是现有字段的解释性 UI 收敛与固定情景平衡验收，不等于完整成长引擎。
 - 时间：1 回合=1 月，3 回合=1 季，12 回合=1 年。
 - 战争：四层（行政大地图/郡域战场/局部交战/单挑演出），三种交战结算模式（自动/标准/六角微操）。
 - **R1 已实装并验收**：每回合推进 1 月；季度首月为 1/4/7/10；跨年至 1 月同时触发年度节拍。
   `quarter_start/year_start` 只是统一调度信号，不代表 R5 的季度内政或年度预算已实现。
 - **R2 已实装并验收**：登用义理/野心百分点修正；结盟共享公式、权威 RNG、日志/UI 同源，
   专项验证 20/20。声望、戒备和利益冲突字段仍未实装，当前按 0 的 Demo 处理。
-- 当前 Next：R3（S10 单挑四倾向 + 吕布公平性）待启动；只处理四种单挑倾向与吕布公平性，不并行 R4。Session 178 武将界面修复已完成（独立需求），本地领先 origin/main 5 commit 未推送。
+- **R3 已实装并验收**：四倾向权威快照、UI/API/存档贯通；吕布三连衰减、75% 单回合
+  上限、受必杀 +20% 化解与败而重伤撤退完成，并修复挑战方胜时 loserId 归属错误。
+- **R5 已实装并验收**：农/商/城按9/6/12月持续推进，总成本300/400/500金；首付1/3、
+  余款按月扣，人员或资源不足暂停，第三月起损失进度；预算覆盖12月金粮、项目、行政费，
+  俸禄/战争损失未实装项明确列0。专项验证17/17。
+- **R6 已实装并验收**：每势力至多双线，源城按邻敌动态留守；停战、两月粮不足或兵力
+  低于守军55%时撤回。武将五维不变，固定 seed 双线计划复现，专项38/38。
+- **R7 已实装并验收**：新状态只用 `courtNetwork/courtNetworkOpportunities`，删除成年女性
+  换算与成功率加成；旧 v1 字段无损迁移，历史女角来源不变。浏览器实点地方结交通过。
+- **R8 已实装并验收**：四入口为人物成长/军团战备/阵型精通/战役态势；固定
+  3城/10将/2战真实推进24个月，每月均有至少两项可行选择并记录机会成本，专项54/54。
+  属性/技能自动升级、功绩等级和阵型双轴成长仍后置。
+- 当前 Next：一致性修复 R1～R8 已收口；按 `12-system-map.md` 选择一个已登记系统。
 
-*Session 233 交接 | 2026-07-30 | 全量文档同步并提交；下一步 P29 原子切换*
+### Session 252 · BF-P4 总验收
+
+- 阵前/城下挑战均复用既有 S10 duel 引擎、权威 RNG 与 `DuelPanel`；郡域实例保存完整
+  上下文，重复结算有幂等保护。
+- 结果写回功绩、败方状态、挑战方 Army 士气，挑战方胜时守军-15%；无 Army 的开发入口
+  不伪造军团，只使用玩家势力在职武将。
+- 专项20/20；shared 198/198、client 36/36、静态检查与构建全绿；1440×900 两种挑战、
+  两郡往返和 console error=0。BF-P4 已完成，Next 为 BF-P5 工具与位置映射。
+
+*Session 239 交接 | 2026-07-30 | CMD-P34 情报原子切换完成；下一步 P35 家族迁移前审计*
+
+### Session 246 · R5 补充
+
+- 农/商/城项目为9/6/12月、300/400/500金；一城一项，首付1/3、余款逐月扣。
+- 人员或资源不足暂停；第3个暂停月起损失进度。预算覆盖12月金粮、民军粮耗、项目余款、
+  递增行政费；俸禄和基线战争损失显式列0。
+- 专项17/17及全仓回归绿色。Next 固定 R6 S15，不并行启动 R7。
+
+### Session 247 · R6 补充
+
+- AI 主动攻击 Army 由一支扩为最多两支；实际受不同前线城、可用主将、兵粮、3500最低
+  出征兵和动态守备约束，同一源城同月不重复出军。
+- 源城保留至少500兵，受威胁时保留相邻最大敌军25%；围城/接战军在停战、粮不足两月
+  或兵力低于目标守军55%时主动撤回并写军情。
+- 不修改武将五维、不增隐藏兵力或战斗倍率；军事决策继续走权威 RNG，专项38/38。
+  Campaign 71/71、战役存档9/9、回合节拍28/28、shared 198/198、client 36/36及
+  typecheck/lint/data/build/diff-check 全绿。县级主动 AI、Army—县位置映射、真实路径
+  补给和郡域迷雾仍后置。Next 固定 R7 S09。
+
+### Session 248 · R7 补充
+
+- 新局、Schema、运行时、迷雾、API 响应与新存档只写 `courtNetwork` 和
+  `courtNetworkOpportunities`；旧 v1 `beauty*` 由加载迁移器无损改名并删除旧键。
+- 开局机会由商业/民心/首都地位派生，结交固定65%基础成功率，不读取或扣除成年女性；
+  历史女角仍只走剧本、事件、亲属跟随和联姻。
+- S09 25/25、存档23/23、计谋谍报34/34、外交40/40、AI谍报4/4、Campaign71/71；
+  Headless 实点地方结交通过，旧字段0、人口不变、console error=0。Next 固定 R8。
