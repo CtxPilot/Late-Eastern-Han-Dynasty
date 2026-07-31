@@ -3,6 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { nanjun190 } from './nanjun-190.js';
+import { yingchuan190 } from './yingchuan-190.js';
 import { createHistoricalGeographyPreview } from './preview.js';
 import {
   CountyDefinitionSchema,
@@ -20,6 +21,17 @@ describe('BF-P0 historical geography schema', () => {
     expect(nanjun190.counties.some(({ name }) => name === '襄阳')).toBe(false);
     expect(nanjun190.landmarks.find(({ id }) => id === 'nanjun_xiangyang_ferry')?.tacticalTags)
       .toContain('boundary_entry');
+  });
+
+  it('accepts Yingchuan as a road-dominant second commandery', () => {
+    const result = HistoricalGeographyBundleSchema.safeParse(yingchuan190);
+    expect(result.error?.issues).toEqual(undefined);
+    expect(result.success).toBe(true);
+    expect(yingchuan190.counties).toHaveLength(17);
+    expect(yingchuan190.routes.length).toBeGreaterThan(nanjun190.routes.length);
+    expect(yingchuan190.routes.every(({ kind }) => kind === 'road')).toBe(true);
+    expect(yingchuan190.counties.filter(({ terrainTags }) => terrainTags.includes('plain')).length)
+      .toBeGreaterThan(10);
   });
 
   it('rejects out-of-range coordinates and missing source references', () => {

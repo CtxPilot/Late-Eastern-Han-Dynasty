@@ -153,6 +153,7 @@ export const LocalGeometrySchema = z.discriminatedUnion('type', [
   LocalPolylineSchema,
   LocalPolygonSchema,
 ]);
+export type LocalGeometry = z.infer<typeof LocalGeometrySchema>;
 
 export const BattlefieldLandmarkDefinitionSchema = z
   .object({
