@@ -68,7 +68,7 @@ export interface BattlefieldMap {
 // ====== Tier II：白刃战 ======
 
 /** 白刃战入口模式选择 */
-export type MeleeEntryMode = 'auto' | 'standard' | 'micro';
+export type MeleeEntryMode = 'auto' | 'standard' | 'tactical';
 
 /** 战术点动作类型 */
 export type TacticalActionType =
@@ -109,6 +109,12 @@ export interface MeleeState {
   defenderArmyId: string;
   attackerFactionId: number;
   defenderFactionId: number;
+  /** 交战快照选定的唯一结算模式；null 表示尚未选择。 */
+  entryMode: MeleeEntryMode | null;
+  /** 结算结果是否已经回写 CampaignArmy，防止重复扣兵。 */
+  settlementApplied: boolean;
+  /** 六角微操模式对应的权威 BattleState id。 */
+  tacticalBattleId?: string;
   /** 当前回合数 */
   round: number;
   /** 最多 20 回合 */

@@ -129,30 +129,19 @@ export function ensureDemographics(city: Pick<City, 'population' | 'demographics
   return splitDemographics(city.population ?? 0);
 }
 
-/**
- * 城潜在可寻次数初值：约每 400 成年女 → 1 次可寻（04§30）
- * 之后只随寻访/抢夺扣减，不每月强制重刷
- */
-export const BEAUTY_PER_ADULT_FEMALE = 1 / 400;
-
-/** 开局/扩城时计算 beautySeekLeft */
-export function beautySeekLeftFromFemales(adultFemale: number): number {
-  return Math.max(0, Math.floor(adultFemale * BEAUTY_PER_ADULT_FEMALE));
-}
-
-/** @deprecated 同 beautySeekLeftFromFemales */
-export function beautyPoolFromFemales(adultFemale: number): number {
-  return beautySeekLeftFromFemales(adultFemale);
-}
-
-export function adultFemaleFromBeautyPool(beautyPool: number): number {
-  return Math.max(0, Math.floor(beautyPool / BEAUTY_PER_ADULT_FEMALE));
-}
-
-/** @deprecated 旧搜罗扣女成；S09 不再扣人口 */
-export function adultFemaleCostForBeautyPoints(points: number): number {
-  if (points <= 0) return 0;
-  return Math.ceil(points / BEAUTY_PER_ADULT_FEMALE);
+/** R7：开局人脉机会由城市商贸、民心与首都地位派生，禁止读取人口性别。 */
+export function initialCourtNetworkOpportunities(city: {
+  isCapital: boolean;
+  commerce: number;
+  morale: number;
+}): number {
+  return Math.max(
+    1,
+    1 +
+      Math.floor(Math.max(0, city.commerce) / 250) +
+      (city.morale >= 75 ? 1 : 0) +
+      (city.isCapital ? 2 : 0),
+  );
 }
 
 /** 寻访（04§30） */
@@ -160,7 +149,7 @@ export const BEAUTY_SEEK = {
   goldCost: 60,
   stockGain: 1,
   seekCost: 1,
-  /** 成功率基础（人多略提高） */
+  /** 固定基础成功率；R7 后不读取成年女性人口。 */
   baseSuccess: 0.65,
 } as const;
 
@@ -190,8 +179,7 @@ export function withSyncedPopulation<
   T extends {
     demographics: CityDemographics;
     population: number;
-    beautySeekLeft?: number;
-    beautyPool?: number;
+    courtNetworkOpportunities?: number;
   },
 >(city: T, d: CityDemographics): T {
   const demographics = {
@@ -200,7 +188,7 @@ export function withSyncedPopulation<
     child: Math.max(0, Math.floor(d.child)),
     elder: Math.max(0, Math.floor(d.elder)),
   };
-  // 不重算 beautySeekLeft / beautyStock（04§30）
+  // 不重算宫廷人脉机会/库存（04§30）
   return {
     ...city,
     demographics,

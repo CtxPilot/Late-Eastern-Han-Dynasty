@@ -46,7 +46,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       food: 0,
       population: 0,
       demographics: EMPTY_DEMO,
-      beautySeekLeft: 0,
+      courtNetworkOpportunities: 0,
       troops: bandMidTroops(city.troops),
       troopsMorale: 0,
       officers: [],
@@ -67,7 +67,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       food: round100(city.food),
       population: round100(city.population),
       demographics: EMPTY_DEMO,
-      beautySeekLeft: 0,
+      courtNetworkOpportunities: 0,
       troopsMorale: 0,
       officers: city.officers,
       stats: {
@@ -86,7 +86,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       food: 0,
       population: 0,
       demographics: EMPTY_DEMO,
-      beautySeekLeft: 0,
+      courtNetworkOpportunities: 0,
       troops: bandMidTroops(city.troops),
       troopsMorale: 0,
       officers: [],
@@ -107,7 +107,7 @@ function maskCity(city: City, vis: CityVisibility): City {
     food: 0,
     population: 0,
     demographics: EMPTY_DEMO,
-    beautySeekLeft: 0,
+    courtNetworkOpportunities: 0,
     troops: 0,
     troopsMorale: 0,
     officers: [],
@@ -127,7 +127,7 @@ function maskFaction(f: Faction, playerId: number, alliedIds: Set<number>): Fact
       ...f,
       gold: 0,
       food: 0,
-      beautyStock: 0,
+      courtNetwork: 0,
       officerIds: [],
     };
   }
@@ -135,7 +135,7 @@ function maskFaction(f: Faction, playerId: number, alliedIds: Set<number>): Fact
     ...f,
     gold: 0,
     food: 0,
-    beautyStock: 0,
+    courtNetwork: 0,
     officerIds: [],
     capitalCityId: f.capitalCityId,
   };

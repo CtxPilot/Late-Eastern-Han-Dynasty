@@ -2,7 +2,8 @@
 // Copyright (c) 2026 CtxPilot
 
 import { z } from 'zod';
-import type { BattlefieldInstance, BattlefieldGenerationAudit, BattlefieldNodeState, BattlefieldRouteState, EncounterState } from './types/battlefield-instance.js';
+import type { BattlefieldInstance, BattlefieldGenerationAudit, BattlefieldNodeState, BattlefieldRouteState, EncounterState, BattlefieldDynamicSituation, BattlefieldDuelContext } from './types/battlefield-instance.js';
+import { DuelStateRuntimeSchema } from './game-state-battle-schema.js';
 
 const StableIdSchema = z.string().min(1);
 const NonNegInt = z.number().int().nonnegative();
@@ -47,6 +48,28 @@ export const BattlefieldGenerationAuditSchema: z.ZodType<BattlefieldGenerationAu
   decisions: z.array(z.string()),
 }).strict();
 
+export const BattlefieldDynamicSituationSchema: z.ZodType<BattlefieldDynamicSituation> = z.object({
+  weather: z.enum(['clear', 'rain', 'fog']),
+  deployments: z.array(z.object({
+    armyId: StableIdSchema,
+    nodeId: StableIdSchema,
+  }).strict()),
+  attackerScouted: z.boolean(),
+  defenderScouted: z.boolean(),
+  ambush: z.enum(['none', 'attacker', 'defender']),
+  encounterOrder: z.array(StableIdSchema),
+}).strict();
+
+export const BattlefieldDuelContextSchema: z.ZodType<BattlefieldDuelContext> = z.object({
+  kind: z.enum(['formation_front', 'city_front']),
+  nodeId: StableIdSchema,
+  attackerArmyId: StableIdSchema.optional(),
+  challengerId: z.number().int().positive(),
+  defenderId: z.number().int().positive(),
+  duel: z.lazy(() => DuelStateRuntimeSchema),
+  settlementApplied: z.boolean(),
+}).strict();
+
 export const BattlefieldInstanceSchema: z.ZodType<BattlefieldInstance> = z.object({
   id: StableIdSchema,
   warId: StableIdSchema,
@@ -63,6 +86,8 @@ export const BattlefieldInstanceSchema: z.ZodType<BattlefieldInstance> = z.objec
   turn: NonNegInt,
   phase: z.enum(['active', 'settling', 'resolved']),
   generationAudit: BattlefieldGenerationAuditSchema,
+  dynamicSituation: BattlefieldDynamicSituationSchema.optional(),
+  activeDuel: BattlefieldDuelContextSchema.optional(),
 }).strict().superRefine((inst, ctx) => {
   const nodeIds = new Set(inst.nodeStates.map((n) => n.nodeId));
   if (inst.nodeStates.length === 0) {
@@ -84,6 +109,23 @@ export const BattlefieldInstanceSchema: z.ZodType<BattlefieldInstance> = z.objec
   const ids = inst.nodeStates.map((n) => n.nodeId);
   if (new Set(ids).size !== ids.length) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['nodeStates'], message: '节点 id 重复' });
+  }
+  for (const [index, deployment] of (inst.dynamicSituation?.deployments ?? []).entries()) {
+    if (!inst.armyIds.includes(deployment.armyId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dynamicSituation', 'deployments', index, 'armyId'], message: '部署 Army 不在实例 armyIds 中' });
+    }
+    if (!nodeIds.has(deployment.nodeId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dynamicSituation', 'deployments', index, 'nodeId'], message: '部署节点不在战场中' });
+    }
+  }
+  if (inst.activeDuel) {
+    if (!nodeIds.has(inst.activeDuel.nodeId)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['activeDuel', 'nodeId'], message: '单挑节点不在战场中' });
+    }
+    if (inst.activeDuel.challengerId !== inst.activeDuel.duel.challengerId
+      || inst.activeDuel.defenderId !== inst.activeDuel.duel.defenderId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['activeDuel'], message: '单挑上下文双方必须与 DuelState 一致' });
+    }
   }
 });
 

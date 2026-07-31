@@ -20,6 +20,8 @@
  * `xorshift32-v1`（runtimeRandom），不得引入 `Math.random()`。
  */
 
+import type { DuelState } from './duel.js';
+
 export interface BattlefieldNodeState {
   nodeId: string;
   name: string;
@@ -77,6 +79,27 @@ export interface BattlefieldGenerationAudit {
   decisions: string[];
 }
 
+export interface BattlefieldDynamicSituation {
+  weather: 'clear' | 'rain' | 'fog';
+  deployments: Array<{ armyId: string; nodeId: string }>;
+  attackerScouted: boolean;
+  defenderScouted: boolean;
+  ambush: 'none' | 'attacker' | 'defender';
+  encounterOrder: string[];
+}
+
+/** BF-P4：郡域层阵前/城下挑战；伤害与指令完全复用 S10 DuelState。 */
+export interface BattlefieldDuelContext {
+  kind: 'formation_front' | 'city_front';
+  nodeId: string;
+  attackerArmyId?: string;
+  challengerId: number;
+  defenderId: number;
+  duel: DuelState;
+  /** 结果是否已回写，避免 step/skip 重试重复修改驻军、士气或功绩。 */
+  settlementApplied: boolean;
+}
+
 export interface BattlefieldInstance {
   id: string;
   warId: string;
@@ -93,6 +116,10 @@ export interface BattlefieldInstance {
   turn: number;
   phase: 'active' | 'settling' | 'resolved';
   generationAudit: BattlefieldGenerationAudit;
+  /** BF-P3：创建时冻结的动态战况；旧存档可无此字段。 */
+  dynamicSituation?: BattlefieldDynamicSituation;
+  /** BF-P4：进行中或待关闭的阵前/城下单挑；旧存档可无此字段。 */
+  activeDuel?: BattlefieldDuelContext;
 }
 
 export const BATTLEFIELD_TEMPLATE_VERSION = 1;

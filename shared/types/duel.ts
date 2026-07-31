@@ -15,6 +15,9 @@ export type DuelPhase = 'pre_duel' | 'dueling' | 'resolving' | 'resolved';
 /** Outcome once a duel ends (§8.8.1). */
 export type DuelOutcome = 'killed' | 'captured' | 'escaped' | 'draw' | 'surrendered';
 
+/** Strategic posture chosen once before automatic resolution (§8.3.4). */
+export type DuelStance = 'assault' | 'steady' | 'bait' | 'delegate';
+
 /** Internal 7-command model (§8.5.1). Engine-only; players never choose. */
 export enum DuelCommand {
   FIERCE_ATTACK = 'fierce_attack', // 猛攻 (克牵制·被必杀克)
@@ -111,6 +114,8 @@ export interface DuelState {
   preDuelDone: boolean;
   dialogueLog: DuelDialog[];
   roundHistory: DuelRound[];
+  /** Authoritative pre-duel choices; neither side changes stance mid-duel. */
+  stances: Record<number, DuelStance>;
   autoResolve: boolean;
   /** Playback speed mode chosen by the player (UI hint only; engine ignores). */
   speedMode: 'full' | 'fast' | 'skip';

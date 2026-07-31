@@ -127,8 +127,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     food: z.number().nonnegative(),
     population: z.number().int().nonnegative(),
     demographics: CityDemographicsSchema,
-    beautySeekLeft: z.number().int().nonnegative(),
-    beautyPool: z.number().int().nonnegative().optional(),
+    courtNetworkOpportunities: z.number().int().nonnegative(),
     troops: z.number().int().nonnegative(),
     troopsMorale: z.number().min(0).max(100),
     officers: z.array(PositiveIdSchema),
@@ -140,6 +139,20 @@ export const CityRuntimeSchema: z.ZodType<City> = z
         wall: z.number().nonnegative(),
       })
       .strict(),
+    activeDevelopment: z
+      .object({
+        kind: z.enum(['farm', 'commerce', 'wall']),
+        assignedOfficerId: PositiveIdSchema,
+        totalMonths: z.number().int().positive(),
+        remainingMonths: z.number().int().nonnegative(),
+        totalGoldCost: z.number().int().positive(),
+        goldPaid: z.number().int().nonnegative(),
+        pausedMonths: z.number().int().nonnegative(),
+        progressLostMonths: z.number().int().nonnegative(),
+        status: z.enum(['active', 'paused']),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((city, ctx) => {
@@ -168,7 +181,7 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     headquartersLabel: z.string().min(1).optional(),
     gold: z.number().nonnegative(),
     food: z.number().nonnegative(),
-    beautyStock: z.number().int().nonnegative(),
+    courtNetwork: z.number().int().nonnegative(),
     cityIds: z.array(PositiveIdSchema),
     officerIds: z.array(PositiveIdSchema),
     isPlayer: z.boolean(),
@@ -227,6 +240,18 @@ export const GameStateEntitiesSchema: z.ZodType<
     factions: entityRecordSchema(FactionRuntimeSchema),
     females: entityRecordSchema(FemaleRuntimeSchema),
   })
-  .strict();
+  .strict()
+  .superRefine((entities, ctx) => {
+    for (const city of Object.values(entities.cities)) {
+      const project = city.activeDevelopment;
+      if (project && !entities.officers[project.assignedOfficerId]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['cities', city.id, 'activeDevelopment', 'assignedOfficerId'],
+          message: '持续项目指派武将不存在',
+        });
+      }
+    }
+  });
 
 export type GameStateEntities = z.infer<typeof GameStateEntitiesSchema>;

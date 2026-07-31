@@ -12,12 +12,8 @@
  */
 
 import { nanjun190 } from './data/historical-geography/index.js';
-import {
-  BATTLEFIELD_TEMPLATE_VERSION,
-  type BattlefieldInstance,
-  type BattlefieldNodeState,
-  type BattlefieldRouteState,
-} from './types/battlefield-instance.js';
+import { generateCommanderyBattlefield } from './commandery-battlefield.js';
+import { BATTLEFIELD_TEMPLATE_VERSION, type BattlefieldInstance } from './types/battlefield-instance.js';
 
 const NANJUN_TEMPLATE_ID = 'nanjun-190';
 const JIANGLING_ID = 'nanjun_jiangling';
@@ -31,64 +27,20 @@ export interface GenerateNanjunBattlefieldOpts {
   seatGarrison?: number;
   seatWallDurability?: number;
   rngDrawStart: number;
+  scenarioDateAtCreation?: string;
+  /** BF-P3：省略时保持静态模板零 RNG 消费。 */
+  dynamic?: { rng: () => number; currentMonth: number };
 }
 
 const NANJUN_ENTRY_NODES = ['nanjun_dangyang', 'nanjun_zhijiang'];
 
 export function generateNanjunBattlefield(opts: GenerateNanjunBattlefieldOpts): BattlefieldInstance {
-  const commandery = nanjun190.commanderies[0];
-  if (!commandery) throw new Error('nanjun190 缺少 commandery 定义');
-
-  const seatGarrison = opts.seatGarrison ?? 5000;
-  const seatWall = opts.seatWallDurability ?? 100;
-
-  const nodeStates: BattlefieldNodeState[] = nanjun190.counties.map((c) => {
-    const isSeat = c.id === JIANGLING_ID;
-    return {
-      nodeId: c.id,
-      name: c.name,
-      role: c.role,
-      rulerFactionId: isSeat ? opts.defenderFactionId : null,
-      garrison: isSeat ? seatGarrison : 0,
-      wallDurability: isSeat ? seatWall : 0,
-      maxWallDurability: isSeat ? seatWall : 0,
-      armyIds: [],
-      adjacentNodeIds: c.adjacentCountyIds,
-      localX: c.localX,
-      localY: c.localY,
-      controlTurns: 0,
-    };
-  });
-
-  const routeStates: BattlefieldRouteState[] = nanjun190.routes.map((r) => ({
-    routeId: r.id,
-    fromNodeId: r.fromNodeId,
-    toNodeId: r.toNodeId,
-    type: r.kind,
-  }));
-
-  return {
-    id: opts.instanceId,
-    warId: opts.warId,
+  return generateCommanderyBattlefield({
+    ...opts,
+    bundle: nanjun190,
     templateId: NANJUN_TEMPLATE_ID,
-    templateVersion: BATTLEFIELD_TEMPLATE_VERSION,
-    scenarioDateAtCreation: new Date().toISOString(),
-    targetCommanderyId: commandery.id,
-    targetSeatNodeId: JIANGLING_ID,
     entryNodeIds: NANJUN_ENTRY_NODES,
-    nodeStates,
-    routeStates,
-    armyIds: opts.armyIds,
-    encounters: [],
-    turn: 0,
-    phase: 'active',
-    generationAudit: {
-      rngAlgorithm: 'xorshift32-v1',
-      rngDrawStart: opts.rngDrawStart,
-      rngDrawEnd: opts.rngDrawStart,
-      decisions: ['generateNanjunBattlefield:seat=jiangling,entries=dangyang+zhijiang'],
-    },
-  };
+  });
 }
 
 export const NANJUN_JIANGLING_NODE_ID = JIANGLING_ID;

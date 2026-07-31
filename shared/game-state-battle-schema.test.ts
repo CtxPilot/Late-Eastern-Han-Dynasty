@@ -21,6 +21,7 @@ function validBattlefield() {
 function validMelee() {
   return {
     battlefieldId: 'bf-13-15', attackerArmyId: 'atk', defenderArmyId: 'def', attackerFactionId: 2, defenderFactionId: 1,
+    entryMode: null, settlementApplied: false,
     round: 0, maxRounds: 20, attackerTroops: 3000, attackerMorale: 85, attackerFatigue: 0, attackerFormation: FormationType.WEDGE,
     defenderTroops: 2000, defenderMorale: 85, defenderFatigue: 0, defenderFormation: FormationType.SQUARE,
     tacticalPoints: 6, tacticalPointsUsed: 0, phase: 'active' as const, eventLog: [],

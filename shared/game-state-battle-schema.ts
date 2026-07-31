@@ -64,7 +64,7 @@ const DuelRoundSchema = z
   })
   .strict();
 
-const DuelResultSchema = z
+export const DuelResultRuntimeSchema = z
   .object({
     winnerId: PositiveIdSchema,
     loserId: PositiveIdSchema,
@@ -91,9 +91,10 @@ export const DuelStateRuntimeSchema: z.ZodType<DuelState> = z
       z.object({ speakerId: PositiveIdSchema, text: z.string(), moraleEffect: z.number() }).strict(),
     ),
     roundHistory: z.array(DuelRoundSchema),
+    stances: NumericRecordSchema(z.enum(['assault', 'steady', 'bait', 'delegate'])),
     autoResolve: z.boolean(),
     speedMode: z.enum(['full', 'fast', 'skip']),
-    result: DuelResultSchema.optional(),
+    result: DuelResultRuntimeSchema.optional(),
   })
   .strict()
   .superRefine((duel, ctx) => {
@@ -107,6 +108,10 @@ export const DuelStateRuntimeSchema: z.ZodType<DuelState> = z
     }
     if (new Set(duel.turnOrder).size !== 2 || duel.turnOrder.some((id) => !expectedIds.has(id))) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['turnOrder'], message: '单挑行动顺序必须恰好包含双方武将' });
+    }
+    const stanceIds = Object.keys(duel.stances).map(Number);
+    if (stanceIds.length !== 2 || stanceIds.some((id) => !expectedIds.has(id))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['stances'], message: '单挑倾向快照必须恰好包含双方武将' });
     }
     if (duel.phase === 'resolved' && !duel.result) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['result'], message: '已结束单挑必须包含结果' });
@@ -276,12 +281,15 @@ export const BattlefieldMapRuntimeSchema: z.ZodType<BattlefieldMap> = z.object({
   }));
 });
 
-export const MeleeStateRuntimeSchema: z.ZodType<MeleeState> = z.object({
+export const MeleeStateRuntimeSchema: z.ZodType<MeleeState, z.ZodTypeDef, unknown> = z.object({
   battlefieldId: z.string().min(1),
   attackerArmyId: z.string().min(1),
   defenderArmyId: z.string().min(1),
   attackerFactionId: PositiveIdSchema,
   defenderFactionId: PositiveIdSchema,
+  entryMode: z.enum(['auto', 'standard', 'tactical']).nullable().default(null),
+  settlementApplied: z.boolean().default(false),
+  tacticalBattleId: z.string().min(1).optional(),
   round: NonNegativeIntSchema,
   maxRounds: z.number().int().positive(),
   attackerTroops: NonNegativeIntSchema,
@@ -303,6 +311,9 @@ export const MeleeStateRuntimeSchema: z.ZodType<MeleeState> = z.object({
   if (melee.attackerFactionId === melee.defenderFactionId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['defenderFactionId'], message: '白刃战双方不能属于同一势力' });
   }
+  if (melee.tacticalBattleId && melee.entryMode !== 'tactical') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['tacticalBattleId'], message: '六角战斗 id 只能用于六角微操模式' });
+  }
   if (melee.round > melee.maxRounds) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['round'], message: '白刃战回合不能超过上限' });
   }
@@ -310,12 +321,12 @@ export const MeleeStateRuntimeSchema: z.ZodType<MeleeState> = z.object({
 
 type GameStateCombatSlice = Pick<GameState, 'activeBattles' | 'activeBattlefield' | 'activeMelee' | 'activeBattlefieldInstance'>;
 
-export const GameStateBattleSchema: z.ZodType<GameStateCombatSlice> = z
+export const GameStateBattleSchema: z.ZodType<GameStateCombatSlice, z.ZodTypeDef, unknown> = z
   .object({
     activeBattles: z.array(BattleStateRuntimeSchema),
     activeBattlefield: BattlefieldMapRuntimeSchema.nullable(),
     activeMelee: MeleeStateRuntimeSchema.nullable(),
-    activeBattlefieldInstance: BattlefieldInstanceSchema.nullable().optional(),
+    activeBattlefieldInstance: z.lazy(() => BattlefieldInstanceSchema).nullable().optional(),
   })
   .strict()
   .superRefine((slice, ctx) => {

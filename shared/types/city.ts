@@ -64,6 +64,20 @@ export interface CityDemographics {
   elder: number;
 }
 
+export type DevelopmentProjectKind = 'farm' | 'commerce' | 'wall';
+
+export interface DevelopmentProject {
+  kind: DevelopmentProjectKind;
+  assignedOfficerId: number;
+  totalMonths: number;
+  remainingMonths: number;
+  totalGoldCost: number;
+  goldPaid: number;
+  pausedMonths: number;
+  progressLostMonths: number;
+  status: 'active' | 'paused';
+}
+
 /** Runtime city entity */
 export interface City extends CityStatic {
   terrain: TerrainType;
@@ -74,16 +88,8 @@ export interface City extends CityStatic {
   population: number;
   /** 人口四桶；开局必填 */
   demographics: CityDemographics;
-  /**
-   * 潜在可寻次数（04§30）：寻访成功 −1；抢夺可多扣
-   * 开局 ≈ floor(adultFemale/400)；不随人口每月强制重刷
-   */
-  beautySeekLeft: number;
-  /**
-   * @deprecated 旧 Demo 字段；请用 beautySeekLeft / Faction.beautyStock
-   * 保留可选以免旧存档；新局不写
-   */
-  beautyPool?: number;
+  /** 本城尚可建立的宫廷人脉机会；与人口及历史女角无换算关系。 */
+  courtNetworkOpportunities: number;
   troops: number;
   troopsMorale: number;
   officers: number[];
@@ -95,4 +101,6 @@ export interface City extends CityStatic {
     commerce: number;
     wall: number;
   };
+  /** R5：一城同时至多一个持续开发项目；旧存档缺失表示无项目。 */
+  activeDevelopment?: DevelopmentProject;
 }

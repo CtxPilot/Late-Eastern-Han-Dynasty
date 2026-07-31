@@ -26,6 +26,7 @@
     "nobility.ts",
     "battlefield-instance-schema.ts",
     "nanjun-battlefield.ts",
+    "commandery-battlefield.ts",
     "save.ts",
     "rng.ts",
     "game-state-schema.ts",

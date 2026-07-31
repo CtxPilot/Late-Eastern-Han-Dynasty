@@ -7,8 +7,7 @@ import {
   sumDemographics,
   syncPopulation,
   ensureDemographics,
-  beautySeekLeftFromFemales,
-  beautyPoolFromFemales,
+  initialCourtNetworkOpportunities,
   civilianFoodNeed,
   troopFoodNeed,
   cityFoodNeed,
@@ -17,7 +16,6 @@ import {
   foodNeedBreakdown,
   ageDemographicsTick,
   withSyncedPopulation,
-  BEAUTY_PER_ADULT_FEMALE,
   BEAUTY_SEEK,
   BEAUTY_LOOT,
   BEAUTY_REWARD,
@@ -86,26 +84,11 @@ describe('ensureDemographics', () => {
   });
 });
 
-describe('beautySeekLeftFromFemales', () => {
-  it('returns 0 for 0 females', () => {
-    expect(beautySeekLeftFromFemales(0)).toBe(0);
-  });
-
-  it('returns 1 per 400 females', () => {
-    expect(beautySeekLeftFromFemales(400)).toBe(1);
-    expect(beautySeekLeftFromFemales(800)).toBe(2);
-    expect(beautySeekLeftFromFemales(1200)).toBe(3);
-  });
-
-  it('floors partial', () => {
-    expect(beautySeekLeftFromFemales(500)).toBe(1);
-    expect(beautySeekLeftFromFemales(399)).toBe(0);
-  });
-});
-
-describe('beautyPoolFromFemales (deprecated alias)', () => {
-  it('matches beautySeekLeftFromFemales', () => {
-    expect(beautyPoolFromFemales(800)).toBe(beautySeekLeftFromFemales(800));
+describe('initialCourtNetworkOpportunities', () => {
+  it('derives opportunities from commerce, morale, and capital status', () => {
+    expect(initialCourtNetworkOpportunities({ isCapital: false, commerce: 0, morale: 70 })).toBe(1);
+    expect(initialCourtNetworkOpportunities({ isCapital: false, commerce: 500, morale: 80 })).toBe(4);
+    expect(initialCourtNetworkOpportunities({ isCapital: true, commerce: 500, morale: 70 })).toBe(5);
   });
 });
 
@@ -255,10 +238,6 @@ describe('constants', () => {
   it('DEFAULT_DEMO_RATIO sums to 1', () => {
     const sum = DEFAULT_DEMO_RATIO.adultMale + DEFAULT_DEMO_RATIO.adultFemale + DEFAULT_DEMO_RATIO.child + DEFAULT_DEMO_RATIO.elder;
     expect(sum).toBeCloseTo(1, 2);
-  });
-
-  it('BEAUTY_PER_ADULT_FEMALE is 1/400', () => {
-    expect(BEAUTY_PER_ADULT_FEMALE).toBe(1 / 400);
   });
 
   it('BEAUTY_SEEK constants are positive', () => {

@@ -81,6 +81,65 @@ function migrateLegacyNobilityRanks(input: unknown): unknown {
   return { ...envelope, snapshot: { ...snapshot, officers } };
 }
 
+/** R7：v1 早期 S09 使用 beauty* 字段；加载时幂等改名并删除旧键。 */
+function migrateLegacyCourtNetworkFields(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const envelope = input as { snapshot?: unknown };
+  if (typeof envelope.snapshot !== 'object' || envelope.snapshot === null) return input;
+  const snapshot = envelope.snapshot as { cities?: unknown; factions?: unknown };
+  let changed = false;
+
+  const cities =
+    typeof snapshot.cities === 'object' && snapshot.cities !== null
+      ? Object.fromEntries(Object.entries(snapshot.cities).map(([id, value]) => {
+          if (typeof value !== 'object' || value === null) return [id, value];
+          const city = value as Record<string, unknown>;
+          if (!('beautySeekLeft' in city) && !('beautyPool' in city)) return [id, value];
+          const {
+            beautySeekLeft,
+            beautyPool,
+            ...rest
+          } = city;
+          changed = true;
+          return [id, {
+            ...rest,
+            courtNetworkOpportunities:
+              typeof city.courtNetworkOpportunities === 'number'
+                ? city.courtNetworkOpportunities
+                : typeof beautySeekLeft === 'number'
+                  ? beautySeekLeft
+                  : typeof beautyPool === 'number'
+                    ? beautyPool
+                    : 0,
+          }];
+        }))
+      : snapshot.cities;
+
+  const factions =
+    typeof snapshot.factions === 'object' && snapshot.factions !== null
+      ? Object.fromEntries(Object.entries(snapshot.factions).map(([id, value]) => {
+          if (typeof value !== 'object' || value === null) return [id, value];
+          const faction = value as Record<string, unknown>;
+          if (!('beautyStock' in faction)) return [id, value];
+          const { beautyStock, ...rest } = faction;
+          changed = true;
+          return [id, {
+            ...rest,
+            courtNetwork:
+              typeof faction.courtNetwork === 'number'
+                ? faction.courtNetwork
+                : typeof beautyStock === 'number'
+                  ? beautyStock
+                  : 0,
+          }];
+        }))
+      : snapshot.factions;
+
+  return changed
+    ? { ...envelope, snapshot: { ...snapshot, cities, factions } }
+    : input;
+}
+
 /**
  * 将任意已解析的存档信封分派到当前版本。
  *
@@ -92,7 +151,7 @@ export function migrateSaveEnvelopeToCurrent(input: unknown): unknown {
 
   switch (version) {
     case CURRENT_SAVE_SCHEMA_VERSION:
-      return migrateLegacyNobilityRanks(input);
+      return migrateLegacyCourtNetworkFields(migrateLegacyNobilityRanks(input));
     default:
       throw new UnsupportedSaveVersionError(version);
   }
