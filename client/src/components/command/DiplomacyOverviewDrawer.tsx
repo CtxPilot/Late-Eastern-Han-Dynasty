@@ -100,9 +100,9 @@ export function DiplomacyOverviewDrawer() {
   const giftReason = !selected
     ? '没有可交涉的目标势力。'
     : selected.relation === 'war'
-      ? '双方已经交战，不能献美。'
-      : (self?.beautyStock ?? 0) < 1
-        ? '美女库存不足（需1）。'
+      ? '双方已经交战，不能牵线。'
+      : (self?.courtNetwork ?? 0) < 1
+        ? '宫廷人脉不足（需1）。'
         : null;
   const allianceReason = !selected
     ? '没有可缔盟的目标势力。'
@@ -131,9 +131,9 @@ export function DiplomacyOverviewDrawer() {
       const relation = String(
         findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id)?.relation ?? 'neutral',
       );
-      if (relation === 'war') return '双方已经交战，不能献美。';
-      if ((latest.factions[latest.playerFactionId]?.beautyStock ?? 0) < 1) {
-        return '美女库存不足（需1）。';
+      if (relation === 'war') return '双方已经交战，不能牵线。';
+      if ((latest.factions[latest.playerFactionId]?.courtNetwork ?? 0) < 1) {
+        return '宫廷人脉不足（需1）。';
       }
     }
     if (confirm === 'alliance') {
@@ -188,7 +188,7 @@ export function DiplomacyOverviewDrawer() {
         {facet === 'factions'
           ? '选择势力查看当前权威关系摘要。'
           : facet === 'negotiation'
-            ? '进贡与献美从此处送交统一终审；点化女间谍归情报域。'
+            ? '进贡与宫廷牵线从此处送交统一终审；人脉掩护归情报域。'
             : '结盟无论成败均消耗金500和一次权威外交判定。'}
       </p>
 
@@ -253,7 +253,7 @@ export function DiplomacyOverviewDrawer() {
                   <span className="text-[10px] text-stone-500">{selected.relationLabel} · 友好 {selected.favorability}</span>
                 </div>
                 <p className="mt-1 text-[10px] text-stone-500">
-                  己方总金 {resources.gold} · 美女库存 {self?.beautyStock ?? 0}
+                  己方总金 {resources.gold} · 宫廷人脉 {self?.courtNetwork ?? 0}
                 </p>
               </div>
               <article className="border border-amber-900/50 bg-amber-950/15 px-3 py-2">
@@ -281,7 +281,7 @@ export function DiplomacyOverviewDrawer() {
               <article className="border border-rose-900/50 bg-rose-950/15 px-3 py-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-rose-200">献美</h3>
+                    <h3 className="text-rose-200">宫廷牵线</h3>
                     <p className="mt-1 text-[10px] text-stone-500">转移库存1，友好 +{giftGain}，积累点化额度1</p>
                   </div>
                   <button
@@ -295,7 +295,7 @@ export function DiplomacyOverviewDrawer() {
                     }}
                     className="border border-rose-800 bg-rose-950/40 px-3 py-1.5 text-rose-100 disabled:opacity-40"
                   >
-                    献美
+                    牵线
                   </button>
                 </div>
                 {giftReason ? <p className="mt-1 text-[10px] text-red-300" data-testid="command-diplomacy-gift-reason">{giftReason}</p> : null}
@@ -358,19 +358,19 @@ export function DiplomacyOverviewDrawer() {
       <CommandConfirmDialog
         open={confirm != null && selected != null}
         category="外交"
-        command={`${confirm === 'tribute' ? '确认进贡' : confirm === 'gift-beauty' ? '确认献美' : '确认结盟'}：${selected?.name ?? '未知势力'}`}
+        command={`${confirm === 'tribute' ? '确认进贡' : confirm === 'gift-beauty' ? '确认宫廷牵线' : '确认结盟'}：${selected?.name ?? '未知势力'}`}
         summary={
           confirm === 'tribute'
             ? '将立即支付金钱以改善双方关系。'
             : confirm === 'gift-beauty'
-              ? '将永久转移一份美女库存给目标势力。'
+              ? '将永久转移一份宫廷人脉给目标势力，用于交涉牵线。'
               : '结盟交涉无论成败都会立即消耗金钱，并消费一次外交判定。'
         }
         items={confirm && selected ? [
           { label: '目标势力', value: selected.name },
           {
             label: '立即消耗',
-            value: confirm === 'tribute' ? '金 200' : confirm === 'gift-beauty' ? '美女库存 1' : '金 500',
+            value: confirm === 'tribute' ? '金 200' : confirm === 'gift-beauty' ? '宫廷人脉 1' : '金 500',
             tone: 'warning',
           },
           {

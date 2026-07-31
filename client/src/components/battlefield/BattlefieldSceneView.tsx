@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { FIRST_BATCH_COUNTY_IDS } from '@leh/shared';
+import { FIRST_BATCH_COUNTY_IDS, type DuelStance } from '@leh/shared';
+import { DuelPanel } from '../battle/DuelPanel';
 
 export function BattlefieldSceneView() {
   const inst = useGameStore((s) => s.battlefieldInstance);
@@ -12,8 +14,15 @@ export function BattlefieldSceneView() {
   const exitNanjunBattlefield = useGameStore((s) => s.exitNanjunBattlefield);
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
+  const startBattlefieldDuel = useGameStore((s) => s.startBattlefieldDuel);
+  const stepBattlefieldDuel = useGameStore((s) => s.stepBattlefieldDuel);
+  const skipBattlefieldDuel = useGameStore((s) => s.skipBattlefieldDuel);
+  const closeBattlefieldDuel = useGameStore((s) => s.closeBattlefieldDuel);
+  const [duelStance, setDuelStance] = useState<DuelStance>('delegate');
   if (!inst || !game) return null;
-  const jiangling = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  const seat = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  const isNanjun = inst.templateId === 'nanjun-190';
+  const commanderyName = isNanjun ? '南郡' : '颍川郡';
   const playerFactionId = game.playerFactionId;
   const firstBatch = FIRST_BATCH_COUNTY_IDS as readonly string[];
 
@@ -21,18 +30,58 @@ export function BattlefieldSceneView() {
     <div className="h-full flex flex-col bg-[#1a2218]">
       <div className="flex justify-between items-center px-4 py-2 border-b border-amber-900/50">
         <div>
-          <div className="text-amber-400 text-sm">南郡战场 · {inst.targetCommanderyId}</div>
-          <div className="text-stone-400 text-xs">郡治：江陵（守方据点 {jiangling?.garrison ?? 0} 兵 / 城 {jiangling?.wallDurability ?? 0}）· 入口：当阳、枝江</div>
+          <div className="text-amber-400 text-sm">{commanderyName}战场 · {inst.targetCommanderyId}</div>
+          <div className="text-stone-400 text-xs">
+            郡治：{seat?.name}（守方据点 {seat?.garrison ?? 0} 兵 / 城 {seat?.wallDurability ?? 0}）
+            {' · '}入口：{inst.entryNodeIds.map((id) => inst.nodeStates.find((node) => node.nodeId === id)?.name ?? id).join('、')}
+          </div>
+          {inst.dynamicSituation && (
+            <div data-testid="bf-dynamic-situation" className="text-sky-200 text-xs">
+              战况：{inst.dynamicSituation.weather === 'rain' ? '雨' : inst.dynamicSituation.weather === 'fog' ? '雾' : '晴'}
+              {' · '}侦察 {inst.dynamicSituation.attackerScouted ? '有获' : '未获'}
+              {' · '}伏击 {inst.dynamicSituation.ambush === 'none' ? '无' : inst.dynamicSituation.ambush === 'attacker' ? '我方' : '敌方'}
+              {' · '}部署 {inst.dynamicSituation.deployments.length} 军
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
+          <select
+            data-testid="battlefield-duel-stance"
+            value={duelStance}
+            disabled={loading || !!inst.activeDuel}
+            onChange={(event) => setDuelStance(event.target.value as DuelStance)}
+            className="rounded border border-amber-800 bg-stone-900 px-2 text-xs text-amber-100"
+            aria-label="单挑倾向"
+          >
+            <option value="delegate">委任</option>
+            <option value="assault">强攻</option>
+            <option value="steady">持重</option>
+            <option value="bait">诱敌</option>
+          </select>
           <button
+            data-testid="btn-formation-front-duel"
+            className="px-3 py-1.5 rounded bg-amber-950 border border-amber-700 text-sm text-amber-100 disabled:opacity-40"
+            disabled={loading || !!inst.activeDuel}
+            onClick={() => void startBattlefieldDuel('formation_front', inst.entryNodeIds[0], duelStance)}
+          >
+            阵前挑战
+          </button>
+          <button
+            data-testid="btn-city-front-duel"
+            className="px-3 py-1.5 rounded bg-red-950 border border-red-700 text-sm text-red-100 disabled:opacity-40"
+            disabled={loading || !!inst.activeDuel}
+            onClick={() => void startBattlefieldDuel('city_front', inst.targetSeatNodeId, duelStance)}
+          >
+            城下挑战
+          </button>
+          {isNanjun && <button
             data-testid="btn-engage-jiangling"
             className="px-3 py-1.5 rounded bg-red-900 border border-red-600 text-sm text-red-50 hover:bg-red-800 disabled:opacity-40"
             disabled={loading}
             onClick={() => void engageJiangling()}
           >
             围攻江陵（六角接战）
-          </button>
+          </button>}
           <button
             data-testid="btn-exit-battlefield"
             className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm text-stone-200 hover:bg-stone-700 disabled:opacity-40"
@@ -63,7 +112,7 @@ export function BattlefieldSceneView() {
           {inst.nodeStates.map((n) => {
             const isSeat = n.nodeId === inst.targetSeatNodeId;
             const isOwned = n.rulerFactionId === playerFactionId;
-            const isEngageable = firstBatch.includes(n.nodeId) && !isOwned;
+            const isEngageable = isNanjun && firstBatch.includes(n.nodeId) && !isOwned;
             const fillColor = isSeat
               ? '#a21d24'
               : isOwned
@@ -112,8 +161,17 @@ export function BattlefieldSceneView() {
         </svg>
       </div>
       <div className="px-4 py-1 text-[10px] text-stone-500 border-t border-stone-800">
-        模板 {inst.templateId} v{inst.templateVersion} · {inst.nodeStates.length} 县 / {inst.routeStates.length} 路线 · phase={inst.phase}
+        模板 {inst.templateId} v{inst.templateVersion} · {inst.nodeStates.length} 县 / {inst.routeStates.length} 路线 · RNG {inst.generationAudit.rngDrawStart}→{inst.generationAudit.rngDrawEnd} · phase={inst.phase}
       </div>
+      {inst.activeDuel && (
+        <DuelPanel
+          duel={inst.activeDuel.duel}
+          onStep={stepBattlefieldDuel}
+          onSkip={skipBattlefieldDuel}
+          onClose={closeBattlefieldDuel}
+          resolveName={(officerId) => game.officers[officerId]?.name}
+        />
+      )}
     </div>
   );
 }

@@ -50,6 +50,7 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
 
   return (
     <section className="flex min-h-0 flex-1 flex-col" data-testid="command-military-readiness">
+      <h3 className="mb-2 text-xs tracking-widest text-red-200">军团战备</h3>
       <div className="mb-2 grid grid-cols-3 gap-2 text-[10px]">
         <Metric label="总兵力" value={overview.totalTroops.toLocaleString('zh-CN')} />
         <Metric label="总粮草" value={overview.totalFood.toLocaleString('zh-CN')} />

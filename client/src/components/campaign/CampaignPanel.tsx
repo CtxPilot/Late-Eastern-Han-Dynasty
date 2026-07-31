@@ -55,7 +55,7 @@ export function CampaignPanel() {
   return (
     <div className="text-[11px] text-stone-300 leading-snug">
       <p className="px-3 py-1 text-[10px] text-stone-500 border-b border-stone-900">
-        战役层军团只读摘要；编成与全部军令请使用底部命令坞“军事”。
+        战役态势只读摘要；编成与全部军令请使用底部命令坞“军事”。
       </p>
 
       {/* Army 列表 */}
@@ -101,7 +101,7 @@ export function CampaignPanel() {
       {/* 选中 Army 详情与操作 */}
       {selectedArmy && (
         <div className="px-3 py-2 border-b border-stone-800 space-y-1.5">
-          <div className="text-amber-400/80 font-medium">{selectedArmy.name} 详情</div>
+          <div className="text-amber-400/80 font-medium">战役态势 · {selectedArmy.name}</div>
           <div className="text-stone-400">
             <div>主将：{game.officers[selectedArmy.commanderId]?.name}</div>
             {selectedArmy.subCommanderIds.length > 0 && (
@@ -116,6 +116,7 @@ export function CampaignPanel() {
             <div>位置：{currentNode?.name ?? selectedArmy.currentNodeId}</div>
             <div>兵力：{selectedArmy.troops}/{selectedArmy.maxTroops}</div>
             <div>粮草：{selectedArmy.food}/{selectedArmy.maxFood}</div>
+            <div>军团经验：{selectedArmy.experience}/3000</div>
             <div>
               士气 {bar(selectedArmy.morale, 100)} {selectedArmy.morale}
             </div>

@@ -101,14 +101,33 @@ export async function endTurn(): Promise<GameState> {
 }
 
 export type DevelopKind = 'farm' | 'commerce' | 'wall';
+export interface AnnualBudget {
+  cityCount: number;
+  months: 12;
+  goldIncome: number;
+  foodProduced: number;
+  civilianAndMilitaryFood: number;
+  projectGold: number;
+  administrativeGold: number;
+  salaryGold: 0;
+  warLossGold: 0;
+  netGold: number;
+  netFood: number;
+  notes: string[];
+}
+
+export async function getAnnualBudget(): Promise<AnnualBudget> {
+  const { data } = await http.get<AnnualBudget>('/civil/budget');
+  return data;
+}
 
 export async function developFarm(cityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/develop-farm', { cityId });
   return data;
 }
 
-export async function develop(cityId: number, kind: DevelopKind): Promise<GameState> {
-  const { data } = await http.post<GameState>('/civil/develop', { cityId, kind });
+export async function develop(cityId: number, kind: DevelopKind, officerId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/develop', { cityId, kind, officerId });
   return data;
 }
 
@@ -127,7 +146,7 @@ export async function trainTroops(cityId: number): Promise<GameState> {
   return data;
 }
 
-/** 寻访：势力 beautyStock+1，城可寻次数−1 */
+/** 地方结交：势力 courtNetwork+1，城市机会−1 */
 export async function seekBeauty(cityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/seek-beauty', { cityId });
   return data;
@@ -419,9 +438,22 @@ export async function battleFinishPlayer(): Promise<BattleState> {
   return data;
 }
 
+export async function getActiveBattle(): Promise<BattleState | null> {
+  try {
+    const { data } = await http.get<BattleState>('/battle');
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 /** S10 §8 玩家发起单挑 */
-export async function battleDuelChallenge(challengerUnitId: string, targetUnitId: string): Promise<BattleState> {
-  const { data } = await http.post<BattleState>('/battle/duel/challenge', { challengerUnitId, targetUnitId });
+export async function battleDuelChallenge(
+  challengerUnitId: string,
+  targetUnitId: string,
+  stance: import('@leh/shared').DuelStance,
+): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/duel/challenge', { challengerUnitId, targetUnitId, stance });
   return data;
 }
 
@@ -541,8 +573,8 @@ export async function battlefieldExit(): Promise<GameState> {
 // ====== 郡域战场实例 API（BF-P2 Q10 Tier II 郡域层） ======
 
 /** 进入南郡郡域战场：服务端生成 BattlefieldInstance 并写入 GameState */
-export async function enterNanjunBattlefield(): Promise<GameState> {
-  const { data } = await http.post<GameState>('/battlefield-instance/enter');
+export async function enterNanjunBattlefield(commandery: 'nanjun' | 'yingchuan' = 'nanjun'): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/enter', { commandery });
   return data;
 }
 
@@ -555,6 +587,30 @@ export async function exitNanjunBattlefield(): Promise<GameState> {
 /** BF-P2 Q9：攻打郡域县节点（当阳/华容/枝江） */
 export async function engageCounty(countyId: string): Promise<GameState> {
   const { data } = await http.post<GameState>('/battlefield-instance/engage-county', { countyId });
+  return data;
+}
+
+export async function startBattlefieldDuel(
+  kind: 'formation_front' | 'city_front',
+  nodeId: string,
+  stance: import('@leh/shared').DuelStance,
+): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/duel/start', { kind, nodeId, stance });
+  return data;
+}
+
+export async function stepBattlefieldDuel(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/duel/step');
+  return data;
+}
+
+export async function skipBattlefieldDuel(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/duel/skip');
+  return data;
+}
+
+export async function closeBattlefieldDuel(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/battlefield-instance/duel/close');
   return data;
 }
 
@@ -584,6 +640,13 @@ export async function getMelee(): Promise<MeleeState | null> {
   } catch {
     return null;
   }
+}
+
+export async function meleeSelectMode(
+  mode: import('@leh/shared').MeleeEntryMode,
+): Promise<{ game: GameState; melee: MeleeState; battle?: BattleState }> {
+  const { data } = await http.post<{ game: GameState; melee: MeleeState; battle?: BattleState }>('/melee/mode', { mode });
+  return data;
 }
 
 /** 执行一回合白刃战 */

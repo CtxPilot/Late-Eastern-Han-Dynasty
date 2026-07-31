@@ -15,6 +15,8 @@ import { DiplomacyOverviewDrawer } from './DiplomacyOverviewDrawer';
 import { MilitaryOverviewDrawer } from './MilitaryOverviewDrawer';
 import { CivilOverviewDrawer } from './CivilOverviewDrawer';
 import { StrategyOverviewDrawer } from './StrategyOverviewDrawer';
+import { IntelOverviewDrawer } from './IntelOverviewDrawer';
+import { FamilyOverviewDrawer } from './FamilyOverviewDrawer';
 
 export function CommandShell() {
   const [state, dispatch] = useReducer(commandShellReducer, INITIAL_COMMAND_SHELL_STATE);
@@ -34,7 +36,11 @@ export function CommandShell() {
           {activeItem.domain === 'civil' ? (
             <CivilOverviewDrawer />
           ) : activeItem.domain === 'strategy' ? (
-            <StrategyOverviewDrawer />
+            <StrategyOverviewDrawer dispatch={dispatch} />
+          ) : activeItem.domain === 'intel' ? (
+            <IntelOverviewDrawer shellState={state} />
+          ) : activeItem.domain === 'family' ? (
+            <FamilyOverviewDrawer />
           ) : activeItem.domain === 'court' ? (
             <CourtCommandDrawer shellState={state} dispatch={dispatch} />
           ) : activeItem.domain === 'personnel' ? (

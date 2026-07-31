@@ -13,6 +13,7 @@ import {
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import type { CommandShellAction } from './commandShellState';
 
 const MAX_ACTIVE_PLOTS = 4;
 
@@ -30,7 +31,7 @@ const STAGE_LABEL: Record<PlotStage, string> = {
 };
 
 const PLOT_COST: Record<PlotType, string> = {
-  [PlotType.HONEY_TRAP]: '美女库存 2、金 150',
+  [PlotType.HONEY_TRAP]: '宫廷人脉 2、金 150',
   [PlotType.SOW_DISCORD]: '金 200',
   [PlotType.FALSE_INTEL]: '金 120',
   [PlotType.EMPTY_FORT]: '目标城粮 150',
@@ -82,7 +83,7 @@ export function validateStrategyLaunch(
   if (draft.type === PlotType.FALSE_INTEL) {
     return canPayGold(120) ? null : '没有己方城池能够支付金 120。';
   }
-  if ((game.factions[factionId]?.beautyStock ?? 0) < 2) return '美女库存不足（需 2）。';
+  if ((game.factions[factionId]?.courtNetwork ?? 0) < 2) return '宫廷人脉不足（需 2）。';
   if (!canPayGold(150)) return '没有己方城池能够支付金 150。';
   if (draft.agentId) {
     const agent = game.intel?.agents?.[draft.agentId];
@@ -114,7 +115,7 @@ export type StrategyOverview = {
   maxActive: number;
   totalGold: number;
   totalFood: number;
-  beautyStock: number;
+  courtNetwork: number;
   detailedEnemyCities: string[];
   idleFemaleAgents: string[];
   emptyFortCandidates: string[];
@@ -160,7 +161,7 @@ export function buildStrategyOverview(game: GameState): StrategyOverview {
     maxActive: MAX_ACTIVE_PLOTS,
     totalGold: resources.gold,
     totalFood: resources.food,
-    beautyStock: game.factions[game.playerFactionId]?.beautyStock ?? 0,
+    courtNetwork: game.factions[game.playerFactionId]?.courtNetwork ?? 0,
     detailedEnemyCities,
     idleFemaleAgents,
     emptyFortCandidates,
@@ -186,7 +187,11 @@ const FACETS: readonly { id: StrategyFacet; label: string }[] = [
   { id: 'ongoing', label: '进行中' },
 ];
 
-export function StrategyOverviewDrawer() {
+export function StrategyOverviewDrawer({
+  dispatch,
+}: {
+  dispatch: React.Dispatch<CommandShellAction>;
+}) {
   const game = useGameStore((state) => state.game);
   const launchPlot = useGameStore((state) => state.launchPlot);
   const loading = useGameStore((state) => state.loading);
@@ -255,7 +260,7 @@ export function StrategyOverviewDrawer() {
       </nav>
 
       <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
-        四计已可从本抽屉发起；迁移期旧“计谋”面板暂留至 P29 对照验收。
+        S17 四计由此唯一发起；探秘与女间谍仍归 S07 情报域。
       </p>
 
       {facet === 'situation' ? (
@@ -263,7 +268,7 @@ export function StrategyOverviewDrawer() {
           <div className="grid grid-cols-3 gap-2">
             <Metric label="进行中" value={`${overview.activeCount}/${overview.maxActive}`} />
             <Metric label="势力总金" value={overview.totalGold} />
-            <Metric label="美女库存" value={overview.beautyStock} />
+            <Metric label="宫廷人脉" value={overview.courtNetwork} />
           </div>
           <InfoList title="已获探秘情报的敌城" items={overview.detailedEnemyCities} empty="暂无；美人计与假情报尚无可用敌城。" />
           <InfoList title="空闲女间谍" items={overview.idleFemaleAgents} empty="暂无；美人计仍可不派女间谍。" />
@@ -287,7 +292,7 @@ export function StrategyOverviewDrawer() {
                 agentId: null,
               })}
             >
-              <option value={PlotType.HONEY_TRAP}>美人计（探秘情报、美女2、金150）</option>
+              <option value={PlotType.HONEY_TRAP}>美人计（探秘情报、人脉2、金150）</option>
               <option value={PlotType.SOW_DISCORD}>离间计（非盟友势力、金200）</option>
               <option value={PlotType.FALSE_INTEL}>假情报（探秘情报、金120）</option>
               <option value={PlotType.EMPTY_FORT}>空城疑兵（寡兵城、粮150）</option>
@@ -358,6 +363,20 @@ export function StrategyOverviewDrawer() {
             <p>当前进行中：{overview.activeCount}/{overview.maxActive}</p>
           </div>
           {launchReason ? <p data-testid="command-strategy-launch-reason" className="text-[10px] text-amber-500">{launchReason}</p> : null}
+          {!isEmpty && draft.type !== PlotType.SOW_DISCORD ? (
+            <button
+              type="button"
+              data-testid="command-strategy-go-intel"
+              className="w-full rounded border border-sky-800 bg-sky-950/30 px-3 py-2 text-sky-100"
+              onClick={() => dispatch({
+                type: 'select-command',
+                domain: 'intel',
+                commandId: 'recon',
+              })}
+            >
+              前往情报 · 探秘
+            </button>
+          ) : null}
           <button
             type="button"
             data-testid="command-strategy-launch-submit"
@@ -369,7 +388,7 @@ export function StrategyOverviewDrawer() {
             送交终审 · {PLOT_LABEL[draft.type]}
           </button>
           <p className="text-[10px] leading-relaxed text-stone-600">
-            探秘和女间谍仍属于情报域；P29 再补跨域导航并下线旧入口。
+            探秘和女间谍仍属于情报域；跨域导航不复制情报写链。
           </p>
         </section>
       ) : (

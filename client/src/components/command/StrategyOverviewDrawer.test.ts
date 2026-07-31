@@ -10,7 +10,7 @@ describe('strategy read-only overview model', () => {
     const game = {
       playerFactionId: 1,
       factions: {
-        1: { id: 1, name: '曹操军', beautyStock: 3 },
+        1: { id: 1, name: '曹操军', courtNetwork: 3 },
         2: { id: 2, name: '刘备军' },
       },
       cities: {
@@ -60,7 +60,7 @@ describe('strategy read-only overview model', () => {
       maxActive: 4,
       totalGold: 700,
       totalFood: 1000,
-      beautyStock: 3,
+      courtNetwork: 3,
       detailedEnemyCities: ['宛城'],
       idleFemaleAgents: ['红袖'],
       emptyFortCandidates: ['洛阳'],
@@ -80,7 +80,7 @@ describe('strategy launch validation', () => {
   const baseGame = {
     playerFactionId: 1,
     factions: {
-      1: { id: 1, name: '曹操军', isAlive: true, beautyStock: 2 },
+      1: { id: 1, name: '曹操军', isAlive: true, courtNetwork: 2 },
       2: { id: 2, name: '刘备军', isAlive: true },
       3: { id: 3, name: '孙权军', isAlive: true },
     },

@@ -3,26 +3,17 @@
 
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
-import { FamilyPanel } from './FamilyPanel';
-import { SpyPanel } from './SpyPanel';
-import { PlotPanel } from './PlotPanel';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { AccSection } from '../ui/AccSection';
 
 type AccordionKey =
   | 'campaign'
-  | 'family'
-  | 'intel'
-  | 'plot'
   | 'strategist'
   | 'cities'
   | null;
 
-/**
- * 左侧政务：战役、谍报、计谋等遗留导航；不重复命令坞外交/人事。
- * 所有折叠默认收起。
- */
+/** 左侧政务：战役、总军师与城池；已迁域不再重复挂载。 */
 export function LeftPanel() {
   const game = useGameStore((s) => s.game);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
@@ -30,12 +21,6 @@ export function LeftPanel() {
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
   const clearError = useGameStore((s) => s.clearError);
   const [open, setOpen] = useState<AccordionKey>(null);
-
-  const familyCount = useMemo(() => {
-    if (!game) return 0;
-    return Object.values(game.females).filter((f) => f.factionId === game.playerFactionId)
-      .length;
-  }, [game]);
 
   const armyCount = useMemo(() => {
     if (!game) return 0;
@@ -83,24 +68,6 @@ export function LeftPanel() {
         </AccSection>
 
         <AccSection
-          title="谍报"
-          accent="intel"
-          open={open === 'intel'}
-          onToggle={() => toggle('intel')}
-        >
-          <SpyPanel />
-        </AccSection>
-
-        <AccSection
-          title="计谋"
-          accent="intel"
-          open={open === 'plot'}
-          onToggle={() => toggle('plot')}
-        >
-          <PlotPanel />
-        </AccSection>
-
-        <AccSection
           title="总军师"
           accent="military"
           open={open === 'strategist'}
@@ -109,16 +76,6 @@ export function LeftPanel() {
           <div className="px-2 py-1">
             <GrandStrategistPanel />
           </div>
-        </AccSection>
-
-        <AccSection
-          title="家族"
-          badge={familyCount}
-          accent="personnel"
-          open={open === 'family'}
-          onToggle={() => toggle('family')}
-        >
-          <FamilyPanel />
         </AccSection>
 
         <AccSection

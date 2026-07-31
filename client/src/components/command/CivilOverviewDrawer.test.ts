@@ -56,8 +56,8 @@ describe('civil read-only overview model', () => {
     expect(validateCivilOrder(game, 1, 'relief')).toBeNull();
     expect(validateCivilOrder({
       ...game,
-      cities: { ...game.cities, 1: { ...game.cities[1], gold: 119 } },
-    }, 1, 'wall')).toContain('需120');
+      cities: { ...game.cities, 1: { ...game.cities[1], gold: 166 } },
+    }, 1, 'wall')).toContain('需167');
     expect(validateCivilOrder({
       ...game,
       cities: { ...game.cities, 1: { ...game.cities[1], food: 149 } },
@@ -69,8 +69,8 @@ describe('civil read-only overview model', () => {
     const game = {
       playerFactionId: 1,
       cities: {
-        1: { ...cityBase, id: 1, name: '洛阳', ruler: 1, beautySeekLeft: 2 },
-        2: { ...cityBase, id: 2, name: '宛城', ruler: 2, beautySeekLeft: 2 },
+        1: { ...cityBase, id: 1, name: '洛阳', ruler: 1, courtNetworkOpportunities: 2 },
+        2: { ...cityBase, id: 2, name: '宛城', ruler: 2, courtNetworkOpportunities: 2 },
       },
     } as unknown as GameState;
 
@@ -78,7 +78,7 @@ describe('civil read-only overview model', () => {
     expect(validateBeautySeek(game, 2)).toContain('归属');
     expect(validateBeautySeek({
       ...game,
-      cities: { ...game.cities, 1: { ...game.cities[1], beautySeekLeft: 0 } },
+      cities: { ...game.cities, 1: { ...game.cities[1], courtNetworkOpportunities: 0 } },
     }, 1)).toContain('已尽');
     expect(validateBeautySeek({
       ...game,

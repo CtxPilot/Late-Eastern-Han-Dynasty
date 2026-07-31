@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useMemo, useState } from 'react';
-import type { City, GameState } from '@leh/shared';
+import { useEffect, useMemo, useState } from 'react';
+import type { City, DevelopmentProject, GameState } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { getAnnualBudget, type AnnualBudget } from '../../services/api';
 
 export type CivilCitySummary = {
   cityId: number;
@@ -22,6 +23,7 @@ export type CivilCitySummary = {
   adultFemale: number;
   child: number;
   elder: number;
+  activeDevelopment?: DevelopmentProject;
 };
 
 export function selectCivilCities(game: GameState): CivilCitySummary[] {
@@ -48,6 +50,7 @@ function toSummary(city: City): CivilCitySummary {
     adultFemale: city.demographics.adultFemale,
     child: city.demographics.child,
     elder: city.demographics.elder,
+    activeDevelopment: city.activeDevelopment,
   };
 }
 
@@ -59,9 +62,9 @@ const ORDER_CONFIG: Record<CivilOrder, {
   cost: string;
   summary: string;
 }> = {
-  farm: { label: '开发农业', cost: '100金', summary: '农业开发度由权威随机流提升20～30。' },
-  commerce: { label: '开发商业', cost: '100金', summary: '商业开发度由权威随机流提升18～28。' },
-  wall: { label: '开发城防', cost: '120金', summary: '城防开发度由权威随机流提升15～25；不等同于耐久修缮。' },
+  farm: { label: '开发农业', cost: '首付100金 / 总计300金', summary: '持续9个月；完成后农业+100。' },
+  commerce: { label: '开发商业', cost: '首付134金 / 总计400金', summary: '持续6个月；完成后商业+100。' },
+  wall: { label: '开发城防', cost: '首付167金 / 总计500金', summary: '持续12个月；完成后城防+100。' },
   relief: { label: '施米安民', cost: '150粮', summary: '民心由权威随机流提升8～12，上限100。' },
 };
 
@@ -75,14 +78,15 @@ export function validateCivilOrder(
   if (order === 'relief') {
     return city.food < 150 ? `城市粮不足（需150，当前${city.food}）。` : null;
   }
-  const goldCost = order === 'wall' ? 120 : 100;
+  if (city.activeDevelopment) return `该城已有${city.activeDevelopment.kind}持续项目。`;
+  const goldCost = order === 'wall' ? 167 : order === 'commerce' ? 134 : 100;
   return city.gold < goldCost ? `城市金不足（需${goldCost}，当前${city.gold}）。` : null;
 }
 
 export function validateBeautySeek(game: GameState, cityId: number): string | null {
   const city = game.cities[cityId];
   if (!city || city.ruler !== game.playerFactionId) return '所选城市已不存在或归属已经变化。';
-  if ((city.beautySeekLeft ?? 0) < 1) return `${city.name}可寻次数已尽。`;
+  if ((city.courtNetworkOpportunities ?? 0) < 1) return `${city.name}人脉机会已尽。`;
   return city.gold < 60 ? `城市金不足（需60，当前${city.gold}）。` : null;
 }
 
@@ -105,11 +109,24 @@ export function CivilOverviewDrawer() {
   const [facet, setFacet] = useState<CivilFacet>('overview');
   const [draft, setDraft] = useState<CivilOrder | null>(null);
   const [seekDraft, setSeekDraft] = useState(false);
+  const [officerId, setOfficerId] = useState<number | null>(null);
+  const [budget, setBudget] = useState<AnnualBudget | null>(null);
   const cities = useMemo(() => game ? selectCivilCities(game) : [], [game]);
   const effectiveCityId = cities.some((city) => city.cityId === selectedCityId)
     ? selectedCityId
     : cities[0]?.cityId;
   const city = cities.find((candidate) => candidate.cityId === effectiveCityId);
+  const cityEntity = city ? game?.cities[city.cityId] : undefined;
+  const eligibleOfficers = cityEntity
+    ? cityEntity.officers.map((id) => game?.officers[id]).filter((officer) => officer?.status === 'active')
+    : [];
+  useEffect(() => {
+    if (!game) return;
+    void getAnnualBudget().then(setBudget).catch(() => setBudget(null));
+  }, [game]);
+  useEffect(() => {
+    setOfficerId(eligibleOfficers[0]?.id ?? null);
+  }, [effectiveCityId, eligibleOfficers[0]?.id]);
 
   if (!game) return <p data-testid="command-civil-empty">尚未载入剧本。</p>;
   if (!city) return <p data-testid="command-civil-empty">当前势力没有可治理城市。</p>;
@@ -155,7 +172,7 @@ export function CivilOverviewDrawer() {
       </nav>
 
       <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
-        S03 城市治理在此统一提交；总览另提供明确标注的 S09 跨系统寻访入口。
+        S03 城市治理在此统一提交；总览另提供明确标注的 S09 跨系统结交入口。
       </p>
 
       <section className="min-h-0 space-y-2 overflow-y-auto" data-testid={`command-civil-panel-${facet}`}>
@@ -167,6 +184,31 @@ export function CivilOverviewDrawer() {
             <Fact label="粮" value={city.food} />
             <Fact label="人口" value={city.population} />
             <Fact label="民心" value={city.morale} />
+            {city.activeDevelopment ? (
+              <div className="border border-amber-900/70 bg-amber-950/10 px-3 py-2" data-testid="civil-active-project">
+                <strong className="text-amber-200">持续项目 · {city.activeDevelopment.kind}</strong>
+                <p className="text-[10px] text-stone-400">
+                  {city.activeDevelopment.status === 'paused' ? '暂停' : '推进中'}
+                  {' · '}剩余{city.activeDevelopment.remainingMonths}个月
+                  {' · '}已付{city.activeDevelopment.goldPaid}/{city.activeDevelopment.totalGoldCost}金
+                </p>
+                <p className="text-[10px] text-stone-500">
+                  暂停{city.activeDevelopment.pausedMonths}月 · 已损失{city.activeDevelopment.progressLostMonths}月进度
+                </p>
+              </div>
+            ) : null}
+            {budget ? (
+              <div className="border border-stone-800 px-3 py-2" data-testid="civil-annual-budget">
+                <strong className="text-stone-200">未来12月预算 · {budget.cityCount}城</strong>
+                <p className="text-[10px] text-stone-400">
+                  金收入{budget.goldIncome}－项目{budget.projectGold}－行政{budget.administrativeGold}
+                  －俸禄{budget.salaryGold}＝净{budget.netGold}
+                </p>
+                <p className="text-[10px] text-stone-400">
+                  粮产{budget.foodProduced}－民军耗粮{budget.civilianAndMilitaryFood}＝净{budget.netFood}
+                </p>
+              </div>
+            ) : null}
             <div
               className="mt-3 border border-rose-950/80 bg-rose-950/10 px-3 py-2"
               data-testid="command-civil-s09-card"
@@ -175,11 +217,11 @@ export function CivilOverviewDrawer() {
                 <div>
                   <strong className="text-rose-200">S09 · 宫廷人脉</strong>
                   <p className="mt-1 text-[10px] leading-relaxed text-stone-500">
-                    跨系统寻访：消耗60金；成功时势力美女库存+1、此城可寻次数−1。
+                    地方结交：消耗60金；成功时宫廷人脉+1、此城机会−1。
                   </p>
                   <p className="mt-1 text-[10px] text-stone-400">
-                    当前库存 {game.factions[game.playerFactionId]?.beautyStock ?? 0}
-                    {' · '}本城可寻 {game.cities[city.cityId]?.beautySeekLeft ?? 0}
+                    当前人脉 {game.factions[game.playerFactionId]?.courtNetwork ?? 0}
+                    {' · '}本城机会 {game.cities[city.cityId]?.courtNetworkOpportunities ?? 0}
                   </p>
                 </div>
                 <button
@@ -189,7 +231,7 @@ export function CivilOverviewDrawer() {
                   onClick={() => setSeekDraft(true)}
                   className="shrink-0 border border-rose-900 bg-rose-950/30 px-3 py-2 text-rose-100"
                 >
-                  寻访
+                  结交
                   <span className="mt-0.5 block text-[10px] text-stone-500">60金</span>
                 </button>
               </div>
@@ -203,6 +245,19 @@ export function CivilOverviewDrawer() {
               <CivilButton order="farm" onClick={() => setDraft('farm')} />
               <CivilButton order="commerce" onClick={() => setDraft('commerce')} />
             </div>
+            <label className="block text-[10px] text-stone-500">
+              指派武将
+              <select
+                value={officerId ?? ''}
+                onChange={(event) => setOfficerId(Number(event.target.value))}
+                className="mt-1 w-full border border-stone-700 bg-stone-950 p-2 text-stone-200"
+                data-testid="civil-project-officer"
+              >
+                {eligibleOfficers.map((officer) => (
+                  <option key={officer!.id} value={officer!.id}>{officer!.name}</option>
+                ))}
+              </select>
+            </label>
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
               手工业、交通与卫生尚未实装；农业开发不等同于屯田。
             </p>
@@ -211,6 +266,18 @@ export function CivilOverviewDrawer() {
           <>
             <Fact label="城防开发" value={city.wall} testId="command-civil-value-wall" />
             <CivilButton order="wall" onClick={() => setDraft('wall')} />
+            <label className="block text-[10px] text-stone-500">
+              指派武将
+              <select
+                value={officerId ?? ''}
+                onChange={(event) => setOfficerId(Number(event.target.value))}
+                className="mt-1 w-full border border-stone-700 bg-stone-950 p-2 text-stone-200"
+              >
+                {eligibleOfficers.map((officer) => (
+                  <option key={officer!.id} value={officer!.id}>{officer!.name}</option>
+                ))}
+              </select>
+            </label>
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
               当前数值是城市城防开发度，不代表战役城墙耐久；修缮与设施建设尚未实装。
             </p>
@@ -236,6 +303,9 @@ export function CivilOverviewDrawer() {
         summary={draft ? ORDER_CONFIG[draft].summary : ''}
         items={[
           { label: '城市', value: `${city.name} · ${city.province}` },
+          ...(draft && draft !== 'relief'
+            ? [{ label: '指派武将', value: eligibleOfficers.find((officer) => officer?.id === officerId)?.name ?? '未选择' }]
+            : []),
           { label: '当前资源', value: `${city.gold}金 / ${city.food}粮` },
           { label: '资源消耗', value: draft ? ORDER_CONFIG[draft].cost : '—', tone: 'warning' },
         ]}
@@ -251,20 +321,23 @@ export function CivilOverviewDrawer() {
         onConfirm={async () => {
           if (!draft) return;
           if (draft === 'relief') await relief(city.cityId);
-          else await develop(draft, city.cityId);
+          else {
+            if (officerId == null) return;
+            await develop(draft, city.cityId, officerId);
+          }
           if (!useGameStore.getState().error) setDraft(null);
         }}
       />
       <CommandConfirmDialog
         open={seekDraft}
         category="S09 宫廷人脉"
-        command={`确认在${city.name}寻访`}
-        summary="由 S09 权威随机流判定；无论成败均消耗60金，成功时库存+1、可寻次数−1。"
+        command={`确认在${city.name}结交人脉`}
+        summary="由 S09 权威随机流判定；无论成败均消耗60金，成功时人脉+1、城市机会−1。"
         items={[
           { label: '城市', value: `${city.name} · ${city.province}` },
           {
             label: '当前状态',
-            value: `${city.gold}金 / 可寻${game.cities[city.cityId]?.beautySeekLeft ?? 0} / 库存${game.factions[game.playerFactionId]?.beautyStock ?? 0}`,
+            value: `${city.gold}金 / 机会${game.cities[city.cityId]?.courtNetworkOpportunities ?? 0} / 人脉${game.factions[game.playerFactionId]?.courtNetwork ?? 0}`,
           },
           { label: '资源消耗', value: '60金', tone: 'warning' },
         ]}
@@ -272,7 +345,7 @@ export function CivilOverviewDrawer() {
         error={error}
         validateBeforeConfirm={() => {
           const latest = useGameStore.getState().game;
-          return !latest ? '寻访草稿已失效，请返回修改。' : validateBeautySeek(latest, city.cityId);
+          return !latest ? '结交草稿已失效，请返回修改。' : validateBeautySeek(latest, city.cityId);
         }}
         onCancel={() => setSeekDraft(false)}
         onConfirm={async () => {

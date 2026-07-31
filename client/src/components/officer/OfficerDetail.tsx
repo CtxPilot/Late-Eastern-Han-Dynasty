@@ -178,7 +178,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                 </>
               )}
               <Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} />
-              <Info label="经验" value={String(officer.experience)} />
+              <Info label="人物成长" value={`经验 ${officer.experience}`} />
             </div>
             <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
           </aside>
@@ -229,13 +229,17 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                   </section>
 
                   <section>
-                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能</h3>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">人物成长</h3>
+                    <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
+                      <Info label="经验" value={String(officer.experience)} />
+                      <Info label="功绩" value={isRuler ? '君主不计' : String(officer.merit)} />
+                    </div>
                     <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
                       {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
-                      {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level}`} />)}
+                      {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level} · 用${skill.useCount}`} />)}
                       {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
                     </div>
-                    <p className="mt-1.5 text-[10px] text-stone-600">技能升级系统待实装，当前仅展示已有技能等级</p>
+                    <p className="mt-1.5 text-[10px] text-stone-600">经验、功绩与技能使用次数统一在此解释；属性/技能自动升级规则待实装。</p>
                   </section>
 
                   <section>
@@ -260,7 +264,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <p className="mt-1.5 text-[10px] text-stone-600">出身分类（社会·地域·职业·政治·特殊），非家族关系数据</p>
                   </section>
                   <section>
-                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型</h3>
+                    <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型精通</h3>
                     <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
                       {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
                       {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}

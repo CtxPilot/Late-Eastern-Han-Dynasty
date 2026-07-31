@@ -53,8 +53,8 @@ export function TopBar() {
       <span className="text-sky-200/80" title="兵力">
         兵 {troops.toLocaleString()}
       </span>
-      <span className="text-rose-200/80" title="美女资源（势力库存）">
-        美女 {faction?.beautyStock ?? 0}
+      <span className="text-rose-200/80" title="宫廷人脉（势力库存）">
+        人脉 {faction?.courtNetwork ?? 0}
       </span>
       <span className="text-stone-500" title="城池数">
         城 {cityCount}

@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Stage, Layer, Circle, Text, Group, Line, RegularPolygon } from 'react-konva';
-import { TerrainType, type Officer, type BattleSideContext } from '@leh/shared';
+import { TerrainType, type Officer, type BattleSideContext, type DuelStance } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
 import { ExpressionPortrait } from '../officer/ExpressionPortrait';
@@ -62,6 +62,7 @@ export function BattleView() {
   const [fireMode, setFireMode] = useState(false);
   const [abilitySel, setAbilitySel] = useState<string | null>(null);
   const [duelMode, setDuelMode] = useState(false);
+  const [duelStance, setDuelStance] = useState<DuelStance>('delegate');
 
   useEffect(() => {
     const el = containerRef.current;
@@ -106,7 +107,7 @@ export function BattleView() {
       }
       if (duelMode) {
         setDuelMode(false);
-        void duelChallenge(selected.id, occ.id);
+        void duelChallenge(selected.id, occ.id, duelStance);
         return;
       }
       void attack(occ.id);
@@ -304,14 +305,40 @@ export function BattleView() {
                 {duelMode ? '单挑·点敌将' : '单挑'}
               </button>
             )}
+            {duelMode && (
+              <div data-testid="duel-stance-picker" className="flex items-center gap-1 rounded border border-yellow-800 bg-stone-950/90 px-2 py-1">
+                <span className="mr-1 text-xs text-yellow-300">倾向</span>
+                {([
+                  ['assault', '强攻'],
+                  ['steady', '持重'],
+                  ['bait', '诱敌'],
+                  ['delegate', '委任'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    data-testid={`duel-stance-${value}`}
+                    className={`rounded border px-2 py-1 text-xs ${
+                      duelStance === value
+                        ? 'border-yellow-400 bg-yellow-800 text-yellow-50'
+                        : 'border-stone-700 bg-stone-900 text-stone-300'
+                    }`}
+                    onClick={() => setDuelStance(value)}
+                    title={value === 'assault' ? '偏向猛攻与必杀，风险较高' : value === 'steady' ? '偏向格挡、牵制与周旋' : value === 'bait' ? '偏向周旋、闪避与反制' : '由武将自行判断'}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <span className="ml-1 text-[11px] text-stone-500">选定后点相邻敌将</span>
+              </div>
+            )}
             {attacker && selected?.id === attacker.id && !attacker.hasActed && usableAbilities.length > 0 && (
               <div className="flex gap-1 flex-wrap">
-                {usableAbilities.map((ab) => {
+                {usableAbilities.map((ab, index) => {
                   const active = abilitySel === ab.id;
                   const enoughEnergy = (attacker.energy ?? 0) >= ab.energyCost;
                   return (
                     <button
-                      key={ab.id}
+                      key={`${ab.id}-${index}`}
                       data-testid={`btn-ability-${ab.id}`}
                       className={`px-2 py-1 rounded border text-xs ${
                         active

@@ -40,9 +40,9 @@ export function RightPanel() {
   const vis = selected ? getCityVisibility(game, selected.id) : null;
   const seekLeft =
     selected != null && (isPlayerCity || vis?.showEconomy)
-      ? (selected.beautySeekLeft ?? 0)
+      ? (selected.courtNetworkOpportunities ?? 0)
       : null;
-  const playerBeauty = game.factions[game.playerFactionId]?.beautyStock ?? 0;
+  const playerBeauty = game.factions[game.playerFactionId]?.courtNetwork ?? 0;
   const d = selected && vis?.showDemographics ? ensureDemographics(selected) : null;
   const br =
     selected && d && vis?.showDemographics
@@ -141,16 +141,16 @@ export function RightPanel() {
                 }
               />
               {isPlayerCity && (
-                <Row label="势力美女" value={String(playerBeauty)} />
+                <Row label="宫廷人脉" value={String(playerBeauty)} />
               )}
               <Row
-                label="可寻次数"
+                label="人脉机会"
                 value={
                   seekLeft != null
                     ? String(seekLeft)
                     : vis?.kind === 'fog'
                       ? '???'
-                      : String(selected.beautySeekLeft ?? '???')
+                      : String(selected.courtNetworkOpportunities ?? '???')
                 }
               />
               <Row
@@ -242,7 +242,7 @@ export function RightPanel() {
             onToggle={() => toggle('civil')}
           >
             <p className="px-3 mt-1 text-[10px] text-stone-600">
-              城市治理与 S09 宫廷人脉寻访请使用底部命令坞“内政”。
+              城市治理与 S09 宫廷人脉结交请使用底部命令坞“内政”。
             </p>
             {!isPlayerCity && (
               <p className="px-3 mt-1 text-[10px] text-stone-600">内政仅己方城可用</p>

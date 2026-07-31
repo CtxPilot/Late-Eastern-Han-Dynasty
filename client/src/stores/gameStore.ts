@@ -19,10 +19,14 @@ interface Store {
   clearSceneStack: () => void;
 
   battlefieldInstance: BattlefieldInstance | null;
-  enterNanjunBattlefield: () => Promise<void>;
+  enterNanjunBattlefield: (commandery?: 'nanjun' | 'yingchuan') => Promise<void>;
   exitNanjunBattlefield: () => Promise<void>;
   engageJiangling: () => Promise<void>;
   engageCounty: (countyId: string) => Promise<void>;
+  startBattlefieldDuel: (kind: 'formation_front' | 'city_front', nodeId: string, stance: import('@leh/shared').DuelStance) => Promise<void>;
+  stepBattlefieldDuel: () => Promise<void>;
+  skipBattlefieldDuel: () => Promise<void>;
+  closeBattlefieldDuel: () => Promise<void>;
   game: GameState | null;
   battle: BattleState | null;
   selectedCityId: number | null;
@@ -52,7 +56,7 @@ interface Store {
   endTurn: () => Promise<void>;
   chooseEvent: (eventId: number, choiceIndex: number) => Promise<void>;
   developFarm: () => Promise<void>;
-  develop: (kind: 'farm' | 'commerce' | 'wall', cityId?: number) => Promise<void>;
+  develop: (kind: 'farm' | 'commerce' | 'wall', cityId?: number, officerId?: number) => Promise<void>;
   conscript: (cityId?: number) => Promise<void>;
   relief: (cityId?: number) => Promise<void>;
   trainTroops: (cityId?: number) => Promise<void>;
@@ -111,7 +115,7 @@ interface Store {
   finishPlayer: () => Promise<void>;
   runEnemy: () => Promise<void>;
   exitBattle: () => Promise<void>;
-  duelChallenge: (challengerUnitId: string, targetUnitId: string) => Promise<void>;
+  duelChallenge: (challengerUnitId: string, targetUnitId: string, stance: import('@leh/shared').DuelStance) => Promise<void>;
   duelStep: () => Promise<void>;
   duelSkip: () => Promise<void>;
 
@@ -140,6 +144,7 @@ interface Store {
   meleeLastResult: MeleeRoundResult | null;
   /** 发起白刃战 */
   meleeStart: (attackerArmyId: string, defenderArmyId: string) => Promise<void>;
+  meleeSelectMode: (mode: import('@leh/shared').MeleeEntryMode) => Promise<void>;
   /** 执行白刃战回合 */
   meleeRound: (actionType: string) => Promise<void>;
   /** 刷新战术点 */
@@ -188,10 +193,10 @@ export const useGameStore = create<Store>((set, get) => ({
   replaceSceneStack: (frame) => set({ sceneStack: replaceStack(frame), screen: screenOf([frame]) }),
   clearSceneStack: () => set({ sceneStack: clearStack(), screen: BOOT_SCREEN }),
 
-  enterNanjunBattlefield: async () => {
+  enterNanjunBattlefield: async (commandery = 'nanjun') => {
     set({ loading: true, error: null, lastActionOk: null });
     try {
-      const game = await api.enterNanjunBattlefield();
+      const game = await api.enterNanjunBattlefield(commandery);
       const inst = game.activeBattlefieldInstance ?? null;
       if (!inst) {
         throw new Error('服务端未返回郡域战场实例');
@@ -203,7 +208,7 @@ export const useGameStore = create<Store>((set, get) => ({
         sceneStack: after,
         screen: screenOf(after),
         loading: false,
-        lastActionOk: '进入南郡战场',
+        lastActionOk: `进入${commandery === 'yingchuan' ? '颍川' : '南郡'}战场`,
       });
     } catch (e) {
       set({ error: errMsg(e, '进入南郡战场失败'), loading: false });
@@ -255,6 +260,43 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  startBattlefieldDuel: async (kind, nodeId, stance) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.startBattlefieldDuel(kind, nodeId, stance);
+      set({ game, battlefieldInstance: game.activeBattlefieldInstance ?? null, loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '发起阵前单挑失败'), loading: false });
+    }
+  },
+
+  stepBattlefieldDuel: async () => {
+    try {
+      const game = await api.stepBattlefieldDuel();
+      set({ game, battlefieldInstance: game.activeBattlefieldInstance ?? null });
+    } catch (e) {
+      set({ error: errMsg(e, '阵前单挑推进失败') });
+    }
+  },
+
+  skipBattlefieldDuel: async () => {
+    try {
+      const game = await api.skipBattlefieldDuel();
+      set({ game, battlefieldInstance: game.activeBattlefieldInstance ?? null });
+    } catch (e) {
+      set({ error: errMsg(e, '阵前单挑跳过失败') });
+    }
+  },
+
+  closeBattlefieldDuel: async () => {
+    try {
+      const game = await api.closeBattlefieldDuel();
+      set({ game, battlefieldInstance: game.activeBattlefieldInstance ?? null });
+    } catch (e) {
+      set({ error: errMsg(e, '关闭阵前单挑失败') });
+    }
+  },
+
   boot: async () => {
     set({ loading: true, error: null, lastActionOk: null });
     try {
@@ -266,12 +308,30 @@ export const useGameStore = create<Store>((set, get) => ({
       } catch {
         game = null;
       }
+      const activeBattle = game ? await api.getActiveBattle() : null;
+      const activeMelee = game && !activeBattle ? await api.getMelee() : null;
+      const activeBattlefield = game && !activeBattle ? await api.getBattlefield() : null;
+      const restoredStack = activeBattle
+        ? replaceStack({ scene: 'battle', battleId: activeBattle.id })
+        : activeMelee
+          ? [
+              { scene: 'world' as const },
+              { scene: 'battlefield' as const, battlefieldId: activeMelee.battlefieldId },
+              { scene: 'melee' as const, encounterId: `${activeMelee.attackerArmyId}:${activeMelee.defenderArmyId}` },
+            ]
+          : activeBattlefield
+            ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeBattlefield.id }]
+            : game ? replaceStack({ scene: 'world' }) : [];
       set({
         game,
+        battle: activeBattle,
+        battlefield: activeBattlefield,
+        melee: activeMelee,
+        sceneStack: restoredStack,
         childrenCatalog: st.children,
         eventsCatalog: st.events,
         scenariosCatalog: st.scenarios,
-        screen: game ? 'world' : 'scenario',
+        screen: activeBattle ? 'battle' : activeMelee ? 'melee' : activeBattlefield ? 'battlefield' : game ? 'world' : 'scenario',
         loading: false,
       });
     } catch (e) {
@@ -331,7 +391,7 @@ export const useGameStore = create<Store>((set, get) => ({
     await get().develop('farm');
   },
 
-  develop: async (kind, cityId) => {
+  develop: async (kind, cityId, officerId) => {
     const id = cityId ?? get().selectedCityId;
     if (id == null) {
       set({ error: '请先选择己方城池' });
@@ -339,7 +399,9 @@ export const useGameStore = create<Store>((set, get) => ({
     }
     set({ loading: true, error: null });
     try {
-      const game = await api.develop(id, kind);
+      const selectedOfficerId = officerId ?? get().game?.cities[id]?.officers[0];
+      if (selectedOfficerId == null) throw new Error('本城没有可指派武将');
+      const game = await api.develop(id, kind, selectedOfficerId);
       const logMsg = game.actionLog[0]?.message ?? '开发完成';
       set({ game, loading: false, lastActionOk: logMsg });
     } catch (e) {
@@ -769,11 +831,13 @@ export const useGameStore = create<Store>((set, get) => ({
       const game = await api.exitBattle();
       const msg = game.actionLog[0]?.message ?? '返回大地图';
       const after = popScene(get().sceneStack);
+      const resolvedMelee = game.activeMelee ?? null;
       set({
         game,
         battle: null,
+        melee: resolvedMelee,
         sceneStack: after,
-        screen: screenOf(after),
+        screen: resolvedMelee ? 'melee' : screenOf(after),
         selectedUnitId: null,
         moveRange: [],
         loading: false,
@@ -784,9 +848,9 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  duelChallenge: async (challengerUnitId: string, targetUnitId: string) => {
+  duelChallenge: async (challengerUnitId: string, targetUnitId: string, stance: import('@leh/shared').DuelStance) => {
     try {
-      const battle = await api.battleDuelChallenge(challengerUnitId, targetUnitId);
+      const battle = await api.battleDuelChallenge(challengerUnitId, targetUnitId, stance);
       set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
     } catch (e) {
       set({ error: errMsg(e, '发起单挑失败') });
@@ -928,6 +992,21 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, melee, screen: 'melee', loading: false });
     } catch (e) {
       set({ error: errMsg(e, '白刃战发起失败'), loading: false });
+    }
+  },
+
+  meleeSelectMode: async (mode) => {
+    set({ loading: true, error: null });
+    try {
+      const { game, melee, battle } = await api.meleeSelectMode(mode);
+      if (mode === 'tactical' && battle) {
+        const after = pushScene(get().sceneStack, { scene: 'battle', battleId: battle.id });
+        set({ game, melee, battle, sceneStack: after, screen: screenOf(after), loading: false });
+        return;
+      }
+      set({ game, melee, screen: mode === 'auto' ? 'melee' : 'melee', loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '选择交战模式失败'), loading: false });
     }
   },
 

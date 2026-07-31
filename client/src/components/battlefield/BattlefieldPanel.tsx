@@ -20,7 +20,9 @@ export function BattlefieldPanel() {
     return (
       <div className="h-full flex flex-col bg-stone-950 text-stone-200">
         <div className="flex items-center justify-between px-4 py-2 bg-stone-900 border-b border-stone-700">
-          <h2 className="text-lg font-bold text-amber-400">白刃战 · 标准模式</h2>
+          <h2 className="text-lg font-bold text-amber-400">
+            白刃战 · {useGameStore.getState().melee?.entryMode === 'auto' ? '自动结算' : '标准模式'}
+          </h2>
           <button
             type="button"
             className="px-3 py-1 text-sm rounded bg-stone-700 hover:bg-stone-600"

@@ -9,7 +9,19 @@ import { useGameStore } from '../../stores/gameStore';
  * 单挑演出面板 (§8.12) — 全自动结算, 玩家只观看.
  * 速度模式: full(逐回合) / fast(快速) / skip(只看结果).
  */
-export function DuelPanel({ duel }: { duel: DuelState }) {
+export function DuelPanel({
+  duel,
+  onStep,
+  onSkip,
+  onClose,
+  resolveName,
+}: {
+  duel: DuelState;
+  onStep?: () => void | Promise<void>;
+  onSkip?: () => void | Promise<void>;
+  onClose?: () => void | Promise<void>;
+  resolveName?: (officerId: number) => string | undefined;
+}) {
   const game = useGameStore((s) => s.game);
   const duelStep = useGameStore((s) => s.duelStep);
   const duelSkip = useGameStore((s) => s.duelSkip);
@@ -18,31 +30,40 @@ export function DuelPanel({ duel }: { duel: DuelState }) {
 
   const battle = useGameStore((s) => s.battle);
   const commanderName = (officerId: number) =>
+    resolveName?.(officerId) ??
     battle?.units.find((unit) => unit.commanderId === officerId)?.commanderName ??
     game?.officers[officerId]?.name;
+  const advance = onStep ?? duelStep;
+  const skip = onSkip ?? duelSkip;
   const challengerName = commanderName(duel.challengerId) ?? '挑战方';
   const defenderName = commanderName(duel.defenderId) ?? '应战方';
   const rounds = duel.roundHistory;
   const shownRound = rounds[Math.min(idx, rounds.length - 1)];
   const resolved = duel.phase === 'resolved' && !!duel.result;
+  const stanceLabel = (officerId: number) => ({
+    assault: '强攻',
+    steady: '持重',
+    bait: '诱敌',
+    delegate: '委任',
+  }[duel.stances[officerId] ?? 'delegate']);
 
   // full 模式: 跟随最新回合; fast/skip: 自动推进/跳过
   useEffect(() => {
     if (duel.phase !== 'dueling') return;
     if (mode === 'skip') {
-      void duelSkip();
+      void skip();
       return;
     }
     if (mode === 'fast') {
-      const t = setTimeout(() => void duelStep(), 600);
+      const t = setTimeout(() => void advance(), 600);
       return () => clearTimeout(t);
     }
     // full: 自动推进但慢速
     if (idx >= rounds.length) {
-      const t = setTimeout(() => void duelStep(), 1500);
+      const t = setTimeout(() => void advance(), 1500);
       return () => clearTimeout(t);
     }
-  }, [duel.phase, mode, idx, rounds.length, duelStep, duelSkip]);
+  }, [duel.phase, mode, idx, rounds.length, advance, skip]);
 
   // 回合追加时推进游标
   useEffect(() => {
@@ -66,6 +87,10 @@ export function DuelPanel({ duel }: { duel: DuelState }) {
         <div className="grid grid-cols-2 gap-4 mb-3">
           <HpBar name={challengerName} hp={atk.hp} maxHp={atk.maxHp} energy={atk.energy} injury={atk.injury} side="atk" />
           <HpBar name={defenderName} hp={def.hp} maxHp={def.maxHp} energy={def.energy} injury={def.injury} side="def" />
+        </div>
+        <div data-testid="duel-stance-summary" className="mb-3 grid grid-cols-2 gap-4 text-center text-xs text-yellow-200/80">
+          <div>{challengerName} · {stanceLabel(duel.challengerId)}</div>
+          <div>{defenderName} · {stanceLabel(duel.defenderId)}</div>
         </div>
 
         {/* 阵前对话 */}
@@ -131,18 +156,29 @@ export function DuelPanel({ duel }: { duel: DuelState }) {
           <div className="flex gap-1">
             {!resolved && (
               <button
+                data-testid="btn-duel-step"
                 className="px-3 py-1.5 rounded bg-emerald-900 border border-emerald-600 text-sm"
-                onClick={() => void duelStep()}
+                onClick={() => void advance()}
               >
                 下一回合 →
               </button>
             )}
             {!resolved && (
               <button
+                data-testid="btn-duel-skip"
                 className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm"
-                onClick={() => void duelSkip()}
+                onClick={() => void skip()}
               >
                 跳过 ▶▶
+              </button>
+            )}
+            {resolved && onClose && (
+              <button
+                data-testid="btn-close-battlefield-duel"
+                className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-sm"
+                onClick={() => void onClose()}
+              >
+                返回战场
               </button>
             )}
           </div>

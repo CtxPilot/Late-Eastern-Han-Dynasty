@@ -97,7 +97,7 @@ export function buildMilitaryOverview(game: GameState): MilitaryOverview {
 type MilitaryFacet = 'readiness' | 'formation' | 'orders' | 'reports';
 
 const FACETS: readonly { id: MilitaryFacet; label: string }[] = [
-  { id: 'readiness', label: '军备' },
+  { id: 'readiness', label: '军团战备' },
   { id: 'formation', label: '编成' },
   { id: 'orders', label: '军令' },
   { id: 'reports', label: '战报' },
@@ -141,7 +141,7 @@ export function MilitaryOverviewDrawer() {
       </nav>
 
       <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
-        军情摘要直接读取权威状态；编成出征与军团军令均以本抽屉为唯一写入口。
+        军团战备汇总驻军与资源；编成出征与军团军令均以本抽屉为唯一写入口。
       </p>
 
       {facet === 'readiness' ? (
@@ -202,7 +202,7 @@ function ArmyCard({ army }: { army: MilitaryArmySummary }) {
         {army.targetNodeName ? ` → ${army.targetNodeName}` : ''}
       </p>
       <p className="text-[10px] text-stone-400">
-        兵 {army.troops} · 粮 {army.food} · 士气 {army.morale} · 组织 {army.organization}
+        兵 {army.troops} · 粮 {army.food} · 士气 {army.morale} · 组织 {army.organization} · 疲劳 {army.fatigue}
       </p>
     </article>
   );

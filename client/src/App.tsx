@@ -115,13 +115,22 @@ export default function App() {
   return (
     <div className="h-full relative">
       <GameLayout />
-      <button
-        data-testid="btn-enter-nanjun-battlefield"
-        className="fixed top-14 right-2 z-50 px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800"
-        onClick={() => void enterNanjunBattlefield()}
-      >
-        进入南郡战场（BF-P1）
-      </button>
+      <div className="fixed top-14 right-2 z-50 flex gap-2">
+        <button
+          data-testid="btn-enter-nanjun-battlefield"
+          className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800"
+          onClick={() => void enterNanjunBattlefield('nanjun')}
+        >
+          南郡水网
+        </button>
+        <button
+          data-testid="btn-enter-yingchuan-battlefield"
+          className="px-3 py-1.5 rounded bg-stone-800 border border-amber-500 text-xs text-amber-50 hover:bg-stone-700"
+          onClick={() => void enterNanjunBattlefield('yingchuan')}
+        >
+          颍川平原
+        </button>
+      </div>
     </div>
   );
 }
