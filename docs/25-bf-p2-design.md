@@ -43,20 +43,20 @@ BF-P1 在 Session 173 已打通"大地图 → 进入南郡战场 → 围攻江�
 
 ## 二、Q6 深化：县级独立可争夺范围
 
-> **状态：Q9 已实施（Session 176，2026-07-24）+ 老实标注（Session 177，2026-07-24）** — 首批 3 县（当阳/华容/枝江）+ 江陵 seat = 4 县可攻打节点已落地；`engageCounty(countyId)` orchestrator 复用 `runAutoBattle` 自动结算；`tickBattlefieldInstance` 月度 tick 实现驻军消耗掉控制；`verify-save-battlefield-instance` 44/44 含 f 类断言；Headless Chrome 完整验证通过。
+> **状态：Q9 已实施（Session 176，2026-07-24）+ 老实标注（Session 177，2026-07-24）+ 补给线路径判定补全（BF-P5，2026-07-31）** — 首批 3 县（当阳/华容/枝江）+ 江陵 seat = 4 县可攻打节点已落地；`engageCounty(countyId)` orchestrator 复用 `runAutoBattle` 自动结算；`tickBattlefieldInstance` 月度 tick 实现驻军消耗掉控制 + **BF-P5 补给线真实路径判定**；`verify-save-battlefield-instance` 49/49 含 f 类断言；Headless Chrome 完整验证通过。
 >
-> **⚠️ 四项攻占效果实现程度分级（Session 177 老实标注，避免读者误判四条实现程度一致）**：
+> **⚠️ 四项攻占效果实现程度分级（Session 177 老实标注 + BF-P5 更新，避免读者误判四条实现程度一致）**：
 >
 > | # | 攻占效果 | 实现程度 | 说明 |
 > |:-:|----------|:--------:|------|
-> | 1 | 补给线切断 | **简化替代实现** | 设计原意是"经过占领县的敌方 Army 糧耗×2 + 士气-5"（见 §2.4 第 1 条）；实际落地为"攻方占领任意首批县 → 守方**全部** CampaignArmy 士气 -5"全局机制。简化原因：`CampaignArmy` 在大地图层移动（数字 cityId），与郡域县节点（字符串 countyId）当前无位置映射，无法做"补给线经过攻方控制县"的路径判定。真正糧耗×2 路径判定留待 **R6（S15 多线 AI）/ BF-P5（核心战线扩展，县控接补给）**，前置依赖是先解决 Army 层与郡域层的位置映射。详见 §2.6。 |
+> | 1 | 补给线切断 | ✅ **完整实现（BF-P5 路径判定）** | 设计原意是"经过占领县的敌方 Army 糧耗×2 + 士气-5"（见 §2.4 第 1 条）。**BF-P5（2026-07-31）已落地真实路径判定**：`shared/army-county-mapping.ts` 建立 Army—郡域位置映射（`nodeStates[].armyIds` 权威 + deployments 回退），`tickBattlefieldInstance` 逐支守方 Army 求 seat → Army 当前县最短路径，路径经过攻方控制县 → 该 Army 粮耗×2 + 士气-5。0-A 边界：守方 Army 入郡域场景由 R6（S15 多线 AI）排期，路径判定机制由 `verify-save-battlefield-instance.ts` f6/f6b 构造场景完整验证。详见 §2.6.1。 |
 > | 2 | 驻军消耗压力 | ✅ **完整实现** | 占县后 `garrison>0` 保留控制、`garrison==0` 月度 tick 掉控制（`rulerFactionId=null`）；`controlTurns` 累计。与设计原意一致。 |
 > | 3 | 战场推进节点 | ✅ **完整实现** | 县攻打复用 `runAutoBattle` 自动结算，不同入侵入口→不同首攻县，县作为江陵外围防线。与设计原意一致。 |
-> | 4 | 视野扩张 | **未实现，当前为占位视觉反馈** | 设计原意是"占领后点亮周边道路上的敌方 Army，复用 S06 `maskGameStateForPlayer` 迷雾机制"（见 §2.4 第 4 条）。实际：郡域场景当前**无任何迷雾遮蔽**，全部节点始终可见，不存在"揭示原本被遮蔽的敌方 Army"这个动作；占领后玩家看到的只是"节点变绿 + 显示驻军数字"的占领视觉反馈，不是视野扩张。**前置条件**：郡域场景需要先有迷雾层（当前没有）。**新发现缺口**：郡域迷雾此前从未被任何阶段排期覆盖（BF-P0~P2 未做、S06 迷雾只服务 Tier I 大地图层、BF-P3 的"伏击/侦察"只覆盖 Tier I 出征/围城层面），不属于 Q9 遗留，而是郡域场景本身尚未设计迷雾——需作为新缺口补登记至 `docs/09-roadmap.md` 与 `docs/23-design-consistency-remediation.md` R6。真正实现留待郡域迷雾落地后。详见 §2.6。 |
+> | 4 | 视野扩张 | ✅ **完整实现（BF-P5 迷雾层，2026-07-31）** | 郡域迷雾层落地：`shared/commandery-fog.ts` 纯函数 + `maskGameStateForPlayer` 集成，军情层按揭示集遮蔽、地理层恒可见；揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县（每源 + 一跳邻接）。**占领某县后其 `rulerFactionId` 变为攻方 → 成为揭示源 → 邻接县破雾**，正是"视野扩张"动作本身。验证：占华容前迷雾 7 县（含州陵）→ 占后 6 县、州陵/当阳/枝江揭示、华容驻军可见（f8 14 条 + 真实 API + Headless Chrome）。详见 §2.6.2。 |
 >
-> **对比要点**：第 2、3 条是真正按设计文档落地的完整实现；第 1 条是打了折扣的简化替代（机制类型不同——全局士气 vs 路径糧耗）；第 4 条压根没有可揭示的迷雾，只有占领视觉。**不要把四条混为一谈。**
+> **对比要点**：四项攻占效果现**全部为完整实现**。第 1 条 BF-P5 补全路径判定；第 4 条 BF-P5 Session 256 随郡域迷雾层完整落地。守方 Army 入郡域场景的揭示归属仍留待 R6（迷雾层已就绪，届时只需并入揭示源）。
 >
-> **BF-P2 实施阶段完成声明**：Q10+Q11+Q12+Q9 四项全部落地，但其中 Q9 的四项攻占效果里，**两项（驻军消耗、战场推进）为完整实现，两项（补给线切断、视野扩张）为简化替代/占位**，详见 §2.6 与本表。不能笼统说"四项攻占效果全部完整落地"。
+> **BF-P2 实施阶段完成声明**：Q10+Q11+Q12+Q9 四项全部落地；Q9 的四项攻占效果于 **BF-P5 起全部为完整实现**（补给线路径判定 Session 254、视野扩张迷雾层 Session 256），详见 §2.6。此前"一项为占位视觉反馈"的诚实标注随迷雾层落地解除。
 
 ### 2.1 问题陈述
 
@@ -122,9 +122,9 @@ interface BattlefieldNodeState {
 
 攻占县的玩法效果（沿用 Q6 "影响补给与战争结算，不进全局经济"）：
 
-1. **补给线判定**（核心玩法价值 1）—— ⚠️ **简化替代实现（非完整落地，见 §2.6）**：
+1. **补给线判定**（核心玩法价值 1）—— ✅ **BF-P5 真实路径判定已落地**（原为简化替代实现，见 §2.6.1）：
    - 设计原意：攻方占县 → 该县及邻接路线对攻方"友军"开放，对守方"敌后"；守方 Army 若其补给线（从己方边界入口到 Army 当前节点的最短路径）经过攻方控制县，月度粮耗 ×2，士气 -5；实施位置：`CampaignArmy` 月度 tick + `BattlefieldInstance.routeStates` 联合判定。
-   - 实际落地（Session 176）：`tickBattlefieldInstance` 中改为"攻方占领至少 1 个首批县 → 守方**全部** CampaignArmy morale -5"全局机制。**未做路径判定、未做糧耗×2**。简化原因与前置依赖见 §2.6。
+   - BF-P5 落地（2026-07-31）：`shared/army-county-mapping.ts` 位置映射 + `tickBattlefieldInstance` 逐军真实路径判定（详情见 §2.6.1）。0-A 边界：守方 Army 入郡域场景留 R6（S15 多线 AI）。
 
 2. **驻军分配**（玩法价值 2）—— ✅ **完整实现**：
    - 攻占县后必须留驻军（最小 1 个 Squad 或 Army 拋部），否则下月控制权掉到 `null`（"无主"）；
@@ -136,9 +136,9 @@ interface BattlefieldNodeState {
    - 不新建第三种战斗引擎，沿用 P1 `engageJiangling` 桥接模式扩展为 `engageCounty(countyId)`；
    - 县城防 20（vs 江陵 60），攻方需要的最小兵力相应降低。
 
-4. **视野扩张**（玩法价值 4）—— ⚠️ **未实现，当前为占位视觉反馈（见 §2.6）**：
+4. **视野扩张**（玩法价值 4）—— ✅ **完整实现（BF-P5 Session 256，见 §2.6.2）**：
    - 设计原意：占县后该县及邻接路线视野对攻方透明；沿用 S06 `maskGameStateForPlayer` 在郡域战场层加一层 mask（已有迷雾机制，复用即可）。
-   - 实际情况（Session 176）：郡域场景当前**无迷雾遮蔽**，全部节点始终可见，不存在"揭示原本被遮蔽的敌方 Army"这个动作；占领后玩家看到的只是"节点变绿 + 显示驻军数字"的占领视觉反馈，不是视野扩张。前置条件（郡域迷雾层）尚未设计，是新发现缺口，见 §2.6。
+   - 落地情况（Session 256）：郡域迷雾层已下沉到 `BattlefieldInstance`（`shared/commandery-fog.ts` + `maskGameStateForPlayer` 集成）。地理层恒可见，军情层按揭示集遮蔽；揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县（每源 + 一跳邻接）。**占领某县 → `rulerFactionId` 变攻方 → 成为揭示源 → 邻接县破雾**，即"视野扩张"动作本身。验证：占华容前 7 迷雾（含州陵）→ 占后 6、州陵/当阳/枝江揭示、华容驻 858 可见。
 
 5. **不进全局经济**（Q6 边界，强约束）：
    - 县占领不写入 `GameState.cities`（仍只是 30 城）；
@@ -162,35 +162,44 @@ interface BattlefieldNodeState {
 
 ### 2.6 四项攻占效果的老实标注（Session 177，2026-07-24）
 
-> 本节是对 §2.4 四项攻占效果实现程度的**诚实分级**，纠正 Session 176 报告中"四项均 ✓ 通过"的统一化表述。验证报告（`verify-save-battlefield-instance.ts` 44/44 + Headless Chrome）验证的是**实际落地的机制**，但其中两项的实际机制与 §2.4 设计原意不一致，必须如实区分，避免后续维护者或用户误判为"四项均已按设计文档完整落地"。
+> 本节是对 §2.4 四项攻占效果实现程度的**诚实分级**，纠正 Session 176 报告中"四项均 ✓ 通过"的统一化表述。验证报告（`verify-save-battlefield-instance.ts` 现 63/63 + Headless Chrome）验证的是**实际落地的机制**。第 1 条（补给线）由 BF-P5 补全真实路径判定、第 4 条（视野）由 BF-P5 Session 256 随郡域迷雾层完整落地——**四项攻占效果现全部为完整实现**，本节保留了历史分级过程供追溯。
 
-#### 2.6.1 补给线切断 —— 简化替代实现
+#### 2.6.1 补给线切断 —— BF-P5 真实路径判定已落地（替换简化替代实现）
+
+> **状态更新（BF-P5，2026-07-31）**：§2.6.1 原为"简化替代实现"，BF-P5 已通过
+> `shared/army-county-mapping.ts` 建立 Army—郡域位置映射并落地真实路径判定，
+> 替换掉"占领任意首批县 → 守方全军士气 -5"的全局简化。本节按当前状态重写。
 
 | 维度 | 内容 |
 |------|------|
 | §2.4 设计原意 | 攻方占领县 → 守方 Army 若其补给线（从己方边界入口到 Army 当前节点的最短路径）**经过攻方控制县**，月度**粮耗 ×2**，士气 -5。核心是"**路径判定**"——只有补给线真的穿过占领县的 Army 才受罚。 |
-| 实际落地（Session 176） | `tickBattlefieldInstance` 实现：攻方占领**至少 1 个首批县** → 守方**全部 CampaignArmy** morale -5。是"**全局士气流失**"，不是"路径糧耗×2"。 |
-| 简化原因 | `CampaignArmy` 在大地图层移动，位置用数字 `cityId` 表示；郡域县节点用字符串 `countyId` 表示。两者当前**无位置映射**——无法判断某个 Army 的补给线是否"经过"某个占领县。要做真正的路径判定，必须先解决 Army 层与郡域层的位置映射（即 Army 在郡域场景内的 countyId 定位）。 |
-| 验证脚本对应 | `verify-save-battlefield-instance.ts` 的 f6 断言验证的是"占领首批县 → 守方 morale -5"这个**简化替代机制**，不是设计文档原始的糧耗×2 路径判定。f6 通过 ≠ 糧耗×2 已实现。 |
-| 真正实现落点 | **R6（S15 多线 AI，见 `docs/23-design-consistency-remediation.md` §三）** + **BF-P5（核心战线扩展，"县控接补给与郡国归属"，见 `docs/09-roadmap.md`）**。前置依赖：Army 层与郡域层位置映射（Army 在郡域场景内的 countyId 定位）。 |
+| 实际落地（Session 176 简化替代） | `tickBattlefieldInstance` 实现：攻方占领**至少 1 个首批县** → 守方**全部 CampaignArmy** morale -5。是"**全局士气流失**"，不是"路径糧耗×2"。 |
+| **实际落地（BF-P5，2026-07-31，替换上一条）** | 位置映射：`shared/army-county-mapping.ts` 新增 `resolveArmyCountyNodeId`（`nodeStates[].armyIds` 权威来源 + `dynamicSituation.deployments` 回退）、`shortestCountyPath`（沿 `adjacentNodeIds` 无向图 BFS）、`isCountyPathBlockedBy`（路径上非入口节点被攻方控制即切断）、`monthlyArmyFoodCost`（0-A 复用行军公式）。生成侧：`generateCommanderyBattlefield` 把创建时 deployments 写入 `nodeStates[].armyIds`（BF-P3 确定性序列不变，RNG 零消费）。判定侧：`tickBattlefieldInstance` 逐支守方 Army 定位 countyId，补给线 = seat（守方边界入口）→ Army 当前县最短路径，路径经过攻方控制县 → 该 Army **粮耗×2 + 士气-5**；未定位在郡域内的守方 Army 不受影响。 |
+| 简化原因（BF-P5 已消除） | `CampaignArmy` 在大地图层移动，位置用数字 `cityId` 表示；郡域县节点用字符串 `countyId` 表示。两者此前**无位置映射**——无法判断某个 Army 的补给线是否"经过"某个占领县。BF-P5 通过 `nodeStates[].armyIds` 位置映射消除该前置依赖。 |
+| 0-A 边界（诚实标注） | 真实游戏流程中守方 Army 尚未纳入郡域定位（`enterNanjunBattlefield` 只收集攻方 Army；守方 Army 留在 Tier I 大地图层），因此补给定位于**测试构造场景**中完整验证：`verify-save-battlefield-instance.ts` f6（守方 Army 部署州陵，补给线 江陵→华容→州陵 经攻方控制的华容 → 粮耗×2 + 士气-5）与 f6b 对照（部署夷道，路径不经过占领县 → 不受罚）。守方 Army 进入郡域场景由 **R6（S15 多线 AI，见 `docs/23-design-consistency-remediation.md` §三）** 排期。 |
+| 验证脚本对应 | `verify-save-battlefield-instance.ts` f6/f6b：真实路径判定断言（morale -5 + 粮耗×2 折算 + 仅守方受罚 + 对照不受罚），共享层单测见 `shared/army-county-mapping.test.ts`（BFS 路径/补给线判定/粮耗折算，218 passed 包含本模块）。 |
 
-#### 2.6.2 视野扩张 —— 未实现，当前为占位视觉反馈
+#### 2.6.2 视野扩张 —— ✅ 完整实现（BF-P5 郡域迷雾落地，2026-07-31）
 
 | 维度 | 内容 |
 |------|------|
 | §2.4 设计原意 | 占领县后该县及邻接路线视野对攻方透明，复用 S06 `maskGameStateForPlayer` 在郡域战场层加一层 mask，揭示原本被遮蔽的敌方 Army。核心是"**揭示**"——原本看不见的东西，占领后能看见。 |
-| 实际落地（Session 176） | 郡域场景（`BattlefieldSceneView`）当前**无任何迷雾遮蔽**，全部 16 县节点 + 11 路线 + 10 地标**始终全可见**。占领后玩家看到的是"节点 fill 变绿（#2d5a2d） + 显示'驻N'文本"——这是**占领视觉反馈**，不是视野扩张，因为压根没有"原本被遮蔽的敌方 Army"可揭示。 |
-| 未实现原因 | 郡域场景从未设计过迷雾层。S06 `maskGameStateForPlayer` 只服务 Tier I 大地图层（30 城出征/围城层面），从未下沉到 Tier II 郡域场景。 |
-| 前置条件 | 郡域场景需要先有迷雾层（mask 机制下沉到 `BattlefieldInstance` 层）。当前没有，且**不属于 Q9 遗留**——这是郡域场景本身尚未设计迷雾。 |
-| **新发现缺口** | **"郡域场景迷雾机制"此前从未被任何阶段排期覆盖**：BF-P0（资料/Schema）未涉及、BF-P1（静态郡域闭环）未涉及、BF-P2（实例管理/县级攻打）未涉及、S06 迷雾只服务 Tier I、BF-P3 的"伏击/侦察"只覆盖 Tier I 出征/围城层面。这是 Session 177 新发现的缺口，需补登记至 `docs/09-roadmap.md` 与 `docs/23-design-consistency-remediation.md` R6，不得无声消失。 |
-| 真正实现落点 | 需先设计并落地郡域迷雾层（mask 下沉到 `BattlefieldInstance`），再做"占领县→揭示周边"逻辑。迷雾层本身不归属 BF-P3（BF-P3 是 Tier I 战场 AI 整场复现），倾向随 BF-P5 或独立任务排期，详见上述两份路线图。 |
+| 实际落地（Session 256，BF-P5） | 郡域迷雾层已下沉到 `BattlefieldInstance`（`shared/commandery-fog.ts` 纯函数 + `shared/mask-state.ts` 集成）。**地理层恒可见**（县名/位置/路线/郡治/入口），**军情层**（驻军/城防/驻守 Army/部署）按揭示集遮蔽。揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县（每源 + 一跳邻接）。**占领某县后其 `rulerFactionId` 变为攻方 → 成为揭示源 → 邻接县破雾**，正是"视野扩张"动作本身。验证：占华容前迷雾 7 县（含州陵），占后 6 县，州陵/当阳/枝江揭示可见（`verify-save-battlefield-instance.ts` f8 14 条 + 真实 API + Headless Chrome）。详见 `docs/21-battlefield-scene-design.md` §5.2.1。 |
+| 实现方式 | `maskBattlefieldInstanceForPlayer` 为**mask 投影专属**：`foggedNodeIds` 由 `maskGameStateForPlayer` 填充，**不写入存档**（Zod optional 旧档兼容）；服务端真源永不携带。零 RNG 纯函数。 |
+| 验证 | ① shared `commandery-fog.test.ts` 8/8；② `verify-save-battlefield-instance.ts` f8 14 条 → 63/63 全过；③ 真实 API：`/battlefield-instance/enter` 返回 7 fogged → `/battlefield-instance/engage-county`(华容) → 6 fogged 且州陵揭示、华容占领驻 858；④ Headless Chrome：进场 7 `?` → dispatchEvent 点华容 → 州陵 `?` 消失、华容"驻738"、巫仍迷雾、consoleErrors=0。 |
+
+##### 2.6.2.1 边界与留待
+
+- 迷雾只覆盖**军情层**，地理层恒可见（可点攻打破雾），符合 §5.2.1 已批准方案；
+- 守方 Army 进入郡域场景后的揭示归属仍留待 **R6**（`docs/23-design-consistency-remediation.md`）——本次迷雾层已建好，接守方 Army 时只需将其所在县并入揭示源；
+- 全郡（第二郡颍川等）迷雾沿用同一 `commandery-fog.ts`，无南郡硬编码。
 
 #### 2.6.3 驻军消耗压力 + 战场推进节点 —— 完整实现（对比说明）
 
 - **驻军消耗压力（第 2 条）**：✅ 完整实现。占领后 `garrison>0` 保留控制、`garrison==0` 月度 tick 掉控制（`rulerFactionId=null`）、`controlTurns` 累计——与 §2.4 设计原意一致。验证：`verify-save-battlefield-instance.ts` f7a/f7b。
 - **战场推进节点（第 3 条）**：✅ 完整实现。县攻打复用 `runAutoBattle` 自动结算、不同入侵入口→不同首攻县、县作为江陵外围防线——与 §2.4 设计原意一致。验证：`verify-save-battlefield-instance.ts` f2/f4 + Headless Chrome 完整点击流。
 
-**对比要点**：第 2、3 条是真实现，第 1、4 条不是。**不要把四项的实现程度混为一谈。** 验证报告"44/44 全过"指的是这四项**各自实际落地的机制**都按预期跑通了，不代表四项都按 §2.4 设计原意完整落地。
+**对比要点**：四项攻占效果现**全部为完整实现**。第 1 条补给线路径判定由 BF-P5 于 Session 254 补全（§2.6.1），第 4 条视野扩张由 BF-P5 于 Session 256 随郡域迷雾层完整落地（§2.6.2）。**不要把四项的实现时间混为一谈，但实现程度已一致。** 验证报告 63/63 全过指的是这四项各自实际落地的机制都按预期跑通；守方 Army 入郡域场景的揭示归属留待 R6。
 
 ---
 

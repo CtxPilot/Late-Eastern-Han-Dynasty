@@ -88,6 +88,7 @@ export const BattlefieldInstanceSchema: z.ZodType<BattlefieldInstance> = z.objec
   generationAudit: BattlefieldGenerationAuditSchema,
   dynamicSituation: BattlefieldDynamicSituationSchema.optional(),
   activeDuel: BattlefieldDuelContextSchema.optional(),
+  foggedNodeIds: z.array(z.string()).optional(),
 }).strict().superRefine((inst, ctx) => {
   const nodeIds = new Set(inst.nodeStates.map((n) => n.nodeId));
   if (inst.nodeStates.length === 0) {

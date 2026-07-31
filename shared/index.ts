@@ -25,6 +25,7 @@ export * from './nanjun-battlefield.js';
 export * from './commandery-battlefield.js';
 export * from './commandery-templates.js';
 export * from './army-county-mapping.js';
+export * from './commandery-fog.js';
 export * from './campaign-utils.js';
 export * from './save.js';
 export * from './rng.js';

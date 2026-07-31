@@ -20,6 +20,7 @@ import {
   GameStateSchema,
   UnitType,
   FormationType,
+  maskGameStateForPlayer,
   monthlyArmyFoodCost,
   type GameState,
   type SaveEnvelopeV1,
@@ -290,29 +291,43 @@ check('f5 占领后存档读档 instance id 一致', f5Restored?.id === f5State.
 check('f5 读档后当阳 rulerFactionId 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.rulerFactionId === getGame().playerFactionId);
 check('f5 读档后当阳 garrison 一致', f5Restored?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison === f5State.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang')?.garrison);
 
-// f6. 补给线切断（简化替代版，非设计原意的糧耗×2 路径判定）：
-//   ⚠️ 本断言验证的是 BF-P2 Q9 落地的**简化替代机制**——"攻方占领至少 1 个首批县
-//   → 守方全部 CampaignArmy morale -5"（全局士气流失）。
-//   这**不是**设计文档（docs/25-bf-p2-design.md §2.4 第 1 条）原始承诺的
-//   "经过占领县的敌方 Army 糧耗×2 + 士气-5"路径判定机制。
-//   简化原因：CampaignArmy（数字 cityId）与郡域县节点（字符串 countyId）当前
-//   无位置映射，无法做"补给线经过攻方控制县"的路径判定。真正糧耗×2 路径判定
-//   留 R6（S15 多线 AI）/ BF-P5，前置依赖是 Army-郡域位置映射。
-//   f6 通过 ≠ 糧耗×2 路径判定已实现，仅代表简化替代机制按预期跑通。
-//   详见 docs/25-bf-p2-design.md §2.6.1。
-// 克隆攻方 Army 作为守方，调 tickBattlefieldInstance → morale -5
+// f6. 补给线真实路径判定（BF-P5，替换原简化替代版）：
+//   CampaignArmy（数字 cityId）与郡域县节点（字符串 countyId）的位置映射已由
+//   shared/army-county-mapping.ts 提供（nodeStates[].armyIds 权威 + deployments 回退）。
+//   守方 Army 补给线 = seat（江陵）→ Army 当前县 最短路径；路径经过攻方控制县 →
+//   该 Army 粮耗×2 + 士气-5（docs/25-bf-p2-design.md §2.4 第 1 条 / §2.6.1）。
+// 场景：当阳、华容已被攻方占领（f2/f4）。守方 Army 部署在州陵，
+//   补给线 江陵→华容→州陵 经过华容（攻方）→ 应被切断。
 const f6State = getGame();
 const f6DefenderId = f6State.activeBattlefieldInstance!.nodeStates.find((n) => n.nodeId === f6State.activeBattlefieldInstance!.targetSeatNodeId)?.rulerFactionId;
 const f6AtkArmy = f6State.campaignArmies.find((a) => a.factionId === f6State.playerFactionId);
 if (!f6AtkArmy || f6DefenderId == null) throw new Error('f6 夹具：找不到攻方 Army 或守方势力');
-// f6 真实路径判定由 BF-P5 实现（见 shared/army-county-mapping.ts），本脚本在 Session 254 引入；
-      // 具体断言见工作树最终版（f6/f6b）。此处保留 HEAD 简化版占位以避免双写——实际由后续提交落位。
-const f6DefArmy = { ...f6AtkArmy, id: 'f6-defender-clone', factionId: f6DefenderId, name: '守方测试军' };
-const f6WithDef: GameState = { ...f6State, campaignArmies: [...f6State.campaignArmies, f6DefArmy] };
-const f6BeforeMorale = f6DefArmy.morale;
+const f6Inst = f6State.activeBattlefieldInstance!;
+const placeDefenderAt = (armyId: string, nodeId: string): GameState => ({
+  ...f6State,
+  campaignArmies: [...f6State.campaignArmies, { ...f6AtkArmy, id: armyId, factionId: f6DefenderId, name: '守方测试军' }],
+  activeBattlefieldInstance: {
+    ...f6Inst,
+    nodeStates: f6Inst.nodeStates.map((n) => (n.nodeId === nodeId ? { ...n, armyIds: [armyId] } : n)),
+  },
+});
+const f6WithDef = placeDefenderAt('f6-defender-clone', 'nanjun_zhouling');
+const f6BeforeMorale = f6WithDef.campaignArmies.find((a) => a.id === 'f6-defender-clone')!.morale;
+const f6BeforeFood = f6WithDef.campaignArmies.find((a) => a.id === 'f6-defender-clone')!.food;
 const f6After = tickBattlefieldInstance(f6WithDef);
-const f6AfterMorale = f6After.campaignArmies.find((a) => a.id === 'f6-defender-clone')?.morale;
-check('f6 占领首批县后守方 morale -5（简化替代：全局士气流失，非糧耗×2 路径判定）', f6AfterMorale === f6BeforeMorale - 5);
+const f6AfterDef = f6After.campaignArmies.find((a) => a.id === 'f6-defender-clone');
+check('f6 守方 Army 补给线经过攻方占领县（华容）→ 该 Army morale -5（真实路径判定）', f6AfterDef?.morale === f6BeforeMorale - 5);
+check('f6 守方 Army 补给线被切断 → 该 Army 粮耗×2（月度粮耗折算）', f6AfterDef?.food === f6BeforeFood - monthlyArmyFoodCost(f6AtkArmy.troops) * 2);
+check('f6 切断仅作用于守方 Army（攻方 Army 不受影响）', f6After.campaignArmies.find((a) => a.id === f6AtkArmy.id)?.food === f6AtkArmy.food);
+
+// f6b 对照：守方 Army 在夷道，补给线 江陵→枝江→夷道 不经过攻方占领县 → 不受罚
+const f6bWithDef = placeDefenderAt('f6b-defender-clone', 'nanjun_yidao');
+const f6bBeforeMorale = f6bWithDef.campaignArmies.find((a) => a.id === 'f6b-defender-clone')!.morale;
+const f6bBeforeFood = f6bWithDef.campaignArmies.find((a) => a.id === 'f6b-defender-clone')!.food;
+const f6bAfter = tickBattlefieldInstance(f6bWithDef);
+const f6bAfterDef = f6bAfter.campaignArmies.find((a) => a.id === 'f6b-defender-clone');
+check('f6b 对照：守方 Army 补给线不经过攻方占领县 → morale 不变', f6bAfterDef?.morale === f6bBeforeMorale);
+check('f6b 对照：守方 Army 补给线未切断 → 粮耗不变', f6bAfterDef?.food === f6bBeforeFood);
 
 // f7. 驻军消耗：占领后 controlTurns++ → 1；garrison=0 时掉控制
 // 先调一次 tick → controlTurns 从 0 → 1（当阳 garrison > 0，保留控制）
@@ -331,6 +346,47 @@ const f7After2 = tickBattlefieldInstance(f7State2);
 const f7Dangyang2 = f7After2.activeBattlefieldInstance?.nodeStates.find((n) => n.nodeId === 'nanjun_dangyang');
 check('f7b garrison=0 时 tick 后掉控制（rulerFactionId=null）', f7Dangyang2?.rulerFactionId == null);
 check('f7b 掉控制后 controlTurns=0', f7Dangyang2?.controlTurns === 0);
+
+// ====== f8. 郡域迷雾（BF-P5）：mask 投影按揭示集遮蔽军情，占县揭示邻接 ======
+console.log('\nf8. 郡域迷雾（BF-P5）:');
+
+// f8 夹具复用 f2/f4 场景：当阳、华容已被攻方占领（getGame() 服务端真源）
+const f8Real = getGame();
+const f8Inst = f8Real.activeBattlefieldInstance!;
+check('f8 夹具：服务端真源 instance 无 foggedNodeIds（mask 投影字段不入存档）', f8Inst.foggedNodeIds === undefined);
+
+// 服务端真源军情完整（占县 garrison 保留）
+const f8HuarongReal = f8Inst.nodeStates.find((n) => n.nodeId === 'nanjun_huarong');
+check('f8 夹具：真源华容已占领且留驻', f8HuarongReal?.rulerFactionId === f8Real.playerFactionId && (f8HuarongReal?.garrison ?? 0) > 0);
+
+// getClientGame 投影应用迷雾裁剪
+const f8Client = getGame();
+const f8Masked = maskGameStateForPlayer(f8Client);
+const f8MaskedInst = f8Masked.activeBattlefieldInstance;
+check('f8 投影 instance 非 null', f8MaskedInst != null);
+const f8Fogged = new Set(f8MaskedInst!.foggedNodeIds ?? []);
+
+// 揭示集：入口（当阳/枝江）+ 郡治江陵 + 占领（当阳/华容）及各自一跳邻接
+check('f8 入口当阳揭示（军情可见）', !f8Fogged.has('nanjun_dangyang'));
+check('f8 入口枝江揭示', !f8Fogged.has('nanjun_zhijiang'));
+check('f8 郡治江陵揭示（守军可见）', !f8Fogged.has('nanjun_jiangling'));
+check('f8 占领县华容揭示', !f8Fogged.has('nanjun_huarong'));
+check('f8 华容邻接州陵被揭示（视野扩张）', !f8Fogged.has('nanjun_zhouling'));
+check('f8 远郊巫县仍迷雾', f8Fogged.has('nanjun_wu'));
+
+// 迷雾县军情被遮蔽：garrison/wall/armyIds 置 0
+const f8WuMasked = f8MaskedInst!.nodeStates.find((n) => n.nodeId === 'nanjun_wu');
+check('f8 迷雾县巫 garrison 遮蔽为 0', f8WuMasked?.garrison === 0);
+check('f8 迷雾县巫 armyIds 遮蔽为空', f8WuMasked?.armyIds.length === 0);
+check('f8 迷雾县巫地理层保留（name 可见）', f8WuMasked?.name === '巫');
+// 已揭示县军情保留：江陵守军可见
+const f8JianglingMasked = f8MaskedInst!.nodeStates.find((n) => n.nodeId === 'nanjun_jiangling');
+check('f8 揭示县江陵 garrison 保留可见', (f8JianglingMasked?.garrison ?? 0) > 0);
+
+// mask 投影不写回服务端真源（真源仍完整）
+const f8RealAfter = getGame();
+check('f8 mask 不修改服务端真源（真源巫县仍无迷雾标记）',
+  f8RealAfter.activeBattlefieldInstance?.foggedNodeIds === undefined);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

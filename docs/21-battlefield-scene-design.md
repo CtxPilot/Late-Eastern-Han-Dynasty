@@ -299,6 +299,35 @@ interface BattlefieldLandmarkDefinition {
 
 例外：边界争夺、跨郡围城或历史事件可用 `scenarioOverrides` 引入少量郡外前沿节点，但必须显式列举，不由生成器任意扩张。
 
+### 5.2.1 郡域迷雾（BF-P5 实装 2026-07-31）
+
+**【已批准方案】地理层始终可见，军情层按揭示集遮蔽。**
+
+迷雾只影响**战场实例的客户端投影**，不写入权威存档：
+
+- **地理层（恒可见）**：县名、位置、路线、郡治标记、入口县——保证玩家可读可攻打，不因迷雾失去操作线索。
+- **军情层（按揭示集遮蔽）**：驻军 `garrison`、城防 `wallDurability`、驻守 `armyIds`、部署 `dynamicSituation.deployments`。
+
+**揭示集来源**（每来源自身 + 一跳 `adjacentNodeIds`）：
+
+1. 全部入口县 `entryNodeIds`；
+2. 郡治 `targetSeatNodeId`（显式加入，使邻接郡治的县可被攻打破雾）；
+3. 攻方 Army 所在县（`campaignArmies` 中 `factionId === 攻方` 的 `armyIds` 与 `nodeStates[].armyIds` 求交）；
+4. 攻方已占领县（`nodeStates[].rulerFactionId === 攻方势力`）。
+
+**投影机制**：`shared/commandery-fog.ts` 提供纯函数
+
+- `computeRevealedNodeIds(inst, playerFactionId, playerArmyIds)` → 排序去重揭示集；
+- `maskBattlefieldInstanceForPlayer(inst, ...)` → 返回新实例：未揭示节点 `garrison=0`、`wallDurability=0`、`armyIds=[]`，节点 id 追加进 `foggedNodeIds`；`deployments` 仅保留「攻方 Army 且节点已揭示」条目。
+
+**数据契约**：`BattlefieldInstance.foggedNodeIds?: string[]` 为 **mask 投影专属字段**，由 `shared/mask-state.ts` 的 `maskGameStateForPlayer` 填充；Zod schema 中为 optional（旧档兼容）；**绝不写入存档**，服务端真源永不携带该字段。
+
+**客户端渲染**：`BattlefieldSceneView` 对 `foggedNodeIds` 命中节点——深色底 `#141a14`、县名暗色、以 `?` 替代驻军数、不可点击攻打；郡治头部显示「未知」。已揭示县渲染不变。
+
+**视野扩张（BF-P2 Q9 攻占效果 #4 完整实现）**：攻占某县后，其 `rulerFactionId` 变为攻方 → 该县成为揭示源，邻接县随之破雾（含此前远郊迷雾县如州陵）。验证：占华容前迷雾 7 县含州陵，占后 6 县，州陵/当阳/枝江揭示可见。
+
+**RNG 铁律**：迷雾两函数零 `Math.random()`，纯入参推导，不改变实例（返回新对象）。
+
 ### 5.3 历史地图与可玩性
 
 场景生成采用“史实骨架 + 可玩性标注”：
@@ -765,7 +794,8 @@ Phase 0-A 的目的仍是验证架构，不把“30 个治所”误解为“必�
 - 按剧本和主要征战路线成组补齐郡县；
 - 数据录入/校勘工具、可视化编辑、批量验证；
 - 郡治迁移、析置与剧本覆写；
-- 县城控制接入补给和 §17.6 归属算法。
+- 县城控制接入补给和 §17.6 归属算法；
+- **郡域迷雾（已实装 2026-07-31，见 §5.2.1）**：军情层遮蔽 + 攻占视野扩张，兑现 BF-P2 Q9 攻占效果 #4。
 
 验收：
 
@@ -1125,4 +1155,4 @@ Headless Chrome 实测全链路：
 
 ---
 
-*正式版 v1.3 | 2026-07-24 | BF-P1 最小闭环已打通，P2 待续*
+*正式版 v1.4 | 2026-07-31 | BF-P1 最小闭环已打通；BF-P5 郡域迷雾已实装（§5.2.1）*

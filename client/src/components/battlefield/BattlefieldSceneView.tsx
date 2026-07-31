@@ -27,6 +27,10 @@ export function BattlefieldSceneView() {
   const isNanjun = inst.templateId === 'nanjun-190';
   const playerFactionId = game.playerFactionId;
   const firstBatch = FIRST_BATCH_COUNTY_IDS as readonly string[];
+  // BF-P5 郡域迷雾：foggedNodeIds 由服务端 maskGameStateForPlayer 填充（仅下发投影，
+  // 不写入存档）；旧档/未接入时无此字段 → 视为无迷雾。
+  const foggedNodeIds = inst.foggedNodeIds ?? [];
+  const seatFogged = foggedNodeIds.includes(inst.targetSeatNodeId);
 
   return (
     <div className="h-full flex flex-col bg-[#1a2218]">
@@ -34,7 +38,7 @@ export function BattlefieldSceneView() {
         <div>
           <div className="text-amber-400 text-sm">{commanderyName}战场 · {inst.targetCommanderyId}</div>
           <div className="text-stone-400 text-xs">
-            郡治：{seat?.name}（守方据点 {seat?.garrison ?? 0} 兵 / 城 {seat?.wallDurability ?? 0}）
+            郡治：{seat?.name}（守方据点 {seatFogged ? '未知' : seat?.garrison ?? 0} 兵 / 城 {seatFogged ? '未知' : seat?.wallDurability ?? 0}）
             {' · '}入口：{inst.entryNodeIds.map((id) => inst.nodeStates.find((node) => node.nodeId === id)?.name ?? id).join('、')}
           </div>
           {inst.dynamicSituation && (
@@ -114,15 +118,20 @@ export function BattlefieldSceneView() {
           {inst.nodeStates.map((n) => {
             const isSeat = n.nodeId === inst.targetSeatNodeId;
             const isOwned = n.rulerFactionId === playerFactionId;
-            const isEngageable = isNanjun && firstBatch.includes(n.nodeId) && !isOwned;
-            const fillColor = isSeat
-              ? '#a21d24'
-              : isOwned
-                ? '#2d5a2d'
-                : firstBatch.includes(n.nodeId)
-                  ? '#5a4a2a'
-                  : '#3a3a32';
-            const strokeColor = isSeat ? '#ffd700' : isOwned ? '#4a8a4a' : '#111';
+            const isFogged = foggedNodeIds.includes(n.nodeId);
+            // BF-P5 郡域迷雾：未揭示县仅保留地理（可点攻占入口仍生效），
+            // 驻军/占领高亮等军情不呈现。已揭示县维持原渲染。
+            const isEngageable = !isFogged && isNanjun && firstBatch.includes(n.nodeId) && !isOwned;
+            const fillColor = isFogged
+              ? '#141a14'
+              : isSeat
+                ? '#a21d24'
+                : isOwned
+                  ? '#2d5a2d'
+                  : firstBatch.includes(n.nodeId)
+                    ? '#5a4a2a'
+                    : '#3a3a32';
+            const strokeColor = isFogged ? '#000' : isSeat ? '#ffd700' : isOwned ? '#4a8a4a' : '#111';
             return (
               <g
                 key={n.nodeId}
@@ -140,13 +149,13 @@ export function BattlefieldSceneView() {
                 <text
                   x={n.localX} y={n.localY - 0.04}
                   fontSize={0.024}
-                  fill={isSeat ? '#ffd700' : isOwned ? '#8aff8a' : '#cfc0a0'}
+                  fill={isFogged ? '#4a554a' : isSeat ? '#ffd700' : isOwned ? '#8aff8a' : '#cfc0a0'}
                   textAnchor="middle"
                   fontFamily="HanDynastySerif"
                 >
                   {n.name}
                 </text>
-                {isOwned && (
+                {isOwned && !isFogged && (
                   <text
                     x={n.localX} y={n.localY + 0.035}
                     fontSize={0.014}
@@ -155,6 +164,17 @@ export function BattlefieldSceneView() {
                     fontFamily="HanDynastySerif"
                   >
                     驻{n.garrison}
+                  </text>
+                )}
+                {isFogged && (
+                  <text
+                    x={n.localX} y={n.localY + 0.035}
+                    fontSize={0.014}
+                    fill="#5a6a5a"
+                    textAnchor="middle"
+                    fontFamily="HanDynastySerif"
+                  >
+                    ?
                   </text>
                 )}
               </g>

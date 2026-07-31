@@ -9,12 +9,12 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 253：BF-P5 录入/校勘工具（第一步）** |
+| 会话 | **Session 256：BF-P5 郡域迷雾设计+实装（视野扩张攻占效果完整落地）** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **BF-P5 录入/校勘工具第一步已完成：**seed-schema.ts + 两郡迁移 + verify 脚本 + 16 单元测试 |
-| 文档最新 | 当前状态已同步至 Session 253 / BF-P5 录入工具 `[x]`；历史会话口径按原时点保留 |
-| 本交接用途 | BF-P5 录入/校勘工具完成后的下一子步骤选择 |
-| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：Army—县位置映射、第三郡录入（需用户提供史料）、orchestrator 去硬编码、郡域迷雾 |
+| 代码最新 | **BF-P5 郡域迷雾已完成：**`shared/commandery-fog.ts` 纯函数（`computeRevealedNodeIds`/`maskBattlefieldInstanceForPlayer`）+ `maskGameStateForPlayer` 集成；`foggedNodeIds` 为 mask 投影专属字段（Zod optional，不入存档）；地理层恒可见、军情层按揭示集遮蔽（入口县∪郡治∪攻方 Army 所在县∪攻方已占领县，每源+一跳邻接）；占领县→邻接破雾=视野扩张；客户端迷雾渲染（深色/`?`/seat 未知/不可攻打） |
+| 文档最新 | 当前状态已同步至 Session 256 / BF-P5 郡域迷雾；历史会话口径按原时点保留 |
+| 本交接用途 | BF-P5 郡域迷雾完成后的下一子步骤选择 |
+| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：第三郡录入（需用户提供史料）、年代覆写；守方 Army 入郡域场景随 R6（S15 多线 AI，迷雾层已就绪并入揭示源即可） |
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -189,6 +189,39 @@ server/root 两层注册 npm script；新建 `seed-schema.test.ts` 16/16。docs/
 层字段表，docs/09 BF-P5 标"录入工具第一步已完成"，docs/10 + HANDOFF 双写。shared 214/214、
 typecheck/build/validate-data 全绿。Army—县映射、orchestrator 去硬编码、郡域迷雾留后续。
 
+Session 254 增量：BF-P5 补给线真实路径判定（替换 BF-P2 Q9 全局简化）。新建
+`shared/army-county-mapping.ts` 四纯函数：`resolveArmyCountyNodeId`（nodeStates[].armyIds
+权威 + deployments 回退）、`shortestCountyPath`（BFS）、`isCountyPathBlockedBy`（非入口
+节点被占即切断）、`monthlyArmyFoodCost`（复用行军公式）；`generateCommanderyBattlefield`
+把创建时 deployments 写入 nodeStates[].armyIds（BF-P3 确定性序列/RNG 零消费不变）；
+`tickBattlefieldInstance` 逐支守方 Army 定位 + 补给线 seat→Army 当前县最短路径判定，
+路径经过攻方控制县 → 该 Army 粮耗×2 + 士气-5，替换"占领任意首批县→守方全军 -5"。
+验证：`shared/army-county-mapping.test.ts`（BFS/判定/折算，shared 218/218 全过）、
+`verify-save-battlefield-instance.ts` f6/f6b 真实路径断言（49/49）、verify-campaign 71/71、
+verify-bf-p3-dynamic 13/13、verify-bf-p4-duel 20/20，typecheck/lint 全绿。
+**0-A 边界**：守方 Army 入郡域场景随 R6（S15 多线 AI）；补给线判定由 f6/f6b 构造场景
+完整验证（守方 Army 部署州陵，补给线 江陵→华容→州陵 经攻方华容 → 切断受罚；夷道对照
+不受罚）。docs/25 §2.6.1 由"简化替代实现"改写为"真实路径判定已落地"，docs/09 BF-P5
+待办(1)勾除，docs/10 + HANDOFF 双写。
+
+Session 256 增量：BF-P5 郡域迷雾设计+实装（BF-P2 Q9 视野扩张攻占效果完整落地）。新建
+`shared/commandery-fog.ts` 两纯函数（`computeRevealedNodeIds`：揭示源 = 入口县 ∪ 郡治
+∪ 攻方 Army 所在县 ∪ 攻方已占领县，每源 + 一跳 adjacentNodeIds；`maskBattlefieldInstanceForPlayer`：
+未揭示节点 garrison/wallDurability=0、armyIds=[]、push foggedNodeIds，deployments 仅留
+攻方 Army 且已揭示）。`BattlefieldInstance.foggedNodeIds?: string[]` 为 **mask 投影专属**
+（Zod optional 旧档兼容，**不入存档**，服务端真源永不携带）；`maskGameStateForPlayer`
+集成调用。客户端 `BattlefieldSceneView` 迷雾节点深色 `#141a14`/县名 `#4a554a`/`?` 替代
+驻军/不可攻打，郡治 seatFogged 显示「未知」。新增 `shared/commandery-fog.test.ts` 8/8
+（shared 224→232）；`verify-save-battlefield-instance.ts` 新增 f8 迷雾断言 14 条
+（49→**63/63**）。全量回归：shared 232/232、client 36/36、verify-campaign 71/71、
+bf-p3 13/13、bf-p4 20/20、verify-historical-geography 2 郡 OK、typecheck/lint/data/build
+全绿。**真实 API**：create→campaign/start→enter 初始 7 迷雾（含州陵）→engage-county
+(华容)→6 迷雾、**州陵揭示**、华容占驻 858；**Headless Chrome**：进场 7 `?`→点华容→
+州陵 `?` 消失、华容「驻738」、巫仍迷雾、consoleErrors=0。**0-A 边界**：守方 Army 入郡域
+场景揭示归属留 R6（迷雾层已就绪）；第二郡颍川通用无南郡硬编码。docs/21 新增 §5.2.1
+迷雾章节（v1.3→v1.4）、25 §2.6.2/分级表更新为完整实现、09 BF-P5 待办(2)勾除、
+12 S02、23 R6 待办第 2 条标记解决、docs/10 + HANDOFF 双写。
+
 ---
 
 ## 2. 怎么跑
@@ -228,7 +261,7 @@ pnpm --filter @leh/shared build && pnpm dev
 | ID | 系统 | 成熟度 | 代码/要点 |
 |:--:|------|:------:|-----------|
 | S01 | 回合 | **M+** | `turn.ts`；1回合=1月，季度首月/年度显式节拍；12回合验证28/28；全势力金粮同步 |
-| S02 | 地图 | M | Natural Earth；官道；LOD |
+| S02 | 地图 | M | Natural Earth；官道；LOD；**郡域迷雾已实装（BF-P5 Session 256）**：`shared/commandery-fog.ts` + mask 投影 |
 | S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；文化/工艺/交通/卫生、**军屯/民屯未实装** |
 | S04 | 人口经济 | **M+** | 四桶 demographics + 民军粮耗 + 12月金粮预算 + 递增多城行政成本；俸禄仍未实装 |
 | S05 | 军事 | M+ | 邻接出征→战→占城；战役 Army 主/副将/参谋；**爵位加成未接入** |
@@ -374,6 +407,9 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 会话 | 交付 |
 |------|------|
+| 256 | **BF-P5 郡域迷雾设计+实装**（BF-P2 Q9 视野扩张攻占效果完整落地）。新建 `shared/commandery-fog.ts`：`computeRevealedNodeIds`（揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县，每源 + 一跳邻接）+ `maskBattlefieldInstanceForPlayer`（未揭示节点 garrison/wall/armyIds 清零、deployments 过滤，返回新实例）；`BattlefieldInstance.foggedNodeIds?: string[]` 为 **mask 投影专属**（Zod optional 不入存档）；`maskGameStateForPlayer` 集成；客户端迷雾渲染（深色/`?`/seat 未知/不可攻打）。新增 fog 单测 8/8（shared 224→232）；`verify-save-battlefield-instance` f8 14 条 → 63/63。真实 API：enter 初始 7 迷雾（含州陵）→ engage-county(华容) → 6 迷雾、州陵揭示、华容占驻 858；Headless Chrome：进场 7 `?` → 点华容 → 州陵 `?` 消失、华容「驻738」、巫仍迷雾、consoleErrors=0。全量回归绿。**0-A 边界**：守方 Army 入郡域场景揭示归属留 R6（迷雾层已就绪）；颍川通用。docs/21 §5.2.1、25 §2.6.2、09 BF-P5 待办(2)、12 S02、23 R6、10+HANDOFF 双写） |
+| 255 | **BF-P5 orchestrator 去硬编码**（郡国模板目录驱动）。新建 `shared/commandery-templates.ts`（`COMMANDERY_TEMPLATES` 登记南郡/颍川：bundle/templateId/entryNodeIds/instancePrefix/warPrefix/UI 标签 + 5 个查找助手）；`enterNanjunBattlefield` 由"nanjun/yingchuan 双 if 分支 + 硬编码 bundle/入口/前缀"改为目录查找（未登记抛错）；`generateNanjunBattlefield` 南郡兼容包装从目录取数；路由校验用 `getCommanderyIds()`；客户端 api 参数类型放宽、`gameStore`/`BattlefieldSceneView` 标签目录驱动；`verify-historical-geography` 遍历目录（单一真源）。新增 `shared/commandery-templates.test.ts` 6/6（shared 218→224）；回归 verify-save-battlefield-instance 49/49、verify-campaign 71/71、bf-p3 13/13、bf-p4 20/20、typecheck/lint/data/build 全绿（仅既有大 chunk warning）。**0-A 边界**：江陵席城按钮与 `FIRST_BATCH_COUNTY_IDS` 全局门禁仍为南郡专属（郡级可攻打清单未拆）；第三郡录入（需用户史料）、郡域迷雾留后续。docs/09 BF-P5 行、12 S02、08 目录登记说明同步） |
+| 254 | **BF-P5 补给线真实路径判定**（替换 BF-P2 Q9 全局简化）。`shared/army-county-mapping.ts` 四纯函数（resolveArmyCountyNodeId/shortestCountyPath/isCountyPathBlockedBy/monthlyArmyFoodCost）；`generateCommanderyBattlefield` 部署写 nodeStates[].armyIds（RNG 零消费）；`tickBattlefieldInstance` 逐军判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5）；verify-save-battlefield-instance f6/f6b 真实路径断言 49/49；shared 218/218；verify-campaign 71/71、bf-p3 13/13、bf-p4 20/20；docs/25 §2.6.1 改写、docs/09 BF-P5 待办(1)勾除、12-system-map S02/S15/S16 同步。0-A 边界：守方 Army 入郡域场景随 R6） |
 | 173 | **BF-P1 静态郡域场景+六角引擎最小闭环**（world→战场→六角接战→回写全链路 Headless 通过；shared/scenes 场景栈 + BattlefieldInstance 类型/Zod + generateNanjunBattlefield + BattlefieldSceneView + engageJiangling 复用 createBattle。存档契约可序列化结构+往返单测已落地，不接 GameState schema 留 P2。回归 62/29/38/172 无破坏。补提交 negotiation.ts 解 R2 遗漏依赖） |
 | 174 | **BF-P2 Q10：activeBattlefieldInstance 无损追加至 GameState 存档契约**（按已批准方案 A，GameState 加 optional 字段；battle schema superRefine 互斥护栏 activeBattlefield 与 activeBattlefieldInstance 不可同时非 null；full schema ROOT_KEYS + 跨域引用校验；服务端 enterNanjunBattlefield/exitNanjunBattlefield/getBattlefieldInstance orchestrator + 3 个 API 路由；client gameStore 改造 enter 调 API、退出战场调 exit 清字段；新 verify-save-battlefield-instance.ts 27/27 全过 5 类断言含跨存档版本兼容；零回归；Headless Chrome 闭环重测 enter→16 县渲染+服务端字段写入→exit→字段清 null 全验证。Q9/Q11/Q12 仍待实施） |
 | 175 | **BF-P2 Q11+Q12：类型归并文档化 + AI 攻县依赖声明**（Q11：BattlefieldMap Tier I 19 调用点 vs BattlefieldInstance Tier II 6 调用点保持独立不合并不废弃，结论落地至 02-architecture/03-data-models/12-system-map/25-bf-p2-design；Q12：R6 范围补"县级攻打决策不属于 BF-P2/P3，归 R6"，09-roadmap BF-P3 同步范围边界；3 处代码注释补 RNG 边界为 BF-P3 预留说明；修正 03-data-models 两处过时口径"BattlefieldInstance 尚未实装"+ GameState 缺字段。git diff --check + typecheck/lint 全过。Q9 仍待实施） |
@@ -487,7 +523,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 兵种缺口 | 设计 21 兵种（含弩兵等 14 项未建数据），当前 9 兵种 | 0-B（P0B-09） |
 | 人物列传扩展 | 4 原型试点（曹操/诸葛亮/吕布/关羽），30 基线武将扩展 ~7.5-9.5h（merge 脚本+UI 已就绪，仅需写 Markdown + 运行 merge） | 后续会话渐进 |
 | 阵型缺口 | 设计 27 阵型（18 陆+9 水），当前 7 条；formationProficiency 代码层零存在（只有 formationMastery id 清单） | 0-B（P0B-08） |
-| 补给线糧耗×2 真实路径判定 | 当前简化为"占领任意首批县→守方全军 morale -5"全局士气流失；真实路径判定需 Army 在郡域内移动 + 路径图论算法 | R6/BF-P5（前置：Army-郡域位置映射） |
+| 补给线糧耗×2 真实路径判定 | **✅ BF-P5 已落地（Session 254）**：`shared/army-county-mapping.ts` 位置映射 + `tickBattlefieldInstance` 逐军真实路径判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5）。0-A 边界：守方 Army 入郡域场景由 R6（S15 多线 AI）排期，判定机制由 verify f6/f6b 构造场景验证 | ~~R6/BF-P5~~ → 已解决；R6 仅剩守方 Army 入郡域场景 |
 | 郡域场景迷雾机制 | 当前郡域场景无迷雾层（占领后仅视觉反馈，非"揭示"动作）；此前从未被任何阶段排期覆盖，是新发现缺口 | R6/BF-P5 |
 
 详细内容已在各自历史 session 记录里，本清单仅作汇总与边界提醒，不展开细节。

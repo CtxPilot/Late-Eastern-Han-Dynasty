@@ -10,6 +10,7 @@ import {
   troopsBandLabel,
   type CityVisibility,
 } from './intel.js';
+import { maskBattlefieldInstanceForPlayer } from './commandery-fog.js';
 import type { City, CityDemographics } from './types/city.js';
 import type { GameState } from './types/game.js';
 import type { Officer } from './types/officer.js';
@@ -255,6 +256,19 @@ export function maskGameStateForPlayer(state: GameState): GameState {
 
   const plots = (state.plots ?? []).filter((p) => p.casterFactionId === playerId);
 
+  // BF-P5 郡域迷雾：对 activeBattlefieldInstance 应用军情裁剪。
+  // 地理层（县名/位置/路线/郡治）始终可见；未揭示县节点军情置未知，
+  // 并填充 foggedNodeIds（mask 投影字段，不写入存档）。
+  const activeBattlefieldInstance = state.activeBattlefieldInstance
+    ? maskBattlefieldInstanceForPlayer(
+        state.activeBattlefieldInstance,
+        playerId,
+        state.campaignArmies
+          .filter((army) => army.factionId === playerId)
+          .map((army) => army.id),
+      )
+    : state.activeBattlefieldInstance;
+
   return {
     ...state,
     cities,
@@ -273,5 +287,6 @@ export function maskGameStateForPlayer(state: GameState): GameState {
       plantableBeauty: intel.plantableBeauty ?? {},
     },
     plots,
+    activeBattlefieldInstance,
   };
 }

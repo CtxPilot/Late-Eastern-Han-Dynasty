@@ -120,6 +120,13 @@ export interface BattlefieldInstance {
   dynamicSituation?: BattlefieldDynamicSituation;
   /** BF-P4：进行中或待关闭的阵前/城下单挑；旧存档可无此字段。 */
   activeDuel?: BattlefieldDuelContext;
+  /**
+   * BF-P5：郡域迷雾 mask 投影字段——当前被迷雾遮蔽（军情未知）的县节点 id。
+   * 仅由 `shared/commandery-fog.ts` `maskBattlefieldInstanceForPlayer` 在
+   * 服务端下发投影时填充（`maskGameStateForPlayer` 调用），**不写入存档**；
+   * 服务端真源实例与旧存档无此字段。
+   */
+  foggedNodeIds?: string[];
 }
 
 export const BATTLEFIELD_TEMPLATE_VERSION = 1;

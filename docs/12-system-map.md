@@ -36,7 +36,7 @@
 | ID | 系统 | 成熟度 | 要点 |
 |:--:|------|:------:|------|
 | S01 | 回合 | **M+** | `turn.ts`；**1 回合=1 月**，季度首月 1/4/7/10 与年度 1 月显式节拍；全势力金粮同步；12 回合验证 28/28 |
-| S02 | 地图 | **M/D+** | 已实装行政大地图官道邻接；**BF-P0 已完成：**南郡 190 年严格 Schema、史料校勘、16 个战场县节点/11 路线/10 地标与边界入口；**双层数据模型（Q11 已落地）：**`BattlefieldMap`（Tier I 大地图层，数字 cityId）与 `BattlefieldInstance`（Tier II 郡域场景层，字符串 countyId）保持独立不合并；**BF-P2 Q9 已完成：**首批 3 县（当阳/华容/枝江）可攻打——`engageCounty(countyId)` + `tickBattlefieldInstance` 月度 tick；**BF-P4 已完成：**颍川第二郡17县/29陆路对照+双入口单挑；**BF-P5 Seed 工具已实装：**`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器+`pnpm verify-historical-geography` 逐郡校验；南郡/颍川均已迁移至 seed 生成。**待 BF-P5 后续：**批量模板扩展、Army—县位置映射、郡域迷雾、扩展至 105 郡国模板 |
+| S02 | 地图 | **M/D+** | 已实装行政大地图官道邻接；**BF-P0 已完成：**南郡 190 年严格 Schema、史料校勘、16 个战场县节点/11 路线/10 地标与边界入口；**双层数据模型（Q11 已落地）：**`BattlefieldMap`（Tier I 大地图层，数字 cityId）与 `BattlefieldInstance`（Tier II 郡域场景层，字符串 countyId）保持独立不合并；**BF-P2 Q9 已完成：**首批 3 县（当阳/华容/枝江）可攻打——`engageCounty(countyId)` + `tickBattlefieldInstance` 月度 tick；**BF-P4 已完成：**颍川第二郡17县/29陆路对照+双入口单挑；**BF-P5 Seed 工具已实装：**`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器+`pnpm verify-historical-geography` 逐郡校验；南郡/颍川均已迁移至 seed 生成；**BF-P5 补给线真实路径判定已实装（Session 254）：**`shared/army-county-mapping.ts` Army—县位置映射 + `tickBattlefieldInstance` 逐军补给线路径判定（经过攻方控制县 → 粮耗×2 + 士气-5），替换全局简化。**BF-P5 orchestrator 去硬编码已实装（Session 255）：**`shared/commandery-templates.ts` 郡国模板目录驱动 `enterNanjunBattlefield`/路由校验/逐郡校验/前端标签，新增郡国只需登记目录条目。**BF-P5 郡域迷雾已实装（Session 256）：**`shared/commandery-fog.ts` 纯函数（揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县，每源 + 一跳邻接）+ `maskGameStateForPlayer` 集成；`foggedNodeIds` 为 mask 投影专属字段（Zod optional，不入存档）；地理层恒可见、军情层按揭示集遮蔽；占领县→邻接破雾=视野扩张攻占效果（BF-P2 Q9 第 4 项完整实现）。验证：fog 单测 8/8、`verify-save-battlefield-instance.ts` 63/63、真实 API + Headless Chrome 闭环。**待 BF-P5 后续：**批量模板扩展、守方 Army 入郡域场景（R6，迷雾层已就绪并入揭示源即可）、扩展至 105 郡国模板 |
 | S03 | 内政 | M | 已实装农/商/城即时开发+征兵/训练/施米，随机路径统一权威 `xorshift32-v1`（确定续玩 12/12）；文化/工艺/交通/卫生、军屯/民屯仅设计；**委任AI复用本引擎（§39，设计完成）** |
 | S04 | 人口经济 | M | 四桶粮耗；城金为真源 |
 | S05 | 军事 | **M+/D+** | 已实装出征占城与战役 Army 主/副将/参谋编成；**已批准待 BF-P1～P3：**跨郡入口、郡域节点行军、Encounter、撤退与战争原子回写；爵位加成未接入 |
@@ -54,8 +54,8 @@
 | S12 | 官职功绩体力 | **S/M+** | **0-A 精简任命**；体力完整；功绩等级字段/门槛仍未实现。**HC-P1-1～4 已完成：**相对称王门槛、阶段年龄、原子称王/王号、王国六职、完整七级爵位与王命封爵已落地。 |
 | S13 | 宝物 | S | — |
 | S14 | 事件 | **M+** | 场景/史料层隔离 + 年月窗口/前置/互斥/失效 + 玩家/AI选择 + EventDialog来源标签；190共24事件/5条叙事线 |
-| S15 | AI | **M+** | 内政占位 + 谍报/计谋 + 外交过滤/君主激进度/真实 CampaignArmy；**R6 已接最多双线、动态守备、缺粮/劣势/停战撤退、公平五维与固定 seed 复现**；县级主动 AI、郡域补给/迷雾仍后置 |
-| S16 | 存档剧本 | **M/D+** | 两剧本目录、v1 信封、完整 GameState/跨引用、迁移、受锁内存恢复与可序列化 PRNG 已完成；**BF-P2 Q10 已实装：**`activeBattlefieldInstance` 无损追加至 GameState（optional 字段，不升 schema 版本，沿用 PRNG 信封 v1 经验），互斥护栏（Zod superRefine + orchestrator 双重），`verify-save-battlefield-instance` 44/44（含 Q9 f 类县级攻打状态流转+补给线+驻军掉控制）；**待 BF-P3：**冻结战场模板版本迁移、Encounter 序列化、战场 AI 整场复现；生产存取与 SQLite 仍D |
+| S15 | AI | **M+** | 内政占位 + 谍报/计谋 + 外交过滤/君主激进度/真实 CampaignArmy；**R6 已接最多双线、动态守备、缺粮/劣势/停战撤退、公平五维与固定 seed 复现**；**BF-P5 补给线真实路径判定已实装**（`tickBattlefieldInstance` 逐军判定）；县级主动 AI、守方 Army 入郡域场景（R6，迷雾层已就绪并入揭示源即可）仍后置 |
+| S16 | 存档剧本 | **M/D+** | 两剧本目录、v1 信封、完整 GameState/跨引用、迁移、受锁内存恢复与可序列化 PRNG 已完成；**BF-P2 Q10 已实装：**`activeBattlefieldInstance` 无损追加至 GameState（optional 字段，不升 schema 版本，沿用 PRNG 信封 v1 经验），互斥护栏（Zod superRefine + orchestrator 双重），`verify-save-battlefield-instance` 63/63（含 Q9 f 类县级攻打状态流转+补给线真实路径判定+驻军掉控制+f8 郡域迷雾投影，BF-P5 更新）；**待 BF-P3：**冻结战场模板版本迁移、Encounter 序列化、战场 AI 整场复现；生产存取与 SQLite 仍D |
 | S17 | **计谋** | **S/M+** | **三层体系**：L1 美人计/离间/假情报/空城 ✅ 且创建/结算接权威 PRNG（S07/S17 合并验证 30/30）· L2 釜底抽薪/调虎离山/暗渡陈仓/树上开花/借刀杀人/趁火打劫/秘密挖角/隔岸观火/偷梁换柱/借尸还魂/指桑骂槐（设计完成）· L3 以逸待劳/远交近攻/假痴不癫/反客为主/高筑墙广积粮/避实击虚/坚壁清野/深藏不露（设计完成）· 行政↔战场联动 |
 | S18 | **家族** | **M+** | 女眷/婚配/跟随 ✅；正妻/随侍随迁及默认忠诚接权威 PRNG（36/36）；**固定子女登场引擎** ✅；父辈/族谱 ❌ |
 | S19 | **单挑大会** | **D** | 独立锦标赛系统：赛制/押注/称号/叙事/数据结构设计完成，引擎待实现 |
@@ -265,7 +265,10 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 - 南郡/颍川统一走数据驱动 `generateCommanderyBattlefield`，无郡名生成分支；
   南郡旧模板、旧 API 默认值与旧存档保持兼容。
 - Session 252 已补齐阵前/城下单挑共享 duel 引擎、可存档上下文与幂等回写，BF-P4 完成。
-- 下一步按顺序进入 BF-P5；优先工具和 Army—县位置映射，不直接批量堆模板。
+- Session 253 已实装 seed-schema 录入工具；Session 254 已实装 Army—县位置映射与
+  补给线真实路径判定；Session 255 已实装 orchestrator 去硬编码（郡国模板目录驱动）；
+  Session 256 已实装郡域迷雾（视野扩张攻占效果完整落地）。
+  下一步按顺序进入 BF-P5 剩余子步骤（第三郡录入、年代覆写），不直接批量堆模板。
 
 - 命令坞家族已有 `总览｜姻亲｜婚配｜跟随` 四分面，读模型限定玩家女角与剧本子女白名单。
 - 新写入口0；旧婚配/手动跟随仍各1且为唯一提交，旧婚配后新摘要即时同步。
@@ -288,7 +291,7 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 - S02/S21 的南郡动态战况与权威 RNG 收口完成：天气、部署、侦察、伏击、遭遇顺序进入
   可存档快照与生成审计；AI 保存点整场复现通过。
 - 下一固定阶段为 BF-P4 第二郡与地形对照；完成两郡对照前不得启动 BF-P5 批量扩展。
-- 天气/伏击尚无战斗数值效果，Tier II 郡域迷雾仍未实装。
+- 天气/伏击尚无战斗数值效果（Tier II 郡域迷雾已于 Session 256 实装，见 S02 行）。
 
 *v11.10 | Session 251：BF-P4 颍川第二郡对照核心*
 

@@ -106,20 +106,29 @@ S09 目标名称改为“**宫廷人脉**”（Session 248 已迁为
 > AI 守县（被动响应，沿用既有 `runAutoBattle`）"不属于新 AI 决策类型；AI 主动
 > 攻县属 R6 范畴，与 BF-P3 解耦。详见 `docs/25-bf-p2-design.md` §五。
 >
-> **R6 待办依赖补登记（Session 177，2026-07-24，老实标注）**：BF-P2 Q9
-> 落地时发现两项前置依赖必须由 R6（或 BF-P5）承接，此前未登记：
-> 1. **补给线糧耗×2 真实路径判定**：BF-P2 当前用"占领任意首批县→守方全部
->    Army morale -5"全局简化替代（见 `docs/25-bf-p2-design.md` §2.6.1）。
->    真正"经过占领县的 Army 糧耗×2"需要先解决 `CampaignArmy`（数字
->    cityId）与郡域县节点（字符串 countyId）的**位置映射**，属 R6 多线 AI
->    范畴（Army 在郡域场景内的 countyId 定位是多线 AI 行为的前置）。
-> 2. **郡域场景迷雾机制**：BF-P2 Q9 的"视野扩张"攻占效果未实现，当前
->    郡域场景无迷雾遮蔽，只有占领视觉反馈（见 `docs/25-bf-p2-design.md`
->    §2.6.2）。**这是新发现缺口**：郡域迷雾此前从未被任何阶段排期覆盖
->    （BF-P0~P2 未做、S06 迷雾只服务 Tier I 大地图层、BF-P3 的"伏击/侦察"
->    只覆盖 Tier I 出征/围城层面）。需作为新缺口登记，不得无声消失。
->    迷雾层（mask 下沉到 `BattlefieldInstance`）本身不归属 BF-P3，倾向随
->    R6 或 BF-P5 排期；落地后才能做"占领县→揭示周边敌方 Army"逻辑。
+> **R6 待办依赖补登记（Session 177，2026-07-24，老实标注；Session 254 更新）**：
+> BF-P2 Q9 落地时发现两项前置依赖必须由 R6（或 BF-P5）承接：
+> 1. **补给线糧耗×2 真实路径判定 —— ✅ 已解决（BF-P5，Session 254）**：
+>    BF-P2 原用"占领任意首批县→守方全部 Army morale -5"全局简化替代
+>    （见 `docs/25-bf-p2-design.md` §2.6.1）。BF-P5 已通过
+>    `shared/army-county-mapping.ts` 建立 `CampaignArmy`（数字 cityId）与
+>    郡域县节点（字符串 countyId）的**位置映射**（`nodeStates[].armyIds` 权威 +
+>    deployments 回退），`tickBattlefieldInstance` 逐军真实路径判定（补给线 =
+>    seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5），全局简化
+>    已下线。**R6 剩余部分**：守方 Army 在郡域场景内的 countyId 定位（多线 AI
+>    行为前置）——守方 Army 进入郡域场景仍属 R6 范畴。
+> 2. **郡域场景迷雾机制 —— ✅ 已解决（BF-P5，Session 256）**：BF-P2 Q9 的
+>    "视野扩张"攻占效果原未实现（郡域场景无迷雾遮蔽，只有占领视觉反馈，
+>    见 `docs/25-bf-p2-design.md` §2.6.2）。BF-P5 已把迷雾层下沉到
+>    `BattlefieldInstance`：`shared/commandery-fog.ts` 纯函数（`computeRevealedNodeIds`
+>    + `maskBattlefieldInstanceForPlayer`）+ `maskGameStateForPlayer` 集成；
+>    `foggedNodeIds` 为 mask 投影专属字段（Zod optional，**不入存档**）。
+>    地理层恒可见、军情层按揭示集遮蔽；揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army
+>    所在县 ∪ 攻方已占领县（每源 + 一跳邻接）。**占领县→成为揭示源→邻接县破雾**
+>    = 视野扩张攻占效果完整实现。验证：fog 单测 8/8、`verify-save-battlefield-instance.ts`
+>    f8（63/63）、真实 API + Headless Chrome。**R6 剩余部分**：守方 Army 进入郡域
+>    场景后的揭示归属（多线 AI 行为前置）——迷雾层已就绪，届时把守方 Army 所在县
+>    并入揭示源即可，仍属 R6 范畴。
 | **R7 ✅** | S09 | 宫廷人脉语义与字段迁移 | 不再由成年女性数量换算；历史女角边界不变 |
 | **R8 ✅** | 跨系统 | 成长入口收敛和 24 回合情景平衡 | 3 城/10 将/2 场战争测试中每回合有明确取舍（54/54） |
 
@@ -137,7 +146,8 @@ S09 目标名称改为“**宫廷人脉**”（Session 248 已迁为
 - R5 已于 Session 246 完成：三类持续项目、暂停损失、年度预算与递增行政成本已实装。
 - R6 已于 Session 247 完成最低验收：每势力最多双线，前线动态留守；停战、两月粮不足或
   兵力低于守军 55% 时撤回。未修改武将五维，军事流固定 seed 复现 38/38。县级主动 AI、
-  Army—县位置映射、真实路径补给和郡域迷雾仍按上文明确留 R6 后续/BF-P5，不冒充完成。
+  守方 Army 入郡域场景仍按上文明确留 R6 后续/BF-P5；**Army—县位置映射、真实路径补给
+  与郡域迷雾已分别由 BF-P5 Session 254 / Session 256 解决（见上文第 1、2 条）**。
 - R7 已于 Session 248 完成：新局、运行时、Schema 与新存档只使用
   `courtNetwork/courtNetworkOpportunities`；开局机会由商业/民心/首都地位派生，结交成功率
   不读取人口。旧 v1 `beauty*` 加载后幂等迁移并删除旧键，历史女角来源和家族边界不变。

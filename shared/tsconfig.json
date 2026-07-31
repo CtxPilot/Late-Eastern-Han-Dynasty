@@ -29,6 +29,7 @@
     "nanjun-battlefield.ts",
     "commandery-battlefield.ts",
     "commandery-templates.ts",
+    "commandery-fog.ts",
     "save.ts",
     "rng.ts",
     "game-state-schema.ts",
