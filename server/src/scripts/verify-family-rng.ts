@@ -12,6 +12,7 @@ import {
   type SaveEnvelopeV1,
 } from '@leh/shared';
 import { tickChildrenAppear } from '../engine/child.js';
+import { joinFaction, releaseOfficer } from '../engine/family.js';
 import { marryFemale } from '../engine/personnel.js';
 import { getRuntimeRngState, resetRuntimeRng } from '../runtime-rng.js';
 import {
@@ -179,6 +180,33 @@ assert(married.females[testFemale.id].husbandId === testHusband.id, '确定性�
 assert(JSON.stringify(married) === JSON.stringify(expectedMarriage), '确定性赐婚读档后的结果必须一致');
 assert(getRuntimeRngState().draws === marriageSave.rng.draws, '当前婚配没有成功率判定，不得消费随机数');
 
+const attendantState: GameState = {
+  ...directState,
+  females: {
+    ...directState.females,
+    [testFemale.id]: {
+      ...testFemale,
+      factionId: null,
+      husbandId: undefined,
+      giftedToOfficerId: testCandidate.id,
+      locationId: testAdjacentCity.id,
+    },
+  },
+};
+const attendantJoined = joinFaction(
+  attendantState,
+  testCandidate.id,
+  playerFaction.id,
+  () => 0,
+  testOwnedCity.id,
+  60,
+);
+assert(attendantJoined.females[testFemale.id].factionId === playerFaction.id, '随侍必须随所系武将加入势力');
+assert(attendantJoined.females[testFemale.id].locationId === testOwnedCity.id, '随侍必须迁往所系武将所在城');
+const attendantReleased = releaseOfficer(attendantJoined, testCandidate.id);
+assert(attendantReleased.females[testFemale.id].factionId == null, '随侍必须随所系武将流落在野');
+assert(attendantReleased.females[testFemale.id].giftedToOfficerId === testCandidate.id, '随迁不得改写随侍关系');
+
 const childDef = getStaticData().children[0];
 if (!childDef) throw new Error('家族确定性验证缺少子女定义');
 const childState: GameState = {
@@ -204,4 +232,4 @@ assert(zhurongFemale?.canCommand === true, '祝融女角必须保留唯一可统
 assert(zhurongOfficer != null, '祝融必须存在于武将数据以支持出战特例');
 assert(getRuntimeRngState().draws === childSave.rng.draws, '祝融特例是静态权限，不得消费随机数');
 
-console.log(`family deterministic continuation verification passed: ${passed}/32`);
+console.log(`family deterministic continuation verification passed: ${passed}/36`);

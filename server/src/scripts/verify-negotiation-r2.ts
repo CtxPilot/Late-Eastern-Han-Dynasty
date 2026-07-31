@@ -353,12 +353,12 @@ assert(
 
 // 进贡/献美友好增量放大验证
 import { doGiftBeautyDip } from '../services/game.js';
-// 先准备：让己方有 beautyStock
+// 先准备：让己方有 courtNetwork
 const giftPrepState: GameState = {
   ...prepared,
   factions: {
     ...prepared.factions,
-    [1]: { ...prepared.factions[1], beautyStock: 10 },
+    [1]: { ...prepared.factions[1], courtNetwork: 10 },
   },
 };
 restoreGameFromEnvelope(envelopeFor(giftPrepState));
@@ -376,7 +376,7 @@ const hegemonyGiftState: GameState = {
   ...getGame(),
   factions: {
     ...getGame().factions,
-    [1]: { ...getGame().factions[1], politicalStage: 'hegemon', beautyStock: 10 },
+    [1]: { ...getGame().factions[1], politicalStage: 'hegemon', courtNetwork: 10 },
   },
   diplomacy: getGame().diplomacy.map((l) =>
     (l.factionA === 1 && l.factionB === 3) || (l.factionA === 3 && l.factionB === 1)

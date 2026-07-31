@@ -392,10 +392,10 @@ check('霸府进贡友好增量 > 诸侯', hegemonTributeFav > vassalTributeFav)
 
 // 9e. 献美友好增量：霸府状态比诸侯放大（×1.1）
 createGame(1, 1);
-// 准备 beautyStock
+// 准备 courtNetwork
 const giftPrepState = structuredClone(getGame());
-giftPrepState.factions[1].beautyStock = 10;
-// 用 restore 模拟（这里直接 createGame 后手动设 beautyStock 通过 service 不可达，
+giftPrepState.factions[1].courtNetwork = 10;
+// 用 restore 模拟（这里直接 createGame 后手动设 courtNetwork 通过 service 不可达，
 // 改用 doGiftBeautyDip 会消耗 stock，先保证有库存）
 // 实际验证：vassal 献美 ×1 → +12，hegemon 献美 ×1 → +13
 // 由于 service 层 doGiftBeautyDip 依赖 currentGame，直接用引擎层 giftBeautyStock 验证
@@ -403,7 +403,7 @@ import { giftBeautyStock as engineGiftBeauty } from '../engine/diplomacy.js';
 
 createGame(1, 1);
 const vassalGiftState = structuredClone(getGame());
-vassalGiftState.factions[1].beautyStock = 10;
+vassalGiftState.factions[1].courtNetwork = 10;
 const vassalGiftAfter = engineGiftBeauty(vassalGiftState, 3, 1);
 const vassalGiftFav = findDiplomacy(vassalGiftAfter.diplomacy, 1, 3)?.favorability ?? 0;
 check('诸侯献美×1 友好增量=12（基线）', vassalGiftFav === 12);
@@ -412,7 +412,7 @@ check('诸侯献美×1 友好增量=12（基线）', vassalGiftFav === 12);
 createGame(1, 1);
 doEstablishHegemony();
 const hegemonGiftState = structuredClone(getGame());
-hegemonGiftState.factions[1].beautyStock = 10;
+hegemonGiftState.factions[1].courtNetwork = 10;
 // 重置双边友好为 0 以便观察增量
 hegemonGiftState.diplomacy = hegemonGiftState.diplomacy.map((l) =>
   (l.factionA === 1 && l.factionB === 3) || (l.factionA === 3 && l.factionB === 1)

@@ -53,6 +53,41 @@ const gatheringSave = envelopeFor(gathering);
 const parsedGathering = parseCurrentSaveEnvelope(gatheringSave);
 assert(parsedGathering.snapshot.currentYear === gathering.currentYear, 'v1 解析应保留英雄集结快照年份');
 assert(parsedGathering.scenarioId === gathering.scenarioId, '英雄集结信封剧本 ID 应保留');
+const legacyCourtNetwork = structuredClone(gatheringSave) as unknown as {
+  snapshot: {
+    cities: Record<string, Record<string, unknown>>;
+    factions: Record<string, Record<string, unknown>>;
+  };
+};
+for (const city of Object.values(legacyCourtNetwork.snapshot.cities)) {
+  city.beautySeekLeft = city.courtNetworkOpportunities;
+  delete city.courtNetworkOpportunities;
+}
+for (const faction of Object.values(legacyCourtNetwork.snapshot.factions)) {
+  faction.beautyStock = 7;
+  delete faction.courtNetwork;
+}
+const migratedCourtNetwork = parseCurrentSaveEnvelope(legacyCourtNetwork);
+assert(
+  Object.values(migratedCourtNetwork.snapshot.factions).every((faction) => faction.courtNetwork === 7),
+  'R7 旧 beautyStock 必须迁移为 courtNetwork',
+);
+assert(
+  Object.values(migratedCourtNetwork.snapshot.cities).every((city) =>
+    Number.isInteger(city.courtNetworkOpportunities)
+  ),
+  'R7 旧 beautySeekLeft 必须迁移为 courtNetworkOpportunities',
+);
+assert(
+  !JSON.stringify(migratedCourtNetwork.snapshot).includes('beautyStock') &&
+    !JSON.stringify(migratedCourtNetwork.snapshot).includes('beautySeekLeft'),
+  'R7 迁移后快照不得保留旧 beauty 字段',
+);
+assert(
+  !JSON.stringify(gatheringSave.snapshot).includes('beautyStock') &&
+    !JSON.stringify(gatheringSave.snapshot).includes('beautySeekLeft'),
+  'R7 新存档不得写入旧 beauty 字段',
+);
 
 const mismatchedScenario = { ...gatheringSave, scenarioId: 2 };
 assert(rejectsInvalid(mismatchedScenario), '信封与快照的剧本 ID 不一致时必须拒绝');
@@ -110,4 +145,4 @@ assert(
   '当前信封必须拒绝瞬态未知根字段',
 );
 
-console.log(`save migration, runtime restore, and PRNG verification passed: ${passed}/19`);
+console.log(`save migration, runtime restore, and PRNG verification passed: ${passed}/23`);

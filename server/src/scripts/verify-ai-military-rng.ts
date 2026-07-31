@@ -237,4 +237,115 @@ const noAction = runAiMilitary(getGame(), runtimeRandom, () => 1);
 assert(getRuntimeRngState().draws === save.rng.draws, 'AI 决定不行动时不得消费权威结算流');
 assert(JSON.stringify(noAction.cities) === JSON.stringify(raidFixture.state.cities), 'AI 不行动时不得产生伤亡结算');
 
-console.log(`AI military diplomacy/campaign/determinism verification passed: ${passed}/29`);
+// R6：两条互不复用源城的官道战线，同月真实创建两支 Army，并保留威胁守备。
+createGame(1, 1);
+const dualInitial = getGame();
+const roadEdges = Object.values(dualInitial.cities)
+  .flatMap((from) => Object.values(dualInitial.cities)
+    .filter((target) => from.id < target.id && canMarchAlongRoad(from.id, target.id))
+    .map((target) => [from.id, target.id] as const))
+  .sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+const firstEdge = roadEdges[0];
+const secondEdge = roadEdges.find((edge) =>
+  firstEdge && !edge.includes(firstEdge[0]) && !edge.includes(firstEdge[1])
+);
+if (!firstEdge || !secondEdge) throw new Error('R6 双线验证缺少两条不相交官道');
+const aiFactionId = Object.values(dualInitial.factions)[0]?.id;
+const enemyFactionId = Object.values(dualInitial.factions).find((item) => item.id !== aiFactionId)?.id;
+if (aiFactionId == null || enemyFactionId == null) throw new Error('R6 双线验证缺少两势力');
+const commanders = Object.values(dualInitial.officers)
+  .filter((officer) => officer.status === OfficerStatus.ACTIVE)
+  .sort((a, b) => a.id - b.id)
+  .slice(0, 2);
+if (commanders.length < 2) throw new Error('R6 双线验证缺少两名主将');
+const sourceIds = [firstEdge[0], secondEdge[0]];
+const targetIds = [firstEdge[1], secondEdge[1]];
+const dualCities = Object.fromEntries(Object.values(dualInitial.cities).map((city) => {
+  const sourceIndex = sourceIds.indexOf(city.id);
+  const targetIndex = targetIds.indexOf(city.id);
+  if (sourceIndex >= 0) {
+    return [city.id, {
+      ...city,
+      ruler: aiFactionId,
+      troops: 8_000,
+      food: 50_000,
+      officers: [commanders[sourceIndex].id],
+    }];
+  }
+  if (targetIndex >= 0) {
+    return [city.id, { ...city, ruler: enemyFactionId, troops: 2_000, officers: [] }];
+  }
+  return [city.id, { ...city, ruler: null, troops: 0, officers: [] }];
+}));
+const dualOfficers = Object.fromEntries(Object.values(dualInitial.officers).map((officer) => {
+  const commanderIndex = commanders.findIndex((item) => item.id === officer.id);
+  return commanderIndex >= 0
+    ? [officer.id, {
+        ...officer,
+        faction: aiFactionId,
+        status: OfficerStatus.ACTIVE,
+        location: sourceIds[commanderIndex],
+      }]
+    : [officer.id, officer];
+}));
+const dualState: GameState = {
+  ...dualInitial,
+  playerFactionId: enemyFactionId,
+  factions: Object.fromEntries(Object.values(dualInitial.factions).map((faction) => [
+    faction.id,
+    faction.id === aiFactionId
+      ? {
+          ...faction,
+          isAlive: true,
+          isPlayer: false,
+          capitalCityId: sourceIds[0],
+          rulerId: commanders[0].id,
+          officerIds: commanders.map((officer) => officer.id),
+        }
+      : faction.id === enemyFactionId
+        ? { ...faction, isAlive: true, isPlayer: true, capitalCityId: targetIds[0] }
+        : { ...faction, isAlive: false, isPlayer: false },
+  ])),
+  cities: dualCities,
+  officers: dualOfficers,
+  diplomacy: [{
+    factionA: aiFactionId,
+    factionB: enemyFactionId,
+    relation: DipRelation.HOSTILE,
+    favorability: -60,
+  }],
+  plots: [],
+  campaignArmies: [],
+  actionLog: [],
+};
+const statSnapshot = commanders.map((officer) => dualState.officers[officer.id].stats);
+const dualAfter = runAiMilitary(dualState, () => 0.5, () => 0);
+const dualArmies = dualAfter.campaignArmies.filter((army) => army.factionId === aiFactionId);
+assert(dualArmies.length === 2, 'R6 AI 必须能在资源、主将与前线充足时同月开辟双线');
+assert(new Set(dualArmies.map((army) => army.fromNodeId)).size === 2, 'R6 双线不得复用同一源城');
+assert(sourceIds.every((id) => dualAfter.cities[id].troops >= 500), 'R6 出征必须保留守备预备队');
+assert(
+  JSON.stringify(commanders.map((officer) => dualAfter.officers[officer.id].stats)) === JSON.stringify(statSnapshot),
+  'R6 公平难度不得永久修改武将五维',
+);
+const capped = runAiMilitary(dualAfter, () => 0.5, () => 0);
+assert(
+  capped.campaignArmies.filter((army) => army.factionId === aiFactionId).length === 2,
+  'R6 同时主动战线必须受双线硬上限约束',
+);
+const starvingState: GameState = {
+  ...dualAfter,
+  campaignArmies: dualAfter.campaignArmies.map((army, index) =>
+    index === 0 ? { ...army, phase: 'sieging', currentNodeId: army.targetNodeId!, path: [], food: 0 } : army
+  ),
+};
+const retreatingId = starvingState.campaignArmies[0].id;
+const withdrew = runAiMilitary(starvingState, () => 0.5, () => 1);
+const withdrewArmy = withdrew.campaignArmies.find((army) => army.id === retreatingId);
+assert(withdrewArmy?.phase === 'marching', 'R6 缺粮围城军必须主动转入撤退行军');
+assert(withdrewArmy?.targetNodeId === withdrewArmy?.fromNodeId, 'R6 撤退目标必须是原出发城');
+assert(withdrew.actionLog.some((log) => log.type === 'ai_retreat'), 'R6 主动撤退必须写入军情');
+const dualReplay = runAiMilitary(dualState, () => 0.5, () => 0);
+assert(JSON.stringify(dualReplay) === JSON.stringify(dualAfter), 'R6 双线计划同 seed 必须完整复现');
+
+console.log(`AI military diplomacy/campaign/R6 determinism verification passed: ${passed}/${passed}`);

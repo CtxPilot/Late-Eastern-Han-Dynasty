@@ -4,7 +4,7 @@
 import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType } from '@leh/shared';
 import {
   battleFinishPlayer, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle,
-  getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeStart, startMarch,
+  getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
 
 let passed = 0;
@@ -97,6 +97,7 @@ const melee = meleeStart(started.army.id, defender.id).melee;
 check('真实白刃战已进入权威 GameState', getGame().activeMelee?.battlefieldId === battlefield.id && getMelee() === getGame().activeMelee);
 check('白刃战父子边界通过严格解析', GameStateBattleSchema.parse(combatSlice()).activeMelee?.battlefieldId === battlefield.id);
 check('白刃战进行中完整 GameState 通过跨切片校验', fullStatePasses());
+meleeSelectMode('standard');
 const advancedMelee = meleeRound('normal_attack').melee;
 check('白刃战操作后权威快照同步更新', getGame().activeMelee?.round === melee.round + 1 && advancedMelee.round === getGame().activeMelee?.round);
 let invalidActionRejected = false;

@@ -4,7 +4,7 @@
 /**
  * 单挑引擎冒烟测试 (§8):
  *   1. 关羽(武圣) vs 典韦(恶来) — 全自动结算, 验证状态机走完 + 产生结果
- *   2. 吕布(无双) vs 张飞(咆哮) — 验证无双必先手 + 三连击 + 不可被斩
+ *   2. 吕布(无双) vs 张飞(咆哮) — 验证无双必先手 + 三连击 + 败而重伤撤退
  *   3. 普通武将对决 — 验证无专属时正常结算
  *   4. canChallenge / aiAcceptChallenge 边界条件
  *
@@ -12,6 +12,7 @@
  */
 import {
   CivilPosition,
+  DuelCommand,
   GrowthPotential,
   Ideal,
   LocalPosition,
@@ -213,19 +214,45 @@ function main(): void {
   }
 
   // 无双不可被斩
-  label('吕布不可被斩 (无双保护)');
+  label('吕布传奇保护不改写败局');
   let lvBuKilled = false;
-  for (let i = 0; i < 10; i++) {
+  let lvBuLost = false;
+  let lvBuRetreatText = false;
+  for (let i = 0; i < 5000; i++) {
     const r = runDuelToCompletion(
-      createDuel('test', dianWei, lvBu, DEFAULT_DUEL_CONFIG, makeSeededRng(i * 17 + 1)),
-      dianWei, lvBu, DEFAULT_DUEL_CONFIG, makeSeededRng(i * 17 + 2),
+      createDuel('test', guanYu, lvBu, DEFAULT_DUEL_CONFIG, makeSeededRng(i * 17 + 1), 'bait', 'assault'),
+      guanYu, lvBu, DEFAULT_DUEL_CONFIG, makeSeededRng(i * 17 + 2),
     );
-    if (r.result && r.result.loserId === lvBu.id && r.result.outcome === 'killed') {
-      lvBuKilled = true;
-      break;
+    if (r.result?.loserId === lvBu.id) {
+      lvBuLost = true;
+      lvBuKilled ||= r.result.outcome === 'killed' || r.result.outcome === 'captured';
+      lvBuRetreatText ||= r.result.epilogue.includes('单挑落败') && r.result.epilogue.includes('重伤');
     }
   }
-  assert(!lvBuKilled, '吕布(无双) 在 10 次单挑中从未被斩');
+  assert(lvBuLost, '顶尖对手采用诱敌时存在可重复验证的吕布败局');
+  assert(!lvBuKilled, '吕布败局不会被改写，但斩/俘改为重伤撤退');
+  assert(lvBuRetreatText, '吕布败局叙事明确记录落败与重伤撤退');
+
+  label('四倾向改变权威指令分布');
+  let assaultOffense = 0;
+  let steadyDefense = 0;
+  let baitReads = 0;
+  for (let i = 0; i < 120; i++) {
+    const collect = (stance: 'assault' | 'steady' | 'bait') => {
+      const initial = createDuel('stance', genericA, genericB, DEFAULT_DUEL_CONFIG, makeSeededRng(i + 1), stance, 'delegate');
+      const stepped = stepDuel(initial, genericA, genericB, DEFAULT_DUEL_CONFIG, makeSeededRng(i + 1000));
+      return stepped.roundHistory[0].commands[initial.turnOrder.indexOf(genericA.id)];
+    };
+    const assault = collect('assault');
+    const steady = collect('steady');
+    const bait = collect('bait');
+    if (assault ===  DuelCommand.FIERCE_ATTACK || assault === DuelCommand.FINISHER) assaultOffense++;
+    if (steady === DuelCommand.PARRY || steady === DuelCommand.RESTRAIN || steady === DuelCommand.PROBE) steadyDefense++;
+    if (bait === DuelCommand.PROBE || bait === DuelCommand.DODGE || bait === DuelCommand.RESTRAIN) baitReads++;
+  }
+  assert(assaultOffense > 55, `强攻显著偏向猛攻/必杀（${assaultOffense}/120）`);
+  assert(steadyDefense > 65, `持重显著偏向格挡/牵制/周旋（${steadyDefense}/120）`);
+  assert(baitReads > 65, `诱敌显著偏向周旋/闪避/牵制（${baitReads}/120）`);
 
   // 关羽武器映射 (青龙偃月刀 → blade, 暴伤×3.0)
   label('关羽武器映射 (id=6 → blade)');

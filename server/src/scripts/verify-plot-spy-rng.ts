@@ -78,7 +78,7 @@ const prepared: GameState = {
     ...initial.factions,
     [initial.playerFactionId]: {
       ...initial.factions[initial.playerFactionId],
-      beautyStock: 10,
+      courtNetwork: 10,
     },
   },
   intel: {
@@ -189,7 +189,7 @@ const plantBase: GameState = {
     ...prepared.factions,
     [enemyFactionId]: {
       ...prepared.factions[enemyFactionId],
-      beautyStock: Math.max(1, prepared.factions[enemyFactionId].beautyStock ?? 0),
+      courtNetwork: Math.max(1, prepared.factions[enemyFactionId].courtNetwork ?? 0),
     },
   },
   intel: {

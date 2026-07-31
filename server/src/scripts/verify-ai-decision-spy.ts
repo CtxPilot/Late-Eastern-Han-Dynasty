@@ -34,7 +34,7 @@ function envelopeFor(snapshot: GameState): SaveEnvelopeV1 {
 interface IntelMetrics {
   agents: Array<{ id: string; factionId: number; status: string; agentKind: string | undefined }>;
   cityDefense: Array<{ cityId: number; stationAgentId: string | null }>;
-  beautySeekLeft: Array<{ cityId: number; seekLeft: number }>;
+  courtNetworkOpportunities: Array<{ cityId: number; opportunities: number }>;
 }
 
 function extractIntelMetrics(state: GameState): IntelMetrics {
@@ -50,9 +50,9 @@ function extractIntelMetrics(state: GameState): IntelMetrics {
       cityId: Number(cid),
       stationAgentId: def?.stationAgentId ?? null,
     })),
-    beautySeekLeft: Object.values(state.cities).map((c) => ({
+    courtNetworkOpportunities: Object.values(state.cities).map((c) => ({
       cityId: c.id,
-      seekLeft: c.beautySeekLeft ?? 0,
+      opportunities: c.courtNetworkOpportunities ?? 0,
     })),
   };
 }
@@ -92,7 +92,7 @@ const actualFinalRng = getRuntimeRngState();
 
 assert(
   JSON.stringify(actualSequence) === JSON.stringify(expectedSequence),
-  '读档重放后 6 个月 AI 谍报决策序列完全一致（agents/cityDefense/beautySeekLeft）',
+  '读档重放后 6 个月 AI 谍报决策序列完全一致（agents/cityDefense/courtNetworkOpportunities）',
 );
 assert(
   JSON.stringify(actualFinalRng) === JSON.stringify(expectedFinalRng),

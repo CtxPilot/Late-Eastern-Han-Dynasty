@@ -74,7 +74,7 @@ const seekState: GameState = {
   ...initial,
   cities: {
     ...initial.cities,
-    [ownedCity.id]: { ...ownedCity, gold: 10_000, beautySeekLeft: 5 },
+    [ownedCity.id]: { ...ownedCity, gold: 10_000, courtNetworkOpportunities: 5 },
   },
 };
 
@@ -86,20 +86,20 @@ const seekSuccess = verifyRoundTrip(
   '寻访成功',
   1,
 );
-assert(seekSuccess.factions[playerFaction.id].beautyStock === (playerFaction.beautyStock ?? 0) + 1, '寻访成功必须增加库存');
-assert(seekSuccess.cities[ownedCity.id].beautySeekLeft === 4, '寻访成功必须扣除一次可寻次数');
+assert(seekSuccess.factions[playerFaction.id].courtNetwork === (playerFaction.courtNetwork ?? 0) + 1, '结交成功必须增加人脉');
+assert(seekSuccess.cities[ownedCity.id].courtNetworkOpportunities === 4, '结交成功必须扣除一次机会');
 
 resetRuntimeRng(findSeed(([roll]) => roll > 0.99, 1));
 const seekFailSave = envelopeFor(seekState);
 const seekFail = verifyRoundTrip(seekFailSave, () => doSeekBeauty(ownedCity.id), '寻访失败', 1);
-assert(seekFail.factions[playerFaction.id].beautyStock === (playerFaction.beautyStock ?? 0), '寻访失败不得增加库存');
-assert(seekFail.cities[ownedCity.id].beautySeekLeft === 5, '寻访失败不得扣除可寻次数');
+assert(seekFail.factions[playerFaction.id].courtNetwork === (playerFaction.courtNetwork ?? 0), '结交失败不得增加库存');
+assert(seekFail.cities[ownedCity.id].courtNetworkOpportunities === 5, '结交失败不得扣除机会');
 
 const lootState: GameState = {
   ...initial,
   cities: {
     ...initial.cities,
-    [targetCity.id]: { ...targetCity, beautySeekLeft: 10 },
+    [targetCity.id]: { ...targetCity, courtNetworkOpportunities: 10 },
   },
 };
 resetRuntimeRng(0x09_0001);
@@ -110,16 +110,16 @@ const loot = verifyRoundTrip(
   '占城抢夺',
   2,
 );
-const gained = (loot.factions[playerFaction.id].beautyStock ?? 0) - (playerFaction.beautyStock ?? 0);
+const gained = (loot.factions[playerFaction.id].courtNetwork ?? 0) - (playerFaction.courtNetwork ?? 0);
 assert(gained >= 2 && gained <= 4, '占城抢夺库存增量必须位于 2~4');
-assert(loot.cities[targetCity.id].beautySeekLeft === 10 - gained, '抢夺所得与城市可寻次数扣减必须一致');
+assert(loot.cities[targetCity.id].courtNetworkOpportunities === 10 - gained, '接管所得与城市机会扣减必须一致');
 assert(loot.cities[targetCity.id].stats.morale < targetCity.stats.morale, '抢夺必须降低民忠');
 
 const emptyLootState: GameState = {
   ...initial,
   cities: {
     ...initial.cities,
-    [targetCity.id]: { ...targetCity, beautySeekLeft: 0 },
+    [targetCity.id]: { ...targetCity, courtNetworkOpportunities: 0 },
   },
 };
 resetRuntimeRng(0x09_0002);
@@ -136,7 +136,7 @@ const rewardState: GameState = {
   ...initial,
   factions: {
     ...initial.factions,
-    [playerFaction.id]: { ...playerFaction, beautyStock: 3 },
+    [playerFaction.id]: { ...playerFaction, courtNetwork: 3 },
   },
   officers: {
     ...initial.officers,
@@ -151,7 +151,7 @@ const reward = verifyRoundTrip(
   '赏赐库存',
   0,
 );
-assert(reward.factions[playerFaction.id].beautyStock === 1, '赏赐必须按指定数量扣库存');
+assert(reward.factions[playerFaction.id].courtNetwork === 1, '笼络必须按指定数量扣人脉');
 assert(reward.officers[activeOfficer.id].loyalty > 50, '赏赐必须确定性增加忠诚');
 
 console.log(`beauty deterministic continuation verification passed: ${passed}/25`);
