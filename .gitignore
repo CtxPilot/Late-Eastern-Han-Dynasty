@@ -61,3 +61,6 @@ docs/screenshots/leh-seats-full.png
 .opencode/
 .playwright-mcp/
 *.orig
+
+# OpenCode session plans (tool artifacts)
+.zcode/
