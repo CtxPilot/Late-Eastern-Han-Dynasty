@@ -24,6 +24,7 @@
     "scenes.ts",
     "hegemony.ts",
     "nobility.ts",
+    "army-county-mapping.ts",
     "battlefield-instance-schema.ts",
     "nanjun-battlefield.ts",
     "commandery-battlefield.ts",

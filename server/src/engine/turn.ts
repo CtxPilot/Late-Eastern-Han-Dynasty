@@ -12,7 +12,10 @@ import {
   laborForce,
   pruneExpiredIntel,
   withSyncedPopulation,
-  FIRST_BATCH_COUNTY_IDS,
+  isCountyPathBlockedBy,
+  monthlyArmyFoodCost,
+  resolveArmyCountyNodeId,
+  shortestCountyPath,
   type City,
   type CityDemographics,
   type GameState,
@@ -314,15 +317,13 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
 }
 
 /**
- * BF-P2 Q9：郡域战场实例月度 tick。
+ * BF-P2 Q9 + BF-P5：郡域战场实例月度 tick。
  *
  * 在 endTurn 里于 tickCampaignMarch/tickCampaignGarrison 之后调用，处理：
  * 1. 驻军消耗：已占领县 controlTurns++；若 garrison==0 则掉控制（rulerFactionId=null）。
- * 2. 补给线切断（0-A 简化版）：攻方占领至少 1 个首批县 → 守方所有 CampaignArmy 士气 -5。
- *
- * 0-A 简化说明：真正的"补给线经过攻方控制县"判定需要 CampaignArmy 在郡域战场内移动
- * （countyId 体系），当前 Army 在大地图层移动（数字 cityId），两者无映射；
- * 故简化为"占领任意首批县 → 守方全军士气流失"。糧耗×2 留 P5/R6 多线 AI 范畴。
+ * 2. 补给线切断（BF-P5 真实路径判定）：逐支守方 Army 经 shared/army-county-mapping
+ *    定位 countyId，补给线 = seat → Army 当前县 最短路径；路径经过攻方控制县 →
+ *    该 Army 粮耗×2 + 士气-5。未定位在郡域内的守方 Army 不受影响。
  */
 export function tickBattlefieldInstance(state: GameState): GameState {
   const inst = state.activeBattlefieldInstance;
@@ -346,19 +347,27 @@ export function tickBattlefieldInstance(state: GameState): GameState {
     return node;
   });
 
-  const attackerOccupiedFirstBatch = FIRST_BATCH_COUNTY_IDS.some((cid) =>
-    newNodeStates.find((n) => n.nodeId === cid)?.rulerFactionId === attackerFactionId,
-  );
-
+  // BF-P5 补给线真实路径判定（替换 BF-P2 的"占领任意首批县→守方全军士气-5"全局简化）：
+  // 逐支守方 Army 解析 countyId 定位，补给线 = seat(守方边界入口) → Army 当前县 最短路径；
+  // 路径经过攻方控制县 → 该 Army 粮耗×2 + 士气-5。未定位在郡域内的守方 Army 不受影响。
   let campaignArmiesChanged = false;
   let newCampaignArmies = state.campaignArmies;
-  if (attackerOccupiedFirstBatch && defenderFactionId != null) {
+  const supplyCutMessages: string[] = [];
+  if (defenderFactionId != null) {
     newCampaignArmies = state.campaignArmies.map((army) => {
-      if (army.factionId === defenderFactionId) {
-        campaignArmiesChanged = true;
-        return { ...army, morale: Math.max(0, army.morale - 5) };
-      }
-      return army;
+      if (army.factionId !== defenderFactionId) return army;
+      const countyNodeId = resolveArmyCountyNodeId(inst, army.id);
+      if (!countyNodeId) return army;
+      const supplyPath = shortestCountyPath(inst, inst.targetSeatNodeId, countyNodeId);
+      if (!supplyPath || !isCountyPathBlockedBy(inst, supplyPath, attackerFactionId)) return army;
+      campaignArmiesChanged = true;
+      const foodPenalty = monthlyArmyFoodCost(army.troops) * 2;
+      supplyCutMessages.push(`${army.name}（${countyNodeId}）补给线被切断`);
+      return {
+        ...army,
+        morale: Math.max(0, army.morale - 5),
+        food: Math.max(0, army.food - foodPenalty),
+      };
     });
   }
 
@@ -370,17 +379,13 @@ export function tickBattlefieldInstance(state: GameState): GameState {
   }
   if (campaignArmiesChanged) {
     next = { ...next, campaignArmies: newCampaignArmies };
-    const occupiedCount = newNodeStates.filter((n) =>
-      n.rulerFactionId === attackerFactionId &&
-      (FIRST_BATCH_COUNTY_IDS as readonly string[]).includes(n.nodeId),
-    ).length;
     next = {
       ...next,
       actionLog: [{
         year: state.currentYear,
         month: state.currentMonth,
         type: 'battlefield',
-        message: `攻方占领 ${occupiedCount} 个首批县，守方士气 -5（补给线受扰）`,
+        message: `${supplyCutMessages.join('；')}，粮耗×2 士气-5`,
       }, ...next.actionLog].slice(0, 80),
     };
   }

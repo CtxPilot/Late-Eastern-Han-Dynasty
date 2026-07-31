@@ -88,6 +88,21 @@ export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefiel
     return { weather, deployments, attackerScouted, defenderScouted, ambush, encounterOrder };
   })() : undefined;
 
+  // Army—县位置映射：把创建时部署（dynamicSituation.deployments）写入 nodeStates[].armyIds，
+  // 作为运行时权威位置来源（BF-P5，`shared/army-county-mapping.ts` 读取）。
+  const nodeStatesWithArmyPositions = dynamicSituation
+    ? (() => {
+        const armyIdsByNode = new Map<string, string[]>();
+        for (const { armyId, nodeId } of dynamicSituation.deployments) {
+          armyIdsByNode.set(nodeId, [...(armyIdsByNode.get(nodeId) ?? []), armyId]);
+        }
+        return nodeStates.map((node) => ({
+          ...node,
+          armyIds: armyIdsByNode.get(node.nodeId) ?? [],
+        }));
+      })()
+    : nodeStates;
+
   return {
     id: opts.instanceId,
     warId: opts.warId,
@@ -97,7 +112,7 @@ export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefiel
     targetCommanderyId: commandery.id,
     targetSeatNodeId: commandery.seatCountyId,
     entryNodeIds: [...opts.entryNodeIds],
-    nodeStates,
+    nodeStates: nodeStatesWithArmyPositions,
     routeStates: opts.bundle.routes.map((route) => ({
       routeId: route.id,
       fromNodeId: route.fromNodeId,
