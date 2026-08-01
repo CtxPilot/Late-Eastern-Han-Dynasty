@@ -10,13 +10,22 @@ import {
   ensureDemographics,
   maxConscriptable,
   withSyncedPopulation,
+  meritEffects,
+  meritLevelFor,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
   type GameState,
 } from '@leh/shared';
+import { grantMeritTo } from './meritGrant.js';
 
 export type DevelopKind = DevelopmentProjectKind;
+
+// 功绩获取数值（docs/04 §6.1 内政条；固定值不消耗权威 RNG，待平衡）
+const MERIT_DEVELOP_START = 4;
+const MERIT_CONSCRIPT = 3;
+const MERIT_RELIEF = 3;
+const MERIT_TRAIN = 3;
 
 export const DEVELOPMENT_PROJECTS: Record<
   DevelopKind,
@@ -91,7 +100,7 @@ export function developCity(
   };
 
   return pushLog(
-    state,
+    grantMeritTo(state, assignedOfficerId, MERIT_DEVELOP_START),
     `development_start_${kind}`,
     `${city.name} 启动${conf.label}持续开发（${conf.totalMonths}个月，首付${initialCost}金）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
@@ -106,6 +115,13 @@ export function developFarm(state: GameState, cityId: number, assignedOfficerId:
 function monthlyInstallment(project: DevelopmentProject): number {
   const monthsAfterThis = Math.max(0, project.remainingMonths - 1);
   return Math.ceil((project.totalGoldCost - project.goldPaid) / Math.max(1, monthsAfterThis + 1));
+}
+
+/** 城主内政效率加成（等级表 文 Lv6/9 内政+10%，Session 265 数值消费） */
+function civilEfficiencyOf(state: GameState, city: City): number {
+  const lord = state.officers[city.officers[0]];
+  if (!lord) return 0;
+  return meritEffects(meritLevelFor(lord.merit ?? 0), lord.meritPath ?? 'neutral').civilEfficiency;
 }
 
 /** 每月推进一个城市项目；资源或人员条件不满足即暂停并应用中断损失。 */
@@ -167,14 +183,24 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
     };
   }
   const conf = DEVELOPMENT_PROJECTS[project.kind];
+  // 开发效率加成（等级表 文 Lv3/4 开发+5%/+10%，Session 265：指派将执行）
+  let gain = conf.gain;
+  const assignee = state.officers[project.assignedOfficerId];
+  if (assignee) {
+    const developBonus = meritEffects(
+      meritLevelFor(assignee.merit ?? 0),
+      assignee.meritPath ?? 'neutral',
+    ).developBonus;
+    if (developBonus > 0) gain = Math.floor(conf.gain * (1 + developBonus));
+  }
   return {
     city: {
       ...city,
       gold: city.gold - installment,
-      stats: { ...city.stats, [conf.stat]: Math.min(999, city.stats[conf.stat] + conf.gain) },
+      stats: { ...city.stats, [conf.stat]: Math.min(999, city.stats[conf.stat] + gain) },
       activeDevelopment: undefined,
     },
-    note: `${city.name}${conf.label}持续开发完成，${conf.label}+${conf.gain}`,
+    note: `${city.name}${conf.label}持续开发完成，${conf.label}+${gain}`,
   };
 }
 
@@ -195,7 +221,8 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
 
   const troopsGain = 300 + Math.floor(rng() * 151);
   const bonus = Math.floor(city.stats.farm / 50) + Math.floor((city.stats.morale ?? 70) / 40);
-  const want = troopsGain + bonus * 10;
+  // 内政效率加成（城主功绩，Session 265；不消耗 RNG）
+  const want = Math.floor((troopsGain + bonus * 10) * (1 + civilEfficiencyOf(state, city)));
   const total = Math.min(want, maxMen);
 
   const nextDemo = { ...d, adultMale: d.adultMale - total };
@@ -214,7 +241,7 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const nextCity = withSyncedPopulation(base, nextDemo);
 
   return pushLog(
-    state,
+    grantMeritTo(state, nextCity.officers[0], MERIT_CONSCRIPT),
     'conscript',
     `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
@@ -229,7 +256,7 @@ export function relief(state: GameState, cityId: number, rng: () => number): Gam
   const foodCost = 150;
   if (city.food < foodCost) throw new Error('粮食不足');
 
-  const gain = 8 + Math.floor(rng() * 5);
+  const gain = Math.floor((8 + Math.floor(rng() * 5)) * (1 + civilEfficiencyOf(state, city)));
   const prev = city.stats.morale ?? 70;
   const nextMorale = Math.min(100, prev + gain);
 
@@ -240,7 +267,7 @@ export function relief(state: GameState, cityId: number, rng: () => number): Gam
   };
 
   return pushLog(
-    state,
+    grantMeritTo(state, nextCity.officers[0], MERIT_RELIEF),
     'relief',
     `${city.name} 施米安民 民心+${gain}（${prev}→${nextMorale}，耗粮${foodCost}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
@@ -256,7 +283,7 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   if (city.food < foodCost) throw new Error('粮食不足');
   if (city.troops < 100) throw new Error('兵力不足，无法训练');
 
-  const gain = 5 + Math.floor(rng() * 6);
+  const gain = Math.floor((5 + Math.floor(rng() * 6)) * (1 + civilEfficiencyOf(state, city)));
   const prev = city.troopsMorale ?? 70;
   const next = Math.min(100, prev + gain);
 
@@ -267,7 +294,7 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   };
 
   return pushLog(
-    state,
+    grantMeritTo(state, nextCity.officers[0], MERIT_TRAIN),
     'train',
     `${city.name} 训练部队 士气+${gain}（${prev}→${next}，耗粮${foodCost}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },

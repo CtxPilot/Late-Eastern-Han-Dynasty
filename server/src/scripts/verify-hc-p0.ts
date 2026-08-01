@@ -26,6 +26,7 @@ import {
   hegemonyFavorMultiplier,
   parseCurrentSaveEnvelope,
   controlsEmperor,
+  syncMerit,
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
@@ -260,6 +261,10 @@ check('无效霸府官职值被拒绝', invalidPositionRejected);
 createGame(1, 1);
 doEstablishHegemony();
 // 夏侯惇 id=9 (统85 武90) 满足大司马 (统85 武75) 与都督中外诸军事 (统85 武80)
+// S12 功绩门槛（docs/04 §十）：夹具给目标武将补 Lv6 功绩（1200），使断言聚焦政治阶段/属性/唯一性
+const hc0Game = getGame();
+hc0Game.officers[9] = syncMerit({ ...hc0Game.officers[9], merit: 1200 });
+hc0Game.officers[101] = syncMerit({ ...hc0Game.officers[101], merit: 1200 });
 const afterAppoint1 = appointOfficer(getGame(), 9, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
 check('霸府状态势力任命大司马成功', afterAppoint1.officers[9].hegemonyPosition === HegemonyPosition.GRAND_COMMANDER);
 check('任命大司马后 actionLog 含 appoint', afterAppoint1.actionLog.some((l) => l.type === 'appoint' && l.message.includes('大司马')));
@@ -305,6 +310,8 @@ check('拒绝信息含"属性不足"', weakError.includes('属性不足'));
 // 8i. 存档往返一致性：霸府官职字段序列化/反序列化保留
 createGame(1, 1);
 doEstablishHegemony();
+const hc0i = getGame();
+hc0i.officers[9] = syncMerit({ ...hc0i.officers[9], merit: 1200 });
 const hegemonyAppointState = appointOfficer(getGame(), 9, 'hegemony', HegemonyPosition.GRAND_COMMANDER);
 const hegemonyAppointSave = envelopeFor(hegemonyAppointState);
 const hegemonyAppointParsed = parseCurrentSaveEnvelope(hegemonyAppointSave);

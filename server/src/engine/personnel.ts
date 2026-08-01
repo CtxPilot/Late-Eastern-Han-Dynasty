@@ -18,6 +18,13 @@ import {
 } from '@leh/shared';
 import { joinFaction } from './family.js';
 import { syncFactionResources } from './economy.js';
+import { grantMeritTo } from './meritGrant.js';
+
+// 功绩获取数值（docs/04 §6.1 人事条；固定值不消耗权威 RNG，待平衡）
+const MERIT_SEARCH_FOUND = 8;
+const MERIT_SEARCH_TREASURE = 5;
+const MERIT_RECRUIT = 4;
+const MERIT_MARRY = 10;
 
 export const MARRY_GOLD = 300;
 export const GIFT_BEAUTY_GOLD = 100;
@@ -134,26 +141,28 @@ export function searchTalent(
   });
 
   const roll = rng();
-  // 有候选人时提高「发现武将」权重
-  const officerChance = localOrAdj.length > 0 ? 0.7 : 0.15;
+  // 结果池权重（docs/04 §6.1 RNG 契约）：将（有在野将 0.65 / 无 0.15）、金 +0.15、粮 +0.15、
+  // 宝物 +0.05（稀有固定 5%，随 roll 落入）、无 其余。总权重恒 1.0，任何军官概率下宝物可达。
+  const officerChance = localOrAdj.length > 0 ? 0.65 : 0.15;
 
   if (roll < officerChance && localOrAdj.length > 0) {
     const found = localOrAdj[Math.floor(rng() * localOrAdj.length)];
-    // 吸引至搜索城（便于登用）
+    // 吸引至搜索城（便于登用）；先发功绩再基于发放后 officers 构造 patch
+    const withMerit = grantMeritTo(s, searcher.id, MERIT_SEARCH_FOUND);
     const officers = {
-      ...s.officers,
+      ...withMerit.officers,
       [found.id]: { ...found, location: cityId },
     };
     // 同步城武将列表展示用（仍为在野，不进 faction）
     return pushLog(
-      s,
+      withMerit,
       'personnel_search',
       `${searcher.name} 于 ${city.name} 寻得在野 ${found.name}（相性${found.hidden.compatibility}，可登用，耗金 ${SEARCH_GOLD}）`,
       { officers },
     );
   }
 
-  if (roll < officerChance + 0.2) {
+  if (roll < officerChance + 0.15) {
     const gain = 40 + Math.floor(rng() * 60);
     const c = s.cities[cityId];
     return pushLog(
@@ -169,7 +178,7 @@ export function searchTalent(
     );
   }
 
-  if (roll < officerChance + 0.35) {
+  if (roll < officerChance + 0.3) {
     const gain = 60 + Math.floor(rng() * 80);
     const c = s.cities[cityId];
     return pushLog(
@@ -182,6 +191,18 @@ export function searchTalent(
           [cityId]: { ...c, food: c.food + gain },
         },
       },
+    );
+  }
+
+  // —— 宝物（稀有固定 5%，roll ∈ [officerChance+0.3, officerChance+0.35)）——
+  // 0-A 纯功绩模拟：寻得宝物 = 功绩 +5（docs/04 §6.1 宝物+5）；
+  // 真宝物实体（GameState.inventory / 具名宝物）后置（API 契约已预留 found: Item）。
+  // 不新增 RNG 消费（roll 已生成，宝物分支直接落入），确定性续玩 32/32 不受影响。
+  if (roll < officerChance + 0.35) {
+    return pushLog(
+      grantMeritTo(s, searcher.id, MERIT_SEARCH_TREASURE),
+      'personnel_search',
+      `${searcher.name} 于 ${city.name} 寻得宝物一件（可上献朝廷彰功，耗金 ${SEARCH_GOLD}）`,
     );
   }
 
@@ -297,7 +318,7 @@ export function recruitOfficer(
   s = syncFactionResources(s);
   const joined = s.officers[officerId];
   return pushLog(
-    s,
+    grantMeritTo(s, recruiter.id, MERIT_RECRUIT),
     'personnel_recruit',
     `${recruiter.name} 登用 ${target.name} 成功（忠诚 ${joined?.loyalty ?? RECRUIT_LOYALTY_BASE}，成功率约 ${Math.round(chance)}%，耗金 ${RECRUIT_GOLD}）`,
   );
@@ -348,6 +369,11 @@ export function marryFemale(
   const female = requirePlayerFemale(state, femaleId);
   const officer = requirePlayerOfficer(state, officerId);
 
+  // 君主特例（docs/04 §3.8 切片 C）：不得赐婚给君主（君主不参与忠诚/拉拢记录）
+  if (officer.faction != null && state.factions[officer.faction]?.rulerId === officerId) {
+    throw new Error(`${officer.name} 是君主，不参与赐婚（§3.8 君主特例）`);
+  }
+
   if (female.status === MaritalStatus.MARRIED && female.husbandId != null) {
     throw new Error(`${female.name} 已有婚配`);
   }
@@ -396,22 +422,25 @@ export function marryFemale(
     politics: officer.stats.politics + (bonus.politics ?? 0),
     charisma: officer.stats.charisma + (bonus.charisma ?? 0),
   };
+  // 先发功绩（君主不发，grantMeritTo 内守卫），再以带功绩的武将为基础叠加婚配修改
+  const withMerit = grantMeritTo(state, officerId, MERIT_MARRY);
+  const granted = withMerit.officers[officerId];
   const nextOfficer: Officer = {
-    ...officers[officerId],
+    ...granted,
     loyalty: Math.min(100, officer.loyalty + MARRY_LOYALTY),
     wifeId: femaleId,
     beauties: (officers[officerId].beauties ?? []).filter((id) => id !== femaleId),
     stats: panelStatsDisplay(raw),
   };
-  officers = { ...officers, [officerId]: nextOfficer };
+  officers = { ...withMerit.officers, [officerId]: nextOfficer };
 
   return pushLog(
-    state,
+    withMerit,
     'marry',
     `赐婚：${female.name} 配 ${officer.name}（正妻，忠诚+${MARRY_LOYALTY}，耗金 ${MARRY_GOLD}）`,
     {
       cities,
-      females: { ...state.females, [femaleId]: nextFemale },
+      females: { ...withMerit.females, [femaleId]: nextFemale },
       officers,
     },
   );
@@ -427,6 +456,11 @@ export function giftBeauty(
 ): GameState {
   const female = requirePlayerFemale(state, femaleId);
   const officer = requirePlayerOfficer(state, officerId);
+
+  // 君主特例（docs/04 §3.8 切片 C）：不得赏赐美人给君主（不产生君主拉拢记录）
+  if (officer.faction != null && state.factions[officer.faction]?.rulerId === officerId) {
+    throw new Error(`${officer.name} 是君主，不参与赏赐美人（§3.8 君主特例）`);
+  }
 
   if (female.status === MaritalStatus.MARRIED && female.husbandId != null) {
     throw new Error(`${female.name} 已婚配，不可再作赏赐美人`);

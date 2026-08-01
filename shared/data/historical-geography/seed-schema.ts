@@ -10,7 +10,12 @@
  * 与 `schema.ts` 的关系：本文件是「录入层」，schema.ts 是「校验层」。构建器产出的
  * `HistoricalGeographyBundle` 必须能通过 `HistoricalGeographyBundleSchema.safeParse`。
  *
- * 完整度约 95%：剩余 lon/lat（两郡均留空）、variantOf（年代变体暂无模板）等字段
+ * 年代覆写（BF-P5）：`CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 均支持
+ * `validFromYear`/`validToYear`（缺省 = `scenarioYear`），即「基线模板 + 建安改置覆写」
+ * 的最小 Schema（docs/21 Q4 方案 B）。同一条目可声明有效期区间，运行时用
+ * `resolveBundleForYear`（见 `year-overrides.ts`）按年份过滤出该年有效的子集。
+ *
+ * 完整度约 95%：剩余 lon/lat（两郡均留空）、variantOf（年代变体引用）等字段
  * 不经 seed 接入，如需可后续扩展。
  */
 
@@ -81,6 +86,13 @@ export interface CountySeed {
   locationNote?: string;
   /** 文献引用覆盖；缺省使用郡级 `sourceRefs`。 */
   sourceRefs?: string[];
+  /**
+   * 年代有效期起始（缺省 = `scenarioYear`）。与 `validToYear` 构成
+   * 「本县仅在该区间内存在的覆写」；越界年份解析时该县被过滤。
+   */
+  validFromYear?: number;
+  /** 年代有效期截止（缺省 = `scenarioYear`）。须满足 `<= validToYear`。 */
+  validToYear?: number;
 }
 
 /**
@@ -96,6 +108,10 @@ export interface LandmarkSeed {
   confidence?: HistoricalConfidence;
   locationNote?: string;
   sourceRefs?: string[];
+  /** 年代有效期起始（缺省 = `scenarioYear`）。 */
+  validFromYear?: number;
+  /** 年代有效期截止（缺省 = `scenarioYear`）。 */
+  validToYear?: number;
 }
 
 /**
@@ -116,6 +132,10 @@ export interface RouteSeed {
   seasonal?: RouteSeasonal;
   confidence?: HistoricalConfidence;
   sourceRefs?: string[];
+  /** 年代有效期起始（缺省 = `scenarioYear`）。 */
+  validFromYear?: number;
+  /** 年代有效期截止（缺省 = `scenarioYear`）。 */
+  validToYear?: number;
 }
 
 /**
@@ -134,6 +154,13 @@ export interface CommanderySeed {
   worldCityId: number;
   /** 情景年份。 */
   scenarioYear: number;
+  /**
+   * 郡国本身的有效期起始（缺省 = `scenarioYear`）。用于「某郡在某年析置/裁撤」，
+   * 如建安末分南郡立襄阳郡。越界年份解析时整个郡被过滤。
+   */
+  validFromYear?: number;
+  /** 郡国有效期截止（缺省 = `scenarioYear`）。 */
+  validToYear?: number;
   /** 模板版本，缺省 1。 */
   templateVersion?: number;
   /** 本地坐标系包围盒，缺省 {0,0,1,1}。 */
@@ -165,6 +192,18 @@ export interface BuildBundleOptions {
   validation?: 'throw' | 'safe';
 }
 
+/**
+ * 解析 seed 条目的年代有效期，缺省回退 `scenarioYear`。
+ * 返回 [validFromYear, validToYear]，保证 `validFromYear <= validToYear`
+ * （Zod `hasValidPeriod` 若被违反会在最终校验阶段拦截）。
+ */
+function resolveValidPeriod(
+  seed: { validFromYear?: number; validToYear?: number },
+  scenarioYear: number,
+): [number, number] {
+  return [seed.validFromYear ?? scenarioYear, seed.validToYear ?? scenarioYear];
+}
+
 /** 构建结果（safe 模式）。 */
 export interface BuildBundleResult {
   bundle: HistoricalGeographyBundle;
@@ -181,6 +220,7 @@ function normalizeGeometry(geometry: SeedGeometry): LocalGeometry {
 
 /**
  * 从县邻接自动派生 road 路径。用字典序去重得到无向边，要求 adjacent 双向对称。
+ * 自动派生 road 的有效期取两端县有效期的交集，避免越界年份产生悬空端点。
  * 与旧颍川模板的 routePairs 逻辑等价。
  */
 function autoRouteFromAdjacent(
@@ -209,19 +249,29 @@ function autoRouteFromAdjacent(
       }
     }
   }
-  return pairs.map(([from, to]) => ({
-    id: `road_${from}__${to}`,
-    commanderyId,
-    fromNodeId: from,
-    toNodeId: to,
-    kind: 'road' as const,
-    movementCost: 1,
-    seasonal: 'all' as const,
-    validFromYear: scenarioYear,
-    validToYear: scenarioYear,
-    confidence: 'inferred' as const,
-    sourceRefs: [...defaultSourceRefs],
-  }));
+  const periodByCounty = new Map<string, [number, number]>();
+  for (const county of counties) {
+    periodByCounty.set(county.id, resolveValidPeriod(county, scenarioYear));
+  }
+  return pairs.map(([from, to]) => {
+    const fromPeriod = periodByCounty.get(from) ?? [scenarioYear, scenarioYear];
+    const toPeriod = periodByCounty.get(to) ?? [scenarioYear, scenarioYear];
+    const validFromYear = Math.max(fromPeriod[0], toPeriod[0]);
+    const validToYear = Math.min(fromPeriod[1], toPeriod[1]);
+    return {
+      id: `road_${from}__${to}`,
+      commanderyId,
+      fromNodeId: from,
+      toNodeId: to,
+      kind: 'road' as const,
+      movementCost: 1,
+      seasonal: 'all' as const,
+      validFromYear,
+      validToYear,
+      confidence: 'inferred' as const,
+      sourceRefs: [...defaultSourceRefs],
+    };
+  });
 }
 
 /**
@@ -276,8 +326,8 @@ export function buildHistoricalGeographyBundleSafe(
       name: countySeed.name,
       commanderyId,
       role: countySeed.role ?? ('county' as const),
-      validFromYear: scenarioYear,
-      validToYear: scenarioYear,
+      validFromYear: resolveValidPeriod(countySeed, scenarioYear)[0],
+      validToYear: resolveValidPeriod(countySeed, scenarioYear)[1],
       localX: countySeed.x,
       localY: countySeed.y,
       confidence,
@@ -299,8 +349,8 @@ export function buildHistoricalGeographyBundleSafe(
       commanderyId,
       name: landmarkSeed.name,
       kind: landmarkSeed.kind,
-      validFromYear: scenarioYear,
-      validToYear: scenarioYear,
+      validFromYear: resolveValidPeriod(landmarkSeed, scenarioYear)[0],
+      validToYear: resolveValidPeriod(landmarkSeed, scenarioYear)[1],
       localGeometry: normalizeGeometry(landmarkSeed.geometry),
       tacticalTags: landmarkSeed.tacticalTags ?? [],
       confidence,
@@ -319,8 +369,8 @@ export function buildHistoricalGeographyBundleSafe(
     kind: routeSeed.kind ?? ('road' as const),
     movementCost: routeSeed.movementCost ?? 1,
     ...(routeSeed.seasonal ? { seasonal: routeSeed.seasonal } : {}),
-    validFromYear: scenarioYear,
-    validToYear: scenarioYear,
+    validFromYear: resolveValidPeriod(routeSeed, scenarioYear)[0],
+    validToYear: resolveValidPeriod(routeSeed, scenarioYear)[1],
     confidence: routeSeed.confidence ?? ('inferred' as const),
     sourceRefs: routeSeed.sourceRefs ?? [...defaultSourceRefs],
   }));
@@ -354,8 +404,8 @@ export function buildHistoricalGeographyBundleSafe(
         province: seed.province,
         seatCountyId: seed.seatCountyId,
         worldCityId: seed.worldCityId,
-        validFromYear: scenarioYear,
-        validToYear: scenarioYear,
+        validFromYear: resolveValidPeriod(seed, scenarioYear)[0],
+        validToYear: resolveValidPeriod(seed, scenarioYear)[1],
         countyIds: seed.counties.map((countySeed) => countySeed.id),
         localBounds: seed.localBounds ?? { minX: 0, minY: 0, maxX: 1, maxY: 1 },
         sourceRefs: [...defaultSourceRefs],

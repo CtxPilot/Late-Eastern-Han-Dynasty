@@ -28,6 +28,9 @@ import {
   type Officer,
   type UnitTemplate,
   type UnitType,
+  meritStatBonus,
+  meritEffects,
+  meritLevelFor,
 } from '@leh/shared';
 import type { TerrainType } from '@leh/shared';
 import { getUnitMatchup } from './damage.js';
@@ -206,10 +209,12 @@ export function computeCritRate(ctx: CritContext): number {
   const pf = profToBonus(proficiency);
 
   let rate = 5; // 基础 5%
-  rate += o.stats.war / 50;
+  rate += (o.stats.war + meritStatBonus(o, 'war')) / 50; // 功绩属性加成计入有效武力（Session 265）
   rate += unitCritBonus(unitType);
   rate += pf.crit;
   rate += fm.crit;
+  // 等级表特殊效果：武 Lv9 暴率+5%（docs/04 §十 6.2，Session 265）
+  rate += meritEffects(meritLevelFor(o.merit ?? 0), o.meritPath ?? 'neutral').critBonus * 100;
   // 地形: 高地+3% (0-A 简化: 山地视为高地)
   if (terrain === ('mountain' as TerrainType)) rate += 3;
 

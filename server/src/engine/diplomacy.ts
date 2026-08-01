@@ -14,6 +14,10 @@ import {
   type GameState,
 } from '@leh/shared';
 import { syncFactionResources } from './economy.js';
+import { grantMeritTo } from './meritGrant.js';
+
+// 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
+const MERIT_ALLIANCE = 10;
 
 export const TRIBUTE_GOLD = 200;
 export const TRIBUTE_FAVOR = 15;
@@ -236,8 +240,9 @@ export function formAlliance(
   );
 
   const name = state.factions[targetFactionId].name;
+  const withMerit = envoy ? grantMeritTo(state, envoy.id, MERIT_ALLIANCE) : state;
   const withCities = pushLog(
-    state,
+    withMerit,
     'alliance',
     `${envoy.name} 与 ${name} 缔结盟约（成功率 ${Math.round(breakdown.chance)}%，耗金 ${ALLIANCE_GOLD}；盟友城池情报部分共享）`,
     { cities, diplomacy },

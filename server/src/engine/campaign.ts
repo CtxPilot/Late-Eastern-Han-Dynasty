@@ -20,9 +20,13 @@
 import {
   OfficerStatus,
   areCitiesRoadAdjacent,
+  formationTroopCap,
   isFriendlyOrBetter,
   isHostileOrAtWar,
   roadNeighbors,
+  meritEffects,
+  meritLevelFor,
+  meritStatBonus,
   UnitType,
   type AutoBattleResult,
   type CampaignArmy,
@@ -36,6 +40,18 @@ import {
 import { clearCityCounterOnCapture } from './spy.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
+import { grantMeritTo } from './meritGrant.js';
+import {
+  MERIT_ANNIHILATE_FACTION,
+  MERIT_CAPTURE_CITY,
+  MERIT_DEFEND_CITY,
+  MERIT_FIELD_ANNIHILATE,
+  MERIT_FIELD_ROUT,
+  pickDefenderCommander,
+} from './militaryMerit.js';
+
+// 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
+const MERIT_SIEGE_SURRENDER = 30;
 
 // ====== 常量 ======
 
@@ -134,8 +150,22 @@ function officerName(state: GameState, id: number): string {
   return state.officers[id]?.name ?? `武将${id}`;
 }
 
-/** 校验编成选项合法性 */
+/** 校验编成选项合法性（目标侧 + 源侧；顺序贴近原实现：target 校验先于主将等源侧校验） */
 export function validateFormation(
+  state: GameState,
+  opts: CampaignFormationOptions,
+  actingFactionId: number = state.playerFactionId,
+): void {
+  // 顺序贴近原实现：出发节点 → 目标侧 → 主将等源侧（错误优先级与历史一致）
+  const from = state.cities[opts.fromNodeId];
+  if (!from) throw new Error('出发节点不存在');
+  if (from.ruler !== actingFactionId) throw new Error('出发节点非己方');
+  validateFormationTarget(state, opts, actingFactionId);
+  validateFormationSourceRest(state, opts, actingFactionId);
+}
+
+/** 源侧校验：出发城/主将/副将/参谋/兵力/携粮（非行军编成如郡域增援同样适用）。 */
+export function validateFormationSource(
   state: GameState,
   opts: CampaignFormationOptions,
   actingFactionId: number = state.playerFactionId,
@@ -143,15 +173,16 @@ export function validateFormation(
   const from = state.cities[opts.fromNodeId];
   if (!from) throw new Error('出发节点不存在');
   if (from.ruler !== actingFactionId) throw new Error('出发节点非己方');
+  validateFormationSourceRest(state, opts, actingFactionId);
+}
 
-  const target = state.cities[opts.targetNodeId];
-  if (!target) throw new Error('目标节点不存在');
-  if (target.ruler === actingFactionId) throw new Error('目标已是己方');
-  if (target.ruler == null) throw new Error('暂不支持攻打无主节点');
-
-  if (!areCitiesRoadAdjacent(opts.fromNodeId, opts.targetNodeId)) {
-    throw new Error(`${from.name} 与 ${target.name} 无官道直达（战役层首跳须邻接）`);
-  }
+/** 源侧后段：主将/副将/参谋/兵力/携粮（不含出发节点校验，供完整与源侧校验复用）。 */
+function validateFormationSourceRest(
+  state: GameState,
+  opts: CampaignFormationOptions,
+  actingFactionId: number,
+): void {
+  const from = state.cities[opts.fromNodeId];
 
   const commander = state.officers[opts.commanderId];
   if (!commander) throw new Error('主将不存在');
@@ -181,9 +212,32 @@ export function validateFormation(
     throw new Error(`出征兵力至少 ${MIN_CAMPAIGN_TROOPS}`);
   }
   if (opts.troopCount > from.troops) throw new Error('出征兵力超过节点驻军');
+  // 出征上限（docs/04 §7.5 + 6.2 带兵+，Session 265）：min(驻军, 5000 + 武官等级×500 + 功绩带兵+)
+  const cap = Math.min(from.troops, formationTroopCap(commander));
+  if (opts.troopCount > cap) {
+    throw new Error(
+      `${commander.name} 出征上限 ${cap} 兵（功绩带兵+ 与武官等级合计），当前 ${opts.troopCount}`,
+    );
+  }
 
   if (!Number.isFinite(opts.food) || opts.food < 0) throw new Error('携粮数值非法');
   if (opts.food > from.food) throw new Error('携粮超过节点库存');
+}
+
+/** 目标侧校验：目标非己方/有主/官道邻接（仅行军编成需要）。 */
+export function validateFormationTarget(
+  state: GameState,
+  opts: CampaignFormationOptions,
+  actingFactionId: number = state.playerFactionId,
+): void {
+  const target = state.cities[opts.targetNodeId];
+  if (!target) throw new Error('目标节点不存在');
+  if (target.ruler === actingFactionId) throw new Error('目标已是己方');
+  if (target.ruler == null) throw new Error('暂不支持攻打无主节点');
+  const from = state.cities[opts.fromNodeId];
+  if (!areCitiesRoadAdjacent(opts.fromNodeId, opts.targetNodeId)) {
+    throw new Error(`${from?.name ?? '出发城'} 与 ${target.name} 无官道直达（战役层首跳须邻接）`);
+  }
 }
 
 /** 计算副将数上限（§5.5.1 简化：武官官职 + 爵位） */
@@ -248,9 +302,14 @@ export function startCampaign(
 export function startCampaignForFaction(
   state: GameState,
   opts: CampaignFormationOptions,
-  actingFactionId: number,
+  actingFactionId: number = state.playerFactionId,
+  flags: { skipTargetValidation?: boolean; phase?: 'marching' | 'garrison' } = {},
 ): { state: GameState; army: CampaignArmy } {
-  validateFormation(state, opts, actingFactionId);
+  if (flags.skipTargetValidation) {
+    validateFormationSource(state, opts, actingFactionId);
+  } else {
+    validateFormation(state, opts, actingFactionId);
+  }
 
   const from = state.cities[opts.fromNodeId];
   const limit = subCommanderLimit(state, opts.commanderId);
@@ -284,8 +343,8 @@ export function startCampaignForFaction(
     formation: opts.formation,
     currentNodeId: opts.fromNodeId,
     targetNodeId: opts.targetNodeId,
-    path: [opts.targetNodeId],
-    phase: 'marching',
+    path: flags.phase === 'garrison' ? [] : [opts.targetNodeId],
+    phase: flags.phase ?? 'marching',
     troops,
     maxTroops: troops,
     food,
@@ -560,13 +619,17 @@ interface ArmyPowerInput {
 function computePower(inp: ArmyPowerInput): number {
   const base = inp.troops * unitPower(inp.unitType);
 
+  // 功绩属性加成计入有效属性（Session 265 数值消费）
+  const effStat = (o: Officer, stat: 'leadership' | 'war' | 'intelligence'): number =>
+    o.stats[stat] + meritStatBonus(o, stat);
+
   const mainMod = inp.commander
-    ? 1 + (inp.commander.stats.leadership + inp.commander.stats.war / 2) / 200
+    ? 1 + (effStat(inp.commander, 'leadership') + effStat(inp.commander, 'war') / 2) / 200
     : 1;
   const subMod = inp.subCommanders.length > 0
-    ? inp.subCommanders.reduce((s, o) => s + o.stats.leadership * 0.3, 0) / inp.subCommanders.length
+    ? inp.subCommanders.reduce((s, o) => s + effStat(o, 'leadership') * 0.3, 0) / inp.subCommanders.length
     : 0;
-  const advisorMod = inp.advisor ? inp.advisor.stats.intelligence / 200 : 0;
+  const advisorMod = inp.advisor ? effStat(inp.advisor, 'intelligence') / 200 : 0;
   const formationMod = 0; // 0-A 简化：阵型修正由阵型联动后置
   const commandMod = mainMod + subMod + advisorMod + formationMod;
 
@@ -792,7 +855,13 @@ export function runAutoBattle(
   }
   if (defCmd && commanderStatus[defCmd.id] == null) {
     if (winner === 'attacker' && defTroops <= 0) {
-      commanderStatus[defCmd.id] = rng() < 0.5 ? 'captured' : rng() < 0.2 ? 'killed' : 'wounded';
+      // 被俘概率（等级表 Lv12 被俘-20%，Session 265：被俘者视角抗被俘）
+      const captureResist = meritEffects(
+        meritLevelFor(defCmd.merit ?? 0),
+        defCmd.meritPath ?? 'neutral',
+      ).captureResist;
+      const captureRoll = 0.5 - captureResist;
+      commanderStatus[defCmd.id] = rng() < captureRoll ? 'captured' : rng() < 0.2 ? 'killed' : 'wounded';
     } else {
       commanderStatus[defCmd.id] = defLossRatio > 0.5 ? (rng() < 0.15 ? 'killed' : rng() < 0.3 ? 'wounded' : 'alive') : 'alive';
     }
@@ -887,7 +956,10 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
     spoils: { gold: Math.floor(targetCity.gold * 0.5), food: Math.floor(targetCity.food * 0.5) },
     events: [{ round: 0, type: 'stratagem', description: `${targetCity.name} 开城投降` }],
   }, { type: 'siege_surrender', defCityId: targetCity.id }, rng);
-  return { state: captured, success: true };
+  return {
+    state: commander ? grantMeritTo(captured, commander.id, MERIT_SIEGE_SURRENDER) : captured,
+    success: true,
+  };
 }
 
 /** 强攻 = 攻城自动战斗（§16.6） */
@@ -1120,6 +1192,11 @@ function applyBattleResultToState(
       factions = recomputeFactionCities(cities, factions);
       // 清反间 + 抢美女
       let after: GameState = { ...state, cities, officers, factions, campaignArmies: [...armies, updatedArmy] };
+      // 军事功绩：破城 +30（Army 主将）；若占城导致目标势力覆灭再 +50（灭国）
+      after = grantMeritTo(after, army.commanderId, MERIT_CAPTURE_CITY);
+      if (prevRuler != null && factions[prevRuler] && !factions[prevRuler].isAlive) {
+        after = grantMeritTo(after, army.commanderId, MERIT_ANNIHILATE_FACTION);
+      }
       after = clearCityCounterOnCapture(after, targetId);
       after = lootBeautyOnCapture(after, targetId, army.factionId, rng);
       after = syncFactionResources(after);
@@ -1139,12 +1216,27 @@ function applyBattleResultToState(
         troops: from.troops + result.attackerRemaining,
       };
     }
+    // 军事功绩：守城 +8（守方主将，守方击退攻方围城；仅限围城战，野战无守城一说）
+    let defeatedState: GameState = { ...state, cities, officers, factions, campaignArmies: armies };
+    if (resolution.defCityId != null && cities[resolution.defCityId]) {
+      const defCity = cities[resolution.defCityId];
+      if (defCity.ruler != null) {
+        const defCmd = pickDefenderCommander(defeatedState, defCity, defCity.ruler);
+        if (defCmd) defeatedState = grantMeritTo(defeatedState, defCmd.id, MERIT_DEFEND_CITY);
+      }
+    } else if (resolution.enemyArmyId != null) {
+      // 军事功绩：野战守方击退来敌 +10（敌方 Army 主将）
+      const enemyCmd = state.campaignArmies.find((a) => a.id === resolution.enemyArmyId)?.commanderId;
+      if (enemyCmd != null) {
+        defeatedState = grantMeritTo(defeatedState, enemyCmd, MERIT_FIELD_ROUT);
+      }
+    }
     // Army 残部退回（兵力极少则解散）
     if (result.attackerRemaining > MIN_CAMPAIGN_TROOPS) {
       armies.push({ ...updatedArmy, phase: 'garrison', currentNodeId: army.fromNodeId, targetNodeId: undefined, path: [] });
     }
     return pushLog(
-      { ...state, cities, officers, factions, campaignArmies: armies },
+      defeatedState,
       'campaign_defeat',
       `${army.name} 战败，残部 ${result.attackerRemaining} 退回`,
     );
@@ -1152,8 +1244,20 @@ function applyBattleResultToState(
 
   // 野战胜（无 defCityId）：Army 驻守当前节点
   armies.push({ ...updatedArmy, phase: 'garrison' });
+  // 军事功绩：野战击破——守方溃散（击破敌军主力，30% 溃散线）攻方主将 +20；
+  // 未溃散险胜 +10。引擎结构下守方 30% 溃散线兜底，"全歼（残 0）"不可达，
+  // 故以"溃散"为重大战果判定（docs/04 §6.1）。
+  const defRouted = result.events.some(
+    (e) => e.type === 'rout' && e.description.includes('守方'),
+  );
+  let fieldState: GameState = { ...state, cities, officers, factions, campaignArmies: armies };
+  fieldState = grantMeritTo(
+    fieldState,
+    army.commanderId,
+    defRouted ? MERIT_FIELD_ANNIHILATE : MERIT_FIELD_ROUT,
+  );
   return pushLog(
-    { ...state, cities, officers, factions, campaignArmies: armies },
+    fieldState,
     'campaign_field_win',
     `${army.name} 野战胜利，敌军溃退`,
   );

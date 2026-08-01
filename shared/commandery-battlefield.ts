@@ -15,8 +15,14 @@ export interface GenerateCommanderyBattlefieldOpts {
   warId: string;
   attackerFactionId: number;
   defenderFactionId: number;
+  /** 攻方 Army id 列表（部署到入口县）。 */
   armyIds: string[];
+  /** 攻方部署入口县（边界入口）。 */
   entryNodeIds: string[];
+  /** 守方 Army id 列表（R6：部署到守方纵深前沿县；缺省/空 = 无守方 Army）。 */
+  defenderArmyIds?: string[];
+  /** 守方部署节点（守方纵深前沿县）；缺省/空但存在 defenderArmyIds 时回退郡治 seat。 */
+  defenderEntryNodeIds?: string[];
   seatGarrison?: number;
   seatWallDurability?: number;
   rngDrawStart: number;
@@ -24,7 +30,14 @@ export interface GenerateCommanderyBattlefieldOpts {
   dynamic?: { rng: () => number; currentMonth: number };
 }
 
-/** BF-P4 通用郡域实例生成器：只消费模板与显式入口，不按郡名分支。 */
+/**
+ * BF-P4 通用郡域实例生成器：只消费模板与显式入口，不按郡名分支。
+ *
+ * 攻方 Army（`opts.armyIds`）部署到攻方边界入口 `opts.entryNodeIds`；
+ * 守方 Army（`opts.defenderArmyIds`，R6 守方 Army 入郡域场景）部署到
+ * 守方纵深前沿县 `opts.defenderEntryNodeIds`（缺省回退郡治 seat）。
+ * 无守方 Army 时全部行为与 BF-P3 完全一致（RNG 零新增消费、审计不变）。
+ */
 export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefieldOpts): BattlefieldInstance {
   const commandery = opts.bundle.commanderies[0];
   if (!commandery) throw new Error(`${opts.bundle.sliceId} 缺少 commandery 定义`);
@@ -66,10 +79,27 @@ export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefiel
     const weather = weatherRoll < (wetSeason ? .45 : .18)
       ? 'rain' as const
       : weatherRoll < (wetSeason ? .62 : .38) ? 'fog' as const : 'clear' as const;
-    const deployments = [...opts.armyIds].sort().map((armyId) => ({
+    // 攻方 Army → 入口县（BF-P3 确定性序列：稳定排序后逐支 draw 选入口）。
+    const attackerDeployments = [...opts.armyIds].sort().map((armyId) => ({
       armyId,
       nodeId: opts.entryNodeIds[Math.floor(draw() * opts.entryNodeIds.length)]!,
     }));
+    // 守方 Army → 守方纵深前沿县（R6，`docs/23-design-consistency-remediation.md` §三）。
+    // 无守方 Army 或未提供守方节点时零 RNG 消费（回退郡治 seat，确定性部署），
+    // 保证 BF-P3 既有序列（无 defenderArmyIds 时）完全不变。
+    const defenderArmyIds = opts.defenderArmyIds ?? [];
+    const defenderNodes = opts.defenderEntryNodeIds?.length
+      ? opts.defenderEntryNodeIds
+      : [commandery.seatCountyId];
+    const defenderDeployments = defenderArmyIds.length === 0
+      ? []
+      : [...defenderArmyIds].sort().map((armyId) => ({
+          armyId,
+          nodeId: opts.defenderEntryNodeIds?.length
+            ? defenderNodes[Math.floor(draw() * defenderNodes.length)]!
+            : commandery.seatCountyId,
+        }));
+    const deployments = [...attackerDeployments, ...defenderDeployments];
     const attackerScouted = draw() < .55;
     const defenderScouted = draw() < .5;
     const ambushRoll = draw();
@@ -119,7 +149,7 @@ export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefiel
       toNodeId: route.toNodeId,
       type: route.kind,
     })),
-    armyIds: [...opts.armyIds],
+    armyIds: [...opts.armyIds, ...(opts.defenderArmyIds ?? [])].sort(),
     encounters: [],
     turn: 0,
     phase: 'active',

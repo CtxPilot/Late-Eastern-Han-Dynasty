@@ -582,13 +582,17 @@ export interface Officer {
   militaryPosition: MilitaryPosition | null;
   nobilityRank: NobilityRank | null;
 
-  // 功绩
+  // 功绩（Session 261 已实装：shared/merit.ts 派生与同步；Session 265 数值消费）
   merit: number;               // 累计功绩 0~210000+（君主身份占位 0，不参与功绩系统，见 04 §3.8/§6.5）
 
-  // 功绩等级（以下3字段设计稿已定，运行时类型尚未实现，需在 shared/types/officer.ts 补全）
-  // meritLevel: number;          // 功绩等级 1~20，由 merit 反查20级表得到
-  // meritPath: 'warrior' | 'scholar' | 'neutral';
-  // peakMeritLevel: number;      // 生涯最高等级，用于衰减退级底线
+  // 功绩等级（Session 261 已实装：shared/merit.ts 派生与同步）
+  meritLevel?: number;          // 功绩等级 1~20，由 merit 反查20级表得到（merit 写入点同步）
+  meritPath?: 'warrior' | 'scholar' | 'neutral';  // 文武分岔，由当前官职轨道派生（Lv6 ★分岔；Lv16 属性加成按分岔消费）
+  peakMeritLevel?: number;      // 生涯最高等级，用于衰减退级底线（只升不降）
+  // Session 265 数值消费：meritLevel/meritPath 派生属性加成（meritAttrBonusFor，
+  // Lv5 体上限+3 / Lv15/16/17/20 五维+，计入有效属性）与特殊效果（meritEffects：
+  // 单挑/开发/暴率/内政效率/被俘/适性/体力恢复）及出征上限（formationTroopCap，
+  // 见 04 §7.5 与 §十 6.2）。
 
   // 体力
   stamina: {

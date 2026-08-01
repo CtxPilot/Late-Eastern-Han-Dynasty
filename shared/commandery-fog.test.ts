@@ -79,11 +79,16 @@ describe('computeRevealedNodeIds', () => {
     expect(revealed).not.toContain('nanjun_zhouling');
   });
 
-  it('守方 Army 所在县不被攻方视为揭示源', () => {
+  it('守方 Army 所在县并入揭示源（R6 守方 Army 入郡域场景）', () => {
     const inst = buildNanjunInstance({ playerArmyNode: 'nanjun_yiling' });
-    // 攻方 Army 列表不含 army-d1 → 该节点（及其邻接）不作为揭示源
+    // 攻方 Army 列表为空 → nodeStates 中的 army-p1 视为守方 Army（非攻方）
+    // → 其所在县及一跳邻接并入揭示源（`docs/23-design-consistency-remediation.md` R6）。
     const revealed = computeRevealedNodeIds(inst, PLAYER_FACTION_ID, []);
-    expect(revealed).not.toContain('nanjun_yiling');
+    expect(revealed).toContain('nanjun_yiling');
+    expect(revealed).toContain('nanjun_yidao');
+    expect(revealed).toContain('nanjun_zigui');
+    // 非邻接远郊县仍迷雾
+    expect(revealed).not.toContain('nanjun_zhouling');
   });
 });
 
@@ -141,6 +146,32 @@ describe('maskBattlefieldInstanceForPlayer', () => {
     expect(masked.dynamicSituation?.deployments).toEqual([
       { armyId: 'army-p1', nodeId: 'nanjun_yiling' },
     ]);
+  });
+
+  it('守方 Army 所在县揭示后其 armyIds 保留（玩家可见驻军），deployments 仍不泄露（R6）', () => {
+    const inst = buildNanjunInstance();
+    // 州陵部署守方 Army army-d1（权威运行时位置）
+    const withDefender = {
+      ...inst,
+      nodeStates: inst.nodeStates.map((n) =>
+        n.nodeId === 'nanjun_zhouling' ? { ...n, armyIds: ['army-d1'] } : n,
+      ),
+      dynamicSituation: {
+        weather: 'clear' as const,
+        deployments: [{ armyId: 'army-d1', nodeId: 'nanjun_zhouling' }],
+        attackerScouted: false,
+        defenderScouted: true,
+        ambush: 'none' as const,
+        encounterOrder: ['army-d1'],
+      },
+    };
+    // 攻方 Army 列表为空 → army-d1 视为守方 Army → 其所在县州陵并入揭示源
+    const masked = maskBattlefieldInstanceForPlayer(withDefender, PLAYER_FACTION_ID, []);
+    const zhouling = masked.nodeStates.find((n) => n.nodeId === 'nanjun_zhouling')!;
+    expect(masked.foggedNodeIds).not.toContain('nanjun_zhouling');
+    expect(zhouling.armyIds).toEqual(['army-d1']);
+    // deployments 快照仍只保留攻方 Army → 守方部署历史不泄露
+    expect(masked.dynamicSituation?.deployments).toEqual([]);
   });
 
   it('不修改入参（纯函数）', () => {

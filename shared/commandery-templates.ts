@@ -28,6 +28,8 @@ export interface CommanderyTemplateEntry {
   templateId: string;
   /** 郡域边界入口县 id（攻方部署点，来自模板县节点）。 */
   entryNodeIds: string[];
+  /** 守方部署节点 id（守方纵深前沿县；守方 Army 入场部署点，R6）。 */
+  defenderEntryNodeIds: string[];
   /** 实例 id 前缀（如 `bf-nanjun`）。 */
   instancePrefix: string;
   /** 战争 id 前缀（如 `war-nanjun`）。 */
@@ -42,6 +44,7 @@ export const COMMANDERY_TEMPLATES: Record<string, CommanderyTemplateEntry> = {
     bundle: nanjun190,
     templateId: 'nanjun-190',
     entryNodeIds: ['nanjun_dangyang', 'nanjun_zhijiang'],
+    defenderEntryNodeIds: ['nanjun_zhouling', 'nanjun_yidao'],
     instancePrefix: 'bf-nanjun',
     warPrefix: 'war-nanjun',
   },
@@ -51,6 +54,7 @@ export const COMMANDERY_TEMPLATES: Record<string, CommanderyTemplateEntry> = {
     bundle: yingchuan190,
     templateId: 'yingchuan-190',
     entryNodeIds: ['yingchuan_xiangcheng', 'yingchuan_changshe'],
+    defenderEntryNodeIds: ['yingchuan_wuyang', 'yingchuan_fucheng'],
     instancePrefix: 'bf-yingchuan',
     warPrefix: 'war-yingchuan',
   },

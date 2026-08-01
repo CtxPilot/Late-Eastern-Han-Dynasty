@@ -121,6 +121,10 @@ export function rewardBeautyStock(
   if (!officer) throw new Error('武将不存在');
   if (officer.faction !== fid) throw new Error('非己方武将');
   if (officer.status !== OfficerStatus.ACTIVE) throw new Error('武将非现役');
+  // 君主特例（docs/04 §3.8 切片 C）：不得动用宫廷人脉笼络君主（忠诚±对君主不生效）
+  if (officer.faction != null && state.factions[officer.faction]?.rulerId === officerId) {
+    throw new Error(`${officer.name} 是君主，不参与笼络（§3.8 君主特例）`);
+  }
 
   const fac = ensureFactionNetwork(state.factions[fid]);
   if (fac.courtNetwork < amount) {

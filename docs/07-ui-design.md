@@ -865,7 +865,7 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 - `client/src/components/layout/FactionPanel.tsx`：LeftPanel 新增 AccSection，与 FamilyPanel 同级。每派系卡片（出身标签色块 + 领袖名 + 成员数 + 成员列表点击跳 OfficerDetail）。
 - `client/src/components/officer/OfficerDetail.tsx`：仿 `EventDialog.tsx:43-49` modal。展示：名+势力色+年龄+官职三轨+爵位 / 明五维+hidden 五维（敌将按 `maskOfficer` 脱敏为 50）/ tags 五类着色 chip / bloodline 父子链+wifeId+beauties / unitProficiency 适性条+formationMastery+skills+uniqueSkill。
 - `client/src/components/layout/OfficerRosterPanel.tsx`：**己方在职武将列表**（当前缺失，是 OfficerDetail/忠诚度警报/赏金/俸禄的前置）。列 `game.officers` filter `faction===playerId`，展示名/统/武/智/忠诚/状态徽章/位置。`loyalty<60` 加 `border-red-500 animate-pulse` 红框警报。
-- **君主身份特例 UI（Session 188 实装，Session 194 资源真源修正）**：判定 `isRuler = game.factions[officer.faction]?.rulerId === officer.id`。君主身份时：OfficerDetail aside 不渲染"忠诚"与"功绩"条目，"拉拢记录"整个区块不渲染；功绩位置改为**势力综合国力派生指标**（城池数/总兵力/总金/总粮）。其中金粮兵与 TopBar 统一调用 `getFactionResourceTotals()`，从当前 `game.cities` 所属城池即时汇总，禁止读取回合末才同步的 `faction.gold/food` 作为实时展示。OfficerRosterPanel 名册行右上"忠 N"对君主替换为"君主"字样，低忠诚红框警报对君主天然不触发（君主恒为占位 100）。规则真源见 04 §3.8。引擎守卫（拒绝给君主赏赐美人/赐婚/改功绩）属切片 C，留待后续 Session。
+- **君主身份特例 UI（Session 188 实装，Session 194 资源真源修正）**：判定 `isRuler = game.factions[officer.faction]?.rulerId === officer.id`。君主身份时：OfficerDetail aside 不渲染"忠诚"与"功绩"条目，"拉拢记录"整个区块不渲染；功绩位置改为**势力综合国力派生指标**（城池数/总兵力/总金/总粮）。其中金粮兵与 TopBar 统一调用 `getFactionResourceTotals()`，从当前 `game.cities` 所属城池即时汇总，禁止读取回合末才同步的 `faction.gold/food` 作为实时展示。OfficerRosterPanel 名册行右上"忠 N"对君主替换为"君主"字样，低忠诚红框警报对君主天然不触发（君主恒为占位 100）。规则真源见 04 §3.8。**Session 261 已落地功绩引擎守卫**（battle/duel 发放与季度衰减跳过君主，见 04 §6.5）；**Session 265 切片 C 完成**：`appointOfficer` 忠诚±对君主跳过、`giftBeauty`/`marryFemale`/`rewardBeautyStock` 对君主目标拒绝（错误文案含「§3.8 君主特例」），六维不显示功绩属性加成。
 - `client/src/components/officer/OfficerPortrait.tsx`（Session 124 首批切片，Session 166 素材替换）：吕布、关羽、诸葛亮、曹操改用工程内金石水墨 PNG，继续叠加氏族题签、朱砂姓名印与印绶色条；其余人物仍按属性与 ID 生成稳定 SVG/CSS 默认轮廓。`avatarGene` 尚未落库，四张位图也只是重点人物替换，**不得误记为 P5-10 全量完成**。
 - **抽象头像的目标不是写实，而是符号化辨识**：每名重点人物只强化 1~2 个有历史/文本依据的轮廓符号（冠式、胡须、眉眼、持物或官印），其余细节服从统一几何语法。辨识度须通过不显示姓名的快速识别测试验证，不能仅凭维护者主观判断。
 - 四名现有切片的符号基线：吕布=双翎武冠+锐脸/虬髯；关羽=方脸+长髯；诸葛亮=文冠+长脸/山羊胡；曹操=王者冠式+圆脸/短髯。后续不得直接照搬现代影视、动漫或商业游戏的专有服饰与构图。
@@ -1648,6 +1648,7 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
 
 - `OfficerDetail` 属性页以“人物成长”集中展示经验、功绩、技能等级与使用次数；已掌握
   阵型区块命名为“阵型精通”。两处均明确自动升级/双轴成长仍待实装。
+- **S12 功绩等级展示（Session 261 实装；Session 265 数值消费）**：非君主武将 aside 功绩条目显示 `LvN · 称号`（如 `Lv9 · 名将`）；人物成长区块追加功绩进度条（当前功绩/下一级阈值 + 距下一级提示 + 带兵+N，Lv2+ 才显示带兵+），数据经 `meritLevelFor/meritTitle/meritNextThreshold/meritTroopBonus` 从 `officer.merit` 纯函数派生；君主仍只显示国力指标。**Session 265**：六维行在功绩属性加成 >0 时显示绿色 `+N`（`meritAttrBonusFor` 派生；Lv5 体力+3、Lv15/16/17/20 五维+，Lv16 按文武分岔；君主屏蔽），带兵+ 文案与出征上限联动（`formationTroopCap`）。任命面板门槛文案含 `功绩LvN`（`formatReq` 同步），确认前复验与按钮禁用均经 `meetsPositionReq(..., meritLevelFor(officer.merit))` 检查。
 - 命令坞军事首分面命名为“军团战备”，汇总城市兵力、士气、金粮和可征人口。
 - 左栏 CampaignArmy 只读详情命名为“战役态势”，汇总阶段、兵粮、士气、组织、疲劳与经验。
 - 四入口只是现有权威字段的玩家可读归类，不增加资源、提交入口或升级规则。

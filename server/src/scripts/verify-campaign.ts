@@ -104,6 +104,11 @@ function stubOfficer(
     stamina: 100,
     wifeId: null,
     beauties: [],
+    // 功绩带兵+ 数值消费（Session 265）：夹具主将默认 Lv15（白身 cap=10000）
+    // 以覆盖 6000~7500 兵出征用例；测试目标是战役引擎而非功绩数值。
+    ...(opts.merit == null && opts.meritLevel == null
+      ? { merit: 45_000, meritLevel: 15, peakMeritLevel: 15, meritPath: 'warrior' as const }
+      : {}),
     ...opts,
   };
 }

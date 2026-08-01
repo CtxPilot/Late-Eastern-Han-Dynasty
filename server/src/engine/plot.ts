@@ -16,6 +16,26 @@ import {
   type PlotCost,
 } from '@leh/shared';
 import { upsertDipFavor } from './spy.js';
+import { grantMeritTo } from './meritGrant.js';
+
+// 计谋成功功绩（docs/04 §6.1 军事条 计策+3~8；固定值 +5 不消耗权威 RNG，待平衡）
+const MERIT_PLOT_SUCCESS = 5;
+
+/**
+ * 计谋执行武将缺省解析：势力内 ACTIVE 非君主智最高者（军师类武将出谋）。
+ */
+function resolveCasterOfficer(state: GameState, factionId: number): number | undefined {
+  const rulerId = state.factions[factionId]?.rulerId;
+  const candidates = Object.values(state.officers)
+    .filter(
+      (o) =>
+        o.faction === factionId &&
+        o.status === 'active' &&
+        o.id !== rulerId,
+    )
+    .sort((a, b) => b.stats.intelligence - a.stats.intelligence || a.id - b.id);
+  return candidates[0]?.id;
+}
 
 const HONEY_TRAP_COST: PlotCost = {
   gold: 150,
@@ -134,6 +154,7 @@ export function launchPlot(
     targetCityId?: number;
     targetOfficerId?: number;
     agentId?: string;
+    casterOfficerId?: number;
   },
   rng: () => number,
 ): GameState {
@@ -281,6 +302,7 @@ export function launchPlot(
     id: plotId,
     type,
     casterFactionId: fid,
+    casterOfficerId: opts.casterOfficerId ?? resolveCasterOfficer(state, fid),
     targetFactionId,
     targetCityId,
     targetOfficerId: opts.targetOfficerId,
@@ -370,6 +392,10 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
     diplomacy = result.diplomacy;
     factions = result.factions;
     intel = result.intel;
+    // 军事功绩：计谋成功 +5（执行武将 casterOfficerId，君主不发守卫在 grantMeritTo 内）
+    if (result.success && plot.casterOfficerId != null) {
+      officers = grantMeritTo({ ...s, officers }, plot.casterOfficerId, MERIT_PLOT_SUCCESS).officers;
+    }
     messages.push(`${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：${result.message}`);
 
     if (result.enterActive) {

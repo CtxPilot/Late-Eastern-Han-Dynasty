@@ -12,9 +12,12 @@ import {
   initialCourtNetworkOpportunities,
   calcStaminaMax,
   emptyIntel,
+  grantMerit,
   maskGameStateForPlayer,
+  meritLevelFor,
   parseCurrentSaveEnvelope,
   splitDemographics,
+  syncMerit,
   type BattleState,
   type City,
   type FemaleCharacter,
@@ -171,7 +174,7 @@ function buildGameState(
   const availableOfficerIds = new Set(scenario.availableOfficerIds);
   for (const o of staticData.officers.filter((item) => availableOfficerIds.has(item.id))) {
     const pos = startState.officerPositions.find((p) => p.officerId === o.id);
-    officers[o.id] = {
+    officers[o.id] = syncMerit({
       ...o,
       skills: o.skills.map((s) => ({ ...s, useCount: 0 })),
       faction: pos?.factionId ?? null,
@@ -184,11 +187,11 @@ function buildGameState(
       militaryPosition: (pos?.militaryPosition as MilitaryPosition) ?? MilitaryPosition.NONE,
       nobilityRank: (pos?.nobilityRank as NobilityRank) ?? NobilityRank.NONE,
       merit: pos?.merit ?? 0,
-      stamina: calcStaminaMax(o, pos?.merit ?? 0, scenario.noLifespan ? 40 : (startState.year - o.birthYear)),
+      stamina: calcStaminaMax(o, meritLevelFor(pos?.merit ?? 0), scenario.noLifespan ? 40 : (startState.year - o.birthYear)),
       actionsPerMonth: 1,
       wifeId: null,
       beauties: [],
-    };
+    });
   }
 
   const cities: Record<number, City> = {};
@@ -398,7 +401,7 @@ export function endTurn(): GameState {
     next = tickCampaignGarrison(next);
     next = tickConstruction(next); // 设施建造回合化推进
     next = gsTick(next, runtimeRandom); // 总军师系统：忠诚/被俘自动解职
-    next = tickBattlefieldInstance(next); // BF-P2 Q9：郡域战场月度 tick（驻军消耗 + 补给线切断）
+    next = tickBattlefieldInstance(next, runtimeRandom); // BF-P2 Q9 + R6：郡域战场月度 tick（驻军消耗 + 补给线切断 + 守方 Army 主动行动）
     next = { ...next, campaignNodes: getCampaignNodes(next) };
     currentGame = next;
     const g = getClientGame();
@@ -686,6 +689,7 @@ export function doLaunchPlot(
   targetCityId: number | undefined,
   targetOfficerId: number | undefined,
   agentId: string | undefined,
+  casterOfficerId?: number,
 ): GameState {
   return withLock(() => {
     currentGame = launchPlot(getGame(), {
@@ -694,6 +698,7 @@ export function doLaunchPlot(
       targetCityId,
       targetOfficerId,
       agentId: agentId || undefined,
+      casterOfficerId,
     }, runtimeRandom);
     return getClientGame();
   });
@@ -1203,12 +1208,26 @@ export function enterNanjunBattlefield(commandery = 'nanjun'): GameState {
       throw new Error(`未知郡国模板：${commandery}（已登记：${getCommanderyIds().join('、')}）`);
     }
     const attackerFactionId = state.playerFactionId;
-    const defenderFaction = Object.values(state.factions).find(
-      (faction) => faction.id !== attackerFactionId && faction.isAlive,
-    );
-    if (!defenderFaction) throw new Error('未找到敌方势力');
+    const seatCityId = template.bundle.commanderies[0]?.worldCityId;
+    const seatRuler = seatCityId != null ? state.cities[seatCityId]?.ruler : null;
+    // 守方势力：优先郡治大地图城市实际占领势力（郡国归属语义，R6）；郡治无主或
+    // 属玩家时回退任意非玩家存活势力（既有行为）。
+    const defenderFactionId = seatRuler != null && seatRuler !== attackerFactionId
+      ? seatRuler
+      : (() => {
+          const fallback = Object.values(state.factions).find(
+            (faction) => faction.id !== attackerFactionId && faction.isAlive,
+          );
+          if (!fallback) throw new Error('未找到敌方势力');
+          return fallback.id;
+        })();
     const armyIds = state.campaignArmies
       .filter((army) => army.factionId === attackerFactionId)
+      .map((army) => army.id);
+    // R6 守方 Army 入郡域场景：郡治大地图城市（worldCityId）驻留的守方势力
+    // Army 一并入场，部署到守方纵深前沿县（模板 defenderEntryNodeIds）。
+    const defenderArmyIds = state.campaignArmies
+      .filter((army) => army.factionId === defenderFactionId && army.currentNodeId === seatCityId)
       .map((army) => army.id);
     const beforeRng = getRuntimeRngState();
     const stableSuffix = `${state.currentYear}-${state.currentMonth}-${beforeRng.draws}`;
@@ -1218,9 +1237,11 @@ export function enterNanjunBattlefield(commandery = 'nanjun'): GameState {
       bundle: template.bundle,
       templateId: template.templateId,
       attackerFactionId,
-      defenderFactionId: defenderFaction.id,
+      defenderFactionId,
       armyIds,
       entryNodeIds: template.entryNodeIds,
+      defenderArmyIds,
+      defenderEntryNodeIds: template.defenderEntryNodeIds,
       rngDrawStart: beforeRng.draws,
       scenarioDateAtCreation: `${state.currentYear}-${String(state.currentMonth).padStart(2, '0')}`,
       dynamic: { rng: runtimeRandom, currentMonth: state.currentMonth },
@@ -1321,7 +1342,11 @@ function settleBattlefieldDuel(state: GameState, context: BattlefieldDuelContext
     if (!successor) throw new Error('势力君主单挑败亡但无可用继承者');
     factions[loserFaction.id] = { ...loserFaction, rulerId: successor.id };
   }
-  if (winner) officers[winner.id] = { ...winner, merit: (winner.merit ?? 0) + result.meritReward };
+  // 君主不参与功绩系统（docs/04 §3.8/§6.5）：胜方为君主时不发功绩，避免双重计数
+  if (winner) {
+    const winnerIsRuler = state.factions[winner.faction ?? 0]?.rulerId === winner.id;
+    officers[winner.id] = winnerIsRuler ? winner : grantMerit(winner, result.meritReward);
+  }
   if (loser) {
     if (result.outcome === 'killed') {
       officers[loser.id] = { ...loser, status: OfficerStatus.DEAD, faction: null, location: null, stamina: 0 };
@@ -1466,52 +1491,130 @@ export function engageCounty(countyId: string): GameState {
     const defGarrison = node.garrison > 0 ? node.garrison : 1000;
     const defWall = node.wallDurability;
 
-    const result = runAutoBattle(
-      state,
-      atkArmy,
-      null,
-      { cityId: 0, garrison: defGarrison, wall: defWall },
-      runtimeRandom,
-    );
+    // R6 县级主动 AI（Session 259）：县内守方 Army 参战 —— 取兵力最大一支为
+    // defArmy 合成副本（troops = 驻军 + Σ守方 Army.troops，不改动 Army 真身），
+    // 结算后按比例回填各守方 Army 与县驻军；攻方胜 → 守方 Army 溃退
+    // （seat 未被攻方占 → 移驻 seat 县；被占 → 撤出郡域回大地图）。
+    const seat = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+    const defenderFactionId = seat?.rulerFactionId ?? null;
+    const defenderArmies = node.armyIds
+      .map((id) => state.campaignArmies.find((a) => a.id === id))
+      .filter((a): a is CampaignArmy => !!a && a.factionId === defenderFactionId);
+    const defenderArmyTotal = defenderArmies.reduce((s, a) => s + a.troops, 0);
+    const defenderTotal = defGarrison + defenderArmyTotal;
 
-    // 更新 nodeStates
-    const newNodeStates = inst.nodeStates.map((n, i) => {
-      if (i !== nodeIndex) return n;
-      if (result.winner === 'attacker') {
+    const result = defenderArmies.length > 0
+      ? runAutoBattle(
+          state,
+          atkArmy,
+          { ...[...defenderArmies].sort((a, b) => b.troops - a.troops)[0], troops: defenderTotal },
+          null, // 守方 Army 迎战（野战），不叠加城墙惩罚（见 docs/25 §2.6.4）
+          runtimeRandom,
+        )
+      : runAutoBattle(
+          state,
+          atkArmy,
+          null,
+          { cityId: 0, garrison: defGarrison, wall: defWall },
+          runtimeRandom,
+        );
+
+    // 按比例回填守方残兵：Army 分摊 = defenderRemaining × (Σ守方 Army / 总守军)，尾差归 garrison
+    const armyShare = defenderTotal > 0 ? defenderArmyTotal / defenderTotal : 0;
+    const armyRemainingTotal = defenderTotal > 0
+      ? Math.min(defenderArmyTotal, Math.round(result.defenderRemaining * armyShare))
+      : 0;
+    const garrisonRemaining = Math.max(0, result.defenderRemaining - armyRemainingTotal);
+
+    // 各守方 Army 残兵分配（按各自兵力占比，尾差归最大支）
+    const remainingByArmy = new Map<string, number>();
+    let allotted = 0;
+    const sortedDefArmies = [...defenderArmies].sort((a, b) => b.troops - a.troops);
+    sortedDefArmies.forEach((a, idx) => {
+      const share = idx === sortedDefArmies.length - 1
+        ? armyRemainingTotal - allotted
+        : Math.round(armyRemainingTotal * (a.troops / Math.max(1, defenderArmyTotal)));
+      allotted += share;
+      remainingByArmy.set(a.id, share);
+    });
+
+    const occupied = result.winner === 'attacker';
+    const defenderArmyIdsSet = new Set(defenderArmies.map((a) => a.id));
+    const defenderFlee = occupied && defenderArmies.length > 0;
+    const seatHeldByAttacker = seat?.rulerFactionId === state.playerFactionId;
+
+    // 更新 nodeStates：目标县（占领/留守 + 守方 Army 移除或保留）+ 溃退移驻 seat
+    let newNodeStates = inst.nodeStates.map((n) => {
+      if (n.nodeId !== countyId) return n;
+      if (occupied) {
         return {
           ...n,
           rulerFactionId: state.playerFactionId,
           garrison: result.attackerRemaining,
           wallDurability: Math.max(0, n.wallDurability - Math.floor(n.maxWallDurability * 0.5)),
           controlTurns: 0,
+          armyIds: defenderFlee ? n.armyIds.filter((id) => !defenderArmyIdsSet.has(id)) : n.armyIds,
         };
       }
-      return {
-        ...n,
-        garrison: result.defenderRemaining,
-      };
+      return { ...n, garrison: garrisonRemaining };
+    });
+    if (defenderFlee && !seatHeldByAttacker && seat) {
+      newNodeStates = newNodeStates.map((n) =>
+        n.nodeId === seat.nodeId
+          ? { ...n, armyIds: [...n.armyIds, ...sortedDefArmies.map((a) => a.id)] }
+          : n,
+      );
+    }
+    // 同步 deployments 回退表（溃退移驻 seat → 改 nodeId；撤出郡域 → 移除）
+    let nextDeployments = inst.dynamicSituation?.deployments ?? null;
+    if (defenderFlee && nextDeployments != null) {
+      if (!seatHeldByAttacker && seat) {
+        nextDeployments = nextDeployments.map((d) =>
+          defenderArmyIdsSet.has(d.armyId) ? { ...d, nodeId: seat.nodeId } : d,
+        );
+      } else {
+        nextDeployments = nextDeployments.filter((d) => !defenderArmyIdsSet.has(d.armyId));
+      }
+    }
+
+    // 更新攻方 Army 兵力（消耗）+ morale clamp 到 0-100（Zod schema 约束）；
+    // 守方 Army 兵力/士气按回填更新（溃退 Army 同样带回残兵）
+    const newCampaignArmies = state.campaignArmies.map((a) => {
+      if (a.id === atkArmy.id) {
+        return {
+          ...a,
+          troops: result.attackerRemaining,
+          morale: Math.max(0, Math.min(100, result.attackerMoraleAfter)),
+        };
+      }
+      const remaining = remainingByArmy.get(a.id);
+      if (remaining != null) {
+        return {
+          ...a,
+          troops: remaining,
+          morale: Math.max(0, Math.min(100, result.defenderMoraleAfter)),
+        };
+      }
+      return a;
     });
 
-    // 更新攻方 Army 兵力（消耗）+ morale clamp 到 0-100（Zod schema 约束）
-    const newCampaignArmies = state.campaignArmies.map((a) =>
-      a.id === atkArmy.id
-        ? {
-            ...a,
-            troops: result.attackerRemaining,
-            morale: Math.max(0, Math.min(100, result.attackerMoraleAfter)),
-          }
-        : a,
-    );
-
-    const occupied = result.winner === 'attacker';
+    const fleeMsg = defenderFlee
+      ? seatHeldByAttacker
+        ? '，守方 Army 溃逃出郡域'
+        : `，守方 Army 溃退至 ${seat?.name ?? '郡治'}`
+      : defenderArmies.length > 0
+        ? '，守方 Army 参战'
+        : '';
     const logMsg = occupied
-      ? `${atkArmy.name} 攻占 ${node.name}（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}`
-      : `${atkArmy.name} 攻打 ${node.name} 失利（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}`;
+      ? `${atkArmy.name} 攻占 ${node.name}（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}${fleeMsg}`
+      : `${atkArmy.name} 攻打 ${node.name} 失利（剩兵 ${result.attackerRemaining}），守方残兵 ${result.defenderRemaining}${fleeMsg}`;
 
     currentGame = {
       ...state,
       campaignArmies: newCampaignArmies,
-      activeBattlefieldInstance: { ...inst, nodeStates: newNodeStates },
+      activeBattlefieldInstance: defenderFlee && inst.dynamicSituation && nextDeployments != null
+        ? { ...inst, nodeStates: newNodeStates, dynamicSituation: { ...inst.dynamicSituation, deployments: nextDeployments } }
+        : { ...inst, nodeStates: newNodeStates },
       actionLog: [{
         year: state.currentYear,
         month: state.currentMonth,

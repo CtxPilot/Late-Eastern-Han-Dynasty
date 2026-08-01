@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 256：BF-P5 郡域迷雾设计+实装（视野扩张攻占效果完整落地）** |
+| 会话 | **Session 265：S12 等级表数值消费全量实装 + 君主特例切片 C 收口** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **BF-P5 郡域迷雾已完成：**`shared/commandery-fog.ts` 纯函数（`computeRevealedNodeIds`/`maskBattlefieldInstanceForPlayer`）+ `maskGameStateForPlayer` 集成；`foggedNodeIds` 为 mask 投影专属字段（Zod optional，不入存档）；地理层恒可见、军情层按揭示集遮蔽（入口县∪郡治∪攻方 Army 所在县∪攻方已占领县，每源+一跳邻接）；占领县→邻接破雾=视野扩张；客户端迷雾渲染（深色/`?`/seat 未知/不可攻打） |
-| 文档最新 | 当前状态已同步至 Session 256 / BF-P5 郡域迷雾；历史会话口径按原时点保留 |
-| 本交接用途 | BF-P5 郡域迷雾完成后的下一子步骤选择 |
-| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：第三郡录入（需用户提供史料）、年代覆写；守方 Army 入郡域场景随 R6（S15 多线 AI，迷雾层已就绪并入揭示源即可） |
+| 代码最新 | **S12 数值消费 100% 实装（Session 265）**：`shared/merit.ts` 新增 `meritAttrBonusFor`（属性加成累计，Lv16 文武分岔）+ `meritEffects`（单挑/开发/暴率/内政效率/被俘/适性/体力恢复）+ `formationTroopCap`（出征上限）；属性加成计入有效属性（体力/单挑/六角/暴率/战役战力）；特殊效果接入 duel/civil/crit/campaign/battle/turn；带兵+ 接出征上限（campaign 校验 + AI 同规则裁剪）；**君主特例切片 C 完成**（任命忠诚±跳过、赏赐美人/赐婚/笼络拒绝君主）；OfficerDetail 六维绿色 +N 展示 |
+| 文档最新 | 当前状态已同步至 Session 265 / S12 全量收口 + 切片 C 完成；历史会话口径按原时点保留 |
+| 本交接用途 | S12 全部收口（等级/获取点/数值消费 + 君主特例三项）；下一大系统按 12-system-map.md 由用户拍板 |
+| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：**第三郡录入（陈留郡，需用户提供史料）**；或由用户按 `12-system-map.md` 拍板下一大系统 |
+
+Session 265 基线：shared 285/285（merit.test.ts 29 项，数值消费 12 项新增）、client 39/39
+（officerMeritConsume.test.tsx 3 项新增）、`verify-merit-consume` 18/18、`verify-s265-ui`
+浏览器 8/8；verify-merit 25/25、verify-merit-grants 36/36、verify-merit-military 29/29、
+verify-campaign 71/71、verify-ai-military-rng 38/38、verify-beauty-rng 25/25、
+verify-family-rng 36/36、verify-hc-p1 20/20、save-battlefield-instance 101/101 全绿；
+typecheck/lint/data/build/diff-check 全绿。注意：带兵+ 上限生效后，战役出征受
+`formationTroopCap` 约束（白身 5000 起，AI 同规则），夹具已按 Lv15 适配。
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -222,6 +230,90 @@ bf-p3 13/13、bf-p4 20/20、verify-historical-geography 2 郡 OK、typecheck/lin
 迷雾章节（v1.3→v1.4）、25 §2.6.2/分级表更新为完整实现、09 BF-P5 待办(2)勾除、
 12 S02、23 R6 待办第 2 条标记解决、docs/10 + HANDOFF 双写。
 
+Session 258 增量（用户已拍板：入场=郡治城市现有 Army、部署=守方纵深前沿县）：R6
+守方 Army 入郡域场景实装。`enterNanjunBattlefield` 守方势力改为郡治大地图城市
+（`worldCityId`）实际占领势力（无主/属玩家回退既有行为），驻留郡治城市的守方现役
+Army（`currentNodeId === worldCityId`）自动纳入战场；`generateCommanderyBattlefield`
+新增 `defenderArmyIds`/`defenderEntryNodeIds`（模板目录南郡=州陵/夷道、颍川=舞阳/
+父城），守方 Army 排序后部署到守方纵深前沿县，无守方 Army 时 RNG 零新增消费
+（verify-bf-p3-dynamic 13/13 复现）；`computeRevealedNodeIds` 揭示源并入守方 Army
+所在县（第 5 条），mask 投影保留其 armyIds（玩家可见驻军）、deployments 快照仍只
+保留攻方条目；补给线真实路径判定（Session 254）随之在真实流程触发。验证：shared
+**247/247**、`verify-save-battlefield-instance.ts` **74/74**（f9 真实流程 11 条：
+守方势力=江陵占领势力 2、入 armyIds、部署州陵/夷道、迷雾揭示、占路径县→tick→粮耗
+×2+士气-5、攻方不受影响）、verify-campaign 71/71、bf-p3 13/13、bf-p4 20/20、
+verify-historical-geography 2 郡、client 36/36、typecheck/lint/data/build/diff-check
+全绿。**边界**：守方 Army 入场仅纳入郡治城市驻留 Army；县级主动 AI（守方调动/攻县）
+仍后置；第三郡录入仍需史料。docs/23 R6 待办两条剩余标记解决、21 §5.2.1 揭示源
+第 5 条（v1.4→v1.5）、25 §2.6.2/对比要点、09 BF-P5、12 S02/S15、08 模板目录字段、
+docs/10 + HANDOFF 双写。
+
+Session 259 增量（用户拍板：B 标准闭环，不含大地图增援）：县级主动 AI（R6 后续 ·
+S15 深化）实装。新增 `shared/commandery-defender-ai.ts` `decideDefenderArmyAction`
+决策纯函数：规则① 所在县被攻方占 → 兵力优势（troops ≥ garrison×1.2）且 RNG 判定
+（60%~100%）→ 收复，否则撤退；② 补给线断 → 士气<60 撤退，否则向 seat 回撤一格
+（首步被攻方占则原地）；③ 有攻方占领县 → 向最近者移动一格；④ 驻守。无可行动 RNG
+零消费（verify-bf-p3-dynamic 13/13 确定性不变）。`tickBattlefieldInstance(state)`
+→ `(state, rng)`，补给线惩罚后集成守方行动，位置变更同步 `nodeStates[].armyIds` 与
+`dynamicSituation.deployments` 回退表（避免回退拉回旧位置）。`engageCounty` 守方
+Army 参战：合成守军（兵力最大支为 defArmy 副本，troops=驻军+ΣArmy），
+defenderRemaining/defenderMoraleAfter 按比例回填各 Army 与 garrison；攻方胜 → 溃退
+（seat 未被占 → 移驻 seat；被占 → 撤出郡域），败 → 留原县回填。验证：shared
+**256/256**（+9 defender-ai 单测）、`verify-save-battlefield-instance.ts` **88/88**
+（f10 新增 14 条：f10a 主动移动州陵→华容+deployments 同步、f10c 交战参战+溃退移驻
+seat+残兵回填、f10b 补给线断+士气<60 撤出郡域回大地图+当月仍受罚）、verify-campaign
+71/71、bf-p3 13/13、bf-p4 20/20、verify-historical-geography 2 郡、client 36/36、
+typecheck/lint/data/build/diff-check 全绿。**边界**：0-A 简化——收复县驻军取守方
+Army 兵力（再攻时守军=驻军+Army 名义重复，视为协同放大）；守方 Army 参战走 defArmy
+分支无城墙惩罚（野战迎击）；大地图 AI 增援（选项 C）后置；第三郡录入仍需史料。
+docs/25 §2.6.4 新增 + 验证 74→88、23 R6 剩余标记解决、12 S15 行、09 BF-P5 行、
+docs/10 + HANDOFF 双写。
+
+Session 260 增量（用户拍板：选项 C 大地图 AI 向郡域增援）：`aiMilitary.ts` 新增
+`export maybeReinforceCommandery` 接入 `runAiMilitary`（置于常规出征之前，守土优先；
+增援军 phase='garrison' 不占双线名额）。条件链（任一不满足 RNG 零消费）：① 郡域
+战场 active 且该 AI 势力为守方；② 郡域内守方 Army < 2；③ 模板可解析且郡治大地图
+城市属该势力；④ 郡治城可调兵力（−requiredReserve）≥ 1000；⑤ decisionRng() <
+概率（0.3 + 攻方每占 1 县 +0.1，上限 0.7）。触发：`startCampaignForFaction` +
+flags `{ skipTargetValidation, phase: 'garrison' }` 从郡治城编成（扣兵/粮、武将
+IN_BATTLE）→ 部署到 defenderEntryNodeIds 首个未被攻方占领县（全被占则 seat）→
+inst.armyIds/nodeStates[].armyIds/deployments 三方同步 + actionLog。
+`campaign.ts`：validateFormation 拆分为 validateFormationSource/Target，
+`validateFormation` 保持原顺序（出发节点→目标侧→源侧，错误优先级与历史一致）；
+startCampaignForFaction 新增 flags（garrison 编成 path=[] 不走 tickCampaignMarch）。
+验证：`verify-save-battlefield-instance` **101/101**（f11 新增 13 条：f11a 触发增援
+全套断言、f11b 判定失败零变更、f11c 占县提升概率、f11d 上限 2、f11e runAiMilitary
+端到端）、verify-campaign **71/71**（校验拆分后顺序保持）、verify-ai-military-rng
+38/38 确定性不变、bf-p3 13/13、bf-p4 20/20、march-fog 7/7、turn-cadence、
+historical-geography 2 郡、shared 256/256、client 36/36、typecheck/lint/data/build/
+diff-check 全绿。**边界**：增援仅从郡治城编成（不跨城征调）；概率为启发式常数；
+登记观察——Session 258 入场守方 Army phase 保持入场前值（可能 'marching'），生产
+endTurn 的 tickCampaignMarch 可能推进其大地图位置（不影响郡域内 armyIds 权威位置，
+未修）。docs/25 §2.6.4.1 新增、12 S15 行、09 BF-P5 边界、docs/10 + HANDOFF 双写。
+
+Session 261 增量（用户拍板：S12 功绩等级系统实装）：`shared/merit.ts` 新建——20 级
+功绩表（`MERIT_LEVELS`）+ `meritLevelFor`（merit→Lv 反查）+ `meritTitle/meritTroopBonus/
+meritAttrBonus/meritNextThreshold`（展示查询）+ `applyMeritDecay`（70+/75+/80+ 每季
+-0.3%/-0.5%/-1.0%，保底 min(10, peakMeritLevel)）+ `deriveMeritPath`（按官职轨道
+派生文武分岔）+ `grantMerit/syncMerit`（统一发放与三字段同步，peak 只升不降）。
+`Officer` 新增 `meritLevel/meritPath/peakMeritLevel`（optional 旧档兼容，Schema 同步）。
+`game.ts` 开局 syncMerit 填字段 + stamina 改传 `meritLevelFor`（修复 6.4-1 临时方案）；
+`battle.ts` 战场单挑与 duel 结算发放改走 grantMerit 并**落地君主守卫**（§6.5）；
+任命功绩门槛激活（`PositionReq.meritLevel` 四轨填 0-A 精简数值、`appoint.ts` 属性/
+功绩两段判定、**君主任命豁免功绩门槛**、AppointPanel 门槛展示与复验同步）；
+`turn.ts` 季度衰减（`applyMeritDecayQuarter`，actionLog 写 `merit_decay`）；
+OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国力指标）。
+验证：`shared/merit.test.ts` 17/17、`verify-merit` **25/25**（初始化/门槛拒绝与放行/
+季度衰减/保底/advanceTurn 日志/三字段过完整 Schema）、`verify-merit-headless` **7/7**
+（1440×900 名册→简册功绩等级/进度条/白身无带兵+0/君主国力/门槛文案，console
+error=0）；全量回归 shared 273/273、client 36/36、verify-hc-p0 101/101、verify-hc-p1
+20/20、verify-hc-p1-1~4、verify-campaign 71/71、save-*、turn-cadence 28/28、
+personnel-rng 32/32、duel-rng 3/3、battle-rng 5/5、bf 系列、validate-data 全绿。
+**适配**：verify-hc-p0（8c/8i 夏侯惇/曹仁夹具补 Lv6 功绩）、verify-hc-p1-3（maxOfficer
+夹具补 Lv6 功绩）。**后置**：等级表属性/技能/特殊效果数值消费（体力保持 meritLevel×2
+基线）、带兵+ 接出征上限、功绩获取点扩展（内政/人事/外交引擎多无执行武将参数）、
+门槛数值待平衡。docs/04（§十+§3.4）、03、07、12、docs/10 + HANDOFF 双写。
+
 ---
 
 ## 2. 怎么跑
@@ -235,6 +327,9 @@ pnpm --filter @leh/shared build && pnpm dev
 # 战斗守将: pnpm verify-battle-commanders # 全剧本/玩家视角关联与交战揭示边界
 # AI 军事: pnpm verify-ai-military-rng # 双线/守备/撤退/公平/确定续玩 38/38
 # 回合节拍: pnpm verify-turn-cadence # 连续12回合，月/季/年 28/28
+# 功绩等级: pnpm verify-merit         # 初始化/门槛/衰减 25/25
+# 功绩数值消费: pnpm verify-merit-consume # 出征上限/属性/单挑/暴率/开发/内政/体力恢复/君主守卫 18/18
+# 功绩 UI: pnpm verify-s265-ui       # 六维 +N/功绩区块（需 dev + CDP 9239）8/8
 # 谈判公式: pnpm verify-negotiation-r2 # 登用/结盟边界、单调、seed、UI同源 20/20
 # BF-P0 南郡: pnpm --filter @leh/shared test -- schema.test.ts
 # BF-P4 两郡浏览器验收（需 dev + 1440×900 CDP 9238）: pnpm verify-bf-p4-headless
@@ -261,7 +356,7 @@ pnpm --filter @leh/shared build && pnpm dev
 | ID | 系统 | 成熟度 | 代码/要点 |
 |:--:|------|:------:|-----------|
 | S01 | 回合 | **M+** | `turn.ts`；1回合=1月，季度首月/年度显式节拍；12回合验证28/28；全势力金粮同步 |
-| S02 | 地图 | M | Natural Earth；官道；LOD；**郡域迷雾已实装（BF-P5 Session 256）**：`shared/commandery-fog.ts` + mask 投影 |
+| S02 | 地图 | M | Natural Earth；官道；LOD；**郡域迷雾已实装（BF-P5 Session 256）**：`shared/commandery-fog.ts` + mask 投影；**守方 Army 入郡域场景已完成（R6，Session 258）**：揭示源并入守方 Army 所在县 |
 | S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；文化/工艺/交通/卫生、**军屯/民屯未实装** |
 | S04 | 人口经济 | **M+** | 四桶 demographics + 民军粮耗 + 12月金粮预算 + 递增多城行政成本；俸禄仍未实装 |
 | S05 | 军事 | M+ | 邻接出征→战→占城；战役 Army 主/副将/参谋；**爵位加成未接入** |
@@ -271,10 +366,10 @@ pnpm --filter @leh/shared build && pnpm dev
 | S09 | **宫廷人脉** | **M+** | `courtNetwork/courtNetworkOpportunities` 已实装；与成年女性人口脱钩；旧 v1 `beauty*` 无损迁移；历史女角边界不变 |
 | S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗与完整单挑均统一权威 PRNG，确定续玩 5/5 + 3/3；其余三层战斗、战役 Army 与设计边界保持不变 |
 | S11 | 人事 | **M+** | 搜索/登用接权威 PRNG，确定续玩 32/32；R2 修复义理/野心 100 倍量纲错误并与 UI 同源；现有赏赐/任命确定性 |
-| S12 | 官职功绩体力 | **S/M** | 精简任命；meritLevel 未实现；体力完整 |
+| S12 | 官职功绩体力 | **M+** | 精简任命；**功绩等级系统已实装（Session 261）**：`shared/merit.ts` 20 级表/映射/衰减/文武分岔 + `Officer.meritLevel/meritPath/peakMeritLevel` + 任命功绩门槛（君主任命豁免）+ 季度衰减 + OfficerDetail 等级/进度条展示；**6.1 获取点 100% 实装（Session 262+263+264）**：`meritGrant.ts` 统一守卫发放（君主不发）+ 内政（开发/施米/征兵/训练，城主）+ 人事（搜索寻才+8/宝物 5% 稀有+5/登用+4/联姻+10）+ 外交（同盟+10 使节君主不出使/劝降+30）+ 军事（破城+30/守城+8/灭国+50/计策+5 + 野战击破溃散+20/险胜+10/守方击退+10，`militaryMerit.ts` + `Plot.casterOfficerId` 缺省军师）；**数值消费 100% 实装（Session 265）**：`meritAttrBonusFor` 属性加成（Lv16 文武分岔）计入有效属性（体力/单挑/六角/暴率/战役战力）+ `meritEffects` 特殊效果（单挑+/开发+/暴率+/内政效率/被俘-/适性+/体力恢复）接入 duel/civil/crit/campaign/battle/turn + `formationTroopCap` 带兵+ 接出征上限（AI 同规则）+ 君主特例切片 C（任命忠诚±/赏赐/赐婚/笼络守卫）；`verify-merit-consume` 18/18 + `verify-s265-ui` 8/8。体力完整。**后置**：等级表依赖未实装引擎的效果、真宝物 inventory（0-B） |
 | S13 | 宝物 | S | 薄 |
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
-| S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；县级主动 AI 与郡域补给/迷雾后置 |
+| S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
 | S16 | 剧本/存档 | **M/D** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；所有行动后结算 RNG 已收口；S15 行为复现、生产存取与 SQLite 未做 |
 | S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30/30）；L2 11计/L3 8国策仍设计；AI 发起决策仍属 S15 |
 | S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；父辈/族谱 ❌ |
@@ -407,6 +502,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 会话 | 交付 |
 |------|------|
+| 257 | **BF-P5 年代覆写机制实装**。`seed-schema.ts` 扩展 `CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 支持 `validFromYear`/`validToYear`（缺省=scenarioYear）；构建器透传，自动派生 road 取两端县有效期交集；新建 `year-overrides.ts` 纯函数 `resolveBundleForYear(bundle, year)` 按年份过滤并重新 Zod 校验，无效年份或引用断裂**抛错**（无静默回退）；对过期县/地标引用自动剔除、对不存在 id 引用保留给 Zod 拦截（防手误）。新建 `year-overrides.test.ts` 12 项：190 基线、208 县析置/裁撤、自动道路交集、郡有效期截止抛错、seat 过期抛错、零 RNG 确定性、入参不变，以及 `nanjun190`/`yingchuan190` 190 回归/其他年份抛错。南郡/颍川生产数据仍为 190 单一年代（机制由测试夹具演示，不编造历史）。验证：shared 244/244、server/client typecheck、client 36/36、lint、validate-data、`verify-historical-geography` 2 郡全绿。docs/22 §7.4、08 §十五、09 BF-P5 行、12 S02、10+HANDOFF 双写） |
 | 256 | **BF-P5 郡域迷雾设计+实装**（BF-P2 Q9 视野扩张攻占效果完整落地）。新建 `shared/commandery-fog.ts`：`computeRevealedNodeIds`（揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县，每源 + 一跳邻接）+ `maskBattlefieldInstanceForPlayer`（未揭示节点 garrison/wall/armyIds 清零、deployments 过滤，返回新实例）；`BattlefieldInstance.foggedNodeIds?: string[]` 为 **mask 投影专属**（Zod optional 不入存档）；`maskGameStateForPlayer` 集成；客户端迷雾渲染（深色/`?`/seat 未知/不可攻打）。新增 fog 单测 8/8（shared 224→232）；`verify-save-battlefield-instance` f8 14 条 → 63/63。真实 API：enter 初始 7 迷雾（含州陵）→ engage-county(华容) → 6 迷雾、州陵揭示、华容占驻 858；Headless Chrome：进场 7 `?` → 点华容 → 州陵 `?` 消失、华容「驻738」、巫仍迷雾、consoleErrors=0。全量回归绿。**0-A 边界**：守方 Army 入郡域场景揭示归属留 R6（迷雾层已就绪）；颍川通用。docs/21 §5.2.1、25 §2.6.2、09 BF-P5 待办(2)、12 S02、23 R6、10+HANDOFF 双写） |
 | 255 | **BF-P5 orchestrator 去硬编码**（郡国模板目录驱动）。新建 `shared/commandery-templates.ts`（`COMMANDERY_TEMPLATES` 登记南郡/颍川：bundle/templateId/entryNodeIds/instancePrefix/warPrefix/UI 标签 + 5 个查找助手）；`enterNanjunBattlefield` 由"nanjun/yingchuan 双 if 分支 + 硬编码 bundle/入口/前缀"改为目录查找（未登记抛错）；`generateNanjunBattlefield` 南郡兼容包装从目录取数；路由校验用 `getCommanderyIds()`；客户端 api 参数类型放宽、`gameStore`/`BattlefieldSceneView` 标签目录驱动；`verify-historical-geography` 遍历目录（单一真源）。新增 `shared/commandery-templates.test.ts` 6/6（shared 218→224）；回归 verify-save-battlefield-instance 49/49、verify-campaign 71/71、bf-p3 13/13、bf-p4 20/20、typecheck/lint/data/build 全绿（仅既有大 chunk warning）。**0-A 边界**：江陵席城按钮与 `FIRST_BATCH_COUNTY_IDS` 全局门禁仍为南郡专属（郡级可攻打清单未拆）；第三郡录入（需用户史料）、郡域迷雾留后续。docs/09 BF-P5 行、12 S02、08 目录登记说明同步） |
 | 254 | **BF-P5 补给线真实路径判定**（替换 BF-P2 Q9 全局简化）。`shared/army-county-mapping.ts` 四纯函数（resolveArmyCountyNodeId/shortestCountyPath/isCountyPathBlockedBy/monthlyArmyFoodCost）；`generateCommanderyBattlefield` 部署写 nodeStates[].armyIds（RNG 零消费）；`tickBattlefieldInstance` 逐军判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5）；verify-save-battlefield-instance f6/f6b 真实路径断言 49/49；shared 218/218；verify-campaign 71/71、bf-p3 13/13、bf-p4 20/20；docs/25 §2.6.1 改写、docs/09 BF-P5 待办(1)勾除、12-system-map S02/S15/S16 同步。0-A 边界：守方 Army 入郡域场景随 R6） |
@@ -523,8 +619,8 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | 兵种缺口 | 设计 21 兵种（含弩兵等 14 项未建数据），当前 9 兵种 | 0-B（P0B-09） |
 | 人物列传扩展 | 4 原型试点（曹操/诸葛亮/吕布/关羽），30 基线武将扩展 ~7.5-9.5h（merge 脚本+UI 已就绪，仅需写 Markdown + 运行 merge） | 后续会话渐进 |
 | 阵型缺口 | 设计 27 阵型（18 陆+9 水），当前 7 条；formationProficiency 代码层零存在（只有 formationMastery id 清单） | 0-B（P0B-08） |
-| 补给线糧耗×2 真实路径判定 | **✅ BF-P5 已落地（Session 254）**：`shared/army-county-mapping.ts` 位置映射 + `tickBattlefieldInstance` 逐军真实路径判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5）。0-A 边界：守方 Army 入郡域场景由 R6（S15 多线 AI）排期，判定机制由 verify f6/f6b 构造场景验证 | ~~R6/BF-P5~~ → 已解决；R6 仅剩守方 Army 入郡域场景 |
-| 郡域场景迷雾机制 | 当前郡域场景无迷雾层（占领后仅视觉反馈，非"揭示"动作）；此前从未被任何阶段排期覆盖，是新发现缺口 | R6/BF-P5 |
+| 补给线糧耗×2 真实路径判定 | **✅ BF-P5 已落地（Session 254）**：`shared/army-county-mapping.ts` 位置映射 + `tickBattlefieldInstance` 逐军真实路径判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5）。**守方 Army 入郡域场景已落地（R6，Session 258）**：`enterNanjunBattlefield` 自动纳入郡治驻留守方 Army 至守方纵深前沿县，真实流程触发补给线切断（f9） | ~~R6/BF-P5~~ → 已解决 |
+| 郡域场景迷雾机制 | **✅ BF-P5 已落地（Session 256）**：`shared/commandery-fog.ts` 揭示集（入口∪郡治∪攻方 Army 所在县∪占领县∪**守方 Army 所在县**，Session 258 并入）| ~~新发现缺口~~ → 已解决 |
 
 详细内容已在各自历史 session 记录里，本清单仅作汇总与边界提醒，不展开细节。
 
@@ -568,12 +664,12 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～38 均已完成**。CMD 现有运行时域迁移阶段收口；下一大系统须按 `12-system-map.md` 由用户拍板，屯田仍设计中不得伪造。 |
+| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～38 均已完成；BF-P5/R6 郡域军事闭环完成（Session 258/259/260）**；**S12 全量收口（Session 261~265：等级 + 获取点 100% + 数值消费 100% + 君主特例切片 C 完成）**。S12 剩余后置项：等级表依赖未实装引擎的效果（自荐/声望/自选技能/指挥部队数/忠诚系列/专属技/再动/双主武器）、真宝物 inventory（0-B）。BF-P5 剩余仅**第三郡录入（陈留郡，需用户提供史料）**。下一大系统须按 `12-system-map.md` 由用户拍板，屯田仍设计中不得伪造。 |
 | **Session 203 CMD-P6 已完成** | 人事旧入口、权威/草稿/门槛/终审/action/API 清单与 1440×900 Headless 基线已仓库化；分面固定为“名册｜招贤｜任官｜赏罚”，调动仅设计中。下一步 CMD-P7 只迁名册读路径；旧手风琴仍是唯一生产入口。 |
 | **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |
 | **Session 196 CMD-P1 已完成** | 通用 `CommandDock`/`CommandDrawer`/`CommandShell` + 瞬时草稿 reducer 已挂入 world；九类均为原面板/设计中说明，无业务提交入口。client 7/7 + shared 197/197 + 31个根 verify + HC-P0 101/101 全绿。下一步 CMD-P2。 |
-| **2（可并行）** | 君主特例切片 C（引擎守卫：giftBeauty/marryFemale/rewardBeautyStock/appoint/battle/duel 加君主守卫拒绝改忠诚/功绩）。与 HC-P0 改动点不重叠（Q11 已批准可并行），但需单独验证回归。 |
+| **2（已收口）** | 君主特例切片 C 已于 Session 265 完成（`appointOfficer` 忠诚±跳过、`giftBeauty`/`marryFemale`/`rewardBeautyStock` 拒绝君主）；君主特例三项（忠诚/功绩/拉拢记录）全部落地，见 04 §3.8。 |
 | **3（保持待启动）** | R3：S10 单挑四倾向 + 吕布规则内最强但可败（`23-design-consistency-remediation.md`）。HC-P0 与 R3 的先后次序由用户定。 |
 | **Session 188 HC-P0-5 已完成** | HC-P0-5 霸府外交权重加成（1 commit 待提交）：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3，称王/称帝分档预留）+ `calculateAllianceChance` 接入结盟成功率修正 + `AllianceChanceBreakdown.hegemonyModifier` 字段 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
 | **Session 189 HC-P0-6 已完成** | 皇权100/季度+10/消耗40/冷却8季；对匡扶汉室目标声望-30；引擎/API/君主 UI/存档；verify-hc-p0 101/101 + 全量回归 + Headless 实点。HC-P0 阶段性完成。 |

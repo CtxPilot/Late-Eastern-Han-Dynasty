@@ -4,9 +4,13 @@
 import {
   FormationType,
   OfficerStatus,
+  syncMerit,
   TerrainType,
   UnitProficiency,
   Weather,
+  meritEffects,
+  meritLevelFor,
+  meritStatBonus,
   type BattleState,
   type BattleUnit,
   type CombatAbilityDef,
@@ -278,13 +282,13 @@ export function attackUnit(
   const atkTerrain = battle.hexGrid.terrain[attacker.position.r][attacker.position.q];
   const defTerrain = battle.hexGrid.terrain[defender.position.r][defender.position.q];
 
-  // §6.1 基础伤害
+  // §6.1 基础伤害（功绩属性加成计入有效武力/统帅，Session 265）
   const baseDamage = calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
-      officerWar: atkO.stats.war,
-      officerLeadership: atkO.stats.leadership,
+      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war'),
+      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership'),
       troops: attacker.troopCount,
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
@@ -294,8 +298,8 @@ export function attackUnit(
     {
       unitAttack: defT.attack,
       unitDefense: defT.defense,
-      officerWar: defO.stats.war,
-      officerLeadership: defO.stats.leadership,
+      officerWar: defO.stats.war + meritStatBonus(defO, 'war'),
+      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership'),
       troops: defender.troopCount,
       maxTroops: defender.maxTroops,
       morale: defender.morale,
@@ -549,11 +553,24 @@ function proficiencyToMaxLevel(prof: UnitProficiency | undefined): number {
   }
 }
 
-/** 查找武将对该兵种的适性 */
+/** 适性升档（全兵种适性+1 级：NONE→C→B→A→S，S 封顶） */
+function boostProficiency(prof: UnitProficiency): UnitProficiency {
+  switch (prof) {
+    case UnitProficiency.NONE: return UnitProficiency.C;
+    case UnitProficiency.C: return UnitProficiency.B;
+    case UnitProficiency.B: return UnitProficiency.A;
+    case UnitProficiency.A: return UnitProficiency.S;
+    default: return UnitProficiency.S;
+  }
+}
+
+/** 查找武将对该兵种的适性（等级表 Lv14 全兵种适性+1，Session 265 数值消费） */
 function getOfficerProficiency(state: GameState, officerId: number, unitType: UnitType): UnitProficiency {
   const o = state.officers[officerId];
   if (!o) return UnitProficiency.NONE;
-  return o.unitProficiency[unitType] ?? UnitProficiency.NONE;
+  const prof = o.unitProficiency[unitType] ?? UnitProficiency.NONE;
+  const effects = meritEffects(meritLevelFor(o.merit ?? 0), o.meritPath ?? 'neutral');
+  return effects.proficiencyBoost > 0 ? boostProficiency(prof) : prof;
 }
 
 /** 查找武将可施放的战法（适性等级 ≥ 战法层级门槛） */
@@ -667,6 +684,7 @@ export function castAbility(
   }
 
   // 计算伤害：基础伤害（用 calcDamage 的结构）× power 倍率
+  // 功绩属性加成计入有效武力/统帅（Session 265）
   const atkT = tmpl;
   const defT = getUnitByType()[target.unitType];
   const strongMap = buildStrongAgainstMap();
@@ -675,8 +693,8 @@ export function castAbility(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
-      officerWar: atkO.stats.war,
-      officerLeadership: atkO.stats.leadership,
+      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war'),
+      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership'),
       troops: attacker.troopCount,
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
@@ -686,8 +704,8 @@ export function castAbility(
     {
       unitAttack: defT.attack,
       unitDefense: defT.defense,
-      officerWar: defO.stats.war,
-      officerLeadership: defO.stats.leadership,
+      officerWar: defO.stats.war + meritStatBonus(defO, 'war'),
+      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership'),
       troops: target.troopCount,
       maxTroops: target.maxTroops,
       morale: target.morale,
@@ -1041,14 +1059,18 @@ function applyDuelOutcome(battle: BattleState, state: GameState): BattleState {
     }
   }
 
-  // 胜方士气 + 功绩
+  // 胜方士气 + 功绩（君主不参与功绩系统，docs/04 §3.8/§6.5）
   if (winnerUnit) {
     units = units.map((u) =>
       u.id === winnerUnit.id ? { ...u, morale: Math.min(120, u.morale + result.moraleChange.winner) } : u,
     );
   }
   if (winnerOff) {
-    winnerOff.merit = (winnerOff.merit ?? 0) + result.meritReward;
+    const winnerIsRuler = state.factions[winnerOff.faction ?? 0]?.rulerId === winnerOff.id;
+    if (!winnerIsRuler) {
+      winnerOff.merit = (winnerOff.merit ?? 0) + result.meritReward;
+      Object.assign(winnerOff, syncMerit(winnerOff));
+    }
   }
 
   // 观众效应: 敌军士气 -10/友军 +5 (简化: 对所有敌方单位)

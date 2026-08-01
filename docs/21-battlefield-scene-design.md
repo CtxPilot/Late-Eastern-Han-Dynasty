@@ -313,7 +313,8 @@ interface BattlefieldLandmarkDefinition {
 1. 全部入口县 `entryNodeIds`；
 2. 郡治 `targetSeatNodeId`（显式加入，使邻接郡治的县可被攻打破雾）；
 3. 攻方 Army 所在县（`campaignArmies` 中 `factionId === 攻方` 的 `armyIds` 与 `nodeStates[].armyIds` 求交）；
-4. 攻方已占领县（`nodeStates[].rulerFactionId === 攻方势力`）。
+4. 攻方已占领县（`nodeStates[].rulerFactionId === 攻方势力`）；
+5. 守方 Army 所在县（`nodeStates[].armyIds` 中存在非攻方 Army；R6 守方 Army 入郡域场景后并入，玩家可察敌军部署位置——Session 258 落地）。
 
 **投影机制**：`shared/commandery-fog.ts` 提供纯函数
 
@@ -1155,4 +1156,4 @@ Headless Chrome 实测全链路：
 
 ---
 
-*正式版 v1.4 | 2026-07-31 | BF-P1 最小闭环已打通；BF-P5 郡域迷雾已实装（§5.2.1）*
+*正式版 v1.5 | 2026-08-01 | BF-P1 最小闭环已打通；BF-P5 郡域迷雾已实装（§5.2.1）；守方 Army 入郡域场景（R6，§5.2.1 揭示源第 5 条）*

@@ -21,6 +21,8 @@ export interface PositionReq {
   intelligence?: number;
   politics?: number;
   charisma?: number;
+  /** 功绩等级门槛（S12，docs/04 §十；0-A 精简数值待平衡） */
+  meritLevel?: number;
   /** 一势力唯一 */
   uniqueFaction?: boolean;
   /** 一城唯一（需 cityId） */
@@ -68,16 +70,18 @@ export const HEGEMONY_LABELS: Record<HegemonyPosition, string> = {
 
 export const CIVIL_REQ: Partial<Record<CivilPosition, PositionReq>> = {
   [CivilPosition.CLERK]: { politics: 30 },
-  [CivilPosition.MAGISTRATE]: { politics: 50, intelligence: 40 },
-  [CivilPosition.PREFECT]: { politics: 60, leadership: 50 },
+  [CivilPosition.MAGISTRATE]: { politics: 50, intelligence: 40, meritLevel: 2 },
+  [CivilPosition.PREFECT]: { politics: 60, leadership: 50, meritLevel: 3 },
   [CivilPosition.GOVERNOR]: {
     leadership: 90,
     intelligence: 80,
+    meritLevel: 5,
     uniqueFaction: true,
   },
   [CivilPosition.CHANCELLOR]: {
     politics: 80,
     intelligence: 70,
+    meritLevel: 6,
     uniqueFaction: true,
   },
 };
@@ -86,11 +90,13 @@ export const LOCAL_REQ: Partial<Record<LocalPosition, PositionReq>> = {
   [LocalPosition.INTENDANT]: { politics: 40, needsCity: true },
   [LocalPosition.ADVISOR]: {
     intelligence: 90,
+    meritLevel: 4,
     uniqueFaction: true,
   },
   [LocalPosition.PREFECT]: {
     leadership: 70,
     politics: 60,
+    meritLevel: 3,
     needsCity: true,
     uniqueCity: true,
   },
@@ -98,11 +104,12 @@ export const LOCAL_REQ: Partial<Record<LocalPosition, PositionReq>> = {
 
 export const MILITARY_REQ: Partial<Record<MilitaryPosition, PositionReq>> = {
   [MilitaryPosition.CAPTAIN]: { leadership: 30, war: 30 },
-  [MilitaryPosition.COLONEL]: { leadership: 50, war: 50 },
-  [MilitaryPosition.GENERAL]: { leadership: 70, war: 60 },
+  [MilitaryPosition.COLONEL]: { leadership: 50, war: 50, meritLevel: 2 },
+  [MilitaryPosition.GENERAL]: { leadership: 70, war: 60, meritLevel: 3 },
   [MilitaryPosition.GRAND_GENERAL]: {
     leadership: 85,
     war: 80,
+    meritLevel: 6,
     uniqueFaction: true,
   },
 };
@@ -116,46 +123,55 @@ export const HEGEMONY_REQ: Partial<Record<HegemonyPosition, PositionReq>> = {
   [HegemonyPosition.GRAND_COMMANDER]: {
     leadership: 85,
     war: 75,
+    meritLevel: 6,
     uniqueFaction: true,
   },
   [HegemonyPosition.REGENT_SECRETARY]: {
     politics: 80,
     intelligence: 75,
+    meritLevel: 6,
     uniqueFaction: true,
   },
   [HegemonyPosition.GRAND_CAPTAIN]: {
     leadership: 85,
     war: 80,
+    meritLevel: 6,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_CHANCELLOR]: {
     politics: 85,
     intelligence: 80,
+    meritLevel: 6,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_INTERIOR_MINISTER]: {
     politics: 80,
     charisma: 70,
+    meritLevel: 4,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_COMMANDANT]: {
     leadership: 80,
     war: 75,
+    meritLevel: 4,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_GENTLEMAN_STEWARD]: {
     leadership: 75,
     charisma: 75,
+    meritLevel: 4,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_AGRICULTURE_MINISTER]: {
     politics: 80,
     intelligence: 75,
+    meritLevel: 5,
     uniqueFaction: true,
   },
   [HegemonyPosition.KINGDOM_COACH_MINISTER]: {
     leadership: 75,
     politics: 70,
+    meritLevel: 5,
     uniqueFaction: true,
   },
 };
@@ -173,12 +189,14 @@ export function isKingdomPosition(position: string): position is HegemonyPositio
   return (KINGDOM_POSITIONS as readonly string[]).includes(position);
 }
 
-export function meetsPositionReq(stats: OfficerStats, req: PositionReq): boolean {
+export function meetsPositionReq(stats: OfficerStats, req: PositionReq, meritLevel?: number): boolean {
   if (req.leadership != null && stats.leadership < req.leadership) return false;
   if (req.war != null && stats.war < req.war) return false;
   if (req.intelligence != null && stats.intelligence < req.intelligence) return false;
   if (req.politics != null && stats.politics < req.politics) return false;
   if (req.charisma != null && stats.charisma < req.charisma) return false;
+  // 功绩门槛仅在调用方显式传入 meritLevel 时检查（未传 = 不检查功绩）
+  if (req.meritLevel != null && meritLevel != null && meritLevel < req.meritLevel) return false;
   return true;
 }
 
@@ -189,6 +207,7 @@ export function formatReq(req: PositionReq): string {
   if (req.intelligence != null) parts.push(`智≥${req.intelligence}`);
   if (req.politics != null) parts.push(`政≥${req.politics}`);
   if (req.charisma != null) parts.push(`魅≥${req.charisma}`);
+  if (req.meritLevel != null) parts.push(`功绩Lv${req.meritLevel}`);
   return parts.join(' ') || '无门槛';
 }
 

@@ -45,6 +45,9 @@ export interface OfficerHidden {
   tactics: number;
 }
 
+/** 功绩文武分岔（docs/04 §十 6.2 Lv6 ★分岔）：由当前官职轨道派生（shared/merit.ts deriveMeritPath）。 */
+export type MeritPath = 'warrior' | 'scholar' | 'neutral';
+
 export interface OfficerSkillStatic {
   skillId: SkillType;
   level: number;
@@ -86,6 +89,12 @@ export interface Officer extends OfficerStatic {
   /** 霸府专属官职（docs/26 Q2 方案B，HC-P0-4 独立轨道）。非霸府势力武将该字段恒为空/none。 */
   hegemonyPosition?: HegemonyPosition;
   merit: number;
+  /** 功绩等级 1~20，由 merit 反查 20 级表（shared/merit.ts meritLevelFor），merit 写入点同步 */
+  meritLevel?: number;
+  /** 生涯最高功绩等级，用于衰减退级底线（docs/04 §十 6.3） */
+  peakMeritLevel?: number;
+  /** 文武分岔：'warrior' | 'scholar' | 'neutral'（由官职轨道派生） */
+  meritPath?: MeritPath;
   stamina: number;
   /** 每月可用行动次数（独立于体力）：决定"本月还能否发起新动作"，默认 1，可被技能/特性/装备加成突破。月度重置。 */
   actionsPerMonth?: number;

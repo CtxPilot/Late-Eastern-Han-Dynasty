@@ -115,8 +115,12 @@ S09 目标名称改为“**宫廷人脉**”（Session 248 已迁为
 >    郡域县节点（字符串 countyId）的**位置映射**（`nodeStates[].armyIds` 权威 +
 >    deployments 回退），`tickBattlefieldInstance` 逐军真实路径判定（补给线 =
 >    seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5），全局简化
->    已下线。**R6 剩余部分**：守方 Army 在郡域场景内的 countyId 定位（多线 AI
->    行为前置）——守方 Army 进入郡域场景仍属 R6 范畴。
+>    已下线。**R6 剩余部分 —— ✅ 已解决（Session 258，2026-08-01）**：守方 Army
+>    在郡域场景内的 countyId 定位（多线 AI 行为前置）——`enterNanjunBattlefield`
+>    守方势力改为郡治大地图城市（worldCityId）实际占领势力，驻留郡治城市的守方
+>    现役 Army（`currentNodeId === worldCityId`）自动纳入郡域战场，部署到模板
+>    `defenderEntryNodeIds`（守方纵深前沿县）；补给线真实路径判定在真实流程触发
+>    （f9 真实流程，`verify-save-battlefield-instance.ts` 74/74）。
 > 2. **郡域场景迷雾机制 —— ✅ 已解决（BF-P5，Session 256）**：BF-P2 Q9 的
 >    "视野扩张"攻占效果原未实现（郡域场景无迷雾遮蔽，只有占领视觉反馈，
 >    见 `docs/25-bf-p2-design.md` §2.6.2）。BF-P5 已把迷雾层下沉到
@@ -126,9 +130,11 @@ S09 目标名称改为“**宫廷人脉**”（Session 248 已迁为
 >    地理层恒可见、军情层按揭示集遮蔽；揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army
 >    所在县 ∪ 攻方已占领县（每源 + 一跳邻接）。**占领县→成为揭示源→邻接县破雾**
 >    = 视野扩张攻占效果完整实现。验证：fog 单测 8/8、`verify-save-battlefield-instance.ts`
->    f8（63/63）、真实 API + Headless Chrome。**R6 剩余部分**：守方 Army 进入郡域
->    场景后的揭示归属（多线 AI 行为前置）——迷雾层已就绪，届时把守方 Army 所在县
->    并入揭示源即可，仍属 R6 范畴。
+>    f8（63/63）、真实 API + Headless Chrome。**R6 剩余部分 —— ✅ 已解决（Session 258）**：
+>    守方 Army 进入郡域场景后的揭示归属（多线 AI 行为前置）——`computeRevealedNodeIds`
+>    揭示源新增第 5 条「守方 Army 所在县」（非攻方 Army 所在节点，含一跳邻接）；
+>    mask 投影保留其 `armyIds`（玩家可见驻军），`deployments` 快照仍只保留攻方条目
+>    （部署历史不泄露）。f9 真实流程 + fog 单测 10/10 验证。
 | **R7 ✅** | S09 | 宫廷人脉语义与字段迁移 | 不再由成年女性数量换算；历史女角边界不变 |
 | **R8 ✅** | 跨系统 | 成长入口收敛和 24 回合情景平衡 | 3 城/10 将/2 场战争测试中每回合有明确取舍（54/54） |
 
@@ -147,7 +153,8 @@ S09 目标名称改为“**宫廷人脉**”（Session 248 已迁为
 - R6 已于 Session 247 完成最低验收：每势力最多双线，前线动态留守；停战、两月粮不足或
   兵力低于守军 55% 时撤回。未修改武将五维，军事流固定 seed 复现 38/38。县级主动 AI、
   守方 Army 入郡域场景仍按上文明确留 R6 后续/BF-P5；**Army—县位置映射、真实路径补给
-  与郡域迷雾已分别由 BF-P5 Session 254 / Session 256 解决（见上文第 1、2 条）**。
+  与郡域迷雾已分别由 BF-P5 Session 254 / Session 256 解决（见上文第 1、2 条）**；
+  **守方 Army 入郡域场景与县级主动 AI 已于 Session 258 / Session 259 完成**（见下文）。
 - R7 已于 Session 248 完成：新局、运行时、Schema 与新存档只使用
   `courtNetwork/courtNetworkOpportunities`；开局机会由商业/民心/首都地位派生，结交成功率
   不读取人口。旧 v1 `beauty*` 加载后幂等迁移并删除旧键，历史女角来源和家族边界不变。

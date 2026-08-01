@@ -13,6 +13,8 @@ import {
   OfficerStatus,
   formatReq,
   meetsPositionReq,
+  meritLevelFor,
+  syncMerit,
   isKingdomPosition,
   positionLabel,
   CIVIL_REQ,
@@ -143,6 +145,15 @@ export function appointOfficer(
         `${officer.name} 属性不足（需 ${formatReq(req)}）`,
       );
     }
+    // S12 功绩门槛（docs/04 §十 6.4-3）：与属性门槛分开判定，文案清晰。
+    // 君主不参与功绩系统（§3.8/§6.5），任命时豁免功绩门槛（以国力度量，merit 恒 0）。
+    const officerIsRuler = state.factions[officer.faction ?? 0]?.rulerId === officer.id;
+    const officerMeritLevel = meritLevelFor(officer.merit);
+    if (!officerIsRuler && req.meritLevel != null && officerMeritLevel < req.meritLevel) {
+      throw new Error(
+        `${officer.name} 功绩不足（需功绩Lv${req.meritLevel}，当前Lv${officerMeritLevel}）`,
+      );
+    }
     if (req.needsCity) {
       if (cityId == null) throw new Error('该官职须指定城池');
       const city = state.cities[cityId];
@@ -199,10 +210,16 @@ export function appointOfficer(
     updated.hegemonyPosition = position as HegemonyPosition;
   }
 
-  updated.loyalty = Math.min(
-    100,
-    Math.max(0, (updated.loyalty ?? 50) + loyaltyDelta),
-  );
+  // 君主特例（docs/04 §3.8 切片 C，Session 265）：任命/解职的忠诚±效果对君主不生效
+  const isRuler = state.factions[officer.faction]?.rulerId === officerId;
+  if (!isRuler) {
+    updated.loyalty = Math.min(
+      100,
+      Math.max(0, (updated.loyalty ?? 50) + loyaltyDelta),
+    );
+  }
+  // 官职轨道变化 → 同步 meritPath（S12 文武分岔，shared/merit.ts）
+  updated = syncMerit(updated);
   officers[officerId] = updated;
 
   // Demo 效果：太守 → 城士气 +3；大将军 → 己方各城士气 +1

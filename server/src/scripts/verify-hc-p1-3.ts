@@ -8,6 +8,7 @@ import {
   HegemonyPosition,
   KINGDOM_POSITIONS,
   parseCurrentSaveEnvelope,
+  syncMerit,
   type GameState,
   type OfficerStats,
   type SaveEnvelopeV1,
@@ -59,7 +60,9 @@ function maxOfficer(state: GameState, officerId: number): GameState {
     ...state,
     officers: {
       ...state.officers,
-      [officerId]: { ...officer, stats },
+      // S12 功绩门槛（docs/04 §十）：夹具给满属性武将补 Lv6 功绩（1200），
+      // 使王国官职门槛判定聚焦于政治阶段/属性/唯一性，而非功绩。
+      [officerId]: syncMerit({ ...officer, stats, merit: 1200 }),
     },
   };
 }

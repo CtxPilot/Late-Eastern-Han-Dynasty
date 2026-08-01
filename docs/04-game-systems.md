@@ -371,19 +371,25 @@ Game Loop:
 > 任命忠诚+5 / 解职−3；太守须在目标城且一城一任；大将军/军师/丞相/都督势力唯一。  
 > Demo 即时效果：太守城士气+3；大将军己方各城士气+1。全量收入/计策加成后置。
 
-| 职位 | 轨道 | 需要属性 | Demo 效果 |
-|------|:--:|:--:|------|
-| **太守** | local | 统≥70 政≥60 | 城士气+3；须在城 |
-| **军师** | local | 智≥90 | 势力唯一 |
-| **大将军** | military | 统≥85 武≥80 | 全己方城士气+1；势力唯一 |
-| **都督** | civil | 统≥90 智≥80 | 势力唯一 |
-| **丞相** | civil | 政≥80 智≥70 | 势力唯一 |
-| 军候/校尉/将军 等 | military | 见 `positions.ts` | 写职+忠诚 |
+| 职位 | 轨道 | 需要属性 | 功绩门槛 | Demo 效果 |
+|------|:--:|:--:|:--:|------|
+| **太守** | local | 统≥70 政≥60 | Lv3（150） | 城士气+3；须在城 |
+| **军师** | local | 智≥90 | Lv4（350） | 势力唯一 |
+| **大将军** | military | 统≥85 武≥80 | Lv6（1200） | 全己方城士气+1；势力唯一 |
+| **都督** | civil | 统≥90 智≥80 | Lv5（700） | 势力唯一 |
+| **丞相** | civil | 政≥80 智≥70 | Lv6（1200） | 势力唯一 |
+| 军候/书吏/从事 | military/civil/local | 见 `positions.ts` | 无（Lv1） | 写职+忠诚 |
+| 县令/校尉 | civil/military | 见 `positions.ts` | Lv2（50） | 写职+忠诚 |
+| 郡守/将军 | civil/military | 见 `positions.ts` | Lv3（150） | 写职+忠诚 |
+| 霸府三职（大司马/录尚书事/都督中外诸军事） | hegemony | 见 `positions.ts` | Lv6（1200） | 势力唯一 |
+| 王国六职 | hegemony | 见 `positions.ts` | Lv4~Lv6 | 势力唯一 |
+
+> **功绩门槛（Session 261 实装）**：0-A 精简数值，以 6.2 等级表锚点（Lv6 分岔/中阶、Lv10 重要门槛）下调为可玩基线（0-A 功绩获取慢，一仗单挑约 +5~30）。剧本开局武将已预设官职不受门槛影响；君主任命豁免功绩门槛（§6.5）。完整门槛表见 `shared/positions.ts`（`PositionReq.meritLevel`）。数值待平衡。
 
 ### 3.7 当前 Demo 随机性边界
 
 - `searchTalent` 与 `recruitOfficer` 的所有已实现随机判定均要求调用方显式传入单一权威 `xorshift32-v1`；服务层使用 `runtimeRandom`，模块内不再直接调用 `Math.random()`。
-- 搜索按实际分支消费随机数：失败 1 次；成功后无收获 2 次；发现武将、获得随机金或随机粮均为 3 次。登用无论成败均消费 1 次。
+- 搜索按实际分支消费随机数：失败 1 次；成功后无收获 2 次；发现武将 3 次（多 1 次选将）；获得随机金或随机粮均为 3 次；**寻得宝物 2 次**（Session 264：宝物为稀有固定 5% 结果池分支，随 roll 直接落入，不额外消费 RNG）。登用无论成败均消费 1 次。
 - `pnpm verify-personnel-rng`（32/32）固定保存点后分别覆盖搜索发现/失败/资财/粮草和登用成功/失败，验证恢复后的完整结果与 `draws` 一致。
 - `pnpm verify-negotiation-r2`（20/20）另覆盖登用/结盟公式边界、单调性、固定 seed、单次 RNG
   消费，以及日志/UI 共享百分比。界面默认明确提交君主为登用说客，消除旧 UI 显示君主、
@@ -398,12 +404,12 @@ Game Loop:
 
 **忠诚度**：君主**不参与忠诚度系统**。
 - UI 不渲染忠诚数值（OfficerDetail aside 与 OfficerRosterPanel 名册行均不显示，而非显示恒定 100）。
-- 引擎层拒绝任何会修改君主忠诚的操作（赏赐美人/赐婚/任命官职的忠诚±效果对君主不生效）。具体引擎守卫属切片 C，留待后续 Session 单独验证回归后落地。
+- 引擎层拒绝任何会修改君主忠诚的操作（赏赐美人/赐婚/任命官职的忠诚±效果对君主不生效）。**切片 C 已实装（Session 265）**：`appointOfficer` 任命/解职的忠诚±对君主跳过；`giftBeauty` / `marryFemale` / `rewardBeautyStock` 对君主目标直接拒绝（从源头杜绝产生君主赏赐/婚配记录）。
 - `Officer.loyalty` 字段在数据层保留为占位 100，不删字段、不加 `isRuler` 独立位（避免身份转变时字段同步的一致性负担）。
 
 **拉拢记录（赏赐美人）**：君主**不参与拉拢记录**。
 - UI 隐藏整个"拉拢记录"区块（不展示"赏赐美人 0"这种空状态，而是根本不渲染）。
-- 引擎守卫（切片 C）将阻止给君主赏赐美人/赐婚，从源头杜绝产生君主赏赐记录。
+- 引擎守卫（切片 C，Session 265 已实装）阻止给君主赏赐美人/赐婚（`giftBeauty`/`marryFemale` 对君主目标 throw），从源头杜绝产生君主赏赐记录。
 - **历史沉淀原则**：当前代码层面不可能出现"君主带历史赏赐记录"的情况（开局所有君主 `beauties = []` 且身份不可变）。未来若引入篡位/继承事件，属下变君主那一刻应将其 `beauties` 数组转为只读历史沉淀（如 `historicalBeauties` 字段），不再作为当前活跃状态参与计算与 UI 展示；届时再设计该归档逻辑，现在不做是避免过度设计。
 
 **功绩**：君主**不参与普通武将功绩等级系统**。
@@ -1065,8 +1071,10 @@ hiddenCompatibility: (1-|相性差|/150)×100
 ```
 基础上限 = 城市等级基准 + 守将(统/10×500) + 官位(大将军+8000)
 超上限惩罚：10%→士气-3/季 / 30%→瘟疫+10% / 50%→逃兵5%/季
-出征上限 = min(城市驻军, 5000 + 武官等级×500 + 功绩等级×200)
+出征上限 = min(城市驻军, 5000 + 武官等级×500 + 功绩等级带兵+)
 ```
+
+> **实装（Session 265）**：`shared/merit.ts formationTroopCap` 实现出征上限 = min(驻军, 5000 + 武官等级×500 + 功绩带兵+)——武官等级×500 按 0-A 四级简化（军候 1 / 校尉 2 / 将军 3 / 大将军 4），功绩带兵+ 取 6.2 等级表 `troopBonus`（替换原"功绩等级×200"口径，Lv2 +200 ~ Lv20 +15000）。接入 `campaign.ts validateFormationSourceRest`（主将编成校验，超限拒绝）与 `aiMilitary.ts`（AI 出征/增援编成同步裁剪，AI 与玩家同规则）。简化出征（`march.ts maxMarchable`，旧演示战路径）保持原驻军-留守口径。
 
 ---
 
@@ -1131,7 +1139,8 @@ hiddenCompatibility: (1-|相性差|/150)×100
 
 ## 十、功绩等级系统
 
-**实现状态**：文档级设计完成，代码级尚未实现 `merit → meritLevel` 映射函数。当前 stamina 调用处临时传 `merit` 值代用，需后续补正。`meritLevel` / `meritPath` / `peakMeritLevel` 运行时字段待加入 `shared/types/officer.ts`。功绩门槛联动任命（已有门槛表 `shared/positions.ts`）待激活。
+**实现状态（Session 261）**：**已实装**。`merit → meritLevel` 映射、20 级表、文武分岔、衰减退级底线全部落地于 `shared/merit.ts`（纯函数 + 单测 17 项）；`meritLevel` / `meritPath` / `peakMeritLevel` 三运行时字段已入 `shared/types/officer.ts` 与 `OfficerRuntimeSchema`（optional，旧档兼容，加载时由迁移/运行时派生回填）；stamina 初始化已改为先经 `meritLevelFor()` 映射（不再把 `merit` 值直接当 `meritLevel`）；任命功绩门槛已激活（`shared/positions.ts` 门槛表 + `appoint.ts` 检查，详见 6.4-3 与 §3.4 表）；季度衰减已接入 `turn.ts`（详见 6.3）。专项验证 `pnpm verify-merit`（25/25）+ `verify-merit-headless`（UI 实测 7/7，console error=0），全量回归绿色。
+**实装边界（Session 265 更新）**：等级/称号/进度/带兵+ 为完整实现；等级表"属性/技能/特殊效果"的**运行时数值消费已接入**——属性加成（Lv5 体上限+3、Lv15/16/17/20 属性+，经 `meritAttrBonusFor` 累计、Lv16 按文武分岔）计入有效属性（体力/单挑/六角伤害/暴率/战役战力），特殊效果（Lv3/4/6 武单挑+5/10/15% 与文开发+5/10%、Lv6/9 文内政效率+10%、Lv9 武暴率+5%、Lv12 被俘-20%、Lv14 全兵种适性+1、Lv20 体力恢复+5/月）经 `meritEffects` 接入 duel/civil/crit/campaign/battle/turn 各引擎，带兵+ 经 `formationTroopCap` 接入出征上限（04 §7.5）；**仍后置**（依赖未实装引擎）：Lv5 可自荐官职、Lv7 忠诚降速、Lv8 势力声望+5、Lv10 +1 自选技能、Lv11 指挥部队数+1、Lv13 忠诚光环、Lv18 专属技+50%、Lv19 再动、Lv20 双主武器/全忠诚+2。体力公式保持 `meritLevel×2`（Session 186 基线），Lv5"体上限+3"缩放后追加保证字面 +3。专项验证 `pnpm verify-merit-consume`（18/18）+ `verify-s265-ui`（浏览器 8/8）+ shared 单测。
 
 ### 6.1 功绩获取
 
@@ -1140,6 +1149,35 @@ hiddenCompatibility: (1-|相性差|/150)×100
 **军事功绩**：击破+5~20 / 破城+30 / 斩俘主将+15 / 单挑胜+10 / 守城+8 / 灭国+50 / 计策+3~8
 
 **内政功绩**：开发+3~6 / 施米+2~4 / 征兵+2~5 / 训练+2~4 / 搜索人才+8 / 宝物+5 / 登用+4 / 外交同盟+10 / 劝降+30 / 联姻+10
+
+> **当前实装（Session 262 扩充）**：单挑胜（`duel.ts` meritReward 5~30，按结局）与战场单挑/斩俘（`battle.ts`）经统一入口 `grantMerit` 发放并同步三字段；**内政/人事/外交全部获取点已接入**（经 `server/src/engine/meritGrant.ts` 统一发放守卫 `grantMeritTo`——武将存在性 + 君主不发放，见 6.5）：
+>
+> | 获取点 | 数值（固定值） | 执行武将来源 |
+> |---|---|---|
+> | 开发（启动持续项目） | +4 | 指派将（路由 `officerId`，缺省 `city.officers[0]`） |
+> | 施米 / 征兵 / 训练 | +3 | 城主（`city.officers[0]`；无城主不发放，不伪造归属） |
+> | 搜索（寻得在野） | +8 | 引擎自动选 `pickSearcher`（同城智+魅最高，否则君主） |
+> | 登用（成功） | +4 | 说客 `recruiterId`（缺省同城/君主） |
+> | 联姻 | +10 | 成婚武将 `officerId` |
+> | 外交同盟（成功） | +10 | 使节 `selectAllianceEnvoy`（魅最高现役，**君主不出使**，见下） |
+> | 劝降（成功） | +30 | `Army.commanderId` 主将 |
+>
+> 数值均为固定值（不消耗权威 RNG，保证确定性验证 RNG 流稳定），以文档范围为基线取中档、标注待平衡。动作失败（搜索无果/登用失败/交涉失败）不发放。**使节选择修正（Session 262）**：`selectAllianceEnvoy` 现排除君主（§6.5 君主不参与功绩——君主魅最高恒为使节将导致同盟功绩无人可领）；仅君主一人的小势力回退允许君主出使（功绩由 `grantMeritTo` 守卫兜底不发放）。
+>
+> **军事功绩（Session 263 实装）**：破城 / 守城 / 灭国 / 计策已接入，统一走 `grantMeritTo` + 公共模块 `server/src/engine/militaryMerit.ts`：
+>
+> | 获取点 | 数值（固定值） | 执行武将 | 触发点 |
+> |---|---|---|---|
+> | 破城 | +30 | 攻方主将（战棋 `battle.units` 攻方主单位 / 战役 `army.commanderId`） | `march.ts settleBattle` 与 `campaign.ts applyBattleResultToState` 占城分支（含劝降占城，与劝降+30 叠加） |
+> | 守城 | +8 | 守方主将（**统一口径：守方城内武力最高 ACTIVE 武将** `pickDefenderCommander`） | 战棋 defender 胜（`settleBattle` 败北分支）/ 战役 assault 攻方败（`defCityId` 场景） |
+> | 灭国 | +50 | 攻方主将 | 占城致目标势力覆灭（`recomputeFactionCities` 后 `isAlive` 翻转）时叠加 |
+> | 计策 | +5 | 执行武将 `Plot.casterOfficerId`（缺省=势力内非君主智最高，军师出谋） | `resolvePlot` 成功结算（`tickPlotsMonth` 内发放） |
+> | 击破（野战） | 击破主力 +20 / 险胜击退 +10 | 攻方主将；攻方败时守方 Army 主将 +10（击退来敌） | `campaign.ts` field_battle 分支（行军遭遇战）。**判定说明（Session 264）**：引擎守方 30% 溃散线兜底，"全歼（残 0）"不可达，故以"守方溃散（`rout` 事件）"为击破主力 +20；守方未溃散（回合上限小胜）→ 险胜 +10；攻方败 → 守方击退 +10。战棋层无城野战（旧演示战）不发 |
+> | 搜索宝物 | +5 | 搜索执行者 `searcher`（`pickSearcher`） | `searchTalent` 结果池稀有分支（固定 5%），日志「寻得宝物一件」；0-A 纯功绩模拟，真宝物实体后置 |
+>
+> 守方主将若为君主（§6.5）由 `grantMeritTo` 守卫拦截不发放（与君主特例一致）；计谋成功/失败分别发放/不发放；计谋执行武将也可由路由 `/plot/launch` 的 `casterOfficerId` 显式指定（缺省军师，UI 选择器后置）。
+>
+> **仍后置（Session 265 更新）**：**真宝物实体**（`GameState.inventory` / 具名宝物）——0-A 为纯功绩模拟（API 契约已预留 `found: Item`，0-B 再落 inventory）；搜索宝物**具名**后置（文案固定"宝物一件"）。等级表数值消费已于 Session 265 全量接入（见 6.4 实装边界）：属性加成、单挑/开发/暴率/内政效率/被俘/适性/体力恢复特殊效果、带兵+ 接出征上限；依赖未实装引擎的效果（自荐/声望/自选技能/指挥部队数/忠诚系列/专属技/再动/双主武器）保持后置。
 
 ### 6.2 20级等级表
 
@@ -1170,17 +1208,21 @@ hiddenCompatibility: (1-|相性差|/150)×100
 
 70岁+：-0.3%/季，75岁+：-0.5%/季，80岁+：-1.0%/季。最低保留Lv10。
 
-### 6.4 待补
+> **已实装（Session 261）**：`shared/merit.ts applyMeritDecay(merit, peakMeritLevel, age, quarters)` 纯函数实现比例扣减（向下取整、多季连乘）；保底 = `min(10, peakMeritLevel)`（即"最低保留 Lv10"对到过 Lv10 者生效，生涯峰值不足 Lv10 的老将按峰值保底）。`turn.ts` 季度首月（isQuarterStart）对 70+ 岁**非君主**在职/在野武将逐人扣减并同步三字段，actionLog 写 `merit_decay` 条目（每季至多 8 条）。`peakMeritLevel` 只升不降（`syncMerit` 维护），作为衰减退级底线。
 
-1. `shared/stamina.ts` — 调用方传 `pos?.merit` 作为 `meritLevel` 是临时方案，需先用 `merit → level` 映射函数转换再传入
-2. `shared/types/officer.ts` — `OfficerRuntime` 缺 `meritLevel / meritPath / peakMeritLevel` 三个运行时字段
-3. `server/src/engine/appoint.ts` — 暂无功绩门槛检查，0-A 精简设计已注明后置
+### 6.4 已实装（Session 261，原"待补"三项全部落地；Session 265 数值消费全量接入）
+
+1. ✅ `shared/merit.ts` — `merit → level` 映射函数（`meritLevelFor`）+ 20 级表 + 称号/带兵+/属性加成查询 + `grantMerit`/`syncMerit` 统一发放与三字段同步；`server/src/services/game.ts` 初始化与 `battle.ts`/`duel` 发放点均改走映射/统一入口（不再把 `merit` 值直接当 `meritLevel`）。
+2. ✅ `shared/types/officer.ts` — `OfficerRuntime` 新增 `meritLevel / meritPath / peakMeritLevel` 三运行时字段（optional 兼容旧档；`OfficerRuntimeSchema` 同步；新建 `shared/merit.test.ts` 17 项）。
+3. ✅ `server/src/engine/appoint.ts` — 功绩门槛检查已激活：`shared/positions.ts` `PositionReq` 新增 `meritLevel`，四轨门槛表填入 0-A 精简数值（见 §3.4 表）；属性与功绩分两段判定、错误文案分离；**君主任命豁免功绩门槛**（见 6.5）。`meetsPositionReq` 第三参为可选功绩等级（未传不检查功绩），`AppointPanel` 门槛展示与确认前复验同步生效。
+4. ✅ **数值消费（Session 265）**：属性加成计入有效属性（`shared/stamina.ts effectiveStat/meritStatBonus` + `calcStaminaMax` Lv5 体上限+3 + duel/battle/crit/campaign 战力链）；特殊效果经 `meritEffects(level, path)` 接入 duel（单挑+%、被俘-20%）/ civil（开发+%、内政效率+%）/ crit（暴率+5%）/ battle `getOfficerProficiency`（适性+1）/ turn（Lv20 体力恢复+5/月）；带兵+ 经 `formationTroopCap` 接入 `startCampaign` 出征上限（AI 出征同步裁剪，AI 与玩家同规则）；`verify-merit-consume` 18/18 + `verify-s265-ui` 浏览器 8/8 + shared 单测 29 项。君主守卫（切片 C）：`appointOfficer` 忠诚±对君主不生效、`giftBeauty`/`marryFemale`/`rewardBeautyStock` 拒绝君主。
 
 ### 6.5 君主身份特例（Session 188 规则定稿）
 
 君主不参与本节功绩等级系统。详见 §3.8 君主身份特例。要点：
 - 君主 UI 不显示"功绩"数值，改显示势力综合国力派生指标（城池数/总兵力/总金/总粮）。
-- 引擎层战斗/单挑/内政等修改 `Officer.merit` 的点，对君主身份不生效（避免双重计数）。
+- 引擎层战斗/单挑/内政等修改 `Officer.merit` 的点，对君主身份不生效（避免双重计数）。**Session 261 已落地**：`battle.ts` 与 `duel` 结算发放功绩前判定 `rulerId`，君主不发；季度衰减同样跳过君主。**Session 265 切片 C 收口**：任命/解职忠诚±对君主不生效（`appoint.ts`），`giftBeauty`/`marryFemale`/`rewardBeautyStock` 拒绝君主目标；UI 六维不显示功绩属性加成（`OfficerDetail` 对 `isRuler` 屏蔽 `meritAttrBonusFor`）。
+- **君主任命豁免功绩门槛（Session 261 补充）**：君主 merit 恒 0（无功绩概念），若任命官职检查功绩门槛将永远拒绝 → `appoint.ts` 对君主跳过功绩门槛（以国力度量），属性门槛照常检查。
 - 未来君主专属"基业"体系（若做）应在 `meritLevel` 运行时字段补全后独立设计，不复用 `Officer.merit`。
 
 ---

@@ -9,7 +9,10 @@ import {
   OfficerStatus,
   UnitType,
   canMarchAlongRoad,
+  formationTroopCap,
+  getCommanderyTemplateByTemplateId,
   isHostileOrAtWar,
+  resolveArmyCountyNodeId,
   roadNeighbors,
   type GameState,
   type Officer,
@@ -31,6 +34,12 @@ export const AI_MILITARY_CONFIG = Object.freeze({
   threatenedReserveRatio: 0.25,
   retreatTroopRatio: 0.55,
   retreatFoodMonths: 2,
+  // 郡域增援（R6 后续 · S15 深化，Session 260）
+  reinforceChanceBase: 0.3,
+  reinforceChancePerHeldCounty: 0.1,
+  reinforceChanceCap: 0.7,
+  minReinforceTroops: 1_000,
+  maxReinforceArmies: 2,
 });
 
 function pushLog(
@@ -185,9 +194,122 @@ export function runAiMilitary(
         `【战报】${factionName}攻${target.name}${result.winner === 'attacker' ? '得胜' : '失利'}：攻方损${result.attackerCasualties}、守方损${result.defenderCasualties}（出阵${beforeTroops}）`,
       );
     }
+    // R6 后续 · S15 深化（Session 260）：郡域增援 —— 该 AI 势力为郡域守方时，
+    // 评估是否从郡治大地图城市编成增援 Army 直接入场（不走大地图行军）。
+    // 置于常规出征之前（守土优先）：增援军 phase='garrison' 不占 activeFronts 名额，
+    // 常规出征决策仍可用双线名额；但郡治城兵力被增援占用后该月不再作出征源。
+    s = maybeReinforceCommandery(s, f.id, decisionRng);
     s = aiMilitaryTurn(s, f.id, resolutionRng, decisionRng);
   }
   return s;
+}
+
+/**
+ * 郡域增援决策（R6 后续 · S15 深化，Session 260）。
+ *
+ * 条件链（任一不满足即返回原 state，**RNG 零消费**，保持既有 AI 军事流确定性）：
+ *   1. `activeBattlefieldInstance` 存在且该 AI 势力为守方（seat.rulerFactionId）；
+ *   2. 郡域内守方 Army 数 < `maxReinforceArmies`（2）；
+ *   3. 模板可解析且郡治大地图城市（worldCityId）仍属该势力；
+ *   4. 郡治城可调兵力（troops - 动态守备 requiredReserve）≥ `minReinforceTroops`；
+ *   5. `decisionRng()` < 增援概率（基础 0.3 + 攻方每占 1 县 +0.1，上限 0.7）。
+ *
+ * 触发后：`startCampaignForFaction` 从郡治城编成（扣城兵力/粮草、武将 IN_BATTLE），
+ * 新 Army 置 phase='garrison'（不走大地图行军），直接入场：
+ *   - `inst.armyIds` 追加；
+ *   - 部署到守方纵深前沿县（`defenderEntryNodeIds` 中首个未被攻方占领者；
+ *     全被占则部署 seat），`nodeStates[].armyIds` 与 `dynamicSituation.deployments`
+ *     同步（位置一致性，见 `docs/25-bf-p2-design.md` §2.6.4）。
+ * 设计真源：`docs/25-bf-p2-design.md` §2.6.4；`docs/12-system-map.md` S15。
+ */
+export function maybeReinforceCommandery(
+  state: GameState,
+  factionId: number,
+  decisionRng: () => number,
+): GameState {
+  const inst = state.activeBattlefieldInstance;
+  if (!inst) return state;
+  const seat = inst.nodeStates.find((n) => n.nodeId === inst.targetSeatNodeId);
+  if (seat?.rulerFactionId !== factionId) return state;
+
+  const defenderArmyCount = state.campaignArmies.filter(
+    (army) => army.factionId === factionId && resolveArmyCountyNodeId(inst, army.id) != null,
+  ).length;
+  if (defenderArmyCount >= AI_MILITARY_CONFIG.maxReinforceArmies) return state;
+
+  const template = getCommanderyTemplateByTemplateId(inst.templateId);
+  if (template == null) return state;
+  const seatCityId = template.bundle.commanderies[0]?.worldCityId;
+  if (seatCityId == null) return state;
+  const from = state.cities[seatCityId];
+  if (!from || from.ruler !== factionId) return state;
+  const reserve = requiredReserve(state, factionId, seatCityId);
+  const available = from.troops - reserve;
+  if (available < AI_MILITARY_CONFIG.minReinforceTroops) return state;
+
+  // 增援概率：攻方（玩家）占领县越多，守方越急
+  const heldByAttacker = inst.nodeStates.filter(
+    (n) => n.rulerFactionId === state.playerFactionId,
+  ).length;
+  const chance = Math.min(
+    AI_MILITARY_CONFIG.reinforceChanceCap,
+    AI_MILITARY_CONFIG.reinforceChanceBase +
+      heldByAttacker * AI_MILITARY_CONFIG.reinforceChancePerHeldCounty,
+  );
+  if (decisionRng() >= chance) return state;
+
+  const commander = pickCommander(state, factionId, seatCityId);
+  if (!commander) return state;
+  // 出征上限（docs/04 §7.5 + 6.2 带兵+，Session 265）：AI 与玩家同规则
+  const troopCount = Math.min(
+    available,
+    Math.max(AI_MILITARY_CONFIG.minReinforceTroops, Math.floor(available * 0.6)),
+    formationTroopCap(commander),
+  );
+  const food = Math.min(from.food, troopCount * 3);
+  const started = startCampaignForFaction(state, {
+    fromNodeId: seatCityId,
+    targetNodeId: seatCityId,
+    commanderId: commander.id,
+    subCommanderIds: [],
+    unitType: UnitType.LIGHT_INFANTRY,
+    formation: FormationType.SQUARE,
+    troopCount,
+    food,
+  }, factionId, { skipTargetValidation: true, phase: 'garrison' });
+  const army = started.army;
+  // 增援军不走大地图行军：startCampaignForFaction 以 phase='garrison'、path=[] 编成
+
+  // 入场：部署到守方纵深前沿县（未被攻方占领者优先，全被占则 seat）
+  const deployNodeId =
+    template.defenderEntryNodeIds.find((nodeId) => {
+      const node = inst.nodeStates.find((n) => n.nodeId === nodeId);
+      return node && node.rulerFactionId !== state.playerFactionId;
+    }) ?? inst.targetSeatNodeId;
+  const nodeStates = inst.nodeStates.map((n) =>
+    n.nodeId === deployNodeId ? { ...n, armyIds: [...n.armyIds, army.id] } : n,
+  );
+  const newInst: typeof inst = {
+    ...inst,
+    armyIds: [...inst.armyIds, army.id],
+    nodeStates,
+    dynamicSituation: inst.dynamicSituation
+      ? {
+          ...inst.dynamicSituation,
+          deployments: [
+            ...(inst.dynamicSituation.deployments ?? []),
+            { armyId: army.id, nodeId: deployNodeId },
+          ],
+        }
+      : inst.dynamicSituation,
+  };
+
+  const factionName = state.factions[factionId]?.name ?? '某军';
+  return pushLog(
+    { ...started.state, activeBattlefieldInstance: newInst },
+    'ai_war_report',
+    `【军情】${factionName}命${commander.name}率${troopCount}兵增援${template.label}（部署 ${deployNodeId}）`,
+  );
 }
 
 function aiMilitaryTurn(
@@ -257,9 +379,11 @@ function aiMilitaryTurn(
         const commander = pickCommander(s, factionId, from.id);
         if (commander) {
           const troopShare = Math.min(0.9, 0.7 + (aggression - 0.75) * 0.3);
+          // 出征上限（docs/04 §7.5 + 6.2 带兵+，Session 265）：AI 与玩家同规则
           const troopCount = Math.min(
             from.troops - reserve,
             Math.max(AI_MILITARY_CONFIG.minCampaignTroops, Math.floor(from.troops * troopShare)),
+            formationTroopCap(commander),
           );
           const food = Math.min(from.food, troopCount * 3);
           const started = startCampaignForFaction(s, {

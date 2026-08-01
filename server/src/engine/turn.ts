@@ -7,15 +7,21 @@
 import {
   Season,
   ageDemographicsTick,
+  applyMeritDecay,
+  calcStaminaMax,
   cityFoodNeed,
   ensureDemographics,
   laborForce,
+  meritEffects,
+  meritLevelFor,
   pruneExpiredIntel,
+  syncMerit,
   withSyncedPopulation,
   isCountyPathBlockedBy,
   monthlyArmyFoodCost,
   resolveArmyCountyNodeId,
   shortestCountyPath,
+  decideDefenderArmyAction,
   type City,
   type CityDemographics,
   type GameState,
@@ -64,6 +70,34 @@ export function advanceCalendar(currentYear: number, currentMonth: number): Turn
 
 function sumSafe(d: CityDemographics): number {
   return d.adultMale + d.adultFemale + d.child + d.elder;
+}
+
+/**
+ * S12 功绩衰减（docs/04 §十 6.3）：季度首月对 70 岁+ 非君主武将按年龄档
+ * （70+/75+/80+ 每季 -0.3%/-0.5%/-1.0%）扣减功绩，保底 min(10, peakMeritLevel)。
+ * 只返回有实际衰减的武将，返回 notes 供 actionLog 记录。
+ */
+export function applyMeritDecayQuarter(
+  state: GameState,
+  year: number,
+): { officers: GameState['officers']; notes: { message: string }[] } {  const officers: GameState['officers'] = { ...state.officers };
+  const notes: { message: string }[] = [];
+  for (const o of Object.values(state.officers)) {
+    if (o.birthYear <= 0) continue;
+    const age = year - o.birthYear;
+    if (age < 70) continue;
+    // 君主不参与功绩系统（docs/04 §3.8/§6.5）
+    if (state.factions[o.faction ?? 0]?.rulerId === o.id) continue;
+    const before = o.merit ?? 0;
+    const after = applyMeritDecay(before, o.peakMeritLevel ?? meritLevelFor(before), age, 1);
+    if (after === before) continue;
+    const synced = syncMerit({ ...o, merit: after });
+    officers[o.id] = synced;
+    notes.push({
+      message: `${o.name} 年${age}，功绩随岁月衰减至 ${after}（Lv${synced.meritLevel ?? 1}）`,
+    });
+  }
+  return { officers, notes };
 }
 
 /** 饥荒死亡权重：老 > 童 > 女 > 男 */
@@ -245,7 +279,14 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickEvents(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
-  if (isQuarterStart) nextState = tickImperialAuthorityQuarter(nextState);
+  // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）
+  let meritDecayNotes: { message: string }[] = [];
+  if (isQuarterStart) {
+    nextState = tickImperialAuthorityQuarter(nextState);
+    const decay = applyMeritDecayQuarter(nextState, currentYear);
+    nextState = { ...nextState, officers: decay.officers };
+    meritDecayNotes = decay.notes;
+  }
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {
     ...nextState,
@@ -261,10 +302,19 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
       ]),
     ),
     officers: Object.fromEntries(
-      Object.entries(nextState.officers).map(([id, o]) => [
-        id,
-        { ...o, actionsPerMonth: 1 },
-      ]),
+      Object.entries(nextState.officers).map(([id, o]) => {
+        let next: typeof o = { ...o, actionsPerMonth: 1 };
+        // 等级表 Lv20 体力恢复+5/月（docs/04 §十 6.2，Session 265；封顶体力上限）
+        if (o.status !== 'dead') {
+          const effects = meritEffects(meritLevelFor(o.merit ?? 0), o.meritPath ?? 'neutral');
+          if (effects.staminaRecovery > 0) {
+            const level = o.meritLevel ?? meritLevelFor(o.merit ?? 0);
+            const max = calcStaminaMax(o, level, currentYear - o.birthYear);
+            next = { ...next, stamina: Math.min(max, (o.stamina ?? max) + effects.staminaRecovery) };
+          }
+        }
+        return [id, next] as const;
+      }),
     ),
   };
 
@@ -285,6 +335,12 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
             message: `${currentYear}年${currentMonth}月 — ${seasonLabel}季开始`,
           }]
         : []),
+      ...meritDecayNotes.slice(0, 8).map((note) => ({
+        year: currentYear,
+        month: currentMonth,
+        type: 'merit_decay',
+        message: note.message,
+      })),
       ...(isYearStart
         ? [{
             year: currentYear,
@@ -317,15 +373,19 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
 }
 
 /**
- * BF-P2 Q9 + BF-P5：郡域战场实例月度 tick。
+ * BF-P2 Q9 + BF-P5 + R6（Session 259）：郡域战场实例月度 tick。
  *
  * 在 endTurn 里于 tickCampaignMarch/tickCampaignGarrison 之后调用，处理：
  * 1. 驻军消耗：已占领县 controlTurns++；若 garrison==0 则掉控制（rulerFactionId=null）。
  * 2. 补给线切断（BF-P5 真实路径判定）：逐支守方 Army 经 shared/army-county-mapping
  *    定位 countyId，补给线 = seat → Army 当前县 最短路径；路径经过攻方控制县 →
  *    该 Army 粮耗×2 + 士气-5。未定位在郡域内的守方 Army 不受影响。
+ * 3. 县级主动 AI（R6 后续 · S15，Session 259）：补给线惩罚结算后，逐支守方 Army
+ *    经 shared/commandery-defender-ai 决策月度行动（移动/收复/撤退），决策消费
+ *    权威 PRNG；无守方 Army / 无可行动时 RNG 零消费（保持 f1~f9 确定性）。
+ *    位置变更同步 nodeStates[].armyIds 与 dynamicSituation.deployments（回退表）。
  */
-export function tickBattlefieldInstance(state: GameState): GameState {
+export function tickBattlefieldInstance(state: GameState, rng: () => number): GameState {
   const inst = state.activeBattlefieldInstance;
   if (!inst) return state;
 
@@ -371,11 +431,67 @@ export function tickBattlefieldInstance(state: GameState): GameState {
     });
   }
 
-  if (!nodeStatesChanged && !campaignArmiesChanged) return state;
+  // ==== 3. 县级主动 AI：守方 Army 月度行动（R6 后续 · S15，Session 259）====
+  // 补给线惩罚结算后逐支守方 Army 决策（决策消费权威 PRNG；无可行动零消费）。
+  // 位置变更同步 nodeStates[].armyIds（权威表）与 dynamicSituation.deployments（回退表），
+  // 避免 resolveArmyCountyNodeId 经 deployments 回退把已移动/已撤出的 Army 拉回旧位置。
+  let defenderActed = false;
+  let actedNodeStates = newNodeStates;
+  let actedDeployments: { armyId: string; nodeId: string }[] | null =
+    inst.dynamicSituation?.deployments ?? null;
+  const defenderActionMessages: string[] = [];
+  if (defenderFactionId != null) {
+    for (const army of newCampaignArmies) {
+      if (army.factionId !== defenderFactionId) continue;
+      if (!actedNodeStates.some((n) => n.armyIds.includes(army.id))) continue; // 不在郡域
+      const viewInst = actedDeployments != null
+        ? { ...inst, nodeStates: actedNodeStates, dynamicSituation: { ...inst.dynamicSituation!, deployments: actedDeployments } }
+        : { ...inst, nodeStates: actedNodeStates };
+      const action = decideDefenderArmyAction(
+        viewInst,
+        army,
+        { defenderFactionId, attackerFactionId, seatNodeId: inst.targetSeatNodeId },
+        rng,
+      );
+      if (action.type === 'stay') continue;
+      defenderActed = true;
+      if (action.type === 'move') {
+        const { fromNodeId, toNodeId } = action;
+        actedNodeStates = actedNodeStates.map((n) => {
+          if (n.nodeId === fromNodeId) return { ...n, armyIds: n.armyIds.filter((id) => id !== army.id) };
+          if (n.nodeId === toNodeId) return { ...n, armyIds: [...n.armyIds, army.id] };
+          return n;
+        });
+        actedDeployments = actedDeployments?.map((d) => (d.armyId === army.id ? { ...d, nodeId: toNodeId } : d)) ?? null;
+        defenderActionMessages.push(`${army.name} 自 ${fromNodeId} 移驻 ${toNodeId}`);
+      } else if (action.type === 'recapture') {
+        // 收复：rulerFactionId 夺回为守方；驻军并入 Army 兵力（0-A 简化，见 docs/25 §2.6.4）
+        actedNodeStates = actedNodeStates.map((n) =>
+          n.nodeId === action.nodeId
+            ? { ...n, rulerFactionId: defenderFactionId, garrison: army.troops, controlTurns: 0 }
+            : n,
+        );
+        defenderActionMessages.push(`${army.name} 收复 ${action.nodeId}`);
+      } else if (action.type === 'retreat') {
+        // 撤出郡域：位置表（权威 + 回退）同步移除；currentNodeId 本就是郡治大地图城市 id
+        actedNodeStates = actedNodeStates.map((n) =>
+          n.nodeId === action.nodeId ? { ...n, armyIds: n.armyIds.filter((id) => id !== army.id) } : n,
+        );
+        actedDeployments = actedDeployments?.filter((d) => d.armyId !== army.id) ?? null;
+        defenderActionMessages.push(`${army.name} 撤出郡域`);
+      }
+    }
+  }
+
+  if (!nodeStatesChanged && !campaignArmiesChanged && !defenderActed) return state;
 
   let next: GameState = state;
-  if (nodeStatesChanged) {
-    next = { ...next, activeBattlefieldInstance: { ...inst, nodeStates: newNodeStates } };
+  if (nodeStatesChanged || defenderActed) {
+    const finalNodeStates = defenderActed ? actedNodeStates : newNodeStates;
+    const finalInst = actedDeployments != null && defenderActed
+      ? { ...inst, nodeStates: finalNodeStates, dynamicSituation: { ...inst.dynamicSituation!, deployments: actedDeployments } }
+      : { ...inst, nodeStates: finalNodeStates };
+    next = { ...next, activeBattlefieldInstance: finalInst };
   }
   if (campaignArmiesChanged) {
     next = { ...next, campaignArmies: newCampaignArmies };
@@ -386,6 +502,18 @@ export function tickBattlefieldInstance(state: GameState): GameState {
         month: state.currentMonth,
         type: 'battlefield',
         message: `${supplyCutMessages.join('；')}，粮耗×2 士气-5`,
+      }, ...next.actionLog].slice(0, 80),
+    };
+  }
+
+  if (defenderActionMessages.length > 0) {
+    next = {
+      ...next,
+      actionLog: [{
+        year: state.currentYear,
+        month: state.currentMonth,
+        type: 'battlefield',
+        message: defenderActionMessages.join('；'),
       }, ...next.actionLog].slice(0, 80),
     };
   }

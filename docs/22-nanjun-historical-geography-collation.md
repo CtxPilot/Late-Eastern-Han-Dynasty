@@ -123,7 +123,29 @@
 | 路径（显式） | `route_<descriptor>` | `route_yangtze_wu_zigui` |
 | 史源 | `src_<序号或缩写>` | `src_xuhanshujunzhi` |
 
-### 7.4 校验脚本
+### 7.4 年代覆写（BF-P5，Session 257 实装）
+
+> docs/21 Q4 方案 B 的最小 Schema 落地：以《郡国志》为基线，按剧本年份应用
+> 建安改置覆写。**南郡/颍川 190 切片仍为单一年代**（全部条目 validFrom=To=190）；
+> 多年代能力由测试夹具演示，不主张任何真实行政区划变更。
+
+- `CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 均支持
+  `validFromYear`/`validToYear`（**缺省 = `scenarioYear`**，即单一年代条目）。
+- 自动派生 road（`autoFillRoads`）的有效期取两端县有效期的**交集**，
+  避免越界年份产生悬空端点。
+- 运行时按年份取模板用纯函数 `resolveBundleForYear(bundle, year)`
+  （`shared/data/historical-geography/year-overrides.ts`）：
+  过滤出该年有效子集并重新跑 Zod 校验。
+- 语义要点：
+  - 存活县的 `adjacentCountyIds`/`landmarkIds` 中，指向「存在但该年已过期」的
+    引用会被剔除（裁撤后不可能仍相邻）；指向 bundle 内根本不存在 id 的引用
+    不剔除、交由 Zod 拦截（防手误被静默吞掉）。
+  - 郡治 `seatCountyId` 该年已过期 → 抛错。
+  - 路径声明全时段而端点限时 → Zod 拦截（数据须声明一致的逐年代集合）。
+- **严格性（BF-P5「无静默抽象回退」）**：请求年份无有效郡国定义、或过滤后
+  引用断裂时抛错，不做静默回退。
+
+### 7.5 校验脚本
 
 ```bash
 pnpm verify-historical-geography

@@ -972,18 +972,30 @@ Phase 4 — 特殊人物审核
 `CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器。南郡与颍川
 均已迁移至 seed 生成，`pnpm verify-historical-geography` 逐郡校验。
 
-**BF-P5 郡国模板目录（Session 255 新增）**：`shared/commandery-templates.ts` 为运行时
-郡国战场模板的唯一登记入口（bundle/templateId/entryNodeIds/instancePrefix/warPrefix/
-UI 标签）。orchestrator `enterNanjunBattlefield`、路由校验、`verify-historical-geography`
-逐郡校验与前端标签均从此目录驱动；新增第三郡只需登记一条目录条目，并保证
-`entryNodeIds` 引用模板内县节点即可。南郡兼容包装 `generateNanjunBattlefield` 亦从目录取数。
+**BF-P5 郡国模板目录（Session 255 新增，Session 258 扩展）**：`shared/commandery-templates.ts`
+为运行时郡国战场模板的唯一登记入口（bundle/templateId/entryNodeIds/
+**defenderEntryNodeIds**/instancePrefix/warPrefix/UI 标签）。orchestrator
+`enterNanjunBattlefield`、路由校验、`verify-historical-geography` 逐郡校验与前端标签
+均从此目录驱动；新增第三郡只需登记一条目录条目，并保证 `entryNodeIds` 引用模板内
+县节点即可。`defenderEntryNodeIds` 为**守方 Army 部署节点**（R6 守方 Army 入郡域
+场景，Session 258）：南郡=州陵/夷道、颍川=舞阳/父城，守方势力驻留郡治城市的现役
+Army 入场时部署到这些守方纵深前沿县（缺省回退郡治 seat）。南郡兼容包装
+`generateNanjunBattlefield` 亦从目录取数。
+
+**BF-P5 年代覆写（Session 257 新增）**：`seed-schema.ts` 的
+`CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 均支持
+`validFromYear`/`validToYear`（缺省 = `scenarioYear`，即单一年代条目）；自动派生
+road 的有效期取两端县有效期的交集。运行时按年份取模板用纯函数
+`resolveBundleForYear(bundle, year)`（`year-overrides.ts`）：过滤出该年有效子集并
+重新跑 Zod 校验，请求年份无有效郡国定义或过滤后引用断裂时**抛错**（无静默回退）。
+南郡/颍川 190 切片仍为单一年代，多年代能力由测试夹具演示。
 
 | Seed 类型 | 核心字段 | 说明 |
 |------|------|------|
-| `CommanderySeed` | id/name/province/seatCountyId/worldCityId/scenarioYear/sourceRefs/counties/landmarks?/routes?/autoFillRoads? | 郡国聚合入口；`autoFillRoads` 控制是否从县邻接自动派生 road 路径（缺省 true；南郡水路为主设 false） |
-| `CountySeed` | id/name/x/y/adjacent/role?/terrain?/landmarks?/confidence?/sourceRefs? | `role` 可选 seat/county/marquisate/frontier（缺省 county）；`terrain` 可选8种地形标签（缺省 plain） |
-| `LandmarkSeed` | id/name/kind/geometry/tacticalTags?/confidence?/sourceRefs? | 实体嵌入式地标（消灭旧「seed只放id、实体另写」半自动模式）；`geometry` 支持 point/polyline/polygon |
-| `RouteSeed` | id/from/to/kind?/movementCost?/seasonal?/confidence?/sourceRefs? | 显式 per-edge 路径覆盖；端点可引用县 id 或地标 id；缺省回退 road/1/all/inferred |
+| `CommanderySeed` | id/name/province/seatCountyId/worldCityId/scenarioYear/sourceRefs/counties/landmarks?/routes?/autoFillRoads? | 郡国聚合入口；`autoFillRoads` 控制是否从县邻接自动派生 road 路径（缺省 true；南郡水路为主设 false）；支持 `validFromYear`/`validToYear`（缺省=scenarioYear） |
+| `CountySeed` | id/name/x/y/adjacent/role?/terrain?/landmarks?/confidence?/sourceRefs? | `role` 可选 seat/county/marquisate/frontier（缺省 county）；`terrain` 可选8种地形标签（缺省 plain）；支持 `validFromYear`/`validToYear` |
+| `LandmarkSeed` | id/name/kind/geometry/tacticalTags?/confidence?/sourceRefs? | 实体嵌入式地标（消灭旧「seed只放id、实体另写」半自动模式）；`geometry` 支持 point/polyline/polygon；支持 `validFromYear`/`validToYear` |
+| `RouteSeed` | id/from/to/kind?/movementCost?/seasonal?/confidence?/sourceRefs? | 显式 per-edge 路径覆盖；端点可引用县 id 或地标 id；缺省回退 road/1/all/inferred；支持 `validFromYear`/`validToYear` |
 
 数字真源：南郡 16 县 + 10 地标 + 11 路线；颍川 17 县 + 4 地标 + 29 路线；合计 33 县、14 地标、40 路线。
 

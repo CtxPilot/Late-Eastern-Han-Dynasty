@@ -20,14 +20,16 @@
  *    县节点军情显示为"未知"（garrison=0、wall=0、armyIds=[]），并记录进
  *    `foggedNodeIds`（mask 投影字段，不写入存档）。
  *  - 揭示集 = 入口县 ∪ 郡治（seat，攻方明确目标）∪ 攻方 Army 所在县 ∪
- *    攻方已占领县 ∪ 上述来源的一跳邻接。
+ *    攻方已占领县 ∪ 守方 Army 所在县（R6：守方 Army 入郡域场景后，其位置
+ *    所在县并入揭示源，玩家可察敌军部署）∪ 上述来源的一跳邻接。
  *
  * 视野扩张效果：`engageCounty` 攻占某县后，该县及其邻接县进入揭示集，
  * 军情对攻方透明——补齐 BF-P2 Q9 第 4 条。
  *
- * 0-A 边界：守方 Army 入郡域场景由 R6（S15 多线 AI）排期；本模块已按
- * 攻方 Army id 列表（`playerArmyIds`）过滤 Army 位置揭示，R6 接入守方 Army
- * 后其位置仍只在"攻方可见"时暴露。
+ * 0-A 边界：守方 Army 入郡域场景已由 R6 落地（其所在县并入揭示源）；本模块
+ * 按攻方 Army id 列表（`playerArmyIds`）区分攻守：守方 Army 位置只经
+ * `nodeStates[].armyIds`（权威运行时位置）在揭示节点暴露，`deployments` 快照
+ * 仅保留攻方条目，不额外泄露守方部署历史。
  *
  * 消费方：`shared/mask-state.ts` `maskGameStateForPlayer`（服务端下发投影）。
  */
@@ -41,7 +43,9 @@ import type { BattlefieldInstance, BattlefieldNodeState } from './types/battlefi
  *  1. 入口县（`inst.entryNodeIds`，攻方从边界进入）；
  *  2. 郡治（`inst.targetSeatNodeId`，攻方明确进攻目标，天然可察）；
  *  3. 攻方 Army 当前所在县（`playerArmyIds` ∩ `nodeStates[].armyIds`）；
- *  4. 攻方已占领县（`rulerFactionId === playerFactionId`）。
+ *  4. 攻方已占领县（`rulerFactionId === playerFactionId`）；
+ *  5. 守方 Army 所在县（`nodeStates[].armyIds` 中存在非攻方 Army；R6 守方
+ *     Army 入郡域场景后并入揭示源，玩家可察敌军部署位置）。
  * 每个来源节点自身 + 其 `adjacentNodeIds`（一跳）均为已揭示。
  *
  * 返回排序去重列表，纯函数零 RNG。
@@ -58,7 +62,8 @@ export function computeRevealedNodeIds(
   revealSources.add(inst.targetSeatNodeId);
   for (const node of inst.nodeStates) {
     const hasPlayerArmy = node.armyIds.some((armyId) => playerArmySet.has(armyId));
-    if (hasPlayerArmy || node.rulerFactionId === playerFactionId) {
+    const hasEnemyArmy = node.armyIds.some((armyId) => !playerArmySet.has(armyId));
+    if (hasPlayerArmy || hasEnemyArmy || node.rulerFactionId === playerFactionId) {
       revealSources.add(node.nodeId);
     }
   }

@@ -301,12 +301,13 @@ gameRouter.post('/intel/captive', (req, res) => {
 
 gameRouter.post('/plot/launch', (req, res) => {
   try {
-    const { type, targetFactionId, targetCityId, targetOfficerId, agentId } = req.body as {
+    const { type, targetFactionId, targetCityId, targetOfficerId, agentId, casterOfficerId } = req.body as {
       type: string;
       targetFactionId?: number;
       targetCityId?: number;
       targetOfficerId?: number;
       agentId?: string;
+      casterOfficerId?: number;
     };
     res.json(
       gameService.doLaunchPlot(
@@ -315,6 +316,7 @@ gameRouter.post('/plot/launch', (req, res) => {
         targetCityId != null ? Number(targetCityId) : undefined,
         targetOfficerId != null ? Number(targetOfficerId) : undefined,
         agentId ? String(agentId) : undefined,
+        casterOfficerId != null ? Number(casterOfficerId) : undefined,
       ),
     );
   } catch (e) {

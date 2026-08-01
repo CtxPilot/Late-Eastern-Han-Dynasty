@@ -29,6 +29,8 @@ export interface Plot {
   type: PlotType;
   /** Faction launching the plot */
   casterFactionId: number;
+  /** Executing officer (Session 263; absent in legacy saves) */
+  casterOfficerId?: number;
   /** Target faction (for inter-faction plots like sowDiscord) */
   targetFactionId?: number;
   /** Target city (for honey trap targeting an officer in a city) */

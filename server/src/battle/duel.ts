@@ -24,6 +24,9 @@ import {
   PrimaryWeaponSubType,
   SecondaryWeaponSubType,
   type Officer,
+  meritStatBonus,
+  meritEffects,
+  meritLevelFor,
 } from '@leh/shared';
 import {
   DuelCommand,
@@ -298,13 +301,20 @@ function computeDamage(
   if (!hit) return { damage: 0, hit: false };
 
   // baseDamage = |武差| × weaponPower × (1 + 指令修正)
-  const warDiff = Math.abs(atkOff.stats.war - defOff.stats.war);
+  // 功绩属性加成（Lv15/16/17/20）计入有效武力（Session 265 数值消费）
+  const atkWar = atkOff.stats.war + meritStatBonus(atkOff, 'war');
+  const defWar = defOff.stats.war + meritStatBonus(defOff, 'war');
+  const warDiff = Math.abs(atkWar - defWar);
   const cmdMod = commandDamageMod(cmd);
   let base = warDiff * weapon.power * (1 + cmdMod + clash.atkDamageMod);
   // 保底: 即使武差为 0 也应有伤害 (用进攻方武力兜底)
-  if (base < atkOff.stats.war * weapon.power * 0.2) {
-    base = atkOff.stats.war * weapon.power * 0.2;
+  if (base < atkWar * weapon.power * 0.2) {
+    base = atkWar * weapon.power * 0.2;
   }
+
+  // 等级表特殊效果：武 Lv3/4/6 单挑+5%/+10%/+15%（docs/04 §十 6.2，Session 265）
+  const duelBonus = meritEffects(meritLevelFor(atkOff.merit ?? 0), atkOff.meritPath ?? 'neutral').duelBonus;
+  if (duelBonus > 0) base *= 1 + duelBonus;
 
   // 力量附加 (§8.6.2)
   const stamina = staminaFactor(atk.hp / atk.maxHp);
@@ -677,8 +687,9 @@ function resolveOutcome(
   if (rng() < clamp(killChance, 0.05, 0.85)) {
     return { outcome: 'killed', epilogue: `${winnerOff.name} 将 ${loserOff.name} 斩于马下。` };
   }
-  // 被俘概率
-  const captureChance = clamp(0.4 - loserHp * 0.002, 0.1, 0.5);
+  // 被俘概率（等级表 Lv12 被俘概率-20%，docs/04 §十 6.2；Session 265 数值消费）
+  const captureResist = meritEffects(meritLevelFor(loserOff.merit ?? 0), loserOff.meritPath ?? 'neutral').captureResist;
+  const captureChance = clamp(0.4 - loserHp * 0.002 - captureResist, 0.1, 0.5);
   if (rng() < captureChance) {
     return { outcome: 'captured', epilogue: `${loserOff.name} 力竭被俘。` };
   }

@@ -102,22 +102,27 @@ function favorabilityBetween(
   };
 }
 
-/** 当前 Demo 以魅力最高的现役己方武将自动担任结盟使者。 */
+/**
+ * 当前 Demo 以魅力最高的现役己方武将自动担任结盟使者。
+ * 君主不出使（docs/04 §6.5：君主不参与功绩系统——使者若为君主则同盟功绩无人可领）；
+ * 但若势力除君主外无现役武将（小势力），回退允许君主出使（功绩由 grantMeritTo 守卫兜底不发放）。
+ */
 export function selectAllianceEnvoy(
   state: GameState,
   factionId: number,
 ): Officer {
-  const envoy = Object.values(state.officers)
-    .filter(
-      (officer) =>
-        officer.faction === factionId &&
-        officer.status === OfficerStatus.ACTIVE,
-    )
-    .sort(
-      (a, b) =>
-        b.stats.charisma - a.stats.charisma ||
-        a.id - b.id,
-    )[0];
+  const rulerId = state.factions[factionId]?.rulerId;
+  const active = Object.values(state.officers).filter(
+    (officer) =>
+      officer.faction === factionId &&
+      officer.status === OfficerStatus.ACTIVE,
+  );
+  const pool = active.filter((officer) => officer.id !== rulerId);
+  const envoy = (pool.length > 0 ? pool : active).sort(
+    (a, b) =>
+      b.stats.charisma - a.stats.charisma ||
+      a.id - b.id,
+  )[0];
   if (!envoy) throw new Error('无可用外交使者');
   return envoy;
 }

@@ -32,6 +32,7 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   id: z.string().min(1),
   type: z.nativeEnum(PlotType),
   casterFactionId: PositiveIdSchema,
+  casterOfficerId: PositiveIdSchema.optional(),
   targetFactionId: PositiveIdSchema.optional(),
   targetCityId: PositiveIdSchema.optional(),
   targetOfficerId: PositiveIdSchema.optional(),

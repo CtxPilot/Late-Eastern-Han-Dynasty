@@ -66,7 +66,11 @@ const playerFaction = initial.factions[initial.playerFactionId];
 const ownedCity = Object.values(initial.cities).find((city) => city.ruler === playerFaction.id);
 const targetCity = Object.values(initial.cities).find((city) => city.ruler !== playerFaction.id);
 const activeOfficer = Object.values(initial.officers).find(
-  (officer) => officer.faction === playerFaction.id && officer.status === OfficerStatus.ACTIVE,
+  (officer) =>
+    officer.faction === playerFaction.id &&
+    officer.status === OfficerStatus.ACTIVE &&
+    // §3.8 君主特例（切片 C）：君主不参与笼络/赏赐/赐婚，夹具选非君主武将
+    officer.id !== playerFaction.rulerId,
 );
 if (!ownedCity || !targetCity || !activeOfficer) throw new Error('S09 确定性验证缺少城市或己方武将');
 

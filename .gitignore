@@ -60,6 +60,7 @@ docs/screenshots/leh-seats-full.png
 .omo/
 .opencode/
 .playwright-mcp/
+reasonix.toml
 *.orig
 
 # OpenCode session plans (tool artifacts)

@@ -19,6 +19,13 @@ import { createBattle } from './battle.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { clearCityCounterOnCapture } from './spy.js';
 import { syncFactionResources } from './economy.js';
+import { grantMeritTo } from './meritGrant.js';
+import {
+  MERIT_ANNIHILATE_FACTION,
+  MERIT_CAPTURE_CITY,
+  MERIT_DEFEND_CITY,
+  pickDefenderCommander,
+} from './militaryMerit.js';
 
 export const MIN_MARCH_TROOPS = 1000;
 export const GARRISON_RESERVE = 500;
@@ -329,11 +336,22 @@ export function settleBattle(
     message = `攻占 ${target.name}！驻军 ${garrison}${freeMsg}`;
     type = 'capture';
 
-    let after: GameState = pushLog(
-      { ...state, cities, officers, factions: nextFactions },
-      type,
-      message,
-    );
+    let after: GameState = { ...state, cities, officers, factions: nextFactions };
+    // 军事功绩：破城 +30（攻方主将）；若占城导致目标势力覆灭再 +50（灭国）
+    const attackerCommanderId = battle.units.find(
+      (u) => u.side === 'attacker' && !u.isDestroyed,
+    )?.commanderId;
+    if (attackerCommanderId != null) {
+      after = grantMeritTo(after, attackerCommanderId, MERIT_CAPTURE_CITY);
+      if (
+        prevRuler != null &&
+        nextFactions[prevRuler] &&
+        !nextFactions[prevRuler].isAlive
+      ) {
+        after = grantMeritTo(after, attackerCommanderId, MERIT_ANNIHILATE_FACTION);
+      }
+    }
+    after = pushLog(after, type, message);
     // 占城：拆敌反间驻守
     after = clearCityCounterOnCapture(after, targetId);
     // 接管地方人脉（势力库存↑，城市机会↓，民忠↓）
@@ -371,7 +389,17 @@ export function settleBattle(
     type = 'battle_end';
   }
 
-  return pushLog({ ...state, cities, officers }, type, message);
+  // 军事功绩：守城 +8（守方主将，守方击退攻方）
+  let resultState: GameState = { ...state, cities, officers };
+  if (defenderWon) {
+    const defFid = battle.defenderFaction ?? target.ruler;
+    if (defFid != null) {
+      const defCmd = pickDefenderCommander(resultState, target, defFid);
+      if (defCmd) resultState = grantMeritTo(resultState, defCmd.id, MERIT_DEFEND_CITY);
+    }
+  }
+
+  return pushLog(resultState, type, message);
 }
 
 /** 仅标记 battle 已结算（由 service 层持有） */

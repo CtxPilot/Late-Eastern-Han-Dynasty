@@ -11,6 +11,12 @@ import {
   LOCAL_LABELS,
   MILITARY_LABELS,
   PERSONALITY_LABEL,
+  meritAttrBonusFor,
+  meritEntry,
+  meritLevelFor,
+  meritNextThreshold,
+  meritTitle,
+  meritTroopBonus,
   type GameState,
   type Officer,
 } from '@leh/shared';
@@ -143,6 +149,17 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
   const signatureStat = STAT_ROWS.filter(r => !r[2]).reduce((best, row) => officer.stats[row[1]] > officer.stats[best[1]] ? row : best, STAT_ROWS[0]);
   const factionName = officer.faction != null ? game.factions[officer.faction]?.name ?? '未知势力' : null;
   const isRuler = realmStats != null;
+  // S12 功绩等级展示（docs/04 §十）：由 merit 派生等级/称号/进度；君主不参与
+  const meritLevel = meritLevelFor(officer.merit);
+  const meritTitleText = meritTitle(meritLevel, officer.meritPath ?? 'neutral');
+  const meritNext = meritNextThreshold(officer.merit);
+  const meritCurrentThreshold = meritEntry(meritLevel).threshold;
+  const meritPct = meritNext
+    ? Math.min(100, Math.round(((officer.merit - meritCurrentThreshold) / Math.max(1, meritNext.threshold - meritCurrentThreshold)) * 100))
+    : 100;
+  const meritTroop = meritTroopBonus(meritLevel);
+  // 等级表属性加成（Session 265 数值消费；君主不参与）
+  const meritAttr = meritAttrBonusFor(officer);
   // 政治头衔（HC-P0-3）：君主且势力 politicalStage !== 'vassal' 时展示
   const politicalTitle = isRuler && officer.faction != null
     ? game.factions[officer.faction]?.politicalTitle
@@ -174,7 +191,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               ) : (
                 <>
                   <Info label="忠诚" value={String(officer.loyalty)} />
-                  <Info label="功绩" value={String(officer.merit)} />
+                  <Info label="功绩" value={`Lv${meritLevel} · ${meritTitleText}`} />
                 </>
               )}
               <Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} />
@@ -207,10 +224,12 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <div className="space-y-2">
                       {STAT_ROWS.map(([label, key, isStamina]) => {
                         const raw = isStamina ? (officer.stamina ?? 0) : officer.stats[key];
+                        // 功绩属性加成展示（等级表 Lv5/15/16/17/20，Session 265）
+                        const meritBonus = isRuler ? 0 : (isStamina ? (meritAttr.stamina ?? 0) : (meritAttr[key] ?? 0));
                         const capped = Math.min(raw, 100);
                         const overflow = raw > 100 ? raw - 100 : 0;
                         const display = overflow > 0 ? `${capped} (+${overflow})` : String(capped);
-                        return <div key={key} className="grid grid-cols-[2rem_3rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
+                        return <div key={key} className="grid grid-cols-[2rem_3.5rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}{meritBonus > 0 ? <span className="ml-0.5 text-emerald-400">+{meritBonus}</span> : null}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
                       })}
                     </div>
                   </section>
@@ -232,8 +251,19 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">人物成长</h3>
                     <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
                       <Info label="经验" value={String(officer.experience)} />
-                      <Info label="功绩" value={isRuler ? '君主不计' : String(officer.merit)} />
+                      <Info label="功绩" value={isRuler ? '君主不计' : `${officer.merit} / ${meritNext ? meritNext.threshold : 'MAX'}`} />
                     </div>
+                    {!isRuler && (
+                      <div className="mb-2">
+                        <div className="flex items-baseline justify-between text-[10px] text-stone-500">
+                          <span>功绩 Lv{meritLevel} {meritTitleText}{meritTroop > 0 ? ` · 带兵+${meritTroop}` : ''}</span>
+                          <span>{meritNext ? `距 Lv${meritNext.level}` : '已至巅峰'}</span>
+                        </div>
+                        <div className="mt-0.5 h-1 overflow-hidden rounded bg-stone-800">
+                          <div className="h-full bg-gradient-to-r from-amber-950 via-amber-700 to-amber-400" style={{ width: `${meritPct}%` }} />
+                        </div>
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
                       {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
                       {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level} · 用${skill.useCount}`} />)}
