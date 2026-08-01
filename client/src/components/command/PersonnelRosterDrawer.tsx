@@ -70,7 +70,8 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<PersonnelRosterScope>('all');
   const [sort, setSort] = useState<PersonnelRosterSort>('leadership');
-  const [selected, setSelected] = useState<Officer | null>(null);
+  /** 存 id 而非快照：OfficerDetail 需随 store 更新实时解析（S13 Session 266 装备/赏赐后刷新） */
+  const [selectedOfficerId, setSelectedOfficerId] = useState<number | null>(null);
   const intendedFacet =
     shellState.activeCommand === 'appoint'
       ? 'appointment'
@@ -163,7 +164,7 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
           return (
             <button key={officer.id} type="button" data-testid={`command-personnel-officer-${officer.id}`} onClick={(event) => {
               selectedTrigger.current = event.currentTarget;
-              setSelected(officer);
+              setSelectedOfficerId(officer.id);
             }} className="flex w-full items-center gap-2 border border-stone-800 bg-stone-900/60 px-2 py-1.5 text-left hover:border-amber-800 hover:bg-amber-950/20">
               <OfficerPortrait officer={officer} compact />
               <div className="min-w-0 flex-1">
@@ -176,8 +177,8 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
         {officers.length === 0 ? <p className="py-8 text-center text-stone-600" data-testid="personnel-roster-no-results">没有符合条件的人物</p> : null}
       </div>
 
-      <OfficerDetail game={game} officer={selected} onClose={() => {
-        setSelected(null);
+      <OfficerDetail game={game} officer={selectedOfficerId != null ? game.officers[selectedOfficerId] ?? null : null} onClose={() => {
+        setSelectedOfficerId(null);
         requestAnimationFrame(() => selectedTrigger.current?.focus());
       }} />
       </div>

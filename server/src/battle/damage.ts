@@ -14,6 +14,8 @@ export interface DamageInput {
   morale: number;
   terrain: TerrainType;
   matchup?: number;
+  /** 装备防御加成（S13 Session 266：黑铁甲/革甲 baseEffect defense）。 */
+  armorDefense?: number;
 }
 
 /** 兵种克制系数：攻方克制守方 → 1.3；被克制 → 0.7；互无关系 → 1.0 */
@@ -36,7 +38,7 @@ export function calcDamage(
   rng: () => number,
 ): number {
   const baseAttack = attacker.unitAttack + attacker.officerWar / 10;
-  const baseDefense = defender.unitDefense + defender.officerLeadership / 10;
+  const baseDefense = defender.unitDefense + defender.officerLeadership / 10 + (defender.armorDefense ?? 0);
 
   const troopFactor = 0.3 + 0.7 * (attacker.troops / Math.max(1, attacker.maxTroops));
   const moraleFactor = 0.6 + 0.4 * (attacker.morale / 100);

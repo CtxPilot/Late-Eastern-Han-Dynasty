@@ -19,6 +19,7 @@ import {
 import { joinFaction } from './family.js';
 import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
+import { searchTreasureIntoInventory } from './items.js';
 
 // 功绩获取数值（docs/04 §6.1 人事条；固定值不消耗权威 RNG，待平衡）
 const MERIT_SEARCH_FOUND = 8;
@@ -195,14 +196,15 @@ export function searchTalent(
   }
 
   // —— 宝物（稀有固定 5%，roll ∈ [officerChance+0.3, officerChance+0.35)）——
-  // 0-A 纯功绩模拟：寻得宝物 = 功绩 +5（docs/04 §6.1 宝物+5）；
-  // 真宝物实体（GameState.inventory / 具名宝物）后置（API 契约已预留 found: Item）。
-  // 不新增 RNG 消费（roll 已生成，宝物分支直接落入），确定性续玩 32/32 不受影响。
+  // S13 Session 266：真宝物实体入库（替换 0-A 纯功绩模拟）。功绩 +5 保留；
+  // 宝物入势力库存（不新增 RNG 消费——用既有 roll 派生宝物索引，确定性续玩不受影响）。
   if (roll < officerChance + 0.35) {
+    s = grantMeritTo(s, searcher.id, MERIT_SEARCH_TREASURE);
+    const withItem = searchTreasureIntoInventory(s, fid, roll);
     return pushLog(
-      grantMeritTo(s, searcher.id, MERIT_SEARCH_TREASURE),
+      withItem,
       'personnel_search',
-      `${searcher.name} 于 ${city.name} 寻得宝物一件（可上献朝廷彰功，耗金 ${SEARCH_GOLD}）`,
+      `${searcher.name} 于 ${city.name} 寻得宝物一件（已入势力库存，耗金 ${SEARCH_GOLD}）`,
     );
   }
 

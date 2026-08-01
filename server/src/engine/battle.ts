@@ -21,6 +21,7 @@ import {
   type UnitType,
 } from '@leh/shared';
 import { getUnitByType } from '../data/loader.js';
+import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
 import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
@@ -282,13 +283,15 @@ export function attackUnit(
   const atkTerrain = battle.hexGrid.terrain[attacker.position.r][attacker.position.q];
   const defTerrain = battle.hexGrid.terrain[defender.position.r][defender.position.q];
 
-  // §6.1 基础伤害（功绩属性加成计入有效武力/统帅，Session 265）
+  // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266）
+  const atkEquip = equipBonusFor(atkO);
+  const defEquip = equipBonusFor(defO);
   const baseDamage = calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
-      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war'),
-      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership'),
+      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war') + (atkEquip.war ?? 0),
+      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership') + (atkEquip.leadership ?? 0),
       troops: attacker.troopCount,
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
@@ -298,12 +301,13 @@ export function attackUnit(
     {
       unitAttack: defT.attack,
       unitDefense: defT.defense,
-      officerWar: defO.stats.war + meritStatBonus(defO, 'war'),
-      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership'),
+      officerWar: defO.stats.war + meritStatBonus(defO, 'war') + (defEquip.war ?? 0),
+      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership') + (defEquip.leadership ?? 0),
       troops: defender.troopCount,
       maxTroops: defender.maxTroops,
       morale: defender.morale,
       terrain: defTerrain,
+      armorDefense: equipArmorDefenseFor(defO),
     },
     rng,
   );
@@ -327,6 +331,8 @@ export function attackUnit(
     distance: hexDistance(attacker.position, defender.position),
     isFirstRound: battle.turn === 1,
     attackerMoved: attacker.mp < attacker.maxMp,
+    attackerCritBonus: equipCritRateFor(atkO),
+    defenderCritBonus: equipCritRateFor(defO),
     rng,
   });
 
@@ -689,12 +695,14 @@ export function castAbility(
   const defT = getUnitByType()[target.unitType];
   const strongMap = buildStrongAgainstMap();
   const matchup = getUnitMatchup(attacker.unitType, target.unitType, strongMap);
+  const atkEquip2 = equipBonusFor(atkO);
+  const defEquip2 = equipBonusFor(defO);
   const baseDmg = calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
-      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war'),
-      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership'),
+      officerWar: atkO.stats.war + meritStatBonus(atkO, 'war') + (atkEquip2.war ?? 0),
+      officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership') + (atkEquip2.leadership ?? 0),
       troops: attacker.troopCount,
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
@@ -704,12 +712,13 @@ export function castAbility(
     {
       unitAttack: defT.attack,
       unitDefense: defT.defense,
-      officerWar: defO.stats.war + meritStatBonus(defO, 'war'),
-      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership'),
+      officerWar: defO.stats.war + meritStatBonus(defO, 'war') + (defEquip2.war ?? 0),
+      officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership') + (defEquip2.leadership ?? 0),
       troops: target.troopCount,
       maxTroops: target.maxTroops,
       morale: target.morale,
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
+      armorDefense: equipArmorDefenseFor(defO),
     },
     rng,
   );
@@ -1006,7 +1015,10 @@ export function skipBattleDuel(
   const challenger = state.officers[battle.duel.challengerId];
   const defender = state.officers[battle.duel.defenderId];
   if (!challenger || !defender) return battle;
-  const duel = runDuelToCompletion(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
+  const duel = runDuelToCompletion(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng, {
+    [challenger.id]: duelEquipBonusFor(challenger),
+    [defender.id]: duelEquipBonusFor(defender),
+  });
   return applyDuelPhase(battle, duel, state);
 }
 

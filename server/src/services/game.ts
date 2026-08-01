@@ -30,6 +30,7 @@ import {
 import { staticData } from '../data/loader.js';
 import { advanceTurn, tickBattlefieldInstance } from '../engine/turn.js';
 import { catchUpChildren } from '../engine/child.js';
+import { applyInitialItems, duelEquipBonusFor, equipItem, grantTreasure, unequipItem } from '../engine/items.js';
 import {
   conscript,
   developCity,
@@ -329,8 +330,10 @@ function buildGameState(
   };
   // 子女补登：appearYear ≤ 开局年则直接入库（0-A 起 190 年通常无人）
   const withChildren = catchUpChildren(draft);
+  // 初始宝配：签名武将装备 + 其余 initial 宝物入势力库存（S13 Session 266）
+  const withItems = applyInitialItems(withChildren);
   // 城池金粮为真源，开局即同步 faction 缓存
-  const synced = syncFactionResources(withChildren);
+  const synced = syncFactionResources(withItems);
   // 战役节点：基于同步后的城池状态生成
   return { ...synced, campaignNodes: buildCampaignNodes(synced) };
 }
@@ -516,6 +519,30 @@ export function doGiftBeauty(femaleId: number, officerId: number): GameState {
 export function doSearchTalent(cityId: number): GameState {
   return withLock(() => {
     currentGame = searchTalent(getGame(), cityId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+/** S13 宝物装备（Session 266）。 */
+export function doEquipItem(officerId: number, itemId: number): GameState {
+  return withLock(() => {
+    currentGame = equipItem(getGame(), officerId, itemId);
+    return getClientGame();
+  });
+}
+
+/** S13 宝物卸下。 */
+export function doUnequipItem(officerId: number, itemId: number): GameState {
+  return withLock(() => {
+    currentGame = unequipItem(getGame(), officerId, itemId);
+    return getClientGame();
+  });
+}
+
+/** S13 宝物赏赐（04 §11.1：忠诚+5~20 按品质 + 自动装备）。 */
+export function doGrantTreasure(officerId: number, itemId: number): GameState {
+  return withLock(() => {
+    currentGame = grantTreasure(getGame(), officerId, itemId);
     return getClientGame();
   });
 }
@@ -986,6 +1013,7 @@ export function listStatic() {
     cities: staticData.cities,
     units: staticData.units,
     formations: staticData.formations,
+    items: staticData.items,
     children: staticData.children.map((c) => ({
       childId: c.childId,
       childName: c.childName,
@@ -1430,7 +1458,10 @@ export function skipBattlefieldDuel(): GameState {
     const challenger = state.officers[context.challengerId];
     const defender = state.officers[context.defenderId];
     if (!challenger || !defender) throw new Error('单挑武将不存在');
-    const duel = runDuelToCompletion(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom);
+    const duel = runDuelToCompletion(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom, {
+      [challenger.id]: duelEquipBonusFor(challenger),
+      [defender.id]: duelEquipBonusFor(defender),
+    });
     const next = { ...context, duel };
     currentGame = settleBattlefieldDuel(
       { ...state, activeBattlefieldInstance: { ...inst, activeDuel: next } },

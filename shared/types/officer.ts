@@ -17,6 +17,7 @@ import type {
   SkillType,
 } from '../enums/index.js';
 import type { OfficerStats } from './common.js';
+import type { Equipment } from './item.js';
 
 export interface CeilingBonus {
   attribute: CeilingAttribute;
@@ -102,4 +103,6 @@ export interface Officer extends OfficerStatic {
   wifeId?: number | null;
   /** 赏赐美人（非婚配）女性 id 列表 */
   beauties: number[];
+  /** 装备槽（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书；8+2 槽全量留 0-B，S13 Session 266 实装） */
+  equipment?: Equipment;
 }

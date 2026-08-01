@@ -30,34 +30,53 @@ export function meritStatBonus(
 
 type StatKey = 'war' | 'leadership' | 'intelligence' | 'politics' | 'charisma';
 
+/** 装备六维加成（S13，Session 266）：由调用方从 officer.equipment + items 静态数据计算传入。 */
+export type EquipStatBonus = Partial<Record<StatKey, number>>;
+
 function effectiveStat(
   officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
   stat: StatKey,
+  equipBonus?: EquipStatBonus,
 ): number {
   const bare = officer.stats[stat];
   const cb = officer.hidden.ceilingBonus;
   const ceiling = cb && cb.attribute === STAT_CEILING_MAP[stat] ? cb.hiddenBonus : 0;
-  return bare + ceiling + meritStatBonus(officer, stat);
+  return bare + ceiling + meritStatBonus(officer, stat) + (equipBonus?.[stat] ?? 0);
 }
 
-export function effectiveWar(officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath }): number {
-  return effectiveStat(officer, 'war');
+export function effectiveWar(
+  officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
+  equipBonus?: EquipStatBonus,
+): number {
+  return effectiveStat(officer, 'war', equipBonus);
 }
 
-export function effectiveLeadership(officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath }): number {
-  return effectiveStat(officer, 'leadership');
+export function effectiveLeadership(
+  officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
+  equipBonus?: EquipStatBonus,
+): number {
+  return effectiveStat(officer, 'leadership', equipBonus);
 }
 
-export function effectiveIntelligence(officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath }): number {
-  return effectiveStat(officer, 'intelligence');
+export function effectiveIntelligence(
+  officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
+  equipBonus?: EquipStatBonus,
+): number {
+  return effectiveStat(officer, 'intelligence', equipBonus);
 }
 
-export function effectivePolitics(officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath }): number {
-  return effectiveStat(officer, 'politics');
+export function effectivePolitics(
+  officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
+  equipBonus?: EquipStatBonus,
+): number {
+  return effectiveStat(officer, 'politics', equipBonus);
 }
 
-export function effectiveCharisma(officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath }): number {
-  return effectiveStat(officer, 'charisma');
+export function effectiveCharisma(
+  officer: OfficerStatic & { merit?: number; meritLevel?: number; meritPath?: MeritPath },
+  equipBonus?: EquipStatBonus,
+): number {
+  return effectiveStat(officer, 'charisma', equipBonus);
 }
 
 function ageModifier(age: number, power: number = 0): number {

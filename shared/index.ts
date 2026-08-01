@@ -16,6 +16,7 @@ export * from './labels.js';
 export * from './stamina.js';
 export * from './stamina-cost.js';
 export * from './merit.js';
+export * from './items.js';
 export * from './negotiation.js';
 export * from './expression.js';
 export * from './scenes.js';

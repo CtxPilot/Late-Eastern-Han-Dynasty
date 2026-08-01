@@ -4,6 +4,8 @@
 import { useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
+  EQUIP_SLOT_LABELS,
+  EQUIP_SLOT_ORDER,
   FORMATION_LABEL,
   HEGEMONY_LABELS,
   HegemonyPosition,
@@ -11,6 +13,7 @@ import {
   LOCAL_LABELS,
   MILITARY_LABELS,
   PERSONALITY_LABEL,
+  equipmentStatBonus,
   meritAttrBonusFor,
   meritEntry,
   meritLevelFor,
@@ -78,23 +81,6 @@ const UNIT_NAME: Record<string, string> = {
   yellowTurban: '黄巾兵',
 };
 
-/** 装备 8 槽 + 2 消耗品快捷槽（04-game-systems.md §12.1 设计，代码未实装，占位展示） */
-const EQUIP_SLOTS = [
-  { key: 'weaponPrimary', label: '主武器' },
-  { key: 'weaponSecondary', label: '副武器' },
-  { key: 'helmet',      label: '兜鍪/冠' },
-  { key: 'armor',       label: '铠甲' },
-  { key: 'robe',        label: '战袍/绶带' },
-  { key: 'mount',       label: '坐骑' },
-  { key: 'tome',        label: '兵书/典籍' },
-  { key: 'seal',        label: '配饰/印信' },
-] as const;
-
-const CONSUMABLE_SLOTS = [
-  { key: 'consumable1', label: '消耗·甲' },
-  { key: 'consumable2', label: '消耗·乙' },
-] as const;
-
 type Tab = 'stats' | 'family' | 'equipment' | 'biography';
 
 const TABS: readonly [Tab, string][] = [
@@ -139,6 +125,13 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
       totalFood: totals.food,
     };
   }, [game.cities, game.factions, officer]);
+
+  // 装备属性加成（S13 Session 266：baseStats 六维累计，从 itemsCatalog 计算）
+  const itemsCatalog = useGameStore((s) => s.itemsCatalog);
+  const equipAttr = useMemo(() => {
+    if (!officer) return {};
+    return equipmentStatBonus(officer.equipment, (id) => itemsCatalog.find((i) => i.id === id));
+  }, [itemsCatalog, officer]);
 
   if (!officer) return null;
   const location = officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城';
@@ -226,10 +219,12 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                         const raw = isStamina ? (officer.stamina ?? 0) : officer.stats[key];
                         // 功绩属性加成展示（等级表 Lv5/15/16/17/20，Session 265）
                         const meritBonus = isRuler ? 0 : (isStamina ? (meritAttr.stamina ?? 0) : (meritAttr[key] ?? 0));
+                        // 装备属性加成（S13 Session 266：baseStats 六维累计）
+                        const equipBonus = isStamina ? 0 : (equipAttr[key] ?? 0);
                         const capped = Math.min(raw, 100);
                         const overflow = raw > 100 ? raw - 100 : 0;
                         const display = overflow > 0 ? `${capped} (+${overflow})` : String(capped);
-                        return <div key={key} className="grid grid-cols-[2rem_3.5rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}{meritBonus > 0 ? <span className="ml-0.5 text-emerald-400">+{meritBonus}</span> : null}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
+                        return <div key={key} className="grid grid-cols-[2rem_3.5rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}{meritBonus > 0 ? <span className="ml-0.5 text-emerald-400">+{meritBonus}</span> : null}{equipBonus > 0 ? <span className="ml-0.5 text-sky-300">装+{equipBonus}</span> : null}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
                       })}
                     </div>
                   </section>
@@ -374,37 +369,178 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               </div>
             )}
 
-            {tab === 'equipment' && (
-              <div className="space-y-4">
-                <p className="text-[10px] text-stone-600">装备系统待实装（Officer.equipped 8+2 槽代码未实装，0-B 技术债 D-0B-7），当前仅展示占位槽位</p>
-
-                <h3 className="text-xs tracking-widest text-amber-500">装备（8格）</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {EQUIP_SLOTS.map((slot) => (
-                    <div key={slot.key} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2">
-                      <div className="text-[10px] text-stone-500">{slot.label}</div>
-                      <div className="text-stone-600 text-xs mt-1">未装备</div>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="mt-4 text-xs tracking-widest text-amber-500">消耗品快捷槽（2格·数量可叠加）</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {CONSUMABLE_SLOTS.map((slot) => (
-                    <div key={slot.key} className="rounded border border-amber-900/30 bg-stone-900/50 px-3 py-2">
-                      <div className="text-[10px] text-stone-500">{slot.label}</div>
-                      <div className="text-stone-600 text-xs mt-1">—</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {tab === 'equipment' && <EquipmentTab game={game} officer={officer} isRuler={isRuler} />}
           </div>
         </div>
       </section>
     </div>
   );
 }
+
+/** S13 装备 tab（Session 266，0-A 5 槽）：展示武将装备 + 势力库存，支持装备/卸下/赏赐。 */
+function EquipmentTab({
+  game,
+  officer,
+  isRuler,
+}: {
+  game: GameState;
+  officer: Officer;
+  isRuler: boolean;
+}) {
+  const itemsCatalog = useGameStore((s) => s.itemsCatalog);
+  const unequipItem = useGameStore((s) => s.unequipItem);
+  const grantTreasure = useGameStore((s) => s.grantTreasure);
+  const loading = useGameStore((s) => s.loading);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+
+  const itemById = (id: number) => itemsCatalog.find((i) => i.id === id);
+  const inventory = officer.faction != null ? game.factions[officer.faction]?.inventory ?? {} : {};
+
+  if (itemsCatalog.length === 0) {
+    return (
+      <div className="space-y-4">
+        <p className="text-[10px] text-stone-600">宝物目录加载中…</p>
+      </div>
+    );
+  }
+
+  const equippedIds = new Set(Object.values(officer.equipment ?? {}));
+  const inventoryEntries = Object.entries(inventory).filter(([id]) => !equippedIds.has(Number(id)));
+
+  return (
+    <div className="space-y-4">
+      <p className="text-[10px] text-stone-600">
+        S13 宝物系统（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书）。装备/卸下对武将自由操作；赏赐需宝物在势力库存。
+      </p>
+
+      <h3 className="text-xs tracking-widest text-amber-500">装备（5槽）</h3>
+      <div className="grid grid-cols-2 gap-2">
+        {EQUIP_SLOT_ORDER.map((slotKey) => {
+          const itemId = officer.equipment?.[slotKey];
+          const item = itemId != null ? itemById(itemId) : null;
+          const slotLabel = EQUIP_SLOT_LABELS[slotKey];
+          return (
+            <div key={slotKey} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2" data-testid={`equip-slot-${slotKey}`}>
+              <div className="text-[10px] text-stone-500">{slotLabel}</div>
+              {item ? (
+                <div className="mt-1">
+                  <div className="text-xs text-amber-200">{item.name}</div>
+                  <div className="text-[10px] text-stone-500">{QUALITY_LABEL[item.quality]} · {item.description}</div>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {Object.entries(item.baseStats).map(([k, v]) => (
+                      <span key={k} className="rounded bg-stone-800 px-1 text-[10px] text-emerald-300">{STAT_LABEL[k]} +{v}</span>
+                    ))}
+                    {item.baseEffect.map((e, i) => (
+                      <span key={i} className="rounded bg-stone-800 px-1 text-[10px] text-amber-300">{e.description ?? `${EFFECT_LABEL[e.type] ?? e.type} +${e.value}`}</span>
+                    ))}
+                  </div>
+                  {!isRuler && (
+                    <button
+                      type="button"
+                      data-testid={`btn-unequip-${itemId}`}
+                      disabled={loading}
+                      onClick={() => unequipItem(officer.id, itemId!)}
+                      className="mt-1.5 px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-[10px] disabled:opacity-40"
+                    >
+                      卸下
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-stone-600 text-xs mt-1">未装备</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!isRuler && (
+        <>
+          <h3 className="mt-4 text-xs tracking-widest text-amber-500">装备/赏赐宝物</h3>
+          <div className="flex items-center gap-2">
+            <select
+              data-testid="item-inventory-select"
+              className="flex-1 rounded border border-stone-700 bg-stone-900 text-stone-200 text-[10px] px-1 py-0.5"
+              value={selectedItemId ?? ''}
+              onChange={(e) => setSelectedItemId(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">选择库存宝物…</option>
+              {inventoryEntries.map(([id, count]) => {
+                const it = itemById(Number(id));
+                if (!it) return null;
+                return (
+                  <option key={id} value={id}>
+                    {it.name} ×{count}（{QUALITY_LABEL[it.quality]}）
+                  </option>
+                );
+              })}
+            </select>
+            <button
+              type="button"
+              data-testid="btn-grant-item"
+              disabled={loading || selectedItemId == null}
+              onClick={() => grantTreasure(officer.id, selectedItemId!)}
+              className="px-2 py-0.5 rounded border border-amber-800 text-amber-100 disabled:opacity-40"
+            >
+              赏赐并装备
+            </button>
+          </div>
+          {inventoryEntries.length === 0 && (
+            <p className="text-[10px] text-stone-600">势力库存暂无宝物（搜索寻访或开局宝配获取）。</p>
+          )}
+        </>
+      )}
+
+      <h3 className="mt-4 text-xs tracking-widest text-amber-500">势力库存</h3>
+      <div className="flex flex-wrap gap-1.5">
+        {Object.entries(inventory).map(([id, count]) => {
+          const it = itemById(Number(id));
+          if (!it) return null;
+          return (
+            <span key={id} className="rounded border border-stone-800 bg-stone-900/60 px-2 py-1 text-[10px] text-stone-300">
+              {it.name} ×{count}
+            </span>
+          );
+        })}
+        {Object.keys(inventory).length === 0 && (
+          <span className="text-[10px] text-stone-600">空</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const QUALITY_LABEL: Record<string, string> = {
+  common: '普通',
+  rare: '稀有',
+  epic: '精良',
+  legendary: '传说',
+};
+
+const STAT_LABEL: Record<string, string> = {
+  war: '武',
+  leadership: '统',
+  intelligence: '智',
+  politics: '政',
+  charisma: '魅',
+};
+
+const EFFECT_LABEL: Record<string, string> = {
+  crit_rate: '暴击率',
+  charge_damage: '突击伤害',
+  vs_cavalry: '对骑',
+  authority: '权威',
+  range: '射程',
+  armor_pierce: '破甲',
+  defense: '防御',
+  arrow_resist: '防箭',
+  mobility: '机动力',
+  escape: '逃脱',
+  tactic_power: '计策威力',
+  legitimacy: '正统',
+  recruit_bonus: '征兵',
+  duel_boost: '单挑伤害',
+};
 
 function Info({ label, value }: { label: string; value: string }) { return <div className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5"><span className="text-stone-500">{label}</span><span className="float-right text-stone-200">{value || '—'}</span></div>; }
 function Chip({ text, accent = false }: { text: string; accent?: boolean }) { return <span className={`rounded border px-2 py-1 ${accent ? 'border-rose-800 bg-rose-950/40 text-rose-200' : 'border-stone-700 bg-stone-900 text-stone-300'}`}>{text}</span>; }

@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -57,13 +57,20 @@ export async function fetchStatic(): Promise<{
   children: ChildCatalogEntry[];
   events: EventCatalogEntry[];
   scenarios: ScenarioCatalogEntry[];
+  items: ItemStatic[];
 }> {
   const { data } = await http.get<{
     children?: ChildCatalogEntry[];
     events?: EventCatalogEntry[];
     scenarios?: ScenarioCatalogEntry[];
+    items?: ItemStatic[];
   }>('/static');
-  return { children: data.children ?? [], events: data.events ?? [], scenarios: data.scenarios ?? [] };
+  return {
+    children: data.children ?? [],
+    events: data.events ?? [],
+    scenarios: data.scenarios ?? [],
+    items: data.items ?? [],
+  };
 }
 
 export async function chooseEvent(
@@ -190,6 +197,24 @@ export async function giftBeauty(
 
 export async function searchTalent(cityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/personnel/search', { cityId });
+  return data;
+}
+
+/** S13 宝物装备（Session 266）。 */
+export async function equipItem(officerId: number, itemId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/equip', { officerId, itemId });
+  return data;
+}
+
+/** S13 宝物卸下。 */
+export async function unequipItem(officerId: number, itemId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/unequip', { officerId, itemId });
+  return data;
+}
+
+/** S13 宝物赏赐（忠诚+5~20 + 自动装备）。 */
+export async function grantTreasure(officerId: number, itemId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/grant', { officerId, itemId });
   return data;
 }
 

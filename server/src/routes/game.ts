@@ -182,6 +182,33 @@ gameRouter.post('/personnel/recruit', (req, res) => {
   }
 });
 
+/** S13 宝物（Session 266）：装备 { officerId, itemId } */
+gameRouter.post('/items/equip', (req, res) => {
+  try {
+    res.json(gameService.doEquipItem(Number(req.body.officerId), Number(req.body.itemId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'equip failed' });
+  }
+});
+
+/** S13 宝物：卸下 { officerId, itemId } */
+gameRouter.post('/items/unequip', (req, res) => {
+  try {
+    res.json(gameService.doUnequipItem(Number(req.body.officerId), Number(req.body.itemId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'unequip failed' });
+  }
+});
+
+/** S13 宝物赏赐（04 §11.1）：{ officerId, itemId } 忠诚+5~20 自动装备 */
+gameRouter.post('/items/grant', (req, res) => {
+  try {
+    res.json(gameService.doGrantTreasure(Number(req.body.officerId), Number(req.body.itemId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'grant item failed' });
+  }
+});
+
 /** S11/S12 任命：三轨 + 霸府 { officerId, track, position, cityId? } */
 gameRouter.post('/personnel/appoint', (req, res) => {
   try {

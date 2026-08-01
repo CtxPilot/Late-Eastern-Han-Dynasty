@@ -97,6 +97,16 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     actionsPerMonth: z.number().int().nonnegative().optional(),
     wifeId: NullablePositiveIdSchema.optional(),
     beauties: z.array(PositiveIdSchema),
+    equipment: z
+      .object({
+        weaponPrimary: PositiveIdSchema.optional(),
+        weaponSecondary: PositiveIdSchema.optional(),
+        armor: PositiveIdSchema.optional(),
+        mount: PositiveIdSchema.optional(),
+        tome: PositiveIdSchema.optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -197,6 +207,7 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     kingdomName: z.string().min(1).optional(),
     imperialAuthority: z.number().int().min(0).max(100).optional(),
     imperialDecreeCooldown: z.number().int().nonnegative().optional(),
+    inventory: z.record(z.coerce.number().int().positive(), z.number().int().positive()).optional(),
   })
   .strict();
 

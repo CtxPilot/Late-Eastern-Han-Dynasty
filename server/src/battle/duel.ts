@@ -267,6 +267,13 @@ function resolveClash(atk: DuelCommand, def: DuelCommand): ClashResult {
 // Damage (§8.6.1)
 // ---------------------------------------------------------------------------
 
+export interface DuelEquipBonus {
+  /** 装备武力加成（baseStats.war 累计；计入有效武力）。 */
+  war: number;
+  /** 装备单挑伤害加成（baseEffect type='duel_boost'，百分比点；0-A 数据暂无，机制预留）。 */
+  duelPct: number;
+}
+
 function computeDamage(
   atkOff: Officer,
   defOff: Officer,
@@ -275,6 +282,7 @@ function computeDamage(
   weapon: WeaponProfile,
   clash: ClashResult,
   rng: DuelRng,
+  equipBonus?: DuelEquipBonus,
 ): { damage: number; hit: boolean } {
   // 必杀 always hits (穿透闪避); 暗袭 95%; others base 80% + 敏捷差 + 武器命中 + 指令
   let hitRate: number;
@@ -301,8 +309,8 @@ function computeDamage(
   if (!hit) return { damage: 0, hit: false };
 
   // baseDamage = |武差| × weaponPower × (1 + 指令修正)
-  // 功绩属性加成（Lv15/16/17/20）计入有效武力（Session 265 数值消费）
-  const atkWar = atkOff.stats.war + meritStatBonus(atkOff, 'war');
+  // 功绩+装备属性加成计入有效武力（Session 265 数值消费 + Session 266 装备）
+  const atkWar = atkOff.stats.war + meritStatBonus(atkOff, 'war') + (equipBonus?.war ?? 0);
   const defWar = defOff.stats.war + meritStatBonus(defOff, 'war');
   const warDiff = Math.abs(atkWar - defWar);
   const cmdMod = commandDamageMod(cmd);
@@ -315,6 +323,9 @@ function computeDamage(
   // 等级表特殊效果：武 Lv3/4/6 单挑+5%/+10%/+15%（docs/04 §十 6.2，Session 265）
   const duelBonus = meritEffects(meritLevelFor(atkOff.merit ?? 0), atkOff.meritPath ?? 'neutral').duelBonus;
   if (duelBonus > 0) base *= 1 + duelBonus;
+
+  // 装备单挑伤害加成（baseEffect duel_boost，S13 Session 266；0-A 数据暂无）
+  if ((equipBonus?.duelPct ?? 0) > 0) base *= 1 + (equipBonus!.duelPct / 100);
 
   // 力量附加 (§8.6.2)
   const stamina = staminaFactor(atk.hp / atk.maxHp);
@@ -783,6 +794,7 @@ export function stepDuel(
   defender: Officer,
   cfg: DuelEngineConfig,
   rng: DuelRng,
+  equipByOfficer?: Record<number, DuelEquipBonus>,
 ): DuelState {
   if (state.phase !== 'dueling') return state;
 
@@ -801,7 +813,7 @@ export function stepDuel(
   const secondCmd = aiCommand(secondOff, secondC, firstC, firstC.lastCommand, secondUnique, state.stances[secondId] ?? 'delegate', rng);
 
   // 解算: 先手方攻击后手方, 然后后手方攻击先手方 (若仍存活)
-  const round = resolveExchange(firstId, secondId, firstCmd, secondCmd, firstOff, secondOff, firstC, secondC, firstWeapon, secondWeapon, firstUnique, secondUnique, state.round + 1, rng);
+  const round = resolveExchange(firstId, secondId, firstCmd, secondCmd, firstOff, secondOff, firstC, secondC, firstWeapon, secondWeapon, firstUnique, secondUnique, state.round + 1, rng, equipByOfficer?.[firstId], equipByOfficer?.[secondId]);
 
   // 更新 combatants
   const combatants: Record<number, DuelCombatantState> = {
@@ -842,6 +854,8 @@ function resolveExchange(
   secondUnique: UniqueId,
   roundNum: number,
   rng: DuelRng,
+  firstEquip?: DuelEquipBonus,
+  secondEquip?: DuelEquipBonus,
 ): DuelRound {
   const commands: [DuelCommand, DuelCommand] = [firstCmd, secondCmd];
   const hits: Record<number, boolean> = { [firstId]: false, [secondId]: false };
@@ -866,7 +880,7 @@ function resolveExchange(
     if (firstCmd === DuelCommand.FINISHER && secondUnique === 'wushuang' && rng() < 0.2) {
       clash = { ...clash, finisherResolved: true };
     }
-    const { damage, hit } = computeDamage(firstOff, secondOff, firstC, firstCmd, firstWeapon, clash, rng);
+    const { damage, hit } = computeDamage(firstOff, secondOff, firstC, firstCmd, firstWeapon, clash, rng, firstEquip);
     hits[firstId] = hit;
     // 暴击
     let crit = false;
@@ -922,7 +936,7 @@ function resolveExchange(
     if (secondCmd === DuelCommand.FINISHER && firstUnique === 'wushuang' && rng() < 0.2) {
       clash2 = { ...clash2, finisherResolved: true };
     }
-    const { damage, hit } = computeDamage(secondOff, firstOff, { ...secondC, hp: hpAfter[secondId] }, secondCmd, secondWeapon, clash2, rng);
+    const { damage, hit } = computeDamage(secondOff, firstOff, { ...secondC, hp: hpAfter[secondId] }, secondCmd, secondWeapon, clash2, rng, secondEquip);
     hits[secondId] = hit;
     let crit = false;
     let finalDmg = damage;
@@ -1103,11 +1117,12 @@ export function runDuelToCompletion(
   defender: Officer,
   cfg: DuelEngineConfig,
   rng: DuelRng,
+  equipByOfficer?: Record<number, DuelEquipBonus>,
 ): DuelState {
   let s = state;
   let guard = 0;
   while (s.phase === 'dueling' && guard < cfg.maxRounds + 5) {
-    s = stepDuel(s, challenger, defender, cfg, rng);
+    s = stepDuel(s, challenger, defender, cfg, rng, equipByOfficer);
     guard++;
   }
   return s;

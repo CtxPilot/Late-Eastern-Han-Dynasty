@@ -5595,3 +5595,24 @@
 - **Next**：S12 数值消费收口，**君主特例三项（忠诚/功绩/拉拢记录）全部落地，切片 C 完成**。剩余后置：等级表依赖未实装引擎的效果（0-B）、真宝物 inventory（0-B）、BF-P5 第三郡录入（陈留郡，需史料）；下一大系统按 `12-system-map.md` 由用户拍板。
 
 *v15.68 | 2026-08-01 | Session 265 · S12 数值消费全量实装 + 君主特例切片 C 收口*
+
+## 2026-08-01 — Session 266 · S13 宝物系统 0-A 完整闭环实装
+
+- Phase: **S13 宝物系统 0-A 实装**（用户拍板：完整 0-A 闭环 + 5 槽；消化 S12 后置的"真宝物 inventory"）
+- 落地内容：
+  - **Schema/类型**：`Officer.equipment`（5 槽：weaponPrimary/weaponSecondary/armor/mount/tome，EquipSlot/Equipment 类型）+ `Faction.inventory`（宝物 id → 数量，ItemInventory 类型）；`OfficerRuntimeSchema`/`FactionRuntimeSchema` 均 optional 追加（旧档兼容），完整 GameStateSchema 往返通过。
+  - **共享纯函数（`shared/items.ts`）**：`equipSlotFor`（品类→槽位）、`canEquipItem`（属性门槛 + 专属白名单）、`equipmentStatBonus`（baseStats 六维累计，去重）、`EQUIP_SLOT_ORDER/LABELS`；`shared/stamina.ts` effectiveStat 系函数加可选 `EquipStatBonus` 参数（缺省 0，旧调用不变）。
+  - **服务端引擎（`server/src/engine/items.ts`）**：`equipItem`（库存出→槽位入，门槛/槽冲突校验）、`unequipItem`（回库存）、`grantTreasure`（04 §11.1：忠诚+5~20 按品质 + 自动装备；§3.8 君主特例拒绝）、`searchTreasureIntoInventory`（搜索稀有分支真实入库，**零新增 RNG 消费**——用既有 roll 派生宝物索引）、`applyInitialItems`（createGame 初始宝配：曹操倚天剑/吕布方天画戟/关羽青龙偃月刀/张飞丈八蛇矛/刘备雌雄双股剑/诸葛亮孙子兵法；其余 initial 宝物入库存）、`equipBonusFor`/`equipArmorDefenseFor`/`equipCritRateFor`/`duelEquipBonusFor` 效果计算。
+  - **效果接入**：六维加成（`equipBonusFor`）计入 battle.ts 伤害 officerWar/Leadership、campaign.ts computePower 战力、crit.ts 暴率武力、duel.ts 单挑武力；baseEffect 可落地——`defense`（damage.ts `armorDefense`）、`crit_rate`（crit.ts `equipCritBonus`，替换无装备时按 officer.id 推断的签名兜底）、`duel_boost`（duel.ts `DuelEquipBonus.duelPct`，0-A 数据暂无此效果，机制预留）；`weaponCritBonus` 仅武将无任何装备时兜底。
+  - **API/路由**：`POST /items/equip`、`POST /items/unequip`、`POST /items/grant`（均 `{ officerId, itemId }`）；`/static` 增加 `items`；client api.ts/gameStore 新增对应 action；`OfficerDetail` 装备 tab 真实 5 槽展示（宝物名/品质/属性/效果/卸下按钮 + 势力库存 + 赏赐并装备选择器，君主隐藏写控件），六维显示装备加成 `装+N`（sky 色，与功绩 emerald 区分）。
+  - **搜索宝物**：`personnel.ts searchTalent` 稀有分支从"纯功绩模拟（文案固定宝物一件）"改为**真宝物入库**（功绩 +5 保留，宝物入势力库存），日志显示入库。
+  - **名册快照修复**：PersonnelRosterDrawer 改存 `selectedOfficerId`（点击瞬间的 Officer 快照改为 id），OfficerDetail 从最新 game 实时解析——装备/赏赐/卸下后 UI 即时刷新（否则 store 更新后 selected 仍为旧对象）。
+- 验证：
+  - 新增 `pnpm verify-items`（server 集成）**32/32**：初始宝配六人 + 库存分配、装备/卸下库存增减、武力门槛拒绝（荀彧武 28 装青龙偃月刀被拒）、槽位冲突拒绝（主武器占用再装青铜剑）、赏赐忠诚 +15（epic）/自动装备/库存扣减、君主特例拒绝、搜索宝物入库存（零新增 RNG）、effectiveWar 计入装备武力（97+10=107）、暴率 +5%、装备防御降伤（645→164）、完整 GameStateSchema 往返；
+  - 新增 `pnpm verify-s266-ui`（浏览器 1440×900）**17/17**：装备 tab/5 槽/曹操倚天剑展示/权威+5/武力+8/君主隐藏卸下与赏赐/六维装+8/库存选择器/赏赐服务端装备（{"mount":12}）/UI 同步显示/卸下回空/console error=0；
+  - shared 单测 **291/291**（新增 items.test.ts 6 项）、client 15 文件 **42/42**（新增 officerEquipment.test.tsx 3 项）、verify-items 32/32、全量回归绿：verify-personnel-rng 32/32（RNG 契约未破坏）、verify-merit 25/25、verify-merit-grants 36/36、verify-merit-military 29/29、verify-merit-consume 18/18、verify-campaign 71/71、verify-ai-military-rng 38/38、verify-beauty-rng 25/25、verify-family-rng 36/36、verify-hc-p1 20/20、verify-save-battlefield-instance 101/101、verify-turn-cadence 28/28、verify-negotiation-r2 40/40；typecheck/lint/data/build/diff-check 全绿。
+- 简化/占位标注：**5 槽为 0-A 精简**（04 §12.1 设计 8+2 槽，兜鍪/战袍绶带/配饰印信 + 2 消耗品快捷槽留 0-B）；套装（L3）与专属共鸣倍率（L2 bond 150%）未实装（0-B）；消耗品使用（金疮药）未实装（0-B）；装备缴获/传承/没收后置；baseEffect 中依赖未实装引擎的类型（mobility 行军/charge_damage 突击/authority 外交/legitimacy 正统/recruit_bonus 征兵等）仅展示不生效；搜索宝物索引用既有 roll 派生（确定性，无 RNG 消费）。
+- 文档同步：`docs/03`（§十 Item 运行时字段 + Equipment/ItemInventory）、`docs/04`（§十二 0-A 实装边界 + §十五 11.1 宝物行实装标注 + §3.8 君主特例补宝物赏赐）、`docs/06`（2.8 宝物/装备 + 搜索响应）、`docs/07`（7.3 装备区块真实 5 槽 + 六维装+N）、`docs/08`（items.json 规模口径 0-A 20 条已实装）、`docs/09`（P4-08 宝物转移引擎进度）、`docs/12`（S13 行）、`docs/10` + `HANDOFF.md` 双写。
+- **Next**：S13 0-A 闭环完成。后置：8+2 槽/套装/专属共鸣/消耗品/缴获传承（0-B）、baseEffect 依赖未实装引擎的效果、BF-P5 第三郡录入（陈留郡，需史料）；下一大系统按 `12-system-map.md` 由用户拍板。
+
+*v15.69 | 2026-08-01 | Session 266 · S13 宝物系统 0-A 完整闭环实装*

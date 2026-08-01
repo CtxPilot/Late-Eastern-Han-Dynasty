@@ -153,8 +153,9 @@ function skillLevel(officer: Officer, skillId: string): number {
   return s ? clamp(s.level, 1, 5) : 0;
 }
 
-/** 0-A 签名武器暴击加成 (无装备系统时按 officer.id 推断). */
+/** 0-A 签名武器暴击加成（无装备系统时按 officer.id 推断；S13 实装后仅武将无任何装备时兜底）。 */
 function weaponCritBonus(officer: Officer): number {
+  if (officer.equipment && Object.keys(officer.equipment).length > 0) return 0;
   const id = officer.id;
   if (id === 5) return 5;  // 方天画戟 +5%
   if (id === 6) return 5;  // 青龙偃月刀 +5%
@@ -199,6 +200,8 @@ export interface CritContext {
   isSiege?: boolean;
   isNight?: boolean;
   isSurrounded?: boolean; // 被围(乱战)
+  /** 装备暴率加成（S13 Session 266：baseEffect crit_rate 累计，调用方从装备计算传入）。 */
+  equipCritBonus?: number;
 }
 
 export function computeCritRate(ctx: CritContext): number {
@@ -237,8 +240,8 @@ export function computeCritRate(ctx: CritContext): number {
   if (u === 'qishen') rate += 15;
   if (u === 'shenjiang') rate += 15;
 
-  // 宝物
-  rate += weaponCritBonus(o);
+  // 宝物（0-A 签名兜底 + 装备系统 crit_rate 效果，S13 Session 266）
+  rate += weaponCritBonus(o) + (ctx.equipCritBonus ?? 0);
 
   // 暴击惩罚
   if (matchup < 1) rate -= 5;       // 被克
@@ -447,6 +450,10 @@ export interface ResolveAttackOpts {
   isFirstRound: boolean;
   /** 攻方本回合是否已移动(强行军连击) */
   attackerMoved: boolean;
+  /** 攻方装备暴率加成（S13 Session 266，baseEffect crit_rate 累计）。 */
+  attackerCritBonus?: number;
+  /** 守方装备暴率加成（反击暴击用）。 */
+  defenderCritBonus?: number;
   rng: CritRng;
 }
 
@@ -468,6 +475,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
   const atkCritCtx: CritContext = {
     officer: atkOff, unitType: attacker.unit.unitType, formation: attacker.unit.formation,
     proficiency: attacker.proficiency, terrain: opts.attackerTerrain, matchup,
+    equipCritBonus: opts.attackerCritBonus,
   };
   const critRate = computeCritRate(atkCritCtx);
   const critMult = computeCritMultiplier(atkCritCtx);
@@ -511,6 +519,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
         const defCritCtx: CritContext = {
           officer: defOff, unitType: defender.unit.unitType, formation: defender.unit.formation,
           proficiency: defender.proficiency, terrain: opts.defenderTerrain, matchup: 1 / matchup,
+          equipCritBonus: opts.defenderCritBonus,
         };
         const counterCritRate = clamp(computeCritRate(defCritCtx) + 0.05, 0.02, 0.6);
         counterCrit = rng() < counterCritRate;

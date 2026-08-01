@@ -251,6 +251,7 @@ POST   /api/v1/games/:id/cities/:cityId/search
   搜索(在野武将/宝物)
   Body: { officerId: number }
   Response: { found: Officer | Item | null, foundType: 'officer' | 'item' | 'none' }
+  > Session 266：宝物分支已由纯功绩模拟改为真宝物入库（`searchTreasureIntoInventory` 入势力库存，零新增 RNG 消费），现行路径 `POST /api/game/personnel/search`（Body `{ cityId }`，返回 GameState）。
 
 POST   /api/v1/games/:id/officers/:officerId/recruit
   登用在野武将
@@ -484,19 +485,26 @@ POST   /api/v1/games/:id/marriage/divorce
 
 ### 2.8 宝物/装备
 
-```
-POST   /api/v1/games/:id/items/:itemId/equip
-  装备宝物
-  Body: { officerId: number }
-  Response: { officer: Officer }
+> **Session 266 实装（S13 0-A）**：装备/卸下/赏赐已实装，路径为现行 `POST /api/game/items/equip|unequip|grant`（Body `{ officerId, itemId }`，返回 `GameState`）；`use`（消耗品）仍 0-B。
 
-POST   /api/v1/games/:id/items/:itemId/unequip
-  卸下宝物
-  Body: { officerId: number }
-  Response: { officer: Officer }
+```
+POST   /api/game/items/equip
+  装备宝物（库存→武将槽位；门槛/槽冲突校验）【已实装】
+  Body: { officerId: number, itemId: number }
+  Response: { ...GameState }
+
+POST   /api/game/items/unequip
+  卸下宝物（回势力库存）【已实装】
+  Body: { officerId: number, itemId: number }
+  Response: { ...GameState }
+
+POST   /api/game/items/grant
+  赏赐宝物（忠诚+5~20 按品质 + 自动装备；君主特例拒绝）【已实装】
+  Body: { officerId: number, itemId: number }
+  Response: { ...GameState }
 
 POST   /api/v1/games/:id/items/:itemId/use
-  使用消耗品
+  使用消耗品（0-B）
   Body: { officerId: number }
   Response: { result: string, remaining: number }
 ```

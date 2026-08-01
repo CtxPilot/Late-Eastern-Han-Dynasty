@@ -20,6 +20,7 @@
     "stamina.ts",
     "stamina-cost.ts",
     "merit.ts",
+    "items.ts",
     "negotiation.ts",
     "expression.ts",
     "scenes.ts",

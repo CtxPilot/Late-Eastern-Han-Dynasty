@@ -9,20 +9,22 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 265：S12 等级表数值消费全量实装 + 君主特例切片 C 收口** |
+| 会话 | **Session 266：S13 宝物系统 0-A 完整闭环实装** |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **23 大** |
-| 代码最新 | **S12 数值消费 100% 实装（Session 265）**：`shared/merit.ts` 新增 `meritAttrBonusFor`（属性加成累计，Lv16 文武分岔）+ `meritEffects`（单挑/开发/暴率/内政效率/被俘/适性/体力恢复）+ `formationTroopCap`（出征上限）；属性加成计入有效属性（体力/单挑/六角/暴率/战役战力）；特殊效果接入 duel/civil/crit/campaign/battle/turn；带兵+ 接出征上限（campaign 校验 + AI 同规则裁剪）；**君主特例切片 C 完成**（任命忠诚±跳过、赏赐美人/赐婚/笼络拒绝君主）；OfficerDetail 六维绿色 +N 展示 |
-| 文档最新 | 当前状态已同步至 Session 265 / S12 全量收口 + 切片 C 完成；历史会话口径按原时点保留 |
-| 本交接用途 | S12 全部收口（等级/获取点/数值消费 + 君主特例三项）；下一大系统按 12-system-map.md 由用户拍板 |
-| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：**第三郡录入（陈留郡，需用户提供史料）**；或由用户按 `12-system-map.md` 拍板下一大系统 |
+| 代码最新 | **S13 宝物 0-A 闭环 100% 实装（Session 266）**：`shared/items.ts` 纯函数（5 槽映射/门槛/六维累计）+ `Officer.equipment`（主武器/副武器/铠甲/坐骑/兵书）+ `Faction.inventory`（宝物库存）；服务端引擎 equip/unequip/grantTreasure（忠诚+5~20 按品质，§3.8 君主特例拒绝）/搜索真宝物入库（零新增 RNG）/初始宝配（曹操倚天剑·吕布方天画戟·关羽青龙偃月刀等）；六维加成计入有效属性（战斗/单挑/暴率/战役战力）+ baseEffect 可落地（defense/crit_rate/duel_boost 机制）；OfficerDetail 装备 tab 真实 5 槽 + 六维装+N + 库存展示 |
+| 文档最新 | 当前状态已同步至 Session 266 / S13 0-A 闭环完成；历史会话口径按原时点保留 |
+| 本交接用途 | S13 宝物 0-A 完整闭环（数据/Schema/引擎/效果/API/UI/验证）；下一大系统按 12-system-map.md 由用户拍板 |
+| 玩法下一步 | 继续 **BF-P5** 剩余子步骤：**第三郡录入（陈留郡，需用户提供史料）**；或由用户按 `12-system-map.md` 拍板下一大系统（S13 后置项 8+2 槽/套装/消耗品属 0-B） |
 
-Session 265 基线：shared 285/285（merit.test.ts 29 项，数值消费 12 项新增）、client 39/39
-（officerMeritConsume.test.tsx 3 项新增）、`verify-merit-consume` 18/18、`verify-s265-ui`
-浏览器 8/8；verify-merit 25/25、verify-merit-grants 36/36、verify-merit-military 29/29、
+Session 266 基线：shared 291/291（items.test.ts 6 项新增）、client 42/42
+（officerEquipment.test.tsx 3 项新增）、`verify-items` 32/32、`verify-s266-ui` 浏览器
+17/17；verify-merit 25/25、verify-merit-grants 36/36、verify-merit-military 29/29、
+verify-merit-consume 18/18、verify-personnel-rng 32/32（搜索宝物入库后 RNG 契约未破坏）、
 verify-campaign 71/71、verify-ai-military-rng 38/38、verify-beauty-rng 25/25、
-verify-family-rng 36/36、verify-hc-p1 20/20、save-battlefield-instance 101/101 全绿；
-typecheck/lint/data/build/diff-check 全绿。注意：带兵+ 上限生效后，战役出征受
-`formationTroopCap` 约束（白身 5000 起，AI 同规则），夹具已按 Lv15 适配。
+verify-family-rng 36/36、verify-hc-p1 20/20、save-battlefield-instance 101/101、
+verify-turn-cadence 28/28、verify-negotiation-r2 40/40 全绿；
+typecheck/lint/data/build/diff-check 全绿。名册详情改为按 officerId 实时解析
+（装备/赏赐/卸下后 UI 即时刷新）。
 
 CMD-P4 回归基线：shared 197/197、client 12/12、HC-P0 101/101、Campaign 70/70、
 AI军事29/29、negotiation 40/40，根 31 个 `verify-*` 全过；typecheck/lint/data/build/SPDX 全绿。
@@ -366,8 +368,8 @@ pnpm --filter @leh/shared build && pnpm dev
 | S09 | **宫廷人脉** | **M+** | `courtNetwork/courtNetworkOpportunities` 已实装；与成年女性人口脱钩；旧 v1 `beauty*` 无损迁移；历史女角边界不变 |
 | S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗与完整单挑均统一权威 PRNG，确定续玩 5/5 + 3/3；其余三层战斗、战役 Army 与设计边界保持不变 |
 | S11 | 人事 | **M+** | 搜索/登用接权威 PRNG，确定续玩 32/32；R2 修复义理/野心 100 倍量纲错误并与 UI 同源；现有赏赐/任命确定性 |
-| S12 | 官职功绩体力 | **M+** | 精简任命；**功绩等级系统已实装（Session 261）**：`shared/merit.ts` 20 级表/映射/衰减/文武分岔 + `Officer.meritLevel/meritPath/peakMeritLevel` + 任命功绩门槛（君主任命豁免）+ 季度衰减 + OfficerDetail 等级/进度条展示；**6.1 获取点 100% 实装（Session 262+263+264）**：`meritGrant.ts` 统一守卫发放（君主不发）+ 内政（开发/施米/征兵/训练，城主）+ 人事（搜索寻才+8/宝物 5% 稀有+5/登用+4/联姻+10）+ 外交（同盟+10 使节君主不出使/劝降+30）+ 军事（破城+30/守城+8/灭国+50/计策+5 + 野战击破溃散+20/险胜+10/守方击退+10，`militaryMerit.ts` + `Plot.casterOfficerId` 缺省军师）；**数值消费 100% 实装（Session 265）**：`meritAttrBonusFor` 属性加成（Lv16 文武分岔）计入有效属性（体力/单挑/六角/暴率/战役战力）+ `meritEffects` 特殊效果（单挑+/开发+/暴率+/内政效率/被俘-/适性+/体力恢复）接入 duel/civil/crit/campaign/battle/turn + `formationTroopCap` 带兵+ 接出征上限（AI 同规则）+ 君主特例切片 C（任命忠诚±/赏赐/赐婚/笼络守卫）；`verify-merit-consume` 18/18 + `verify-s265-ui` 8/8。体力完整。**后置**：等级表依赖未实装引擎的效果、真宝物 inventory（0-B） |
-| S13 | 宝物 | S | 薄 |
+| S12 | 官职功绩体力 | **M+** | 精简任命；**功绩等级系统已实装（Session 261）**：`shared/merit.ts` 20 级表/映射/衰减/文武分岔 + `Officer.meritLevel/meritPath/peakMeritLevel` + 任命功绩门槛（君主任命豁免）+ 季度衰减 + OfficerDetail 等级/进度条展示；**6.1 获取点 100% 实装（Session 262+263+264）**：`meritGrant.ts` 统一守卫发放（君主不发）+ 内政（开发/施米/征兵/训练，城主）+ 人事（搜索寻才+8/宝物 5% 稀有+5/登用+4/联姻+10）+ 外交（同盟+10 使节君主不出使/劝降+30）+ 军事（破城+30/守城+8/灭国+50/计策+5 + 野战击破溃散+20/险胜+10/守方击退+10，`militaryMerit.ts` + `Plot.casterOfficerId` 缺省军师）；**数值消费 100% 实装（Session 265）**：`meritAttrBonusFor` 属性加成（Lv16 文武分岔）计入有效属性（体力/单挑/六角/暴率/战役战力）+ `meritEffects` 特殊效果（单挑+/开发+/暴率+/内政效率/被俘-/适性+/体力恢复）接入 duel/civil/crit/campaign/battle/turn + `formationTroopCap` 带兵+ 接出征上限（AI 同规则）+ 君主特例切片 C（任命忠诚±/赏赐/赐婚/笼络守卫）；`verify-merit-consume` 18/18 + `verify-s265-ui` 8/8。体力完整。**后置**：等级表依赖未实装引擎的效果（搜索宝物已由 S13 改为真宝物入库，Session 266） |
+| S13 | 宝物 | **M** | **0-A 完整闭环已实装（Session 266）**：`shared/items.ts` 纯函数 + `Officer.equipment` 5 槽 + `Faction.inventory`；装备/卸下/赏赐（忠诚+5~20 按品质）/搜索真宝物入库（零新增 RNG）/初始宝配；六维加成进有效属性 + baseEffect 可落地（defense/crit_rate/duel_boost 机制）；`/items/equip|unequip|grant` API；OfficerDetail 装备 tab + 六维装+N；verify-items 32/32 + verify-s266-ui 17/17。**后置（0-B）**：8+2 槽/套装/专属共鸣/消耗品/缴获传承/items 全量 |
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
 | S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
 | S16 | 剧本/存档 | **M/D** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；所有行动后结算 RNG 已收口；S15 行为复现、生产存取与 SQLite 未做 |
@@ -664,7 +666,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 | 优先级 | 事项 |
 |:------:|------|
-| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～38 均已完成；BF-P5/R6 郡域军事闭环完成（Session 258/259/260）**；**S12 全量收口（Session 261~265：等级 + 获取点 100% + 数值消费 100% + 君主特例切片 C 完成）**。S12 剩余后置项：等级表依赖未实装引擎的效果（自荐/声望/自选技能/指挥部队数/忠诚系列/专属技/再动/双主武器）、真宝物 inventory（0-B）。BF-P5 剩余仅**第三郡录入（陈留郡，需用户提供史料）**。下一大系统须按 `12-system-map.md` 由用户拍板，屯田仍设计中不得伪造。 |
+| **1（当前 Next）** | **HC-P1-1～6 与 CMD-P0～38 均已完成；BF-P5/R6 郡域军事闭环完成（Session 258/259/260）**；**S12 全量收口（Session 261~265）**；**S13 宝物 0-A 完整闭环完成（Session 266：Officer.equipment 5 槽 + Faction.inventory + 装备/卸下/赏赐/搜索真宝物入库/初始宝配 + 六维/暴率/防御/单挑效果 + OfficerDetail 装备 tab；verify-items 32/32 + verify-s266-ui 浏览器 17/17）**。S12 剩余后置项：等级表依赖未实装引擎的效果（自荐/声望/自选技能/指挥部队数/忠诚系列/专属技/再动/双主武器）。S13 后置项（0-B）：8+2 槽全量、套装 L3/专属共鸣 L2、消耗品使用、缴获/传承/没收、依赖未实装引擎的 baseEffect、items 全量 165 条。BF-P5 剩余仅**第三郡录入（陈留郡，需用户提供史料）**。下一大系统须按 `12-system-map.md` 由用户拍板，屯田仍设计中不得伪造。 |
 | **Session 203 CMD-P6 已完成** | 人事旧入口、权威/草稿/门槛/终审/action/API 清单与 1440×900 Headless 基线已仓库化；分面固定为“名册｜招贤｜任官｜赏罚”，调动仅设计中。下一步 CMD-P7 只迁名册读路径；旧手风琴仍是唯一生产入口。 |
 | **Session 200 英雄集结审查已完成** | 17城链路稳定；friendly 不野战、Army ID 不复制、结盟禁用三项复验通过。待修：CampaignPanel 目标候选按全局前线而非当前出发城过滤；友军城 `garrison` 语义；多方计谋日志“失败；成功”合并歧义。当前仅4势力/玩家可见10将，不能声称完成0-B规模压力验证。报告与24张截图见 `docs/reviews/session-200-hero-gathering-demo-full-flow-audit.md`。 |
 | **Session 196 CMD-P0 已完成** | `07-ui-design.md` §12 已固化布局、动画、状态机、草稿与焦点契约；旧朝廷路径基线见 `docs/reviews/session-196-cmd-p0-court-baseline.md`，4张截图见 `docs/screenshots/session-196-cmd-p0-baseline/`。 |

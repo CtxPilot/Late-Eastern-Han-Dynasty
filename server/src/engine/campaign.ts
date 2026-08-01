@@ -40,6 +40,7 @@ import {
 import { clearCityCounterOnCapture } from './spy.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
+import { equipBonusFor } from './items.js';
 import { grantMeritTo } from './meritGrant.js';
 import {
   MERIT_ANNIHILATE_FACTION,
@@ -619,9 +620,9 @@ interface ArmyPowerInput {
 function computePower(inp: ArmyPowerInput): number {
   const base = inp.troops * unitPower(inp.unitType);
 
-  // 功绩属性加成计入有效属性（Session 265 数值消费）
+  // 功绩+装备属性加成计入有效属性（Session 265 数值消费 + Session 266 装备）
   const effStat = (o: Officer, stat: 'leadership' | 'war' | 'intelligence'): number =>
-    o.stats[stat] + meritStatBonus(o, stat);
+    o.stats[stat] + meritStatBonus(o, stat) + (equipBonusFor(o)[stat] ?? 0);
 
   const mainMod = inp.commander
     ? 1 + (effStat(inp.commander, 'leadership') + effStat(inp.commander, 'war') / 2) / 200

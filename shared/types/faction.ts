@@ -2,6 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import type { FactionId } from '../enums/index.js';
+import type { ItemInventory } from './item.js';
 
 /**
  * 政治阶段状态机（docs/26 霸府/称王/称帝主线，Q5 已批准）。
@@ -55,4 +56,6 @@ export interface Faction {
   imperialAuthority?: number;
   /** 伪诏宣战剩余冷却季数；每逢季度开始减 1。 */
   imperialDecreeCooldown?: number;
+  /** 势力宝物库存（宝物 id → 数量；未分配宝物，S13 Session 266 实装）。 */
+  inventory?: ItemInventory;
 }

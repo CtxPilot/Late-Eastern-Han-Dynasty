@@ -1116,6 +1116,29 @@ export interface Item {
 }
 ```
 
+### 10.1 运行时装备字段（Session 266 实装，S13）
+
+```typescript
+/** 装备槽位（0-A 精简 5 槽；8+2 槽全量设计留 0-B，见 04 §12.1） */
+export type EquipSlot =
+  | 'weaponPrimary'   // 主武器
+  | 'weaponSecondary' // 副武器
+  | 'armor'           // 铠甲
+  | 'mount'           // 坐骑
+  | 'tome';           // 兵书
+
+/** Officer.equipment: 槽位 → 宝物 id（未装备槽位缺省） */
+export type Equipment = Partial<Record<EquipSlot, number>>;
+
+/** Faction.inventory: 宝物 id → 数量（势力未分配库存） */
+export type ItemInventory = Record<number, number>;
+```
+
+- `Officer.equipment` / `Faction.inventory` 均为 optional 字段（旧档兼容，Zod 不升版本）。
+- 共享纯函数见 `shared/items.ts`：`equipSlotFor`（品类→槽位）、`canEquipItem`（属性门槛+专属白名单）、`equipmentStatBonus`（baseStats 六维累计）；`shared/stamina.ts` effectiveStat 系函数支持可选 `EquipStatBonus` 参数。
+- 服务端引擎见 `server/src/engine/items.ts`：equip/unequip/grantTreasure（忠诚+5~20 按品质）/搜索真宝物入库/初始宝配。
+- API：`POST /items/equip`、`POST /items/unequip`、`POST /items/grant`（均 `{ officerId, itemId }`）。
+
 ---
 
 ## 十一、技能 Skill

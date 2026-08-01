@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, MeleeRoundResult, MeleeState } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState } from '@leh/shared';
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
@@ -44,6 +44,8 @@ interface Store {
   /** 事件目录（对话/选项标签，无 effects） */
   eventsCatalog: EventCatalogEntry[];
   scenariosCatalog: ScenarioCatalogEntry[];
+  /** S13 宝物静态目录（Session 266，装备展示用）。 */
+  itemsCatalog: ItemStatic[];
   /** S10 当前选中单位可用战法 */
   usableAbilities: UsableAbility[];
 
@@ -68,6 +70,9 @@ interface Store {
   giftBeauty: (femaleId: number, officerId: number) => Promise<void>;
   searchTalent: (cityId: number) => Promise<void>;
   recruitOfficer: (officerId: number, recruiterId?: number) => Promise<void>;
+  equipItem: (officerId: number, itemId: number) => Promise<void>;
+  unequipItem: (officerId: number, itemId: number) => Promise<void>;
+  grantTreasure: (officerId: number, itemId: number) => Promise<void>;
   appointOfficer: (
     officerId: number,
     track: 'civil' | 'local' | 'military' | 'hegemony',
@@ -178,6 +183,7 @@ export const useGameStore = create<Store>((set, get) => ({
   childrenCatalog: [],
   eventsCatalog: [],
   scenariosCatalog: [],
+  itemsCatalog: [],
   usableAbilities: [],
   battlefield: null,
   melee: null,
@@ -332,6 +338,7 @@ export const useGameStore = create<Store>((set, get) => ({
         childrenCatalog: st.children,
         eventsCatalog: st.events,
         scenariosCatalog: st.scenarios,
+        itemsCatalog: st.items,
         screen: activeBattle ? 'battle' : activeMelee ? 'melee' : activeBattlefield ? 'battlefield' : game ? 'world' : 'scenario',
         loading: false,
       });
@@ -511,6 +518,36 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '搜索完成' });
     } catch (e) {
       set({ error: errMsg(e, '搜索失败'), loading: false });
+    }
+  },
+
+  equipItem: async (officerId, itemId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.equipItem(officerId, itemId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '装备完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '装备失败'), loading: false });
+    }
+  },
+
+  unequipItem: async (officerId, itemId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.unequipItem(officerId, itemId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '卸下完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '卸下失败'), loading: false });
+    }
+  },
+
+  grantTreasure: async (officerId, itemId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.grantTreasure(officerId, itemId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '赏赐完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '赏赐宝物失败'), loading: false });
     }
   },
 
