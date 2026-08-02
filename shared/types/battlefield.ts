@@ -132,6 +132,14 @@ export interface MeleeState {
   defenderFatigue: number;
   defenderFormation: FormationType;
 
+  /**
+   * 阵型执行组织度（FM-P3a 点值迁移）。
+   * optional 旧档兼容：缺省按 orderly（×1.0 中性）解析，旧档/未携带时不改变既有白刃战行为。
+   * 来自对应 CampaignArmy.organization（0..100），仅作用于阵型正面增量，负修正原值保留。
+   */
+  attackerOrganization?: number;
+  defenderOrganization?: number;
+
   /** 战术点（进攻方玩家） */
   tacticalPoints: number;
   /** 本回合已使用的战术点 */
@@ -142,6 +150,13 @@ export interface MeleeState {
 
   /** 本场战斗的日志 */
   eventLog: string[];
+
+  /**
+   * 动作级幂等缓存（FM-P3 §7.5）。
+   * 键：commandId；值：该命令首次执行后的回合数与结果。同一 commandId + 同 expectedRound 的重试
+   * 返回首次结果，不二次扣 TP/推进；同 ID 不同请求体拒绝；expectedRound 过期也拒绝。
+   */
+  commandCache?: Record<string, { round: number; result: MeleeRoundResult }>;
 }
 
 /** 单回合结算结果 */

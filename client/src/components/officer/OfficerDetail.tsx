@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
   EQUIP_SLOT_LABELS,
@@ -22,11 +22,14 @@ import {
   meritTroopBonus,
   type GameState,
   type Officer,
+  type OfficerRelation,
+  type SkillTreeDef,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
+import * as api from '../../services/api';
 
 const STAT_ROWS = [
   ['统帅', 'leadership', false],
@@ -81,13 +84,15 @@ const UNIT_NAME: Record<string, string> = {
   yellowTurban: '黄巾兵',
 };
 
-type Tab = 'stats' | 'family' | 'equipment' | 'biography';
+type Tab = 'stats' | 'family' | 'equipment' | 'biography' | 'relations' | 'skills';
 
 const TABS: readonly [Tab, string][] = [
   ['stats', '属性'],
-  ['family', '家族'],
+  ['family', '关系'],
   ['equipment', '装备'],
   ['biography', '列传'],
+  ['relations', '社交'],
+  ['skills', '技能'],
 ];
 
 interface Props {
@@ -204,7 +209,9 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                   className={`flex-1 py-1.5 rounded border text-[11px] tracking-widest ${tab === k ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400 hover:text-stone-200'}`}
                   onClick={() => setTab(k)}
                 >
-                  {label}
+                  {k === 'equipment'
+                    ? `${label} ${Object.keys(officer.equipment ?? {}).length}/${EQUIP_SLOT_ORDER.length}`
+                    : label}
                 </button>
               ))}
             </div>
@@ -300,13 +307,6 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
                     <Info label="状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
                   </section>
-                  {!isRuler && (
-                    <section>
-                      <h3 className="mb-2 text-xs tracking-widest text-amber-500">拉拢记录</h3>
-                      <Info label="赏赐美人" value={String(officer.beauties.length)} />
-                      <p className="mt-1.5 text-[10px] text-stone-600">S09 势力资源赏赐记录，用于提升该武将忠诚度，与婚姻/家族身份无关</p>
-                    </section>
-                  )}
                 </div>
               </div>
             )}
@@ -327,6 +327,19 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                 <section>
                   <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
                   <Info label="正妻" value={wife ?? '—'} />
+                  {officer.consortIds && officer.consortIds.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {officer.consortIds.map((c, i) => {
+                        const female = game.females[c.id];
+                        return (
+                          <div key={i} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1 text-xs">
+                            <span className="text-stone-200">{female?.name ?? `#${c.id}`}</span>
+                            <span className="ml-2 text-[10px] text-stone-500">{c.rank === 'concubine' ? '妾' : '姬'}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </section>
 
                 <section>
@@ -369,6 +382,10 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               </div>
             )}
 
+            {tab === 'relations' && <RelationsTab officer={officer} game={game} />}
+
+            {tab === 'skills' && <SkillsTab officer={officer} game={game} />}
+
             {tab === 'equipment' && <EquipmentTab game={game} officer={officer} isRuler={isRuler} />}
           </div>
         </div>
@@ -396,19 +413,16 @@ function EquipmentTab({
   const itemById = (id: number) => itemsCatalog.find((i) => i.id === id);
   const inventory = officer.faction != null ? game.factions[officer.faction]?.inventory ?? {} : {};
 
-  if (itemsCatalog.length === 0) {
-    return (
-      <div className="space-y-4">
-        <p className="text-[10px] text-stone-600">宝物目录加载中…</p>
-      </div>
-    );
-  }
-
   const equippedIds = new Set(Object.values(officer.equipment ?? {}));
   const inventoryEntries = Object.entries(inventory).filter(([id]) => !equippedIds.has(Number(id)));
 
   return (
     <div className="space-y-4">
+      {itemsCatalog.length === 0 && (
+        <p className="text-[10px] text-amber-700" data-testid="equipment-catalog-status">
+          宝物目录加载中；装备槽与已绑定的宝物编号仍可查看。
+        </p>
+      )}
       <p className="text-[10px] text-stone-600">
         S13 宝物系统（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书）。装备/卸下对武将自由操作；赏赐需宝物在势力库存。
       </p>
@@ -446,6 +460,8 @@ function EquipmentTab({
                     </button>
                   )}
                 </div>
+              ) : itemId != null ? (
+                <div className="mt-1 text-xs text-amber-700">宝物 #{itemId}（目录加载中）</div>
               ) : (
                 <div className="text-stone-600 text-xs mt-1">未装备</div>
               )}
@@ -544,3 +560,184 @@ const EFFECT_LABEL: Record<string, string> = {
 
 function Info({ label, value }: { label: string; value: string }) { return <div className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5"><span className="text-stone-500">{label}</span><span className="float-right text-stone-200">{value || '—'}</span></div>; }
 function Chip({ text, accent = false }: { text: string; accent?: boolean }) { return <span className={`rounded border px-2 py-1 ${accent ? 'border-rose-800 bg-rose-950/40 text-rose-200' : 'border-stone-700 bg-stone-900 text-stone-300'}`}>{text}</span>; }
+
+const RELATION_TYPE_LABEL: Record<string, string> = {
+  sworn: '义兄弟', master_disciple: '师徒', parent_child: '父子',
+  siblings: '兄弟', spouse: '夫妻', best_friend: '挚友',
+  enemy: '宿敌', lord_retainer: '君臣',
+};
+
+const RELATION_STATE_LABEL: Record<string, string> = {
+  intimate: '亲密', friendly: '友好', neutral: '普通',
+  dislike: '嫌恶', hostile: '仇敌',
+};
+
+const RELATION_STATE_COLOR: Record<string, string> = {
+  intimate: 'text-emerald-400', friendly: 'text-sky-300', neutral: 'text-stone-400',
+  dislike: 'text-orange-300', hostile: 'text-red-400',
+};
+
+function RelationsTab({ officer, game }: { officer: Officer; game: GameState }) {
+  const [relations, setRelations] = useState<OfficerRelation[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    setLoading(true);
+    void api.getOfficerRelations(officer.id).then((r) => { setRelations(r); setLoading(false); });
+  }, [officer.id]);
+  if (loading) return <p className="text-stone-500 text-xs">加载社交关系…</p>;
+  if (relations.length === 0) return <p className="text-stone-600 text-xs">暂无社交关系记录</p>;
+  return (
+    <div className="space-y-4">
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">社交关系</h3>
+        <div className="space-y-1.5">
+          {relations.map((r, i) => (
+            <div key={i} className="flex items-center justify-between rounded border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-stone-200">{r.targetName}</span>
+                <span className="rounded bg-stone-800 px-1.5 py-0.5 text-[10px] text-stone-400">{RELATION_TYPE_LABEL[r.type] ?? r.type}</span>
+                <span className={`text-[10px] ${r.source === 'official' ? 'text-emerald-500' : 'text-amber-500'}`}>{r.source === 'official' ? '正史' : '演义'}</span>
+              </div>
+              <span className={`text-[10px] ${RELATION_STATE_COLOR[r.state] ?? 'text-stone-400'}`}>{RELATION_STATE_LABEL[r.state] ?? r.state}（{r.affinity}）</span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">关系图谱</h3>
+        <RelationGraph officerId={officer.id} relations={relations} game={game} />
+      </section>
+    </div>
+  );
+}
+
+function RelationGraph({ officerId, relations, game }: { officerId: number; relations: OfficerRelation[]; game: GameState }) {
+  const size = 240;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 80;
+  const self = game.officers[officerId];
+  if (!self || relations.length === 0) return <p className="text-stone-600 text-[10px]">无关系数据</p>;
+  const typeColors: Record<string, string> = {
+    sworn: '#f59e0b', master_disciple: '#10b981', parent_child: '#3b82f6',
+    siblings: '#6366f1', spouse: '#ec4899', best_friend: '#14b8a6',
+    enemy: '#ef4444', lord_retainer: '#8b5cf6',
+  };
+  return (
+    <svg width={size} height={size} className="mx-auto">
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#333" strokeWidth={0.5} strokeDasharray="4 2" />
+      {relations.map((rel, i) => {
+        const angle = (2 * Math.PI * i) / relations.length - Math.PI / 2;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        return (
+          <g key={i}>
+            <line x1={cx} y1={cy} x2={x} y2={y} stroke={typeColors[rel.type] ?? '#666'} strokeWidth={1.5} opacity={0.6} />
+            <circle cx={x} cy={y} r={10} fill={typeColors[rel.type] ?? '#555'} stroke="#222" strokeWidth={1} />
+            <text x={x} y={y + 3} textAnchor="middle" fill="#fff" fontSize={8} fontFamily="HanDynastySerif">{rel.targetName.slice(0, 1)}</text>
+            <text x={x} y={y + 18} textAnchor="middle" fill="#999" fontSize={7} fontFamily="HanDynastySerif">{rel.targetName.slice(0, 2)}</text>
+          </g>
+        );
+      })}
+      <circle cx={cx} cy={cy} r={16} fill="#d97706" stroke="#222" strokeWidth={2} />
+      <text x={cx} y={cy + 4} textAnchor="middle" fill="#fff" fontSize={12} fontFamily="HanDynastySerif" fontWeight="bold">{self.name.slice(0, 1)}</text>
+    </svg>
+  );
+}
+
+function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState }) {
+  const [trees, setTrees] = useState<SkillTreeDef[]>([]);
+  const [skillState, setSkillState] = useState<api.OfficerSkillState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTree, setSelectedTree] = useState<string>('strategy');
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    setLoading(true);
+    void Promise.all([
+      api.getSkillTrees(),
+      api.getOfficerSkillState(officer.id),
+    ]).then(([t, s]) => { setTrees(t); setSkillState(s); setLoading(false); });
+  }, [officer.id]);
+  if (loading) return <p className="text-stone-500 text-xs">加载技能树…</p>;
+  if (!skillState) return <p className="text-stone-600 text-xs">技能数据不可用</p>;
+  const currentTree = trees.find((t) => t.id === selectedTree);
+  const totalPoints = skillState.totalSkillPoints;
+  const usedPoints = skillState.skillPointsSpent;
+  const remaining = totalPoints - usedPoints;
+  const traitTotal = skillState.totalTraitPoints;
+  const traitUsed = skillState.traitPointsSpent;
+  const traitRemaining = traitTotal - traitUsed;
+  const handleUpgrade = async (nodeId: string) => {
+    try {
+      const next = await api.upgradeSkillNode(officer.id, nodeId);
+      setSkillState(next);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '加点失败');
+    }
+  };
+  const handleReset = async () => {
+    try {
+      const next = await api.resetSkillTree(officer.id);
+      setSkillState(next);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '重置失败');
+    }
+  };
+  return (
+    <div className="space-y-4">
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能点</h3>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-stone-300">剩余 <strong className="text-amber-300">{remaining}</strong> / {totalPoints}</span>
+          <span className="text-stone-500">已用 {usedPoints}</span>
+          <button type="button" onClick={handleReset} className="px-2 py-0.5 rounded border border-stone-700 text-stone-400 text-[10px] hover:text-stone-200">重置</button>
+        </div>
+      </section>
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能树</h3>
+        <div className="flex gap-1 mb-2">
+          {trees.map((t) => (
+            <button key={t.id} type="button" onClick={() => setSelectedTree(t.id)}
+              className={`px-2 py-1 rounded text-[10px] border ${selectedTree === t.id ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400'}`}
+            >{t.name}</button>
+          ))}
+        </div>
+        {currentTree && (
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {currentTree.nodes.map((node) => {
+              const lv = skillState.skillTreeState[node.id] ?? 0;
+              const unlocked = node.prerequisites.every((p) => (skillState.skillTreeState[p] ?? 0) > 0);
+              const maxed = lv >= node.maxLevel;
+              const canUp = unlocked && !maxed && remaining >= node.costPerLevel;
+              return (
+                <div key={node.id} className={`flex items-center justify-between rounded border px-3 py-1.5 text-xs ${lv > 0 ? 'border-amber-800/60 bg-amber-950/20' : unlocked ? 'border-stone-800 bg-stone-900/50' : 'border-stone-900 bg-stone-950/50 opacity-50'}`}>
+                  <div>
+                    <span className="text-stone-200">{node.name}</span>
+                    <span className="ml-2 text-[10px] text-stone-500">{node.domains.map((d) => ({ battlefield: '战场', melee: '白刃', duel: '单挑', campaign: '战役', civil: '内政' })[d] ?? d).join('/')}</span>
+                    {lv > 0 && <span className="ml-2 text-amber-400">Lv{lv}/{node.maxLevel}</span>}
+                  </div>
+                  {canUp && (
+                    <button type="button" onClick={() => handleUpgrade(node.id)} className="px-2 py-0.5 rounded border border-amber-800 text-amber-200 text-[10px]">+{node.costPerLevel}</button>
+                  )}
+                  {maxed && <span className="text-emerald-500 text-[10px]">已满</span>}
+                  {!unlocked && !maxed && <span className="text-stone-600 text-[10px]">锁定</span>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">特性点</h3>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-stone-300">剩余 <strong className="text-amber-300">{traitRemaining}</strong> / {traitTotal}</span>
+          <span className="text-stone-500">已用 {traitUsed}</span>
+        </div>
+        <p className="text-[10px] text-stone-600 mt-1">特性（被动天赋）点数化：每 5 级 merit 获得 1 特性点，用于购买特性等级。特性全量 42 项待 0-B 实装。</p>
+      </section>
+    </div>
+  );
+}

@@ -18,7 +18,6 @@ export default function App() {
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   const boot = useGameStore((s) => s.boot);
-  // FontBarrier：字体加载前拒绝渲染 Canvas，防跨平台乱码/豆腐块
   const [isEngineReady, setIsEngineReady] = useState(false);
   const [fontError, setFontError] = useState<string | null>(null);
   const [fontRetryNonce, setFontRetryNonce] = useState(0);
@@ -26,7 +25,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     setFontError(null);
-    (async () => {
+    void (async () => {
       const fontsLoaded = await waitForGameFonts();
       if (cancelled) return;
       if (fontsLoaded) {
@@ -39,98 +38,35 @@ export default function App() {
     return () => { cancelled = true; };
   }, [boot, fontRetryNonce]);
 
-  if (!isEngineReady) {
-    return (
-      <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
-        <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
-        <p className="text-stone-400 text-sm">
-          {fontError ?? '正在加载工程字体…（跨平台字体防御屏障）'}
-        </p>
-        {fontError && (
-          <>
-            <pre className="text-stone-500 text-xs max-w-2xl px-4 text-center whitespace-pre-wrap">
-              {fontError}
-            </pre>
-            <button
-              type="button"
-              className="px-4 py-2 rounded bg-amber-900 border border-amber-600 text-amber-200"
-              onClick={() => setFontRetryNonce((n) => n + 1)}
-            >
-              重试加载字体
-            </button>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  if (screen === 'boot') {
-    return (
-      <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
-        <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
-        <p className="text-stone-400 text-sm">{loading ? '正在创建游戏…' : error ?? '启动中'}</p>
-        {error && (
-          <button
-            type="button"
-            className="px-4 py-2 rounded bg-amber-900 border border-amber-600"
-            onClick={() => void boot()}
-          >
-            重试
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  if (screen === 'scenario') return <ScenarioSelect />;
-
-  if (!game) {
-    return <div className="h-full flex items-center justify-center bg-stone-950 text-red-300">游戏状态缺失，请重新选择剧本。</div>;
-  }
-
-  if (screen === 'battle') {
-    return (
-      <div className="h-full flex flex-col">
-        <BattleView />
-      </div>
-    );
-  }
-
-  if (screen === 'battlefield' && battlefieldInstance) {
-    return (
-      <div className="h-full flex flex-col">
-        <BattlefieldSceneView />
-      </div>
-    );
-  }
-
-  if (screen === 'battlefield' || screen === 'melee') {
-    return (
-      <div className="h-full flex flex-col">
-        <BattlefieldPanel />
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full relative">
-      <GameLayout />
-      <div className="fixed top-14 right-2 z-50 flex gap-2">
-        <button
-          data-testid="btn-enter-nanjun-battlefield"
-          className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800"
-          onClick={() => void enterNanjunBattlefield('nanjun')}
-        >
-          南郡水网
-        </button>
-        <button
-          data-testid="btn-enter-yingchuan-battlefield"
-          className="px-3 py-1.5 rounded bg-stone-800 border border-amber-500 text-xs text-amber-50 hover:bg-stone-700"
-          onClick={() => void enterNanjunBattlefield('yingchuan')}
-        >
-          颍川平原
-        </button>
-      </div>
+  if (!isEngineReady) return (
+    <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
+      <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
+      <p className="text-stone-400 text-sm">{fontError ?? '正在加载工程字体…（跨平台字体防御屏障）'}</p>
+      {fontError && <>
+        <pre className="text-stone-500 text-xs max-w-2xl px-4 text-center whitespace-pre-wrap">{fontError}</pre>
+        <button type="button" className="px-4 py-2 rounded bg-amber-900 border border-amber-600 text-amber-200" onClick={() => setFontRetryNonce((n) => n + 1)}>重试加载字体</button>
+      </>}
     </div>
   );
+
+  if (screen === 'boot') return (
+    <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
+      <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
+      <p className="text-stone-400 text-sm">{loading ? '正在创建游戏…' : error ?? '启动中'}</p>
+      {error && <button type="button" className="px-4 py-2 rounded bg-amber-900 border border-amber-600" onClick={() => void boot()}>重试</button>}
+    </div>
+  );
+  if (screen === 'scenario') return <ScenarioSelect />;
+  if (!game) return <div className="h-full flex items-center justify-center bg-stone-950 text-red-300">游戏状态缺失，请重新选择剧本。</div>;
+  if (screen === 'battle') return <div className="h-full flex flex-col"><BattleView /></div>;
+  if (screen === 'battlefield' && battlefieldInstance) return <div className="h-full flex flex-col"><BattlefieldSceneView /></div>;
+  if (screen === 'battlefield' || screen === 'melee') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
+
+  return <div className="h-full relative">
+    <GameLayout />
+    <div className="fixed top-14 right-2 z-50 flex gap-2">
+      <button data-testid="btn-enter-nanjun-battlefield" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800" onClick={() => void enterNanjunBattlefield('nanjun')}>南郡水网</button>
+      <button data-testid="btn-enter-yingchuan-battlefield" className="px-3 py-1.5 rounded bg-stone-800 border border-amber-500 text-xs text-amber-50 hover:bg-stone-700" onClick={() => void enterNanjunBattlefield('yingchuan')}>颍川平原</button>
+    </div>
+  </div>;
 }

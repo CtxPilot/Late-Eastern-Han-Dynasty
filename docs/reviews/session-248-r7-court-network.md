@@ -14,7 +14,7 @@
 
 ## 兼容边界
 
-`/civil/seek-beauty`、`/personnel/reward-beauty`、`/diplomacy/gift-beauty` 等旧 API 路径
+`/civil/seek-beauty`、`/personnel/reward-beauty`、`/diplomacy/court-network` 等旧 API 路径
 暂时保留，避免既有客户端断裂；它们只编排新字段和新语义，不会把旧键写回状态。
 
 ## 验证

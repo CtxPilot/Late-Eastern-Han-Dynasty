@@ -8,6 +8,7 @@ import {
   OfficerStatus,
   SerializableRng,
   canMarchAlongRoad,
+  isAdultForMarriage,
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
@@ -149,10 +150,14 @@ const joined = verifyRoundTrip(
 assert(joined.officers[testCandidate.id].loyalty >= 50 && joined.officers[testCandidate.id].loyalty <= 69, '默认忠诚必须由权威随机流生成 50~69');
 
 const singleFemale = Object.values(initial.females).find(
-  (female) => female.status === MaritalStatus.SINGLE || female.status === MaritalStatus.WIDOW,
+  (female) => isAdultForMarriage(female.birthYear, initial.currentYear),
 );
 const husband = Object.values(initial.officers).find(
-  (officer) => officer.faction === playerFaction.id && officer.status === OfficerStatus.ACTIVE && officer.wifeId == null,
+  (officer) => officer.faction === playerFaction.id
+    && officer.id !== ruler.id
+    && officer.status === OfficerStatus.ACTIVE
+    && officer.wifeId == null
+    && isAdultForMarriage(officer.birthYear, initial.currentYear),
 );
 if (!singleFemale || !husband) throw new Error('家族确定性验证缺少可婚配对象');
 if (husband.location == null) throw new Error('家族确定性验证的婚配对象缺少所在城市');
@@ -167,7 +172,15 @@ const marriageState: GameState = {
   },
   females: {
     ...initial.females,
-    [testFemale.id]: { ...testFemale, factionId: playerFaction.id, locationId: marriageCityId },
+    [testFemale.id]: {
+      ...testFemale,
+      factionId: playerFaction.id,
+      locationId: marriageCityId,
+      initialStatus: MaritalStatus.SINGLE,
+      status: MaritalStatus.SINGLE,
+      husbandId: undefined,
+      giftedToOfficerId: null,
+    },
   },
 };
 resetRuntimeRng(0x18_0002);
@@ -193,7 +206,7 @@ const attendantState: GameState = {
     },
   },
 };
-const attendantJoined = joinFaction(
+const legacyGiftJoined = joinFaction(
   attendantState,
   testCandidate.id,
   playerFaction.id,
@@ -201,11 +214,25 @@ const attendantJoined = joinFaction(
   testOwnedCity.id,
   60,
 );
-assert(attendantJoined.females[testFemale.id].factionId === playerFaction.id, '随侍必须随所系武将加入势力');
-assert(attendantJoined.females[testFemale.id].locationId === testOwnedCity.id, '随侍必须迁往所系武将所在城');
-const attendantReleased = releaseOfficer(attendantJoined, testCandidate.id);
-assert(attendantReleased.females[testFemale.id].factionId == null, '随侍必须随所系武将流落在野');
-assert(attendantReleased.females[testFemale.id].giftedToOfficerId === testCandidate.id, '随迁不得改写随侍关系');
+assert(legacyGiftJoined.females[testFemale.id].factionId == null, '退役的旧赠与关系不得让具名女性随武将加入势力');
+const legacyGiftReleased = releaseOfficer(legacyGiftJoined, testCandidate.id);
+assert(legacyGiftReleased.females[testFemale.id].factionId == null, '退役旧关系不得参与释放随迁');
+
+const sunShangxiang = Object.values(initial.females).find((female) => female.name === '孙尚香');
+if (!sunShangxiang) throw new Error('缺少孙尚香未成年人保护夹具');
+let minorMarriageRejected = false;
+try {
+  marryFemale({
+    ...marriageState,
+    females: {
+      ...marriageState.females,
+      [sunShangxiang.id]: { ...sunShangxiang, factionId: playerFaction.id },
+    },
+  }, sunShangxiang.id, testHusband.id);
+} catch (error) {
+  minorMarriageRejected = error instanceof Error && error.message.includes('18岁');
+}
+assert(minorMarriageRejected, '190 年场景必须拒绝幼年孙尚香进入婚配');
 
 const childDef = getStaticData().children[0];
 if (!childDef) throw new Error('家族确定性验证缺少子女定义');
@@ -232,4 +259,4 @@ assert(zhurongFemale?.canCommand === true, '祝融女角必须保留唯一可统
 assert(zhurongOfficer != null, '祝融必须存在于武将数据以支持出战特例');
 assert(getRuntimeRngState().draws === childSave.rng.draws, '祝融特例是静态权限，不得消费随机数');
 
-console.log(`family deterministic continuation verification passed: ${passed}/36`);
+console.log(`family deterministic continuation verification passed: ${passed}/${passed}`);

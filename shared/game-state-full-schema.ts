@@ -218,7 +218,7 @@ export const GameStateSchema = z
 
     Object.entries(state.intel.cities).forEach(([cityId]) => requireRef(cityIds.has(Number(cityId)), ['intel', 'cities', cityId], '情报城市不存在', ctx));
     Object.entries(state.intel.cityDefense).forEach(([cityId]) => requireRef(cityIds.has(Number(cityId)), ['intel', 'cityDefense', cityId], '反间城市不存在', ctx));
-    Object.entries(state.intel.plantableBeauty ?? {}).forEach(([factionId]) => requireRef(factionIds.has(Number(factionId)), ['intel', 'plantableBeauty', factionId], '献美点化目标势力不存在', ctx));
+    Object.entries(state.intel.plantableBeauty ?? {}).forEach(([factionId]) => requireRef(factionIds.has(Number(factionId)), ['intel', 'plantableBeauty', factionId], '宫廷牵线招募目标势力不存在', ctx));
     Object.values(state.intel.agents).forEach((agent) => {
       requireRef(factionIds.has(agent.factionId), ['intel', 'agents', agent.id, 'factionId'], '特工所属势力不存在', ctx);
       requireRef(cityIds.has(agent.homeCityId), ['intel', 'agents', agent.id, 'homeCityId'], '特工本城不存在', ctx);

@@ -408,7 +408,7 @@ export function CourtCommandDrawer({
         </section>
 
         <section className="border-t border-stone-800 pt-3">
-          <h3 className="text-[11px] tracking-widest text-amber-300">朝廷官制 · 只读总览</h3>
+          <h3 className="text-[11px] tracking-widest text-amber-300">霸府官制 · 只读总览</h3>
           <div className="mt-2 space-y-1">
             {model.offices
               .filter((office) =>

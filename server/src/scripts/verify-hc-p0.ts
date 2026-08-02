@@ -12,7 +12,7 @@
  * 5. GameStateSchema.strict() 接受新字段（ROOT_KEYS 已加 emperorLocation）
  * 6. HC-P0-3 开霸府操作：前置校验（未控制汉帝/已开府/已是王帝拒绝）+ 状态转移 + actionLog + 存档往返
  * 7. HC-P0-4 霸府专属官职：前置校验（诸侯状态拒绝）+ 任命成功（字段写入）+ 势力唯一性（替换旧任）+ 存档往返 + 解职
- * 8. HC-P0-5 霸府外交权重加成：结盟成功率修正 + 进贡/献美友好增量放大 + 分档预留（king/emperor）
+ * 8. HC-P0-5 霸府外交权重加成：结盟成功率修正 + 进贡/宫廷牵线友好增量放大 + 分档预留（king/emperor）
  *
  * Run: pnpm verify-hc-p0
  */
@@ -397,25 +397,25 @@ const hegemonTributeFav = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability
 check('霸府进贡友好增量=round(15×1.1)=17（放大生效）', hegemonTributeFav === 17);
 check('霸府进贡友好增量 > 诸侯', hegemonTributeFav > vassalTributeFav);
 
-// 9e. 献美友好增量：霸府状态比诸侯放大（×1.1）
+// 9e. 宫廷牵线友好增量：霸府状态比诸侯放大（×1.1）
 createGame(1, 1);
 // 准备 courtNetwork
 const giftPrepState = structuredClone(getGame());
 giftPrepState.factions[1].courtNetwork = 10;
 // 用 restore 模拟（这里直接 createGame 后手动设 courtNetwork 通过 service 不可达，
-// 改用 doGiftBeautyDip 会消耗 stock，先保证有库存）
-// 实际验证：vassal 献美 ×1 → +12，hegemon 献美 ×1 → +13
-// 由于 service 层 doGiftBeautyDip 依赖 currentGame，直接用引擎层 giftBeautyStock 验证
-import { giftBeautyStock as engineGiftBeauty } from '../engine/diplomacy.js';
+// 改用 doTransferCourtNetwork 会消耗 stock，先保证有库存）
+// 实际验证：vassal 宫廷牵线 ×1 → +12，hegemon 宫廷牵线 ×1 → +13
+// 由于 service 层 doTransferCourtNetwork 依赖 currentGame，直接用引擎层 transferCourtNetwork 验证
+import { transferCourtNetwork as engineGiftBeauty } from '../engine/diplomacy.js';
 
 createGame(1, 1);
 const vassalGiftState = structuredClone(getGame());
 vassalGiftState.factions[1].courtNetwork = 10;
 const vassalGiftAfter = engineGiftBeauty(vassalGiftState, 3, 1);
 const vassalGiftFav = findDiplomacy(vassalGiftAfter.diplomacy, 1, 3)?.favorability ?? 0;
-check('诸侯献美×1 友好增量=12（基线）', vassalGiftFav === 12);
+check('诸侯宫廷牵线×1 友好增量=12（基线）', vassalGiftFav === 12);
 
-// 霸府献美
+// 霸府宫廷牵线
 createGame(1, 1);
 doEstablishHegemony();
 const hegemonGiftState = structuredClone(getGame());
@@ -428,8 +428,8 @@ hegemonGiftState.diplomacy = hegemonGiftState.diplomacy.map((l) =>
 );
 const hegemonGiftAfter = engineGiftBeauty(hegemonGiftState, 3, 1);
 const hegemonGiftFav = findDiplomacy(hegemonGiftAfter.diplomacy, 1, 3)?.favorability ?? 0;
-check('霸府献美×1 友好增量=round(12×1.1)=13（放大生效）', hegemonGiftFav === 13);
-check('霸府献美友好增量 > 诸侯', hegemonGiftFav > vassalGiftFav);
+check('霸府宫廷牵线×1 友好增量=round(12×1.1)=13（放大生效）', hegemonGiftFav === 13);
+check('霸府宫廷牵线友好增量 > 诸侯', hegemonGiftFav > vassalGiftFav);
 
 // 9f. RNG 边界：结盟成功率判定依然走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点
 // （由 verify-negotiation-r2 既有 20 项断言已隐式覆盖，此处仅确认 hegemonyModifier 不引入新随机源）

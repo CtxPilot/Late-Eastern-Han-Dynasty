@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "grid": { "maxWidth": 100, "maxHeight": 100, "animationFps": 30 },
+  "duel": { "battlefieldChance": 0.1, "meleeChance": 0.15, "maxRounds": 3 },
+  "formations": [
+    { "id": "long_snake", "name": "长蛇阵", "attack": 0.12, "defense": -0.08, "mobility": 1.2, "morale": 0, "weakAgainst": ["ambush"] },
+    { "id": "square_circle", "name": "方圆阵", "attack": -0.05, "defense": 0.2, "mobility": 0.8, "morale": 0.08, "weakAgainst": ["assault"] },
+    { "id": "goose_wing", "name": "雁行阵", "attack": 0.08, "defense": 0.02, "mobility": 1, "morale": 0, "weakAgainst": ["assault"] },
+    { "id": "crane_wing", "name": "鹤翼阵", "attack": 0.1, "defense": 0.08, "mobility": 0.9, "morale": 0.03, "weakAgainst": ["ambush"] },
+    { "id": "arrow", "name": "锋矢阵", "attack": 0.2, "defense": -0.15, "mobility": 1.1, "morale": -0.03, "weakAgainst": ["hold"] }
+  ],
+  "tactics": [
+    { "id": "assault", "name": "强攻", "attack": 0.25, "defense": -0.15, "initiative": 0.1, "strongAgainst": ["goose_wing", "square_circle"] },
+    { "id": "hold", "name": "固守", "attack": -0.1, "defense": 0.3, "initiative": -0.1, "strongAgainst": ["arrow", "long_snake"] },
+    { "id": "ambush", "name": "奇袭", "attack": 0.15, "defense": -0.05, "initiative": 0.3, "strongAgainst": ["long_snake", "crane_wing"] }
+  ]
+}

@@ -4,3 +4,5 @@ export default {
     autoprefixer: {},
   },
 };
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 CtxPilot

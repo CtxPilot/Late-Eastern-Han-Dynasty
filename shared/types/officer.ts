@@ -101,8 +101,18 @@ export interface Officer extends OfficerStatic {
   actionsPerMonth?: number;
   /** 正妻女性 id（婚配）；面板不展示隐藏加成 */
   wifeId?: number | null;
-  /** 赏赐美人（非婚配）女性 id 列表 */
+  /** @deprecated 旧存档兼容字段。运行时必须为空，禁止写入具名女性。 */
   beauties: number[];
   /** 装备槽（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书；8+2 槽全量留 0-B，S13 Session 266 实装） */
   equipment?: Equipment;
+  /** 技能树状态：nodeId → 当前等级（0=未解锁） */
+  skillTreeState?: Record<string, number>;
+  /** 已消耗的技能点数 */
+  skillPointsSpent?: number;
+  /** 特性等级状态：traitId → 当前等级（0=未拥有） */
+  traitLevels?: Record<string, number>;
+  /** 已消耗的特性点数 */
+  traitPointsSpent?: number;
+  /** 妾/姬列表（女性实体引用，数量不定） */
+  consortIds?: { id: number; rank: 'concubine' | 'ji' }[];
 }

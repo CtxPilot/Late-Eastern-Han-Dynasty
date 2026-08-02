@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState, ScenarioFactionSetup } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, GrandStrategist, ItemStatic, MeleeRoundResult, MeleeState, OfficerRelation, ScenarioFactionSetup, SkillTreeDef, StrategyModifiers, StrategyType } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -153,6 +153,30 @@ export async function trainTroops(cityId: number): Promise<GameState> {
   return data;
 }
 
+/** S27 开垦：乡政派系命令（50金；智≥60 武将） */
+export async function reclaimLand(cityId: number, officerId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/reclaim', { cityId, officerId });
+  return data;
+}
+
+/** S27 巡查：乡政派系命令（30金；武≥60 武将） */
+export async function patrolCity(cityId: number, officerId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/patrol', { cityId, officerId });
+  return data;
+}
+
+/** S27 兵装采购（10金/件） */
+export async function buyArms(amount: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/faction/buy-arms', { amount });
+  return data;
+}
+
+/** S27 深化：弹劾处理（appease 安抚 / remove 撤换城主） */
+export async function resolveImpeachment(cityId: number, action: 'appease' | 'remove'): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/impeach', { cityId, action });
+  return data;
+}
+
 /** 地方结交：势力 courtNetwork+1，城市机会−1 */
 export async function seekBeauty(cityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/seek-beauty', { cityId });
@@ -178,17 +202,6 @@ export async function rewardBeautyStock(
 
 export async function marry(femaleId: number, officerId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/personnel/marry', {
-    femaleId,
-    officerId,
-  });
-  return data;
-}
-
-export async function giftBeauty(
-  femaleId: number,
-  officerId: number,
-): Promise<GameState> {
-  const { data } = await http.post<GameState>('/personnel/gift-beauty', {
     femaleId,
     officerId,
   });
@@ -353,11 +366,11 @@ export async function followCheck(): Promise<GameState> {
   return data;
 }
 
-export async function giftBeautyDip(
+export async function transferCourtNetwork(
   targetFactionId: number,
   amount?: number,
 ): Promise<GameState> {
-  const { data } = await http.post<GameState>('/diplomacy/gift-beauty', {
+  const { data } = await http.post<GameState>('/diplomacy/court-network', {
     targetFactionId,
     amount,
   });
@@ -415,6 +428,10 @@ export async function suggestFromCity(
 export async function battleMove(unitId: string, q: number, r: number): Promise<BattleState> {
   const { data } = await http.post<BattleState>('/battle/move', { unitId, q, r });
   return data;
+}
+
+export async function battleUndo(): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/undo'); return data;
 }
 
 export async function battleAttack(attackerId: string, defenderId: string): Promise<BattleState> {
@@ -502,6 +519,11 @@ export async function battleEnemyPhase(): Promise<BattleState> {
 export async function battleMoveRange(unitId: string): Promise<string[]> {
   const { data } = await http.get<{ keys: string[] }>(`/battle/move-range/${unitId}`);
   return data.keys;
+}
+
+export async function battleMovePath(unitId: string, q: number, r: number): Promise<import('@leh/shared').PathResult> {
+  const { data } = await http.get<import('@leh/shared').PathResult>(`/battle/move-path/${unitId}/${q}/${r}`);
+  return data;
 }
 
 /** 退出战场并结算；返回最新 GameState（含占城） */
@@ -674,9 +696,9 @@ export async function meleeSelectMode(
   return data;
 }
 
-/** 执行一回合白刃战 */
-export async function meleeRound(actionType: string): Promise<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }> {
-  const { data } = await http.post<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }>('/melee/round', { actionType });
+/** 执行一回合白刃战（FM-P3 动作级幂等：commandId + expectedRound） */
+export async function meleeRound(actionType: string, targetFormation?: import('@leh/shared').FormationType, commandId?: string, expectedRound?: number): Promise<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }> {
+  const { data } = await http.post<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }>('/melee/round', { actionType, targetFormation, commandId, expectedRound });
   return data;
 }
 
@@ -695,31 +717,35 @@ export async function meleeExit(): Promise<{ game: GameState }> {
 // ====== 总军师 API ======
 
 /** 任命总军师 */
-export async function grandStrategistAppoint(officerId: number): Promise<{ game: GameState; strategist: import('@leh/shared').GrandStrategist }> {
-  const { data } = await http.post('/grand-strategist/appoint', { officerId });
-  return data as any;
+export async function grandStrategistAppoint(officerId: number): Promise<{ game: GameState; strategist: GrandStrategist }> {
+  const { data } = await http.post<{ game: GameState; strategist: GrandStrategist }>('/grand-strategist/appoint', { officerId });
+  return data;
 }
 
 /** 解职总军师 */
 export async function grandStrategistDismiss(): Promise<{ game: GameState; log: string }> {
-  const { data } = await http.post('/grand-strategist/dismiss');
-  return data as any;
+  const { data } = await http.post<{ game: GameState; log: string }>('/grand-strategist/dismiss');
+  return data;
 }
 
 /** 切换态势 */
-export async function grandStrategistSwitch(strategy: string): Promise<{ game: GameState; log: string }> {
-  const { data } = await http.post('/grand-strategist/strategy', { strategy });
-  return data as any;
+export async function grandStrategistSwitch(strategy: StrategyType): Promise<{ game: GameState; log: string }> {
+  const { data } = await http.post<{ game: GameState; log: string }>('/grand-strategist/strategy', { strategy });
+  return data;
 }
 
 /** 获取总军师状态 */
 export async function grandStrategistStatus(): Promise<{
-  strategist: import('@leh/shared').GrandStrategist | null;
-  modifiers: any;
+  strategist: GrandStrategist | null;
+  modifiers: StrategyModifiers;
   hasStrategist: boolean;
 }> {
-  const { data } = await http.get('/grand-strategist/status');
-  return data as any;
+  const { data } = await http.get<{
+    strategist: GrandStrategist | null;
+    modifiers: StrategyModifiers;
+    hasStrategist: boolean;
+  }>('/grand-strategist/status');
+  return data;
 }
 
 /** 开霸府（HC-P0-3）。前置：控制汉献帝 + 当前 politicalStage='vassal'。 */
@@ -758,5 +784,73 @@ export async function getKingRequirements(): Promise<KingRequirementsDto> {
 
 export async function falseDecreeWar(targetFactionId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/hegemony/false-decree-war', { targetFactionId });
+  return data;
+}
+
+// ====== 关系网 API（S24） ======
+
+export async function getOfficerRelations(officerId: number): Promise<OfficerRelation[]> {
+  const { data } = await http.get<OfficerRelation[]>(`/relations/${officerId}`);
+  return data;
+}
+
+// ====== 技能树 API（S25） ======
+
+export async function getSkillTrees(): Promise<SkillTreeDef[]> {
+  const { data } = await http.get<SkillTreeDef[]>('/skill-trees');
+  return data;
+}
+
+export interface OfficerSkillState {
+  skillTreeState: Record<string, number>;
+  skillPointsSpent: number;
+  totalSkillPoints: number;
+  traitLevels: Record<string, number>;
+  traitPointsSpent: number;
+  totalTraitPoints: number;
+}
+
+export async function getOfficerSkillState(officerId: number): Promise<OfficerSkillState> {
+  const { data } = await http.get<OfficerSkillState>(`/officer/${officerId}/skills`);
+  return data;
+}
+
+export async function upgradeSkillNode(officerId: number, nodeId: string): Promise<OfficerSkillState> {
+  const { data } = await http.post<OfficerSkillState>('/skill-tree/upgrade', { officerId, nodeId });
+  return data;
+}
+
+export async function upgradeTrait(officerId: number, traitId: string): Promise<OfficerSkillState> {
+  const { data } = await http.post<OfficerSkillState>('/trait/upgrade', { officerId, traitId });
+  return data;
+}
+
+export async function resetSkillTree(officerId: number): Promise<OfficerSkillState> {
+  const { data } = await http.post<OfficerSkillState>('/skill-tree/reset', { officerId });
+  return data;
+}
+
+// ====== 天命-人心 API（S26） ======
+
+export interface FactionOverview {
+  factionId: number;
+  factionName: string;
+  mandate: number;
+  mandateLabel: string;
+  mandateDiplomacyModifier: number;
+  popularWill: number;
+  popularWillLabel: string;
+  popularWillDesertionModifier: number;
+  popularWillRecruitModifier: number;
+  fame: number;
+  fameLabel: string;
+  arms: number;
+  cityCount: number;
+  officerCount: number;
+  commanderyCount: number;
+}
+
+export async function getFactionOverview(): Promise<FactionOverview> {
+  const { data } = await http.get<FactionOverview>('/faction/overview');
   return data;
 }

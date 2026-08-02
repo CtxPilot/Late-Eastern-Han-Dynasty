@@ -13,15 +13,16 @@ export type CommandDockItem = {
 };
 
 export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
-  { domain: 'civil', label: '内政', availability: 'available', reason: '城市四分面只读总览；写操作暂留右侧' },
+  { domain: 'civil', label: '内政', availability: 'available', reason: '城市治理与宫廷人脉唯一入口' },
   { domain: 'military', label: '军事', availability: 'available', reason: '军备、编成出征与战役军令唯一入口' },
   { domain: 'personnel', label: '人事', availability: 'available', reason: '名册、招贤、任官、赏罚唯一入口' },
   { domain: 'diplomacy', label: '外交', availability: 'available', reason: '势力、交涉与盟约唯一入口' },
   { domain: 'strategy', label: '计略', availability: 'available', reason: 'S17 四计态势、发起与进行中记录唯一入口' },
   { domain: 'intel', label: '情报', availability: 'available', reason: 'S07 人员、任务、反间与俘虏唯一入口' },
   { domain: 'farming', label: '屯田', availability: 'planned', reason: '设计中，尚未提供运行时入口' },
-  { domain: 'family', label: '家族', availability: 'available', reason: 'S18 四分面只读摘要；写链仍在左侧家族面板' },
+  { domain: 'family', label: '家族', availability: 'available', reason: '家族总览与婚姻、子嗣操作唯一入口' },
   { domain: 'court', label: '朝廷', availability: 'available', reason: '朝廷功能唯一入口' },
+  { domain: 'faction', label: '势力', availability: 'available', reason: '势力总览与天命人心双轨系统唯一入口' },
 ] as const;
 
 export function CommandDock({
@@ -41,7 +42,7 @@ export function CommandDock({
       data-testid="command-dock"
       className="shrink-0 border-t border-amber-950/80 bg-stone-950/95 px-3 py-2 shadow-[0_-6px_20px_rgba(0,0,0,0.35)]"
     >
-      <div className="mx-auto flex min-w-[76rem] max-w-[90rem] items-stretch gap-1.5">
+      <div className="mx-auto grid max-w-[90rem] grid-cols-5 items-stretch gap-1.5 lg:grid-cols-10">
         {COMMAND_DOCK_ITEMS.map((item) => {
           const active = item.domain === activeDomain;
           return (
@@ -54,7 +55,7 @@ export function CommandDock({
               ref={(element) => registerButton?.(item.domain, element)}
               title={item.reason}
               onClick={() => onDomainToggle(item.domain)}
-              className={`min-w-[5.5rem] flex-1 border px-2 py-1.5 text-xs transition-colors ${
+              className={`min-w-0 border px-2 py-1.5 text-xs transition-colors ${
                 active
                   ? 'border-amber-500 bg-amber-950/70 text-amber-100'
                   : 'border-stone-800 bg-stone-900/75 text-stone-300 hover:border-stone-600'
@@ -75,7 +76,7 @@ export function CommandDock({
           type="button"
           disabled
           title="本阶段继续使用顶部“结束回合”"
-          className="min-w-[7rem] border border-red-950 bg-red-950/25 px-3 py-1.5 text-xs text-stone-600"
+          className="min-w-0 border border-red-950 bg-red-950/25 px-3 py-1.5 text-xs text-stone-600"
         >
           进行
           <span className="mt-0.5 block text-[9px]">仍在顶部</span>

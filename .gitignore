@@ -45,8 +45,8 @@ docs/screenshots/leh-seats-full.png
 /index.html
 /src/
 
-# Local high-resolution portrait source PNGs (do not redistribute; the
-# README uses docs/screenshots/leh-officer-*.png which are already in git)
+# Local high-resolution portrait source PNGs are forbidden from the project;
+# verify-compliance also fails if this ignored directory is recreated non-empty.
 /assets/portraits/
 
 # External reference demos (not part of the project; user-provided PCG prototypes)
@@ -57,11 +57,17 @@ docs/screenshots/leh-seats-full.png
 *.woff
 *.ttf
 *.otf
-.omo/
-.opencode/
-.playwright-mcp/
+.omo
+.opencode
+.playwright-mcp
 reasonix.toml
 *.orig
 
 # OpenCode session plans (tool artifacts)
-.zcode/
+.zcode
+.crush
+.codegraph
+
+# Compliance exports and local audit evidence must live outside the repository.
+agent-exports/
+audit-evidence/

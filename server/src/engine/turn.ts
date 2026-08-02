@@ -10,6 +10,8 @@ import {
   applyMeritDecay,
   calcStaminaMax,
   cityFoodNeed,
+  computeMandate,
+  computePopularWill,
   ensureDemographics,
   laborForce,
   meritEffects,
@@ -22,6 +24,7 @@ import {
   resolveArmyCountyNodeId,
   shortestCountyPath,
   decideDefenderArmyAction,
+  merchantCommerceMultiplier,
   type City,
   type CityDemographics,
   type GameState,
@@ -38,6 +41,7 @@ import { tickEvents } from './event.js';
 import { syncFactionResources } from './economy.js';
 import { tickImperialAuthorityQuarter } from './hegemony.js';
 import { tickDevelopmentProject } from './civil.js';
+import { tickFactionPolitics } from './factionPolitics.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -148,7 +152,9 @@ export function settleCityMonthDetailed(
 
   const foodProduced = Math.floor(city.stats.farm * 3.2 * laborFactor * foodMul);
   const adultShare = (d.adultMale + d.adultFemale) / Math.max(sumSafe(d), 1);
-  const goldProduced = Math.floor((city.stats.commerce / 9) * (0.7 + adultShare) * goldMul);
+  // S27 商贾满意度修正：≥70 商业 +15%、<30 −15%（docs/08 §十七）
+  const merchantMod = 1 + merchantCommerceMultiplier(city.cityFactions ?? []);
+  const goldProduced = Math.floor((city.stats.commerce / 9) * (0.7 + adultShare) * goldMul * merchantMod);
 
   const need = cityFoodNeed({ ...city, demographics: d, troops: city.troops }, season);
   let food = city.food + foodProduced - need;
@@ -273,6 +279,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = runAiMilitary(nextState, rng, rng);
   // 家族跟随 S18：在野武将自动投奔检定
   nextState = tickFollowCheck(nextState, rng);
+  // S27 城级派系：满意度回归 / 兵装月产 / 叛乱判定 / 每季声望衰减
+  nextState = tickFactionPolitics(nextState, rng, isQuarterStart);
   // 子女 S18：每年 1 月 appearYear 登场
   nextState = tickChildrenAppear(nextState);
   // 事件 S14：自动触发无选项事件
@@ -518,5 +526,19 @@ export function tickBattlefieldInstance(state: GameState, rng: () => number): Ga
     };
   }
 
-  return next;
+  // S26 天命-人心双轨系统：每回合重算所有势力
+  const finalState = next;
+  const factions = { ...finalState.factions };
+  for (const fidStr of Object.keys(factions)) {
+    const fid = Number(fidStr);
+    const f = factions[fid];
+    if (!f) continue;
+    factions[fid] = {
+      ...f,
+      mandate: computeMandate(f, finalState),
+      popularWill: computePopularWill(f, finalState),
+    };
+  }
+
+  return { ...next, factions };
 }

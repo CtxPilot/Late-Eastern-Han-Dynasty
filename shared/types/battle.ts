@@ -29,6 +29,8 @@ export interface BattleUnit {
   morale: number;
   food: number;
   position: HexCoord;
+  /** 六方向朝向 0=东，顺时针至5；旧档缺省时由阵营推导。 */
+  facing?: 0 | 1 | 2 | 3 | 4 | 5;
   mp: number;
   maxMp: number;
   /** 气力 0~100（计策消耗） */
@@ -43,6 +45,18 @@ export interface BattleUnit {
 export interface BattleLogEntry {
   turn: number;
   message: string;
+}
+
+export interface BattleActionRecord {
+  id: string;
+  kind: 'move' | 'attack';
+  unitId: string;
+  logicalTimestamp: number;
+  source: 'player' | 'ai' | 'system';
+  reversible: boolean;
+  beforePosition?: HexCoord;
+  afterPosition?: HexCoord;
+  beforeMp?: number;
 }
 
 export interface BattleState {
@@ -67,6 +81,8 @@ export interface BattleState {
     terrain: TerrainType[][];
   };
   log: BattleLogEntry[];
+  /** 最近三条玩家战术操作；移动在攻击/RNG 前可撤，攻击仅留审计且不可撤。 */
+  actionHistory?: BattleActionRecord[];
   message: string;
   /** Active duel (S10 §8); while set, battle is paused until duel resolves. */
   duel?: DuelState | null;

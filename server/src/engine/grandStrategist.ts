@@ -20,6 +20,7 @@ import {
   OfficerStatus,
   type GameState,
   type GrandStrategist,
+  type StrategyModifiers,
   type StrategyType,
 } from '@leh/shared';
 
@@ -56,17 +57,7 @@ function strategyPotency(int: number): number {
 export function calcStrategyModifiers(
   strategy: StrategyType,
   int: number,
-): {
-  moraleBonus: number;
-  foodCostMult: number;
-  siegeEfficiency: number;
-  buildSpeed: number;
-  stratagemChanceBonus: number;
-  civilEffectBonus: number;
-  conscriptCostReduction: number;
-  warDeclineReduction: number;
-  diplomacyBonus: number;
-} {
+): StrategyModifiers {
   const potency = strategyPotency(int);
   const defaults = {
     moraleBonus: 0,

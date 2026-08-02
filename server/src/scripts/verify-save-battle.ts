@@ -3,7 +3,7 @@
 
 import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType } from '@leh/shared';
 import {
-  battleFinishPlayer, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle,
+  battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
 
@@ -44,6 +44,13 @@ check('真实出征生成的 BattleState 通过严格解析', parsedBattle.units
 check('真实战斗攻守势力与单位归属一致', parsedBattle.units.every((unit) => unit.factionId === (unit.side === 'attacker' ? parsedBattle.attackerFaction : parsedBattle.defenderFaction)));
 check('真实战场尺寸与二维地形一致', parsedBattle.hexGrid.terrain.length === parsedBattle.hexGrid.height && parsedBattle.hexGrid.terrain.every((row) => row.length === parsedBattle.hexGrid.width));
 check('服务层当前战斗与出征结果一致', getBattle()?.id === parsedBattle.id);
+const mover = parsedBattle.units.find((unit) => unit.side === 'attacker')!;
+const previewKey = battleMoveRange(mover.id)[0]!;
+const [previewQ, previewR] = previewKey.split(',').map(Number);
+const moved = battleMove(mover.id, previewQ, previewR);
+check('A* 可达格执行后写入可撤销审计记录', moved.actionHistory?.at(-1)?.kind === 'move' && moved.units.find((unit) => unit.id === mover.id)?.position.q === previewQ);
+const undone = battleUndo();
+check('攻击前可撤销移动并恢复位置/移动力', undone.units.find((unit) => unit.id === mover.id)?.position.q === mover.position.q && undone.units.find((unit) => unit.id === mover.id)?.mp === mover.mp);
 
 const current = getGame();
 check('真实战斗已进入权威 GameState.activeBattles', current.activeBattles[0]?.id === parsedBattle.id);

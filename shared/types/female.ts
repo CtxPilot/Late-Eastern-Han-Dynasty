@@ -44,8 +44,7 @@ export interface FemaleCharacter extends FemaleStatic {
   status: MaritalStatus;
   husbandId?: number;
   /**
-   * 被赏赐给的武将 id（非婚配）。
-   * 与 husbandId 互斥：婚配后应清空。
+   * @deprecated 旧存档兼容字段。具名女性赠与机制已退役；加载后必须清空，禁止产生新值。
    */
   giftedToOfficerId?: number | null;
 }

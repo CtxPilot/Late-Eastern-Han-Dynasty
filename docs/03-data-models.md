@@ -16,7 +16,7 @@
 10. [宝物 Item](#十宝物-item)
 11. [技能 Skill](#十一技能-skill)
 12. [女性角色 FemaleCharacter](#十二女性角色-femalecharacter)
-13. [赏赐美人 Beauty](#十三赏赐美人-beauty)
+13. [退役兼容字段](#十三退役兼容字段)
 14. [子女生育事件 ChildBirthEvent](#十四子女生育事件-childbirthevent)
 15. [历史事件 GameEvent](#十五历史事件-gameevent)
 16. [剧本 Scenario](#十六剧本-scenario)
@@ -25,6 +25,10 @@
 19. [单挑类型 DuelTypes](#十九单挑类型-dueltypes)
 20. [API 通用类型](#二十api-通用类型)
 23. [独立郡域战场设计契约](#二十三独立郡域战场设计契约)
+24. [技能树类型](#二十四技能树类型)
+25. [关系网类型](#二十五关系网类型)
+26. [天命人心类型](#二十六天命人心类型)
+27. [城级派系与门阀类型](#二十七城级派系与门阀类型s27)
 
 ---
 
@@ -611,10 +615,9 @@ export interface Officer {
     auxiliary: number | null;        // 书籍/特殊
   };
 
-  // 美人 / 婚配（Demo 运行时）
+  // 婚配与退役兼容字段
   wifeId?: number | null;       // 正妻女性 id
-  beauties: number[];           // 赏赐美人（非婚配）女性 id（君主身份恒为空，见 04 §3.8）
-  beautyMaintenance?: number;   // 月均美人供养费（全量未做）
+  beauties: [];                 // v1 旧档兼容；当前 Schema 强制为空，禁止写入
 
   // 霸府/称王/称帝主线（docs/26/28，HC-P0-4 + HC-P1-3 已实装）
   hegemonyPosition?: HegemonyPosition;  // 朝职单值轨道：霸府3职+王国6职+none；任新职替换本人旧朝职
@@ -949,7 +952,11 @@ export interface UnitTrait {
 
 ## 九、阵型 Formation
 
-> Session 120 全面重写：新增等级/熟练度/极、水阵体系、科技树前置。以下类型对应运行时代码 `shared/types/formation.ts`。
+> Session 120 全面重写：新增等级/熟练度/极、水阵体系、科技树前置。以下 `Formation`
+> 是长期目标契约。**Session 288 FM-P1 已实装**：`shared/types/formation.ts` 迁移到 `Formation`
+> 结构（含 `FormationDeployment`），`formations.json` 已按 0-A 目录 `[0,1,2,3,4,6,16]` 迁移，
+> 146 将精通逐人校勘落地，TacticalConfig v2 + v1→v2 迁移夹具完成。详见
+> `29-formation-integration-development-plan.md` 与 `docs/formation-catalog-migration.md`。
 
 ```typescript
 /** 单级阵型数据 */
@@ -1011,7 +1018,19 @@ export interface Formation {
     minNavalProficiency?: UnitProficiency;  // 水军适性门槛
     allowOnlyUnitTypes?: UnitType[]; // 限定兵种
   };
+
+  // 五部部署模板（FM Gate D，Session 288 已入 schema）
+  deployment?: {
+    slots: Partial<Record<'vanguard' | 'center' | 'left' | 'right' | 'rearguard', { q: number; r: number }>>;
+    fallbackOrder: ('vanguard' | 'center' | 'left' | 'right' | 'rearguard')[];
+    symmetry: 'symmetric' | 'left_weighted' | 'right_weighted';
+  };
 }
+
+// 运行量纲说明（FM-P3a Session 291）：唯一运行量纲为 tiers[0]（0-A 固定 Lv1）攻防机射点值
+// 与 effects 暴击链；三模式（自动/标准/六角）同源消费。meleePercent 过渡字段已在 Session 291 退役
+// （类型/JSON/generate-0a-data 移除），标准模式由等价性单点换算（MELEE_ATK/DEF/MOB_GAIN，见
+// server/src/engine/meleeRound.ts）消费点值，不再存在第二套阵型数值表。
 
 export interface FormationEffect {
   name: string;
@@ -1245,26 +1264,12 @@ export interface FemaleCharacter {
 
 ---
 
-## 十三、赏赐美人 Beauty
+## 十三、退役兼容字段
 
-```typescript
-export interface Beauty {
-  id: number;
-  name: string;
-  grade: 1 | 2 | 3 | 4 | 5 | 6;       // 良家女/歌伎/舞姬/侍姬/才女/绝世佳人
-  source: 'conscripted' | 'tavern' | 'captured' | 'merchant' | 'recommended' | 'gifted' | 'event';
-
-  instantEffect: { loyaltyBoost: number };
-  ongoingEffect: {
-    type: 'loyalty' | 'morale' | 'charm' | 'intelligence' | 'counsel' | 'aura';
-    value: number;
-    interval: 'month' | 'season';
-  };
-
-  ownerOfficerId: number | null;    // null = 在势力库存
-  age: number;
-}
-```
+`Officer.beauties` 与 `FemaleCharacter.giftedToOfficerId` 只为读取 v1 旧档保留。
+`migrateRetiredNamedFemaleGifts()` 在完整 Schema 校验前分别清为 `[]` 和 `null`；当前 Schema
+拒绝任何非空值，生产 API、UI 和引擎均不得产生这些字段。非人格化外交资源使用
+`Faction.courtNetwork`，不得转化为具名人物。
 
 ---
 
@@ -1906,9 +1911,21 @@ interface GrandStrategist {
   appointedYear: number;
   strategy: StrategyType;
   lastStrategyChange: number;
-  献策成功: number;
-  识破次数: number;
-  战略总评: number;
+  adviceSuccess: number;
+  insightCount: number;
+  strategyScore: number;
+}
+
+interface StrategyModifiers {
+  moraleBonus: number;
+  foodCostMult: number;
+  siegeEfficiency: number;
+  buildSpeed: number;
+  stratagemChanceBonus: number;
+  civilEffectBonus: number;
+  conscriptCostReduction: number;
+  warDeclineReduction: number;
+  diplomacyBonus: number;
 }
 ```
 
@@ -2364,11 +2381,16 @@ settlementApplied`。其中 `duel` 直接嵌入既有 `DuelState` 并由同一�
 
 ---
 
-*文档版本: v4.7 | 2026-07-23 | Session 164 大地图节点与史实郡县口径分离*
+*文档版本: v4.8 | 2026-08-01 | Session 267 总军师字段与 StrategyModifiers 契约同步*
 
 Session 245（R4）为 `MeleeState` 增加 `entryMode: auto | standard | tactical | null`、
 `settlementApplied` 与六角模式 `tacticalBattleId`。模式一经选定不可改选；三种路径都以
 同一白刃战快照作为输入，并由 `settlementApplied` 保证 CampaignArmy 兵力、士气只写回一次。
+
+Session 290（FM-P3）继续为 `MeleeState` 增加 `commandCache?: Record<string, { round, result }>`，
+用于 `/melee/round` 的动作级幂等：同一 `commandId` + 同轮 `expectedRound` 的重试返回首次结果，
+不二次扣 TP/推进；过期 `expectedRound` 原子拒绝。该缓存不替代 `settlementApplied`，后者仍只负责
+战后 Army 回写幂等。
 
 ### Session 246 · R5 DevelopmentProject
 
@@ -2377,3 +2399,137 @@ Session 245（R4）为 `MeleeState` 增加 `entryMode: auto | standard | tactica
 pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段表示没有项目；
 实体组合 Schema 校验指派武将引用存在。既有 `developmentProgress` 三数字段继续保留作
 静态数据兼容，不再承担 R5 项目权威状态。
+### Session 277 · BattleState 战旗审计扩展
+
+- `BattleUnit.facing?: 0|1|2|3|4|5`：六方向朝向；旧档缺省时攻方按0、守方按3解释。
+- `BattleState.actionHistory?: BattleActionRecord[]`：最多3条移动/攻击操作，使用
+  `turn×1000+sequence` 逻辑时间和 `player/ai/system` 来源。移动含前后坐标与原移动力；
+  攻击因消费权威 RNG 标为不可逆。两字段均 optional，旧存档兼容。
+- 路径预览 `PathResult/PathStep` 不进入存档，仅作为请求响应和动画协议。
+
+---
+
+## 二十四、技能树类型
+
+> 对应 S25 技能树系统。类型定义位于 `shared/types/skill-tree.ts`。
+
+```ts
+export type SkillDomain = 'battlefield' | 'melee' | 'duel' | 'campaign' | 'civil';
+
+export interface SkillTreeNodeDef {
+  id: string;
+  skillId?: string;          // 关联 skills.json 的 id
+  name: string;
+  description: string;
+  treeId: string;            // 所属子树 id
+  maxLevel: number;          // 可加点次数
+  costPerLevel: number;     // 每级消耗技能点数
+  prerequisites: string[];   // 前置节点 id 列表
+  nodeType: 'skill' | 'passive' | 'gate';
+  domains: SkillDomain[];    // 生效战斗层
+  effects?: { type: string; value: number; description: string }[];
+  icon?: string;
+}
+
+export interface SkillTreeDef {
+  id: string;
+  name: string;
+  description: string;
+  nodes: SkillTreeNodeDef[];
+}
+```
+
+**Officer 新增字段**（`shared/types/officer.ts`）：
+- `skillTreeState?: Record<string, number>` — 技能树状态，nodeId → 当前等级（0=未解锁）
+- `skillPointsSpent?: number` — 已消耗的技能点数
+- `traitLevels?: Record<string, number>` — 特性等级状态，traitId → 当前等级
+- `traitPointsSpent?: number` — 已消耗的特性点数
+- `consortIds?: { id: number; rank: 'concubine' | 'ji' }[]` — 妾/姬列表（女性实体引用）
+
+## 二十五、关系网类型
+
+> 对应 S24 关系网系统。类型定义位于 `shared/relations.ts`。
+
+```ts
+export type RelationType = 'sworn' | 'master_disciple' | 'parent_child' | 'siblings' | 'spouse' | 'best_friend' | 'enemy' | 'lord_retainer';
+export type RelationSource = 'official' | 'romance';
+export type RelationState = 'intimate' | 'friendly' | 'neutral' | 'dislike' | 'hostile';
+
+export interface StaticRelation {
+  fromId: number;
+  toId: number;
+  type: RelationType;
+  source: RelationSource;
+  note?: string;
+}
+
+export interface OfficerRelation {
+  targetId: number;
+  targetName: string;
+  type: RelationType;
+  source: RelationSource;
+  state: RelationState;
+  affinity: number;
+}
+```
+
+**数据文件**：`server/src/data/relations.json`，首批 31 对重点关系（桃园三义、曹操-曹丕父子、诸葛亮-姜维师徒、孙策-周瑜挚友、各势力敌对关系），史源分层标注。
+
+## 二十六、天命人心类型
+
+> 对应 S26 天命人心系统。类型定义位于 `shared/mandate-popular.ts`。
+
+**Faction 新增字段**（`shared/types/faction.ts`）：
+- `mandate?: number` — 天命值 0~100，势力宏观运势
+- `popularWill?: number` — 人心值 0~100，微观人际关系聚合
+
+**纯函数**：
+- `computeMandate(faction, game) → number` — 派生天命值（统一州郡+5/郡、历史功绩+10、政治阶段加成、控制天子+20、民心≥80 每季+1）
+- `computePopularWill(faction, game) → number` — 派生人心值（忠诚均值×0.5 + 民心均值×0.3 + 关系均值×0.2）
+- `mandateLabel(mandate) → string` — 天命区间标签（天命未显/初显/渐盛/所归/在身）
+- `popularWillLabel(pw) → string` — 人心区间标签（涣散/浮动/安定/所向/成城）
+- `mandateDiplomacyModifier(mandate) → number` — 外交权重修正
+- `popularWillDesertionModifier(pw) → number` — 叛逃概率修正
+- `popularWillRecruitModifier(pw) → number` — 募兵效率修正
+
+## 二十七、城级派系与门阀类型（S27）
+
+> 对应 S27 城级派系与门阀系统。类型定义位于 `shared/city-factions.ts`；命令/月度结算在
+> `server/src/engine/factionPolitics.ts`。数字真源见 `08-data-dictionary.md` §二十一。
+
+**City 新增字段**（`shared/types/city.ts`）：
+- `cityFactions?: CityFactionEntry[]` — 城级派系列表，旧档缺省按城市 ID 派生
+- `factionPatrolStamp?: number` — 巡查时间戳（年×12+月），当月该城豁免叛乱判定
+- `pendingImpeachment?: { officerId: number, sinceStamp: number }` — 弹劾待处理（S27 深化，
+  Session 286，`shared/city-factions.ts` `PendingImpeachment`，Zod 同步，旧档兼容）
+
+**Faction 新增字段**（`shared/types/faction.ts`）：
+- `arms?: number` — 兵装库存
+- `fame?: number` — 声望 0~1000（S26 起已有，S27 起活跃增减）
+
+**CityFactionEntry**：
+```ts
+interface CityFactionEntry {
+  kind: 'aristocracy' | 'refugees' | 'merchants' | 'militia' | 'clan' | 'cult' | 'eunuchs' | 'wanderers';
+  name: string;        // 名门用郡望（颍川荀氏等），其余用通称
+  satisfaction: number; // 0~100，月度向 50 回归
+}
+```
+`CITY_FACTION_KINDS` 常量元组同时作为 Zod enum 白名单（`game-state-entity-schema.ts`）。
+
+**纯函数**（shared/city-factions.ts）：
+- `deriveCityFactions(cityId) → CityFactionEntry[]` — 试点城确定性派生（非试点为空）
+- `regressSatisfaction(entries) → entries` — 满意度向 50 回归 ±1
+- `hasUnrestMinorFaction(entries) → boolean` — 是否存在满意度 <30 的小势力
+- `merchantCommerceMultiplier(entries) → number` — 商贾 ≥70/<30 商业修正 ±15%
+- `refugeeConscriptMultiplier(entries) → number` — 流民 ≥70 征兵上限 +20%
+- `defenderMilitia(population, morale) → number` — 民兵 floor(人口×0.02×民心/100)，民心<60 为 0
+- `aristocracyDefenderMoralePenalty(entries) → number` — 世家 <30 守军士气 −15%
+- `armsCombatMultiplier(arms, troops) → number` — 兵装战力满配 +5% / 缺口过半 −10%
+- `fameJoinBonus(fame) → number` — 投奔加成 0.1/0.2/0.35（fame ≥300/≥600/≥900）
+- `pickFactionEvent(entries, rng) → FactionEventOutcome | null` — 月度派系事件（S27 深化，
+  Session 286；高池 ≥70 25%、低池核心 <30 20%，entries 顺序首个；`FactionEventOutcome`
+  含 `eventId/name/high/goldDelta?/farmDelta?/foodDelta?/troopsDelta?/moraleDelta?`）
+- `canSelfRecruit(entries) → boolean` — 豪强/宗族 ≥70 可自募
+- `selfRecruitTroopGain(population) → number` — 自募兵力 max(20, floor(人口×0.005))
+- `canImpeach(entries) → boolean` — 官宦 <30 可弹劾

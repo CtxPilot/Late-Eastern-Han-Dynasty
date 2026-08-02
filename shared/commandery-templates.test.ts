@@ -24,8 +24,8 @@ const BASE_OPTS = {
 };
 
 describe('COMMANDERY_TEMPLATES — 目录登记', () => {
-  it('南郡与颍川已登记', () => {
-    expect(getCommanderyIds().sort()).toEqual(['nanjun', 'yingchuan'].sort());
+  it('六个 190 年郡国模板已登记', () => {
+    expect(getCommanderyIds().sort()).toEqual(['nanjun', 'yingchuan', 'chenliu', 'henan', 'henei', 'hongnong'].sort());
   });
 
   it('每项 bundle 均通过 Zod schema（目录是逐郡校验唯一真源）', () => {
@@ -66,11 +66,19 @@ describe('COMMANDERY_TEMPLATES — 查找助手', () => {
     expect(getCommanderyTemplate('nanjun')?.label).toBe('南郡');
     expect(getCommanderyTemplate('nope')).toBeUndefined();
     expect(getCommanderyTemplateByTemplateId('yingchuan-190')?.id).toBe('yingchuan');
+    expect(getCommanderyTemplateByTemplateId('chenliu-190')?.id).toBe('chenliu');
+    expect(getCommanderyTemplateByTemplateId('henan-190')?.id).toBe('henan');
+    expect(getCommanderyTemplateByTemplateId('henei-190')?.id).toBe('henei');
+    expect(getCommanderyTemplateByTemplateId('hongnong-190')?.id).toBe('hongnong');
     expect(getCommanderyTemplateByTemplateId('nope-190')).toBeUndefined();
   });
 
   it('getCommanderyLabel / getCommanderyLabelByTemplateId 命中与缺失', () => {
     expect(getCommanderyLabel('yingchuan')).toBe('颍川郡');
+    expect(getCommanderyLabel('chenliu')).toBe('陈留郡');
+    expect(getCommanderyLabel('henan')).toBe('河南尹');
+    expect(getCommanderyLabel('henei')).toBe('河内郡');
+    expect(getCommanderyLabel('hongnong')).toBe('弘农郡');
     expect(getCommanderyLabel('nope')).toBeUndefined();
     expect(getCommanderyLabelByTemplateId('nanjun-190')).toBe('南郡');
     expect(getCommanderyLabelByTemplateId('nope-190')).toBeUndefined();

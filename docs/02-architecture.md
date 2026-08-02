@@ -258,7 +258,7 @@ Late-Eastern-Han-Dynasty/
     ├── 09-roadmap.md                # 路线图
     ├── 10-progress.md               # 开发进度
     ├── 11-context-management.md     # 上下文管理
-    ├── 12-system-map.md             # 22 大系统
+    ├── 12-system-map.md             # 23 大系统
     ├── 13-three-kingdoms-chronicle.md # 三国编年史
     └── 14-officer-stats-reference.md # 武将五维参考
 ```
@@ -528,7 +528,7 @@ server/src/data/loader.ts
 | `AdminOfficePanel` | `client/src/components/layout/AdminOfficePanel.tsx` | 行政总署三段式重组 | S20-W4 |
 | `DuelStage` | `client/src/components/battle/DuelStage.tsx` | 单挑 Konva 演出层（混合范式） | S21-W9 |
 | `MeleeStage` | `client/src/components/battle/MeleeStage.tsx` | 白刃战横版 Konva 方阵 | S21-W8 |
-| `Soldier` | `client/src/battle/soldier.ts` | 白刃战小兵粒子类（移植用户 demo） | S21-W8 |
+| `Soldier` | `client/src/battle/soldier.ts` | 白刃战小兵粒子类（依据本项目原创规格实现） | S21-W8 |
 | `HeroCharacter` | `client/src/battle/heroCharacter.ts` | HeroCharacter extends Soldier 特殊造型 | S21-W8 |
 | `frameCount` | `client/src/battle/frameCount.ts` | 模块级共享帧计数 | S20-W3 |
 | `meleeBackground` | `client/src/battle/meleeBackground.ts` | 白刃战视差背景 PCG | S20-W3 |
@@ -538,14 +538,17 @@ server/src/data/loader.ts
 | `naturalRiver` | `shared/pcg/naturalRiver.ts` | PCG 自然河流纯函数 | S20-W3 |
 | `terrainTiles` | `shared/pcg/terrainTiles.ts` | PCG 战术树/山/水纹绘制 | S20-W3 |
 | `strategemVisuals` | `shared/pcg/strategemVisuals.ts` | PCG 计谋视觉（火烟/水环/伏兵雾） | S20-W3 |
+| `formationCore` | `shared/formation-core.ts` | 阵型共享解析器（合法性/贡献/部署/解释纯函数，✅ Session 289） | S10-FM / FM-P2 |
 | `factionInner` | `client/src/lib/factionInner.ts` | 派系判定纯函数（tags 派生） | S20-W4 |
 
-### 新增数据字段（规划，实装时同步 08 真源）
+### 新增数据字段（含已实装项，实装时同步 08 真源）
 
 | 字段 | 类型 | 位置 | 说明 |
 |------|------|------|------|
 | `OfficerStatic.appearance` | `SpecialAppearance?` | `shared/types/officer.ts` + officers.json | 武将特殊造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm） |
 | `BattleState.activeStrategem` | `'none'\|'fire'\|'water'\|'ambush'?` | `shared/types/battle.ts` | 计谋三级联动视觉驱动字段 |
+| `Formation.meleePercent` | `{atk,def,mobility}?` | `shared/types/formation.ts` + formations.json | 标准模式白刃百分比修正（✅ Session 290，meleeRound 单一内容源） |
+| `MeleeState.commandCache` | `Record<string,{round,result}>?` | `shared/types/battlefield.ts` + `shared/game-state-battle-schema.ts` | 白刃战动作级幂等缓存（✅ Session 290） |
 | `gameStore.floatingDelta` | `{gold,food,reason}[]` | `client/src/stores/gameStore.ts` | 财政飘字 delta（前端算，非服务端字段） |
 
 ### 场景栈扩展（已批准，P2 实装）
@@ -577,4 +580,10 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.8 | 最后更新: 2026-07-30 | Session 233 S20 命令坞实装状态同步*
+*文档版本: v2.9 | 最后更新: 2026-08-01 | Session 267 系统清单口径更新为 23 大系统*
+## Session 277：六角战旗纯核心分层
+
+S10 战旗新增三层纯核心：`tactical-grid` 只负责坐标/A*/障碍，`melee-engagement` 只负责
+1~2格武器与朝向，`tactical-system` 负责阶段/事件/撤销/配置/规则策略。服务端编排层必须
+重新校验客户端预览，React/Konva 不持有权威战斗规则。完整依赖方向、扩展协议与流程见
+`27-tactical-wargame-system.md`。

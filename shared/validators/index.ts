@@ -147,17 +147,47 @@ export const CityStaticSchema = z.object({
 
 export const CitiesFileSchema = z.array(CityStaticSchema);
 
-export const FormationTemplateSchema = z.object({
-  id: z.number().int().min(0).max(17),
+const FormationLevelSchema = z.object({
+  level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]),
+  attack: z.number(),
+  defense: z.number(),
+  mobility: z.number(),
+  range: z.number(),
+  specialEffects: z.array(z.string()).optional(),
+});
+
+const FormationUltimateSchema = z.object({
+  attackBonus: z.number(),
+  defenseBonus: z.number(),
+  mobilityBonus: z.number(),
+  rangeBonus: z.number(),
+  effect: z.string(),
+  proficiencyRequired: z.number().int().min(0),
+});
+
+const FormationPrerequisiteSchema = z.object({
+  formationId: z.number().int().min(0).max(26),
+  requiredLevel: z.number().int().min(1).max(5),
+});
+
+const SquadPositionSchema = z.enum(['vanguard', 'center', 'left', 'right', 'rearguard']);
+
+const HexOffsetSchema = z.object({ q: z.number().int(), r: z.number().int() });
+
+const FormationDeploymentSchema = z.object({
+  slots: z.record(SquadPositionSchema, HexOffsetSchema),
+  fallbackOrder: z.array(SquadPositionSchema),
+  symmetry: z.enum(['symmetric', 'left_weighted', 'right_weighted']),
+});
+
+export const FormationSchema = z.object({
+  id: z.number().int().min(0).max(26),
   name: z.string().min(1),
   description: z.string(),
   historicalSource: z.string(),
-  modifiers: z.object({
-    attack: z.number(),
-    defense: z.number(),
-    mobility: z.number(),
-    range: z.number(),
-  }),
+  family: z.enum(['land', 'water']),
+  tiers: z.array(FormationLevelSchema).min(1),
+  ultimate: FormationUltimateSchema,
   effects: z.array(
     z.object({
       name: z.string(),
@@ -173,9 +203,18 @@ export const FormationTemplateSchema = z.object({
   bestUnits: z.array(UnitTypeSchema),
   restrictedUnits: z.array(UnitTypeSchema),
   terrainModifiers: z.record(TerrainTypeSchema, z.number()),
+  prerequisites: z.array(FormationPrerequisiteSchema).optional(),
+  specialUnlock: z
+    .object({
+      minIntelligence: z.number().int().min(1).max(100).optional(),
+      minNavalProficiency: UnitProficiencySchema.optional(),
+      allowOnlyUnitTypes: z.array(UnitTypeSchema).optional(),
+    })
+    .optional(),
+  deployment: FormationDeploymentSchema.optional(),
 });
 
-export const FormationsFileSchema = z.array(FormationTemplateSchema);
+export const FormationsFileSchema = z.array(FormationSchema);
 
 const CombatEffectTypeSchema = z.enum([
   'knockback',

@@ -12,12 +12,15 @@ import {
   withSyncedPopulation,
   meritEffects,
   meritLevelFor,
+  deriveCityFactions,
+  refugeeConscriptMultiplier,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
   type GameState,
 } from '@leh/shared';
 import { grantMeritTo } from './meritGrant.js';
+import { FAME_RELIEF, grantFame, ARMS_CONSCRIPT_PER_HUNDRED, ARMS_TRAIN_COST } from './factionPolitics.js';
 
 export type DevelopKind = DevelopmentProjectKind;
 
@@ -193,12 +196,22 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
     ).developBonus;
     if (developBonus > 0) gain = Math.floor(conf.gain * (1 + developBonus));
   }
+  // S27 开发满意度联动：农业完成→世家+3、商业完成→商贾+3（固定值不耗 RNG，docs/08 §十七）
+  const factionKind = project.kind === 'farm' ? 'aristocracy' : project.kind === 'commerce' ? 'merchants' : null;
+  const cityFactions = factionKind
+    ? (city.cityFactions ?? deriveCityFactions(city.id)).map((entry) =>
+        entry.kind === factionKind
+          ? { ...entry, satisfaction: Math.min(100, entry.satisfaction + 3) }
+          : entry,
+      )
+    : city.cityFactions;
   return {
     city: {
       ...city,
       gold: city.gold - installment,
       stats: { ...city.stats, [conf.stat]: Math.min(999, city.stats[conf.stat] + gain) },
       activeDevelopment: undefined,
+      ...(cityFactions ? { cityFactions } : {}),
     },
     note: `${city.name}${conf.label}持续开发完成，${conf.label}+${gain}`,
   };
@@ -216,7 +229,11 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   if (city.food < foodCost) throw new Error('粮食不足');
 
   const d = ensureDemographics(city);
-  const maxMen = maxConscriptable(d);
+  let maxMen = maxConscriptable(d);
+  // S27 流民满意度 ≥70 → 征兵上限 +20%（docs/08 §十七）
+  const entries = city.cityFactions ?? deriveCityFactions(cityId);
+  const refugeeMod = 1 + refugeeConscriptMultiplier(entries);
+  maxMen = Math.floor(maxMen * refugeeMod);
   if (maxMen < 50) throw new Error('成年男丁不足（需保留劳作人口）');
 
   const troopsGain = 300 + Math.floor(rng() * 151);
@@ -226,6 +243,9 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const total = Math.min(want, maxMen);
 
   const nextDemo = { ...d, adultMale: d.adultMale - total };
+  // S27 兵装消耗：每征 100 兵消耗 1 件（docs/08 §十七）；流民满意度 −3
+  const armsCost = Math.floor(total / 100) * ARMS_CONSCRIPT_PER_HUNDRED;
+  const faction = state.factions[state.playerFactionId];
   const base: City = {
     ...city,
     gold: city.gold - goldCost,
@@ -237,19 +257,37 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
       ...city.stats,
       morale: Math.max(0, (city.stats.morale ?? 70) - 2),
     },
+    cityFactions: entries.map((entry) =>
+      entry.kind === 'refugees'
+        ? { ...entry, satisfaction: Math.max(0, entry.satisfaction - 3) }
+        : entry,
+    ),
   };
   const nextCity = withSyncedPopulation(base, nextDemo);
 
-  return pushLog(
+  let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_CONSCRIPT),
     'conscript',
-    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮）`,
+    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮${armsCost > 0 ? `，兵装−${armsCost}` : ''}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
+  if (faction && armsCost > 0) {
+    after = {
+      ...after,
+      factions: {
+        ...after.factions,
+        [state.playerFactionId]: {
+          ...faction,
+          arms: Math.max(0, (faction.arms ?? 0) - armsCost),
+        },
+      },
+    };
+  }
+  return after;
 }
 
 /**
- * 施米：耗粮，提民心（morale）
+ * 施米：耗粮，提民心（morale）；S27 联动流民满意度 +3、势力声望 +2（固定值不耗 RNG）
  */
 export function relief(state: GameState, cityId: number, rng: () => number): GameState {
   const city = requirePlayerCity(state, cityId);
@@ -259,23 +297,29 @@ export function relief(state: GameState, cityId: number, rng: () => number): Gam
   const gain = Math.floor((8 + Math.floor(rng() * 5)) * (1 + civilEfficiencyOf(state, city)));
   const prev = city.stats.morale ?? 70;
   const nextMorale = Math.min(100, prev + gain);
+  const entries = (city.cityFactions ?? deriveCityFactions(cityId)).map((entry) =>
+    entry.kind === 'refugees'
+      ? { ...entry, satisfaction: Math.min(100, entry.satisfaction + 3) }
+      : entry,
+  );
 
   const nextCity: City = {
     ...city,
     food: city.food - foodCost,
     stats: { ...city.stats, morale: nextMorale },
+    cityFactions: entries,
   };
 
   return pushLog(
-    grantMeritTo(state, nextCity.officers[0], MERIT_RELIEF),
+    grantFame(grantMeritTo(state, nextCity.officers[0], MERIT_RELIEF), state.playerFactionId, FAME_RELIEF),
     'relief',
-    `${city.name} 施米安民 民心+${gain}（${prev}→${nextMorale}，耗粮${foodCost}）`,
+    `${city.name} 施米安民 民心+${gain}（${prev}→${nextMorale}，耗粮${foodCost}；声望+${FAME_RELIEF}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
 }
 
 /**
- * 训练：耗粮，略提士气（troopsMorale）
+ * 训练：耗粮，略提士气（troopsMorale）；S27 兵装 −5/次（docs/08 §十七）
  */
 export function trainTroops(state: GameState, cityId: number, rng: () => number): GameState {
   const city = requirePlayerCity(state, cityId);
@@ -293,10 +337,24 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
     troopsMorale: next,
   };
 
-  return pushLog(
+  const faction = state.factions[state.playerFactionId];
+  let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_TRAIN),
     'train',
-    `${city.name} 训练部队 士气+${gain}（${prev}→${next}，耗粮${foodCost}）`,
+    `${city.name} 训练部队 士气+${gain}（${prev}→${next}，耗粮${foodCost}；兵装−${ARMS_TRAIN_COST}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
+  if (faction && (faction.arms ?? 0) > 0) {
+    after = {
+      ...after,
+      factions: {
+        ...after.factions,
+        [state.playerFactionId]: {
+          ...faction,
+          arms: Math.max(0, (faction.arms ?? 0) - ARMS_TRAIN_COST),
+        },
+      },
+    };
+  }
+  return after;
 }

@@ -11,14 +11,19 @@
     "validators/**/*",
     "data/**/*",
     "demographics.ts",
+    "family-policy.ts",
     "ceiling.ts",
     "city-roads.ts",
+    "city-factions.ts",
     "intel.ts",
     "mask-state.ts",
     "positions.ts",
     "labels.ts",
     "stamina.ts",
     "stamina-cost.ts",
+    "tactical-grid.ts",
+    "tactical-system.ts",
+    "melee-engagement.ts",
     "merit.ts",
     "items.ts",
     "negotiation.ts",
@@ -44,6 +49,9 @@
     "game-state-plot-schema.ts",
     "game-state-full-schema.ts",
     "index.ts",
-    "campaign-utils.ts"
+    "campaign-utils.ts",
+    "relations.ts",
+    "mandate-popular.ts",
+    "formation-core.ts"
   ]
 }

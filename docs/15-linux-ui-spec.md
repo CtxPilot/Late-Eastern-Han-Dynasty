@@ -30,16 +30,16 @@ Linux 极简发行版（Arch 最小化安装）可能完全无 CJK 字体 → Ca
 |---|---|---|---|
 | `HanDynastySerif` (normal) | 思源宋体 SC Regular (NotoSerifCJKsc-Regular.woff2) | SIL OFL 1.1 | 正文 / 古籍史料 |
 | `HanDynastySerif` (bold) | 思源宋体 SC Bold (NotoSerifCJKsc-Bold.woff2) | SIL OFL 1.1 | 标题加粗 |
-| `HanDynastySeal` | 马善政体 Ma Shan Zheng (MuYaoSoftBrush.woff2) | SIL OFL 1.1 | 官印 / 篆书 / 大标题 |
+| `HanDynastySeal` | 马善政体 Ma Shan Zheng (MaShanZheng-Regular.woff2) | SIL OFL 1.1 | 官印 / 篆书 / 大标题 |
 
 > **说明**：原计划用沐瑶软笔体，未找到可确认授权的稳定 woff2 源，改用 Google Fonts 的
 > `马善政体 (Ma Shan Zheng)`——SIL OFL 1.1 授权明确、CDN 稳定、毛笔楷书风格接近印章/篆书需求。
-> 文件名保留 `MuYaoSoftBrush.woff2` 以维持工程内部别名稳定。
+> 工程文件名使用 `MaShanZheng-Regular.woff2`；`HanDynastySeal` 是稳定的内部别名。
 >
 > **3 个 woff2 文件已实际下载就位**（共 ~7MB，`.gitignore` 排除不入 git）：
 > - `NotoSerifCJKsc-Regular.woff2` (~2.0MB，经 @fontsource/noto-serif-sc 镜像下载)
 > - `NotoSerifCJKsc-Bold.woff2` (~2.1MB，经 @fontsource/noto-serif-sc 镜像下载)
-> - `MuYaoSoftBrush.woff2` (~2.7MB，经 @fontsource/ma-shan-zheng 镜像下载)
+> - `MaShanZheng-Regular.woff2`（经 @fontsource/ma-shan-zheng 镜像下载）
 
 ### 1.2 Canvas 渲染屏障（Font Loading Barrier）
 

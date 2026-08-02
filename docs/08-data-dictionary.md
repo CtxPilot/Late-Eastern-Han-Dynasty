@@ -113,11 +113,24 @@
 
 ## 二、formations.json — 阵型数据
 
-**0-A：7条**（6 基础陆阵 + 1 补录冲阵 id 16，因 10 名骑兵系武将 `formationMastery` 已引用 id 16 但 formations.json 漏录，Session 178 补全）· **0-B 全量：27条**（18 陆阵 + 9 水阵）。详见 `05-combat-system.md §4`。
+**0-A：7条**（6 基础陆阵 + 1 特殊冲阵 id 16）· **0-B 全量：27条**（18 陆阵 + 9 水阵）。数量不得因本轮计划改变，详见 `05-combat-system.md §4`。
+
+> **Session 288 FM-P1 已迁移（Gate M/N1/D 通过）**：0-A 目标目录已落地为
+> `[0,1,2,3,4,6,16]`（方/圆/锥/雁/鹤/锋六基础 + 特殊冲阵 16）；普通标准模式卡只含
+> `[0,1,2,3,4,6]`。冲阵在 FM-P0～P5 仅作静态/精通兼容，不进入三模式候选；未来启用须
+> 另行批准。`formations.json` 与 223 将精通数据实际目录已收敛为 `[0,1,2,3,4,6,16]`；
+> 圆阵(1)/雁行(3) 已补齐，7 偃月/8 长蛇移出可选集（稳定 ID 保留不复用、不改号，0-B 仍用）。
+> 迁移前实际目录为 `[0,2,4,6,7,8,16]`；146 将逐人迁移表见
+> `docs/officer-formation-mastery-migration.csv`（已审核通过并落地）。详见
+> `29-formation-integration-development-plan.md` Gate M/N1。
 
 ### 字段说明
 
-> Session 120 重写：新增 tiers/ultimate/family/prerequisites 字段。
+> **Session 288~291 FM-P1~P3a 已实装**：`formations.json` 已迁移到长期目标 `Formation` 结构
+> （`family`/`tiers`/`ultimate`/`prerequisites?`/`deployment?`），不再使用 legacy `modifiers`。
+> 数值以 `05 §4.5.1` Lv1 点值为准校勘；`deployment` 为 Gate D 五部部署草稿；
+> **唯一运行量纲 = `tiers[0]` 点值 + `effects` 暴击链，三模式同源消费；`meleePercent` 过渡字段
+> 已在 Session 291 退役（并发起等价性单点换算，见 §二运行量纲说明）。**
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -128,13 +141,24 @@
 | family | 'land' \| 'water' | 体系：陆阵/水阵 |
 | tiers | FormationLevelData[] | Lv1~Lv5 每级属性（attack/defense/mobility/range/specialEffects） |
 | ultimate | FormationUltimate | 极效果（attackBonus/defenseBonus/effect/proficiencyRequired） |
-| effects | FormationEffect[] | 特殊效果 |
+| effects | FormationEffect[] | 特殊效果（含暴击/反击/连击贡献，crit.ts 单一内容源） |
 | allowedUnits | UnitType[] | 可用兵种 |
 | bestUnits | UnitType[] | 最佳兵种（额外+10%） |
 | restrictedUnits | UnitType[] | 禁用兵种 |
 | terrainModifiers | Record | 地形适应修正 |
 | prerequisites | FormationPrerequisite[]? | 科技树前置条件（非基础阵型必填） |
 | specialUnlock | object? | 特殊解锁条件（智力/水军适性/兵种限定） |
+| deployment | FormationDeployment? | Gate D 五部部署草稿（slots/fallbackOrder/symmetry） |
+
+### 运行量纲说明（FM-P3a Session 291）
+
+- 唯一运行量纲 = `tiers[0]`（0-A 固定 Lv1）`attack/defense/mobility/range` 点值 + `effects`
+  暴击链（`crit_rate`/`counter_rate`/`counter_coeff`/`chain_rate`）——三模式（自动/标准/六角）同源消费。
+- 标准模式 `runMeleeRound` 由等价性单点换算消费点值（`MELEE_ATK_GAIN=0.1`、`MELEE_DEF_GAIN=0.1`、
+  `MELEE_MOB_GAIN=0.5`、`MELEE_MOB_BASE=1.0`，见 `server/src/engine/meleeRound.ts`），正面增量再按
+  组织度执行档缩放（负修正原值保留）。**Session 290 的 `meleePercent` 过渡字段已退役**
+  （类型/JSON/generate-0a-data 全部移除），不再存在第二套阵型数值表。
+- 冲阵 16 保留静态/精通（不含标准候选），无 `tiers[0]` 消费。
 
 ### 示例（方阵·新版结构）
 
@@ -470,7 +494,7 @@
     "navy": "C",
     "siege": "B"
   },
-  "formationMastery": [0, 2, 4, 6, 7, 8, 16],
+  "formationMastery": [2, 6, 16],
   "skills": [
     { "skillId": "fire", "level": 1 },
     { "skillId": "gallop", "level": 3 },
@@ -952,10 +976,10 @@ Phase 4 — 特殊人物审核
 
 | 数据集 | 记录语义 | P0 | P6 / 0-B 目标 |
 |------|------|:--:|:--:|
-| `commanderies` | 郡国定义、治所、年代有效期、模板版本与来源 | **南郡、颍川 190 切片共 2 条已完成** | **105 个郡国** |
-| `counties` | 属县/侯国/前沿节点、郡内相对位置、置信度与来源 | **南郡 16 + 颍川 17 = 33 个战场县节点已完成** | 随 105 郡国逐批补齐；全量县总数待后续校勘，不预设 |
-| `historicalRoutes` | 郡内道路、水路、关渡及季节性 | **南郡 11 + 颍川 29 = 40 条已完成** | 随模板覆盖扩展 |
-| `battlefieldLandmarks` | 河湖、山口、渡桥、港口等地貌锚点 | **南郡 10 + 颍川 4 = 14 条已完成** | 随模板覆盖扩展 |
+| `commanderies` | 郡国定义、治所、年代有效期、模板版本与来源 | **南郡/颍川/陈留/河南尹/河内郡/弘农郡 190 切片共 6 条** | **105 个郡国** |
+| `counties` | 属县/侯国/前沿节点、郡内相对位置、置信度与来源 | **16 + 17 + 17 + 21 + 18 + 9 = 98 个战场县节点** | 随 105 郡国逐批补齐；全量县总数待后续校勘，不预设 |
+| `historicalRoutes` | 郡内道路、水路、关渡及季节性 | **11 + 29 + 19 + 40 + 35 + 17 = 151 条** | 随模板覆盖扩展 |
+| `battlefieldLandmarks` | 河湖、山口、渡桥、港口等地貌锚点 | **10 + 4 + 10 + 10 + 10 + 11 = 55 条** | 随模板覆盖扩展 |
 
 **105 口径说明（数字真源）**：`cities.json` 的 0-B 目标仍为 **105 个行政大地图治所节点**，每个节点代表一个郡国；独立战场的 `CommanderyDefinition` 全量目标亦为与这些治所一一关联的 **105 个郡国模板**。这不是“105 城 + 另加 105 郡国”，也不代表县级节点只有 105 个。县级总记录数须在 P0/P4 校勘与 Schema 验证后另行登记，当前不得估填。
 
@@ -969,16 +993,27 @@ Phase 4 — 特殊人物审核
 
 **BF-P5 Seed 层（Session 253 新增）**：为简化录入流程，在 Zod schema（校验层）之上新增
 **seed 层**（`shared/data/historical-geography/seed-schema.ts`），提供人友好的
-`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器。南郡与颍川
-均已迁移至 seed 生成，`pnpm verify-historical-geography` 逐郡校验。
+`CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器。南郡、颍川、陈留、河南尹、河内郡与弘农郡
+均已由 seed 生成，`pnpm verify-historical-geography` 逐郡校验。陈留 190 切片为 17 县、
+19 条路径、10 个地标：行政县表以《后汉书·郡国三》为 A 级真源；汳水、睢水、济水/
+濮渠三轴据《水经注》录为 approximate 水路；其余县际道路明确标 inferred，不与水经
+明载线路混同。河南尹 190 切片为 21 县、40 路、10 地标；县表据
+《后汉书·郡国一》，洛/伊/谷水轴据《水经注》，荥阳东口据《三国志·武帝纪》；
+道路自动派生项统一标 `inferred`。河内郡 190 切片为 18 县、35 路、10 地标；县表据
+《后汉书·郡国一》，河阳—孟津据《水经注》卷五，共—朝歌淇水轴据卷九，王匡参与
+关东联军据《三国志·武帝纪》；0-A 30 城没有河内治所，运行时暂借洛阳大地图节点承载
+进场与守方归属，不表示河内并入河南尹。
+弘农郡 190 切片为 9 县、17 路、11 地标；县表据《后汉书·郡国一》，河水—崤函—
+桃林/华阴与洛伊上游参考《水经注》。190 年潼关建置年代有争议，模板不把后世潼关关城
+列为确证节点；0-A 暂借长安大地图节点代理进场与守方归属，不表示弘农并入京兆尹。
 
 **BF-P5 郡国模板目录（Session 255 新增，Session 258 扩展）**：`shared/commandery-templates.ts`
 为运行时郡国战场模板的唯一登记入口（bundle/templateId/entryNodeIds/
 **defenderEntryNodeIds**/instancePrefix/warPrefix/UI 标签）。orchestrator
 `enterNanjunBattlefield`、路由校验、`verify-historical-geography` 逐郡校验与前端标签
-均从此目录驱动；新增第三郡只需登记一条目录条目，并保证 `entryNodeIds` 引用模板内
+均从此目录驱动；新增郡国只需登记一条目录条目，并保证 `entryNodeIds` 引用模板内
 县节点即可。`defenderEntryNodeIds` 为**守方 Army 部署节点**（R6 守方 Army 入郡域
-场景，Session 258）：南郡=州陵/夷道、颍川=舞阳/父城，守方势力驻留郡治城市的现役
+场景，Session 258）：南郡=州陵/夷道、颍川=舞阳/父城、陈留=外黄/雍丘、河南尹=成皋/偃师、河内郡=野王/怀、弘农郡=陕/弘农，守方势力驻留郡治城市的现役
 Army 入场时部署到这些守方纵深前沿县（缺省回退郡治 seat）。南郡兼容包装
 `generateNanjunBattlefield` 亦从目录取数。
 
@@ -988,7 +1023,7 @@ Army 入场时部署到这些守方纵深前沿县（缺省回退郡治 seat）�
 road 的有效期取两端县有效期的交集。运行时按年份取模板用纯函数
 `resolveBundleForYear(bundle, year)`（`year-overrides.ts`）：过滤出该年有效子集并
 重新跑 Zod 校验，请求年份无有效郡国定义或过滤后引用断裂时**抛错**（无静默回退）。
-南郡/颍川 190 切片仍为单一年代，多年代能力由测试夹具演示。
+六个 190 切片均为单一年代，多年代能力由测试夹具演示。
 
 | Seed 类型 | 核心字段 | 说明 |
 |------|------|------|
@@ -997,7 +1032,8 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 | `LandmarkSeed` | id/name/kind/geometry/tacticalTags?/confidence?/sourceRefs? | 实体嵌入式地标（消灭旧「seed只放id、实体另写」半自动模式）；`geometry` 支持 point/polyline/polygon；支持 `validFromYear`/`validToYear` |
 | `RouteSeed` | id/from/to/kind?/movementCost?/seasonal?/confidence?/sourceRefs? | 显式 per-edge 路径覆盖；端点可引用县 id 或地标 id；缺省回退 road/1/all/inferred；支持 `validFromYear`/`validToYear` |
 
-数字真源：南郡 16 县 + 10 地标 + 11 路线；颍川 17 县 + 4 地标 + 29 路线；合计 33 县、14 地标、40 路线。
+数字真源：南郡 16/11/10、颍川 17/29/4、陈留 17/19/10、河南尹 21/40/10、
+河内郡 18/35/10、弘农郡 9/17/11（县/路线/地标）；合计 **98 县、151 路线、55 地标**。
 
 ---
 
@@ -1052,3 +1088,194 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 Zod 校验。
 
 **规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。设计真源 `docs/26-hegemony-court-design.md`，实装分期 HC-P0/P1/P2。
+
+---
+
+## 十六、relations.json — 关系网数据（S24）
+
+**31条记录**（首批），对应 0-A 武将重点关系。
+
+### 字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `fromId` | number | 关系发起方武将 ID |
+| `toId` | number | 关系接收方武将 ID |
+| `type` | string | 关系类型：`sworn`(义兄弟) / `master_disciple`(师徒) / `parent_child`(父子) / `siblings`(兄弟) / `spouse`(夫妻) / `best_friend`(挚友) / `enemy`(宿敌) / `lord_retainer`(君臣) |
+| `source` | string | 史源：`official`(正史) / `romance`(演义) |
+| `note` | string? | 史源注 |
+
+### 规模说明
+
+首批 31 对，覆盖桃园三义、曹操-曹丕父子、诸葛亮-姜维师徒、孙策-周瑜挚友、各势力敌对关系。0-B 扩展至全量武将。
+
+## 十七、skill-trees.json — 技能树定义（S25）
+
+**5棵子树**，覆盖 0-A 30 通用技能。
+
+### 子树列表
+
+| 子树 ID | 名称 | 技能数 | 生效层 |
+|---------|------|:------:|--------|
+| `strategy` | 战略计策 | 8 | 六角战场 |
+| `tactics` | 战术计策 | 3 | 六角战场 + 白刃战 |
+| `duel` | 单挑技能 | 3 | 单挑 |
+| `command` | 统军 | 10 | 六角战场 + 白刃战 + 战役 |
+| `civil` | 内政 | 8 | 内政 |
+
+### 规模说明
+
+0-A 30 技能映射完毕。0-B 扩展至 69 通用技能 + 80 专属技能（专属不树化）。
+
+## 十八、Officer 运行时新增字段（S24/S25）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `skillTreeState` | `Record<string, number>?` | 技能树状态，nodeId → 当前等级（0=未解锁） |
+| `skillPointsSpent` | `number?` | 已消耗的技能点数 |
+| `traitLevels` | `Record<string, number>?` | 特性等级状态，traitId → 当前等级 |
+| `traitPointsSpent` | `number?` | 已消耗的特性点数 |
+| `consortIds` | `{id, rank}[]?` | 妾/姬列表（女性实体引用），rank=`concubine`(妾) / `ji`(姬) |
+
+## 十九、Faction 运行时新增字段（S26）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `mandate` | `number?` | 天命值 0~100，势力宏观运势 |
+| `popularWill` | `number?` | 人心值 0~100，微观人际关系聚合 |
+
+## 二十、系统 ID 真源
+
+| 系统 | ID | 成熟度 | 说明 |
+|------|:--:|:------:|------|
+| 关系网 | S24 | D | 社交图谱 + 亲和度引擎，Session 284 首轮实装 |
+| 技能树 | S25 | D | 技能树化 + 点数加点，Session 284 首轮实装 |
+| 天命人心 | S26 | D | 双轨系统，Session 284 首轮实装 |
+| 城级派系与门阀 | S27 | **M/D** | 城级派系 + 声望兵装，Session 285 首轮实装（试点 6 城，效果全接入） |
+
+## 二十一、城级派系与门阀数字真源（S27）
+
+> **数字真源**：本节为 S27 唯一数字真源。实现位置 `shared/city-factions.ts`（派生/效果纯函数）+
+> `server/src/engine/factionPolitics.ts`（命令+月度结算）。改数值必须先改本节，再同步代码。
+
+### 一、城级派系
+
+| 项 | 数值 | 说明 |
+|----|------|------|
+| 核心派系 | 世家 / 流民 / 商贾 | 试点城市必有 |
+| 随机池 | 豪强 / 宗族 / 教团 / 官宦 / 游侠 | 每城 0~2 个（45%/35%/20%） |
+| 初始满意度 | 核心 40~60；小势力 45~65（特例：官宦 15~45、豪强/宗族 55~75）；名门 60~75 | 按城市 ID 哈希派生（确定性） |
+| 试点城市 | 洛阳(1) / 长安(2) / 阳翟(3) / 汝南(4) / 邺(5) / 陈留(7) | 0-A 边界，其余城市为空 |
+| 名门特例 | 阳翟 → 颍川荀氏·颍川陈氏；汝南 → 汝南袁氏 | 仅出现在郡望城市 |
+| 满意度回归 | 每月向 50 移动 ±1 | 月度结算 |
+
+### 二、命令效果
+
+| 命令 | 费用 | 执行人门槛 | 效果 | 功绩 | RNG 消费 |
+|------|------|-----------|------|:----:|----------|
+| 开垦 | 50 金 | 智谋型（智≥60） | 流民 +8~15；世家 −10~20；farm +20~40 | +4 | 3 次 |
+| 巡查 | 30 金 | 武官（武≥60） | 商贾 +5~10；各随机池小势力 −8~15；当月该城免叛乱 | +4 | 1+小势力数 次 |
+| 兵装采购 | 10 金/件 | —（势力级） | 兵装库存 +N | — | 0 |
+
+### 三、效果换算
+
+| 效果 | 数值 | 说明 |
+|------|------|------|
+| 世家 <30 | 守军士气 −15% | 防守己方城市（无守方 Army 时） |
+| 商贾 ≥70 / <30 | 商业产出 ×(1+15%) / ×(1−15%) | 接入 turn.ts 产金公式 |
+| 小势力 <30 | 每月 10% 叛乱 | 兵力 −10%、民心 −5、不满小势力满意度重置 50；巡查当月豁免 |
+| 流民 ≥70 | 征兵兵源 +20% | 征兵上限（maxMen）提升 |
+| 名门（世家） | 征兵每 100 兵 −1 兵装 | 名门支援军备，不足则照常征兵 |
+| 民兵 | floor(人口 ×0.02 × 民心/100) | 民心 ≥60 时加入守军（战斗/战役/攻防通用） |
+| 训练 | 每次 −5 兵装 | 兵装不足则照常训练 |
+| 农业完成 | 世家 +3 | 开发完成联动 |
+| 商业完成 | 商贾 +3 | 开发完成联动 |
+| 施米 | 流民 +3、声望 +2 | 与 S03 既有施米叠加 |
+
+### 四、声望（fame）
+
+| 项 | 数值 | 说明 |
+|----|------|------|
+| 范围 | 0~1000 | 初始 100 |
+| 破城 | +20 | 武力夺取 |
+| 占城（投降） | +10 | siege_surrender |
+| 灭国 | +50 | 势力灭亡时 |
+| 结盟 | +10 | 结盟成功 |
+| 施米 | +2 | 每次施米 |
+| 每季衰减 | −2 | 季度首月（1/4/7/10）全势力 |
+| 武将投奔加成 | 基数 ×1.1/×1.2/×1.35 | fame ≥300/≥600/≥900，接 S11 登用 |
+| 叙事化标签 | 5 档文言 | `fameLabel`：≥900 威震天下 / ≥600 名扬海内 / ≥300 声名鹊起 / ≥100 崭露头角 / <100 名不见经传（Session 287，纯展示） |
+
+### 五、兵装（arms）
+
+| 项 | 数值 | 说明 |
+|----|------|------|
+| 采购 | 10 金/件 | 势力级命令 |
+| 首都月产 | +8/月 | 每座城防 ≥150 的城再 +2/月 |
+| 战斗战力 | 满配(arms×100≥兵力) +5%；缺口过半(且已有库存) −10% | 六角/战役通用 |
+| 战斗消耗 | 损失按 0.5× 兵力损失折算 | battle.ts 结算 |
+| 训练消耗 | 每次 −5 | 见上表 |
+
+## 二十二、S27 运行时新增字段
+
+| 字段 | 载体 | 类型 | 说明 |
+|------|------|------|------|
+| `cityFactions` | City | `CityFactionEntry[]?` | 城级派系列表（kind/name/satisfaction），旧档缺省按城市 ID 派生 |
+| `factionPatrolStamp` | City | `number?` | 巡查时间戳（年×12+月），当月免叛乱判定 |
+| `arms` | Faction | `number?` | 兵装库存 |
+| `fame` | Faction | `number?` | 声望 0~1000（S26 起已存在，S27 起活跃使用） |
+| `CityFactionEntry` | Zod | enum CITY_FACTION_KINDS | 8 类派系 kind 白名单 |
+
+## 二十三、派系事件数字真源（S27 深化，Session 286）
+
+> 每城每月至多 1 事件：先高满意度池（任一 ≥70，25%），未中则低满意度池
+> （核心三派系任一 <30，20%）；事件在叛乱判定之后执行。命中派系取 entries 顺序首个。
+> 实现：`shared/city-factions.ts` `pickFactionEvent` + `server/src/engine/factionPolitics.ts`。
+
+| 派系 | 条件 | 事件名 | 效果 | RNG |
+|------|------|--------|------|-----|
+| 世家 | ≥70 | 名门献金 | 城金 +30~60 | 1 次 |
+| 流民 | ≥70 | 流民垦荒 | farm +10~25 | 1 次 |
+| 商贾 | ≥70 | 货路繁盛 | 城金 +40~80 | 1 次 |
+| 豪强 | ≥70 | 豪强应募 | 兵力 +3%（至少 +20） | 0 次（确定性公式） |
+| 宗族 | ≥70 | 宗族输粮 | 城粮 +50~100 | 1 次 |
+| 教团 | ≥70 | 教团祈福 | 民心 +2 | 0 次 |
+| 官宦 | ≥70 | 官宦引荐 | 城金 +20~40 | 1 次 |
+| 游侠 | ≥70 | 游侠缉盗 | 守军士气 +2 | 0 次 |
+| 世家 | <30 | 世家抽逃 | 城金 −20~40 | 1 次 |
+| 流民 | <30 | 流民流亡 | farm −5~15 | 1 次 |
+| 商贾 | <30 | 商贾撤资 | 城金 −30~60 | 1 次 |
+| — | — | 触发判定 | — | 高池 1 次（未中另 1 次低池判定，最大 2 次）+ 数值 1 次 |
+
+## 二十四、弹劾数字真源（S27 深化，Session 286）
+
+> 触发：`eunuchs` 满意度 <30（Session 286 实测校准：官宦初始区间降至 15~45，
+> 部分城开局即有触发可能）且城有城主（`city.officers[0]` 在职非君主）→ 每月 20%
+> （仅当该月叛乱判定未触发时）；写 `City.pendingImpeachment`。
+> 处理：`appease` 耗金 100 → 官宦 +20；`remove` → 城主解职（S12 appointOfficer）忠诚 −10、
+> 官宦 +10。逾期 2 月：官宦 −5、城主忠诚 −2。
+> 实现：`server/src/engine/factionPolitics.ts` + POST `/civil/impeach`。
+
+| 项 | 数值 |
+|----|------|
+| 弹劾触发概率 | 每月 20% |
+| 安抚花费 | 100 金 |
+| 安抚效果 | 官宦满意度 +20 |
+| 撤换效果 | 城主解职、忠诚 −10、官宦满意度 +10 |
+| 逾期时限 | 2 个月 |
+| 逾期效果 | 官宦满意度 −5、城主忠诚 −2 |
+
+## 二十五、自募武装数字真源（S27 深化，Session 286）
+
+> 触发：`militia`/`clan` 满意度 ≥60（Session 286 实测校准：初始区间 55~75 + 回归锚 50，
+> 原 ≥70 阈值自然游玩不可达）→ 每月 15%；兵力 +max(20, floor(人口×0.005))、
+> 兵装 −3、该派系满意度 −5。与当月高满意度事件互斥（事件层先判定）。
+> 实现：`shared/city-factions.ts` `canSelfRecruit` + `server/src/engine/factionPolitics.ts`。
+
+| 项 | 数值 |
+|----|------|
+| 自募触发概率 | 每月 15% |
+| 触发满意度阈值 | 豪强/宗族 ≥60 |
+| 兵力增量 | max(20, floor(人口 ×0.005)) |
+| 兵装消耗 | 3 件 |
+| 满意度回吐 | 该派系 −5 |

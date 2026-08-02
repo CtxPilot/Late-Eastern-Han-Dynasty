@@ -11,11 +11,12 @@
  *    - 理想一致(benevolence) → 40% 投奔
  *    - 血亲在目标势力 → 50% 召唤
  * 2. 家眷随男跟随：男将加入势力时
- *    - 正妻(husbandId)与随侍(giftedToOfficerId)自动跟随入势力 + 迁移到男将所在城
+ *    - 正妻(husbandId)自动跟随入势力 + 迁移到男将所在城
  * 3. 主将易主：占城后败方武将释放 → 其家眷若有则跟随流落
  */
 import {
   OfficerStatus,
+  fameJoinBonus,
   playerCitiesAdjacentTo,
   type GameState,
   type Officer,
@@ -37,11 +38,11 @@ function pushLog(
   };
 }
 
-/** 找武将的随迁家眷：正妻或明确系于该将的随侍。 */
+/** 找武将的随迁家眷：仅正式配偶。 */
 function findDependentsOfOfficer(state: GameState, officerId: number) {
   const females = Object.values(state.females);
   return females.filter(
-    (f) => f.husbandId === officerId || f.giftedToOfficerId === officerId,
+    (f) => f.husbandId === officerId,
   );
 }
 
@@ -88,7 +89,7 @@ export function joinFaction(
     };
   }
 
-  // 家眷跟随：正妻与随侍自动入势力 + 迁移
+  // 家眷跟随：正妻自动入势力 + 迁移
   let females = { ...state.females };
   const dependents = findDependentsOfOfficer({ ...state, officers }, officerId);
   for (const dependent of dependents) {
@@ -187,6 +188,9 @@ function checkFollowConditions(
     const ruler = state.officers[fac.rulerId];
     if (!ruler) continue;
 
+    // S27 声望投奔加成：≥300/600/900 → +10%/+20%/+35%（docs/08 §十七）
+    const joinBonus = 1 + fameJoinBonus(fac.fame ?? 0);
+
     // Must have a city
     const facCities = Object.values(state.cities).filter((c) => c.ruler === fac.id);
     if (facCities.length === 0) continue;
@@ -202,7 +206,7 @@ function checkFollowConditions(
     // Rule 1: 相性差 < 20 → 20%
     const compatDiff = Math.abs(myCompat - ruler.hidden.compatibility);
     if (compatDiff < 20) {
-      const chance = 0.20;
+      const chance = 0.20 * joinBonus;
       if (rng() < chance) {
         return { factionId: fac.id, cityId: adj[0], reason: `相性相近(差${compatDiff})` };
       }
@@ -210,7 +214,7 @@ function checkFollowConditions(
 
     // Rule 2: 理想一致 (benevolence) → 40%
     if (myIdeal === ruler.hidden.ideal && myIdeal === 'benevolence') {
-      if (rng() < 0.40) {
+      if (rng() < 0.40 * joinBonus) {
         return { factionId: fac.id, cityId: adj[0], reason: `理想一致(${myIdeal})` };
       }
     }
@@ -222,7 +226,7 @@ function checkFollowConditions(
       return kin && kin.faction === fac.id;
     });
     if (kinInFac) {
-      if (rng() < 0.50) {
+      if (rng() < 0.50 * joinBonus) {
         return { factionId: fac.id, cityId: adj[0], reason: `血亲召唤` };
       }
     }
@@ -255,10 +259,10 @@ export function tickFollowCheck(state: GameState, rng: () => number): GameState 
         `${officer.name} 因${result.reason}投奔${facName}`,
       );
 
-      // 记录正妻/随侍随迁
+      // 记录正妻随迁
       const afterFemales = s.females;
       const dependents = Object.values(beforeFemales).filter(
-        (f) => f.husbandId === officer.id || f.giftedToOfficerId === officer.id,
+        (f) => f.husbandId === officer.id,
       );
       for (const dependent of dependents) {
         const after = afterFemales[dependent.id];
@@ -267,8 +271,7 @@ export function tickFollowCheck(state: GameState, rng: () => number): GameState 
           && after.factionId === result.factionId
           && dependent.factionId !== result.factionId
         ) {
-          const role = dependent.husbandId === officer.id ? '正妻' : '随侍';
-          messages.push(`${dependent.name} 以${role}身份随迁入府`);
+          messages.push(`${dependent.name} 以正妻身份随迁入府`);
         }
       }
     }

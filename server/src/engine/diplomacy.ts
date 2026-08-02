@@ -15,6 +15,7 @@ import {
 } from '@leh/shared';
 import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
+import { FAME_ALLIANCE, grantFame } from './factionPolitics.js';
 
 // 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
 const MERIT_ALLIANCE = 10;
@@ -24,8 +25,8 @@ export const TRIBUTE_FAVOR = 15;
 export const ALLIANCE_GOLD = 500;
 export const ALLIANCE_MIN_FAVOR = 30;
 /** 宫廷牵线：每点人脉友好增量 */
-export const GIFT_BEAUTY_FAVOR_PER = 12;
-export const GIFT_BEAUTY_MAX = 5;
+export const COURT_NETWORK_FAVOR_PER = 12;
+export const COURT_NETWORK_TRANSFER_MAX = 5;
 
 function pushLog(
   state: GameState,
@@ -130,7 +131,7 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
  * 累计 plantableBeauty，可供「点化女间谍」
  * HC-P0-5：发起方霸府/王/帝阶段友好增量按 hegemonyFavorMultiplier 放大。
  */
-export function giftBeautyStock(
+export function transferCourtNetwork(
   state: GameState,
   targetFactionId: number,
   amount = 1,
@@ -142,12 +143,12 @@ export function giftBeautyStock(
 
   const n = Math.floor(amount);
   if (!Number.isFinite(n) || n < 1) throw new Error('牵线数量须为正整数');
-  if (n > GIFT_BEAUTY_MAX) throw new Error(`单次最多牵线 ${GIFT_BEAUTY_MAX}`);
+  if (n > COURT_NETWORK_TRANSFER_MAX) throw new Error(`单次最多牵线 ${COURT_NETWORK_TRANSFER_MAX}`);
 
   const self = state.factions[fid];
   if (!self) throw new Error('本势力不存在');
   const stock = self.courtNetwork ?? 0;
-  if (stock < n) throw new Error(`美女资源不足（需 ${n}，当前 ${stock}）`);
+  if (stock < n) throw new Error(`宫廷人脉不足（需 ${n}，当前 ${stock}）`);
 
   const link = findDiplomacy(state.diplomacy, fid, targetFactionId);
   const rel = (link?.relation as string) ?? DipRelation.NEUTRAL;
@@ -156,7 +157,7 @@ export function giftBeautyStock(
   }
 
   const multiplier = hegemonyFavorMultiplier(self.politicalStage);
-  const favorGain = Math.round(GIFT_BEAUTY_FAVOR_PER * n * multiplier);
+  const favorGain = Math.round(COURT_NETWORK_FAVOR_PER * n * multiplier);
   const prevFav = link?.favorability ?? 0;
   const nextFav = Math.min(100, prevFav + favorGain);
   let relation = rel;
@@ -241,10 +242,12 @@ export function formAlliance(
 
   const name = state.factions[targetFactionId].name;
   const withMerit = envoy ? grantMeritTo(state, envoy.id, MERIT_ALLIANCE) : state;
+  // S27 声望：结盟 +10（docs/08 §十七）
+  const withFame = grantFame(withMerit, state.playerFactionId, FAME_ALLIANCE);
   const withCities = pushLog(
-    withMerit,
+    withFame,
     'alliance',
-    `${envoy.name} 与 ${name} 缔结盟约（成功率 ${Math.round(breakdown.chance)}%，耗金 ${ALLIANCE_GOLD}；盟友城池情报部分共享）`,
+    `${envoy.name} 与 ${name} 缔结盟约（成功率 ${Math.round(breakdown.chance)}%，耗金 ${ALLIANCE_GOLD}；盟友城池情报部分共享；声望+${FAME_ALLIANCE}）`,
     { cities, diplomacy },
   );
   return syncFactionResources(withCities);

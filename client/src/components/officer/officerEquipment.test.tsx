@@ -76,8 +76,6 @@ function mkOfficer(partial: Partial<Officer>): Officer {
   } as Officer;
 }
 
-/** 注入 store 的 itemsCatalog（useGameStore 直接读 store 默认值；测试经 renderToStaticMarkup 无 store 提供者，
- *  这里依赖 store 初始值——默认 itemsCatalog=[]，装备 tab 显示"宝物目录加载中"。 */
 describe('OfficerDetail 装备 tab（S13 Session 266）', () => {
   it('装备 tab 按钮存在（SSR 默认 stats tab，内容经交互切换）', () => {
     const html = renderToStaticMarkup(

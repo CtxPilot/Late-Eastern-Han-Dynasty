@@ -4,7 +4,7 @@
 
 | 素材 | 来源 | 许可证 |
 |:----|:-----|:------|
-| `client/public/geo-basemap.png` | [Natural Earth](https://www.naturalearthdata.com) 50m 地理数据，通过 `scripts/render-geo-basemap.py` 渲染 | **公有领域**（Natural Earth 明确声明无版权限制） |
+| `client/public/geo-basemap.png` | [Natural Earth](https://www.naturalearthdata.com) 50m 地理数据，通过 `scripts/render-geo-basemap.py` 渲染；输出 SHA-256 `6a1870cfb2ec530b7447b7f1d6138a05ab639424b3ac547f9c2e4e190fa7bce1` | **公有领域**（Natural Earth 明确声明无版权限制） |
 
 ## 古籍/历史文献引用
 
@@ -37,11 +37,18 @@
 
 ## 开发截图
 
-`docs/screenshots/` 仅保留 Natural Earth 底图时代的自产 UI/调试图（约 18 张）。早期未知来源插画底图的校准截图、Google Maps 校准截图均已移出仓库与 git 历史。
+`docs/screenshots/` 当前保留 126 张自产 UI/调试图；连同 Natural Earth 底图共 127 个已跟踪 PNG。
+2026-08-01 已从当前树删除四张无完整权属链武将 PNG 及八张明确嵌入它们的截图。
+新增截图必须通过 `pnpm verify-compliance`，并确认其嵌入资产均登记于本文件或
+`ASSET_MANIFEST.md`。早期 Google Maps 校准截图不进入当前树。
+`session-*` 子目录属于带日期的历史审计证据，可能展示已经退役的旧术语；不得作为当前
+玩法说明或营销截图。README 只引用完成最新内容复核的截图。
 
 ## 第三方代码库
 
-本项目使用以下开源库，遵循各自许可证（均为 MIT/BSD/Apache-2.0，与项目 MIT 协议兼容）：
+本项目使用的依赖包含 MIT、ISC、Apache-2.0、BSD-3-Clause 与 CC-BY-4.0 条目。
+完整逐包清单以锁文件执行 `pnpm licenses list --json` 生成，发布通知见
+`THIRD_PARTY_NOTICES.md`；禁止继续用“全部都是 MIT”式概括替代构建制品核验。
 
 | 库 | 许可证 |
 |:---|:------|
@@ -59,9 +66,16 @@
 | cors | MIT |
 | TypeScript | Apache-2.0 |
 
+传递构建数据 `caniuse-lite` 当前报告为 CC-BY-4.0；分发时须保留适当署名、许可链接及修改说明。
+ISC/BSD 依赖的版权和免责声明由发布时生成的完整第三方通知保留。
+
 ## Assets
 
 All third-party assets will be documented here.
+
+当前没有获准进入发布树的商业游戏截图、ROM、提取资源或栅格武将立绘。
+
+忽略目录中的 4 张来源不明头像已于 2026-08-01 移至工作区外权限受限的合规隔离区，不属于项目资产或发行内容。
 
 Before using external assets, verify:
 - license compatibility

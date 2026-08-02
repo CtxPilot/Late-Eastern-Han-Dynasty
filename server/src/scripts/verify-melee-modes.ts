@@ -81,5 +81,15 @@ try { meleeSelectMode('auto'); } catch { changeRejected = true; }
 check('选定模式后拒绝改选', changeRejected && getGame().activeMelee?.entryMode === 'standard'
   && getGame().campaignArmies.some((army) => army.id === ids.attackerId));
 
+prepareEncounter();
+meleeSelectMode('standard');
+const changed = meleeRound('change_formation', FormationType.WEDGE).melee;
+check('标准白刃战可消耗1点切换基础阵型', changed.attackerFormation === FormationType.WEDGE && changed.tacticalPoints === 4);
+let invalidFormationRejected = false;
+prepareEncounter();
+meleeSelectMode('standard');
+try { meleeRound('change_formation', FormationType.EIGHT_TRIGRAMS); } catch { invalidFormationRejected = true; }
+check('0-A 拒绝切换未开放阵型', invalidFormationRejected);
+
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
 if (failed > 0) process.exit(1);

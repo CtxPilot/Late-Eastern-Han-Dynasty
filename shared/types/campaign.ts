@@ -195,6 +195,19 @@ export interface GrandStrategist {
   strategyScore: number;
 }
 
+/** 总军师当前态势对军政系统提供的统一修正。 */
+export interface StrategyModifiers {
+  moraleBonus: number;
+  foodCostMult: number;
+  siegeEfficiency: number;
+  buildSpeed: number;
+  stratagemChanceBonus: number;
+  civilEffectBonus: number;
+  conscriptCostReduction: number;
+  warDeclineReduction: number;
+  diplomacyBonus: number;
+}
+
 // ====== 势力特点（04 §36 · 03 §20.6） ======
 
 export interface FactionTraitModifier {

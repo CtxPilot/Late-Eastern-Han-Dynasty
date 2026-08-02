@@ -54,7 +54,7 @@ check('称王后阶段与头衔即时刷新', king.factions[king.playerFactionId
   && king.factions[king.playerFactionId].politicalTitle === `${chosen.name}王`);
 check('称王后皇权正确扣除 80', king.factions[king.playerFactionId].imperialAuthority === 0);
 check('king 结盟发起方修正为 +8', hegemonyAllianceModifier(king.factions[king.playerFactionId].politicalStage) === 8);
-check('king 进贡/献美发起方倍率为 ×1.2', hegemonyFavorMultiplier(king.factions[king.playerFactionId].politicalStage) === 1.2);
+check('king 进贡/宫廷牵线发起方倍率为 ×1.2', hegemonyFavorMultiplier(king.factions[king.playerFactionId].politicalStage) === 1.2);
 
 const officeValues = Object.values(HegemonyPosition);
 check('官制总览契约包含霸府三职与王国六职', officeValues.filter((value) => value !== HegemonyPosition.NONE).length === 9);

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import {
   MaritalStatus,
   OfficerStatus,
+  isAdultForMarriage,
   panelStatsDisplay,
   type GameState,
 } from '@leh/shared';
@@ -52,9 +53,6 @@ export function buildFamilyOverview(
     const wives = females.filter(
       (female) => female.husbandId === officer.id || officer.wifeId === female.id,
     );
-    const attendants = females.filter(
-      (female) => female.giftedToOfficerId === officer.id && female.husbandId !== officer.id,
-    );
     const children = enabledChildren
       .filter((child) =>
         child.fatherId === officer.id || wives.some((wife) => wife.id === child.motherId))
@@ -77,16 +75,10 @@ export function buildFamilyOverview(
       loyalty: officer.loyalty,
       war: panelStatsDisplay(officer.stats).war,
       wives: wives.map((wife) => ({ id: wife.id, name: wife.name, canCommand: wife.canCommand })),
-      attendants: attendants.map((attendant) => ({
-        id: attendant.id,
-        name: attendant.name,
-        canCommand: attendant.canCommand,
-      })),
       children,
     };
   }).filter(
     (branch) => branch.wives.length > 0
-      || branch.attendants.length > 0
       || branch.children.length > 0,
   );
   const ruler = game.officers[game.factions[factionId]?.rulerId];
@@ -117,10 +109,13 @@ export function buildFamilyOverview(
       };
     });
   const marriageFemales = females.filter(
-    (female) => isMarriageAvailable(female.status) && female.husbandId == null,
+    (female) => isMarriageAvailable(female.status)
+      && female.husbandId == null
+      && isAdultForMarriage(female.birthYear, game.currentYear),
   );
   const marriageOfficers = officers.filter(
-    (officer) => officer.wifeId == null || !game.females[officer.wifeId],
+    (officer) => (officer.wifeId == null || !game.females[officer.wifeId])
+      && isAdultForMarriage(officer.birthYear, game.currentYear),
   );
 
   return {
@@ -132,8 +127,6 @@ export function buildFamilyOverview(
         ? '祝融特例·可出战'
         : female.husbandId != null
           ? `正室·${game.officers[female.husbandId]?.name ?? female.husbandId}`
-          : female.giftedToOfficerId != null
-            ? `随侍·${game.officers[female.giftedToOfficerId]?.name ?? female.giftedToOfficerId}`
           : String(female.status) === 'widow'
             ? '寡居'
             : '待字',
@@ -156,11 +149,9 @@ export function validateMarriageDraft(game: GameState | null, draft: MarriageDra
   const officer = game.officers[draft.officerId];
   if (!female || female.factionId !== game.playerFactionId) return '女角已不属于本势力。';
   if (!isMarriageAvailable(female.status) || female.husbandId != null) return '女角婚姻状态已经变化。';
-  if (
-    female.giftedToOfficerId != null
-    && female.giftedToOfficerId !== draft.officerId
-  ) return '女角已随侍其他武将，不能直接婚配。';
+  if (!isAdultForMarriage(female.birthYear, game.currentYear)) return '女角未达到玩家婚配成年门槛（18岁）。';
   if (!officer || officer.faction !== game.playerFactionId) return '目标武将已不属于本势力。';
+  if (!isAdultForMarriage(officer.birthYear, game.currentYear)) return '目标武将未达到玩家婚配成年门槛（18岁）。';
   if (officer.wifeId != null && game.females[officer.wifeId]) return '目标武将已有正妻。';
   const canPay = Object.values(game.cities).some(
     (city) => city.ruler === game.playerFactionId && city.gold >= 300,
@@ -272,11 +263,6 @@ export function FamilyOverviewDrawer() {
                   └ 妻 {wife.name}{wife.canCommand ? '（可出战）' : ''}
                 </p>
               ))}
-              {branch.attendants.map((attendant) => (
-                <p key={attendant.id} className="pl-2 text-[10px] text-stone-400">
-                  └ 随侍 {attendant.name}{attendant.canCommand ? '（可出战）' : ''}
-                </p>
-              ))}
               {branch.children.map((child) => (
                 <p key={child.childId} className="pl-2 text-[10px] text-stone-500">
                   └ 子 {child.childName} · {child.appearYear}登场 · {child.status}
@@ -385,11 +371,11 @@ export function FamilyOverviewDrawer() {
         } × ${
           marriageDraft.officerId != null ? game.officers[marriageDraft.officerId]?.name ?? '未选武将' : '未选武将'
         }`}
-        summary="婚配会立即建立正妻关系；若女角原为该武将随侍，将转为正妻。当前版本不能撤销。"
+        summary="婚配只适用于双方均已满18岁的未婚或寡居角色，并会立即建立正妻关系。当前版本不能撤销。"
         items={[
           { label: '立即消耗', value: '金 300', tone: 'warning' },
           { label: '主要收益', value: '武将忠诚 +18，建立姻亲支' },
-          { label: '随迁语义', value: '正妻与随侍均随所系武将迁移' },
+          { label: '随迁语义', value: '正妻随配偶迁移' },
           { label: '可否撤销', value: '当前版本不可撤销', tone: 'warning' },
         ]}
         loading={loading}
@@ -416,7 +402,7 @@ export function FamilyOverviewDrawer() {
           { label: '检定对象', value: `${overview.freeOfficers.length} 名在野武将` },
           { label: '已知条件', value: '相性、仁德理想、血亲及邻接' },
           { label: '随机性', value: '消费权威 RNG，取消终审不消费', tone: 'warning' },
-          { label: '家眷迁移', value: '投奔者的正妻与随侍一并随迁' },
+          { label: '家眷迁移', value: '投奔者的正妻一并随迁' },
         ]}
         loading={loading}
         error={error}

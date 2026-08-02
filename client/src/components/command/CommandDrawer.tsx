@@ -44,7 +44,7 @@ export function CommandDrawer({
       id={id}
       aria-labelledby={`${id}-title`}
       data-testid="command-drawer"
-      className="absolute bottom-0 left-0 z-20 flex h-[min(42rem,calc(100vh-8rem))] w-[min(26.25rem,calc(100vw-2rem))] flex-col border border-amber-900/60 bg-stone-950/95 shadow-2xl motion-safe:animate-[command-drawer-in_180ms_ease-out]"
+      className="absolute bottom-full left-0 z-20 flex h-[min(42rem,calc(100vh-8rem))] w-[min(26.25rem,calc(100vw-2rem))] flex-col border border-amber-900/60 bg-stone-950/95 shadow-2xl motion-safe:animate-[command-drawer-in_180ms_ease-out]"
     >
       <header className="flex items-center justify-between gap-3 border-b border-stone-800 px-4 py-3">
         <div>

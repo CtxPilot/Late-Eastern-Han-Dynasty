@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult } from '@leh/shared';
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
@@ -34,6 +34,7 @@ interface Store {
   mapFocusCityId: number | null;
   selectedUnitId: string | null;
   moveRange: string[];
+  movePath: PathResult | null;
   error: string | null;
   clearError: () => void;
   loading: boolean;
@@ -62,12 +63,15 @@ interface Store {
   conscript: (cityId?: number) => Promise<void>;
   relief: (cityId?: number) => Promise<void>;
   trainTroops: (cityId?: number) => Promise<void>;
+  reclaimLand: (cityId?: number, officerId?: number) => Promise<void>;
+  patrolCity: (cityId?: number, officerId?: number) => Promise<void>;
+  buyArms: (amount?: number) => Promise<void>;
+  resolveImpeachment: (cityId?: number, action?: 'appease' | 'remove') => Promise<void>;
   seekBeauty: (cityId?: number) => Promise<void>;
   /** @deprecated use seekBeauty */
   searchBeauty: () => Promise<void>;
   rewardBeautyStock: (officerId: number, amount?: number) => Promise<void>;
   marry: (femaleId: number, officerId: number) => Promise<void>;
-  giftBeauty: (femaleId: number, officerId: number) => Promise<void>;
   searchTalent: (cityId: number) => Promise<void>;
   recruitOfficer: (officerId: number, recruiterId?: number) => Promise<void>;
   equipItem: (officerId: number, itemId: number) => Promise<void>;
@@ -105,7 +109,7 @@ interface Store {
   establishHegemony: () => Promise<void>;
   proclaimKing: (kingdomName: string) => Promise<void>;
   falseDecreeWar: (targetFactionId: number) => Promise<void>;
-  giftBeautyDip: (targetFactionId: number, amount?: number) => Promise<void>;
+  transferCourtNetwork: (targetFactionId: number, amount?: number) => Promise<void>;
   plantFemale: (targetFactionId: number) => Promise<void>;
   formAlliance: (targetFactionId: number) => Promise<void>;
   startBattle: () => Promise<void>;
@@ -113,6 +117,8 @@ interface Store {
   marchOnCity: (fromCityId?: number, troopCount?: number) => Promise<void>;
   selectUnit: (id: string | null) => Promise<void>;
   moveTo: (q: number, r: number) => Promise<void>;
+  previewMoveTo: (q: number, r: number) => Promise<void>;
+  undoBattleAction: () => Promise<void>;
   attack: (defenderId: string) => Promise<void>;
   castFire: (targetId: string) => Promise<void>;
   castAbility: (targetId: string, abilityId: string) => Promise<void>;
@@ -150,8 +156,8 @@ interface Store {
   /** 发起白刃战 */
   meleeStart: (attackerArmyId: string, defenderArmyId: string) => Promise<void>;
   meleeSelectMode: (mode: import('@leh/shared').MeleeEntryMode) => Promise<void>;
-  /** 执行白刃战回合 */
-  meleeRound: (actionType: string) => Promise<void>;
+  /** 执行白刃战回合（FM-P3 动作级幂等：自动生成 commandId + 当前回合作为 expectedRound） */
+  meleeRound: (actionType: string, targetFormation?: import('@leh/shared').FormationType) => Promise<void>;
   /** 刷新战术点 */
   meleeRefresh: () => Promise<void>;
   /** 退出白刃战 */
@@ -159,11 +165,11 @@ interface Store {
 
   // 总军师系统
   grandStrategist: import('@leh/shared').GrandStrategist | null;
-  grandStrategistModifiers: any;
+  grandStrategistModifiers: import('@leh/shared').StrategyModifiers | null;
   grandStrategistLoading: boolean;
   grandStrategistAppoint: (officerId: number) => Promise<void>;
   grandStrategistDismiss: () => Promise<void>;
-  grandStrategistSwitch: (strategy: string) => Promise<void>;
+  grandStrategistSwitch: (strategy: import('@leh/shared').StrategyType) => Promise<void>;
   grandStrategistRefresh: () => Promise<void>;
 }
 
@@ -177,6 +183,7 @@ export const useGameStore = create<Store>((set, get) => ({
   mapFocusCityId: null,
   selectedUnitId: null,
   moveRange: [],
+  movePath: null,
   error: null,
   loading: false,
   lastActionOk: null,
@@ -318,8 +325,9 @@ export const useGameStore = create<Store>((set, get) => ({
       const activeBattle = game ? await api.getActiveBattle() : null;
       const activeMelee = game && !activeBattle ? await api.getMelee() : null;
       const activeBattlefield = game && !activeBattle ? await api.getBattlefield() : null;
+      const activeBattlefieldInstance = game && !activeBattle && !activeBattlefield ? await api.getBattlefieldInstance() : null;
       const restoredStack = activeBattle
-        ? replaceStack({ scene: 'battle', battleId: activeBattle.id })
+        ? [{ scene: 'world' as const }, { scene: 'battle' as const, battleId: activeBattle.id }]
         : activeMelee
           ? [
               { scene: 'world' as const },
@@ -328,18 +336,21 @@ export const useGameStore = create<Store>((set, get) => ({
             ]
           : activeBattlefield
             ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeBattlefield.id }]
-            : game ? replaceStack({ scene: 'world' }) : [];
+            : activeBattlefieldInstance
+              ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeBattlefieldInstance.id }]
+              : game ? replaceStack({ scene: 'world' }) : [];
       set({
         game,
         battle: activeBattle,
         battlefield: activeBattlefield,
         melee: activeMelee,
+        battlefieldInstance: activeBattlefieldInstance,
         sceneStack: restoredStack,
         childrenCatalog: st.children,
         eventsCatalog: st.events,
         scenariosCatalog: st.scenarios,
         itemsCatalog: st.items,
-        screen: activeBattle ? 'battle' : activeMelee ? 'melee' : activeBattlefield ? 'battlefield' : game ? 'world' : 'scenario',
+        screen: activeBattle ? 'battle' : activeMelee ? 'melee' : activeBattlefield ? 'battlefield' : activeBattlefieldInstance ? 'battlefield' : game ? 'world' : 'scenario',
         loading: false,
       });
     } catch (e) {
@@ -462,6 +473,65 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  reclaimLand: async (cityId, officerId) => {
+    const id = cityId ?? get().selectedCityId;
+    if (id == null) {
+      set({ error: '请先选择己方城池' });
+      return;
+    }
+    set({ loading: true, error: null });
+    try {
+      const selectedOfficerId = officerId ?? get().game?.cities[id]?.officers[0];
+      if (selectedOfficerId == null) throw new Error('本城没有可指派武将');
+      const game = await api.reclaimLand(id, selectedOfficerId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '开垦完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '开垦失败'), loading: false });
+    }
+  },
+
+  patrolCity: async (cityId, officerId) => {
+    const id = cityId ?? get().selectedCityId;
+    if (id == null) {
+      set({ error: '请先选择己方城池' });
+      return;
+    }
+    set({ loading: true, error: null });
+    try {
+      const selectedOfficerId = officerId ?? get().game?.cities[id]?.officers[0];
+      if (selectedOfficerId == null) throw new Error('本城没有可指派武将');
+      const game = await api.patrolCity(id, selectedOfficerId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '巡查完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '巡查失败'), loading: false });
+    }
+  },
+
+  buyArms: async (amount) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.buyArms(amount ?? 10);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '采购完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '兵装采购失败'), loading: false });
+    }
+  },
+
+  resolveImpeachment: async (cityId, action) => {
+    const id = cityId ?? get().selectedCityId;
+    if (id == null) {
+      set({ error: '请先选择己方城池' });
+      return;
+    }
+    set({ loading: true, error: null });
+    try {
+      const game = await api.resolveImpeachment(id, action ?? 'appease');
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '弹劾已处理' });
+    } catch (e) {
+      set({ error: errMsg(e, '弹劾处理失败'), loading: false });
+    }
+  },
+
   seekBeauty: async (cityId) => {
     const id = cityId ?? get().selectedCityId;
     if (id == null) {
@@ -471,9 +541,9 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const game = await api.seekBeauty(id);
-      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '寻访完成' });
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '结交完成' });
     } catch (e) {
-      set({ error: errMsg(e, '寻访失败'), loading: false });
+      set({ error: errMsg(e, '结交失败'), loading: false });
     }
   },
 
@@ -498,16 +568,6 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '婚配完成' });
     } catch (e) {
       set({ error: errMsg(e, '婚配失败'), loading: false });
-    }
-  },
-
-  giftBeauty: async (femaleId, officerId) => {
-    set({ loading: true, error: null });
-    try {
-      const game = await api.giftBeauty(femaleId, officerId);
-      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '赏赐完成' });
-    } catch (e) {
-      set({ error: errMsg(e, '赏赐失败'), loading: false });
     }
   },
 
@@ -701,13 +761,13 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  giftBeautyDip: async (targetFactionId, amount) => {
+  transferCourtNetwork: async (targetFactionId, amount) => {
     set({ loading: true, error: null });
     try {
-      const game = await api.giftBeautyDip(targetFactionId, amount);
-      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '献美完成' });
+      const game = await api.transferCourtNetwork(targetFactionId, amount);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '宫廷牵线完成' });
     } catch (e) {
-      set({ error: errMsg(e, '献美失败'), loading: false });
+      set({ error: errMsg(e, '宫廷牵线失败'), loading: false });
     }
   },
 
@@ -768,12 +828,18 @@ export const useGameStore = create<Store>((set, get) => ({
 
   selectUnit: async (id) => {
     if (!id) {
-      set({ selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      set({ selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
       return;
     }
     const keys = await api.battleMoveRange(id);
     const abilities = await api.battleUsableAbilities(id);
-    set({ selectedUnitId: id, moveRange: keys, usableAbilities: abilities });
+    set({ selectedUnitId: id, moveRange: keys, movePath: null, usableAbilities: abilities });
+  },
+
+  previewMoveTo: async (q, r) => {
+    const unitId = get().selectedUnitId;
+    if (!unitId || !get().moveRange.includes(`${q},${r}`)) { set({ movePath: null }); return; }
+    try { set({ movePath: await api.battleMovePath(unitId, q, r) }); } catch { set({ movePath: null }); }
   },
 
   moveTo: async (q, r) => {
@@ -781,10 +847,15 @@ export const useGameStore = create<Store>((set, get) => ({
     if (!unitId) return;
     try {
       const battle = await api.battleMove(unitId, q, r);
-      set({ battle, moveRange: [] });
+      set({ battle, moveRange: [], movePath: null });
     } catch (e) {
       set({ error: errMsg(e, '移动失败') });
     }
+  },
+
+  undoBattleAction: async () => {
+    try { const battle = await api.battleUndo(); set({ battle, movePath: null, selectedUnitId: null, moveRange: [] }); }
+    catch (e) { set({ error: errMsg(e, '撤销失败') }); }
   },
 
   attack: async (defenderId) => {
@@ -1048,10 +1119,13 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
-  meleeRound: async (actionType) => {
+  meleeRound: async (actionType, targetFormation) => {
     set({ loading: true, error: null });
     try {
-      const { game, result, melee } = await api.meleeRound(actionType);
+      // FM-P3 动作级幂等：每次点击生成唯一 commandId，并用当前回合作为 expectedRound
+      const currentRound = get().melee?.round ?? 0;
+      const commandId = `r${currentRound}-${actionType}-${targetFormation ?? ''}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const { game, result, melee } = await api.meleeRound(actionType, targetFormation, commandId, currentRound);
       set({ game, melee, meleeLastResult: result, loading: false });
     } catch (e) {
       set({ error: errMsg(e, '白刃战回合失败'), loading: false });

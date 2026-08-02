@@ -20,6 +20,10 @@
 import {
   OfficerStatus,
   areCitiesRoadAdjacent,
+  aristocracyDefenderMoralePenalty,
+  applyOrganizationExecution,
+  armsCombatMultiplier,
+  defenderMilitia,
   formationTroopCap,
   isFriendlyOrBetter,
   isHostileOrAtWar,
@@ -27,12 +31,14 @@ import {
   meritEffects,
   meritLevelFor,
   meritStatBonus,
+  resolveFormationContribution,
   UnitType,
   type AutoBattleResult,
   type CampaignArmy,
   type CampaignFormationOptions,
   type CampaignNode,
   type CampStructure,
+  type Formation,
   type GameState,
   type Officer,
   type StructureType,
@@ -42,6 +48,7 @@ import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
 import { equipBonusFor } from './items.js';
 import { grantMeritTo } from './meritGrant.js';
+import { FAME_CAPTURE_CITY, FAME_OCCUPY_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
 import {
   MERIT_ANNIHILATE_FACTION,
   MERIT_CAPTURE_CITY,
@@ -598,6 +605,50 @@ function expLevelCoeff(xp: number): number {
   return 0.8 + (lv - 1) * 0.083; // Lv1→0.8, Lv7→1.3
 }
 
+// ====== 自动战斗阵型贡献（FM-P3 剩余 · 唯一量纲 = tiers[0] 点值） ======
+
+/**
+ * 自动战斗阵型目录注入（服务端启动时 `setAutoFormationCatalog(staticData.formations)`）。
+ * null（纯单测/脚本未注入）回退中性（0，无阵型修正），不携带第二套数值表。
+ */
+let AUTO_FORMATION_CATALOG: readonly Formation[] | null = null;
+
+/** 注入自动战斗阵型目录（null 恢复中性回退）。 */
+export function setAutoFormationCatalog(catalog: readonly Formation[] | null): void {
+  AUTO_FORMATION_CATALOG = catalog;
+}
+
+/** 自动战斗等价性系数（与标准模式同源：1 点 ≈ 10% 战力；计划 §5.2 同源消费、不叠加） */
+const AUTO_FORM_ATK_GAIN = 0.1;
+const AUTO_FORM_DEF_GAIN = 0.1;
+/** 五部侧击 +10%（05 §13.3）：己方有左/右翼 Squad 视为对敌侧翼施加侧击 */
+const SQUAD_FLANK_BONUS = 0.1;
+
+/** 五部侧击：左/右翼位存在 → 自动战斗 +10%（0-A 简化：不判敌展开结构，攻防对称）。 */
+export function squadFlankBonus(squads: CampaignArmy['squads']): number {
+  return squads.some((s) => s.position === 'left' || s.position === 'right') ? SQUAD_FLANK_BONUS : 0;
+}
+
+/**
+ * 自动战斗阵型战力修正：攻/防点值（正面增量按组织度执行档缩放，负修正原值保留）合并为加性
+ * 战力修正 + 五部侧击。mobility/range 点值不参与自动战力（自动无走向/射程概念）。
+ * 组织度执行档与全局 `orgCoeff`（战备状态）分项解释，不重复乘算（计划 §4.4）。
+ * 导出供战报复算/客户端解释复算与验证脚本。
+ */
+export function autoFormationMods(
+  formationId: number,
+  organization: number,
+  squads: CampaignArmy['squads'],
+): number {
+  const catalog = AUTO_FORMATION_CATALOG;
+  if (!catalog) return 0;
+  const contrib = resolveFormationContribution(catalog, formationId, organization);
+  const exec = contrib.organizationExecution;
+  const atkEff = applyOrganizationExecution(contrib.attack, exec);
+  const defEff = applyOrganizationExecution(contrib.defense, exec);
+  return atkEff * AUTO_FORM_ATK_GAIN + defEff * AUTO_FORM_DEF_GAIN + squadFlankBonus(squads);
+}
+
 interface ArmyPowerInput {
   troops: number;
   unitType: UnitType;
@@ -608,12 +659,16 @@ interface ArmyPowerInput {
   organization: number;
   experience: number;
   fatigue: number;
+  /** 阵型战力修正（FM-P3 剩余：攻防点值 + 五部侧击；缺省 0 等价无阵型加成） */
+  formationMod?: number;
   /** 攻城器械加成 0~0.5 */
   siegeEquipBonus?: number;
   /** 城墙惩罚 0~0.4 */
   wallPenalty?: number;
   /** 计谋修正乘数（默认 1） */
   stratagemMod?: number;
+  /** S27 兵装战力修正乘数（默认 1）：武装充足 +5%、缺口过半 −10%（docs/08 §十七） */
+  armsMod?: number;
 }
 
 /** §17.2 战力公式 */
@@ -631,7 +686,7 @@ function computePower(inp: ArmyPowerInput): number {
     ? inp.subCommanders.reduce((s, o) => s + effStat(o, 'leadership') * 0.3, 0) / inp.subCommanders.length
     : 0;
   const advisorMod = inp.advisor ? effStat(inp.advisor, 'intelligence') / 200 : 0;
-  const formationMod = 0; // 0-A 简化：阵型修正由阵型联动后置
+  const formationMod = inp.formationMod ?? 0; // FM-P3：攻防点值 + 五部侧击（性加项，不重复乘 orgCoeff）
   const commandMod = mainMod + subMod + advisorMod + formationMod;
 
   const moraleCoeff = 0.4 + (inp.morale / 100) * 0.6;
@@ -642,9 +697,10 @@ function computePower(inp: ArmyPowerInput): number {
 
   const envMod = 1.0; // 0-A 简化：平原/晴
   const stratagemMod = inp.stratagemMod ?? 1.0;
+  const armsMod = inp.armsMod ?? 1.0;
   const siegeMod = 1.0 + (inp.siegeEquipBonus ?? 0) - (inp.wallPenalty ?? 0);
 
-  return base * commandMod * statusMod * envMod * stratagemMod * siegeMod;
+  return base * commandMod * statusMod * envMod * stratagemMod * siegeMod * armsMod;
 }
 
 interface BattleSide {
@@ -721,7 +777,11 @@ export function runAutoBattle(
     // 守城：优先本城守将
     const city = state.cities[defCity.cityId];
     defenderLabel = city?.name ?? `城${defCity.cityId}`;
-    defTroopsInitial = defCity.garrison;
+    // S27 民兵：民心 ≥60 时 floor(人口 × 0.02 × 民心/100)（docs/08 §十七）
+    const militia = city
+      ? defenderMilitia(city.population, city.stats.morale ?? 70)
+      : 0;
+    defTroopsInitial = defCity.garrison + militia;
     wallPenalty = Math.min(0.4, defCity.wall / 1000 * 0.4) || 0.3;
     // 攻城器械：从 Army structures 取已完工最高级
     const built = atkArmy.structures.filter((s) => s.buildProgress >= 1);
@@ -757,13 +817,48 @@ export function runAutoBattle(
     };
   }
 
+  // S27 兵装战力修正：武装充足（arms×100≥兵力）+5%、缺口过半且已有库存 −10%
+  const atkArmsMod = 1 + armsCombatMultiplier(
+    state.factions[atkArmy.factionId]?.arms ?? 0,
+    atkArmy.troops,
+  );
+  let defArmsMod = 1;
+  if (defArmy) {
+    defArmsMod = 1 + armsCombatMultiplier(
+      state.factions[defArmy.factionId]?.arms ?? 0,
+      defArmy.troops,
+    );
+  } else if (defCity) {
+    const city = state.cities[defCity.cityId];
+    if (city?.ruler != null) {
+      defArmsMod = 1 + armsCombatMultiplier(
+        state.factions[city.ruler]?.arms ?? 0,
+        defTroopsInitial,
+      );
+    }
+  }
+
   const atkSide: BattleSide = { army: atkArmy, commander: atkCmd, subCommanders: atkSubs, advisor: atkAdv, unitType: atkArmy.unitType, siegeEquipBonus, wallPenalty };
   const defSide: BattleSide = { army: defArmy ?? atkArmy, commander: defCmd, subCommanders: defSubs, advisor: defAdv, unitType: defUnitType };
+
+  // FM-P3：自动战斗阵型战力修正（每回合按当回合组织度求值；守城无 Army 时无阵型贡献，
+  // 城墙惩罚/wallPenalty 已表达守势，不虚拟守方阵型）
+  const atkFormMod = (org: number) => autoFormationMods(atkArmy.formation, org, atkArmy.squads);
+  const defFormMod = (org: number) => (defArmy
+    ? autoFormationMods(defArmy.formation, org, defArmy.squads)
+    : 0);
 
   let atkTroops = atkArmy.troops;
   let defTroops = defTroopsInitial;
   let atkMorale = atkArmy.morale;
   let defMorale = defArmy?.morale ?? (state.cities[defCity?.cityId ?? 0]?.troopsMorale ?? 70);
+  // S27 世家暗通：守方城市世家满意度 <30 → 守军士气 −15%（docs/08 §十七）
+  if (!defArmy && defCity) {
+    const city = state.cities[defCity.cityId];
+    if (city) {
+      defMorale = Math.max(0, defMorale * (1 - aristocracyDefenderMoralePenalty(city.cityFactions ?? [])));
+    }
+  }
   let atkOrg = atkArmy.organization;
   let defOrg = defArmy?.organization ?? 70;
 
@@ -775,18 +870,18 @@ export function runAutoBattle(
   const defInitial = defTroopsInitial;
 
   // §17.3 模拟回合数
-  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue });
+  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) });
   const defPower0 = defArmy
-    ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue })
-    : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0 });
+    ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
+    : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) });
   const totalPowerDiff = Math.abs(atkPower0 - defPower0);
   const rounds = Math.min(10, 3 + Math.floor(totalPowerDiff / 1000));
 
   for (let r = 1; r <= rounds; r++) {
-    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue }) * (0.9 + rng() * 0.2);
+    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * (0.9 + rng() * 0.2);
     const defP = (defArmy
-      ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue })
-      : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0 })
+      ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
+      : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
     ) * (0.9 + rng() * 0.2);
 
     const ratio = atkP / Math.max(1, defP);
@@ -1195,8 +1290,11 @@ function applyBattleResultToState(
       let after: GameState = { ...state, cities, officers, factions, campaignArmies: [...armies, updatedArmy] };
       // 军事功绩：破城 +30（Army 主将）；若占城导致目标势力覆灭再 +50（灭国）
       after = grantMeritTo(after, army.commanderId, MERIT_CAPTURE_CITY);
+      // S27 声望：强攻破城 +20 / 开城投降占城 +10；灭国再 +50（docs/08 §十七）
+      after = grantFame(after, army.factionId, resolution.type === 'siege_surrender' ? FAME_OCCUPY_CITY : FAME_CAPTURE_CITY);
       if (prevRuler != null && factions[prevRuler] && !factions[prevRuler].isAlive) {
         after = grantMeritTo(after, army.commanderId, MERIT_ANNIHILATE_FACTION);
+        after = grantFame(after, army.factionId, FAME_ANNIHILATE_FACTION);
       }
       after = clearCityCounterOnCapture(after, targetId);
       after = lootBeautyOnCapture(after, targetId, army.factionId, rng);

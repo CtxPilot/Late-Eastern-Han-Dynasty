@@ -255,3 +255,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 CtxPilot

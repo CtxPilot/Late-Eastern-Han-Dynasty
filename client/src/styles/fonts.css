@@ -35,10 +35,10 @@
 /* 官印 / 篆书 / 大标题（马善政体 Ma Shan Zheng，SIL OFL 1.1，Google Fonts 开源）
  * 说明：原计划用沐瑶软笔体，未找到可确认授权的稳定 woff2 源，改用马善政体——
  *       SIL OFL 1.1 授权明确、CDN 稳定、毛笔楷书风格接近印章/篆书需求。
- *       文件名保留 MuYaoSoftBrush.woff2 维持工程内部别名稳定。 */
+ *       文件名使用真实字体家族名，避免来源误认。 */
 @font-face {
   font-family: 'HanDynastySeal';
-  src: url('/fonts/MuYaoSoftBrush.woff2') format('woff2');
+  src: url('/fonts/MaShanZheng-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: block;

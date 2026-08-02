@@ -136,15 +136,9 @@
 ```
 左侧面板(240px / w-60)：
   - 手风琴式折叠，默认全部收起
-  - 折叠项（按实际代码顺序）：
-    战役（战役 Army 操作）
-    谍报（招募密探 + 训练/点化女间谍 / 特工列表 / 派遣 / 反间 / 俘虏）
-     计谋（三层折叠：L1 美人计·离间·假情报·空城 ✅ / L2 釜底抽薪·调虎离山·暗渡陈仓等 11 计 / L3 国策态势以逸待劳·远交近攻等 8 策·单选开关）
-    总军师（态势与献策）
-    家族（女眷 / 姻亲·子女待/已登场 / 婚配 / 在野跟随；无父辈·无独立子女 tab）
-    己方城池（快捷列表，点击跳转地图）
-  - 人事、外交、朝廷已迁入底部命令坞，左侧旧入口物理删除
-  - 内政操作在右侧 RightPanel；结束回合仅在 TopBar
+  - 折叠项（按实际代码顺序）：战役、总军师、己方城池（快捷列表，点击跳转地图）
+  - 内政、军事、人事、外交、计略、情报、家族、朝廷均已迁入底部命令坞，左右栏旧操作入口物理删除
+  - 结束回合仅在 TopBar；命令坞“进行”仍是禁用状态提示
 ```
 
 ### 5.2 MapCanvas — 地图渲染
@@ -191,20 +185,14 @@ Layer 4 — UI 叠加
     基本信息：州/郡国/势力/金粮/人脉机会/农商城/民心/兵力/士气
     【人口结构】成年男(耗粮重) / 成年女 / 儿童 / 老人 / 可征男丁
     【粮耗预估】男成 / 女·童·老 / 驻军 / 合计
-    内政操作：开发农/商/城、施米、寻访美女、征兵、训练
-    军事操作：出征攻城（已知位置·须道路邻接；未探明目标也可尝试）
-      - 按钮资格只读取己方邻接城与己方驻军，不读取迷雾目标的脱敏 ruler/troops
-      - 未探明目标仍显示势力/兵力为 ???，出征后按既有规则仅获得 surface 战地情报
+    不挂载内政/军事写操作；所有命令统一从底部命令坞进入
     底部：行动日志（含新生/成丁/老故/耗产粮/搜罗/占城/婚配）
 
   左侧政务 — 折叠默认全收起
-    谍报（招募密探 + 训练/点化女间谍 / 特工列表 / 派遣 / 反间 / 俘虏）/
-    计谋（美人计 / 离间 / 假情报 / 空城疑兵 / 列表含 prep·active 剩余月）/
-    家族（女眷 / 姻亲·子女待/已登场 / 婚配 / 在野跟随；无父辈·无独立子女 tab）/
     总军师 / 战役 / 己方城池
 
 状态 B — 武将详细（已实装，Session 122~187 迭代）
-头像(大) / 六维进度条（统武智政魅+体，统一样式）/ 隐藏属性(部分模糊展示：性格/理想文字标签；ceilingBonus 仅"天人/无双"提示) / 技能 / 装备(5槽占位) / 性格与理想 / 兵种适性 / 阵型 / 状态 / 列传
+头像(大) / 六维进度条（统武智政魅+体，统一样式）/ 隐藏属性(部分模糊展示：性格/理想文字标签；ceilingBonus 仅"天人/无双"提示) / 技能 / 装备(真实5槽，页签显示已装备数/5) / 性格与理想 / 兵种适性 / 阵型 / 状态 / 列传
 ```
 
 人口字段说明见 `04-game-systems.md` §28。
@@ -406,7 +394,7 @@ Layer 3 — 特效
 └─────────────────────────────────┘
 ```
 
-> **Session 266 实装（S13 0-A）**：装备区块由占位改为真实 5 槽（`Officer.equipment`），装备 tab 展示宝物名称/品质/baseStats 属性/效果（中文标签映射），支持卸下（回库存）；提供「装备/赏赐宝物」选择器（选库存宝物 → 赏赐并装备）与势力库存展示；**君主隐藏卸下/赏赐写控件**（§3.8 君主特例）。六维区块新增装备加成 `装+N`（sky 色，与功绩 emerald `+N` 区分；君主屏蔽）。8+2 槽全量设计留 0-B。
+> **Session 266 实装（S13 0-A）**：装备区块由占位改为真实 5 槽（`Officer.equipment`），装备 tab 展示宝物名称/品质/baseStats 属性/效果（中文标签映射），支持卸下（回库存）；提供「装备/赏赐宝物」选择器（选库存宝物 → 赏赐并装备）与势力库存展示；**君主隐藏卸下/赏赐写控件**（§3.8 君主特例）。六维区块新增装备加成 `装+N`（sky 色，与功绩 emerald `+N` 区分；君主屏蔽）。Session 268 起页签显示 `已装备数/5`，静态目录尚在加载时也始终渲染五槽及已绑定宝物编号，避免目录时序导致装备区整体消失。8+2 槽全量设计留 0-B。
 
 ### 7.4 人物状态表情系统接入（S23 · Session 172 原型）
 
@@ -443,8 +431,8 @@ App.tsx
 │   │   └── AccSection·己方城池
 │   │       └── 快捷列表(点击跳转)
 │   ├── CommandShell
-│   │   ├── 计略 → StrategyOverviewDrawer（L1 四计唯一入口）
-│   │   └── 情报 → IntelOverviewDrawer（人员 / 任务 / 反间 / 俘虏唯一入口）
+│   │   ├── CommandDock（九领域；响应式 5/10 列）
+│   │   └── CommandDrawer（从命令坞上沿向上展开，不覆盖触发按钮）
 │   ├── MapCanvas (Konva Stage)
 │   │   ├── TerrainLayer (Natural Earth 底图)
 │   │   ├── CityLayer (城市标记 + LOD)
@@ -454,8 +442,6 @@ App.tsx
 │       ├── AccSection·基本信息
 │       ├── AccSection·人口结构
 │       ├── AccSection·粮耗预估
-│       ├── AccSection·内政操作 (开发/施米/寻访/征兵/训练)
-│       ├── AccSection·军事操作 (出征攻城)
 │       └── AccSection·行动日志
 ├── BattleView (路由 /game/battle/:id)
 │   ├── BattleCanvas (Konva Stage)
@@ -848,11 +834,7 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 - `TerritoryLayer.tsx`：在 `GeoBaseLayer` 之上、官道之下。每势力一条 konva `Line` `closed` `fill={faction.color}` `opacity=0.18` `listening={false}`。城归属变更时 `Line.points` 用 `ref.to({points, duration:0.4})` 平滑过渡。
 - `FogLayer.tsx`：整图盖 `Rect fill rgba(10,10,15,0.55)`，用 `globalCompositeOperation='destination-out'` 在己方/已侦查城位置画半径较大 `Circle`（白色挖洞）+ `filters.Blur` 羽化边缘。挖洞半径按 LOD 缩放。
 - konva tween：`MapCanvas.tsx:261-262` 的 `setScale/setPos` → `stageRef.current?.to({scaleX, scaleY, x, y, duration:0.4, easing:Konva.Easings.EaseOut})`，`onFinish` 同步 React state。城归属变更 `Circle.fill` 用 `ref.to({fill, duration:0.3})`。tween 期间加 `isAnimating` 锁禁用 LOD 重算。
-- **PCG 水墨地形绘制**（归入 W3 子项）：保留 `geo-basemap.png`（Natural Earth 公有领域无版权风险），PCG 只用于二级战术网格地形绘制 + 三级白刃战视差背景。算法移植清单（用户 demo 95% 可搬，只换 ctx 来源 `canvas.getContext('2d')` → `layer.getContext()`，rAF → `Konva.Animation`）：
-  - `shared/pcg/inkMountains.ts`（drawInkMountains：分层贝塞尔 + 线性渐变晕染）
-  - `shared/pcg/naturalRiver.ts`（drawNaturalRiver：多段正弦波 + 伪随机扰动）
-  - `shared/pcg/terrainTiles.ts`（drawMiniTree/drawMiniMountain：战术树/山程序化绘制）
-  - `client/src/battle/meleeBackground.ts`（drawMeleeParallaxBackground：4 层视差 + 夕阳/远山/近林/焦土 + 雾气）
+- **PCG 水墨地形绘制**（归入 W3 子项）：保留 `geo-basemap.png`（Natural Earth 公有领域），PCG 只用于二级战术网格地形绘制 + 三级白刃战视差背景。实现依据本项目原创 clean-room 规格：种子、地形、视口和质量档为输入，确定性绘制指令为输出；函数名、噪声参数、控制点与分层方式不得取自无许可 Demo。
 
 #### §11.1.4 W4 派系面板 + OfficerDetail + 内政外交前端增强
 
@@ -923,7 +905,7 @@ BattleView 已有 Demo，补串联与切入：
 - 移动指令：纯战略指令（全军突击/鸣金收兵/发起单挑 三个 DOM 按钮），小兵 AI 自主寻敌对砍。
 - 飘字伤害：Konva `Text` + `Tween` 上浮淡出。
 - 武将计特写：全屏暗场 DOM + Konva 粒子（复用粒子系统）。
-- **Soldier 类移植**（用户 demo 95% 可搬）：`client/src/battle/soldier.ts`，纯 TS 数据类 + 命令式 draw。`ctx` 来源 = `meleeLayer.getContext()`，动画驱动 = `Konva.Animation`。克制矩阵复用服务端 `getUnitMatchup`。
+- **Soldier 原创实现**：`client/src/battle/soldier.ts`，纯 TS 数据类 + 命令式 draw。`ctx` 来源 = `meleeLayer.getContext()`，动画驱动 = `Konva.Animation`。克制矩阵复用服务端 `getUnitMatchup`；不接触无许可 Demo 的表达性实现。
 - **镜头推进切入**：hex 邻接攻击 → `stage.to({scaleX:3, scaleY:3, x:targetX, y:targetY, duration:0.4})` → 黑屏 overlay opacity 0→1（300ms）→ `setScreen('melee')` → opacity 1→0（300ms）揭幕白刃战。
 
 #### §11.2.5 W9 单挑接入（DuelStage 混合范式）
@@ -932,7 +914,7 @@ BattleView 已有 Demo，补串联与切入：
 
 **混合范式**：
 - 静态元素（武将占位矩形/姓氏文字/卡牌轮廓/HP 条）：react-konva `<Group>/<Rect>/<Text>` 声明式
-- 动效（粒子/刀光/火花/震屏）：`Konva.Animation` + `layer.getContext()` 底层 `CanvasRenderingContext2D` 命令式（用户 demo 逻辑 95% 可搬）
+- 动效（粒子/刀光/火花/震屏）：`Konva.Animation` + `layer.getContext()` 底层 `CanvasRenderingContext2D` 命令式，按原创时序和验收用例实现
 - 单一 `<Stage>`，与 BattleView 同范式，不割裂
 
 **三要素**：
@@ -1003,7 +985,7 @@ interface SpecialAppearance {
 
 **触发**：服务端计谋状态驱动（`BattleState.activeStrategem: 'none'|'fire'|'water'|'ambush'`，新字段 D-0B-11）。火计复用已有 `battle.ts` `/battle/fire` 引擎；水攻/伏兵服务端引擎后置 D-0B-12。前端未收到该字段时默认 `'none'`。
 
-**统一帧计数**：模块级 `frameCount` 变量，多个 `Konva.Animation` 实例共享（与用户 demo 一致）。
+**统一帧计数**：由项目时钟服务提供单调帧序号，多个动画实例只读消费，设计与实现均为本项目原创。
 
 **三级联动数据流**：
 
@@ -1023,7 +1005,7 @@ interface SpecialAppearance {
         └─ ambush: 落叶贝塞尔 + 幽暗 vignette
 ```
 
-**算法移植清单**（用户 demo 95% 可搬）：
+**原创效果需求清单**（仅描述效果、输入输出和性能门槛，禁止移植外部 Demo 表达）：
 - `shared/pcg/strategemVisuals.ts`：drawLevel1StrategemVisuals / drawProceduralGridFlame
 - `client/src/battle/meleeStrategem.ts`：drawLevel3StrategemOverlays
 - `client/src/battle/frameCount.ts`：模块级共享帧计数
@@ -1046,7 +1028,7 @@ interface SpecialAppearance {
 #### §11.6.2 方案 A — 拓片印章（底图层）技术规格
 
 **素材采集**（具体数字文件须完成许可审查；历史文物本体公有领域不代表馆方照片/扫描件自动 CC0）：
-- 20~30 张高质感汉代原版拓片切片，按武将类型分类：
+- 20~30 张高质感汉代公有领域拓片切片，按武将类型分类：
   - `warrior`：执弩骑马射猎图 / 武士对剑图
   - `scholar`：对坐清谈 / 老生问道
   - `servant`：汉代侍从 / 小兵拓片
@@ -1201,8 +1183,8 @@ Konva.Group（武将头像容器 120×150，border #3e2723）
 
 - 命令坞挂在 `GameLayout` 的 world 场景底部，位于三栏内容区之后、事件和模态层之下；不得覆盖
   地图工具、人物详情、事件窗、战斗或郡域场景。
-- 桌面验收基准为 `1440×900`，最低支持宽度为 `1280px`。九类与独立“进行”在 1440 基准
-  一行可见；低于 1280 时命令坞内容允许水平滚动，不把按钮压缩为不可辨识图标。
+- 桌面验收基准为 `1440×900`。九类与独立“进行”在 `lg` 及以上采用 10 列一行；更窄视口
+  自动改为 5 列两行，避免依赖横向滚动才能访问后半命令。
 - 命令坞以点击或键盘 `Space`/`Enter` 激活领域。点击当前领域为收起；点击另一领域为先关闭
   前一抽屉、清除前一领域未提交草稿，再打开新抽屉。
 - 抽屉从命令坞上沿向上展开，桌面宽 `360～420px`，最大高度不超过三栏内容可用高度，内容区
@@ -1594,6 +1576,23 @@ BF-P4 当前切片在行政大地图右上提供“南郡水网 / 颍川平原�
 倾向选择、“阵前挑战”和“城下挑战”；两者复用 `DuelPanel` 的逐回合/快速/跳过演出，
 结算后以“返回战场”关闭上下文。1440×900 已实点两条链，console error=0。
 
+Session 269～270 扩为四个显式开发入口：新增“陈留水陆”与“河洛京畿”。
+河南尹入口在 1440×900 实测物理命中，进入后标题、21 县/40 路/3 入口、雒阳郡治
+及荥阳节点均由实例同源渲染。该入口仍是 BF-P5 开发验收通道，不是最终玩家选郡 UI。
+
+Session 271 扩为五个显式开发入口：新增“河内孟津”，点击后调用同一目录驱动进场链并
+渲染 `henei-190`；河内郡、治所怀、河阳及 18 县/35 路均由实例同源渲染。该入口仍是
+BF-P5 开发验收通道；五个并列按钮不是最终玩家选郡 UI。
+
+Session 272 扩为六个显式开发入口：新增“弘农崤函”，点击后渲染 `hongnong-190`；
+弘农郡、治所弘农、新安及 9 县/17 路均由实例同源渲染。该入口仍是 BF-P5 开发验收
+通道；六个并列按钮不是最终玩家选郡 UI。
+
+Session 274 将六个开发入口纳入同一浏览器总验收：每个入口均须物理点击命中，进入后
+核对模板、县/路/入口数与治所文字，再物理点击“返回大地图”并确认实例清空后继续下一郡。
+该验收同时锁定 0-A 大地图归属：河内借洛阳、弘农借长安，其余四郡直连对应节点；代理
+只影响进场与守方归属，不改变历史行政名称。
+
 ### 13.4 HC-P0-6 朝廷命令抽屉
 
 开府后在底部“朝廷”命令抽屉展示“皇权 N/100 · 伪诏冷却 就绪/N季”，并用单一目标选择器
@@ -1657,12 +1656,84 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
 
 *文档版本: v7.4 | 2026-07-30 | Session 249 R8 成长入口收敛*
 
+### 12.2.19 S24 关系网 UI（Session 284）
+
+- OfficerDetail 新增「社交」tab（与属性/关系/装备/列传/技能并列），展示：
+  - 社交关系列表：类型徽章（义兄弟/师徒/父子/挚友/宿敌等）+ 对象名 + 史源分色（正史绿/演义橙）+ 六等关系状态（亲密/友好/普通/嫌恶/仇敌）+ 亲和度数值
+  - SVG 径向图谱：圆心=当前武将，第一圈=直接关系节点（按类型分色），悬停显示状态
+- 家族 tab 更名为「关系」，婚姻区块扩展妾/姬（`Officer.consortIds` 女性实体引用，分 concubine/ji 两档，数量不固定）
+
+### 12.2.20 S25 技能树 UI（Session 284）
+
+- OfficerDetail 新增「技能」tab，展示：
+  - 技能点概览：剩余点数 / 总点数 + 重置按钮
+  - 技能树面板：顶部 tab 切换 5 棵子树（战略计策/战术计策/单挑技能/统军/内政），每棵子树节点列表（名称 + 生效层标注 + 当前等级 + 加点按钮）
+  - 节点状态：已解锁（高亮）/ 可加点（闪烁）/ 前置未满足（灰色锁定）/ 已满级
+  - 特性点概览：剩余特性点 / 总特性点（特性全量 42 项待 0-B 实装）
+
+### 12.2.21 S26 天命人心 UI（Session 284）
+
+- 命令坞新增「势力」入口（`FactionOverviewDrawer`），展示：
+  - 天命值进度条 + 数值 + 区间标签（天命未显/初显/渐盛/所归/在身）
+  - 人心值进度条 + 数值 + 区间标签（涣散/浮动/安定/所向/成城）
+  - 效果预览：外交修正 / 叛逃概率修正 / 募兵效率修正
+  - 势力概览：城池数 / 武将数 / 郡县数
+
+### 12.2.22 S27 城级派系与门阀 UI（Session 285）
+
+- **内政抽屉新增「乡政」分面**（`CivilOverviewDrawer`，5 栏 nav）：
+  - 试点城（洛阳/长安/阳翟/汝南/邺/陈留）展示「城级派系（S27）」面板：机制说明 + 派系满意度列表
+    （kind 标签 + 满意度；<30 红、≥70 绿，testid `command-civil-faction-entries`）
+  - 「开垦」（50金/智≥60）：执行武将下拉（testid `civil-faction-officer`，默认城主）+ 执行按钮；
+    「巡查」（30金/武≥60）同构
+  - 确认弹窗按命令类型区分文案（开垦/巡查/既有开发命令三分支）
+  - 非试点城显示「S27 试点范围为 6 城」提示，派系面板与命令隐藏
+  - **弹劾警示条（S27 深化，Session 286）**：本城存在 `pendingImpeachment` 时，乡政分面顶部
+    显示红框警示（被弹劾城主姓名 + 「2 个月内需安抚或撤换，逾期官宦更不满」），
+    「安抚（100金）」（testid `civil-impeach-appease`）/「撤换城主」（testid `civil-impeach-remove`）
+    两按钮分别调 `POST /civil/impeach`
+- **势力抽屉「声望与兵装（S27）」区**（`FactionOverviewDrawer`）：
+  - 声望 fame 数值 + 配色分档（≥900 amber-300 / ≥600 amber-400 / ≥300 amber-500）
+  - 兵装 arms 库存展示 + 「采购兵装 ×10（100金）」按钮（testid `faction-buy-arms`）
+
+### 12.2.18 S21 三类战斗场景界面（Session 276）
+
+- **战场地图场景**：顶部为郡域军图抬头和战况摘要；主画布使用暗纸方格、道路虚线、加粗水道、
+  朱砂郡治、己方绿色和迷雾墨色，并常驻图例。县节点、军情遮蔽和既有攻打点击区保持同源。
+- **白刃战地图场景**：使用横版两军对峙构图，进攻军为青绿、防守军为赤色；战术卡同时展示
+  印记、战术点成本与风险说明，按钮必须按真实成本门禁。普通攻击成本为 0，不得再用统一“3点”假文案。
+- **单挑场景**：全屏压暗父场景，以双方剪影、姓名、体力/气力、倾向和对话构成演出中心；
+  保留观看演出、快速结算、只看结果、下一回合与返回父场景，测试标识和权威回写不变。
+- 三场景仅使用 `HanDynastySerif` / `HanDynastySeal` 与 CSS/SVG 程序化图形，不加载宿主字体或商业美术。
+
+### 12.2.19 S10 六角路径、动画与撤销（Session 277）
+
+- 选中己军后蓝色填充+描边+点号展示可达格；悬停绘制金色虚线路径、逐格序号，并以文字显示
+  格数、总消耗和剩余移动力，不能只靠颜色传达。
+- 点击目标后按每格140ms的 rAF 动画移动，动画完成才提交权威落子；山地/水域路径步分别携带
+  `climb/wade` 动画状态供后续造型扩展。
+- 可攻击目标使用红色虚线六边形；范围与服务端共用剑/斧1格、矛1~2格及朝向规则。
+- “撤销移动”仅在最后一步为尚未封闭的移动时启用，按钮 title 明示攻击/RNG后的不可逆边界。
+- 白刃面板提供六基础阵型卡，展示攻防弱点；当前阵型不可重复切换。
+
+> **Session 288~290 已落地 / 剩余边界**：
+> - `formations.json` 已迁移到 `[0,1,2,3,4,6,16]`，标准模式/白刃卡只开放六基础 `[0,1,2,3,4,6]`
+> - `meleeRound` 现从 `formations.json.meleePercent` 读取标准模式百分比表（单一内容源，行为不变）
+> - `crit.ts` 现从 `formations.json.effects` 读取暴击/反击/连击贡献（单一内容源，行为等价）
+> - 白刃战动作级幂等已实装：客户端为 `/melee/round` 自动携带 `commandId` + `expectedRound`
+> - **仍未做**：点值量纲迁移（`tiers[0]` → 标准/自动/六角运行数值）、六角 `resolveFormationDeployment`
+>   初始投影、阵型卡分项解释与非法原因显式展示；冲阵 id 16 仍只作“高阶阵·本切片未开放”资料
+
+
 #### 12.2.15 R4 局部交战三入口
 
 - 交战弹窗固定显示“自动结算 / 标准模式 / 六角微操”三项，不再使用含混的“微操模式”。
 - 点击后立即锁定本次交战模式：自动显示结算结果，标准进入战术点面板，六角进入既有
   `BattleView`；六角结束逐层返回白刃战结果，再返回郡域战场。
-- 刷新时恢复 `activeBattlefield / activeMelee / activeBattle` 的最深权威场景。
+- 刷新时恢复 `activeBattlefield / activeMelee / activeBattle` 的最深权威场景；
+  **Session 283 起补齐 Tier II 恢复**：`boot()` 在无更浅场景时检测
+  `activeBattlefieldInstance`，恢复 `screen='battlefield'` 与郡域战场场景栈
+  （含进行中的阵前单挑），与 Tier I `activeBattlefield` 同等深度恢复。
 
 #### 12.2.16 R5 持续内政与预算
 

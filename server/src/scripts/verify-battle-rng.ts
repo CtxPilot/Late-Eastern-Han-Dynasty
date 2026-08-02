@@ -71,7 +71,7 @@ const adjacentBattle = {
   ...created,
   phase: 'player' as const,
   units: created.units.map((unit) =>
-    unit.id === def.id ? { ...unit, position: { ...atk.position } } : unit,
+    unit.id === def.id ? { ...unit, position: { q: atk.position.q + 1, r: atk.position.r } } : unit,
   ),
 };
 const battleSave = envelopeFor(getGame());

@@ -135,6 +135,15 @@ jobs:
       - name: Zod data validation
         run: pnpm validate-data
 
+      - name: Copyright, asset, privacy and license gate
+        run: pnpm verify-compliance
+
+      - name: HTTP security boundary integration test
+        run: pnpm verify-security-http
+
+      - name: Dependency vulnerability audit
+        run: pnpm audit --audit-level=high
+
       - name: 编码门禁（UTF-8 no BOM）
         run: |
           set -e

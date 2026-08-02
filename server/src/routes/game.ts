@@ -4,9 +4,27 @@
 import { Router, type Router as ExpressRouter } from 'express';
 import type { EventSourceClass } from '@leh/shared';
 import { getCommanderyIds } from '@leh/shared';
+import { z } from 'zod';
 import * as gameService from '../services/game.js';
 
 export const gameRouter: ExpressRouter = Router();
+
+const JsonObjectBodySchema = z.record(z.string(), z.unknown());
+const PositiveInt = z.coerce.number().int().positive();
+
+gameRouter.use((req, res, next) => {
+  if (req.method !== 'POST') {
+    next();
+    return;
+  }
+  const parsed = JsonObjectBodySchema.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: 'request body must be a JSON object' });
+    return;
+  }
+  req.body = parsed.data;
+  next();
+});
 
 gameRouter.get('/static', (_req, res) => {
   res.json(gameService.listStatic());
@@ -109,6 +127,55 @@ gameRouter.post('/civil/train', (req, res) => {
   }
 });
 
+/** S27 开垦：乡政派系命令 */
+gameRouter.post('/civil/reclaim', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const officerId = Number(req.body.officerId);
+    if (!Number.isInteger(officerId)) throw new Error('必须指定执行武将');
+    res.json(gameService.doReclaimLand(cityId, officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'reclaim failed' });
+  }
+});
+
+/** S27 巡查：乡政派系命令 */
+gameRouter.post('/civil/patrol', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const officerId = Number(req.body.officerId);
+    if (!Number.isInteger(officerId)) throw new Error('必须指定执行武将');
+    res.json(gameService.doPatrolCity(cityId, officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'patrol failed' });
+  }
+});
+
+/** S27 兵装采购：10 金/件 */
+gameRouter.post('/faction/buy-arms', (req, res) => {
+  try {
+    const amount = Number(req.body.amount);
+    if (!Number.isInteger(amount) || amount <= 0) throw new Error('采购数量须为正整数');
+    res.json(gameService.doBuyArms(amount));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'buy arms failed' });
+  }
+});
+
+/** S27 深化：弹劾处理（appease 安抚 / remove 撤换城主） */
+gameRouter.post('/civil/impeach', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const action = req.body.action;
+    if (action !== 'appease' && action !== 'remove') {
+      throw new Error('弹劾处理须为 appease 或 remove');
+    }
+    res.json(gameService.doResolveImpeachment(cityId, action));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'impeach failed' });
+  }
+});
+
 gameRouter.post('/civil/seek-beauty', (req, res) => {
   try {
     res.json(gameService.doSeekBeauty(Number(req.body.cityId)));
@@ -141,21 +208,12 @@ gameRouter.post('/personnel/reward-beauty', (req, res) => {
 
 gameRouter.post('/personnel/marry', (req, res) => {
   try {
+    const body = z.object({ femaleId: PositiveInt, officerId: PositiveInt }).strict().parse(req.body);
     res.json(
-      gameService.doMarry(Number(req.body.femaleId), Number(req.body.officerId)),
+      gameService.doMarry(body.femaleId, body.officerId),
     );
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'marry failed' });
-  }
-});
-
-gameRouter.post('/personnel/gift-beauty', (req, res) => {
-  try {
-    res.json(
-      gameService.doGiftBeauty(Number(req.body.femaleId), Number(req.body.officerId)),
-    );
-  } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : 'gift failed' });
   }
 });
 
@@ -263,7 +321,7 @@ gameRouter.post('/intel/recruit-female', (req, res) => {
   }
 });
 
-/** 献美→点化女间谍（掩护线） */
+/** 宫廷牵线→点化女间谍（掩护线） */
 gameRouter.post('/intel/plant-female', (req, res) => {
   try {
     res.json(
@@ -390,17 +448,18 @@ gameRouter.post('/diplomacy/tribute', (req, res) => {
   }
 });
 
-/** S08∩S09 宫廷牵线：转移 courtNetwork，友好+12/点（旧路由名兼容） */
-gameRouter.post('/diplomacy/gift-beauty', (req, res) => {
+/** S08∩S09 宫廷牵线：转移非人格化 courtNetwork，友好+12/点。 */
+gameRouter.post('/diplomacy/court-network', (req, res) => {
   try {
+    const body = z.object({
+      targetFactionId: PositiveInt,
+      amount: PositiveInt.max(5).optional(),
+    }).strict().parse(req.body);
     res.json(
-      gameService.doGiftBeautyDip(
-        Number(req.body.targetFactionId),
-        req.body.amount != null ? Number(req.body.amount) : undefined,
-      ),
+      gameService.doTransferCourtNetwork(body.targetFactionId, body.amount),
     );
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : 'gift beauty failed' });
+    res.status(400).json({ error: e instanceof Error ? e.message : 'court network transfer failed' });
   }
 });
 
@@ -488,6 +547,14 @@ gameRouter.get('/battle/move-range/:unitId', (req, res) => {
   res.json({ keys: gameService.battleMoveRange(req.params.unitId) });
 });
 
+gameRouter.get('/battle/move-path/:unitId/:q/:r', (req, res) => {
+  try {
+    res.json(gameService.battleMovePath(req.params.unitId, Number(req.params.q), Number(req.params.r)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'path preview failed' });
+  }
+});
+
 gameRouter.post('/battle/move', (req, res) => {
   try {
     const { unitId, q, r } = req.body as { unitId: string; q: number; r: number };
@@ -495,6 +562,11 @@ gameRouter.post('/battle/move', (req, res) => {
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'move failed' });
   }
+});
+
+gameRouter.post('/battle/undo', (_req, res) => {
+  try { res.json(gameService.battleUndo()); }
+  catch (e) { res.status(400).json({ error: e instanceof Error ? e.message : 'undo failed' }); }
 });
 
 gameRouter.post('/battle/attack', (req, res) => {
@@ -860,7 +932,10 @@ gameRouter.post('/melee/mode', (req, res) => {
 gameRouter.post('/melee/round', (req, res) => {
   try {
     const actionType = String(req.body.actionType ?? 'normal_attack');
-    res.json(gameService.meleeRound(actionType));
+    const targetFormation = req.body.targetFormation == null ? undefined : Number(req.body.targetFormation);
+    const commandId = req.body.commandId == null ? undefined : String(req.body.commandId);
+    const expectedRound = req.body.expectedRound == null ? undefined : Number(req.body.expectedRound);
+    res.json(gameService.meleeRound(actionType, targetFormation, commandId, expectedRound));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'melee round failed' });
   }
@@ -921,5 +996,79 @@ gameRouter.get('/grand-strategist/status', (_req, res) => {
     res.json(gameService.grandStrategistStatus());
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'grand strategist status failed' });
+  }
+});
+
+// ====== 关系网 API（S24） ======
+
+/** 获取武将关系列表 */
+gameRouter.get('/relations/:officerId', (req, res) => {
+  try {
+    const officerId = PositiveInt.parse(req.params.officerId);
+    res.json(gameService.getOfficerRelations(officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get relations failed' });
+  }
+});
+
+// ====== 技能树 API（S25） ======
+
+/** 获取技能树定义（静态） */
+gameRouter.get('/skill-trees', (_req, res) => {
+  try {
+    res.json(gameService.getSkillTrees());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get skill trees failed' });
+  }
+});
+
+/** 获取武将技能树状态 */
+gameRouter.get('/officer/:id/skills', (req, res) => {
+  try {
+    const officerId = PositiveInt.parse(req.params.id);
+    res.json(gameService.getOfficerSkillState(officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get officer skills failed' });
+  }
+});
+
+/** 技能树加点 */
+gameRouter.post('/skill-tree/upgrade', (req, res) => {
+  try {
+    const { officerId, nodeId } = req.body as { officerId: number; nodeId: string };
+    res.json(gameService.upgradeSkillNode(officerId, nodeId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'upgrade skill node failed' });
+  }
+});
+
+/** 特性加点 */
+gameRouter.post('/trait/upgrade', (req, res) => {
+  try {
+    const { officerId, traitId } = req.body as { officerId: number; traitId: string };
+    res.json(gameService.upgradeTrait(officerId, traitId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'upgrade trait failed' });
+  }
+});
+
+/** 重置技能点 */
+gameRouter.post('/skill-tree/reset', (req, res) => {
+  try {
+    const { officerId } = req.body as { officerId: number };
+    res.json(gameService.resetSkillTree(officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'reset skill tree failed' });
+  }
+});
+
+// ====== 天命-人心 API（S26） ======
+
+/** 获取势力总览（含天命/人心） */
+gameRouter.get('/faction/overview', (_req, res) => {
+  try {
+    res.json(gameService.getFactionOverview());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get faction overview failed' });
   }
 });

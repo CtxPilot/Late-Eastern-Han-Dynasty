@@ -327,7 +327,7 @@ export function trainFemaleSpy(
   const faction = state.factions[fid];
   if (!faction) throw new Error('势力不存在');
   if ((faction.courtNetwork ?? 0) < FEMALE_SPY_BEAUTY_COST) {
-    throw new Error(`美女资源不足（需 ${FEMALE_SPY_BEAUTY_COST}）`);
+    throw new Error(`宫廷人脉不足（需 ${FEMALE_SPY_BEAUTY_COST}）`);
   }
   if (city.gold < FEMALE_SPY_GOLD_COST) {
     throw new Error(`金钱不足（需 ${FEMALE_SPY_GOLD_COST}）`);

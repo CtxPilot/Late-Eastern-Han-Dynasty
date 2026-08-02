@@ -19,7 +19,7 @@ export function clampNegotiationChance(chance: number): number {
 
 /**
  * 霸府/称王/称帝外交权重分档修正（docs/26 Q3 已批准方向，HC-P0-5）。
- * 仅对"发起操作的势力自身"应用——开府势力自己发起结盟/进贡/献美时获得加成。
+ * 仅对"发起操作的势力自身"应用——开府势力自己发起结盟/进贡/宫廷牵线时获得加成。
  * 04§36.2 曹操"挟天子令诸侯"+30 外交权重基调；此处结盟成功率加成落在 Q3 批准区间
  * （霸府 +5~10），称王/称帝留更高档位分档结构（即使转移操作未实装，避免后续再改函数签名）。
  * @returns 结盟成功率百分点修正（vassal/undefined=0，hegemon=+5，king=+8，emperor=+12）
@@ -34,8 +34,8 @@ export function hegemonyAllianceModifier(stage: PoliticalStage | undefined): num
 }
 
 /**
- * 霸府/称王/称帝 进贡/献美友好增量倍数（docs/26 Q3，HC-P0-5）。
- * 同样仅对发起方应用——开府势力进贡/献美的友好增量按此倍数放大。
+ * 霸府/称王/称帝 进贡/宫廷牵线友好增量倍数（docs/26 Q3，HC-P0-5）。
+ * 同样仅对发起方应用——开府势力进贡/宫廷牵线的友好增量按此倍数放大。
  * 落在 Q3 批准区间（霸府 ×1.1~1.2），称王/称帝预留更高倍数分档。
  * @returns 友好增量倍数（vassal/undefined=1.0，hegemon=1.1，king=1.2，emperor=1.3）
  */

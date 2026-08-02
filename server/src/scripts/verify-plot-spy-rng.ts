@@ -201,13 +201,13 @@ resetRuntimeRng(0x1707_0006);
 const plantCheck = verifyRoundTrip(
   envelopeFor(plantBase),
   (state) => plantFemaleFromGift(state, enemyFactionId, runtimeRandom, home.id),
-  '献美点化女间谍',
+  '宫廷牵线招募女间谍',
 );
 assert(
   Object.values(plantCheck.result.intel.agents).some(
     (agent) => agent.agentKind === 'female' && agent.coverIdentity?.includes('后宫') === true,
   ),
-  '献美点化必须确定生成女间谍身份、等级与技能',
+  '宫廷牵线招募必须确定生成女间谍身份、等级与技能',
 );
 
 if (!trainedFemale) throw new Error('女间谍训练夹具生成失败');

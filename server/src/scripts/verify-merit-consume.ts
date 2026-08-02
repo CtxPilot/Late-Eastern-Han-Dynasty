@@ -10,7 +10,7 @@
  *   5. 开发效率：文 Lv4 开发+10%（持续项目完成增益）
  *   6. 内政效率：文 Lv9 内政效率+10%（施米增益）
  *   7. Lv20 体力恢复 +5/月（advanceTurn 月度）
- *   8. 君主特例切片 C：任命忠诚±/赏赐美人/赐婚/笼络对君主不生效或拒绝
+ *   8. 君主特例切片 C：任命忠诚±/赐婚/宫廷笼络对君主不生效或拒绝
  *
  * 运行: pnpm verify-merit-consume
  */
@@ -43,7 +43,7 @@ import {
 import { appointOfficer } from '../engine/appoint.js';
 import { rewardBeautyStock } from '../engine/beauty.js';
 import { DEVELOPMENT_PROJECTS, relief, tickDevelopmentProject } from '../engine/civil.js';
-import { giftBeauty, marryFemale } from '../engine/personnel.js';
+import { marryFemale } from '../engine/personnel.js';
 import { advanceTurn } from '../engine/turn.js';
 import { buildCampaignNodes, startCampaign } from '../engine/campaign.js';
 import { createGame, getGame } from '../services/game.js';
@@ -441,18 +441,11 @@ console.log('\n8. 君主特例切片 C（忠诚±与拉拢记录守卫）');
   }
   assert(beautyRejected, '笼络君主被拒（rewardBeautyStock）');
 
-  // giftBeauty / marryFemale 拒绝君主（注入己方单身女性）
+  // marryFemale 拒绝君主（注入己方成年单身女性）
   const ownedCity = Object.values(g.cities).find((c) => c.ruler === fid);
   const testFemale = stubFemale(9001, '测试女', fid, ownedCity?.id ?? 1);
   const gWithFemale: GameState = { ...g, females: { ...g.females, [testFemale.id]: testFemale } };
   {
-    let giftRejected = false;
-    try {
-      giftBeauty(gWithFemale, testFemale.id, rulerId);
-    } catch (e) {
-      giftRejected = String(e).includes('君主');
-    }
-    assert(giftRejected, '赏赐美人给君主被拒（giftBeauty）');
     let marryRejected = false;
     try {
       marryFemale(gWithFemale, testFemale.id, rulerId);

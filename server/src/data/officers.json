@@ -51,11 +51,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -133,9 +132,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -206,9 +205,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -279,11 +278,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -441,11 +439,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -519,9 +516,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      6,
-      7
+      6
     ],
     "skills": [
       {
@@ -596,7 +593,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -667,8 +664,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -736,8 +733,7 @@
       0,
       2,
       4,
-      6,
-      8
+      6
     ],
     "skills": [
       {
@@ -808,9 +804,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -881,9 +877,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -955,7 +950,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -1088,9 +1083,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -1161,8 +1156,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -1232,8 +1227,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -1303,8 +1298,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      8
+      2,
+      4
     ],
     "skills": [
       {
@@ -1374,8 +1369,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -1445,8 +1440,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -1519,8 +1514,7 @@
     "formationMastery": [
       0,
       2,
-      6,
-      8
+      6
     ],
     "skills": [
       {
@@ -1663,8 +1657,8 @@
     },
     "formationMastery": [
       0,
-      6,
-      8
+      2,
+      6
     ],
     "skills": [
       {
@@ -1735,8 +1729,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      8
+      2,
+      4
     ],
     "skills": [
       {
@@ -1807,8 +1801,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -2214,11 +2208,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -2293,9 +2286,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -2368,10 +2360,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -2445,8 +2436,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -2737,10 +2728,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7,
-      8
+      4
     ],
     "skills": [
       {
@@ -2814,7 +2804,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -2887,8 +2877,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -2963,8 +2953,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      8
+      2,
+      4
     ],
     "skills": [
       {
@@ -3038,7 +3028,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -3111,9 +3101,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -3187,9 +3177,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -3262,11 +3252,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -3342,10 +3331,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7
+      6
     ],
     "skills": [
       {
@@ -3496,7 +3485,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -3569,8 +3558,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -3644,8 +3633,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -3715,7 +3704,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -3785,8 +3774,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -3856,7 +3845,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -3925,7 +3914,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -3999,7 +3988,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -4073,8 +4062,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -4148,9 +4137,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -4224,10 +4213,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7,
-      8
+      4
     ],
     "skills": [
       {
@@ -4301,7 +4289,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -4371,8 +4359,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -4446,7 +4434,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -4592,8 +4580,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -4663,9 +4651,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -4885,7 +4873,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -4959,9 +4947,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -5035,9 +5023,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -5111,7 +5099,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -5250,7 +5238,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -5324,8 +5312,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -5398,7 +5386,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -5612,8 +5600,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -5882,9 +5870,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -6023,7 +6011,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -6097,8 +6085,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -6168,7 +6156,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -6242,7 +6230,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -6312,9 +6300,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -6530,9 +6518,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -6607,7 +6595,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -6889,8 +6877,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -7027,7 +7015,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -7093,8 +7081,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -7448,7 +7436,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -7593,9 +7581,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -7665,8 +7653,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -7736,8 +7724,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -7884,8 +7872,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -7959,7 +7947,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -8102,8 +8090,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -8177,8 +8165,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -8311,7 +8299,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -8385,8 +8373,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -8456,7 +8444,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -8525,8 +8513,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -8662,8 +8650,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -8733,8 +8721,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -8808,7 +8796,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -8882,9 +8870,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -8958,10 +8945,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7,
-      8
+      4
     ],
     "skills": [
       {
@@ -9035,11 +9021,10 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
       4,
-      6,
-      7,
-      8
+      6
     ],
     "skills": [
       {
@@ -9113,9 +9098,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -9189,9 +9174,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -9265,9 +9250,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -9341,9 +9326,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -9490,8 +9475,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -9700,7 +9685,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -9774,7 +9759,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -9912,8 +9897,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -10054,8 +10039,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -10130,10 +10115,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7,
-      8
+      4
     ],
     "skills": [
       {
@@ -10208,8 +10192,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -10280,9 +10264,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -10357,8 +10341,8 @@
     },
     "formationMastery": [
       0,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -10433,9 +10417,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -10706,8 +10690,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -10777,8 +10761,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -10912,7 +10896,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -10982,7 +10966,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -11051,9 +11035,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -11196,8 +11179,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -11267,9 +11250,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7,
-      8
+      1,
+      2
     ],
     "skills": [
       {
@@ -11342,9 +11324,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -11418,9 +11400,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -11494,9 +11476,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -11566,8 +11548,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -11637,7 +11619,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -11781,9 +11763,9 @@
     },
     "formationMastery": [
       0,
-      4,
-      7,
-      8
+      1,
+      2,
+      4
     ],
     "skills": [
       {
@@ -11857,7 +11839,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -11999,7 +11981,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -12068,8 +12050,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -12141,7 +12123,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -12217,7 +12199,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -12366,7 +12348,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -12588,7 +12570,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -12738,8 +12720,7 @@
     "formationMastery": [
       0,
       2,
-      6,
-      8
+      6
     ],
     "skills": [
       {
@@ -12813,7 +12794,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -13186,7 +13167,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -13261,8 +13242,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -13482,7 +13463,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -13780,7 +13761,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -13926,9 +13907,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      6,
-      7
+      6
     ],
     "skills": [
       {
@@ -14003,7 +13984,7 @@
     },
     "formationMastery": [
       0,
-      7
+      1
     ],
     "skills": [
       {
@@ -14153,8 +14134,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -14228,9 +14209,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -14305,8 +14286,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -14455,8 +14436,8 @@
     },
     "formationMastery": [
       0,
-      4,
-      7
+      1,
+      4
     ],
     "skills": [
       {
@@ -14670,8 +14651,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -14742,8 +14723,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -14946,9 +14927,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -15022,8 +15003,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -15095,9 +15076,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -15307,9 +15288,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -15454,8 +15435,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -15468,10 +15449,10 @@
       }
     ],
     "tags": [
-      "蛮族",
+      "南中部族",
       "南中",
       "武官",
-      "蛮族",
+      "南中部族",
       "猛将",
       "割据自守",
       "边地"
@@ -15528,8 +15509,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -15542,10 +15523,10 @@
       }
     ],
     "tags": [
-      "蛮族",
+      "南中部族",
       "南中",
       "武官",
-      "蛮族",
+      "南中部族",
       "猛将",
       "割据自守",
       "边地"
@@ -15669,8 +15650,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -15935,9 +15916,9 @@
     },
     "formationMastery": [
       0,
+      1,
       2,
-      4,
-      7
+      4
     ],
     "skills": [
       {
@@ -16006,8 +15987,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {
@@ -16077,8 +16058,8 @@
     },
     "formationMastery": [
       0,
-      2,
-      7
+      1,
+      2
     ],
     "skills": [
       {

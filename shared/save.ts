@@ -141,6 +141,43 @@ function migrateLegacyCourtNetworkFields(input: unknown): unknown {
 }
 
 /**
+ * 合规迁移：具名女性赠与/随侍机制已退役。
+ * v1 版本号不变，读取时幂等清空旧 Officer.beauties 与 Female.giftedToOfficerId，
+ * 防止旧存档在运行时重新激活已删除语义。
+ */
+function migrateRetiredNamedFemaleGifts(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const envelope = input as { snapshot?: unknown };
+  if (typeof envelope.snapshot !== 'object' || envelope.snapshot === null) return input;
+  const snapshot = envelope.snapshot as { officers?: unknown; females?: unknown };
+  let changed = false;
+
+  const officers = typeof snapshot.officers === 'object' && snapshot.officers !== null
+    ? Object.fromEntries(Object.entries(snapshot.officers).map(([id, value]) => {
+        if (typeof value !== 'object' || value === null) return [id, value];
+        const officer = value as Record<string, unknown>;
+        if (!Array.isArray(officer.beauties) || officer.beauties.length === 0) return [id, value];
+        changed = true;
+        return [id, { ...officer, beauties: [] }];
+      }))
+    : snapshot.officers;
+
+  const females = typeof snapshot.females === 'object' && snapshot.females !== null
+    ? Object.fromEntries(Object.entries(snapshot.females).map(([id, value]) => {
+        if (typeof value !== 'object' || value === null) return [id, value];
+        const female = value as Record<string, unknown>;
+        if (female.giftedToOfficerId == null) return [id, value];
+        changed = true;
+        return [id, { ...female, giftedToOfficerId: null }];
+      }))
+    : snapshot.females;
+
+  return changed
+    ? { ...envelope, snapshot: { ...snapshot, officers, females } }
+    : input;
+}
+
+/**
  * 将任意已解析的存档信封分派到当前版本。
  *
  * 当前首个持久化版本就是 v1，因此 v1 分支是显式恒等迁移。未来增加 v2 时，
@@ -151,7 +188,9 @@ export function migrateSaveEnvelopeToCurrent(input: unknown): unknown {
 
   switch (version) {
     case CURRENT_SAVE_SCHEMA_VERSION:
-      return migrateLegacyCourtNetworkFields(migrateLegacyNobilityRanks(input));
+      return migrateRetiredNamedFemaleGifts(
+        migrateLegacyCourtNetworkFields(migrateLegacyNobilityRanks(input)),
+      );
     default:
       throw new UnsupportedSaveVersionError(version);
   }

@@ -8,12 +8,12 @@ import { CommandDrawer } from './CommandDrawer';
 import { CommandShell } from './CommandShell';
 
 describe('command shell components', () => {
-  it('renders the empty shell with nine stable domains and no drawer', () => {
+  it('renders the empty shell with ten stable domains and no drawer', () => {
     const html = renderToStaticMarkup(<CommandShell />);
 
     expect(html).toContain('data-testid="command-dock"');
     expect(html).not.toContain('data-testid="command-drawer"');
-    expect((html.match(/data-testid="command-domain-/g) ?? [])).toHaveLength(9);
+    expect((html.match(/data-testid="command-domain-/g) ?? [])).toHaveLength(10);
     expect(html).toContain('仍在顶部');
   });
 

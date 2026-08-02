@@ -16,7 +16,7 @@
 | P0-05 | Client 骨架 | Vite + React + Konva + Zustand 初始化 |
 | P0A-06 | officers.json（小） | 0-A验收基线30名史实武将；当前实际223名，0-B 1000+目标仍暂缓 |
 | P0A-07 | cities.json（小） | 30城(覆盖13州、含都城级样本) |
-| P0A-08 | formations.json（小） | 7阵型（6 基础 + 1 补录冲阵 id 16） |
+| P0A-08 | formations.json（小） | 7阵型；目标 `[0,1,2,3,4,6,16]`（六基础+特殊冲阵）；Session 288 FM-P1 已迁移落地 |
 | P0A-09 | units.json（小） | 9兵种（6陆+走舸/蒙冲/楼船 Session71） |
 | P0A-10 | items.json（小） | 20宝物 |
 | P0A-11 | females.json（小） | 10女性 |
@@ -59,7 +59,26 @@
 | BF-P3 | ✅ 动态战况与权威 RNG | 天气、部署、伏击/侦察、遭遇顺序、战场 AI、生成审计 | **Session 250 完成：**南郡按月份生成天气，Army 稳定排序后部署到合法入口，并冻结侦察、伏击、遭遇顺序；全部消费权威 `xorshift32-v1` 并记录抽数审计。动态专项13/13、既有 AI 保存点整场复现4/4。**边界：**县级主动目标选择不归本期；天气/伏击当前不含战斗数值修正；Tier II 迷雾仍留 BF-P5。 |
 | BF-P4 | ✅ 第二郡地形对照 | 颍川 17 县/29 陆路、通用生成器、双入口；阵前/城下挑战复用 S10 duel 引擎并幂等回写 | **Session 251~252 完成：**两郡数据/渲染差异、无郡名分支、旧档、两种单挑语境与真实浏览器链均通过 |
 | BF-P5 | 核心战线批量扩展（进行中） | 录入/校勘工具；年代覆写；县控接补给与郡国归属 | 目标剧本可达交战郡均有模板；无静默抽象回退。**录入/校勘工具第一步已完成（Session 253）：**`seed-schema.ts` 提供 `CommanderySeed` → `buildHistoricalGeographyBundle` 纯函数构建器；南郡/颍川均已迁移至 seed 生成；`pnpm verify-historical-geography` 逐郡校验 + preview 一致性；seed-schema 16/16 单元测试。**补给线真实路径判定已落地（Session 后续，2026-07-31）：**`shared/army-county-mapping.ts` 建立 Army—郡域位置映射（`resolveArmyCountyNodeId`/`shortestCountyPath`/`isCountyPathBlockedBy`/`monthlyArmyFoodCost`，nodeStates[].armyIds 权威 + deployments 回退），`generateCommanderyBattlefield` 把部署写入 nodeStates[].armyIds（BF-P3 确定性序列不变），`tickBattlefieldInstance` 逐支守方 Army 真实路径判定（补给线 = seat → Army 当前县最短路径，经过攻方控制县 → 粮耗×2 + 士气-5），替换"占领任意首批县→守方全军 morale -5"全局简化；验证 `shared/army-county-mapping.test.ts` + `verify-save-battlefield-instance.ts` f6/f6b（49/49）。**0-A 边界：**守方 Army 入郡域场景由 R6（S15 多线 AI）排期。**orchestrator 去硬编码已落地（Session 255）：**新建 `shared/commandery-templates.ts` 郡国模板目录（bundle/templateId/entryNodeIds/instancePrefix/warPrefix/UI 标签），`enterNanjunBattlefield` 由"nanjun/yingchuan 双 if 分支"改为目录查找，路由校验、`verify-historical-geography` 逐郡校验与前端标签均改为目录驱动；新增第三郡只需在目录登记一条即可，无需再改服务端分支（南郡兼容包装 `generateNanjunBattlefield` 亦从目录取数）。**剩余待办（Session 177 补登记）：**(1) ~~补给线糧耗×2 真实路径判定~~ —— ✅ 已由上述 BF-P5 位置映射解决，原全局简化替代已下线；(2) ~~郡域场景迷雾机制——新发现缺口~~ —— ✅ **已随 BF-P5 落地（Session 256，2026-07-31）**：`shared/commandery-fog.ts` 纯函数（`computeRevealedNodeIds`/`maskBattlefieldInstanceForPlayer`）+ `maskGameStateForPlayer` 集成，`foggedNodeIds` 为 mask 投影专属字段（Zod optional 不入存档）；地理层恒可见、军情层按揭示集遮蔽；揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县（每源 + 一跳邻接）；**占领县→成为揭示源→邻接县破雾**，即 BF-P2 Q9 视野扩张攻占效果（现为完整实现，占华容前 7 迷雾含州陵 → 占后 6、州陵/当阳/枝江揭示、华容驻 858 可见）。验证：`shared/commandery-fog.test.ts` 8/8、`verify-save-battlefield-instance.ts` f8 14 条（63/63 全过）、真实 API + Headless Chrome 双端闭环。详见 `docs/21-battlefield-scene-design.md` §5.2.1 与 `docs/25-bf-p2-design.md` §2.6.2。**年代覆写机制已落地（Session 257，2026-07-31）：**`shared/data/historical-geography/seed-schema.ts` 的 `CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 均支持 `validFromYear`/`validToYear`（缺省 = `scenarioYear`，单一年代条目）；自动派生 road 取两端县有效期交集。新增纯函数 `resolveBundleForYear(bundle, year)`（`year-overrides.ts`）按年份过滤出该年有效子集并重新跑 Zod 校验，请求年份无有效郡国定义或过滤后引用断裂时**抛错**（无静默回退）。南郡/颍川 190 切片仍为单一年代；多年代能力由 `year-overrides.test.ts` 演示夹具验证（208 年乙县裁撤/丙县析置）。验证：shared 244/244、`pnpm verify-historical-geography` 2 郡通过。详见 `docs/22-nanjun-historical-geography-collation.md` §7.4。**剩余待办（Session 177 补登记）：**(1) ~~补给线糧耗×2 真实路径判定~~ ✅；(2) ~~郡域场景迷雾机制~~ ✅；(3) **年代覆写机制** ✅（机制已实装，具体历史改置待第三郡史料填入）；(4) **第三郡录入**（需要你提供郡的史料）；(5) **县控接补给与郡国归属**机制细节（随第三郡落地）。**守方 Army 入郡域场景已落地（R6 范畴，Session 258，2026-08-01）：**`enterNanjunBattlefield` 守方势力改为郡治大地图城市（`worldCityId`）实际占领势力（无主/属玩家时回退既有行为），驻留郡治城市的守方现役 Army 自动纳入战场，部署到模板新增 `defenderEntryNodeIds`（守方纵深前沿县，南郡=州陵/夷道、颍川=舞阳/父城）；迷雾揭示源并入守方 Army 所在县（`computeRevealedNodeIds` 第 5 条），mask 投影保留其 `armyIds`（玩家可见驻军）但 `deployments` 快照仍不泄露；补给线真实路径判定在真实流程触发（f9：占州陵→占华容→tick→粮耗×2+士气-5）。验证：shared 247/247、`verify-save-battlefield-instance.ts` **74/74**（f9 新增 11 条）、verify-bf-p3-dynamic 13/13 确定性不变。**县级主动 AI 已落地（R6 后续 · S15 深化，Session 259，2026-08-01）：**新建 `shared/commandery-defender-ai.ts` 决策纯函数（`decideDefenderArmyAction`，规则①被占县优势收复/劣势撤退、②补给线断士气<60 撤退否则向 seat 回撤一格、③向最近攻方占领县移动一格、④原地驻守，决策消费权威 PRNG，无可行动零消费）；`tickBattlefieldInstance` 签名加 rng、补给线惩罚后集成守方行动（位置变更同步 `nodeStates[].armyIds` 与 `dynamicSituation.deployments` 回退表）；`engageCounty` 守方 Army 参战（合成守军 + 按比例回填 + 攻方胜溃退移驻 seat/撤出郡域）。验证：shared **256/256**（+9 defender-ai）、`verify-save-battlefield-instance.ts` **88/88**（f10 新增 14 条：f10a 主动移动、f10c 交战溃退、f10b 补给线断撤退）、verify-bf-p3-dynamic 13/13 确定性不变、verify-campaign 71/71、bf-p4 20/20、verify-historical-geography 2 郡、client 36/36、typecheck/lint/data/build/diff-check 全绿。**边界：**大地图 AI 向郡域增援（选项 C）已随 Session 260 落地（见 §2.6.4.1）。 |
+> **Session 269 状态覆盖：**上述 BF-P5 历史段中的“第三郡待史料/待录入”已完成：陈留郡
+> 190 年模板现为 17 县、19 路、10 地标，并已接通目录、郡治归属、攻守入口、补给、迷雾
+> 与真实浏览器入口。BF-P5 后续仅按目标剧本交战范围继续逐郡扩展；105 郡国全量归 BF-P6。
+> **Session 270 续实施：**按陈留—洛阳主战线新增河南尹 190 第四模板（21 县/
+> 40 路/10 地标）；攻方从荥阳/中牟/新郑入场，守方部署成皋/偃师，郡治雒阳。
+> 县表、水系与 190 年荥阳军事入口分级标注，没有将相对拓扑伪装为精确古道。
+> **Session 271 续实施：**按关东义兵北线新增河内郡 190 第五模板（18 县/35 路/
+> 10 地标），攻方入口河阳/修武/获嘉、守方野王/怀、治所怀，并接通“河内孟津”入口。
+> 0-A 大地图无河内治所，暂借洛阳节点承载势力归属与进场，不表示行政合并。
+
 | BF-P6 | 0-B 全量 | 与 105 行政治所一一对应的 105 郡国模板；版本治理与性能优化 | 全量校验、来源/版权、并发战争、存档与渲染性能通过 |
+
+> **Session 272 BF-P5 状态覆盖：**新增弘农郡第六模板（9 县/17 路/11 地标），六模板
+> 合计 98 县/151 路/55 地标；0-A 暂借长安节点代理弘农进场与归属，未启动 BF-P6/0-B。
+> **Session 273 进度口径：**BF-P5 行内早期“第三郡/年代覆写待办”仅保留为历史过程，
+> 当前均已完成。现行 Next 为六模板跨郡入口与 0-A 代理归属总验收，或按目标剧本继续
+> 逐郡扩展；105 郡国全量仍严格归 BF-P6/0-B。
+> **Session 274 总验收：**六模板已在同一 1440×900 浏览器会话逐一真实点击进入并退出；
+> 模板、县/路/入口、治所渲染及大地图归属全部通过。南郡/颍川/陈留/河南尹为直连，
+> 河内→洛阳、弘农→长安为显式 0-A 代理；下一目标战线由用户拍板。
 
 依赖顺序固定为 BF-P0 → P1 → P2 → P3 → P4 → P5 → P6；完成 BF-P4 两郡对照前不得启动批量扩展。县级记录总数不在本阶段预估，待校勘后先更新 `08-data-dictionary.md` 数字真源。
 
@@ -152,7 +171,7 @@
 | P1-06 | GameLayout — 主三栏布局 | P1-01, P1-04 |
 | P1-07 | 初始 GameState 生成(读取剧本) | P1-05, P0-14 |
 | P1-08 | GameService.createGame / .getGameState API | P1-07 |
-| P1-09 | AI 基础框架(空决策/占位) | P1-05 |
+| P1-09 | AI 基础框架（大地图基础框架；六角敌军已于 Session 275 升级为目标/地形/火计战术评分） | P1-05 |
 
 ---
 
@@ -179,7 +198,7 @@
 | P3-02 | BattleState 生成(开战初始化) | P1-05 |
 | P3-03 | 移动范围 BFS 算法 | P3-01, P3-02 |
 | P3-04 | 攻击引擎 — 伤害公式 | P3-03 |
-| P3-05 | 兵种克制 + 阵型加成 | P3-04, P0-08, P0-09 |
+| P3-05 | 兵种克制 + 阵型加成（Session 277 已有六基础白刃切换/修正；目录、精通、三模式、AI 尚未全量同源） | P3-04, P0-08, P0-09 |
 | P3-06 | 计策系统(15种) — 火/水/落石/伏兵/挑拨等 | P3-04 |
 | P3-07 | 单挑系统(7指令+三向克制+武器分化+部位受伤+AI+UI) 设计完成 | P3-04 |
 | P3-08 | 攻城战引擎 — 城墙/城门/器械 | P3-04 |
@@ -188,6 +207,23 @@
 | P3-11 | 战斗 API (move/attack/tactic/duel/retreat) | P3-04~P3-08 |
 | P3-12 | BattleView 完整组件 | P3-09~P3-11 |
 | P3-13 | 特殊兵种战斗效果(藤甲/象兵/虎豹骑 etc) | P3-05 |
+
+### S10-FM：P3-05 阵型联动 0-A 子路线
+
+> 本子路线不新增大系统编号。Session 279 完成原设定优先开发计划；Session 287 启动并产出 FM-P0 材料；
+> Session 288 批准 Gate M/N1/D 并落地 FM-P1（Schema + 数据迁移）。详细 Gate、排期和验收见
+> `29-formation-integration-development-plan.md`。
+
+| ID | 任务 | 状态 | 前置/边界 |
+|:--:|------|:--:|-----------|
+| FM-PLAN | 调研、融合、IP、实施、测试评审稿提交 | [x] | 仅文档，不改变运行时；待用户审核 |
+| FM-P0 | 权威契约、目录/逐将迁移表、数值映射与部署语义冻结 | [x] | 材料产出 + Gate M/N1/D 批准（Session 288） |
+| FM-P1 | `Formation` Zod/Type、TacticalConfig v2、7阵目录与 146 将精通迁移 | [x] | 已实装（Session 288）；v1 只读兼容 |
+| FM-P2 | 共享合法性、阵型贡献、五部部署与解释纯函数 | [x] | 已实装（Session 289）`shared/formation-core.ts`；不创建第四套伤害公式 |
+| FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）；六角点值迁移/部署注入后置 |
+| FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [ ] | 复用 1 TP、组织度、五部阵位 |
+| FM-P5 | 平衡、独特性、经典体验、IP 与文档总验收 | [ ] | 通过后仍不代表 0-B 完成 |
+| FM-P6 | 27阵/水阵/双轴成长扩展 | [ ] | 仅 0-A 验收完成且用户重启 0-B 后可做 |
 
 ---
 
@@ -264,3 +300,58 @@
 - Session 248：R7 S09 完成；运行时改用 `courtNetwork/courtNetworkOpportunities`，
   删除成年女性换算和成功率加成，旧 v1 `beauty*` 存档无损迁移。
 - Next：R8 跨系统成长入口收敛与24回合情景平衡。
+### Session 277 · S10 战旗移动深化
+
+- [x] 100×100 六角坐标、A*/Dijkstra、障碍矩阵与 `<100ms` 性能门禁
+- [x] 路径预览、剩余移动力、逐格动画、权威复验与攻击前移动撤销
+- [x] 剑/斧1格、矛1~2格朝向接战；战法收口白刃2格
+- [x] 六基础阵型正式切换并修复阵型修正键漂移
+- [x] 版本化 JSON、Zod、事件总线、阶段/撤销/规则策略纯核心与覆盖率门禁
+- [ ] 阶段细分字段正式写入 BattleState（当前纯核心协议已就位，运行态仍兼容 player/enemy/over）
+- [ ] 军阵格挡/闪避若要独立于单挑指令系统，须先由用户批准概率池与数值
+
+### Session 279 · S10/P3-05 阵型整合计划
+
+- [x] 按原设定优先完成 `docs/29-formation-integration-development-plan.md` 评审稿。
+- [x] **Session 287**：启动实施 + FM-P0 评审材料（目录迁移 + 146 将 CSV）。
+- [x] **Session 288**：补全 N1 数值映射表 + D 五部部署草稿；**Gate M/N1/D 批准**；FM-P1 落地
+      （`Formation` Zod/Type + `FormationDeployment`、TacticalConfig v2 + v1→v2 夹具、
+      `formations.json` 收敛 `[0,1,2,3,4,6,16]`、146 将精通迁移、validate-data 跨引用）。
+- [x] **Session 289（FM-P2）**：`shared/formation-core.ts` 共享解析器——`getAvailableFormations` /
+      `resolveFormationContribution`（读 tiers[0] + effects 暴击链）/ `resolveFormationDeployment` /
+      `explainFormationResolution` / `organizationBandFor` / `applyOrganizationExecution`；暴击/反击/连击
+      贡献结构化入库 `effects`（单一内容源）；formation-core 单测 7 项。
+- [~] **Session 290（FM-P3 crit + meleeRound 注入 + 变阵幂等）**：crit.ts 暴击/反击/连击/反击系数改从 `formations.json` `effects`
+      注入（`setFormationCatalog` + 服务端启动注入 + 未注入回退硬编码），行为等价（verify-fm3-crit 5 断言）；
+      `meleeRound` 百分比表外移到 `formations.json` `meleePercent`（`setMeleeFormationCatalog` + 回退），
+      白刃伤害/先手不变（verify-fm3-melee 4 断言）；**动作级幂等（§7.5）**：`MeleeState.commandCache` +
+      `meleeRound(commandId, expectedRound)`（同 ID 同轮重试返回首次结果/不二次扣 TP 推进、过期拒绝；
+      verify-fm3-idempotency 5 断言）；**自动入口恢复 `runAutoBattle`（§2.2/§7.4 清债）**：局部自动结算由
+      `runMeleeRound` 循环改为调用既有 `runAutoBattle`（结果桥接回 melee 一次回写，verify-fm3-auto-battle 4 断言）；
+      `generate-0a-data.ts` 同步。
+- [~] **Session 291（FM-P3a 标准模式点值迁移）**：`runMeleeRound` 唯一量纲收敛到 `tiers[0]` 点值——经
+      等价性单点换算（`MELEE_ATK/DEF_GAIN=0.1`、`MOB_GAIN=0.5`、`MOB_BASE=1.0`，模块常量）消费，
+      正面增量按组织度执行档缩放（`MeleeState.attackerOrganization/defenderOrganization?`，旧档缺省 orderly×1.0 中性）；
+      `meleePercent` 过渡字段退役（类型/Zod/formations.json/generate-0a-data 移除，单一内容源收口）；
+      `standardMeleeMods` 导出供战报复算；StandardModePanel 阵型说明同步新数值；
+      验证 `verify-fm3-melee-inject.ts` 重写为点值语义（16 断言 + 迁移对比表）。
+- [~] **Session 292（FM-P3 自动战斗阵型贡献）**：`runAutoBattle` 的 `formationMod` 由 `autoFormationMods`
+      生成（`tiers[0]` 攻防点值 ×0.1 合并加性战力修正 + 五部侧击 +10%；组织度执行档只缩放正面增量、
+      负修正原值保留；`mobility/range` 点值不参与自动战力）；`setAutoFormationCatalog` 服务端注入 +
+      中性回退；`squadFlankBonus`/`autoFormationMods` 导出供复算；守城守方无 Army 无阵型贡献（城墙惩罚
+      表达守势；与 `orgCoeff` 分项不双乘）；验证 `verify-fm3-auto-formation.ts` 13 断言（系数/组织度/
+      侧击/中性/端到端注入生效与确定性）。
+- [ ] 下一步 FM-P3 剩余：六角 `battle.ts` 阵型贡献/部署注入（需多 unit 支持 + 六角变阵状态机评审 +
+      客户端/AI 多 unit 适配，Single 大重构）、战术协同矩阵运行时与战报解释 UI（FM-P4）。
+- 0-B、27 阵、双轴成长、科技树和水阵继续暂停。
+
+### Session 284 · S24 关系网 + S25 技能树 + S26 天命人心
+
+- [x] **S24 关系网系统**：`shared/relations.ts` pairAffinity/relationState/evolveAffinity 纯函数；`server/src/data/relations.json` 首批 31 对重点关系（史源分层）；服务端 `GET /api/game/relations/:officerId`；客户端 OfficerDetail 新增「社交」tab（关系列表 + SVG 径向图谱）；家族 tab 更名为「关系」，婚姻区块扩展妾/姬（`Officer.consortIds`）
+- [x] **S25 技能树系统**：`shared/types/skill-tree.ts` 类型；`server/src/data/skill-trees.json` 5 棵子树（战略计策/战术计策/单挑技能/统军/内政），30 技能按战斗层映射；技能点绑定 merit 等级，特性点每 5 级 +1；服务端 5 个 API 端点；客户端 OfficerDetail 新增「技能」tab（子树切换 + 节点列表 + 加点按钮 + 特性点概览）
+- [x] **S26 天命人心系统**：`shared/mandate-popular.ts` 纯函数（computeMandate/computePopularWill）；Faction 新增 mandate/popularWill 字段；turn.ts 月度结算接入；服务端 `GET /api/game/faction/overview`；命令坞新增「势力」入口（FactionOverviewDrawer 双轨进度条 + 效果预览）
+- [x] 数据层：Officer 新增 skillTreeState/skillPointsSpent/traitLevels/traitPointsSpent/consortIds（全部 optional，旧档兼容）；Zod schema 同步
+- [x] 回归：typecheck / test（shared 311 + client 42）全绿
+- [x] 文档：`30-skill-tree-design.md` / `31-mandate-popular-system.md` 定稿；`12-system-map.md` 注册 S24+S25+S26（23→27）；`03-data-models.md` / `06-api-design.md` / `07-ui-design.md` / `08-data-dictionary.md` / `09-roadmap.md` / `10-progress.md` / `HANDOFF.md` 同步
+
+*文档版本: v5.0 | 2026-08-01 | Session 284 · S24/S25/S26 首轮实装*

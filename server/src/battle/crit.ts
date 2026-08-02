@@ -32,6 +32,7 @@ import {
   meritEffects,
   meritLevelFor,
 } from '@leh/shared';
+import type { Formation } from '@leh/shared';
 import type { TerrainType } from '@leh/shared';
 import { getUnitMatchup } from './damage.js';
 
@@ -89,6 +90,44 @@ const FORMATION_MODS: Record<number, FormationMods> = {
 
 function formationMods(f: FormationType): FormationMods {
   return FORMATION_MODS[f] ?? { crit: 0, counter: 0, chain: 0, counterCoeff: 0 };
+}
+
+/**
+ * 阵型暴击链贡献（FM-P3，单一内容源）。
+ *
+ * 生产引擎从 `formations.json` 的 `effects`（`crit_rate`/`counter_rate`/`counter_coeff`/`chain_rate`）
+ * 结构化读取，替换 §4.2 硬编码表；未注入 catalog（纯单测/脚本）时回退到旧硬编码表，行为等价。
+ * 见 `shared/formation-core.ts resolveFormationContribution` 与 FM 计划 §7.3。
+ */
+let FORMATION_CATALOG: readonly Formation[] | null = null;
+
+/** 注入静态阵型目录（服务端启动时调用；null 恢复旧硬编码回退）。 */
+export function setFormationCatalog(catalog: readonly Formation[] | null): void {
+  FORMATION_CATALOG = catalog;
+}
+
+function effectSum(effects: Formation['effects'], type: string): number {
+  let total = 0;
+  for (const e of effects) {
+    if (e.modifier.type === type && e.modifier.condition == null) total += e.modifier.value;
+  }
+  return total;
+}
+
+function catalogFormationMods(f: FormationType): FormationMods | null {
+  if (!FORMATION_CATALOG) return null;
+  const record = FORMATION_CATALOG.find((item) => item.id === f);
+  if (!record) return null;
+  return {
+    crit: effectSum(record.effects, 'crit_rate'),
+    counter: effectSum(record.effects, 'counter_rate'),
+    chain: effectSum(record.effects, 'chain_rate'),
+    counterCoeff: effectSum(record.effects, 'counter_coeff'),
+  };
+}
+
+function formationModsResolved(f: FormationType): FormationMods {
+  return catalogFormationMods(f) ?? formationMods(f);
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +247,7 @@ export function computeCritRate(ctx: CritContext): number {
   const { officer, unitType, formation, proficiency, terrain, matchup } = ctx;
   const o = officer;
   const u = uniqueOf(o);
-  const fm = formationMods(formation);
+  const fm = formationModsResolved(formation);
   const pf = profToBonus(proficiency);
 
   let rate = 5; // 基础 5%
@@ -303,7 +342,7 @@ export function canCounter(ctx: CounterContext): boolean {
 export function computeCounterRate(ctx: CounterContext, baseCritRate: number): number {
   const o = ctx.officer;
   const u = uniqueOf(o);
-  const fm = formationMods(ctx.formation);
+  const fm = formationModsResolved(ctx.formation);
   // 反击率基础 = 兵种反击触发率(简化 50%) + 加成
   // §6.3 未给统一"反击率"基础; 用 50% 基础 + 修正
   let rate = 0.5;
@@ -325,7 +364,7 @@ export function computeCounterCoeff(ctx: CounterContext): number {
   const u = uniqueOf(o);
   let coeff = baseCounterCoeff(ctx.unitType);
   coeff += skillLevel(o, 'hold') * 0.05;
-  const fm = formationMods(ctx.formation);
+  const fm = formationModsResolved(ctx.formation);
   coeff += fm.counterCoeff;
   if (u === 'ganglie') coeff = 1.0; // 取代 0.6
   if (u === 'elai') coeff = 1.2;
@@ -352,7 +391,7 @@ export interface ChainContext {
 export function computeChainRate(ctx: ChainContext): number {
   const o = ctx.officer;
   const u = uniqueOf(o);
-  const fm = formationMods(ctx.formation);
+  const fm = formationModsResolved(ctx.formation);
   const pf = profToBonus(ctx.proficiency);
 
   let rate = 10; // 基础 10%

@@ -245,7 +245,7 @@ export function launchPlot(
   const factions = { ...state.factions };
   if (cost.beauty) {
     if ((faction.courtNetwork ?? 0) < cost.beauty) {
-      throw new Error(`美女资源不足（需 ${cost.beauty}）`);
+      throw new Error(`宫廷人脉不足（需 ${cost.beauty}）`);
     }
     factions[fid] = {
       ...faction,

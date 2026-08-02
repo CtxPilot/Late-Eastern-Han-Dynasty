@@ -103,4 +103,13 @@ export interface City extends CityStatic {
   };
   /** R5：一城同时至多一个持续开发项目；旧存档缺失表示无项目。 */
   activeDevelopment?: DevelopmentProject;
+  /**
+   * 城级派系与门阀（S27，docs/34）。optional 追加，旧存档缺失时由
+   * deriveCityFactions(cityId) 补种；非试点城市保持空数组。
+   */
+  cityFactions?: import('../city-factions.js').CityFactionEntry[];
+  /** S27 巡查标记：当年×12+月；该月豁免叛乱判定。旧存档缺失表示未巡查。 */
+  factionPatrolStamp?: number;
+  /** S27 深化：官宦弹劾城主事件（docs/34 §十一）。optional，旧档兼容。 */
+  pendingImpeachment?: import('../city-factions.js').PendingImpeachment;
 }

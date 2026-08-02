@@ -18,6 +18,7 @@ import {
   parseCurrentSaveEnvelope,
   splitDemographics,
   syncMerit,
+  deriveCityFactions,
   type BattleState,
   type City,
   type FemaleCharacter,
@@ -39,6 +40,7 @@ import {
   trainTroops,
   type DevelopKind,
 } from '../engine/civil.js';
+import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
 import {
   lootBeautyOnCapture,
   rewardBeautyStock,
@@ -52,11 +54,13 @@ import {
   createBattle,
   finishPlayerAction,
   getMoveRange,
+  getMovePath,
   getUsableAbilities,
   moveUnit,
   runEnemyPhase,
   skipBattleDuel,
   stepBattleDuel,
+  undoLastBattleAction,
 } from '../engine/battle.js';
 import {
   advisorAction as campaignAdvisorAction,
@@ -81,13 +85,12 @@ import {
 } from '../engine/march.js';
 import { runAutoBattle } from '../engine/campaign.js';
 import {
-  giftBeauty,
   marryFemale,
   recruitOfficer,
   searchTalent,
 } from '../engine/personnel.js';
 import { grantBattleIntel } from '../engine/intel.js';
-import { formAlliance, giftBeautyStock, tributeGold } from '../engine/diplomacy.js';
+import { formAlliance, transferCourtNetwork, tributeGold } from '../engine/diplomacy.js';
 import {
   declareWarByFalseDecree,
   establishHegemony,
@@ -228,6 +231,7 @@ function buildGameState(
       facilities: c.facilities ?? [],
       policy: c.policy ?? null,
       developmentProgress: c.developmentProgress ?? { farm: 0, commerce: 0, wall: 0 },
+      cityFactions: deriveCityFactions(c.id),
     };
   }
 
@@ -481,6 +485,38 @@ export function doTrain(cityId: number): GameState {
   });
 }
 
+/** S27 开垦：乡政派系命令（docs/34 §四 1） */
+export function doReclaimLand(cityId: number, officerId: number): GameState {
+  return withLock(() => {
+    currentGame = reclaimLand(getGame(), cityId, officerId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+/** S27 巡查：乡政派系命令（docs/34 §四 2） */
+export function doPatrolCity(cityId: number, officerId: number): GameState {
+  return withLock(() => {
+    currentGame = patrolCity(getGame(), cityId, officerId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+/** S27 兵装采购：10 金/件（docs/34 §五） */
+export function doBuyArms(amount: number): GameState {
+  return withLock(() => {
+    currentGame = buyArms(getGame(), amount);
+    return getClientGame();
+  });
+}
+
+/** S27 深化：弹劾处理（docs/34 §十一）——安抚（appease）或撤换城主（remove） */
+export function doResolveImpeachment(cityId: number, action: 'appease' | 'remove'): GameState {
+  return withLock(() => {
+    currentGame = resolveImpeachment(getGame(), cityId, action);
+    return getClientGame();
+  });
+}
+
 export function doSeekBeauty(cityId: number): GameState {
   return withLock(() => {
     currentGame = seekBeauty(getGame(), cityId, runtimeRandom);
@@ -505,13 +541,6 @@ export function applyLootBeauty(cityId: number, attackerFactionId: number): void
 export function doMarry(femaleId: number, officerId: number): GameState {
   return withLock(() => {
     currentGame = marryFemale(getGame(), femaleId, officerId);
-    return getClientGame();
-  });
-}
-
-export function doGiftBeauty(femaleId: number, officerId: number): GameState {
-  return withLock(() => {
-    currentGame = giftBeauty(getGame(), femaleId, officerId);
     return getClientGame();
   });
 }
@@ -597,9 +626,9 @@ export function doTribute(targetFactionId: number): GameState {
   });
 }
 
-export function doGiftBeautyDip(targetFactionId: number, amount?: number): GameState {
+export function doTransferCourtNetwork(targetFactionId: number, amount?: number): GameState {
   return withLock(() => {
-    currentGame = giftBeautyStock(
+    currentGame = transferCourtNetwork(
       getGame(),
       targetFactionId,
       amount != null ? amount : 1,
@@ -826,6 +855,13 @@ export function battleMove(unitId: string, q: number, r: number): BattleState {
   });
 }
 
+export function battleUndo(): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle(); if (!battle) throw new Error('无战斗');
+    const nextBattle = undoLastBattleAction(battle); commitActiveBattle(nextBattle); return nextBattle;
+  });
+}
+
 export function battleAttack(attackerId: string, defenderId: string): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
@@ -941,6 +977,12 @@ export function battleMoveRange(unitId: string): string[] {
   const battle = getActiveBattle();
   if (!battle) return [];
   return getMoveRange(battle, unitId);
+}
+
+export function battleMovePath(unitId: string, q: number, r: number) {
+  const battle = getActiveBattle();
+  if (!battle) throw new Error('无战斗');
+  return getMovePath(battle, unitId, q, r);
 }
 
 /** 退出战场并结算占城/残兵回流，返回最新 GameState */
@@ -1691,6 +1733,9 @@ export function meleeStart(
       atkArmy.formation,
       defArmy.formation,
       atkCommander?.stats.intelligence ?? 50,
+      // FM-P3a 点值迁移：快照各军组织度供阵型执行档消费（optional，旧档缺省 orderly ×1.0）
+      atkArmy.organization,
+      defArmy.organization,
     );
 
     currentGame = { ...state, activeMelee: melee };
@@ -1739,12 +1784,21 @@ export function meleeSelectMode(
 
     let selected: MeleeState = { ...melee, entryMode: mode };
     if (mode === 'auto') {
+      // FM-P3：自动结算恢复调用既有 runAutoBattle（05 §20.3.5 / 计划 §2.2 §7.4），
+      // 取代此前的 runMeleeRound 循环漂移。结果桥接回 melee 状态后由 applyMeleeSettlement 一次回写。
       const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
-      const intelligence = atkArmy ? state.officers[atkArmy.commanderId]?.stats.intelligence ?? 50 : 50;
-      while (selected.phase === 'active') {
-        const result = runMeleeRound(selected, { type: 'normal_attack' }, intelligence);
-        selected = applyMeleeRoundResult(selected, result, 0);
-      }
+      const defArmy = state.campaignArmies.find((a) => a.id === melee.defenderArmyId);
+      if (!atkArmy || !defArmy) throw new Error('自动结算缺少攻守 Army');
+      const autoResult = runAutoBattle(state, atkArmy, defArmy, null, runtimeRandom);
+      const phase: MeleeState['phase'] = autoResult.winner === 'attacker' ? 'attacker_victory' : 'defender_victory';
+      selected = {
+        ...selected,
+        attackerTroops: autoResult.attackerRemaining,
+        defenderTroops: autoResult.defenderRemaining,
+        attackerMorale: autoResult.attackerMoraleAfter,
+        defenderMorale: autoResult.defenderMoraleAfter,
+        phase,
+      };
       currentGame = applyMeleeSettlement({ ...state, activeMelee: selected }, selected);
       return { game: getClientGame(), melee: getGame().activeMelee! };
     }
@@ -1768,9 +1822,12 @@ export function meleeSelectMode(
   });
 }
 
-/** 执行一回合白刃战 */
+/** 执行一回合白刃战（FM-P3 §7.5 动作级幂等：commandId + expectedRound） */
 export function meleeRound(
   actionType: string,
+  targetFormation?: import('@leh/shared').FormationType,
+  commandId?: string,
+  expectedRound?: number,
 ): { game: GameState; result: import('@leh/shared').MeleeRoundResult; melee: MeleeState } {
   return withLock(() => {
     const state = getGame();
@@ -1778,6 +1835,18 @@ export function meleeRound(
     if (!melee) throw new Error('没有活跃白刃战');
     if (melee.entryMode !== 'standard') throw new Error('只有标准模式可提交逐回合战术');
     if (melee.phase !== 'active') throw new Error('白刃战已结束');
+
+    // 动作级幂等（FM-P3 §7.5）
+    const cache = melee.commandCache ?? {};
+    if (commandId != null) {
+      const cached = cache[commandId];
+      if (cached) {
+        if (cached.round !== expectedRound) throw new Error('expectedRound 过期，命令拒绝');
+        const cur = getGame().activeMelee!;
+        return { game: getClientGame(), result: cached.result, melee: cur };
+      }
+    }
+
     const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
     const atkCommander = atkArmy ? state.officers[atkArmy.commanderId] : undefined;
 
@@ -1785,10 +1854,17 @@ export function meleeRound(
     const cost = getTacticalActionCost(typedAction);
     if (cost === null) throw new Error('未知的白刃战行动');
     if (melee.tacticalPoints < cost) throw new Error('战术点不足');
-    const action = { type: typedAction };
-    const result = runMeleeRound(melee, action, atkCommander?.stats.intelligence ?? 50);
+    const allowedFormations = [0, 1, 2, 3, 4, 6] as const;
+    if (typedAction === 'change_formation' && !allowedFormations.includes(targetFormation as (typeof allowedFormations)[number])) {
+      throw new Error('变阵必须指定 0-A 基础阵型');
+    }
+    const effectiveMelee = typedAction === 'change_formation' ? { ...melee, attackerFormation: targetFormation! } : melee;
+    const action = { type: typedAction, targetFormation };
+    const result = runMeleeRound(effectiveMelee, action, atkCommander?.stats.intelligence ?? 50);
 
-    const nextMelee = applyMeleeRoundResult(melee, result, cost);
+    // 写入幂等缓存（仅标准模式，命令成功）
+    const nextCache = commandId != null ? { ...cache, [commandId]: { round: melee.round, result } } : cache;
+    const nextMelee = applyMeleeRoundResult({ ...effectiveMelee, commandCache: nextCache }, result, cost);
     currentGame = result.phase === 'active'
       ? { ...state, activeMelee: nextMelee }
       : applyMeleeSettlement({ ...state, activeMelee: nextMelee }, nextMelee);
@@ -1863,4 +1939,240 @@ export function grandStrategistStatus(): {
   const int = gs ? (state.officers[gs.officerId]?.stats.intelligence ?? 85) : 85;
   const mods = calcStrategyModifiers(strategy, int);
   return { strategist: gs, modifiers: mods, hasStrategist };
+}
+
+// ====== 关系网 API（S24） ======
+
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { pairAffinity, relationState, skillPointsForMerit, traitPointsForMerit } from '@leh/shared';
+import type { StaticRelation, OfficerRelation, SkillTreeDef } from '@leh/shared';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+let _relationsCache: StaticRelation[] | null = null;
+function loadRelations(): StaticRelation[] {
+  if (_relationsCache) return _relationsCache;
+  const raw = JSON.parse(readFileSync(join(__dirname, '../data/relations.json'), 'utf-8'));
+  _relationsCache = raw.relations ?? raw;
+  return _relationsCache!;
+}
+
+let _skillTreesCache: SkillTreeDef[] | null = null;
+function loadSkillTrees(): SkillTreeDef[] {
+  if (_skillTreesCache) return _skillTreesCache;
+  const raw = JSON.parse(readFileSync(join(__dirname, '../data/skill-trees.json'), 'utf-8'));
+  _skillTreesCache = raw.trees ?? raw;
+  return _skillTreesCache!;
+}
+
+export function getOfficerRelations(officerId: number): OfficerRelation[] {
+  const state = getGame();
+  const officer = state.officers[officerId];
+  if (!officer) return [];
+  const allRelations = loadRelations();
+  const result: OfficerRelation[] = [];
+  const seen = new Set<string>();
+  for (const rel of allRelations) {
+    if (rel.fromId === officerId) {
+      const key = `${Math.min(officerId, rel.toId)}:${Math.max(officerId, rel.toId)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const target = state.officers[rel.toId];
+      if (!target) continue;
+      const aff = pairAffinity(officer, target);
+      result.push({
+        targetId: rel.toId,
+        targetName: target.name,
+        type: rel.type,
+        source: rel.source,
+        state: relationState(aff),
+        affinity: Math.round(aff),
+      });
+    } else if (rel.toId === officerId) {
+      const key = `${Math.min(officerId, rel.fromId)}:${Math.max(officerId, rel.fromId)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const target = state.officers[rel.fromId];
+      if (!target) continue;
+      const aff = pairAffinity(officer, target);
+      result.push({
+        targetId: rel.fromId,
+        targetName: target.name,
+        type: rel.type,
+        source: rel.source,
+        state: relationState(aff),
+        affinity: Math.round(aff),
+      });
+    }
+  }
+  return result;
+}
+
+export function getSkillTrees(): SkillTreeDef[] {
+  return loadSkillTrees();
+}
+
+export function getOfficerSkillState(officerId: number): {
+  skillTreeState: Record<string, number>;
+  skillPointsSpent: number;
+  totalSkillPoints: number;
+  traitLevels: Record<string, number>;
+  traitPointsSpent: number;
+  totalTraitPoints: number;
+} {
+  const state = getGame();
+  const officer = state.officers[officerId];
+  if (!officer) throw new Error('武将不存在');
+  const meritLv = officer.meritLevel ?? 1;
+  return {
+    skillTreeState: officer.skillTreeState ?? {},
+    skillPointsSpent: officer.skillPointsSpent ?? 0,
+    totalSkillPoints: skillPointsForMerit(meritLv),
+    traitLevels: officer.traitLevels ?? {},
+    traitPointsSpent: officer.traitPointsSpent ?? 0,
+    totalTraitPoints: traitPointsForMerit(meritLv),
+  };
+}
+
+export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<typeof getOfficerSkillState> {
+  return withLock(() => {
+    const state = getGame();
+    const officer = state.officers[officerId];
+    if (!officer) throw new Error('武将不存在');
+    const trees = loadSkillTrees();
+    let node: import('@leh/shared').SkillTreeNodeDef | undefined;
+    for (const tree of trees) {
+      node = tree.nodes.find((n) => n.id === nodeId);
+      if (node) break;
+    }
+    if (!node) throw new Error('技能节点不存在');
+    const treeState = officer.skillTreeState ?? {};
+    const currentLevel = treeState[nodeId] ?? 0;
+    if (currentLevel >= node.maxLevel) throw new Error('已达最高等级');
+    const spent = officer.skillPointsSpent ?? 0;
+    const total = skillPointsForMerit(officer.meritLevel ?? 1);
+    if (spent + node.costPerLevel > total) throw new Error('技能点不足');
+    for (const prereq of node.prerequisites) {
+      if ((treeState[prereq] ?? 0) < 1) throw new Error(`前置技能 ${prereq} 未解锁`);
+    }
+    treeState[nodeId] = currentLevel + 1;
+    currentGame = {
+      ...state,
+      officers: {
+        ...state.officers,
+        [officerId]: {
+          ...officer,
+          skillTreeState: treeState,
+          skillPointsSpent: spent + node.costPerLevel,
+        },
+      },
+    };
+    return getOfficerSkillState(officerId);
+  });
+}
+
+export function upgradeTrait(officerId: number, traitId: string): ReturnType<typeof getOfficerSkillState> {
+  return withLock(() => {
+    const state = getGame();
+    const officer = state.officers[officerId];
+    if (!officer) throw new Error('武将不存在');
+    const traitLevels = officer.traitLevels ?? {};
+    const currentLevel = traitLevels[traitId] ?? 0;
+    if (currentLevel >= 5) throw new Error('已达最高等级');
+    const spent = officer.traitPointsSpent ?? 0;
+    const total = traitPointsForMerit(officer.meritLevel ?? 1);
+    if (spent + 1 > total) throw new Error('特性点不足');
+    traitLevels[traitId] = currentLevel + 1;
+    currentGame = {
+      ...state,
+      officers: {
+        ...state.officers,
+        [officerId]: {
+          ...officer,
+          traitLevels,
+          traitPointsSpent: spent + 1,
+        },
+      },
+    };
+    return getOfficerSkillState(officerId);
+  });
+}
+
+export function resetSkillTree(officerId: number): ReturnType<typeof getOfficerSkillState> {
+  return withLock(() => {
+    const state = getGame();
+    const officer = state.officers[officerId];
+    if (!officer) throw new Error('武将不存在');
+    currentGame = {
+      ...state,
+      officers: {
+        ...state.officers,
+        [officerId]: {
+          ...officer,
+          skillTreeState: {},
+          skillPointsSpent: 0,
+          traitLevels: {},
+          traitPointsSpent: 0,
+        },
+      },
+    };
+    return getOfficerSkillState(officerId);
+  });
+}
+
+// ====== 天命-人心 API（S26） ======
+
+import { computeMandate, computePopularWill, mandateLabel, popularWillLabel, mandateDiplomacyModifier, popularWillDesertionModifier, popularWillRecruitModifier, fameLabel } from '@leh/shared';
+
+export function getFactionOverview(): {
+  factionId: number;
+  factionName: string;
+  mandate: number;
+  mandateLabel: string;
+  mandateDiplomacyModifier: number;
+  popularWill: number;
+  popularWillLabel: string;
+  popularWillDesertionModifier: number;
+  popularWillRecruitModifier: number;
+  fame: number;
+  fameLabel: string;
+  arms: number;
+  cityCount: number;
+  officerCount: number;
+  commanderyCount: number;
+} {
+  const state = getGame();
+  const playerFaction = Object.values(state.factions).find((f) => f.id === state.playerFactionId);
+  if (!playerFaction) throw new Error('玩家势力不存在');
+  const mandate = computeMandate(playerFaction, state);
+  const popularWill = computePopularWill(playerFaction, state);
+  return {
+    factionId: playerFaction.id,
+    factionName: playerFaction.name,
+    mandate,
+    mandateLabel: mandateLabel(mandate),
+    mandateDiplomacyModifier: mandateDiplomacyModifier(mandate),
+    popularWill,
+    popularWillLabel: popularWillLabel(popularWill),
+    popularWillDesertionModifier: popularWillDesertionModifier(popularWill),
+    popularWillRecruitModifier: popularWillRecruitModifier(popularWill),
+    fame: playerFaction.fame ?? 0,
+    fameLabel: fameLabel(playerFaction.fame ?? 0),
+    arms: playerFaction.arms ?? 0,
+    cityCount: playerFaction.cityIds?.length ?? 0,
+    officerCount: playerFaction.officerIds?.length ?? 0,
+    commanderyCount: countOwnedCommanderies(playerFaction.id, state),
+  };
+}
+
+function countOwnedCommanderies(factionId: number, state: import('@leh/shared').GameState): number {
+  const owned = new Set<string>();
+  for (const city of Object.values(state.cities)) {
+    if (city.ruler === factionId) {
+      owned.add(city.adminName ?? city.province);
+    }
+  }
+  return owned.size;
 }

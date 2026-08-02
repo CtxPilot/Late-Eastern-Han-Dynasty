@@ -41,6 +41,17 @@ for (const { key, file, expected } of files) {
   console.log(`OK   ${file} (${count})`);
 }
 
+// formations directory + officer formationMastery cross-reference (FM-P1)
+const formationsData = JSON.parse(readFileSync(join(dataDir, 'formations.json'), 'utf-8')) as { id: number }[];
+const formationIds = new Set(formationsData.map((f) => f.id));
+const officersWithMastery = JSON.parse(readFileSync(join(dataDir, 'officers.json'), 'utf-8')) as { formationMastery?: number[] }[];
+for (const officer of officersWithMastery) {
+  for (const fid of officer.formationMastery ?? []) {
+    if (!formationIds.has(fid)) failReference(`officer formationMastery ${fid} not in formations.json`);
+    if (fid === 7 || fid === 8) failReference(`officer formationMastery ${fid} should have been migrated out of 0-A`);
+  }
+}
+
 // provinces coverage for cities
 const cities = JSON.parse(readFileSync(join(dataDir, 'cities.json'), 'utf-8')) as {
   name: string;

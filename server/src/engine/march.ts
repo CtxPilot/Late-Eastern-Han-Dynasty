@@ -20,6 +20,7 @@ import { lootBeautyOnCapture } from './beauty.js';
 import { clearCityCounterOnCapture } from './spy.js';
 import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
+import { FAME_CAPTURE_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
 import {
   MERIT_ANNIHILATE_FACTION,
   MERIT_CAPTURE_CITY,
@@ -343,12 +344,15 @@ export function settleBattle(
     )?.commanderId;
     if (attackerCommanderId != null) {
       after = grantMeritTo(after, attackerCommanderId, MERIT_CAPTURE_CITY);
+      // S27 声望：破城 +20；灭国再 +50（docs/08 §十七）
+      after = grantFame(after, battle.attackerFaction, FAME_CAPTURE_CITY);
       if (
         prevRuler != null &&
         nextFactions[prevRuler] &&
         !nextFactions[prevRuler].isAlive
       ) {
         after = grantMeritTo(after, attackerCommanderId, MERIT_ANNIHILATE_FACTION);
+        after = grantFame(after, battle.attackerFaction, FAME_ANNIHILATE_FACTION);
       }
     }
     after = pushLog(after, type, message);

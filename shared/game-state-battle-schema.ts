@@ -133,6 +133,7 @@ export const BattleUnitRuntimeSchema: z.ZodType<BattleUnit> = z
     morale: PercentageSchema,
     food: z.number().nonnegative(),
     position: z.object({ q: z.number().int(), r: z.number().int() }).strict(),
+    facing: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
     mp: z.number().nonnegative(),
     maxMp: z.number().nonnegative(),
     energy: z.number().nonnegative(),
@@ -179,6 +180,12 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
       })
       .strict(),
     log: z.array(z.object({ turn: z.number().int().positive(), message: z.string() }).strict()),
+    actionHistory: z.array(z.object({
+      id: z.string().min(1), kind: z.enum(['move', 'attack']), unitId: z.string().min(1),
+      logicalTimestamp: NonNegativeIntSchema, source: z.enum(['player', 'ai', 'system']), reversible: z.boolean(),
+      beforePosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(),
+      afterPosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(), beforeMp: z.number().nonnegative().optional(),
+    }).strict()).max(3).optional(),
     message: z.string(),
     duel: DuelStateRuntimeSchema.nullable().optional(),
   })
@@ -281,6 +288,18 @@ export const BattlefieldMapRuntimeSchema: z.ZodType<BattlefieldMap> = z.object({
   }));
 });
 
+export const MeleeRoundResultSchema = z.object({
+  round: z.number().int().nonnegative(),
+  attackerDamage: z.number(),
+  defenderDamage: z.number(),
+  attackerTroopsAfter: z.number(),
+  defenderTroopsAfter: z.number(),
+  attackerMoraleAfter: z.number(),
+  defenderMoraleAfter: z.number(),
+  events: z.array(z.string()),
+  phase: z.enum(['active', 'attacker_victory', 'defender_victory', 'stalemate']),
+});
+
 export const MeleeStateRuntimeSchema: z.ZodType<MeleeState, z.ZodTypeDef, unknown> = z.object({
   battlefieldId: z.string().min(1),
   attackerArmyId: z.string().min(1),
@@ -300,10 +319,13 @@ export const MeleeStateRuntimeSchema: z.ZodType<MeleeState, z.ZodTypeDef, unknow
   defenderMorale: PercentageSchema,
   defenderFatigue: PercentageSchema,
   defenderFormation: z.nativeEnum(FormationType),
+  attackerOrganization: NonNegativeIntSchema.max(100).optional(),
+  defenderOrganization: NonNegativeIntSchema.max(100).optional(),
   tacticalPoints: NonNegativeIntSchema.max(10),
   tacticalPointsUsed: NonNegativeIntSchema.max(10),
   phase: z.enum(['active', 'attacker_victory', 'defender_victory', 'stalemate']),
   eventLog: z.array(z.string()),
+  commandCache: z.record(z.string(), z.object({ round: z.number().int(), result: MeleeRoundResultSchema })).optional(),
 }).strict().superRefine((melee, ctx) => {
   if (melee.attackerArmyId === melee.defenderArmyId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['defenderArmyId'], message: '白刃战双方不能是同一支 Army' });

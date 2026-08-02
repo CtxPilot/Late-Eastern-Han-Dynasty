@@ -39,6 +39,9 @@ export function ScenarioSelect() {
           <p className="text-xs tracking-[0.3em] text-amber-600">汉末纪事 · 开卷</p>
           <h1 className="mt-2 text-3xl text-amber-300">选择剧本与行军旗号</h1>
           <p className="mt-2 text-sm text-stone-500">历史、裴注异闻、文学演义分层标注；重大事件由条件而非年份单独决定。</p>
+          <p className="mt-3 border-l-2 border-stone-700 pl-3 text-xs leading-5 text-stone-500" data-testid="scenario-content-notice">
+            内容提示：游戏包含战争、死亡、俘虏、疾病、间谍与历史婚姻记载。时代称谓仅在有来源的叙事中保留并标注语境，系统分类采用现代中性表述；玩家婚配仅允许双方均满18岁。
+          </p>
         </header>
 
         <section className="grid gap-3 md:grid-cols-2">

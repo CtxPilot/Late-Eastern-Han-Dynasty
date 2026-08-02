@@ -229,7 +229,7 @@ interface Faction {
 | HC-P0-2 | `Faction.politicalStage` 字段 + 存档兼容 | ✅ 已完成：optional 追加 + Zod + 旧存档降级兼容 |
 | HC-P0-3 | "开霸府"操作（玩家主动选择，控制汉帝为前置） | ✅ 已完成：`establishHegemony` 引擎 + `POST /hegemony/establish` 路由 + 底部朝廷命令抽屉开府入口 + OfficerDetail 头衔展示 |
 | HC-P0-4 | 霸府专属官职最小切片（Q2 方案B，先 2~3 个官职） | ✅ 已完成：`Officer.hegemonyPosition?` 独立轨道 + `HegemonyPosition` 枚举 3 官职（大司马/录尚书事/都督中外诸军事）+ `appoint.ts` 引擎扩展（含诸侯状态前置拒绝 + 势力唯一）+ AppointPanel 霸府轨道按钮 + OfficerDetail 官职区块条件展示 + verify-hc-p0 61/61 + Headless 端到端 |
-| HC-P0-5 | 霸府外交权重加成 | ✅ 已完成：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3）+ `calculateAllianceChance` 接入结盟成功率修正 + `tributeGold`/`giftBeautyStock` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
+| HC-P0-5 | 霸府外交权重加成 | ✅ 已完成：`hegemonyAllianceModifier`/`hegemonyFavorMultiplier` 分档纯函数（vassal=0/1.0, hegemon=+5/×1.1, king=+8/×1.2, emperor=+12/×1.3）+ `calculateAllianceChance` 接入结盟成功率修正 + `tributeGold`/`transferCourtNetwork` 进贡/献美友好增量放大 + verify-negotiation-r2 40/40（既有 20 项不变）+ verify-hc-p0 86/86（25 项新增）。加成方向：仅发起方单边修正。 |
 | HC-P0-6 | 伪诏宣战能力 | ✅ 已完成：开府100皇权、季度+10（上限100）、消耗40、冷却8季；绕过关系前置直设war；目标君主或所属核心武将含“匡扶汉室”时发起方声望-30；朝廷抽屉唯一 UI + 存档往返 + verify-hc-p0 101/101 + Headless |
 
 **HC-P0 验收基线**：玩家控制汉帝 → 开霸府 → 任命霸府官职 → 外交权重可见提升 → 伪诏宣战一次。Headless Chrome 实测全流程。
@@ -334,7 +334,7 @@ HC-P1-1～6 已全部完成；确定性、存档和仓库化 Headless 总验收�
   - emperor = ×1.3（分档预留）
 - **加成方向**：仅"开府势力自己发起外交操作时获得加成"（单边修正）。04§36.2 曹操"挟天子令诸侯"+30 外交权重基调本意是霸府势力主动外交优势；双向修正（其他势力对霸府态度变化）更复杂，留后续迭代。
 - **分档单调**：vassal < hegemon < king < emperor，避免后续调参破坏单调性。
-- **实现位置**：`shared/negotiation.ts` 集中两个分档纯函数；`calculateAllianceChance` 公式末项加 `hegemonyModifier`；`diplomacy.ts` `tributeGold`/`giftBeautyStock` 友好增量乘以 `hegemonyFavorMultiplier`。`formAlliance` 通过 `calculateAllianceChance` 间接接入。RNG 边界：结盟判定仍走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点。
+- **实现位置**：`shared/negotiation.ts` 集中两个分档纯函数；`calculateAllianceChance` 公式末项加 `hegemonyModifier`；`diplomacy.ts` `tributeGold`/`transferCourtNetwork` 友好增量乘以 `hegemonyFavorMultiplier`。`formAlliance` 通过 `calculateAllianceChance` 间接接入。RNG 边界：结盟判定仍走既有 xorshift32-v1，本轮只改公式不改 RNG 消费点。
 
 **开放问题**（数值是否区分玩家/AI 势力？AI 称帝后是否对玩家有过度压制？）仍属 S15 AI 深化，留后续。**对汉室态度匹配修正**（04§36.2 提到的另一修正类别）本轮不做，留后续子项或 HC-P1。
 

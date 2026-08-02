@@ -54,8 +54,8 @@ function toSummary(city: City): CivilCitySummary {
   };
 }
 
-type CivilFacet = 'overview' | 'industry' | 'construction' | 'relief';
-export type CivilOrder = 'farm' | 'commerce' | 'wall' | 'relief';
+type CivilFacet = 'overview' | 'industry' | 'construction' | 'relief' | 'faction';
+export type CivilOrder = 'farm' | 'commerce' | 'wall' | 'relief' | 'reclaim' | 'patrol';
 
 const ORDER_CONFIG: Record<CivilOrder, {
   label: string;
@@ -66,6 +66,8 @@ const ORDER_CONFIG: Record<CivilOrder, {
   commerce: { label: '开发商业', cost: '首付134金 / 总计400金', summary: '持续6个月；完成后商业+100。' },
   wall: { label: '开发城防', cost: '首付167金 / 总计500金', summary: '持续12个月；完成后城防+100。' },
   relief: { label: '施米安民', cost: '150粮', summary: '民心由权威随机流提升8～12，上限100。' },
+  reclaim: { label: '开垦荒地', cost: '50金', summary: '耗金50；智≥60武将执行：farm+20~40，流民满意度+8~15，世家−10~20。' },
+  patrol: { label: '巡查缉捕', cost: '30金', summary: '耗金30；武≥60武将执行：商贾满意度+5~10，小势力−8~15，本月免叛乱判定。' },
 };
 
 export function validateCivilOrder(
@@ -77,6 +79,12 @@ export function validateCivilOrder(
   if (!city || city.ruler !== game.playerFactionId) return '所选城市已不存在或归属已经变化。';
   if (order === 'relief') {
     return city.food < 150 ? `城市粮不足（需150，当前${city.food}）。` : null;
+  }
+  if (order === 'reclaim') {
+    return city.gold < 50 ? `城市金不足（需50，当前${city.gold}）。` : null;
+  }
+  if (order === 'patrol') {
+    return city.gold < 30 ? `城市金不足（需30，当前${city.gold}）。` : null;
   }
   if (city.activeDevelopment) return `该城已有${city.activeDevelopment.kind}持续项目。`;
   const goldCost = order === 'wall' ? 167 : order === 'commerce' ? 134 : 100;
@@ -95,6 +103,7 @@ const FACETS: readonly { id: CivilFacet; label: string }[] = [
   { id: 'industry', label: '产业' },
   { id: 'construction', label: '城建' },
   { id: 'relief', label: '赈济' },
+  { id: 'faction', label: '乡政' },
 ];
 
 export function CivilOverviewDrawer() {
@@ -105,6 +114,9 @@ export function CivilOverviewDrawer() {
   const error = useGameStore((state) => state.error);
   const develop = useGameStore((state) => state.develop);
   const relief = useGameStore((state) => state.relief);
+  const reclaimLand = useGameStore((state) => state.reclaimLand);
+  const patrolCity = useGameStore((state) => state.patrolCity);
+  const resolveImpeachment = useGameStore((state) => state.resolveImpeachment);
   const seekBeauty = useGameStore((state) => state.seekBeauty);
   const [facet, setFacet] = useState<CivilFacet>('overview');
   const [draft, setDraft] = useState<CivilOrder | null>(null);
@@ -152,7 +164,7 @@ export function CivilOverviewDrawer() {
         </select>
       </label>
 
-      <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="内政分面">
+      <nav className="mb-3 grid grid-cols-5 gap-1" aria-label="内政分面">
         {FACETS.map((item) => (
           <button
             key={item.id}
@@ -282,7 +294,7 @@ export function CivilOverviewDrawer() {
               当前数值是城市城防开发度，不代表战役城墙耐久；修缮与设施建设尚未实装。
             </p>
           </>
-        ) : (
+        ) : facet === 'relief' ? (
           <>
             <Fact label="民心" value={city.morale} testId="command-civil-value-morale" />
             <Fact label="成年男丁" value={city.adultMale} />
@@ -293,6 +305,87 @@ export function CivilOverviewDrawer() {
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
               施米只影响民心；人口四桶保持不变。
             </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[10px] leading-relaxed text-stone-500">
+              S27 城级派系：满意度月度向 50 回归；商贾≥70 商业+15%、&lt;30 −15%；
+              流民≥70 征兵上限+20%；世家&lt;30 守军士气−15%（暗通）；
+              小势力&lt;30 有月度叛乱风险（巡查可免）。
+            </p>
+            {cityEntity?.pendingImpeachment ? (
+              <div
+                className="space-y-1.5 border border-rose-900/80 bg-rose-950/25 px-3 py-2"
+                data-testid="civil-impeachment-warning"
+              >
+                <p className="text-[10px] text-rose-200">
+                  官宦弹劾城主：
+                  {game?.officers[cityEntity.pendingImpeachment.officerId]?.name ?? '城主'}
+                  —— 2 个月内需安抚或撤换，逾期官宦更不满。
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    data-testid="civil-impeach-appease"
+                    onClick={() => resolveImpeachment(city.cityId, 'appease')}
+                    className="border border-stone-700 bg-stone-900 px-2 py-1.5 text-[10px] text-stone-200 hover:border-amber-700"
+                  >
+                    安抚（100金）
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="civil-impeach-remove"
+                    onClick={() => resolveImpeachment(city.cityId, 'remove')}
+                    className="border border-stone-700 bg-stone-900 px-2 py-1.5 text-[10px] text-stone-200 hover:border-rose-800"
+                  >
+                    撤换城主
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {(cityEntity?.cityFactions?.length ?? 0) > 0 ? (
+              <div className="space-y-1.5" data-testid="command-civil-faction-entries">
+                {cityEntity!.cityFactions!.map((entry) => (
+                  <div
+                    key={entry.kind}
+                    className={`flex justify-between border px-3 py-1.5 ${
+                      entry.satisfaction < 30
+                        ? 'border-rose-900/80 bg-rose-950/20'
+                        : entry.satisfaction >= 70
+                          ? 'border-emerald-900/80 bg-emerald-950/20'
+                          : 'border-stone-800'
+                    }`}
+                  >
+                    <span className="text-stone-300">{entry.name}</span>
+                    <strong className="text-stone-200">
+                      {entry.satisfaction}
+                      <span className="ml-1 text-[10px] text-stone-500">/100</span>
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="border border-stone-800 px-3 py-2 text-stone-600">
+                本城暂无城级派系（0-A 试点城市为洛阳/长安/阳翟/汝南/邺/陈留）。
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <CivilButton order="reclaim" onClick={() => setDraft('reclaim')} />
+              <CivilButton order="patrol" onClick={() => setDraft('patrol')} />
+            </div>
+            <label className="block text-[10px] text-stone-500">
+              指派武将（开垦需智≥60 / 巡查需武≥60）
+              <select
+                value={officerId ?? ''}
+                onChange={(event) => setOfficerId(Number(event.target.value))}
+                className="mt-1 w-full border border-stone-700 bg-stone-950 p-2 text-stone-200"
+                data-testid="civil-faction-officer"
+              >
+                {eligibleOfficers.map((officer) => (
+                  <option key={officer!.id} value={officer!.id}>{officer!.name}</option>
+                ))}
+              </select>
+            </label>
           </>
         )}
       </section>
@@ -321,7 +414,13 @@ export function CivilOverviewDrawer() {
         onConfirm={async () => {
           if (!draft) return;
           if (draft === 'relief') await relief(city.cityId);
-          else {
+          else if (draft === 'reclaim') {
+            if (officerId == null) return;
+            await reclaimLand(city.cityId, officerId);
+          } else if (draft === 'patrol') {
+            if (officerId == null) return;
+            await patrolCity(city.cityId, officerId);
+          } else {
             if (officerId == null) return;
             await develop(draft, city.cityId, officerId);
           }

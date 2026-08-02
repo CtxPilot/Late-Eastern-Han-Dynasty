@@ -58,4 +58,13 @@ export interface Faction {
   imperialDecreeCooldown?: number;
   /** 势力宝物库存（宝物 id → 数量；未分配宝物，S13 Session 266 实装）。 */
   inventory?: ItemInventory;
+  /** 天命值 0~100，势力宏观运势（S26 天命-人心双轨系统）。 */
+  mandate?: number;
+  /** 人心值 0~100，微观人际关系聚合（S26 天命-人心双轨系统）。 */
+  popularWill?: number;
+  /**
+   * 兵装库存（件，S27，docs/34 §五）。月产首都+8/每城防≥150城+2，
+   * 采购 10 金/件；旧存档缺失按 0 处理。
+   */
+  arms?: number;
 }

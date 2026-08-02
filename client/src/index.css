@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'HanDynastySeal';
-  src: url('/fonts/MuYaoSoftBrush.woff2') format('woff2');
+  src: url('/fonts/MaShanZheng-Regular.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -86,3 +86,5 @@ body,
 .portrait-seal { position:absolute; right:9px; bottom:13px; display:grid; place-items:center; width:38px; height:38px; padding:3px; border:2px double #d7aa62; color:#ead4a6; background:var(--portrait-seal); font-family:'HanDynastySeal',serif; font-size:15px; line-height:1; writing-mode:vertical-rl; box-shadow:0 2px 4px rgba(0,0,0,.35); }
 .portrait-ribbon { position:absolute; left:0; right:0; bottom:0; height:5px; background:var(--portrait-ink); opacity:.88; }
 .officer-portrait--compact { flex:0 0 34px; width:34px; height:42px; aspect-ratio:auto; border-color:#57452e; box-shadow:none; }
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 CtxPilot */

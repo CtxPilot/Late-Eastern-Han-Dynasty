@@ -17,6 +17,7 @@ import { CivilOverviewDrawer } from './CivilOverviewDrawer';
 import { StrategyOverviewDrawer } from './StrategyOverviewDrawer';
 import { IntelOverviewDrawer } from './IntelOverviewDrawer';
 import { FamilyOverviewDrawer } from './FamilyOverviewDrawer';
+import { FactionOverviewDrawer } from './FactionOverviewDrawer';
 
 export function CommandShell() {
   const [state, dispatch] = useReducer(commandShellReducer, INITIAL_COMMAND_SHELL_STATE);
@@ -49,6 +50,8 @@ export function CommandShell() {
             <DiplomacyOverviewDrawer />
           ) : activeItem.domain === 'military' ? (
             <MilitaryOverviewDrawer />
+          ) : activeItem.domain === 'faction' ? (
+            <FactionOverviewDrawer onClose={closeDrawer} />
           ) : (
             <>
               <p>{activeItem.reason}。</p>

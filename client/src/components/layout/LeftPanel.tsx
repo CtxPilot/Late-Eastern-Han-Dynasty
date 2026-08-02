@@ -50,10 +50,10 @@ export function LeftPanel() {
 
       <div className="px-2 py-1.5 text-[10px] text-stone-500 border-b border-stone-900 leading-snug">
         {isPlayerCity
-          ? `当前城：${selected!.name}（内政请用右侧）`
+          ? `当前城：${selected!.name}（命令请用底部命令坞）`
           : selected
             ? `已选：${selected.name}`
-            : '先选己方城，再在右侧做内政/军事'}
+            : '先选己方城，再从底部命令坞下令'}
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">

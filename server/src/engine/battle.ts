@@ -4,9 +4,13 @@
 import {
   FormationType,
   OfficerStatus,
+  aristocracyDefenderMoralePenalty,
+  armsCombatMultiplier,
+  defenderMilitia,
   syncMerit,
   TerrainType,
   UnitProficiency,
+  UnitType,
   Weather,
   meritEffects,
   meritLevelFor,
@@ -18,7 +22,11 @@ import {
   type DuelState,
   type GameState,
   type Officer,
-  type UnitType,
+  findTacticalPath,
+  type PathResult,
+  type TacticalGrid,
+  checkMeleeTarget,
+  directionTo,
 } from '@leh/shared';
 import { getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
@@ -138,9 +146,16 @@ export function createBattle(
   const eUnit = unitMap[eType];
 
   const atkTroops = Math.max(1, opts.attackTroops ?? 5000);
-  const defTroops = Math.max(1, opts.defendTroops ?? Math.max(500, city.troops || 4500));
-  const atkMorale = opts.attackMorale ?? 90;
-  const defMorale = opts.defendMorale ?? 80;
+  // S27 守方民兵：民心 ≥60 时 floor(人口 × 0.02 × 民心/100)（docs/08 §十七）
+  const militia = defenderMilitia(city.population, city.stats.morale ?? 70);
+  const defTroops = Math.max(1, (opts.defendTroops ?? Math.max(500, city.troops || 4500)) + militia);
+  let atkMorale = opts.attackMorale ?? 90;
+  let defMorale = opts.defendMorale ?? 80;
+  // S27 世家暗通：世家满意度 <30 → 守军士气 −15%（docs/08 §十七）
+  defMorale = Math.max(0, defMorale * (1 - aristocracyDefenderMoralePenalty(city.cityFactions ?? [])));
+  // S27 兵装战力修正（docs/08 §十七）
+  atkMorale = Math.min(120, atkMorale * (1 + armsCombatMultiplier(state.factions[playerFaction]?.arms ?? 0, atkTroops)));
+  defMorale = Math.min(120, defMorale * (1 + armsCombatMultiplier(state.factions[defenderFaction]?.arms ?? 0, defTroops)));
 
   const units: BattleUnit[] = [
     {
@@ -157,6 +172,7 @@ export function createBattle(
       morale: atkMorale,
       food: 1000,
       position: { q: 2, r: 3 },
+      facing: 0,
       mp: pUnit.mobility,
       maxMp: pUnit.mobility,
       energy: 100,
@@ -180,6 +196,7 @@ export function createBattle(
       morale: defMorale,
       food: 1000,
       position: { q: 16, r: 11 },
+      facing: 3,
       mp: eUnit.mobility,
       maxMp: eUnit.mobility,
       energy: 100,
@@ -212,6 +229,7 @@ export function createBattle(
     winner: null,
     hexGrid: { width: COLS, height: ROWS, terrain: buildTerrain() },
     log: [{ turn: 1, message: openMsg }],
+    actionHistory: [],
     message: '出征开战！移动/攻击，歼灭守军即可占城',
   };
 }
@@ -227,8 +245,8 @@ export function getMoveRange(battle: BattleState, unitId: string): string[] {
   const range = reachable(
     unit.position,
     unit.mp,
-    COLS,
-    ROWS,
+    battle.hexGrid.width,
+    battle.hexGrid.height,
     (h) => battle.hexGrid.terrain[h.r]?.[h.q] ?? TerrainType.PLAIN,
     blocked,
   );
@@ -236,21 +254,62 @@ export function getMoveRange(battle: BattleState, unitId: string): string[] {
   return [...range.keys()];
 }
 
+/**
+ * 路径预览/服务端落子共用的 A* 计划。当前 0-A 兵种沿用既有“可涉水”规则，
+ * 因此使用 amphibious；实体单位映射为 unit 障碍，不能穿越或落在占用格。
+ */
+export function getMovePath(battle: BattleState, unitId: string, q: number, r: number): PathResult {
+  const unit = battle.units.find((candidate) => candidate.id === unitId);
+  if (!unit || unit.hasActed || unit.side !== 'attacker') return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
+  const occupied = new Set(battle.units.filter((candidate) => candidate.id !== unitId && !candidate.isDestroyed && candidate.troopCount > 0).map((candidate) => hexKey(candidate.position)));
+  const grid: TacticalGrid = {
+    width: battle.hexGrid.width,
+    height: battle.hexGrid.height,
+    cells: battle.hexGrid.terrain.map((row, rowIndex) => row.map((terrain, columnIndex) => ({
+      terrain,
+      obstacle: occupied.has(`${columnIndex},${rowIndex}`) ? 'unit' as const : undefined,
+      elevation: terrain === TerrainType.MOUNTAIN ? 1 : 0,
+    }))),
+  };
+  return findTacticalPath(grid, unit.position, { q, r }, unit.mp, { mobility: 'amphibious' });
+}
+
 export function moveUnit(battle: BattleState, unitId: string, q: number, r: number): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   const unit = battle.units.find((u) => u.id === unitId);
   if (!unit || unit.side !== 'attacker' || unit.hasActed) throw new Error('无法移动该部队');
 
-  const keys = getMoveRange(battle, unitId);
-  if (!keys.includes(hexKey({ q, r }))) throw new Error('目标不在移动范围内');
+  const plan = getMovePath(battle, unitId, q, r);
+  if (!plan.found) throw new Error(`目标不在移动范围内（${plan.reason ?? 'UNREACHABLE'}）`);
 
   const units = battle.units.map((u) =>
-    u.id === unitId ? { ...u, position: { q, r }, mp: 0 } : u,
+    u.id === unitId ? { ...u, position: { q, r }, facing: directionTo(u.position, { q, r }), mp: 0 } : u,
   );
   return {
     ...battle,
     units,
-    message: '已移动；可攻击或结束行动',
+    message: `已移动 ${plan.path.length - 1} 格，消耗 ${plan.totalCost} 移动力，剩余 ${plan.path.at(-1)?.remaining ?? 0}；可攻击或结束行动`,
+    log: [...battle.log, { turn: battle.turn, message: `${unit.commanderName} 行军 ${plan.path.length - 1} 格（耗${plan.totalCost}）` }],
+    actionHistory: [...(battle.actionHistory ?? []), {
+      id: `move-${battle.turn}-${(battle.actionHistory?.length ?? 0) + 1}`, kind: 'move' as const, unitId,
+      logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1, source: 'player' as const,
+      reversible: true, beforePosition: unit.position, afterPosition: { q, r }, beforeMp: unit.mp,
+    }].slice(-3),
+  };
+}
+
+/** 仅撤销尚未被攻击/技能/RNG 消费封闭的最后一次玩家移动。 */
+export function undoLastBattleAction(battle: BattleState): BattleState {
+  if (battle.phase !== 'player') throw new Error('UNDO_PHASE_LOCKED');
+  const last = battle.actionHistory?.at(-1);
+  if (!last) throw new Error('UNDO_EMPTY');
+  if (!last.reversible || last.kind !== 'move' || !last.beforePosition || last.beforeMp == null) throw new Error(`UNDO_IRREVERSIBLE:${last.kind}`);
+  return {
+    ...battle,
+    units: battle.units.map((unit) => unit.id === last.unitId ? { ...unit, position: last.beforePosition!, mp: last.beforeMp! } : unit),
+    actionHistory: battle.actionHistory!.slice(0, -1),
+    message: '已撤销上一次移动',
+    log: [...battle.log, { turn: battle.turn, message: `撤销移动 ${last.id}` }],
   };
 }
 
@@ -270,9 +329,9 @@ export function attackUnit(
   const unitMap = getUnitByType();
   const atkT = unitMap[attacker.unitType];
   const defT = unitMap[defender.unitType];
-  if (hexDistance(attacker.position, defender.position) > atkT.range) {
-    throw new Error('超出攻击范围');
-  }
+  const weapon = attacker.unitType === UnitType.SPEARMAN ? 'spear' : attacker.unitType === UnitType.HEAVY_INFANTRY ? 'axe' : 'sword';
+  const targetCheck = checkMeleeTarget(attacker.position, attacker.facing ?? 0, defender.position, weapon);
+  if (!targetCheck.inRange) throw new Error(`不在白刃攻击范围或朝向之外（${weapon} ${targetCheck.distance}格/${targetCheck.arc}）`);
 
   const atkO = state.officers[attacker.commanderId];
   const defO = state.officers[defender.commanderId];
@@ -286,7 +345,7 @@ export function attackUnit(
   // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266）
   const atkEquip = equipBonusFor(atkO);
   const defEquip = equipBonusFor(defO);
-  const baseDamage = calcDamage(
+  const baseDamage = Math.max(1, Math.round(calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
@@ -310,7 +369,7 @@ export function attackUnit(
       armorDefense: equipArmorDefenseFor(defO),
     },
     rng,
-  );
+  ) * (1 + targetCheck.attackModifier)));
 
   // §6.5 暴击/反击/连击事件流
   const atkActor: AttackActor = {
@@ -357,12 +416,17 @@ export function attackUnit(
     }
     return u;
   });
+  const actionHistory = [...(battle.actionHistory ?? []), {
+    id: `attack-${battle.turn}-${(battle.actionHistory?.length ?? 0) + 1}`, kind: 'attack' as const, unitId: attacker.id,
+    logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1, source: 'player' as const, reversible: false,
+  }].slice(-3);
 
   // 攻方被反击致死 → 守方胜
   if (result.attackerDestroyed && !result.defenderDestroyed) {
     return {
       ...battle,
       units,
+      actionHistory,
       phase: 'over',
       winner: 'defender',
       message: `${atkO.name} 攻击 ${defO.name}，却被反击致死！${eventLabel}`,
@@ -374,6 +438,7 @@ export function attackUnit(
     return {
       ...battle,
       units,
+      actionHistory,
       phase: 'over',
       winner: 'attacker',
       message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel} — 敌军溃败！${result.counterDamage ? `（反击-${result.counterDamage}）` : ''}`,
@@ -384,6 +449,7 @@ export function attackUnit(
   return {
     ...battle,
     units,
+    actionHistory,
     phase: 'enemy',
     message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel}（敌剩余 ${result.defenderTroopsAfter}）${result.counterDamage ? ` · 反击-${result.counterDamage}` : ''} — 敌军回合…`,
     log: [...battle.log, { turn: battle.turn, message: `${atkO.name} 攻 ${defO.name} ${totalDamage}${eventLabel}${result.details.length ? ' | ' + result.details.join(' ') : ''}` }],
@@ -596,12 +662,10 @@ export function getUsableAbilities(
   const result: { ability: CombatAbilityDef; level: number; levelData: CombatAbilityLevel }[] = [];
   for (const ability of tmpl.abilities ?? []) {
     if (ability.leveling !== 'leveled') continue;
-    const perLevel = ability.perLevel ?? [];
-    for (const lvData of perLevel) {
-      if (lvData.level <= maxLevel) {
-        result.push({ ability, level: lvData.level, levelData: lvData });
-      }
-    }
+    const usable = (ability.perLevel ?? []).filter((lv) => lv.level <= maxLevel);
+    if (usable.length === 0) continue;
+    const best = usable[usable.length - 1];
+    result.push({ ability, level: best.level, levelData: best });
   }
   return result;
 }
@@ -659,8 +723,9 @@ export function castAbility(
 
   // 射程检查
   const dist = hexDistance(attacker.position, target.position);
-  if (dist < ability.minRange || dist > ability.maxRange) {
-    throw new Error(`超出战法射程（${ability.minRange}-${ability.maxRange}格，当前${dist}格）`);
+  const meleeMax = Math.min(2, ability.maxRange);
+  if (dist < Math.max(1, ability.minRange) || dist > meleeMax) {
+    throw new Error(`战法已转换为白刃接战范围（1-${meleeMax}格，当前${dist}格）`);
   }
 
   const atkO = state.officers[attacker.commanderId];
@@ -870,6 +935,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
     buildStrongAgainstMap(),
     state.officers,
     battle.turn,
+    battle.weather,
   );
 
   if (result.over) {

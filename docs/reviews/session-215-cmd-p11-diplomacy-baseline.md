@@ -31,7 +31,7 @@
 |---|---|---|---|
 | 目标卡片 | `factions`、`diplomacy`；关系标签、友好、势力颜色 | 无；仅存终审目标 id | 只读 |
 | 进贡 | 任一己方城金、友好、政治阶段倍率 | `confirm={tribute,target}`；需总金≥200；战争会转敌对 | `tribute()` → `POST /diplomacy/tribute` |
-| 献美 | 双方 `beautyStock`、友好、`intel.plantableBeauty` | `confirm={gift-beauty,target}`；库存≥1、非战争 | `giftBeautyDip()` → `POST /diplomacy/gift-beauty` |
+| 献美 | 双方 `beautyStock`、友好、`intel.plantableBeauty` | `confirm={court-network,target}`；库存≥1、非战争 | `transferCourtNetwork()` → `POST /diplomacy/court-network` |
 | 结盟 | 关系、友好、shared `calculateAllianceChance` | `confirm={alliance,target}`；非战争/非同盟、友好≥30、金≥500 | `formAlliance()` → `POST /diplomacy/alliance` |
 | 点化（跨域） | `intel.plantableBeauty`、目标库存、金 | `confirm={plant-female,target}`；点化额度≥1、目标库存≥1、金≥80 | `plantFemale()` → `POST /intel/plant-female` |
 

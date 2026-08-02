@@ -143,3 +143,4 @@ if (consoleErrors.length > 0) {
   process.exit(1);
 }
 console.log(`\n结果：${assertions + 1} 通过（console error = 0）`);
+ws.close();

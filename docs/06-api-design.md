@@ -140,7 +140,6 @@ POST   /api/game/civil/search-beauty     { cityId }           // 兼容 → seek
 POST   /api/game/personnel/reward-beauty { officerId, amount? } // 兼容路由：动用宫廷人脉→忠诚
 
 POST   /api/game/personnel/marry       { femaleId, officerId }  // 婚配 300金
-POST   /api/game/personnel/gift-beauty { femaleId, officerId }  // 赏赐 100金
 POST   /api/game/personnel/join-faction  { officerId, factionId, cityId? }  // S18 跟随：入势力，妻跟随
 POST   /api/game/personnel/search          { cityId }              // S11 搜索：己方城 80金
 POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 登用在野男将 200金；R2 UI 显式提交君主并显示共享成功率
@@ -159,8 +158,8 @@ POST   /api/game/personnel/follow-check  {}  // S18 跟随：手动触发投奔�
 // CMD-P36：命令坞家族四分面只从当前 GameState + /static children 摘要派生，
 // 无请求、无提交；上述既有端点仍只由旧 FamilyPanel/共享流程调用。
 // CMD-P37：marry 与 follow-check 玩家入口迁入 FamilyOverviewDrawer 并统一终审；
-// 确认前复验最新婚姻/随侍/正妻/支付或在野候选状态，旧 FamilyPanel 写入口归零。
-// 用户批准保留 giftedToOfficerId 随侍随迁；仅修正语义命名并补回归，端点契约不变。
+// 确认前复验双方归属、婚姻状态、18岁门槛、正妻、支付或在野候选状态。
+// 具名女性赠与端点已删除；旧 giftedToOfficerId 只在读档迁移中清空。
 // CMD-P38：旧 FamilyPanel 与左栏入口物理删除；marry/follow-check 仅余命令坞玩家入口。
 // join-faction/release-officer 与子女年度结算仍为共享流程，不新增或复制玩家按钮。
 
@@ -205,10 +204,10 @@ POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNea
 GET    /api/game/policy/current       → { activePolicies: NationalPolicy[], cooldown: number }
 
 POST   /api/game/diplomacy/tribute     { targetFactionId }  // 进贡 200金，友好+15
-POST   /api/game/diplomacy/gift-beauty { targetFactionId, amount? }  // 献美：beauty−n/对方+n，友好+12×n（1~5）
+POST   /api/game/diplomacy/court-network { targetFactionId, amount? }  // 宫廷人脉−n/对方+n，友好+12×n（1~5）
 POST   /api/game/diplomacy/alliance    { targetFactionId }  // 结盟 500金，友好≥30；R2 权威概率判定，成败均扣金
 
-// CMD-P13：命令坞外交“交涉”已复用 tribute / gift-beauty 两条既有端点及统一终审；
+// CMD-P13：命令坞外交“交涉”已复用 tribute / court-network 两条既有端点及统一终审；
 // CMD-P14：命令坞“盟约”复用 alliance 端点、shared 成功率和权威 RNG。均未新增 API；
 // CMD-P15：旧外交入口已删除；/intel/plant-female 在谍报面板成为点化唯一入口。
 // 客户端仅复验目标存活、plantable 与己方金钱；受迷雾裁剪的敌方 beauty 由服务端权威校验。
@@ -600,6 +599,79 @@ GET    /api/v1/data/skills
   Response: { skills: Skill[] }
 ```
 
+### 2.14 关系网 API（S24）
+
+```
+GET    /api/game/relations/:officerId
+  获取武将关系列表
+  Response: OfficerRelation[]
+```
+
+### 2.15 技能树 API（S25）
+
+```
+GET    /api/game/skill-trees
+  获取技能树定义（静态）
+  Response: SkillTreeDef[]
+
+GET    /api/game/officer/:id/skills
+  获取武将技能树状态与点数
+  Response: { skillTreeState, skillPointsSpent, totalSkillPoints, traitLevels, traitPointsSpent, totalTraitPoints }
+
+POST   /api/game/skill-tree/upgrade
+  技能树加点
+  Body: { officerId: number, nodeId: string }
+  Response: OfficerSkillState
+
+POST   /api/game/trait/upgrade
+  特性加点
+  Body: { officerId: number, traitId: string }
+  Response: OfficerSkillState
+
+POST   /api/game/skill-tree/reset
+  重置技能点
+  Body: { officerId: number }
+  Response: OfficerSkillState
+```
+
+### 2.16 天命人心 API（S26）
+
+```
+GET    /api/game/faction/overview
+  获取势力总览（含天命/人心）
+  Response: { factionId, factionName, mandate, mandateLabel, mandateDiplomacyModifier, popularWill, popularWillLabel, popularWillDesertionModifier, popularWillRecruitModifier, cityCount, officerCount, commanderyCount }
+```
+
+### 2.17 城级派系与门阀 API（S27）
+
+```
+POST   /api/game/civil/reclaim
+  开垦（乡政派系命令）
+  Body: { cityId: number, officerId: number }
+  约束：执行人须为本城己方可行动武将且智≥60；城金≥50
+  Response: GameState（全量）
+
+POST   /api/game/civil/patrol
+  巡查（乡政派系命令）
+  Body: { cityId: number, officerId: number }
+  约束：执行人须为本城己方可行动武将且武≥60；城金≥30；当月免叛乱
+  Response: GameState（全量）
+
+POST   /api/game/faction/buy-arms
+  兵装采购（势力级）
+  Body: { amount: number }  // 正整数，10 金/件
+  Response: GameState（全量）
+
+POST   /api/game/civil/impeach   [S27 深化，Session 286]
+  弹劾处理（乡政派系命令）
+  Body: { cityId: number, action: 'appease' | 'remove' }
+  约束：本城存在 pendingImpeachment；appease 需城金≥100；
+        remove 不支持君主；仅玩家城市可处理
+  Response: GameState（全量）
+```
+
+> `GET /api/game/faction/overview` 响应于 S27 起新增 `fame`、`arms` 字段。
+
 ---
 
 ## 三、WebSocket 事件
@@ -788,21 +860,25 @@ GET    /api/v1/games/:id/campaign/nodes
 POST   /api/v1/games/:id/grand-strategist/appoint
    任命总军师
    Body: { officerId: number }
-   Response: { grandStrategist: GrandStrategist }
+   Response: { game: GameState, strategist: GrandStrategist }
 
 POST   /api/v1/games/:id/grand-strategist/dismiss
    解职总军师
    Body: {}
-   Response: { success: boolean }
+   Response: { game: GameState, log: string }
 
 POST   /api/v1/games/:id/grand-strategist/strategy
    切换态势
    Body: { strategy: 'offense' | 'defense' | 'development' | 'endurance' }
-   Response: { grandStrategist: GrandStrategist, effect: string }
+   Response: { game: GameState, log: string }
 
 GET    /api/v1/games/:id/grand-strategist/status
    获取总军师状态
-   Response: { grandStrategist: GrandStrategist, pendingAdvice?: string }
+   Response: {
+     strategist: GrandStrategist | null,
+     modifiers: StrategyModifiers,
+     hasStrategist: boolean
+   }
 ```
 
 ### 2.16 势力特点
@@ -913,7 +989,7 @@ CMD-P28 没有新增或修改接口。命令坞四计继续复用既有
 
 ---
 
-*文档版本: v4.9 | 2026-07-30 | Session 233 CMD-P28 后现行接口口径同步*
+*文档版本: v5.0 | 2026-08-01 | Session 267 总军师四端点响应同步现行代码*
 
 Session 245 新增 `POST /api/game/melee/mode`，请求 `{ mode: 'auto'|'standard'|'tactical' }`。
 缺失或非法模式返回 400；已选其他模式返回 400；重复提交同一模式幂等返回当前结果。
@@ -946,3 +1022,27 @@ administrativeGold / salaryGold / warLossGold / netGold / netFood / notes`。
 
 四端点都返回最新 `GameState`。start 校验入口/郡治语境与敌方；step/skip 统一消费权威
 RNG，完成时幂等回写；close 只允许已结算上下文。重复 skip 不会二次回写。
+### Session 277 · 六角路径与撤销 API
+
+```text
+GET  /api/game/battle/move-path/:unitId/:q/:r → PathResult
+POST /api/game/battle/undo                     → BattleState
+POST /api/game/melee/round { actionType, targetFormation? }
+```
+
+`move-path` 是非权威预览；`battle/move` 提交时服务端重新执行同一 A*。`undo` 仅接受玩家阶段
+最后一条可逆移动，攻击/技能/结束行动后返回400。白刃 `change_formation` 仅接受0-A六基础阵型，
+消耗1战术点。详细返回结构、错误码与调用示例见 `27-tactical-wargame-system.md` §2.1。
+
+### Session 279 · 阵型整合 API 规划边界
+
+本轮只完成 `29-formation-integration-development-plan.md`，**未新增或修改 API**。
+
+> **Session 290 已实装（FM-P3 动作级幂等）**：`POST /api/game/melee/round` 现接受可选
+> `commandId` 与 `expectedRound`。同一 `commandId` + 同 `expectedRound` 的重试返回首次结果，
+> 不二次扣 TP/推进；同 ID 但 `expectedRound` 过期（与缓存轮次不符）拒绝；不同 ID 各自正常执行。
+> 服务端以 `MeleeState.commandCache` 有界去重。旧客户端不传这两个字段仍兼容（无幂等承诺）。
+>
+> 六角变阵若需命令入口，须在 FM-P3 评审后接入既有战斗命令编排，不另建重复阵法服务；
+> 其只能消耗/推进 `battle.ts` 自身行动或战术阶段，不得调用 `runMeleeRound` 或结算白刃回合。
+> 所有入口都必须服务端复验并保证非法请求不改状态、不扣 TP、不消费 RNG。

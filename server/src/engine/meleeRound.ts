@@ -19,11 +19,13 @@
  */
 import {
   FormationType,
+  type Formation,
   type MeleeState,
   type MeleeRoundResult,
   type TacticalAction,
   type TacticalActionType,
 } from '@leh/shared';
+import { applyOrganizationExecution, resolveFormationContribution } from '@leh/shared';
 
 // ====== 常量 ======
 
@@ -33,6 +35,9 @@ const BASE_TACTICAL_POINTS = 5;
 const MAX_TACTICAL_POINTS = 10;
 /** 白刃战最大回合数 */
 const MAX_MELEE_ROUNDS = 20;
+
+/** 白刃战基础伤害系数（0-A 简化，与 Session 277 百分比基线同构；0.08 + 阵型攻修正） */
+const BASE_DAMAGE_MULT = 0.08;
 
 /** 战术动作消耗表 */
 const TACTICAL_COSTS: Record<TacticalActionType, number> = {
@@ -52,15 +57,52 @@ export function getTacticalActionCost(actionType: TacticalActionType): number | 
   return TACTICAL_COSTS[actionType] ?? null;
 }
 
-/** 阵型攻防修正（0-A 简化，仅 Lv1） */
-const FORMATION_MODS: Record<string, { atk: number; def: number; mobility: number }> = {
-  square:     { atk: 0.0,  def: 0.30, mobility: 0.8  },  // 方阵
-  circle:     { atk: -0.1, def: 0.20, mobility: 0.7  }, // 圆阵
-  cone:       { atk: 0.25, def: -0.10, mobility: 1.3 }, // 锥形
-  echelon:    { atk: 0.15, def: -0.05, mobility: 1.1 }, // 雁行
-  crane:      { atk: 0.10, def: 0.15, mobility: 0.9  }, // 鹤翼
-  arrow:      { atk: 0.20, def: -0.15, mobility: 1.2 }, // 锋矢
-};
+/**
+ * 等价性单点换算（FM-P3a 点值迁移，N1 已审）。
+ *
+ * 唯一运行量纲 = formations.json `tiers[0]` 点值（攻/防/机/射），经下列系数换算为标准模式
+ * 伤害/先手修正；meleePercent 过渡字段已退役，meleeRound 不再持有任何阵型数值硬编码表。
+ * 系数选择使六阵攻守角色与先手语义与 Session 277 百分比基线对齐；逐阵迁移前后差异表见
+ * `docs/formation-catalog-migration.md` §4（诚实标注：点值与百分比分布不同，不逐点相等）。
+ */
+export const MELEE_ATK_GAIN = 0.1; // 1 点攻 ≈ +10% 伤害系数（进 0.08+atk 倍率）
+export const MELEE_DEF_GAIN = 0.1; // 1 点防 ≈ -10% 承受伤害（进 (1-def) 减伤）
+export const MELEE_MOB_GAIN = 0.5; // 1 点机 ≈ 先手比较 +0.5
+export const MELEE_MOB_BASE = 1.0; // 先手比较基准
+
+/** 组织度缺省（optional 旧档兼容）：60 → orderly 档 ×1.0，使旧档/未携带不改变行为 */
+const ORDERLY_ORGANIZATION = 60;
+
+/**
+ * 注入的阵型目录（单一内容源，服务端启动时 `setMeleeFormationCatalog(staticData.formations)`）。
+ * null（纯单测/脚本未注入）时回退中性：等价"无阵型加成"，不再存在第二套数值表。
+ */
+let MELEE_CATALOG: readonly Formation[] | null = null;
+
+/** 注入静态阵型目录（null 恢复中性回退）。 */
+export function setMeleeFormationCatalog(catalog: readonly Formation[] | null): void {
+  MELEE_CATALOG = catalog;
+}
+
+/**
+ * 标准模式阵型修正：tiers[0] 点值 × 等价性系数，正面增量再按组织度执行档缩放（负修正原值保留）。
+ * 导出供战报复算/客户端解释复算（计划 §7.2 解释器可复算、§9.6 可解释性）。
+ * @param organization 0..100；undefined 按 orderly（×1.0 中性）解析，保证旧档/未携带不漂移。
+ */
+export function standardMeleeMods(
+  f: FormationType,
+  organization?: number,
+): { atk: number; def: number; mobility: number } {
+  const catalog = MELEE_CATALOG;
+  if (!catalog) return { atk: 0, def: 0, mobility: MELEE_MOB_BASE };
+  const contrib = resolveFormationContribution(catalog, f, organization ?? ORDERLY_ORGANIZATION);
+  const exec = contrib.organizationExecution;
+  return {
+    atk: applyOrganizationExecution(contrib.attack, exec) * MELEE_ATK_GAIN,
+    def: applyOrganizationExecution(contrib.defense, exec) * MELEE_DEF_GAIN,
+    mobility: MELEE_MOB_BASE + MELEE_MOB_GAIN * applyOrganizationExecution(contrib.mobility, exec),
+  };
+}
 
 // ====== 战术点刷新 ======
 
@@ -114,16 +156,14 @@ export function runMeleeRound(
   const events: string[] = [];
   const round = state.round + 1;
 
-  // 1. 先手判定（阵型机动 + 主将统率简化）
-  const atkMod = FORMATION_MODS[state.attackerFormation] ?? { atk: 0, def: 0, mobility: 1.0 };
-  const defMod = FORMATION_MODS[state.defenderFormation] ?? { atk: 0, def: 0, mobility: 1.0 };
+  // 1. 先手判定（阵型机动 + 主将统率简化；点值经等价性换算读入，含组织度执行档）
+  const atkMod = standardMeleeMods(state.attackerFormation, state.attackerOrganization);
+  const defMod = standardMeleeMods(state.defenderFormation, state.defenderOrganization);
   const attackerFirst = atkMod.mobility >= defMod.mobility;
 
-  // 2. 基础伤害计算（简化：基于兵力 × 阵型修正）
-
-  // 基础伤害系数（0-A 简化）
-  let atkDamageMult = 0.08 + (atkMod.atk || 0);
-  let defDamageMult = 0.08 + (defMod.atk || 0);
+  // 2. 基础伤害计算（简化：基于兵力 × 阵型修正；点值换算为 atk/def 修正）
+  let atkDamageMult = BASE_DAMAGE_MULT + (atkMod.atk || 0);
+  let defDamageMult = BASE_DAMAGE_MULT + (defMod.atk || 0);
 
   // 突击效果
   if (attackerAction?.type === 'all_out_assault') {
@@ -276,6 +316,8 @@ export function createMeleeState(
   attackerFormation: FormationType,
   defenderFormation: FormationType,
   commanderInt: number,
+  attackerOrganization?: number,
+  defenderOrganization?: number,
 ): MeleeState {
   return {
     battlefieldId,
@@ -295,9 +337,12 @@ export function createMeleeState(
     defenderFatigue: 0,
     attackerFormation,
     defenderFormation,
+    attackerOrganization,
+    defenderOrganization,
     tacticalPoints: BASE_TACTICAL_POINTS + (commanderInt >= 80 ? 1 : 0),
     tacticalPointsUsed: 0,
     phase: 'active',
     eventLog: [],
+    commandCache: {},
   };
 }

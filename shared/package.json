@@ -22,12 +22,14 @@
     "typecheck": "tsc -p tsconfig.json",
     "lint": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage:tactical": "vitest run tactical-grid.test.ts tactical-system.test.ts melee-engagement.test.ts --coverage"
   },
   "dependencies": {
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "4.1.10",
     "typescript": "^5.7.3",
     "vitest": "^4.1.10"
   }

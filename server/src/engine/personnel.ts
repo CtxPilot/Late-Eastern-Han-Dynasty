@@ -2,11 +2,12 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * Demo 人事：搜索/登用（男将）+ 婚配 / 赏赐美人。
+ * Demo 人事：搜索/登用（男将）+ 成年角色正式婚配。
  * 搜索与登用的结算随机必须由服务端权威 PRNG 显式注入；本模块不拥有独立随机源。
  * 设计参考 04 §3.1~3.2 / §九婚姻 / §十一赏赐；历史女角禁止搜索登用。
  */
 import {
+  isAdultForMarriage,
   MaritalStatus,
   OfficerStatus,
   calculateRecruitChance,
@@ -28,9 +29,7 @@ const MERIT_RECRUIT = 4;
 const MERIT_MARRY = 10;
 
 export const MARRY_GOLD = 300;
-export const GIFT_BEAUTY_GOLD = 100;
 export const MARRY_LOYALTY = 18;
-export const GIFT_LOYALTY = 12;
 
 /** 搜索耗金 */
 export const SEARCH_GOLD = 80;
@@ -345,10 +344,10 @@ function cityPayGold(state: GameState, cityId: number | null, cost: number): Gam
   // 优先武将所在城扣金；无则任意己方城
   let payId = cityId;
   if (payId == null || state.cities[payId]?.ruler !== state.playerFactionId) {
-    const any = Object.values(state.cities).find(
+    const fallbackCity = Object.values(state.cities).find(
       (c) => c.ruler === state.playerFactionId && c.gold >= cost,
     );
-    payId = any?.id ?? null;
+    payId = fallbackCity?.id ?? null;
   }
   if (payId == null) throw new Error('无可用城池支付金钱');
   const city = state.cities[payId];
@@ -371,6 +370,13 @@ export function marryFemale(
   const female = requirePlayerFemale(state, femaleId);
   const officer = requirePlayerOfficer(state, officerId);
 
+  if (!isAdultForMarriage(female.birthYear, state.currentYear)) {
+    throw new Error(`${female.name} 未达到玩家婚配成年门槛（18岁）`);
+  }
+  if (!isAdultForMarriage(officer.birthYear, state.currentYear)) {
+    throw new Error(`${officer.name} 未达到玩家婚配成年门槛（18岁）`);
+  }
+
   // 君主特例（docs/04 §3.8 切片 C）：不得赐婚给君主（君主不参与忠诚/拉拢记录）
   if (officer.faction != null && state.factions[officer.faction]?.rulerId === officerId) {
     throw new Error(`${officer.name} 是君主，不参与赐婚（§3.8 君主特例）`);
@@ -385,17 +391,9 @@ export function marryFemale(
   if (officer.wifeId != null && state.females[officer.wifeId]) {
     throw new Error(`${officer.name} 已有正妻（Demo 暂不支持多妾）`);
   }
-  // 不可自相矛盾：已赏赐给别人则须先处理——允许直接婚配给同一人
-  if (
-    female.giftedToOfficerId != null &&
-    female.giftedToOfficerId !== officerId
-  ) {
-    throw new Error(`${female.name} 已赏赐给其他武将，请先解除或改赏`);
-  }
-
   const cities = cityPayGold(state, officer.location, MARRY_GOLD);
 
-  // 从原赏赐列表移除
+  // 旧存档兼容：具名女性赠与机制已退役，婚配时一并清除旧关联。
   let officers = { ...state.officers };
   if (female.giftedToOfficerId != null) {
     const prev = officers[female.giftedToOfficerId];
@@ -443,77 +441,6 @@ export function marryFemale(
     {
       cities,
       females: { ...withMerit.females, [femaleId]: nextFemale },
-      officers,
-    },
-  );
-}
-
-/**
- * 赏赐美人：非婚配，挂到武将 beauties；忠诚+
- */
-export function giftBeauty(
-  state: GameState,
-  femaleId: number,
-  officerId: number,
-): GameState {
-  const female = requirePlayerFemale(state, femaleId);
-  const officer = requirePlayerOfficer(state, officerId);
-
-  // 君主特例（docs/04 §3.8 切片 C）：不得赏赐美人给君主（不产生君主拉拢记录）
-  if (officer.faction != null && state.factions[officer.faction]?.rulerId === officerId) {
-    throw new Error(`${officer.name} 是君主，不参与赏赐美人（§3.8 君主特例）`);
-  }
-
-  if (female.status === MaritalStatus.MARRIED && female.husbandId != null) {
-    throw new Error(`${female.name} 已婚配，不可再作赏赐美人`);
-  }
-  if (female.giftedToOfficerId === officerId) {
-    throw new Error(`已赏赐给 ${officer.name}`);
-  }
-  if (female.giftedToOfficerId != null && female.giftedToOfficerId !== officerId) {
-    throw new Error(`${female.name} 已赏赐给其他武将`);
-  }
-  if (officer.wifeId === femaleId) {
-    throw new Error('已是正妻');
-  }
-
-  const cities = cityPayGold(state, officer.location, GIFT_BEAUTY_GOLD);
-
-  let officers = { ...state.officers };
-  // 从旧主人列表摘下（一般不应发生）
-  if (female.giftedToOfficerId != null) {
-    const prev = officers[female.giftedToOfficerId];
-    if (prev) {
-      officers[female.giftedToOfficerId] = {
-        ...prev,
-        beauties: (prev.beauties ?? []).filter((id) => id !== femaleId),
-      };
-    }
-  }
-
-  const list = [...(officers[officerId].beauties ?? [])];
-  if (!list.includes(femaleId)) list.push(femaleId);
-
-  const nextOfficer: Officer = {
-    ...officers[officerId],
-    beauties: list,
-    loyalty: Math.min(100, officer.loyalty + GIFT_LOYALTY),
-  };
-  officers = { ...officers, [officerId]: nextOfficer };
-
-  const nextFemale: FemaleCharacter = {
-    ...female,
-    giftedToOfficerId: officerId,
-    locationId: officer.location ?? female.locationId,
-  };
-
-  return pushLog(
-    state,
-    'gift_beauty',
-    `赏赐：${female.name} → ${officer.name}（美人，忠诚+${GIFT_LOYALTY}，耗金 ${GIFT_BEAUTY_GOLD}）`,
-    {
-      cities,
-      females: { ...state.females, [femaleId]: nextFemale },
       officers,
     },
   );

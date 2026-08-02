@@ -13,6 +13,7 @@ import {
 describe('family read-only overview model', () => {
   it('derives player women, kinship, fixed children, marriage and follow candidates', () => {
     const game = {
+      currentYear: 220,
       playerFactionId: 1,
       enabledChildEventIds: [950],
       factions: {
@@ -26,25 +27,27 @@ describe('family read-only overview model', () => {
       females: {
         201: {
           id: 201, name: '甄氏', clanName: '甄', factionId: 1, locationId: 1,
-          status: 'married', husbandId: 2, canCommand: false,
+          birthYear: 183, status: 'married', husbandId: 2, canCommand: false,
         },
         202: {
           id: 202, name: '蔡琰', clanName: '蔡', factionId: 1, locationId: 1,
-          status: 'widow', canCommand: false,
+          birthYear: 177, status: 'widow', canCommand: false,
         },
         203: {
           id: 203, name: '敌女', clanName: '孙', factionId: 2, locationId: 2,
-          status: 'single', canCommand: false,
+          birthYear: 189, status: 'single', canCommand: false,
         },
       },
       officers: {
         1: {
           id: 1, name: '曹操', faction: 1, wifeId: null, loyalty: 100,
+          birthYear: 155,
           stats: { leadership: 90, war: 70, intelligence: 90, politics: 90, charisma: 95 },
           hidden: { compatibility: 20, ideal: 'fame', bloodline: [] },
         },
         2: {
           id: 2, name: '曹丕', faction: 1, wifeId: 201, loyalty: 90,
+          birthYear: 187,
           stats: { leadership: 70, war: 55, intelligence: 82, politics: 85, charisma: 75 },
           hidden: { compatibility: 25, ideal: 'fame', bloodline: [] },
         },
@@ -54,6 +57,7 @@ describe('family read-only overview model', () => {
         },
         9: {
           id: 9, name: '敌君', faction: 2, wifeId: null, loyalty: 100,
+          birthYear: 160,
           stats: { leadership: 70, war: 70, intelligence: 70, politics: 70, charisma: 70 },
           hidden: { compatibility: 100, ideal: 'order', bloodline: [] },
         },
@@ -85,16 +89,17 @@ describe('family read-only overview model', () => {
 
   it('revalidates marriage and manual follow drafts against the latest state', () => {
     const game = {
+      currentYear: 190,
       playerFactionId: 1,
       cities: { 1: { id: 1, ruler: 1, gold: 300 } },
       females: {
         201: {
-          id: 201, factionId: 1, status: 'single', husbandId: null,
+          id: 201, birthYear: 170, factionId: 1, status: 'single', husbandId: null,
           giftedToOfficerId: null,
         },
       },
       officers: {
-        1: { id: 1, faction: 1, wifeId: null },
+        1: { id: 1, birthYear: 150, faction: 1, wifeId: null },
         2: { id: 2, faction: null, status: OfficerStatus.FREE },
       },
     } as unknown as GameState;
@@ -102,15 +107,15 @@ describe('family read-only overview model', () => {
     expect(validateMarriageDraft(game, { femaleId: 201, officerId: 1 })).toBeNull();
     expect(validateFollowCheck(game)).toBeNull();
 
-    const reassigned = {
+    const underage = {
       ...game,
       females: {
         ...game.females,
-        201: { ...game.females[201], giftedToOfficerId: 9 },
+        201: { ...game.females[201], birthYear: 189 },
       },
     };
-    expect(validateMarriageDraft(reassigned, { femaleId: 201, officerId: 1 }))
-      .toBe('女角已随侍其他武将，不能直接婚配。');
+    expect(validateMarriageDraft(underage, { femaleId: 201, officerId: 1 }))
+      .toBe('女角未达到玩家婚配成年门槛（18岁）。');
 
     const noFreeOfficer = {
       ...game,

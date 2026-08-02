@@ -17,18 +17,13 @@ type RightAcc =
   | 'basic'
   | 'population'
   | 'food'
-  | 'civil'
-  | 'military'
   | 'log'
   | null;
 
-/**
- * 城池详情：按谍报可见性脱敏；侦查在军事操作。
- */
+/** 城池只读详情：按谍报可见性脱敏；所有命令统一由底部命令坞进入。 */
 export function RightPanel() {
   const game = useGameStore((s) => s.game);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
-  const selectCity = useGameStore((s) => s.selectCity);
   const lastAction = useGameStore((s) => s.lastActionOk);
   const error = useGameStore((s) => s.error);
   const [open, setOpen] = useState<RightAcc>(null);
@@ -74,7 +69,7 @@ export function RightPanel() {
         <div className="p-4 text-stone-500 text-xs leading-relaxed space-y-2">
           <p>点城查看。他方城默认情报不明，需侦查或盟友共享。</p>
           <p className="text-amber-700/80">
-            左侧外交可进贡/结盟；结盟后可见盟友城部分信息。
+            底部命令坞“外交”可进贡/结盟；结盟后可见盟友城部分信息。
           </p>
         </div>
       ) : (
@@ -232,40 +227,6 @@ export function RightPanel() {
               ) : (
                 <p className="text-stone-600 text-[10px] px-1">情报不足</p>
               )}
-            </div>
-          </AccSection>
-
-          <AccSection
-            title="内政操作"
-            accent="civil"
-            open={open === 'civil'}
-            onToggle={() => toggle('civil')}
-          >
-            <p className="px-3 mt-1 text-[10px] text-stone-600">
-              城市治理与 S09 宫廷人脉结交请使用底部命令坞“内政”。
-            </p>
-            {!isPlayerCity && (
-              <p className="px-3 mt-1 text-[10px] text-stone-600">内政仅己方城可用</p>
-            )}
-          </AccSection>
-
-          <AccSection
-            title="军事操作"
-            accent="military"
-            open={open === 'military'}
-            onToggle={() => toggle('military')}
-          >
-            <p className="px-3 mt-1 text-[10px] text-stone-600">
-              征兵、训练、编成与军令请使用底部命令坞“军事”。
-            </p>
-            <div className="px-2 mt-2">
-              <button
-                type="button"
-                className="px-3 py-1 rounded bg-stone-800 border border-stone-600 text-xs"
-                onClick={() => selectCity(null)}
-              >
-                取消选中
-              </button>
             </div>
           </AccSection>
 

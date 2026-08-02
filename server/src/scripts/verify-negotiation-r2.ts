@@ -8,7 +8,7 @@
  * - 结盟成功率公式（友好/使者魅力/共同敌人/条约态/hegemonyModifier 逐项相加）
  * - UI 日志百分比与共享公式同源
  * - 固定 seed 结盟成功/失败可复现，只消费一次权威 RNG
- * - HC-P0-5（追加断言）：霸府/王/帝政治阶段对结盟成功率 + 进贡/献美友好增量的修正
+ * - HC-P0-5（追加断言）：霸府/王/帝政治阶段对结盟成功率 + 进贡/宫廷牵线友好增量的修正
  *
  * Run: pnpm verify-negotiation-r2
  */
@@ -290,11 +290,11 @@ assert(hegemonyAllianceModifier('king') === 8, 'king 阶段结盟修正=+8（分
 assert(hegemonyAllianceModifier('emperor') === 12, 'emperor 阶段结盟修正=+12（分档预留）');
 assert(hegemonyAllianceModifier(undefined) === 0, 'undefined 阶段兜底为 0');
 
-assert(hegemonyFavorMultiplier('vassal') === 1.0, 'vassal 进贡/献美倍数=1.0');
-assert(hegemonyFavorMultiplier('hegemon') === 1.1, 'hegemon 进贡/献美倍数=×1.1');
-assert(hegemonyFavorMultiplier('king') === 1.2, 'king 进贡/献美倍数=×1.2（分档预留）');
-assert(hegemonyFavorMultiplier('emperor') === 1.3, 'emperor 进贡/献美倍数=×1.3（分档预留）');
-assert(hegemonyFavorMultiplier(undefined) === 1.0, 'undefined 进贡/献美倍数兜底为 1.0');
+assert(hegemonyFavorMultiplier('vassal') === 1.0, 'vassal 进贡/宫廷牵线倍数=1.0');
+assert(hegemonyFavorMultiplier('hegemon') === 1.1, 'hegemon 进贡/宫廷牵线倍数=×1.1');
+assert(hegemonyFavorMultiplier('king') === 1.2, 'king 进贡/宫廷牵线倍数=×1.2（分档预留）');
+assert(hegemonyFavorMultiplier('emperor') === 1.3, 'emperor 进贡/宫廷牵线倍数=×1.3（分档预留）');
+assert(hegemonyFavorMultiplier(undefined) === 1.0, 'undefined 进贡/宫廷牵线倍数兜底为 1.0');
 
 // 霸府状态结盟成功率应严格高于 vassal 状态（其他条件相同）
 const hegemonyState: GameState = {
@@ -351,8 +351,8 @@ assert(
   '分档单调：king(+8) < emperor(+12)',
 );
 
-// 进贡/献美友好增量放大验证
-import { doGiftBeautyDip } from '../services/game.js';
+// 进贡/宫廷牵线友好增量放大验证
+import { doTransferCourtNetwork } from '../services/game.js';
 // 先准备：让己方有 courtNetwork
 const giftPrepState: GameState = {
   ...prepared,
@@ -363,15 +363,15 @@ const giftPrepState: GameState = {
 };
 restoreGameFromEnvelope(envelopeFor(giftPrepState));
 const vassalGiftFav = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability ?? 0;
-doGiftBeautyDip(3, 1);
+doTransferCourtNetwork(3, 1);
 const vassalGiftAfter = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability ?? 0;
 const vassalGiftDelta = vassalGiftAfter - vassalGiftFav;
 assert(
   vassalGiftDelta === 12,
-  `vassal 献美×1 友好增量应为 12×1×1.0=12（实测 ${vassalGiftDelta}）`,
+  `vassal 宫廷牵线×1 友好增量应为 12×1×1.0=12（实测 ${vassalGiftDelta}）`,
 );
 
-// 霸府状态献美：友好增量应放大为 round(12×1.1)=13
+// 霸府状态宫廷牵线：友好增量应放大为 round(12×1.1)=13
 const hegemonyGiftState: GameState = {
   ...getGame(),
   factions: {
@@ -385,15 +385,15 @@ const hegemonyGiftState: GameState = {
   ),
 };
 restoreGameFromEnvelope(envelopeFor(hegemonyGiftState));
-doGiftBeautyDip(3, 1);
+doTransferCourtNetwork(3, 1);
 const hegemonyGiftAfter = findDiplomacy(getGame().diplomacy, 1, 3)?.favorability ?? 0;
 assert(
   hegemonyGiftAfter === 13,
-  `霸府献美×1 友好增量应放大为 round(12×1.1)=13（实测 ${hegemonyGiftAfter}）`,
+  `霸府宫廷牵线×1 友好增量应放大为 round(12×1.1)=13（实测 ${hegemonyGiftAfter}）`,
 );
 assert(
   hegemonyGiftAfter > vassalGiftDelta,
-  '霸府献美友好增量严格大于 vassal（×1.1 放大生效）',
+  '霸府宫廷牵线友好增量严格大于 vassal（×1.1 放大生效）',
 );
 
 console.log(`R2 negotiation verification passed: ${passed}/40`);

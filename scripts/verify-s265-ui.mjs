@@ -124,3 +124,4 @@ const realErrors = consoleErrors.filter((e) => !/favicon/i.test(e));
 check('console error = 0', realErrors.length === 0, realErrors.join(' | '));
 
 console.log(`\nS12 数值消费 UI 冒烟：${assertions} 项断言通过，console error=0`);
+ws.close();

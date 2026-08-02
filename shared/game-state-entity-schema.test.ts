@@ -182,9 +182,9 @@ describe('GameStateEntitiesSchema', () => {
     );
   });
 
-  it('rejects mutually exclusive marriage and gifted states', () => {
+  it('rejects the retired named-female gift state', () => {
     expect(() =>
       FemaleRuntimeSchema.parse({ ...validFemale(), giftedToOfficerId: 2 }),
-    ).toThrow(/已婚女性不能同时处于赏赐状态/);
+    ).toThrow();
   });
 });

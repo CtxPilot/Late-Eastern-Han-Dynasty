@@ -9,7 +9,7 @@ import type {
   CityStatic,
   EventTemplate,
   FemaleStatic,
-  FormationTemplate,
+  Formation,
   ItemStatic,
   OfficerStatic,
   ScenarioStatic,
@@ -34,7 +34,7 @@ export function loadAllStatic() {
   return {
     officers: load<OfficerStatic[]>('officers', 'officers.json'),
     cities: load<CityStatic[]>('cities', 'cities.json'),
-    formations: load<FormationTemplate[]>('formations', 'formations.json'),
+    formations: load<Formation[]>('formations', 'formations.json'),
     units: load<UnitTemplate[]>('units', 'units.json'),
     items: load<ItemStatic[]>('items', 'items.json'),
     females: load<FemaleStatic[]>('females', 'females.json'),

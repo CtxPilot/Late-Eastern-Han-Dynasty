@@ -33,6 +33,7 @@ import {
   FemaleStaticSchema,
   OfficerStaticSchema,
 } from './validators/index.js';
+import { CITY_FACTION_KINDS } from './city-factions.js';
 
 const PositiveIdSchema = z.number().int().positive();
 const NullablePositiveIdSchema = PositiveIdSchema.nullable();
@@ -96,7 +97,7 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     stamina: z.number().int().nonnegative(),
     actionsPerMonth: z.number().int().nonnegative().optional(),
     wifeId: NullablePositiveIdSchema.optional(),
-    beauties: z.array(PositiveIdSchema),
+    beauties: z.array(PositiveIdSchema).max(0, '具名女性赠与字段已退役，运行时必须为空'),
     equipment: z
       .object({
         weaponPrimary: PositiveIdSchema.optional(),
@@ -107,6 +108,11 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
       })
       .strict()
       .optional(),
+    skillTreeState: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    skillPointsSpent: z.number().int().nonnegative().optional(),
+    traitLevels: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    traitPointsSpent: z.number().int().nonnegative().optional(),
+    consortIds: z.array(z.object({ id: z.number().int(), rank: z.enum(['concubine', 'ji']) })).optional(),
   })
   .strict();
 
@@ -116,6 +122,14 @@ const CityDemographicsSchema = z
     adultFemale: z.number().int().nonnegative(),
     child: z.number().int().nonnegative(),
     elder: z.number().int().nonnegative(),
+  })
+  .strict();
+
+const CityFactionEntrySchema = z
+  .object({
+    kind: z.enum(CITY_FACTION_KINDS),
+    name: z.string().min(1),
+    satisfaction: z.number().int().min(0).max(100),
   })
   .strict();
 
@@ -166,6 +180,15 @@ export const CityRuntimeSchema: z.ZodType<City> = z
       })
       .strict()
       .optional(),
+    cityFactions: z.array(CityFactionEntrySchema).optional(),
+    factionPatrolStamp: z.number().int().optional(),
+    pendingImpeachment: z
+      .object({
+        officerId: PositiveIdSchema,
+        sinceStamp: z.number().int(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((city, ctx) => {
@@ -208,6 +231,9 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     imperialAuthority: z.number().int().min(0).max(100).optional(),
     imperialDecreeCooldown: z.number().int().nonnegative().optional(),
     inventory: z.record(z.coerce.number().int().positive(), z.number().int().positive()).optional(),
+    mandate: z.number().int().min(0).max(100).optional(),
+    popularWill: z.number().int().min(0).max(100).optional(),
+    arms: z.number().int().nonnegative().optional(),
   })
   .strict();
 
@@ -218,18 +244,9 @@ export const FemaleRuntimeSchema: z.ZodType<FemaleCharacter> = z
     initialStatus: z.nativeEnum(MaritalStatus),
     status: z.nativeEnum(MaritalStatus),
     husbandId: PositiveIdSchema.optional(),
-    giftedToOfficerId: NullablePositiveIdSchema.optional(),
+    giftedToOfficerId: z.null().optional(),
   })
-  .strict()
-  .superRefine((female, ctx) => {
-    if (female.husbandId !== undefined && female.giftedToOfficerId != null) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['giftedToOfficerId'],
-        message: '已婚女性不能同时处于赏赐状态',
-      });
-    }
-  });
+  .strict();
 
 function entityRecordSchema<T extends { id: number }>(entitySchema: z.ZodType<T>) {
   return z.record(z.coerce.number().int().positive(), entitySchema).superRefine((entities, ctx) => {

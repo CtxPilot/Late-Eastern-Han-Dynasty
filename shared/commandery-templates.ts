@@ -15,6 +15,10 @@
 import type { HistoricalGeographyBundle } from './data/historical-geography/schema.js';
 import { nanjun190 } from './data/historical-geography/nanjun-190.js';
 import { yingchuan190 } from './data/historical-geography/yingchuan-190.js';
+import { chenliu190 } from './data/historical-geography/chenliu-190.js';
+import { henan190 } from './data/historical-geography/henan-190.js';
+import { henei190 } from './data/historical-geography/henei-190.js';
+import { hongnong190 } from './data/historical-geography/hongnong-190.js';
 
 /** 单个郡国模板登记项。 */
 export interface CommanderyTemplateEntry {
@@ -57,6 +61,30 @@ export const COMMANDERY_TEMPLATES: Record<string, CommanderyTemplateEntry> = {
     defenderEntryNodeIds: ['yingchuan_wuyang', 'yingchuan_fucheng'],
     instancePrefix: 'bf-yingchuan',
     warPrefix: 'war-yingchuan',
+  },
+  chenliu: {
+    id: 'chenliu', label: '陈留郡', bundle: chenliu190, templateId: 'chenliu-190',
+    entryNodeIds: ['chenliu_suanzao', 'chenliu_weishi', 'chenliu_fugou'],
+    defenderEntryNodeIds: ['chenliu_waihuang', 'chenliu_yongqiu'],
+    instancePrefix: 'bf-chenliu', warPrefix: 'war-chenliu',
+  },
+  henan: {
+    id: 'henan', label: '河南尹', bundle: henan190, templateId: 'henan-190',
+    entryNodeIds: ['henan_xingyang', 'henan_zhongmou', 'henan_xinzheng'],
+    defenderEntryNodeIds: ['henan_chenggao', 'henan_yanshi'],
+    instancePrefix: 'bf-henan', warPrefix: 'war-henan',
+  },
+  henei: {
+    id: 'henei', label: '河内郡', bundle: henei190, templateId: 'henei-190',
+    entryNodeIds: ['henei_heyang', 'henei_xiuwu', 'henei_huojia'],
+    defenderEntryNodeIds: ['henei_yewang', 'henei_huai'],
+    instancePrefix: 'bf-henei', warPrefix: 'war-henei',
+  },
+  hongnong: {
+    id: 'hongnong', label: '弘农郡', bundle: hongnong190, templateId: 'hongnong-190',
+    entryNodeIds: ['hongnong_xinan', 'hongnong_yiyang', 'hongnong_luhun'],
+    defenderEntryNodeIds: ['hongnong_shan', 'hongnong_hongnong'],
+    instancePrefix: 'bf-hongnong', warPrefix: 'war-hongnong',
   },
 };
 

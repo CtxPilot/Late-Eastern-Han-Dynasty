@@ -67,7 +67,7 @@ export function selectDiplomacyTargets(game: GameState): DiplomacyTargetSummary[
 export function DiplomacyOverviewDrawer() {
   const game = useGameStore((state) => state.game);
   const tribute = useGameStore((state) => state.tribute);
-  const giftBeautyDip = useGameStore((state) => state.giftBeautyDip);
+  const transferCourtNetwork = useGameStore((state) => state.transferCourtNetwork);
   const formAlliance = useGameStore((state) => state.formAlliance);
   const clearError = useGameStore((state) => state.clearError);
   const loading = useGameStore((state) => state.loading);
@@ -75,7 +75,7 @@ export function DiplomacyOverviewDrawer() {
   const targets = useMemo(() => game ? selectDiplomacyTargets(game) : [], [game]);
   const [selectedFactionId, setSelectedFactionId] = useState<number | null>(null);
   const [facet, setFacet] = useState<'factions' | 'negotiation' | 'treaty'>('factions');
-  const [confirm, setConfirm] = useState<'tribute' | 'gift-beauty' | 'alliance' | null>(null);
+  const [confirm, setConfirm] = useState<'tribute' | 'court-network' | 'alliance' | null>(null);
 
   useEffect(() => {
     if (targets.length === 0) {
@@ -127,7 +127,7 @@ export function DiplomacyOverviewDrawer() {
     if (confirm === 'tribute' && latestResources.gold < 200) {
       return `金钱不足（需200，当前${latestResources.gold}）。`;
     }
-    if (confirm === 'gift-beauty') {
+    if (confirm === 'court-network') {
       const relation = String(
         findDiplomacy(latest.diplomacy, latest.playerFactionId, target.id)?.relation ?? 'neutral',
       );
@@ -286,12 +286,12 @@ export function DiplomacyOverviewDrawer() {
                   </div>
                   <button
                     type="button"
-                    data-testid="command-diplomacy-gift-beauty"
+                    data-testid="command-diplomacy-court-network"
                     disabled={loading || giftReason != null}
                     title={giftReason ?? '送交统一终审'}
                     onClick={() => {
                       clearError();
-                      setConfirm('gift-beauty');
+                      setConfirm('court-network');
                     }}
                     className="border border-rose-800 bg-rose-950/40 px-3 py-1.5 text-rose-100 disabled:opacity-40"
                   >
@@ -358,11 +358,11 @@ export function DiplomacyOverviewDrawer() {
       <CommandConfirmDialog
         open={confirm != null && selected != null}
         category="外交"
-        command={`${confirm === 'tribute' ? '确认进贡' : confirm === 'gift-beauty' ? '确认宫廷牵线' : '确认结盟'}：${selected?.name ?? '未知势力'}`}
+        command={`${confirm === 'tribute' ? '确认进贡' : confirm === 'court-network' ? '确认宫廷牵线' : '确认结盟'}：${selected?.name ?? '未知势力'}`}
         summary={
           confirm === 'tribute'
             ? '将立即支付金钱以改善双方关系。'
-            : confirm === 'gift-beauty'
+            : confirm === 'court-network'
               ? '将永久转移一份宫廷人脉给目标势力，用于交涉牵线。'
               : '结盟交涉无论成败都会立即消耗金钱，并消费一次外交判定。'
         }
@@ -370,14 +370,14 @@ export function DiplomacyOverviewDrawer() {
           { label: '目标势力', value: selected.name },
           {
             label: '立即消耗',
-            value: confirm === 'tribute' ? '金 200' : confirm === 'gift-beauty' ? '宫廷人脉 1' : '金 500',
+            value: confirm === 'tribute' ? '金 200' : confirm === 'court-network' ? '宫廷人脉 1' : '金 500',
             tone: 'warning',
           },
           {
             label: confirm === 'alliance' ? '成功率' : '主要效果',
             value: confirm === 'tribute'
               ? `友好 +${tributeGain}`
-              : confirm === 'gift-beauty'
+              : confirm === 'court-network'
                 ? `友好 +${giftGain}，获得点化额度 1`
                 : `${Math.round(calculateAllianceChance(game, selected.factionId).chance)}%`,
           },
@@ -392,15 +392,15 @@ export function DiplomacyOverviewDrawer() {
         fallbackFocusSelector={
           confirm === 'tribute'
             ? "[data-testid='command-diplomacy-tribute']"
-            : confirm === 'gift-beauty'
-              ? "[data-testid='command-diplomacy-gift-beauty']"
+            : confirm === 'court-network'
+              ? "[data-testid='command-diplomacy-court-network']"
               : "[data-testid='command-diplomacy-alliance']"
         }
         onCancel={() => setConfirm(null)}
         onConfirm={async () => {
           if (!selected || !confirm) return;
           if (confirm === 'tribute') await tribute(selected.factionId);
-          else if (confirm === 'gift-beauty') await giftBeautyDip(selected.factionId, 1);
+          else if (confirm === 'court-network') await transferCourtNetwork(selected.factionId, 1);
           else await formAlliance(selected.factionId);
           if (!useGameStore.getState().error) setConfirm(null);
         }}

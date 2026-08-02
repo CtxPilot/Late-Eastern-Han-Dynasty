@@ -22,7 +22,7 @@ export interface IntelState {
   nextAgentSeq: number;
   recentMissions: SpyMissionLog[];
   /**
-   * 献美可点化额度：player 对 targetFaction 累计献美后可「点化」为女间谍的次数
+   * 宫廷牵线可点化额度：player 对 targetFaction 累计宫廷牵线后可「点化」为女间谍的次数
    * key = targetFactionId, value = plantable count
    */
   plantableBeauty?: Record<number, number>;

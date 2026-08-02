@@ -1,0 +1,71 @@
+{
+  "trees": [
+    {
+      "id": "strategy",
+      "name": "战略计策",
+      "description": "六角战场的主动计略与谋略",
+      "nodes": [
+        { "id": "strategy_fire", "skillId": "fire", "name": "火计", "description": "纵火伤敌", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": [], "nodeType": "skill", "domains": ["battlefield"] },
+        { "id": "strategy_water", "skillId": "water", "name": "水计", "description": "水攻伤敌", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_fire"], "nodeType": "skill", "domains": ["battlefield"] },
+        { "id": "strategy_rockfall", "skillId": "rockfall", "name": "落石", "description": "山地落石", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_water"], "nodeType": "skill", "domains": ["battlefield"] },
+        { "id": "strategy_ambush", "skillId": "ambush", "name": "伏兵", "description": "设伏袭击", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_fire"], "nodeType": "skill", "domains": ["battlefield"] },
+        { "id": "strategy_discord", "skillId": "discord", "name": "离间", "description": "离间敌军", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_ambush"], "nodeType": "skill", "domains": ["battlefield"] },
+        { "id": "strategy_sorcery", "skillId": "sorcery", "name": "妖术", "description": "妖法惑敌", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_discord"], "nodeType": "skill", "domains": ["battlefield", "duel"] },
+        { "id": "strategy_illusion", "skillId": "illusion", "name": "幻术", "description": "幻象乱敌", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_sorcery"], "nodeType": "skill", "domains": ["battlefield", "duel"] },
+        { "id": "strategy_insight", "skillId": "insight", "name": "洞察", "description": "识破伏兵与计策", "treeId": "strategy", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["strategy_fire"], "nodeType": "skill", "domains": ["battlefield", "melee"] }
+      ]
+    },
+    {
+      "id": "tactics",
+      "name": "战术计策",
+      "description": "六角战场与白刃战的战术指令",
+      "nodes": [
+        { "id": "tactics_taunt", "skillId": "taunt", "name": "挑拨", "description": "挑衅敌军", "treeId": "tactics", "maxLevel": 5, "costPerLevel": 1, "prerequisites": [], "nodeType": "skill", "domains": ["battlefield", "melee"] },
+        { "id": "tactics_calm", "skillId": "calm", "name": "沉着", "description": "免疫挑衅与威压", "treeId": "tactics", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["tactics_taunt"], "nodeType": "skill", "domains": ["battlefield", "melee", "duel"] },
+        { "id": "tactics_inspire", "skillId": "inspire", "name": "激励", "description": "鼓舞士气", "treeId": "tactics", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["tactics_calm"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] }
+      ]
+    },
+    {
+      "id": "duel",
+      "name": "单挑技能",
+      "description": "单挑专用的战斗技能",
+      "nodes": [
+        { "id": "duel_bravery", "skillId": "bravery", "name": "勇武", "description": "单挑暴击与伤害", "treeId": "duel", "maxLevel": 5, "costPerLevel": 1, "prerequisites": [], "nodeType": "skill", "domains": ["melee", "duel"] },
+        { "id": "duel_rapidAttack", "skillId": "rapidAttack", "name": "急攻", "description": "单挑连击率", "treeId": "duel", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["duel_bravery"], "nodeType": "skill", "domains": ["battlefield", "melee", "duel"] },
+        { "id": "duel_hold", "skillId": "hold", "name": "固守", "description": "单挑格挡反击", "treeId": "duel", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["duel_bravery"], "nodeType": "skill", "domains": ["battlefield", "melee", "duel"] }
+      ]
+    },
+    {
+      "id": "command",
+      "name": "统军",
+      "description": "战场指挥与兵种强化",
+      "nodes": [
+        { "id": "cmd_gallop", "skillId": "gallop", "name": "疾驰", "description": "骑兵机动力提升", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": [], "nodeType": "skill", "domains": ["battlefield", "campaign"] },
+        { "id": "cmd_forcedMarch", "skillId": "forcedMarch", "name": "强行军", "description": "急行军能力", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_gallop"], "nodeType": "skill", "domains": ["battlefield", "campaign"] },
+        { "id": "cmd_rapidAttack", "skillId": "rapidAttack", "name": "急攻", "description": "战场连击率", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_gallop"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] },
+        { "id": "cmd_hold", "skillId": "hold", "name": "固守", "description": "战场格挡与防御", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_rapidAttack"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] },
+        { "id": "cmd_longRange", "skillId": "longRange", "name": "远射", "description": "弓兵射程提升", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_gallop"], "nodeType": "skill", "domains": ["battlefield", "melee"] },
+        { "id": "cmd_formationChange", "skillId": "formationChange", "name": "布阵", "description": "阵型切换与布阵加成", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_longRange"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] },
+        { "id": "cmd_reorganize", "skillId": "reorganize", "name": "重整", "description": "部队重整恢复", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_formationChange"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] },
+        { "id": "cmd_raid", "skillId": "raid", "name": "奇袭", "description": "夜袭与突袭", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_reorganize"], "nodeType": "skill", "domains": ["battlefield", "melee", "campaign"] },
+        { "id": "cmd_riding", "skillId": "riding", "name": "骑术", "description": "骑兵适性与伤害", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_gallop"], "nodeType": "skill", "domains": ["battlefield", "melee"] },
+        { "id": "cmd_archery", "skillId": "archery", "name": "弓术", "description": "弓兵适性与伤害", "treeId": "command", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["cmd_longRange"], "nodeType": "skill", "domains": ["battlefield", "melee"] }
+      ]
+    },
+    {
+      "id": "civil",
+      "name": "内政",
+      "description": "内政开发与人事",
+      "nodes": [
+        { "id": "civil_farming", "skillId": "farming", "name": "农政", "description": "农业开发", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": [], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_commerce", "skillId": "commerce", "name": "商政", "description": "商业开发", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_farming"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_fortify", "skillId": "fortify", "name": "筑城", "description": "城防建设", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_commerce"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_recruit", "skillId": "recruit", "name": "征兵", "description": "征兵效率", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_farming"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_train", "skillId": "train", "name": "训练", "description": "部队训练", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_recruit"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_discover", "skillId": "discover", "name": "寻访", "description": "搜索人才与宝物", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_train"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_eloquence", "skillId": "eloquence", "name": "辩才", "description": "外交与登用", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_discover"], "nodeType": "skill", "domains": ["civil"] },
+        { "id": "civil_medicine", "skillId": "medicine", "name": "医术", "description": "伤病恢复", "treeId": "civil", "maxLevel": 5, "costPerLevel": 1, "prerequisites": ["civil_eloquence"], "nodeType": "skill", "domains": ["civil"] }
+      ]
+    }
+  ]
+}

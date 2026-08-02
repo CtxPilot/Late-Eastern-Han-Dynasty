@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "grid": { "maxWidth": 100, "maxHeight": 100, "animationFps": 30 },
+  "duel": { "battlefieldChance": 0.1, "meleeChance": 0.15, "maxRounds": 3 },
+  "tactics": [
+    { "id": "assault", "name": "强攻", "attack": 0.25, "defense": -0.15, "initiative": 0.1, "strongAgainstFormationIds": [0, 1, 3] },
+    { "id": "hold", "name": "固守", "attack": -0.1, "defense": 0.3, "initiative": -0.1, "strongAgainstFormationIds": [6] },
+    { "id": "ambush", "name": "奇袭", "attack": 0.15, "defense": -0.05, "initiative": 0.3, "strongAgainstFormationIds": [4] }
+  ]
+}

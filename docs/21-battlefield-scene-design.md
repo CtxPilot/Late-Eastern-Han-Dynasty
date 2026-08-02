@@ -1154,6 +1154,13 @@ Headless Chrome 实测全链路：
 2. **BattlefieldInstance 与现有 BattlefieldMap 数据不兼容**（县节点字符串 id vs 大地图数字 id），P1 不强行合并，新建独立类型；旧 BattlefieldMap 保留不动，避免破坏 Tier I 壳与 62/62。
 3. **Scene 类型需含 'battle'**（gameStore 现有 Screen 用法）而非仅设计文档的 'tactical'——实施时把 'battle' 加入 Scene 联合，'tactical' 保留为同义未来用。
 
+### 10.6 六模板跨郡总验收（Session 274）
+
+`verify-session274-ui` 在单一 1440×900 浏览器会话依次走完南郡、颍川、陈留、河南尹、
+河内、弘农六条“物理点击入口 → 核对实例与治所 → 物理点击退出 → 返回大地图”链。
+四个已有对应 0-A 城市的模板直连 `worldCityId`；河内借洛阳（1）、弘农借长安（2）作为
+进场与守方归属代理，验收不把代理解释为行政合并。六次退出回环和 console error=0 均通过。
+
 ---
 
-*正式版 v1.5 | 2026-08-01 | BF-P1 最小闭环已打通；BF-P5 郡域迷雾已实装（§5.2.1）；守方 Army 入郡域场景（R6，§5.2.1 揭示源第 5 条）*
+*正式版 v1.6 | 2026-08-01 | BF-P1 最小闭环、BF-P5 迷雾/守方 Army 与六模板跨郡总验收完成*

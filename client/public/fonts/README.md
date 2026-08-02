@@ -11,11 +11,11 @@
 |---|---|---|---|---|
 | `NotoSerifCJKsc-Regular.woff2` | 思源宋体 SC Regular | SIL OFL 1.1 | 正文/古籍史料 | `HanDynastySerif` (normal) |
 | `NotoSerifCJKsc-Bold.woff2` | 思源宋体 SC Bold | SIL OFL 1.1 | 标题加粗 | `HanDynastySerif` (bold) |
-| `MuYaoSoftBrush.woff2` | 马善政体 (Ma Shan Zheng) | SIL OFL 1.1 | 官印/篆书/大标题 | `HanDynastySeal` |
+| `MaShanZheng-Regular.woff2` | 马善政体 (Ma Shan Zheng) | SIL OFL 1.1 | 官印/篆书/大标题 | `HanDynastySeal` |
 
 > **说明**：原计划用沐瑶软笔体，但未找到可确认授权的稳定 woff2 源，改用 Google Fonts 的
 > `马善政体 (Ma Shan Zheng)`——SIL OFL 1.1 授权明确、CDN 稳定、毛笔楷书风格接近印章/篆书需求。
-> 文件名保留 `MuYaoSoftBrush.woff2` 以维持工程内部别名稳定，避免改 @font-face 与全库引用。
+> 文件名采用字体真实家族名，禁止使用来源不明的旧名称。
 
 ## 下载来源（开源免版权）
 
@@ -29,7 +29,17 @@
 3 个 woff2 文件已实际下载到位（共 ~7MB）：
 - `NotoSerifCJKsc-Regular.woff2` (~2.0MB)
 - `NotoSerifCJKsc-Bold.woff2` (~2.1MB)
-- `MuYaoSoftBrush.woff2` (~2.7MB)
+- `MaShanZheng-Regular.woff2` (~2.7MB)
+
+## 固定来源与校验和
+
+| 文件 | 固定来源 | SHA-256 |
+|---|---|---|
+| `NotoSerifCJKsc-Regular.woff2` | `@fontsource/noto-serif-sc`（取得日 2026-08-01；上游 notofonts/noto-cjk） | `f76a4c2b177d8fe6b3a15197e17c0d2dd26129b7af99b7e1cf1a77fe9215cdb5` |
+| `NotoSerifCJKsc-Bold.woff2` | `@fontsource/noto-serif-sc`（取得日 2026-08-01；上游 notofonts/noto-cjk） | `7dc0feb5d15b5979bafd55118f1111328ef9e7ac77fad1c44cee48b1d1da332a` |
+| `MaShanZheng-Regular.woff2` | `@fontsource/ma-shan-zheng`（取得日 2026-08-01；上游 google/fonts） | `f3178053ce6bad1c47ba1c2ae6cec4382daacfbfa8f3479dabed1270dbba3e20` |
+
+发行字体时必须同时包含本目录 `OFL-1.1.txt` 和本表，不得只复制二进制。
 
 `.gitignore` 已排除 `*.woff2`，字体不入 git，但本目录文件可在本地直接使用。
 
