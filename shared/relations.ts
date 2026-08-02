@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import type { Officer } from './types/officer.js';
 
 export type RelationType = 'sworn' | 'master_disciple' | 'parent_child' | 'siblings' | 'spouse' | 'best_friend' | 'enemy' | 'lord_retainer';

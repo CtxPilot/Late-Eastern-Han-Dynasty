@@ -6,6 +6,7 @@ import {
   explainFormationResolution,
   getAvailableFormations,
   organizationBandFor,
+  projectHexDeployment,
   resolveFormationContribution,
   resolveFormationDeployment,
 } from './formation-core.js';
@@ -86,6 +87,17 @@ describe('formation-core', () => {
     const dep = resolveFormationDeployment(record, ['vanguard', 'center', 'left', 'right']);
     expect(dep.occupied).toContain('center');
     expect(dep.slots.center).toEqual({ q: 0, r: 0 });
+  });
+
+  it('projectHexDeployment 按攻守镜像并避开已占格', () => {
+    const record = catalog[0];
+    const deployment = resolveFormationDeployment(record, ['center', 'left', 'right']);
+    const attacker = projectHexDeployment(deployment, ['center', 'left', 'right'], { q: 5, r: 5 }, 'attacker', { width: 20, height: 15 });
+    const defender = projectHexDeployment(deployment, ['center', 'left', 'right'], { q: 14, r: 9 }, 'defender', { width: 20, height: 15 });
+    expect(attacker.center?.position).toEqual({ q: 5, r: 5 });
+    expect(attacker.left?.position).toEqual({ q: 4, r: 5 });
+    expect(defender.left?.position).toEqual({ q: 15, r: 9 });
+    expect(new Set(Object.values(attacker).map((item) => `${item.position.q},${item.position.r}`)).size).toBe(3);
   });
 
   it('explainFormationResolution 逐项解释', () => {

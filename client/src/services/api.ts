@@ -714,6 +714,12 @@ export async function meleeExit(): Promise<{ game: GameState }> {
   return data;
 }
 
+/** 设定攻方玩家持久战术姿态（FM-P3：assault/hold/ambush 或 null 清除，不耗 TP）。 */
+export async function meleeSetTactic(tactic: import('@leh/shared').TacticalTacticId | null): Promise<{ game: GameState; melee: MeleeState }> {
+  const { data } = await http.post<{ game: GameState; melee: MeleeState }>('/melee/tactic', { tactic });
+  return data;
+}
+
 // ====== 总军师 API ======
 
 /** 任命总军师 */

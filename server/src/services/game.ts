@@ -1806,11 +1806,15 @@ export function meleeSelectMode(
     if (mode === 'tactical') {
       const battlefield = state.activeBattlefield;
       if (!battlefield) throw new Error('六角微操必须归属于活跃战场');
+      const attackerArmy = state.campaignArmies.find((army) => army.id === melee.attackerArmyId);
+      const defenderArmy = state.campaignArmies.find((army) => army.id === melee.defenderArmyId);
       const battle = createBattle(state, battlefield.targetCityId, {
         attackTroops: melee.attackerTroops,
         defendTroops: melee.defenderTroops,
         attackMorale: melee.attackerMorale,
         defendMorale: melee.defenderMorale,
+        attackerArmy,
+        defenderArmy,
       });
       selected = { ...selected, tacticalBattleId: battle.id };
       currentGame = { ...state, activeMelee: selected, activeBattles: [...state.activeBattles, battle] };
@@ -1892,6 +1896,23 @@ export function meleeExit(): { game: GameState } {
   return withLock(() => {
     currentGame = { ...getGame(), activeMelee: null };
     return { game: getClientGame() };
+  });
+}
+
+/** 设定攻方玩家持久战术姿态（FM-P3）：null 清除为中性；不耗 TP、不推进回合。 */
+export function meleeSetTactic(
+  tactic: import('@leh/shared').TacticalTacticId | null,
+): { game: GameState; melee: MeleeState } {
+  const allowed = ['assault', 'hold', 'ambush'];
+  if (tactic != null && !allowed.includes(tactic)) throw new Error('非法战术');
+  return withLock(() => {
+    const state = getGame();
+    const melee = state.activeMelee;
+    if (!melee) throw new Error('没有活跃白刃战');
+    if (melee.phase !== 'active') throw new Error('白刃战已结束');
+    const nextMelee = { ...melee, tactic };
+    currentGame = { ...state, activeMelee: nextMelee };
+    return { game: getClientGame(), melee: nextMelee };
   });
 }
 

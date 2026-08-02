@@ -7,6 +7,7 @@
  * Tier II：白刃战 — 阵型·战术点·计谋·单挑
  */
 import type { FormationType } from '../enums/index.js';
+import type { TacticalTacticId } from '../tactical-system.js';
 import type { DuelResult } from './duel.js';
 
 // ====== Tier I：战场地图 ======
@@ -139,6 +140,12 @@ export interface MeleeState {
    */
   attackerOrganization?: number;
   defenderOrganization?: number;
+
+  /**
+   * 攻方玩家的持久战术姿态（FM-P3：`assault`/`hold`/`ambush`；未设/null 中性）。
+   * 战术协同矩阵（synergy）与战术修正经 TacticalConfig v2 单一真源消费；白刃面板可设定（不耗 TP）。
+   */
+  tactic?: TacticalTacticId | null;
 
   /** 战术点（进攻方玩家） */
   tacticalPoints: number;

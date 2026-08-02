@@ -5,7 +5,7 @@
 | 路径/集合 | 数量 | 来源与作者 | 许可 | 修改/生成方式 | 审批状态 |
 |---|---:|---|---|---|---|
 | `client/public/geo-basemap.png` | 1 | Natural Earth 50m；Natural Earth contributors | 公有领域 | `scripts/render-geo-basemap.py` 原创渲染 | 允许发布 |
-| `docs/screenshots/**/*.png` | 126 | 本项目开发者在本项目 UI 中自产 | 项目 MIT；嵌入的 Natural Earth 仍为公有领域 | Playwright/浏览器本地截图 | 允许归档；`session-*` 不得作为当前营销图，新增逐次复核 |
+| `docs/screenshots/**/*.png` | 125 | 本项目开发者在本项目 UI 中自产 | 项目 MIT；嵌入的 Natural Earth 仍为公有领域 | Playwright/浏览器本地截图 | 允许归档；`session-*` 不得作为当前营销图，新增逐次复核 |
 | `client/public/fonts/NotoSerifCJKsc-*.woff2` | 2（本地、忽略） | notofonts / Adobe；通过 Fontsource 镜像 | SIL OFL 1.1 | WOFF2 打包 | 允许随 OFL 和校验表发布 |
 | `client/public/fonts/MaShanZheng-Regular.woff2` | 1（本地、忽略） | Google Fonts / Ma Shan Zheng 作者；通过 Fontsource 镜像 | SIL OFL 1.1 | WOFF2 打包 | 允许随 OFL 和校验表发布 |
 

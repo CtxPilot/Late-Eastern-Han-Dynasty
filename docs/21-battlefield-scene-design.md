@@ -1122,6 +1122,13 @@ Headless Chrome 实测全链路：
 3. 点「撤军返回」→ exitBattle → 场景栈 popScene → 回 BattlefieldSceneView（16 县）✓
 4. 点「退出战场」→ popToScene('world') → 回大地图 ✓
 
+### 10.1.1 退出回环修复（Session 298）
+
+修复前端退出状态机的残帧问题：Tier I 战场退出原先只改 `screen='world'`，没有同步回收
+`sceneStack`；连续再次出战并点「撤军返回」时可能回到空战场面板。现在 Tier I/Tier II
+退出均回收至唯一 `world` 根栈并清理本地战斗、白刃战瞬态；Tier I 初始化正式入栈，白刃战
+退出按父战场栈返回而非硬编码 screen。服务端权威战斗结算逻辑不变。
+
 ### 10.2 实施范围对照设计
 
 | 设计项 | P1 落地 |

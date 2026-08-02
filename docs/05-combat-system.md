@@ -4277,7 +4277,9 @@ runMeleeRound()（新） → 给"标准模式"用，每次只算一回合
 
 #### 20.3.6 微操模式
 
-复用 §十八 的 hex 网格代码（现有 `battle.ts` + `battle/` 子模块）。Squad 数据从战场 Army 映射为 BattleUnit（五阵位 → 六角站位）。
+复用 §十八的 hex 网格代码（现有 `battle.ts` + `battle/` 子模块）。Session 297 起，Squad 数据从战场 Army 映射为多个 BattleUnit（五阵位 → 六角站位）：由 `projectHexDeployment` 读取当前阵型的原创 `deployment.slots`，以中军锚点投影，攻方保持方向、守方镜像；缺失 Squad 不生成虚构单位，越界/碰撞按固定邻接顺序收缩。旧无 Army 入口仍保留单攻/单守兼容路径。
+
+多 unit 的攻击、战法、火计、敌军 AI 与灼烧结算按整方存活 unit 判定胜负；击破一个 Squad 只移除该 BattleUnit，不提前结束战斗。六角战中变阵仍需单独冻结 TP、阶段和每回合一次门禁。
 
 **微操内容**：移动/攻击/用计/单挑，与标准模式共享同一套底层（克制/暴击/地形/天气）。
 

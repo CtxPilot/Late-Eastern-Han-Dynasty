@@ -177,6 +177,23 @@ type AnimationCallback = (event: {
 > `server/src/engine/meleeRound.ts`）消费，正面增量再按组织度执行档缩放（负修正原值保留）。
 > 本表继续作为 Session 277 回归基线登记；逐阵迁移前后差异见 `formation-catalog-migration.md` §4.2。
 
+> **Session 295 FM-P3 六角阵型贡献**：六角 `battle.ts`（普攻/战法/AI 评估）经
+> `server/src/battle/hex-formation.ts` `hexFormationMods` 消费 `tiers[0]` 点值——攻点值 ×2 进
+> `baseAttack`、防点值 ×2.5 进 `baseDefense`（六角公式量纲的模式专用投影，负修正原值保留，
+> 组织度因 BattleState 暂无该字段按 orderly 中性解析，随部署注入一并接入）。三模式
+> （自动/标准/六角）点值同源消费至此闭环。
+
+> **Session 297 FM-P3 六角部署注入**：六角微操从 `CampaignArmy.squads` 生成多个 `BattleUnit`，由共享
+> `projectHexDeployment` 读取阵型 `deployment.slots` 投影初始格；攻方保持模板方向、守方轴向镜像，
+> 缺阵位不补虚构部队，越界/碰撞按固定邻接顺序收缩。客户端仍按 `BattleState.units[]` 选择/移动，
+> AI 逐个存活 unit 决策，终局按整方是否仍有存活部队判定。六角战中变阵的资源/阶段门禁仍待后续评审。
+
+> **Session 296 FM-P3 标准模式战术协同矩阵**：本表的强攻/固守/奇袭三战术运行时已接入标准白刃模式——
+> `MeleeState.tactic?` 持久姿态（白刃面板选择、不耗 TP）经 `shared/data/tactical-system.v2.json` 单一真源消费：
+> 战术攻/防/先手修正为 T_base（不受组织度缩放），synergy 按 "敌阵 ∈ `strongAgainstFormationIds` → ×1.1，
+> 否则 ×1.0"；**冲突 0.9 因 0-A 无战术×阵型反向关系表不产生触发源（计划 §4.6 不扩 6×6 矩阵）**，常量保留供
+> 0-B 反向关系扩展。设置/清除经 `POST /melee/tactic`；回合战报 events 记录「战术·强攻」等。
+
 ### 6.3 战术—阵型矩阵
 
 | 战术 | 攻 | 防 | 先手 | 协同/克制 |

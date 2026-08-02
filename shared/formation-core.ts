@@ -163,6 +163,18 @@ export interface DeploymentResolution {
   occupied: SquadPosition[];
 }
 
+export type HexDeploymentSide = 'attacker' | 'defender';
+
+export interface HexDeploymentBounds {
+  width: number;
+  height: number;
+}
+
+export interface HexDeploymentProjection {
+  position: { q: number; r: number };
+  facing: 0 | 1 | 2 | 3 | 4 | 5;
+}
+
 /** resolveFormationDeployment：由阵型 deployment 模板 + 实际可用阵位派生（Gate D）。 */
 export function resolveFormationDeployment(
   record: Formation,
@@ -183,6 +195,39 @@ export function resolveFormationDeployment(
     symmetry: d.symmetry,
     occupied,
   };
+}
+
+/**
+ * 将五部部署偏移投影到六角战场。纯函数、不改状态、不生成缺失部队。
+ * 攻方保持模板方向，守方做轴向镜像；越界或碰撞时沿固定邻接顺序收缩，
+ * 使旧存档和不同尺寸战场都得到确定性坐标。
+ */
+export function projectHexDeployment(
+  deployment: DeploymentResolution,
+  positions: readonly SquadPosition[],
+  anchor: { q: number; r: number },
+  side: HexDeploymentSide,
+  bounds: HexDeploymentBounds,
+  occupied: readonly { q: number; r: number }[] = [],
+): Partial<Record<SquadPosition, HexDeploymentProjection>> {
+  const result: Partial<Record<SquadPosition, HexDeploymentProjection>> = {};
+  const used = new Set(occupied.map((p) => `${p.q},${p.r}`));
+  const candidates = [
+    { q: 0, r: 0 }, { q: 1, r: 0 }, { q: -1, r: 0 },
+    { q: 0, r: 1 }, { q: 0, r: -1 }, { q: 1, r: -1 }, { q: -1, r: 1 },
+  ];
+  const inBounds = (p: { q: number; r: number }) =>
+    p.q >= 0 && p.q < bounds.width && p.r >= 0 && p.r < bounds.height;
+  for (const position of positions) {
+    const raw = deployment.slots[position] ?? { q: 0, r: 0 };
+    const sign = side === 'attacker' ? 1 : -1;
+    const preferred = { q: anchor.q + raw.q * sign, r: anchor.r + raw.r * sign };
+    const offsets = [preferred, ...candidates.map((delta) => ({ q: preferred.q + delta.q, r: preferred.r + delta.r }))];
+    const target = offsets.find((p) => inBounds(p) && !used.has(`${p.q},${p.r}`)) ?? preferred;
+    used.add(`${target.q},${target.r}`);
+    result[position] = { position: target, facing: side === 'attacker' ? 0 : 3 };
+  }
+  return result;
 }
 
 export interface FormationBreakdown {

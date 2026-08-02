@@ -9,12 +9,74 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 294 收口**（README 游戏化重构：中英双语 + 精简工程细节，纯文档零代码） |
+| 会话 | **Session 300 收口**（版权/Agent 留存合规清理；Session 299 关系页签归并与 Session 298 战场退出修复保持） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | FM-P1/P2/P3 + Session 292：`runAutoBattle` 的 `formationMod` 由 `autoFormationMods` 生成（`tiers[0]` 攻防点值 ×0.1 + 组织度执行档仅缩放正面、负原值保留 + `squadFlankBonus` 五部侧击 +10%，`mobility/range` 不参与自动战力）；`setAutoFormationCatalog` 服务端注入 + 中性回退；`ArmyPowerInput.formationMod?` → `computePower` |
-| 文档最新 | README 游戏化重写（The Game/Who it's for/Architecture/Copyright & assets 双语 + Getting started/Roadmap/精简工程细节）；`10-progress` Session 293/294 |
-| 本交接用途 | README 从「工程框架自述」重构为「游戏项目自述」（用户三项拍板：中英双语英文为主、精简工程细节、英文主名+中文副名+游戏语气）；零代码/数据改动，全部链接核对无死链 |
-| 下一步 | **FM-P3 剩余**：六角 `battle.ts` 阵型贡献/部署注入（需多 unit 支持 + 六角变阵状态机评审 + 客户端/AI 多 unit 适配，独立大重构）；之后 FM-P4（战术协同矩阵运行时/战报解释 UI/AI/UI/存档迁移）。**注意：工作区仍存大量 Session 267~293 未提交改动（含 FM 系列代码与多份文档），如需一并入库请告知** |
+| 代码最新 | Session 300：移除商业作品参考表述，补齐 4 个 SPDX 标识；Session 299 `OfficerDetail` 关系页签归并、Session 298 战场退出修复与 Session 297 六角闭环保持 |
+| 文档最新 | 版权资产台账/进度与 Agent 留存门禁同步；Git 历史完成商业名称与疑似品牌截图清洗 |
+| 本交接用途 | 六角初始部署与多 unit 运行时闭环；三模式点值同源、标准战术矩阵仍保持；变阵状态机与战报解释 UI 后置 |
+| 下一步 | 六角战中变阵状态机评审（TP/阶段/每回合一次门禁），或继续处理用户指定的 UI 一致性问题。**未提交提醒**：Session 295~300 改动均在 working tree 未 commit；历史重写后需用户确认远端强制更新 |
+
+### Session 300 交接要点
+
+- **版权残留清理**：隔离疑似带商业品牌标识的早期演示截图，当前跟踪截图从 126 张收敛为 125 张；`CREDITS.md`、`ASSET_MANIFEST.md` 与 `verify-compliance.mjs` 同步。
+- **中性化表达**：移除生产代码及公开进度文档中的商业作品参考名称；所有本地分支、远程跟踪引用和提交说明完成同义替换历史重写。
+- **合规门禁**：补齐 `FactionOverviewDrawer.tsx`、`mandate-popular.ts`、`relations.ts`、`skill-tree.ts` 的 SPDX 标识。
+- **Agent 状态**：本项目专属的空状态目录已清除；共享 Codex 全局状态未整目录删除，避免影响其他项目。发行包仍必须排除所有 Agent 状态、会话、数据库、WAL、认证文件。
+- **验证边界**：版权清理完成后仍需运行 `pnpm verify-compliance`、类型检查、测试、构建和 Git 全历史扫描；远端仓库需按历史重写结果强制更新。
+
+### Session 299 交接要点
+
+- **查实并修复标签重复**：`OfficerDetail` 原有「关系」和「社交」两个并列页签；现统一为唯一「关系」页签，内容包含婚姻、妾/姬、子女、效力、社交关系列表和关系图谱。
+- **边界**：仅调整前端归类；S18 家族数据、S24 `GET /api/game/relations/:officerId` 与关系引擎继续分域。
+- **验证**：新增 SSR 标签断言；client typecheck/lint、43 tests 全绿；Chrome 实点名册→武将详情→关系，确认五个页签中仅一个关系页签，婚姻/社交关系/关系图谱均显示。
+
+### Session 298 交接要点
+
+- **修复战场撤出回环**：Tier I `battlefieldInit` 现在入 `sceneStack`；Tier I/Tier II 退出均回收到
+  `world` 根栈，清理前端 `battle/battlefield/melee` 瞬态；白刃战退出根据父战场栈返回，不再硬编码
+  `screen='battlefield'`。根因是旧 Tier I 退出只改 screen，残留 battlefield 帧会污染下一次出战撤军。
+- **验证**：client typecheck/lint；shared 377/client 42；Chrome 1440×900 实测 `verify-bf-p4-headless`
+  颍川/南郡进入、阵前+城下单挑、退出回环、console error=0 全过。旧 Session 274 脚本在当前 0-A
+  仅有南郡/颍川入口，前两项退出通过后因缺少陈留入口停止，非本修复失败。
+- **边界**：未改变服务端战斗结算；六角进行中仍须先完成后才能由 `exitBattle` 权威结算，不能强制
+  中断。相关设计已同步 `docs/21-battlefield-scene-design.md` §10.1.1。
+
+### Session 297 交接要点
+
+- **六角部署投影**：`shared/formation-core.ts` 新增纯函数 `projectHexDeployment`；按阵型 `deployment.slots`
+  以中军锚点投影 20×15 六角场，攻方保持方向、守方镜像，缺部不造虚构 unit，越界/碰撞按固定邻接顺序收缩。
+- **多 unit 创建**：`createBattle` 新增可选 `attackerArmy/defenderArmy`；tactical melee 入口传入攻守
+  `CampaignArmy`，按 `squads` 生成 BattleUnit，主将 center；无 Army 旧入口仍生成 `atk-1/def-1` 双 unit。
+- **多 unit 终局**：六角普攻、战法、火计、simple AI、灼烧均按整方存活 unit 判胜负；客户端现有 `units[]`
+  交互无需专门改写。六角变阵状态机、组织度执行档、战报解释 UI 未做。
+- **验证**：`verify-fm3-hex-deployment` 13/13；`verify-battle-commanders` 111；shared 377/client 42；
+  三端 typecheck、validate-data、client build 全绿。
+
+### Session 296 交接要点
+
+- **战术协同矩阵（标准模式）**：`MeleeState.tactic?`（optional 旧档兼容，Zod 同步）；`shared/tactical-system.ts`
+  新增 `resolveTacticSynergy`（敌阵 ∈ strongAgainstFormationIds → 1.1，否则 1.0；null 中性）/`tacticModifiers`（T_base，
+  不受组织度缩放）/`ACTIVE_TACTIC_IDS`；synergy 常量 1.1 / 1.0 / **0.9 保留（0-A 无反向关系表不触发，诚实标注）**
+- **消费**：runMeleeRound 先手+initiative、攻方伤害 `(F+T_base)×synergy`、我方减伤+战术防；战报 events 记「战术·强攻」
+- **持久/UI**：`POST /melee/tactic`（null 清除）+ `meleeSetTactic` 运行时校验非法值 + client api/store +
+  StandardModePanel「战术姿态」四按钮（强攻/固守/奇袭/无）
+- **data**：`loader.loadTacticalSystemV2()`（shared/data v2 + Zod）；index.ts 注入 `setMeleeTacticalConfig`
+- **验证**：verify-fm3-tactic 9 断言 + shared 单测 +2（376）；tsc/lint 三端、376+42、validate-data、client build、
+  verify-melee-modes 12、fm3-* 全系、verify-campaign 71 全绿
+- **边界（诚实）**：synergy 0.9 不触发（无反向表）；战报解释 UI 未做（FM-P4）；六角部署注入未做（多 unit/BattleState
+  org/状态机评审待拍板）
+
+### Session 295 交接要点
+
+- **六角战斗阵型贡献**（`server/src/battle/hex-formation.ts`）：攻点值×2 进 baseAttack / 防点值×2.5 进
+  baseDefense（六角公式量纲模式专用投影，计划 §5.1 允许）；负修正原值保留；组织度 60（orderly×1.0）中性；
+  未注入中性回退；`hexFormationMods` 导出供战报复算/验证。
+- **接入点**：calcDamage 三处同源（普攻 attackUnit / 战法 castAbility / AI 评估 simpleAi）；crit 反击连击
+  继承 baseDamage 自动覆盖；`DamageInput` 只在尾部加可选字段，不影响既有调用。
+- **验证**：verify-fm3-hex-formation 11 断言全过；tsc/lint/test(374+42)/validate-data/client build +
+  verify-campaign 71 / melee-modes 12 / fm3-* / battle-rng 5 / tactical-ai 6 / items 32 / save-battle 26 全绿。
+- **边界（诚实）**：六角部署注入未做（多 unit 支持需客户端/AI 大改、六角变阵状态机未评审冻结、BattleState
+  无组织度字段→六角 org 执行档后置）；战术协同矩阵运行时（synergy 1.1/0.9/1.0）与战报解释 UI 未做（FM-P4）。
 
 ### Session 294 交接要点
 

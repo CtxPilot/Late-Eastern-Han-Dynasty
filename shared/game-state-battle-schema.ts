@@ -321,6 +321,7 @@ export const MeleeStateRuntimeSchema: z.ZodType<MeleeState, z.ZodTypeDef, unknow
   defenderFormation: z.nativeEnum(FormationType),
   attackerOrganization: NonNegativeIntSchema.max(100).optional(),
   defenderOrganization: NonNegativeIntSchema.max(100).optional(),
+  tactic: z.enum(['assault', 'hold', 'ambush']).nullable().optional(),
   tacticalPoints: NonNegativeIntSchema.max(10),
   tacticalPointsUsed: NonNegativeIntSchema.max(10),
   phase: z.enum(['active', 'attacker_victory', 'defender_victory', 'stalemate']),

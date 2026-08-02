@@ -4,6 +4,7 @@
 import { readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseTacticalConfigV2, type TacticalConfigV2 } from '@leh/shared';
 import type {
   ChildBirthDef,
   CityStatic,
@@ -43,6 +44,15 @@ export function loadAllStatic() {
     scenarios: load<ScenarioStatic[]>('scenarios', 'scenarios.json'),
     events: load<EventTemplate[]>('events', 'events.json'),
   };
+}
+
+/**
+ * 加载 TacticalConfig v2（战术协同矩阵，FM-P3）。v2 位于 shared/data（共享配置而非服务端数据），
+ * 从 server/src/data 上层三级到仓库根 shared/data 读取，经 Zod 解析，越权即抛错。
+ */
+export function loadTacticalSystemV2(): TacticalConfigV2 {
+  const p = join(dataDir, '../../../shared/data/tactical-system.v2.json');
+  return parseTacticalConfigV2(JSON.parse(readFileSync(p, 'utf-8')));
 }
 
 let cached = loadAllStatic();

@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import configJson from './data/tactical-system.v1.json';
 import v2ConfigJson from './data/tactical-system.v2.json';
-import { BattleRuleRegistry, TacticalEventBus, TacticalUndoStack, duelTriggerChance, migrateTacticalV1ToV2, parseTacticalConfig, parseTacticalConfigV2, resolveFormationTactic, transitionTacticalPhase } from './tactical-system.js';
+import { BattleRuleRegistry, TACTIC_SYNERGY_NEUTRAL, TacticalEventBus, TacticalUndoStack, duelTriggerChance, migrateTacticalV1ToV2, parseTacticalConfig, parseTacticalConfigV2, resolveFormationTactic, resolveTacticSynergy, tacticModifiers, transitionTacticalPhase } from './tactical-system.js';
 
 describe('tactical-system', () => {
   it('配置 v1 经 Zod 校验且含5阵3术', () => { const c = parseTacticalConfig(configJson); expect(c.formations).toHaveLength(5); expect(c.tactics).toHaveLength(3); });
@@ -40,5 +40,25 @@ describe('tactical-system', () => {
   it('单挑双入口门禁和概率封顶', () => {
     expect(duelTriggerChance({ source: 'melee', adjacent: true, bothCommandersActive: true, challengerMorale: 30, defenderMorale: 80, challengerBravery: 7, configuredChance: 0.1 })).toBe(0);
     expect(duelTriggerChance({ source: 'battlefield', adjacent: true, bothCommandersActive: true, challengerMorale: 100, defenderMorale: 0, challengerBravery: 99, configuredChance: 0.5 })).toBe(0.95);
+  });
+  it('战术协同矩阵（FM-P3）：synergy 1.1/1.0、0-A 无 0.9 触发源、null 中性', () => {
+    const c = parseTacticalConfigV2(v2ConfigJson);
+    expect(resolveTacticSynergy(c, 'assault', 0)).toBe(1.1); // 强攻克方阵
+    expect(resolveTacticSynergy(c, 'assault', 3)).toBe(1.1); // 强攻克雁行
+    expect(resolveTacticSynergy(c, 'assault', 2)).toBe(1.0); // 锥形中性
+    expect(resolveTacticSynergy(c, 'hold', 6)).toBe(1.1);    // 固守克锋矢
+    expect(resolveTacticSynergy(c, 'ambush', 4)).toBe(1.1);  // 奇袭克鹤翼
+    expect(resolveTacticSynergy(c, 'hold', 0)).toBe(1.0);    // 无反向表 → 无 0.9
+    expect(resolveTacticSynergy(c, null, 0)).toBe(1.0);      // 未设战术中性
+    expect(resolveTacticSynergy(c, undefined, 0)).toBe(1.0);
+    expect(resolveTacticSynergy(c, 'ambush', 2)).toBe(TACTIC_SYNERGY_NEUTRAL); // 1.0
+  });
+  it('战术自身修正（T_base，不受组织度缩放）', () => {
+    const c = parseTacticalConfigV2(v2ConfigJson);
+    expect(tacticModifiers(c, 'assault')).toEqual({ attack: 0.25, defense: -0.15, initiative: 0.1 });
+    expect(tacticModifiers(c, 'hold')).toEqual({ attack: -0.1, defense: 0.3, initiative: -0.1 });
+    expect(tacticModifiers(c, 'ambush')).toEqual({ attack: 0.15, defense: -0.05, initiative: 0.3 });
+    expect(tacticModifiers(c, null)).toEqual({ attack: 0, defense: 0, initiative: 0 });
+    expect(tacticModifiers(c, undefined)).toEqual({ attack: 0, defense: 0, initiative: 0 });
   });
 });

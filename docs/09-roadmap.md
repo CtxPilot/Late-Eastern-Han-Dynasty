@@ -220,7 +220,7 @@
 | FM-P0 | 权威契约、目录/逐将迁移表、数值映射与部署语义冻结 | [x] | 材料产出 + Gate M/N1/D 批准（Session 288） |
 | FM-P1 | `Formation` Zod/Type、TacticalConfig v2、7阵目录与 146 将精通迁移 | [x] | 已实装（Session 288）；v1 只读兼容 |
 | FM-P2 | 共享合法性、阵型贡献、五部部署与解释纯函数 | [x] | 已实装（Session 289）`shared/formation-core.ts`；不创建第四套伤害公式 |
-| FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）；六角点值迁移/部署注入后置 |
+| FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）+ **六角战斗阵型贡献**（295，`hexFormationMods` 点值投影，三模式点值同源闭环）+ **标准模式战术协同矩阵**（296，`MeleeState.tactic?` 持久战术 + TacticalConfig v2 T_base/synergy + `/melee/tactic`）；六角部署注入后置 |
 | FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [ ] | 复用 1 TP、组织度、五部阵位 |
 | FM-P5 | 平衡、独特性、经典体验、IP 与文档总验收 | [ ] | 通过后仍不代表 0-B 完成 |
 | FM-P6 | 27阵/水阵/双轴成长扩展 | [ ] | 仅 0-A 验收完成且用户重启 0-B 后可做 |
@@ -341,8 +341,26 @@
       中性回退；`squadFlankBonus`/`autoFormationMods` 导出供复算；守城守方无 Army 无阵型贡献（城墙惩罚
       表达守势；与 `orgCoeff` 分项不双乘）；验证 `verify-fm3-auto-formation.ts` 13 断言（系数/组织度/
       侧击/中性/端到端注入生效与确定性）。
-- [ ] 下一步 FM-P3 剩余：六角 `battle.ts` 阵型贡献/部署注入（需多 unit 支持 + 六角变阵状态机评审 +
-      客户端/AI 多 unit 适配，Single 大重构）、战术协同矩阵运行时与战报解释 UI（FM-P4）。
+- [~] **Session 295（FM-P3 六角战斗阵型贡献）**：新增 `server/src/battle/hex-formation.ts` `hexFormationMods`
+      （`tiers[0]` 攻点值×2 进 baseAttack / 防点值×2.5 进 baseDefense，模式专用投影，负原值保留，orderly 中性）
+      + `setHexFormationCatalog` 服务端注入 + 中性回退；battle.ts 普攻（attackUnit）与战法（castAbility）、
+      simpleAi 评估三处 calcDamage 同源传参，crit 反击/连击按 baseDamage 继承自动覆盖；
+      DamageInput 加可选 formationAtk/formationDef 且不影响既有字段；验证 `verify-fm3-hex-formation.ts`
+      11 断言（系数锚定/逐阵投影/calcDamage 方向性/端到端注入生效/固定 rng 复现）。
+- [~] **Session 296（FM-P3 标准模式战术协同矩阵）**：`MeleeState.tactic?`（assault/hold/ambush，持久字段，旧档
+      缺省中性，Zod 同步）；`shared/tactical-system.ts` 新增 `resolveTacticSynergy`/`tacticModifiers`/`ACTIVE_TACTIC_IDS`
+      纯函数 + synergy 常量（1.1/1.0；0-A 无 0.9 触发源并诚实标注）；`runMeleeRound` 消费 T_base（攻/防/先手，
+      不受组织度缩放）+ synergy（对敌阵 ×1.1/×1.0），战报 events 记「战术·强攻」等；`POST /melee/tactic`
+      路由 + `meleeSetTactic` service（运行时校验非法值）+ client api/store + StandardModePanel 战术姿态 UI
+      （强攻/固守/奇袭/无，不耗 TP）；`data/loader.ts` 新增 `loadTacticalSystemV2`（shared/data v2 真源 + Zod）；
+      验证 `verify-fm3-tactic.ts` 9 断言 + shared 单测 +2（376 项）。
+- [~] **Session 297（FM-P3 六角部署注入）**：`shared/formation-core.ts` 新增 `projectHexDeployment`，由
+      `CampaignArmy.squads` 按阵型 `deployment.slots` 生成多个 `BattleUnit`，攻方保持模板方向、守方镜像，
+      缺部不造虚构 unit，越界/碰撞按固定邻接顺序收缩；`createBattle` 保留无 Army 双 unit 兼容入口，
+      tactical melee 入口接入攻守 Army。客户端仍消费 `units[]`，simple AI 逐 unit 决策；普攻/战法/火计/
+      灼烧按整方存活 unit 判定终局。验证 `verify-fm3-hex-deployment` 13/13、battle-commanders 111，
+      shared 377 + client 42、三端 typecheck、validate-data、client build 全绿。六角战中变阵状态机与战报解释 UI 后置。
+- [ ] 下一步：六角战中变阵状态机评审（TP/阶段/每回合一次门禁）或 FM-P4 战报解释 UI。
 - 0-B、27 阵、双轴成长、科技树和水阵继续暂停。
 
 ### Session 284 · S24 关系网 + S25 技能树 + S26 天命人心

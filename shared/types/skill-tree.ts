@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 export type SkillDomain = 'battlefield' | 'melee' | 'duel' | 'campaign' | 'civil';
 
 export interface SkillTreeNodeDef {

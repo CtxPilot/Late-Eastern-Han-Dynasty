@@ -16,6 +16,13 @@ export interface DamageInput {
   matchup?: number;
   /** 装备防御加成（S13 Session 266：黑铁甲/革甲 baseEffect defense）。 */
   armorDefense?: number;
+  /**
+   * 六角阵型贡献（FM-P3：tiers[0] 点值投影，模式专用量纲）。
+   * formationAtk 进入攻击方 baseAttack、formationDef 进入守方 baseDefense；
+   * 负修正原值保留（实际为负增量）。未传等价无阵型加成。
+   */
+  formationAtk?: number;
+  formationDef?: number;
 }
 
 /** 兵种克制系数：攻方克制守方 → 1.3；被克制 → 0.7；互无关系 → 1.0 */
@@ -37,8 +44,8 @@ export function calcDamage(
   defender: DamageInput,
   rng: () => number,
 ): number {
-  const baseAttack = attacker.unitAttack + attacker.officerWar / 10;
-  const baseDefense = defender.unitDefense + defender.officerLeadership / 10 + (defender.armorDefense ?? 0);
+  const baseAttack = attacker.unitAttack + attacker.officerWar / 10 + (attacker.formationAtk ?? 0);
+  const baseDefense = defender.unitDefense + defender.officerLeadership / 10 + (defender.armorDefense ?? 0) + (defender.formationDef ?? 0);
 
   const troopFactor = 0.3 + 0.7 * (attacker.troops / Math.max(1, attacker.maxTroops));
   const moraleFactor = 0.6 + 0.4 * (attacker.morale / 100);

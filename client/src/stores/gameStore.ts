@@ -162,6 +162,8 @@ interface Store {
   meleeRefresh: () => Promise<void>;
   /** 退出白刃战 */
   meleeExit: () => Promise<void>;
+  /** 设定攻方玩家持久战术姿态（FM-P3：assault/hold/ambush 或 null 清除，不耗 TP） */
+  meleeSetTactic: (tactic: import('@leh/shared').TacticalTacticId | null) => Promise<void>;
 
   // 总军师系统
   grandStrategist: import('@leh/shared').GrandStrategist | null;
@@ -234,11 +236,15 @@ export const useGameStore = create<Store>((set, get) => ({
     try {
       const game = await api.exitNanjunBattlefield();
       const after = popToScene(get().sceneStack, 'world');
+      const worldStack = after.some((frame) => frame.scene === 'world') ? after : replaceStack({ scene: 'world' });
       set({
         game,
         battlefieldInstance: null,
-        sceneStack: after,
-        screen: screenOf(after),
+        battlefield: null,
+        battle: null,
+        melee: null,
+        sceneStack: worldStack,
+        screen: 'world',
         loading: false,
         lastActionOk: '退出南郡战场',
       });
@@ -1066,7 +1072,8 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const bf = await api.battlefieldInit(targetCityId, fromCityId);
-      set({ battlefield: bf, screen: 'battlefield', loading: false });
+      const after = pushScene(get().sceneStack, { scene: 'battlefield' });
+      set({ battlefield: bf, sceneStack: after, screen: screenOf(after), loading: false });
     } catch (e) {
       set({ error: errMsg(e, '战场初始化失败'), loading: false });
     }
@@ -1086,7 +1093,11 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const game = await api.battlefieldExit();
-      set({ game, battlefield: null, screen: 'world', loading: false });
+      // 退出必须同时回收瞬态场景栈；只改 screen 会留下 battlefield 残帧，
+      // 下一次从大地图进入战斗后撤军会错误落到空战场面板。
+      const after = popToScene(get().sceneStack, 'world');
+      const worldStack = after.some((frame) => frame.scene === 'world') ? after : replaceStack({ scene: 'world' });
+      set({ game, battlefield: null, battlefieldInstance: game.activeBattlefieldInstance ?? null, melee: null, battle: null, sceneStack: worldStack, screen: 'world', loading: false });
     } catch (e) {
       set({ error: errMsg(e, '退出战场失败'), loading: false });
     }
@@ -1145,9 +1156,22 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { game } = await api.meleeExit();
-      set({ game, melee: null, meleeLastResult: null, screen: 'battlefield', loading: false });
+      const after = get().sceneStack.some((frame) => frame.scene === 'battlefield')
+        ? popToScene(get().sceneStack, 'battlefield')
+        : replaceStack({ scene: 'world' });
+      set({ game, melee: null, meleeLastResult: null, sceneStack: after, screen: screenOf(after), loading: false });
     } catch (e) {
       set({ error: errMsg(e, '退出白刃战失败'), loading: false });
+    }
+  },
+
+  meleeSetTactic: async (tactic) => {
+    set({ loading: true, error: null });
+    try {
+      const { game, melee } = await api.meleeSetTactic(tactic);
+      set({ game, melee, loading: false });
+    } catch (e) {
+      set({ error: errMsg(e, '设定战术失败'), loading: false });
     }
   },
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import { useEffect, useState } from 'react';
 import * as api from '../../services/api';
 import { useGameStore } from '../../stores/gameStore';

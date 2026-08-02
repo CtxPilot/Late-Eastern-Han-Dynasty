@@ -37,7 +37,7 @@
 
 ## 开发截图
 
-`docs/screenshots/` 当前保留 126 张自产 UI/调试图；连同 Natural Earth 底图共 127 个已跟踪 PNG。
+`docs/screenshots/` 当前保留 125 张自产 UI/调试图；连同 Natural Earth 底图共 126 个已跟踪 PNG。
 2026-08-01 已从当前树删除四张无完整权属链武将 PNG 及八张明确嵌入它们的截图。
 新增截图必须通过 `pnpm verify-compliance`，并确认其嵌入资产均登记于本文件或
 `ASSET_MANIFEST.md`。早期 Google Maps 校准截图不进入当前树。

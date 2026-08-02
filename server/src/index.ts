@@ -8,8 +8,10 @@ import { staticData } from './data/loader.js';
 import { setWss } from './ws/broadcast.js';
 import { isAuthorizedRequest, isOriginAllowed, loadSecurityConfig } from './security.js';
 import { setFormationCatalog } from './battle/crit.js';
-import { setMeleeFormationCatalog } from './engine/meleeRound.js';
+import { setHexFormationCatalog } from './battle/hex-formation.js';
+import { setMeleeFormationCatalog, setMeleeTacticalConfig } from './engine/meleeRound.js';
 import { setAutoFormationCatalog } from './engine/campaign.js';
+import { loadTacticalSystemV2 } from './data/loader.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const security = loadSecurityConfig();
@@ -25,6 +27,10 @@ setFormationCatalog(staticData.formations);
 setMeleeFormationCatalog(staticData.formations);
 // FM-P3: 注入静态阵型目录供 runAutoBattle 从 formations.json tiers[0] 点值读取自动战斗贡献（单一内容源）
 setAutoFormationCatalog(staticData.formations);
+// FM-P3: 注入静态阵型目录供 battle.ts 从 formations.json tiers[0] 点值读取六角阵型贡献（单一内容源）
+setHexFormationCatalog(staticData.formations);
+// FM-P3: 注入 TacticalConfig v2 供标准模式战术协同矩阵消费（单一内容源）
+setMeleeTacticalConfig(loadTacticalSystemV2());
 
 const app = createApp(security);
 const server = createServer(app);

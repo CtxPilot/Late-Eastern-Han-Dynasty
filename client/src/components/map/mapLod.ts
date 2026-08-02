@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * Map LOD by zoom — external strategy reference style, with screen-pixel sizing + label collision.
+ * Map LOD by zoom, with screen-pixel sizing and label collision.
  *
  * Sizes are defined in **screen pixels**, converted to world via `/ scale`.
  * Labels that would overlap are dropped by priority (selected > player > tier).
@@ -332,5 +332,4 @@ export function provinceLodView(scale: number, minScale = 0.15): ProvinceLodView
     opacity,
   };
 }
-
 

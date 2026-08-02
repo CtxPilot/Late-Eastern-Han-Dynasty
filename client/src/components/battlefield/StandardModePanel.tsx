@@ -51,12 +51,21 @@ const FORMATION_NOTES: Partial<Record<FormationType, string>> = {
   [FormationType.CRANE_WING]: '攻防持中 · 机动快', [FormationType.ARROWHEAD]: '攻+10% · 防-10% · 机动快',
 };
 
+// FM-P3 战术协同矩阵：战术名/克制的展示文案（数值唯一真源 = shared/data/tactical-system.v2.json，
+// 战报 events 已输出数值，UI 不重复数值以避免第二来源）
+const TACTICS: { id: import('@leh/shared').TacticalTacticId; name: string; desc: string }[] = [
+  { id: 'assault', name: '强攻', desc: '克 方/圆/雁' },
+  { id: 'hold', name: '固守', desc: '克 锋矢' },
+  { id: 'ambush', name: '奇袭', desc: '克 鹤翼' },
+];
+
 export function StandardModePanel() {
   const melee = useGameStore((s) => s.melee);
   const meleeLastResult = useGameStore((s) => s.meleeLastResult);
   const loading = useGameStore((s) => s.loading);
   const meleeRound = useGameStore((s) => s.meleeRound);
   const meleeExit = useGameStore((s) => s.meleeExit);
+  const meleeSetTactic = useGameStore((s) => s.meleeSetTactic);
   const game = useGameStore((s) => s.game);
 
   const [selectedAction, setSelectedAction] = useState<string>('normal_attack');
@@ -180,6 +189,33 @@ export function StandardModePanel() {
         </div>
         <div className="text-xs text-stone-500 mt-1">
           回合 {melee.round}/{melee.maxRounds}
+        </div>
+      </div>
+
+      {/* 战术姿态（FM-P3：持久协同矩阵，不耗战术点） */}
+      <div>
+        <h4 className="text-sm font-medium text-stone-400 mb-2">战术姿态 <span className="text-[10px] text-amber-600">不耗战术点 · 克制敌方阵型时 ×1.1</span></h4>
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            type="button"
+            disabled={loading || !melee.tactic}
+            className={`border px-2 py-1.5 text-center text-xs ${!melee.tactic ? 'border-amber-500 bg-amber-950 text-amber-200' : 'border-stone-700 bg-stone-900/70 text-stone-400 hover:border-amber-800'}`}
+            onClick={() => void meleeSetTactic(null)}
+          >
+            无
+          </button>
+          {TACTICS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              disabled={loading || melee.tactic === t.id}
+              className={`border px-2 py-1.5 text-left text-xs ${melee.tactic === t.id ? 'border-amber-500 bg-amber-950 text-amber-200' : 'border-stone-700 bg-stone-900/70 text-stone-300 hover:border-amber-800'}`}
+              onClick={() => void meleeSetTactic(t.id)}
+            >
+              <span className="block font-medium">{t.name}</span>
+              <span className="mt-0.5 block text-[9px] text-stone-500">{t.desc}</span>
+            </button>
+          ))}
         </div>
       </div>
 

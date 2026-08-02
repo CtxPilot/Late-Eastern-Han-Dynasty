@@ -959,6 +959,18 @@ gameRouter.post('/melee/exit', (_req, res) => {
   }
 });
 
+/** 设定攻方玩家持久战术姿态（FM-P3：assault/hold/ambush 或 null 清除） */
+gameRouter.post('/melee/tactic', (req, res) => {
+  try {
+    const { tactic } = req.body as { tactic?: string | null };
+    const allowed = ['assault', 'hold', 'ambush'];
+    const value = tactic == null ? null : allowed.includes(tactic) ? tactic as import('@leh/shared').TacticalTacticId : (() => { throw new Error('非法战术'); })();
+    res.json(gameService.meleeSetTactic(value));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'melee tactic failed' });
+  }
+});
+
 // ====== 总军师 API（§十四/§二十.2.6） ======
 
 /** 任命总军师 */

@@ -58,7 +58,7 @@ for (const path of tracked.filter((item) => binaryExtensions.has(extname(item).t
   if (!allowed) fail(`asset lacks manifest rule: ${path}`);
 }
 const screenshotCount = tracked.filter((path) => path.startsWith('docs/screenshots/') && path.endsWith('.png')).length;
-if (screenshotCount !== 126) fail(`screenshot inventory changed without manifest update: ${screenshotCount}`);
+if (screenshotCount !== 125) fail(`screenshot inventory changed without manifest update: ${screenshotCount}`);
 
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.mjs', '.css', '.html', '.py']);
 for (const path of tracked.filter((item) => sourceExtensions.has(extname(item)))) {

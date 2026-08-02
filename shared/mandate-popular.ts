@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 import type { GameState } from './types/game.js';
 import type { Faction } from './types/faction.js';
 

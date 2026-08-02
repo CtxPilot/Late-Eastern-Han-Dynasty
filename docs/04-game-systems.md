@@ -500,7 +500,7 @@ Game Loop:
 
 ### 4.2 关系亲和度
 
-> **Session 284 实装**：`shared/relations.ts` 纯函数 `pairAffinity`/`relationState`/`evolveAffinity` 已实现。`server/src/data/relations.json` 首批 31 对重点关系（史源分层）。OfficerDetail 新增「社交」tab 展示关系列表与 SVG 径向图谱。
+> **Session 284 实装；Session 299 标签归并**：`shared/relations.ts` 纯函数 `pairAffinity`/`relationState`/`evolveAffinity` 已实现。`server/src/data/relations.json` 首批 31 对重点关系（史源分层）。OfficerDetail 的「关系」tab 统一展示家族关系、社交关系列表与 SVG 径向图谱；数据引擎仍保持 S18/S24 分域。
 
 ```
 pairAffinity = tagAffinity(0.4) + hiddenCompatibility(0.6)

@@ -196,3 +196,44 @@ export function duelTriggerChance(input: DuelTriggerInput): number {
   if (!input.adjacent || !input.bothCommandersActive || (input.source === 'melee' && Math.min(input.challengerMorale, input.defenderMorale) < 40)) return 0;
   return Math.min(0.95, Math.max(0, input.configuredChance + input.challengerBravery * 0.01 + (input.challengerMorale - input.defenderMorale) * 0.002));
 }
+
+// ====== 战术协同矩阵（FM-P3 · TacticalConfig v2 真源） ======
+
+/** 0-A 可设定的持久战术姿态（计划 §4.6：强攻/固守/奇袭，v2 tactics id） */
+export const ACTIVE_TACTIC_IDS = ['assault', 'hold', 'ambush'] as const;
+export type TacticalTacticId = typeof ACTIVE_TACTIC_IDS[number];
+
+/** 协同区 1.1 / 0.9 / 1.0（计划 §4.6、27 §6.3）。 */
+export const TACTIC_SYNERGY_STRONG = 1.1;
+export const TACTIC_SYNERGY_CONFLICT = 0.9;
+export const TACTIC_SYNERGY_NEUTRAL = 1.0;
+
+/**
+ * 战术对敌方阵型的协同区：敌方阵型 ∈ 本战术 `strongAgainstFormationIds` → 1.1（协同），
+ * 否则 1.0（中性）。**冲突 0.9 在 0-A 无战术×阵型反向关系表（计划 §4.6 不扩 6×6 矩阵），
+ * 不存在独立触发源，因此不产生 0.9 结果**；常量保留供 0-B 扩展反向关系时使用。
+ */
+export function resolveTacticSynergy(
+  config: TacticalConfigV2,
+  tacticId: TacticalTacticId | null | undefined,
+  enemyFormationId: number,
+): number {
+  if (!tacticId) return TACTIC_SYNERGY_NEUTRAL;
+  const tactic = config.tactics.find((item) => item.id === tacticId);
+  if (!tactic) return TACTIC_SYNERGY_NEUTRAL;
+  return tactic.strongAgainstFormationIds.includes(enemyFormationId)
+    ? TACTIC_SYNERGY_STRONG
+    : TACTIC_SYNERGY_NEUTRAL;
+}
+
+/** 战术自身基础修正（T_base，计划 §5.2：不受组织度缩放）。未设战术/未知 id 返回全 0。 */
+export function tacticModifiers(
+  config: TacticalConfigV2,
+  tacticId: TacticalTacticId | null | undefined,
+): { attack: number; defense: number; initiative: number } {
+  if (!tacticId) return { attack: 0, defense: 0, initiative: 0 };
+  const tactic = config.tactics.find((item) => item.id === tacticId);
+  return tactic
+    ? { attack: tactic.attack, defense: tactic.defense, initiative: tactic.initiative }
+    : { attack: 0, defense: 0, initiative: 0 };
+}

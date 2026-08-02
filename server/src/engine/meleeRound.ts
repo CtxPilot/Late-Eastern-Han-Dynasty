@@ -24,6 +24,9 @@ import {
   type MeleeRoundResult,
   type TacticalAction,
   type TacticalActionType,
+  type TacticalConfigV2,
+  resolveTacticSynergy,
+  tacticModifiers,
 } from '@leh/shared';
 import { applyOrganizationExecution, resolveFormationContribution } from '@leh/shared';
 
@@ -82,6 +85,17 @@ let MELEE_CATALOG: readonly Formation[] | null = null;
 /** 注入静态阵型目录（null 恢复中性回退）。 */
 export function setMeleeFormationCatalog(catalog: readonly Formation[] | null): void {
   MELEE_CATALOG = catalog;
+}
+
+/**
+ * 注入 TacticalConfig v2（战术协同矩阵单一真源，服务端启动 `setMeleeTacticalConfig(parse(...v2.json))`）。
+ * null（纯单测/脚本未注入）时战术按中性处理（无协同、无战术修正）。
+ */
+let TACTICAL_CONFIG: TacticalConfigV2 | null = null;
+
+/** 注入 TacticalConfig v2（null 恢复中性回退）。 */
+export function setMeleeTacticalConfig(config: TacticalConfigV2 | null): void {
+  TACTICAL_CONFIG = config;
 }
 
 /**
@@ -156,14 +170,25 @@ export function runMeleeRound(
   const events: string[] = [];
   const round = state.round + 1;
 
-  // 1. 先手判定（阵型机动 + 主将统率简化；点值经等价性换算读入，含组织度执行档）
+  // 1. 先手判定（阵型机动 + 战术先手 + 主将统率简化；点值经等价性换算读入，含组织度执行档）
   const atkMod = standardMeleeMods(state.attackerFormation, state.attackerOrganization);
   const defMod = standardMeleeMods(state.defenderFormation, state.defenderOrganization);
-  const attackerFirst = atkMod.mobility >= defMod.mobility;
+  // FM-P3 战术协同矩阵：T_base（战术自身修正，不受组织度缩放）+ synergy（对敌方阵型的协同区 ×1.1/×1.0）
+  const tMods = TACTICAL_CONFIG ? tacticModifiers(TACTICAL_CONFIG, state.tactic) : { attack: 0, defense: 0, initiative: 0 };
+  const synergy = TACTICAL_CONFIG
+    ? resolveTacticSynergy(TACTICAL_CONFIG, state.tactic, state.defenderFormation)
+    : 1.0;
+  const attackerFirst = (atkMod.mobility + tMods.initiative) >= defMod.mobility;
 
-  // 2. 基础伤害计算（简化：基于兵力 × 阵型修正；点值换算为 atk/def 修正）
-  let atkDamageMult = BASE_DAMAGE_MULT + (atkMod.atk || 0);
+  // 2. 基础伤害计算（简化：基于兵力 × 阵型修正；点值换算为 atk/def 修正 + 战术 T_base）
+  //    resolvedDelta = (F_effective + T_base) × synergy（计划 §5.2；仅攻击方增量，守方无战术）
+  let atkDamageMult = BASE_DAMAGE_MULT + (atkMod.atk + tMods.attack) * synergy;
   let defDamageMult = BASE_DAMAGE_MULT + (defMod.atk || 0);
+
+  if (state.tactic && TACTICAL_CONFIG) {
+    const t = TACTICAL_CONFIG.tactics.find((item) => item.id === state.tactic);
+    if (t) events.push(`战术·${t.name}：攻${tMods.attack >= 0 ? '+' : ''}${Math.round(tMods.attack * 100)}% 防${tMods.defense >= 0 ? '+' : ''}${Math.round(tMods.defense * 100)}% 先手${tMods.initiative >= 0 ? '+' : ''}${Math.round(tMods.initiative * 100)}%${synergy > 1 ? '（克制敌方阵型 ×1.1）' : ''}`);
+  }
 
   // 突击效果
   if (attackerAction?.type === 'all_out_assault') {
@@ -184,9 +209,9 @@ export function runMeleeRound(
     events.push('进攻方进行整顿，士气恢复');
   }
 
-  // 防御修正
+  // 防御修正（守方用其阵型防；我方 = 阵型防 + 战术防修正，正=更能扛）
   const defDefMod = defMod.def || 0;
-  const atkDefMod = atkMod.def || 0;
+  const atkDefMod = (atkMod.def || 0) + tMods.defense;
 
   // 进攻方对防守方造成的伤害
   let attackerDamage: number;

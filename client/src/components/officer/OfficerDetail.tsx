@@ -84,14 +84,13 @@ const UNIT_NAME: Record<string, string> = {
   yellowTurban: '黄巾兵',
 };
 
-type Tab = 'stats' | 'family' | 'equipment' | 'biography' | 'relations' | 'skills';
+type Tab = 'stats' | 'relations' | 'equipment' | 'biography' | 'skills';
 
 const TABS: readonly [Tab, string][] = [
   ['stats', '属性'],
-  ['family', '关系'],
+  ['relations', '关系'],
   ['equipment', '装备'],
   ['biography', '列传'],
-  ['relations', '社交'],
   ['skills', '技能'],
 ];
 
@@ -322,67 +321,15 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               </section>
             )}
 
-            {tab === 'family' && (
-              <div className="space-y-4">
-                <section>
-                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
-                  <Info label="正妻" value={wife ?? '—'} />
-                  {officer.consortIds && officer.consortIds.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {officer.consortIds.map((c, i) => {
-                        const female = game.females[c.id];
-                        return (
-                          <div key={i} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1 text-xs">
-                            <span className="text-stone-200">{female?.name ?? `#${c.id}`}</span>
-                            <span className="ml-2 text-[10px] text-stone-500">{c.rank === 'concubine' ? '妾' : '姬'}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-
-                <section>
-                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">子女</h3>
-                  {children.length === 0 ? (
-                    <p className="text-stone-600 text-xs">无子女记录</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {children.map((c) => {
-                        const live = game.officers[c.childId];
-                        return (
-                          <div key={c.childId} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5 text-xs">
-                            <div className="text-stone-200">{c.childName}</div>
-                            <div className="text-stone-500 text-[10px] mt-0.5">
-                              {c.birthYear}生 · {c.appearYear}登场 · {c.source}
-                            </div>
-                            {live ? (
-                              <div className="text-emerald-600/90 text-[10px] mt-0.5">
-                                已登场
-                                {live.faction === officer.faction ? '·本势力' : live.faction == null ? '·在野' : '·他势力'}
-                              </div>
-                            ) : (
-                              <div className="text-stone-600 text-[10px] mt-0.5">待登场</div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </section>
-
-                <section>
-                  <h3 className="mb-2 text-xs tracking-widest text-amber-500">效力</h3>
-                  <Info label="当前状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
-                  {factionName && <Info label="所属势力" value={factionName} />}
-                  {officer.faction == null && officer.status === 'free' && (
-                    <p className="mt-1.5 text-[10px] text-stone-600">在野武将，满足相性/理想/血亲条件可投奔势力</p>
-                  )}
-                </section>
-              </div>
+            {tab === 'relations' && (
+              <RelationshipsTab
+                officer={officer}
+                game={game}
+                wife={wife}
+                children={children}
+                factionName={factionName}
+              />
             )}
-
-            {tab === 'relations' && <RelationsTab officer={officer} game={game} />}
 
             {tab === 'skills' && <SkillsTab officer={officer} game={game} />}
 
@@ -576,6 +523,79 @@ const RELATION_STATE_COLOR: Record<string, string> = {
   intimate: 'text-emerald-400', friendly: 'text-sky-300', neutral: 'text-stone-400',
   dislike: 'text-orange-300', hostile: 'text-red-400',
 };
+
+function RelationshipsTab({
+  officer,
+  game,
+  wife,
+  children,
+  factionName,
+}: {
+  officer: Officer;
+  game: GameState;
+  wife: string | null;
+  children: api.ChildCatalogEntry[];
+  factionName: string | null;
+}) {
+  return (
+    <div className="space-y-4">
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">婚姻</h3>
+        <Info label="正妻" value={wife ?? '—'} />
+        {officer.consortIds && officer.consortIds.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {officer.consortIds.map((c, i) => {
+              const female = game.females[c.id];
+              return (
+                <div key={i} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1 text-xs">
+                  <span className="text-stone-200">{female?.name ?? `#${c.id}`}</span>
+                  <span className="ml-2 text-[10px] text-stone-500">{c.rank === 'concubine' ? '妾' : '姬'}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">子女</h3>
+        {children.length === 0 ? (
+          <p className="text-stone-600 text-xs">无子女记录</p>
+        ) : (
+          <div className="space-y-1">
+            {children.map((c) => {
+              const live = game.officers[c.childId];
+              return (
+                <div key={c.childId} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5 text-xs">
+                  <div className="text-stone-200">{c.childName}</div>
+                  <div className="text-stone-500 text-[10px] mt-0.5">{c.birthYear}生 · {c.appearYear}登场 · {c.source}</div>
+                  {live ? (
+                    <div className="text-emerald-600/90 text-[10px] mt-0.5">
+                      已登场{live.faction === officer.faction ? '·本势力' : live.faction == null ? '·在野' : '·他势力'}
+                    </div>
+                  ) : (
+                    <div className="text-stone-600 text-[10px] mt-0.5">待登场</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">效力</h3>
+        <Info label="当前状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
+        {factionName && <Info label="所属势力" value={factionName} />}
+        {officer.faction == null && officer.status === 'free' && (
+          <p className="mt-1.5 text-[10px] text-stone-600">在野武将，满足相性/理想/血亲条件可投奔势力</p>
+        )}
+      </section>
+
+      <RelationsTab officer={officer} game={game} />
+    </div>
+  );
+}
 
 function RelationsTab({ officer, game }: { officer: Officer; game: GameState }) {
   const [relations, setRelations] = useState<OfficerRelation[]>([]);

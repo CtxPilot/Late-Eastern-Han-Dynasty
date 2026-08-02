@@ -77,6 +77,15 @@ function mkOfficer(partial: Partial<Officer>): Officer {
 }
 
 describe('OfficerDetail 装备 tab（S13 Session 266）', () => {
+  it('武将关系与社交信息归入同一个关系页签', () => {
+    const html = renderToStaticMarkup(
+      <OfficerDetail game={mkGame()} officer={mkOfficer({})} onClose={() => undefined} />,
+    );
+    expect(html.match(/data-testid="officer-tab-relations"/g)).toHaveLength(1);
+    expect(html).not.toContain('officer-tab-family');
+    expect(html).not.toContain('officer-tab-social');
+  });
+
   it('装备 tab 按钮存在（SSR 默认 stats tab，内容经交互切换）', () => {
     const html = renderToStaticMarkup(
       <OfficerDetail game={mkGame()} officer={mkOfficer({})} onClose={() => undefined} />,

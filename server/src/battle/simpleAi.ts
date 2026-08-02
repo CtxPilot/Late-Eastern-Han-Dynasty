@@ -5,7 +5,12 @@ import { Weather, type BattleUnit, type HexCoord, type Officer, type TerrainType
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
+import { hexFormationMods } from './hex-formation.js';
 import { resolveAttack as resolveCritAttack, type AttackActor, type CritRng } from './crit.js';
+
+function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
+  return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+}
 
 /** S10 0-A tactical AI: deterministic scoring with attacks, fire tactics and terrain-aware movement. */
 export function runSimpleEnemyAi(
@@ -203,11 +208,13 @@ function tryFireTactic(
       ? [...unit.statusEffects, { type: 'burn', remainingTurns: burnTurns, value: Math.max(1, Math.floor(damage * 0.15)) }]
       : unit.statusEffects,
   });
+  const enemyAlive = sideAlive(next, attacker.side);
+  const playerAlive = sideAlive(next, defender.side);
   return {
     units: next,
     message: `${atk.name} 施火计，造成 ${damage} 伤害${terrain === 'forest' ? '（林中火势）' : weatherMod < 1 ? '（雨势减半）' : ''}`,
-    over: troops <= 0,
-    winner: troops <= 0 ? attacker.side : null,
+    over: !enemyAlive || !playerAlive,
+    winner: !enemyAlive ? defender.side : playerAlive ? null : attacker.side,
   };
 }
 
@@ -250,6 +257,7 @@ function doAttack(
       morale: attacker.morale,
       terrain: atkTerrain,
       matchup,
+      formationAtk: hexFormationMods(attacker.formation).atk,
     },
     {
       unitAttack: defT.attack,
@@ -260,6 +268,7 @@ function doAttack(
       maxTroops: defender.maxTroops,
       morale: defender.morale,
       terrain: defTerrain,
+      formationDef: hexFormationMods(defender.formation).def,
     },
     rng,
   );
@@ -319,12 +328,16 @@ function doAttack(
   });
 
   // 攻方被反击致死
-  if (attackerDestroyed && newDefTroops > 0) {
+  const enemyAlive = sideAlive(next, attacker.side);
+  const playerAlive = sideAlive(next, defender.side);
+  if (!enemyAlive || !playerAlive) {
     return {
       units: next,
-      message: `${atkO.name} 攻击 ${defO.name}，却被反击致死！${eventLabel}`,
+      message: !enemyAlive
+        ? `${atkO.name} 攻击 ${defO.name}，却被反击致死！${eventLabel}`
+        : `${atkO.name} 击败 ${defO.name}${eventLabel}，敌军溃败`,
       over: true,
-      winner: defender.side,
+      winner: enemyAlive ? attacker.side : defender.side,
     };
   }
 
@@ -333,8 +346,8 @@ function doAttack(
     return {
       units: next,
       message: msg + ' — 目标溃败',
-      over: true,
-      winner: attacker.side,
+      over: false,
+      winner: null,
     };
   }
   void details;

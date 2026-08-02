@@ -7,6 +7,74 @@
 - `[x]` Done — 已完成
 - `[!]` Blocked — 被阻塞
 
+## 2026-08-03 — Session 300（版权、Git 历史与 Agent 留存合规清理）
+
+> **范围**：按版权风险复查结论执行清理；不改变游戏规则和功能。疑似带外部品牌标识的早期演示截图已移出仓库并隔离，公开代码/文档改为中性表达，Git 历史与提交说明完成清洗。
+
+- 资产：`docs/screenshots` 从 126 张收敛为 125 张；`CREDITS.md`、`ASSET_MANIFEST.md`、`scripts/verify-compliance.mjs` 数量同步。
+- 文本：生产注释与公开进度记录不再保留商业作品名称或品牌暗示。
+- 门禁：补齐 4 个缺失 SPDX 标识；删除仓库内空的 Agent 状态目录；发行包继续禁止 Agent 会话、快照、数据库、WAL、认证文件。
+- 历史：重写本地所有分支和远程跟踪引用中的商业名称、提交说明和疑似截图；清理备份引用/不可达对象后再复扫。
+- **验证状态**：本 Session 收尾前必须通过 `pnpm verify-compliance`、全历史品牌扫描、`git fsck` 与回归测试；远端 `main` 需用户确认后强制更新。
+
+## 2026-08-02 — Session 297（S10-FM：FM-P3 六角部署注入与多 unit 终局）
+
+> **范围**：启动用户批准的六角部署注入；完成 `CampaignArmy.squads` → 多 `BattleUnit` 初始投影，
+> 不接入六角战中变阵状态机。
+> **诚实标注**：BattleState 仍无组织度字段；六角变阵 TP/阶段门禁、战报解释 UI 留后续评审/FM-P4。
+
+- **共享部署投影**：`shared/formation-core.ts` 新增 `projectHexDeployment`，读取阵型 `deployment.slots`，
+  以中军锚点投影到 20×15 六角场；攻方保持模板方向、守方轴向镜像；缺失阵位不生成虚构 unit；越界/碰撞
+  按固定邻接顺序确定性收缩，并输出初始 facing。
+- **创建链**：`createBattle` 新增可选 `attackerArmy/defenderArmy`；有 Army 时按 `CampaignArmy.squads`
+  生成多个 `BattleUnit`，主将固定 center；旧无 Army 调用继续生成原双 unit。tactical melee 入口传入攻守 Army。
+- **多 unit 运行时**：客户端既有 `units[]` 选择/移动兼容；simple AI 逐 unit 行动；普攻、战法、火计、
+  灼烧与 AI 终局改按整方是否仍有存活 unit，击破单个 Squad 不提前结束整场。
+- **验证**：`verify-fm3-hex-deployment` **13/13**；`verify-battle-commanders` 覆盖 **111** 场景；
+  shared **377** + client **42**；三端 typecheck、validate-data、client build 全绿。
+- **文档**：同步 `05`、`09`、`12`、`27`、`29`、本文件与根 `HANDOFF.md`。
+- **Next**：六角战中变阵状态机评审（TP/阶段/每回合一次门禁），或进入 FM-P4 战报解释 UI。
+
+## 2026-08-02 — Session 296（S10-FM：FM-P3 标准模式战术协同矩阵）
+
+> **范围**：标准模式战术协同矩阵（TacticalConfig v2 单一真源 + `MeleeState.tactic?` 持久士气姿态）。
+> 用户拍板：持久 tactic 字段 + UI 选择。
+> **诚实标注**：synergy 冲突 0.9 因 0-A 无战术×阵型反向关系表不产生触发源（计划 §4.6 不扩 6×6 矩阵），
+> 常量保留供 0-B 反向关系扩展；战报解释 UI 仍留 FM-P4。
+
+- **shared**：`ACTIVE_TACTIC_IDS`（assault/hold/ambush）+ `resolveTacticSynergy(config, tactic, enemyFormationId)`
+  （敌阵 ∈ `strongAgainstFormationIds` → ×1.1，否则 ×1.0；null/未设置中性）+ `tacticModifiers`（T_base 攻/防/先手，
+  不受组织度缩放）+ synergy 常量（1.1/1.0/**0.9 保留不触发**）；`MeleeState.tactic?: TacticalTacticId | null`
+  （old档兼容）+ Zod `tactic` 可选；shared 单测 **+2 → 376 项**。
+- **引擎**：`runMeleeRound` 消费 `state.tactic` —— 先手加 `initiative`、攻方伤害 `(F_effective + T_base) × synergy`
+  （计划 §5.2）、我方减伤加战术防修正；战报 events 记「战术·强攻」等；`setMeleeTacticalConfig` 注入（null 中性）。
+- **持久/UI**：`POST /melee/tactic` 路由 + `meleeSetTactic`（运行时校验非法值）+ client api/store `meleeSetTactic`；
+  StandardModePanel 新增「战术姿态」选择（强攻/固守/奇袭/无，不耗 TP，展示文案与 v2 语义对应、数值不重复）。
+- **data**：`loader.loadTacticalSystemV2()`（从 shared/data v2 json 读取 + Zod 解析）；`index.ts` 启动注入。
+- **验证**：`verify-fm3-tactic.ts` **9 断言**（T_base 攻+0.25 生效/未注入中性/先手受 initiative 影响/持久写入
+  + 事件记录/清除/null/非法拒绝/schema 往返含旧档）；tsc/lint 三端、shared 376 + client 42 单测、validate-data、
+  client build 全绿；回归 verify-melee-modes 12、verify-fm3-melee-inject/auto-formation/auto-battle/idempotency/
+  crit-inject/hex-formation、verify-campaign 71 全绿。
+- 文档：`29` 状态/§7.4 表、`27` §6.3、`12` S10、`09` FM 表 + Session 段、`10-progress`、`HANDOFF` 双写。
+
+## 2026-08-02 — Session 295（S10-FM：FM-P3 六角战斗阵型贡献，三模式点值同源闭环）
+
+> **范围**：六角 `battle.ts` 阵型贡献（唯一量纲 = `tiers[0]` 点值，模式专用投影）。
+> **诚实标注**：六角部署注入（多 unit / 初始部署 / 朝向邻接派生 / 六角变阵状态机评审）仍后置；
+> 六角组织度执行档因 BattleState/BattleUnit 暂无组织度字段，随部署注入一并接入。
+
+- **`server/src/battle/hex-formation.ts`**（新模块，避免 battle.ts↔simpleAi 循环依赖）：`setHexFormationCatalog`
+  服务端注入（`index.ts`）+ 中性回退；`HEX_FORM_ATK_GAIN=2` / `HEX_FORM_DEF_GAIN=2.5`；
+  `hexFormationMods(formation)` = `tiers[0]` 攻/防点值 × 增益（组织度 60 → orderly ×1.0 中性，负原值保留），导出供复算/验证。
+- **接入**：`DamageInput` 加可选 `formationAtk/formationDef`；`calcDamage` 中攻点值进 `baseAttack`、
+  防点值进 `baseDefense`；三处消费同源——普攻 `attackUnit`（battle.ts）、战法 `castAbility`（battle.ts）、
+  AI 评估 `runSimpleEnemyAi`（simpleAi.ts）。crit 反击/连击基于 `baseDamage` 自动继承阵型贡献，无需改动。
+- **回归**：verify-fm3-hex-formation **11 断言**（中性/系数锚定/逐阵投影/calcDamage 方向性/端到端注入生效/
+  固定 rng 复现）；`tsc`/`lint` 三端、`pnpm test` shared 374 + client 42、validate-data、client build 全绿；
+  verify-campaign 71、verify-melee-modes 12、verify-fm3-auto-formation/auto-battle/melee-inject/idempotency/
+  crit-inject、verify-battle-rng 5、verify-tactical-ai 6、verify-items 32、verify-save-battle 26 全绿。
+- 文档：`29` 状态/§7.4 表、`12` S10、`09` FM 表 + Session 段、`27` §6.2、`10-progress`、`HANDOFF` 双写。
+
 ## 2026-08-02 — Session 294（README 游戏化重构：双语 + 精简工程细节）
 
 > **范围**：纯文档维护（README.md 整文件重写），零代码/数据/规则改动。用户拍板三项：
@@ -854,7 +922,7 @@
   2. **高**：根目录孤儿 monorepo 前 demo `index.html` + `src/**` 仍含 `LateEasternHanDynasty Demo` 且被 git 跟踪
   3. **高**：5 张 `docs/screenshots/leh-google-geo-*.png` 仍被 git 跟踪（Session 85/86 称已移出/历史删除，但 baseline 又带回）；`.gitignore` 亦无排除规则
   4. **中**：`shared/enums/index.ts` 注释仍写「 轻/中/重水军」
-  5. **中**：设计文档仍写「旧参考版本」「外部作品/外部商业作品/外部商业作品」等商业作品名作参考来源
+  5. **中**：历史设计记录仍保留过往外部参考来源的审计痕迹，公开文档需改为中性表述
 - 修复:
   - UI 品牌 → `LateEasternHanDynasty`（title / 启动页 / TopBar）
   - `git rm` 删除 5 张 Google 校准截图 + 根 `src/` + `index.html`
@@ -1970,7 +2038,7 @@
   - API develop/conscript/relief/train；左右面板全接通
   - AI 对敌城农商/兵力微成长（压迫感）
 - 验证 headless: 农+26/商+20/城+18/征兵+505/训练/施米 全 OK；结束回合春2月
-  截图 `docs/screenshots/leh-demo-playable.png`
+  早期演示截图已因品牌残留隔离，不纳入当前资产清单
 - 决策: **不扩 105 城**；接 Session 30 人口规划
 - Next: 用户确认人口实现优先级
 
@@ -2005,7 +2073,7 @@
 - Next: 接 27c 全屏 cover
 
 ## 2026-07-16 — Session 27
-- Phase: 用户要求 **缩放分级显示地理信息**（参考外部策略参考）
+- Phase: 用户要求 **缩放分级显示地理信息**（采用独立的屏幕像素级 LOD 与标签避让设计）
 - 实现:
   - `client/src/components/map/mapLod.ts`：四级 LOD（strategic/operational/tactical/local）
   - 远景：州名 + 大都会；中景：大城名；近景：全城 + 郡国 + 兵力
@@ -3412,3 +3480,31 @@
   弹劾/自募无独立 UI 跳转（仅乡政警示条）；fame 叙事化标签未做。
 
 *v15.84 | 2026-08-02 | Session 286 · S27 深化三项全实装 + 触发数值实测校准*
+
+## 2026-08-02 — Session 298 · S10/BF 退出回大地图状态机修复
+
+- Phase：**S10 / BF 战场回环 bug 修复**，未开启新大系统。
+- 根因：Tier I `battlefieldExit` 只写 `screen='world'`，未同步清理前端 `sceneStack`；残留的
+  `battlefield` 帧会在下一次出战撤军时把画面导回空战场面板。Tier I 初始化也未建立对应父帧。
+- 修复：Tier I 初始化入场景栈；Tier I/Tier II 退出统一回收到 `world` 根栈并清理本地
+  `battle/battlefield/melee` 瞬态；白刃战退出按实际父战场栈返回，避免硬编码 screen。
+- 验证：client typecheck/lint、shared 377/client 42 单测全绿；实际 Chrome 1440×900 点击验收
+  `verify-bf-p4-headless` 通过：颍川/南郡进入、两条单挑、退出回环、console error=0。
+  Session 274 旧六郡脚本在当前 0-A 仅暴露南郡/颍川两个入口，前两项退出通过后因缺少陈留入口
+  停止，非本次退出修复失败。
+- **边界（诚实）**：本轮未改变服务端战斗结算规则；现有六角战斗仍须完成后才能由权威
+  `exitBattle` 结算，途中“撤军返回”不等同于强制中断六角战斗。
+- **Next**：六角战中变阵状态机评审，或 FM-P4 战报解释 UI。
+
+*v15.85 | 2026-08-02 | Session 298 · 战场退出回环 bug 修复*
+
+## 2026-08-02 — Session 299 · S18/S24 武将关系页签归并
+
+- Phase：**S18 家族 / S24 关系网 UI 归并**，不改变两个系统的数据与 API 边界。
+- 查实：`OfficerDetail` 原有「关系」（婚姻/子女/效力）与「社交」（武将关系列表/关系图谱）两个并列页签，用户层级重复且语义割裂。
+- 修复：合并为唯一「关系」页签，同屏保留婚姻、妾/姬、子女、效力、社交关系列表和关系图谱；移除独立「社交」页签。`GET /relations/:officerId` 及 S18 数据结构不变。
+- 文档：同步 `docs/04-game-systems.md`、`docs/07-ui-design.md`，明确 UI 归并而非后端系统合并。
+- 验证：新增客户端 SSR 回归断言；client typecheck/lint、43 项客户端测试全绿；Chrome 实际点击名册→武将详情→「关系」确认页签为「属性/关系/装备/列传/技能」，婚姻、社交关系、关系图谱均呈现，独立「社交」页签不存在。
+- **Next**：继续处理用户指定的 UI/标签一致性问题；S10 六角变阵仍后置。
+
+*v15.86 | 2026-08-02 | Session 299 · 武将关系页签归并*

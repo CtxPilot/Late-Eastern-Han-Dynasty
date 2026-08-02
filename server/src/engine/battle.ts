@@ -17,6 +17,8 @@ import {
   meritStatBonus,
   type BattleState,
   type BattleUnit,
+  type CampaignArmy,
+  type CampaignSquad,
   type CombatAbilityDef,
   type CombatAbilityLevel,
   type DuelState,
@@ -27,12 +29,15 @@ import {
   type TacticalGrid,
   checkMeleeTarget,
   directionTo,
+  projectHexDeployment,
+  resolveFormationDeployment,
 } from '@leh/shared';
-import { getUnitByType } from '../data/loader.js';
+import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
 import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
+import { hexFormationMods } from '../battle/hex-formation.js';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
 import {
   aiAcceptChallenge,
@@ -50,6 +55,10 @@ import {
 
 const COLS = 20;
 const ROWS = 15;
+
+function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
+  return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+}
 
 function buildStrongAgainstMap(): Record<string, UnitType[]> {
   const units = getUnitByType();
@@ -80,6 +89,74 @@ export interface CreateBattleOpts {
   defendTroops?: number;
   attackMorale?: number;
   defendMorale?: number;
+  /** 可选战役编成；缺省时保留 0-A 单位演示入口。 */
+  attackerArmy?: CampaignArmy;
+  defenderArmy?: CampaignArmy;
+}
+
+function allocateTroops(squads: readonly CampaignSquad[], total: number): number[] {
+  const sourceTotal = squads.reduce((sum, squad) => sum + Math.max(0, Math.floor(squad.troops)), 0);
+  if (sourceTotal <= 0) return squads.map(() => 0);
+  let remaining = Math.max(squads.length, Math.floor(total));
+  return squads.map((squad, index) => {
+    if (index === squads.length - 1) return remaining;
+    const share = Math.max(1, Math.floor((Math.max(0, squad.troops) / sourceTotal) * total));
+    const value = Math.min(share, Math.max(0, remaining - (squads.length - index - 1)));
+    remaining -= value;
+    return value;
+  });
+}
+
+function unitsFromArmy(
+  state: GameState,
+  army: CampaignArmy,
+  side: 'attacker' | 'defender',
+  totalTroops: number,
+  moraleOverride: number | undefined,
+  anchor: { q: number; r: number },
+): BattleUnit[] {
+  const formations = getStaticData().formations;
+  const record = formations.find((formation) => formation.id === army.formation);
+  if (!record) throw new Error(`阵型不存在: ${army.formation}`);
+  const squads = army.squads.length > 0
+    ? army.squads
+    : [{ officerId: army.commanderId, role: 'main' as const, position: 'center' as const, unitType: army.unitType, troops: army.troops, morale: army.morale }];
+  const positions = [...new Set(squads.map((squad) => squad.role === 'main' ? 'center' : squad.position))];
+  const deployment = resolveFormationDeployment(record, positions);
+  const projected = projectHexDeployment(deployment, positions, anchor, side, { width: COLS, height: ROWS });
+  const troopAllocation = allocateTroops(squads, totalTroops);
+  return squads.map((squad, index) => {
+    const officer = state.officers[squad.officerId];
+    const template = getUnitByType()[squad.unitType];
+    if (!officer || !template) throw new Error(`编成单位缺少武将或兵种: ${squad.officerId}/${squad.unitType}`);
+    const position = squad.role === 'main' ? 'center' : squad.position;
+    const projection = projected[position] ?? { position: anchor, facing: side === 'attacker' ? 0 as const : 3 as const };
+    const troops = troopAllocation[index];
+    return {
+      id: `${side}-${army.id}-${squad.officerId}`,
+      armyId: army.id,
+      commanderId: officer.id,
+      commanderName: officer.name,
+      factionId: army.factionId,
+      side,
+      unitType: squad.unitType,
+      formation: army.formation,
+      troopCount: troops,
+      maxTroops: troops,
+      morale: Math.max(0, Math.min(100, moraleOverride ?? squad.morale)),
+      food: Math.max(0, army.food),
+      position: projection.position,
+      facing: projection.facing,
+      mp: template.mobility,
+      maxMp: template.mobility,
+      energy: 100,
+      maxEnergy: 100,
+      hasActed: false,
+      isRetreated: false,
+      isDestroyed: false,
+      statusEffects: [],
+    };
+  });
 }
 
 export function createBattle(
@@ -93,9 +170,14 @@ export function createBattle(
   const playerFaction = state.playerFactionId;
   const defenderFaction = city.ruler ?? 1;
   const fromCityId = opts.fromCityId;
+  const attackerArmy = opts.attackerArmy;
+  const defenderArmy = opts.defenderArmy;
 
   // 优先用出发城主将，其次任意己方现役
-  const playerOfficer =
+  const playerOfficer = attackerArmy
+    ? state.officers[attackerArmy.commanderId]
+    :
+    (
     (fromCityId != null
       ? Object.values(state.officers).find(
           (o: Officer) =>
@@ -113,11 +195,15 @@ export function createBattle(
     Object.values(state.officers).find(
       (o: Officer) => o.faction === playerFaction && o.status === OfficerStatus.ACTIVE,
     ) ??
-    Object.values(state.officers).find((o: Officer) => o.faction === playerFaction);
+    Object.values(state.officers).find((o: Officer) => o.faction === playerFaction)
+    );
 
   // 优先本城守将；无则用势力内非君主武将（避免无城守将时曹操全国飞守）
   const defenderRulerId = state.factions[defenderFaction]?.rulerId;
-  const enemyOfficer =
+  const enemyOfficer = defenderArmy
+    ? state.officers[defenderArmy.commanderId]
+    :
+    (
     Object.values(state.officers).find(
       (o: Officer) =>
         o.faction === defenderFaction &&
@@ -135,7 +221,8 @@ export function createBattle(
     Object.values(state.officers).find(
       (o: Officer) => o.faction === defenderFaction && o.id !== playerOfficer?.id,
     ) ??
-    Object.values(state.officers).find((o: Officer) => o.faction !== playerFaction);
+    Object.values(state.officers).find((o: Officer) => o.faction !== playerFaction)
+    );
 
   if (!playerOfficer || !enemyOfficer) throw new Error('缺少参战武将');
 
@@ -145,10 +232,10 @@ export function createBattle(
   const pUnit = unitMap[pType];
   const eUnit = unitMap[eType];
 
-  const atkTroops = Math.max(1, opts.attackTroops ?? 5000);
+  const atkTroops = Math.max(1, opts.attackTroops ?? attackerArmy?.troops ?? 5000);
   // S27 守方民兵：民心 ≥60 时 floor(人口 × 0.02 × 民心/100)（docs/08 §十七）
   const militia = defenderMilitia(city.population, city.stats.morale ?? 70);
-  const defTroops = Math.max(1, (opts.defendTroops ?? Math.max(500, city.troops || 4500)) + militia);
+  const defTroops = Math.max(1, (opts.defendTroops ?? defenderArmy?.troops ?? Math.max(500, city.troops || 4500)) + militia);
   let atkMorale = opts.attackMorale ?? 90;
   let defMorale = opts.defendMorale ?? 80;
   // S27 世家暗通：世家满意度 <30 → 守军士气 −15%（docs/08 §十七）
@@ -157,7 +244,7 @@ export function createBattle(
   atkMorale = Math.min(120, atkMorale * (1 + armsCombatMultiplier(state.factions[playerFaction]?.arms ?? 0, atkTroops)));
   defMorale = Math.min(120, defMorale * (1 + armsCombatMultiplier(state.factions[defenderFaction]?.arms ?? 0, defTroops)));
 
-  const units: BattleUnit[] = [
+  const legacyUnits: BattleUnit[] = [
     {
       id: 'atk-1',
       armyId: 'a1',
@@ -207,6 +294,16 @@ export function createBattle(
       statusEffects: [],
     },
   ];
+  const units: BattleUnit[] = attackerArmy || defenderArmy
+    ? [
+      ...(attackerArmy
+        ? unitsFromArmy(state, attackerArmy, 'attacker', atkTroops, opts.attackMorale, { q: 2, r: 3 })
+        : [legacyUnits[0]]),
+      ...(defenderArmy
+        ? unitsFromArmy(state, defenderArmy, 'defender', defTroops, opts.defendMorale, { q: 16, r: 11 })
+        : [legacyUnits[1]]),
+    ]
+    : legacyUnits;
 
   const fromName =
     fromCityId != null ? state.cities[fromCityId]?.name ?? String(fromCityId) : null;
@@ -356,6 +453,7 @@ export function attackUnit(
       morale: attacker.morale,
       terrain: atkTerrain,
       matchup,
+      formationAtk: hexFormationMods(attacker.formation).atk,
     },
     {
       unitAttack: defT.attack,
@@ -367,6 +465,7 @@ export function attackUnit(
       morale: defender.morale,
       terrain: defTerrain,
       armorDefense: equipArmorDefenseFor(defO),
+      formationDef: hexFormationMods(defender.formation).def,
     },
     rng,
   ) * (1 + targetCheck.attackModifier)));
@@ -421,16 +520,21 @@ export function attackUnit(
     logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1, source: 'player' as const, reversible: false,
   }].slice(-3);
 
+  const attackerAlive = sideAlive(units, 'attacker');
+  const defenderAlive = sideAlive(units, 'defender');
+
   // 攻方被反击致死 → 守方胜
-  if (result.attackerDestroyed && !result.defenderDestroyed) {
+  if (!attackerAlive || !defenderAlive) {
     return {
       ...battle,
       units,
       actionHistory,
       phase: 'over',
-      winner: 'defender',
-      message: `${atkO.name} 攻击 ${defO.name}，却被反击致死！${eventLabel}`,
-      log: [...battle.log, { turn: battle.turn, message: `${atkO.name} 被 ${defO.name} 反击斩杀` }],
+      winner: defenderAlive ? 'defender' : 'attacker',
+      message: !attackerAlive
+        ? `${atkO.name} 攻击 ${defO.name}，却被反击致死！${eventLabel}`
+        : `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel} — 敌军溃败！`,
+      log: [...battle.log, { turn: battle.turn, message: !attackerAlive ? `${atkO.name} 被 ${defO.name} 反击斩杀` : `击败 ${defO.name}${eventLabel}` }],
     };
   }
 
@@ -439,9 +543,9 @@ export function attackUnit(
       ...battle,
       units,
       actionHistory,
-      phase: 'over',
-      winner: 'attacker',
-      message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel} — 敌军溃败！${result.counterDamage ? `（反击-${result.counterDamage}）` : ''}`,
+      phase: 'enemy',
+      winner: null,
+      message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel} — 击败 ${defO.name}，敌军仍有部队${result.counterDamage ? `（反击-${result.counterDamage}）` : ''}`,
       log: [...battle.log, { turn: battle.turn, message: `击败 ${defO.name}${eventLabel}` }],
     };
   }
@@ -581,13 +685,15 @@ export function castFireTactic(
   const weatherNote = weatherMod < 1 ? '·雨势减半' : '';
   const skillNote = level > 0 ? `火计·${['', '初', '通', '精', '极', '神'][level]}` : '火计（无技能）';
 
-  if (newTroops <= 0) {
+  const attackerAlive = sideAlive(units, 'attacker');
+  const defenderAlive = sideAlive(units, 'defender');
+  if (!attackerAlive || !defenderAlive) {
     return {
       ...battle,
       units,
       phase: 'over',
-      winner: 'attacker',
-      message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote} — 敌军溃败！`,
+      winner: defenderAlive ? 'defender' : 'attacker',
+      message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote} — ${defenderAlive ? '我军溃败！' : '敌军溃败！'}`,
       log: [
         ...battle.log,
         { turn: battle.turn, message: `${skillNote}击破 ${defO.name}` },
@@ -773,6 +879,7 @@ export function castAbility(
       morale: attacker.morale,
       terrain: battle.hexGrid.terrain[attacker.position.r][attacker.position.q],
       matchup,
+      formationAtk: hexFormationMods(attacker.formation).atk,
     },
     {
       unitAttack: defT.attack,
@@ -784,6 +891,7 @@ export function castAbility(
       morale: target.morale,
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
       armorDefense: equipArmorDefenseFor(defO),
+      formationDef: hexFormationMods(target.formation).def,
     },
     rng,
   );
@@ -808,13 +916,15 @@ export function castAbility(
   const levelLabel = ['', '初', '通', '精', '极', '神'][levelData.level] ?? '';
   const fullLabel = `${ability.name}·${levelLabel}`;
 
-  if (newTroops <= 0) {
+  const attackerAlive = sideAlive(units, 'attacker');
+  const defenderAlive = sideAlive(units, 'defender');
+  if (!attackerAlive || !defenderAlive) {
     return {
       ...battle,
       units,
       phase: 'over',
-      winner: 'attacker',
-      message: `${atkO.name} ${fullLabel} 造成 ${dmg} 伤害${effectLabel} — 敌军溃败！`,
+      winner: defenderAlive ? 'defender' : 'attacker',
+      message: `${atkO.name} ${fullLabel} 造成 ${dmg} 伤害${effectLabel} — ${defenderAlive ? '我军溃败！' : '敌军溃败！'}`,
       log: [...battle.log, { turn: battle.turn, message: `${fullLabel}击破 ${defO.name}` }],
     };
   }
@@ -896,10 +1006,8 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
   if (battle.phase !== 'enemy') return battle;
 
   const burned = tickBurnAndEnergy(battle.units, state);
-  if (burned.units.some((u) => u.side === 'defender' && (u.isDestroyed || u.troopCount <= 0))) {
-    const atkAlive = burned.units.some(
-      (u) => u.side === 'attacker' && !u.isDestroyed && u.troopCount > 0,
-    );
+  if (!sideAlive(burned.units, 'defender')) {
+    const atkAlive = sideAlive(burned.units, 'attacker');
     if (atkAlive) {
       return {
         ...battle,
