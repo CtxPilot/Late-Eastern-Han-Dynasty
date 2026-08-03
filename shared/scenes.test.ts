@@ -88,4 +88,12 @@ describe('scene stack — 典型闭环', () => {
     stack = popToScene(stack, 'world');
     expect(screenOf(stack)).toBe('world');
   });
+
+  it('战场退出应允许调用方用 replaceStack 丢弃重复进入留下的脏帧', () => {
+    const dirty = [world, battlefield, world, battlefield];
+    const reset = replaceStack(world);
+    expect(reset).toEqual([world]);
+    expect(screenOf(reset)).toBe('world');
+    expect(dirty).not.toEqual(reset);
+  });
 });

@@ -171,7 +171,7 @@
 | P1-06 | GameLayout — 主三栏布局 | P1-01, P1-04 |
 | P1-07 | 初始 GameState 生成(读取剧本) | P1-05, P0-14 |
 | P1-08 | GameService.createGame / .getGameState API | P1-07 |
-| P1-09 | AI 基础框架（大地图基础框架；六角敌军已于 Session 275 升级为目标/地形/火计战术评分） | P1-05 |
+| P1-09 | AI 基础框架（大地图基础框架；六角敌军已于 Session 275/305/307 升级为目标/地形/火计/leveled兵种战法/主动单挑战术评分） | P1-05 |
 
 ---
 
@@ -221,7 +221,7 @@
 | FM-P1 | `Formation` Zod/Type、TacticalConfig v2、7阵目录与 146 将精通迁移 | [x] | 已实装（Session 288）；v1 只读兼容 |
 | FM-P2 | 共享合法性、阵型贡献、五部部署与解释纯函数 | [x] | 已实装（Session 289）`shared/formation-core.ts`；不创建第四套伤害公式 |
 | FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）+ **六角战斗阵型贡献**（295，`hexFormationMods` 点值投影，三模式点值同源闭环）+ **标准模式战术协同矩阵**（296，`MeleeState.tactic?` 持久战术 + TacticalConfig v2 T_base/synergy + `/melee/tactic`）；六角部署注入后置 |
-| FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [ ] | 复用 1 TP、组织度、五部阵位 |
+| FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [~] | Session 302~310 已完成战报解释、变阵存档往返、敌军主动单挑浏览器链及浏览器 JSON 导入/导出；完整公平 AI、SQLite/XDG 多槽位仍后置 |
 | FM-P5 | 平衡、独特性、经典体验、IP 与文档总验收 | [ ] | 通过后仍不代表 0-B 完成 |
 | FM-P6 | 27阵/水阵/双轴成长扩展 | [ ] | 仅 0-A 验收完成且用户重启 0-B 后可做 |
 
@@ -250,7 +250,7 @@
 
 | ID | 任务 | 依赖 |
 |:--:|------|------|
-| P5-01 | AI 决策引擎(内政/军事/人事/外交 智能) | P1-09 |
+| P5-01 | AI 决策引擎(内政/军事/人事/外交 智能；六角敌军目标/走位/普攻/火计/leveled兵种战法/主动单挑切片已落地，完整 AI 未完成) | P1-09 |
 | P5-02 | AI 战争决策 + 兵力分配 | P5-01 |
 | P5-03 | AI 外交决策(弱势求盟) | P5-01 |
 | P5-04 | 套装系统计算引擎 | P4-08 |
@@ -258,7 +258,7 @@
 | P5-06 | 多剧本完善 | P0-14 |
 | P5-07 | UI 美化(Tailwind主题+动画) | P1~P4 |
 | P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） | P5-07 |
-| P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出 Blob） | P5-05 |
+| P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出 Blob） | **进行中：Session 311/312 已完成服务端命名槽位、列表、原子写入、校验恢复及系统菜单槽位 UI；SQLite、多用户留后续** | P5-05 |
 | P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
 | P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄） | P5-07 |
 | P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核） | P5-07 |

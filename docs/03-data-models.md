@@ -2399,6 +2399,17 @@ Session 290（FM-P3）继续为 `MeleeState` 增加 `commandCache?: Record<strin
 pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段表示没有项目；
 实体组合 Schema 校验指派武将引用存在。既有 `developmentProgress` 三数字段继续保留作
 静态数据兼容，不再承担 R5 项目权威状态。
+### Session 302 · 六角战报解释字段
+
+当前运行时 `BattleLogEntry` 允许可选 `explanation`：变阵记录 TP 与前后阵型，攻击记录攻守阵型贡献。
+字段由 Zod 严格校验但对旧日志可省略，客户端不自行重算。
+
+### Session 306 · FM-P4 战斗快照往返
+
+六角战斗的 `tacticalPoints`、`tacticalPointsUsed`、`log[].explanation` 与变阵后的
+`BattleUnit.formation` 均属于可持久化状态；保存/恢复按 JSON 往返后继续经
+`GameStateBattleSchema` 严格解析。旧存档仍可省略新增 optional 战报解释字段。
+
 ### Session 277 · BattleState 战旗审计扩展
 
 - `BattleUnit.facing?: 0|1|2|3|4|5`：六方向朝向；旧档缺省时攻方按0、守方按3解释。

@@ -1114,20 +1114,21 @@ P1 的首要任务是证明“进入独立战场—接战—回写”的最小�
 
 ### 10.1 已打通最小闭环
 
-world（大地图）→ 进入南郡战场（BattlefieldSceneView）→ 围攻江陵（复用 S10 六角 createBattle）→ 撤军返回（exitBattle + 场景栈 popScene 回战场）→ 退出战场（popToScene world 回大地图）。
+world（大地图）→ 进入南郡战场（BattlefieldSceneView）→ 围攻江陵（复用 S10 六角 createBattle）→ 撤军返回（exitBattle + 场景栈回战场）→ 退出战场（清理全部瞬态帧并重建唯一 world 根栈回大地图）。
 
 Headless Chrome 实测全链路：
 1. 大地图点「进入南郡战场」→ BattlefieldSceneView 渲染 16 县节点 + 11 路线 + 江陵 seat 高亮 ✓
 2. 点「围攻江陵」→ 进入 BattleView（六角，复用 createBattle cityId=14）✓
 3. 点「撤军返回」→ exitBattle → 场景栈 popScene → 回 BattlefieldSceneView（16 县）✓
-4. 点「退出战场」→ popToScene('world') → 回大地图 ✓
+4. 点「退出战场」→ replaceStack({ scene: 'world' })，清理重复/残留 battlefield 帧 → 回大地图 ✓
 
 ### 10.1.1 退出回环修复（Session 298）
 
 修复前端退出状态机的残帧问题：Tier I 战场退出原先只改 `screen='world'`，没有同步回收
-`sceneStack`；连续再次出战并点「撤军返回」时可能回到空战场面板。现在 Tier I/Tier II
-退出均回收至唯一 `world` 根栈并清理本地战斗、白刃战瞬态；Tier I 初始化正式入栈，白刃战
-退出按父战场栈返回而非硬编码 screen。服务端权威战斗结算逻辑不变。
+`sceneStack`；连续再次出战并点「撤军返回」时可能回到空战场面板。Session 298 已补齐基本
+回收，Session 313 进一步将 Tier I/Tier II 的战场级退出统一为 `replaceStack({ scene: 'world' })`，
+彻底丢弃重复进入/读档产生的旧 battlefield 帧，并清理本地战斗、白刃战瞬态；Tier I 初始化
+正式入栈，白刃战退出按父战场栈返回而非硬编码 screen。服务端权威战斗结算逻辑不变。
 
 ### 10.2 实施范围对照设计
 

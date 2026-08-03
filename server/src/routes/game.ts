@@ -55,6 +55,51 @@ gameRouter.get('/state', (_req, res) => {
   }
 });
 
+/** S16 浏览器存档：导出完整 JSON 信封，由客户端下载到本地。 */
+gameRouter.get('/save/export', (_req, res) => {
+  try {
+    res.json(gameService.exportSaveEnvelope());
+  } catch (e) {
+    res.status(404).json({ error: e instanceof Error ? e.message : 'save export failed' });
+  }
+});
+
+/** S16 浏览器存档：导入后走版本迁移、剧本兼容和完整 GameStateSchema 校验。 */
+gameRouter.post('/save/import', (req, res) => {
+  try {
+    res.json(gameService.restoreGameFromEnvelope(req.body));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'save import failed' });
+  }
+});
+
+/** S16 XDG 存档：服务端命名槽位列表。 */
+gameRouter.get('/save/slots', (_req, res) => {
+  try {
+    res.json({ slots: gameService.listDiskSaveSlots() });
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'save list failed' });
+  }
+});
+
+/** S16 XDG 存档：当前权威状态保存到用户数据目录。 */
+gameRouter.post('/save/slots/:slot', (req, res) => {
+  try {
+    res.json(gameService.saveGameToDisk(req.params.slot));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'save slot failed' });
+  }
+});
+
+/** S16 XDG 存档：读取槽位，复用浏览器导入的完整校验/迁移链。 */
+gameRouter.post('/save/slots/:slot/load', (req, res) => {
+  try {
+    res.json(gameService.loadGameFromDisk(req.params.slot));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'load slot failed' });
+  }
+});
+
 gameRouter.get('/civil/budget', (_req, res) => {
   try {
     res.json(gameService.getAnnualBudget());
@@ -615,6 +660,16 @@ gameRouter.post('/battle/finish-player', (_req, res) => {
     res.json(gameService.battleFinishPlayer());
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'finish failed' });
+  }
+});
+
+/** FM-P4 六角战中变阵：1 TP、每回合一次，服务端权威校验。 */
+gameRouter.post('/battle/formation', (req, res) => {
+  try {
+    const { unitId, targetFormation } = req.body as { unitId: string; targetFormation: number };
+    res.json(gameService.battleChangeFormation(String(unitId), Number(targetFormation)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'formation change failed' });
   }
 });
 

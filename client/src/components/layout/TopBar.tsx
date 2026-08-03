@@ -4,6 +4,9 @@
 import { Season } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
+import { exportSave } from '../../services/api';
+import { listSaveSlots, type SaveSlotMeta } from '../../services/api';
+import { useEffect, useRef, useState } from 'react';
 
 const SEASON_LABEL: Record<number, string> = {
   [Season.SPRING]: '春',
@@ -19,6 +22,40 @@ export function TopBar() {
   const endTurn = useGameStore((s) => s.endTurn);
   const screen = useGameStore((s) => s.screen);
   const openScenarioSelect = useGameStore((s) => s.openScenarioSelect);
+  const importSave = useGameStore((s) => s.importSave);
+  const saveToSlot = useGameStore((s) => s.saveToSlot);
+  const loadFromSlot = useGameStore((s) => s.loadFromSlot);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [slotsOpen, setSlotsOpen] = useState(false);
+  const [slotName, setSlotName] = useState('manual-1');
+  const [slots, setSlots] = useState<SaveSlotMeta[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!slotsOpen) return;
+    setSlotsLoading(true);
+    void listSaveSlots().then(setSlots).catch(() => useGameStore.setState({ error: '读取存档槽位列表失败' })).finally(() => setSlotsLoading(false));
+  }, [slotsOpen]);
+
+  const refreshSlots = async () => {
+    setSlots(await listSaveSlots());
+  };
+
+  const handleSlotSave = async () => {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$/.test(slotName)) {
+      useGameStore.setState({ error: '槽位名须为 1~32 位字母、数字、下划线或短横线' });
+      return;
+    }
+    if (slots.some((slot) => slot.slot === slotName) && !window.confirm(`覆盖存档槽位「${slotName}」？`)) return;
+    await saveToSlot(slotName);
+    await refreshSlots();
+  };
+
+  const handleSlotLoad = async (slot: string) => {
+    if (!window.confirm(`读取存档槽位「${slot}」？当前未保存进度将被替换。`)) return;
+    await loadFromSlot(slot);
+    setSlotsOpen(false);
+  };
 
   if (!game) return null;
 
@@ -30,6 +67,32 @@ export function TopBar() {
   );
 
   const season = SEASON_LABEL[game.season] ?? '';
+
+  const handleExport = async () => {
+    try {
+      const envelope = await exportSave();
+      const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `leh-${game.currentYear}-${String(game.currentMonth).padStart(2, '0')}.leh-save.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      useGameStore.setState({ error: '导出存档失败' });
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      await importSave(JSON.parse(await file.text()));
+    } catch {
+      useGameStore.setState({ error: '存档文件不是有效 JSON' });
+    }
+  };
 
   return (
     <header
@@ -68,6 +131,37 @@ export function TopBar() {
       >
         更换剧本
       </button>
+      <button
+        type="button"
+        data-testid="btn-save-export"
+        className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
+        onClick={() => void handleExport()}
+      >
+        导出存档
+      </button>
+      <button
+        type="button"
+        data-testid="btn-save-import"
+        className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
+        onClick={() => fileInput.current?.click()}
+      >
+        导入存档
+      </button>
+      <button
+        type="button"
+        data-testid="btn-save-slots"
+        className="px-2 py-1 rounded border border-amber-800 text-amber-200 hover:border-amber-500"
+        onClick={() => setSlotsOpen((open) => !open)}
+      >
+        槽位存档
+      </button>
+      <input ref={fileInput} type="file" accept="application/json,.json" className="hidden" onChange={handleImport} />
+      {slotsOpen && <div data-testid="save-slots-panel" className="absolute right-3 top-12 z-50 w-80 rounded border border-amber-800 bg-stone-950 p-3 shadow-xl">
+        <div className="flex items-center justify-between mb-2"><span className="text-amber-300 font-semibold">系统存档槽位</span><button type="button" className="text-stone-400" onClick={() => setSlotsOpen(false)}>×</button></div>
+        <div className="flex gap-2 mb-3"><input data-testid="save-slot-name" value={slotName} onChange={(e) => setSlotName(e.target.value)} maxLength={32} className="min-w-0 flex-1 rounded border border-stone-700 bg-stone-900 px-2 py-1 text-stone-200" /><button type="button" data-testid="btn-save-slot" onClick={() => void handleSlotSave()} className="rounded bg-amber-900 px-2 py-1 text-amber-100">保存</button></div>
+        {slotsLoading ? <p className="text-xs text-stone-500">读取槽位…</p> : slots.length === 0 ? <p className="text-xs text-stone-500">暂无服务端槽位存档</p> : <div className="space-y-1">{slots.map((slot) => <div key={slot.slot} className="flex items-center gap-2 rounded border border-stone-800 px-2 py-1"><span className="min-w-0 flex-1 truncate text-sm text-stone-200">{slot.slot}<span className="ml-1 text-xs text-stone-500">{new Date(slot.updatedAt).toLocaleString()}</span></span><button type="button" data-testid={`btn-load-slot-${slot.slot}`} onClick={() => void handleSlotLoad(slot.slot)} className="text-xs text-amber-300 hover:text-amber-100">读取</button></div>)}</div>}
+        <p className="mt-3 text-[11px] text-stone-600">服务端保存至 XDG 数据目录；覆盖与读取均需确认。</p>
+      </div>}
       {screen === 'world' && (
         <button
           type="button"

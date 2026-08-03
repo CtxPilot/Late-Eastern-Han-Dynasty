@@ -3,9 +3,10 @@
 
 import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType } from '@leh/shared';
 import {
-  battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle,
+  battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
+import { runEnemyPhase } from '../engine/battle.js';
 
 let passed = 0;
 let failed = 0;
@@ -61,6 +62,31 @@ const advancedBattle = battleFinishPlayer();
 check('战斗操作后权威快照同步更新', getGame().activeBattles[0]?.phase === advancedBattle.phase);
 exitBattle();
 check('退出并结算后权威战斗快照清空', getGame().activeBattles.length === 0 && getBattle() === null);
+
+// S10 Session 307：敌军相邻主将主动单挑，沿用 DuelState/RNG 入口。
+createGame(1, 2);
+const duelCity = Object.values(getGame().cities).find((city) => city.ruler !== getGame().playerFactionId);
+if (!duelCity) throw new Error('没有可用于敌军主动单挑验证的敌城');
+const duelBattle = startBattle(duelCity.id);
+const duelAttacker = duelBattle.units.find((unit) => unit.side === 'attacker')!;
+const duelDefender = duelBattle.units.find((unit) => unit.side === 'defender')!;
+const challengerOfficer = getGame().officers[duelDefender.commanderId];
+const defenderOfficer = getGame().officers[duelAttacker.commanderId];
+if (!challengerOfficer || !defenderOfficer) throw new Error('缺少敌军主动单挑验证武将');
+// 让验证聚焦主动入口而非特定 0-A 剧本的武力差；正式运行不修改武将数据。
+defenderOfficer.stats.war = challengerOfficer.stats.war;
+const enemyDuel = runEnemyPhase({
+  ...duelBattle,
+  phase: 'enemy',
+  units: duelBattle.units.map((unit) => unit.id === duelDefender.id
+    ? { ...unit, position: { q: duelAttacker.position.q + 1, r: duelAttacker.position.r } }
+    : unit),
+}, getGame(), () => 0);
+check('敌军相邻主将可按触发判定进入 DuelState', Boolean(enemyDuel.duel));
+check('敌军主动单挑先推进一回合且战斗保持可恢复阶段', enemyDuel.duel?.round === 1 && enemyDuel.phase === 'enemy');
+check('敌军主动单挑扣除20气力', enemyDuel.units.find((unit) => unit.id === duelDefender.id)?.energy === 80);
+check('敌军主动单挑快照通过严格解析', BattleStateRuntimeSchema.parse(enemyDuel).duel?.challengerId === challengerOfficer.id);
+exitBattle();
 
 // Tier I / Tier II：使用真实 service 流程，并仅在测试准备阶段注入一支敌军，
 // 因为 0-A AI 尚不会创建 CampaignArmy。

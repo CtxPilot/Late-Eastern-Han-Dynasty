@@ -1,6 +1,6 @@
 # S10/P3-05 阵型联动整合开发计划（原设定优先）
 
-> **状态**：评审稿 v1.0 → **Gate A+I 已通过（287），FM-P0 材料（288），Gate M/N1/D 已批准，FM-P1（288）+ FM-P2（289）+ FM-P3 crit/melee 注入 + 动作幂等 + 自动入口恢复（290）+ FM-P3a 标准模式点值迁移（291）+ FM-P3 自动战斗阵型贡献（292）+ FM-P3 六角战斗阵型贡献（295）+ FM-P3 标准模式战术协同矩阵（296）+ FM-P3 六角部署注入（297）完成；六角战中变阵状态机与战报解释 UI 仍后置**。
+> **状态**：评审稿 v1.0 → **Gate A+I 已通过（287），FM-P0 材料（288），Gate M/N1/D 已批准，FM-P1（288）+ FM-P2（289）+ FM-P3 crit/melee 注入 + 动作幂等 + 自动入口恢复（290）+ FM-P3a 标准模式点值迁移（291）+ FM-P3 自动战斗阵型贡献（292）+ FM-P3 六角战斗阵型贡献（295）+ FM-P3 标准模式战术协同矩阵（296）+ FM-P3 六角部署注入（297）+ FM-P4 六角变阵状态机（301）+ 战报解释 UI（302）+ 浏览器内容链验收（303）完成**。
 > **范围**：S10 战斗系统 / P3-05 阵型联动的 0-A 规模切片。
 > **会话**：279（2026-08-01 计划）；287（启动 + FM-P0）；288（N1/D + 批准 + FM-P1）；289（FM-P2）；290（FM-P3 crit + melee 注入）；291（FM-P3a 标准模式点值迁移）；292（FM-P3 自动战斗阵型贡献）；295（FM-P3 六角战斗阵型贡献）；296（FM-P3 标准模式战术协同矩阵）；297（FM-P3 六角部署注入）。
 > **启动条件**：原设定优先（Gate A）与启动实施（Gate I）均已明确；Gate M/N1/D 已通过，FM-P1/P2/P3(crit+melee)+P3a(点值迁移)+P3(自动/六角阵型贡献+标准战术矩阵+六角部署注入) 落地；**三模式点值同源消费 + 标准战术协同矩阵 + 六角多 unit 初始部署闭环**。下一步为六角战中变阵状态机评审或 FM-P4。
@@ -248,17 +248,17 @@ interface FormationDeployment {
 
 1. 战役层已选阵型继承到局部交战，不再赠送第二次免费覆盖。
 2. 标准模式变阵固定消耗 **1 战术点**，提交后推进并结算一个白刃回合。
-   六角模式若在 FM-P3 评审后保留战中变阵，同样消耗 1 TP 且每回合至多一次，但只消耗/推进
-   `battle.ts` 自身的行动或战术阶段，绝不调用 `runMeleeRound` 或结算白刃回合；具体允许阶段由 FM-P3 状态机评审冻结。
+   六角模式同样消耗 1 TP 且每回合至多一次，只消耗 `battle.ts` 自身的主将行动，不调用
+   `runMeleeRound` 或结算白刃回合；状态机已冻结为玩家阶段、主将未行动时可用。
    “布划”的百分比成本缩减不得折算为 0 TP。
 3. 每回合基础获得 5 战术点；主将智力 ≥80 追加 1；上限 10。
 4. “整顿”目标语义仍为 2 TP、士气 +10、疲劳 -15；当前引擎遗漏疲劳写回，列入 FM-P3
    原设定清债，不得改为恢复新字段。
 5. 变阵需同时通过武将精通、兵种、地形、特殊条件、当前阶段、未被围和“本回合尚未变阵”
    校验；本切片六阵没有被围例外。非法操作必须原子拒绝且不消费 RNG。
-6. 六角模式必须沿用同一服务端合法性、1 TP 和每回合一次门禁；具体允许阶段及
-   `battle.ts` 内的行动消耗由 FM-P3 状态机接入评审决定，不能在客户端自定规则、只靠按钮禁用，
-   或借道白刃回合引擎。
+6. 六角模式沿用同一服务端合法性、1 TP 和每回合一次门禁；服务端在玩家阶段检查主将未行动，
+   成功后同步攻方存活 BattleUnit 阵型并结束主将行动。客户端不能自定规则或只靠按钮禁用，
+   也不能借道白刃回合引擎。
 
 `布阵` 与 `布划` 的原职责在实施前冻结：
 
@@ -488,7 +488,7 @@ explainFormationResolution(resolution): FormationBreakdown[];
 | 战役层自动战斗/强攻 | `runAutoBattle` | **✅ Session 292 已接入**：`formationMod` 由 `autoFormationMods` 生成（攻防点值 ×0.1 合并战力修正 + 五部侧击 +10%，组织度执行档只缩放正面增量、负修正原值保留）；守城无 Army 时守方无阵型贡献（城墙惩罚表达守势） | 不改造成白刃逐回合伤害；`mobility/range` 点值不参与自动战力 |
 | 局部“自动结算”入口 | ✅ Session 290 已复用 `runAutoBattle` | 从同一 Melee/Army 快照读取阵型贡献并一次结算 | 已完成：不再保留旧漂移，不另造自动伤害公式 |
 | 标准模式 | `runMeleeRound` | **✅ Session 291 点值迁移 + Session 296 战术协同矩阵**：阵型贡献（`tiers[0]` 点值经等价性换算）+ 组织度执行档；战术姿态 `MeleeState.tactic?`（assault/hold/ambush，持久字段，白刃面板可设、不耗 TP）经 TacticalConfig v2 消费——T_base 修正 + synergy 对敌阵（克 1.1 / 中性 1.0，0-A 无 0.9 触发源）；1 TP 变阵合法性既有。战报解释 UI 仍后置（FM-P4） | 不增加第二次免费选阵 |
-| 六角微操 | `battle.ts` 与战术阶段协议 | **✅ Session 295 阵型贡献 + Session 297 部署注入**：`hexFormationMods` 把 `tiers[0]` 点值按六角公式量纲投影（攻×2 进 baseAttack / 防×2.5 进 baseDefense，负原值保留，orderly 中性），`CampaignArmy.squads` 按 `projectHexDeployment` 生成多个 BattleUnit；普攻、战法、火计、AI 与灼烧按整方存活 unit 判定终局 | 不在客户端自算结果；⏳ 六角变阵合法性/阶段门禁与战报解释 UI 留 FM-P4 |
+| 六角微操 | `battle.ts` 与战术阶段协议 | **✅ Session 295 阵型贡献 + Session 297 部署注入 + Session 301 变阵状态机 + Session 302/303 战报与浏览器链**：`hexFormationMods` 把 `tiers[0]` 点值按六角公式量纲投影（攻×2 进 baseAttack / 防×2.5 进 baseDefense，负原值保留，orderly 中性），`CampaignArmy.squads` 按 `projectHexDeployment` 生成多个 BattleUnit；普攻、战法、火计、AI 与灼烧按整方存活 unit 判定终局；变阵每回合一次、消耗 1 TP、主将未行动时生效并同步攻方存活部队；`BattleReport` 展示变阵/攻击结构化解释，浏览器链已实测 | 不在客户端自算结果；⏳ 存档/读档验收留后续 |
 
 三种玩家入口不等于三套新伤害引擎。它们仍可能因操作粒度不同产生不同最终战果；“同源”
 指同一输入下阵型合法性、属性贡献和解释一致，不要求自动、白刃与六角输出相同伤亡。
@@ -503,6 +503,9 @@ explainFormationResolution(resolution): FormationBreakdown[];
   `MeleeState.commandCache` 提供动作级幂等；战后 `settlementApplied` 仍负责结果回写幂等。
 - 若六角模式需要变阵入口，优先接入既有战斗命令编排并采用同一 command/version 契约，
   不建立重复的“阵法服务”。
+- **Session 301 已实装**：六角变阵使用 `POST /api/game/battle/formation`，请求 `{ unitId, targetFormation }`；
+  服务端消费 `BattleState.tacticalPoints/tacticalPointsUsed` 与 `BattleUnit.hasActed`，成功后写入
+  `actionHistory.kind=formation`，不改变白刃 `MeleeState.round`。
 - 服务端按当前权威状态重新验证精通、兵种、地形、TP、阶段与目标 ID。
 - 非法命令原子失败：状态、TP、回合、操作历史和 RNG 游标均不变化。
 - 合法变阵一次事务完成扣 TP、写阵型、写去重记录、推进回合和日志。
@@ -731,4 +734,9 @@ Zod 先行规则。
 
 ---
 
-*v1.0 | 2026-08-01 | Session 279 · 原设定优先评审稿；仅计划，实施未启动*
+### Session 302 收口
+
+FM-P4 战报解释 UI 已完成：结构化日志解释字段兼容旧档；六角变阵写入 TP 与前后阵型，攻击写入攻守阵型
+贡献；客户端展示最近六条战报和合法性阻断原因，服务端仍是唯一计算源。
+
+*v1.1 | 2026-08-03 | Session 302 · FM-P4 战报解释 UI*

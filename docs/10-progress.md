@@ -1,11 +1,55 @@
 # 开发进度跟踪
 
+## 2026-08-03 — Session 305 · S10 敌军主动兵种战法切片
+
+> **范围**：继续 S10 六角战斗深化；不新增字段、数据规模或独立规则系统。
+
+- `server/src/battle/simpleAi.ts`：敌军在目标进入 1~2 格白刃范围时，读取当前兵种 `leveled`
+  战法和武将兵种适性，选择可负担的最高层级；成功施放后按既有 `calcDamage`、阵型贡献和
+  权威 RNG 结算，扣除对应气力、结束该部队行动并保留状态效果。命中失败只消费气力，不追加普攻；
+  `proficiency` 特殊战法、多目标范围展开暂不接入。
+- 验证脚本 `verify-tactical-ai` 从 6 项增至 **9/9**，覆盖适性门禁、战法气力消费和状态效果；
+  `verify-battle-rng` **5/5**、`verify-save-battle` **26/26**、server typecheck 全绿。
+- **诚实边界**：本轮未实现敌军主动单挑、阵型切换、协同包围、撤退和全局 P5-01 AI。
+- **Next**：继续 S10 主动单挑深化，或由用户改拍 FM-P4 存档/读档验收；不启动 0-B。
+
+## 2026-08-03 — Session 303（FM-P4 浏览器变阵→攻击→战报链收口）
+
+> **范围**：补齐 FM-P4 的浏览器实际操作验收，不扩数据规模、不新增规则或客户端计算。
+
+- `scripts/verify-fm4-report-ui.mjs` 通过 CDP 真实鼠标事件完成进入六角战场、选择我军、变阵、结束行动、移动与攻击；按当前可用阵型验证战报同时出现变阵 TP/阵型解释与攻击阵型贡献。
+- `BattleView` 补充 `btn-select-attacker`、`btn-finish-player` 验收定位标识；仅测试挂点，无行为变化。
+- 验证：浏览器链通过，Chrome 1440×900、console errors=0；`verify-fm4-hex-formation` **11/11**；shared **377** / client **43**；typecheck、test、build 全绿。
+- **Next**：FM-P4 浏览器内容链已收口；下一项由用户拍板进入 S10 主动战法/主动单挑深化，或继续 FM-P4 存档/读档验收。
+
+## 2026-08-03 — Session 302（FM-P4 六角战报解释 UI）
+
+> **范围**：完成六角战中变阵后的战报解释 UI，不扩数据规模、不新增规则或客户端计算。
+
+- `BattleLogEntry.explanation?`：旧日志兼容的可选结构化字段；变阵写入 TP 前后值与阵型前后值，攻击写入攻守
+  阵型及六角 `baseAttack/baseDefense` 阵型贡献。
+- `BattleReport`：展示最近六条战报、变阵 TP/阵型变化、攻击阵型贡献；服务端合法性错误展示为阻断原因。
+- 验证：typecheck、lint、build、shared 377/client 43、`verify-fm4-hex-formation` **11/11**；Chrome
+  1440×900 实测进入六角战场后战报面板出现，`consoleErrors=0`。
+- **诚实边界**：本轮未新增浏览器攻击/变阵动作链；已有 UI 专项因 headless 指针事件未命中路径摘要而未作为本轮通过依据。
+- **Next**：FM-P4 补完整浏览器变阵→攻击→战报内容链，或由用户拍板进入下一项 S10 战斗深化。
+
 ## 状态标识
 
 - `[ ]` To Do — 未开始
 - `[~]` WIP — 进行中
 - `[x]` Done — 已完成
 - `[!]` Blocked — 被阻塞
+
+## 2026-08-03 — Session 301（FM-P4 六角战中变阵状态机）
+
+> **范围**：实现六角战中变阵最小闭环；每回合每方至多一次、消耗 1 TP、仅玩家阶段主将未行动时可用，变阵后结束主将行动，不调用白刃回合。
+
+- **状态**：`BattleState` 新增可选 `tacticalPoints/tacticalPointsUsed`（旧档缺省兼容）；新回合补充 5 TP，智力 ≥80 额外 +1，上限 10；变阵动作写入 `actionHistory`。
+- **引擎**：新增 `changeBattleFormation`；复用 `getAvailableFormations` 检查精通、兵种、被围与当前阶段；成功后同步攻方存活 `BattleUnit.formation`，主将 `hasActed=true`。
+- **API/UI**：新增 `POST /api/game/battle/formation`；六角战斗底部新增变阵入口和六基础阵型选择器，客户端只作入口/状态展示，服务端权威拒绝非法请求。
+- **结算**：退出六角战时将实际攻方阵型写回 `MeleeState.attackerFormation`，保持战报和一次性结算一致。
+- **验证**：`verify-fm4-hex-formation` **9/9**；typecheck、共享/客户端单测与构建已通过。
 
 ## 2026-08-03 — Session 300（版权、Git 历史与 Agent 留存合规清理）
 
@@ -3508,3 +3552,143 @@
 - **Next**：继续处理用户指定的 UI/标签一致性问题；S10 六角变阵仍后置。
 
 *v15.86 | 2026-08-02 | Session 299 · 武将关系页签归并*
+
+## 2026-08-03 — Session 304 · FM-P4 战报解释保持变阵上下文
+
+- Phase：**S10 / S21 六角战报 UI 收口**；不新增系统、规则、Schema、API 或数据规模。
+- 修复：`BattleReport` 原本只显示最近六条日志；变阵后经敌军回合与攻击日志滚动时，玩家可能看不到
+  变阵前后阵型与 TP 解释。现固定保留最近一次 `formation` 结构化日志，同时保留最近六条普通战报，服务端
+  仍是解释唯一来源，旧纯文本日志继续兼容。
+- 验证：typecheck/lint、shared **377** + client **43**、validate-data、build 全绿；真实 Chrome 1440×900
+  以 CDP 物理鼠标事件完成选择我军→变阵→结束行动→移动→攻击，面板同时出现“变阵：”与“阵型贡献：”，
+  console errors=0。
+- **Next**：保持 S10；进入主动战法/主动单挑深化或 FM-P4 存档/读档验收，需先明确主线。
+
+*v15.87 | 2026-08-03 | Session 304 · FM-P4 战报解释保持变阵上下文*
+
+## 2026-08-03 — Session 306 · FM-P4 战斗快照存档往返验收
+
+- Phase：**S10 / S21 FM-P4 存档契约收口**；不新增玩法系统、规则数值或数据规模。
+- 新增 `verify-fm4-hex-formation` 的 JSON 往返验收：变阵后的 TP、前后阵型、结构化战报 TP
+  解释序列化后重新经 `GameStateBattleSchema` 解析，均保持一致；专项断言 **14/14**。
+- 既有回归：`verify-save-battle` **26/26**、`verify-tactical-ai` **9/9**；shared build 通过。
+- 文档：同步 `docs/03-data-models.md`、`docs/05-combat-system.md`，明确新增字段的存档边界与旧档兼容。
+- 边界：本轮仅强化验收，没有宣称完整读档 UI、敌军主动单挑或特殊战法范围效果已完成。
+- **Next**：保持 S10；继续主动单挑深化，或补真实存档 UI 的浏览器保存/恢复链。
+
+*v15.88 | 2026-08-03 | Session 306 · FM-P4 战斗快照存档往返验收*
+
+## 2026-08-03 — Session 307 · S10 六角敌军主动单挑切片
+
+- Phase：**S10 战斗深化**；继续同一大系统，不扩 0-B、数据规模或并列系统。
+- 实装：敌军回合在相邻敌我主将均存活、士气满足六角门禁且敌军气力足够时，使用共享
+  `duelTriggerChance`（基础 8% + 勇猛/士气差）进行主动单挑判定；成功后复用既有
+  `DuelState`、`createDuel`、权威 RNG、四倾向默认 `delegate` 和既有结算链，先推进一回合，
+  UI 可继续使用已有 DuelPanel 观看/跳过。敌军被拒绝时只写战报并继续普通战术 AI。
+- 存档/API/UI：不新增字段、不改端点和数据规模；沿用现有 `BattleState.duel` 可选快照。
+- 验证：server typecheck、shared build、`verify-tactical-ai` **9/9**、`verify-save-battle` **30/30** 通过；新增真实
+  `BattleState` 主动单挑入口、首回合推进、20 气力扣除和严格 Schema 断言。
+- 边界：尚未完成 `proficiency` 特殊战法、范围战法多目标展开、敌军变阵/协同包围/撤退；
+  本轮不宣称 P5-01 全局 AI，也未宣称特殊战法范围效果完成。
+- Session 308 补充真实 Chrome 验收：`scripts/verify-s10-enemy-duel-ui.mjs` 走通“推进相邻→结束行动→敌军主动单挑→DuelPanel 跳过→结算”，退出码 0、console errors=0。脚本仅在移动范围刷新竞态时回退到同一权威移动 API，不改生产规则。
+- **Next**：保持 S10，继续特殊兵种战法/多目标范围效果，或补真实存档 UI 保存/恢复链。
+
+*v15.90 | 2026-08-03 | Session 308 · S10 敌军主动单挑浏览器验收*
+
+## 2026-08-03 — Session 309 · S10 特殊兵种战法与 AOE 多目标切片
+
+- Phase：**S10 战斗深化**；继续同一大系统，不扩 0-B 数据规模或并列系统。
+- 实装：`castAbility` 与敌军六角 AI 接通 `proficiency` 战法；当前 0-A 以武将对应兵种适性
+  C/B/A/S 作为 `basePower→maxPower` 线性代理，使用静态 `energyCost`，兼容未来真实特殊兵种数据。
+- 范围效果：`aoe` 以选定目标为中心展开 1 格，同阵营敌军主目标全额、邻格目标 50% 溅射；
+ 共享气力、命中、状态效果及整方存活判定，战报标记“波及 N 队”。既有客户端战法按钮和服务端
+ 端点无需新增字段/端点，仍复用当前 UI。
+- 边界：正式“使用次数→熟练度”字段、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成；
+ 这不是 P5-01 全局 AI 完成。
+- 验证：server typecheck、shared build、`pnpm validate-data`、`pnpm verify-tactical-ai` **13/13**。
+- **Next**：补真实存档 UI 保存/恢复链，或待用户批准后设计正式特殊兵种使用次数熟练度。
+
+*v15.91 | 2026-08-03 | Session 309 · S10 特殊兵种战法与 AOE 多目标切片*
+
+## 2026-08-03 — Session 310 · S16 浏览器 JSON 存档导入/导出
+
+- Phase：**S16 / FM-P4 存档 UI 文件层**；不扩 0-B 数据规模，不新增并列大系统。
+- 实装：服务端新增 `GET /api/game/save/export` 与 `POST /api/game/save/import`。导出完整 `SaveEnvelopeV1`（含权威 `xorshift32-v1` 状态），导入复用现有版本迁移、剧本事件层兼容检查、完整 `GameStateSchema` 与 RNG 恢复；客户端顶部新增真实“导出存档/导入存档”按钮。
+- 传输边界：0-A 完整快照超过原 64KB 请求上限，Express JSON 上限调整为 2MB；仅放宽载荷大小，未放宽存档校验。仍未实现 SQLite/XDG 多槽位。
+- 验证：shared **377/377**、client **43/43**、shared/server/client typecheck；真实 Headless Chrome 点击导出按钮，再通过文件输入导入，回合推进到第 3 月后恢复为第 1 月，按钮与恢复链通过。
+- **Next**：保持 S10；待用户批准后设计正式特殊兵种使用次数熟练度，或继续 S16 XDG/SQLite 存档层。
+
+*v15.92 | 2026-08-03 | Session 310 · S16 浏览器 JSON 存档导入/导出*
+
+## 2026-08-03 — Session 311 · S16 XDG 命名槽位服务端
+
+- Phase：**S16 / P5-07b 存档落盘**；继续既有存档系统，不扩 0-B 数据规模、不新增并列大系统。
+- 实装：新增 `GET /api/game/save/slots`、`POST /api/game/save/slots/:slot`、`POST /api/game/save/slots/:slot/load`；服务端按 XDG 约定写入 `$XDG_DATA_HOME/leh/saves/`，未设置时回退 `~/.local/share/leh/saves/`。
+- 安全/一致性：槽位名严格白名单；保存先写同目录临时文件再原子替换；读取限制 2MB；读取仍复用现有存档迁移、剧本兼容、完整 `GameStateSchema` 与 RNG 恢复。
+- 边界：本轮没有新增 GameState 字段、规则、RNG 或数据规模；顶部栏仍为浏览器文件导入/导出，系统菜单槽位 UI、SQLite、多用户/云同步留后续。
+- 验证：server typecheck、shared build、`verify-save-slots` **4/4**（保存文件、原子写入结果、读取恢复、列表与非法槽位拒绝）。
+- **Next**：保持 S10；待用户批准后设计正式特殊兵种使用次数熟练度，或继续 S16 系统菜单槽位 UI/SQLite。
+
+*v15.93 | 2026-08-03 | Session 311 · S16 XDG 命名槽位服务端*
+
+## 2026-08-03 — Session 312 · S16 XDG 槽位系统菜单 UI
+
+- Phase：**S16 / P5-07b 存档 UI 收口**；继续既有存档系统，不扩 0-B 数据规模、不新增并列大系统。
+- 实装：顶部新增“槽位存档”面板，接通槽位列表、1~32 位安全名称、保存、覆盖确认、读取确认与列表刷新；读取后依据服务端权威状态重建 world/battlefield/melee/battle 场景栈。
+- 边界：复用 Session 311 XDG 文件服务与 `SaveEnvelopeV1` 迁移/Schema/RNG 校验，不新增 GameState 字段、规则、RNG、SQLite、多用户或云同步。
+- 验证：client/server typecheck、`git diff --check`；真实 Chrome `verify-s16-save-slots-ui` 通过：面板打开、保存槽位、读取槽位、恢复 190 年 1 月状态，console errors=0。
+- **Next**：保持 S10；待用户批准后设计正式特殊兵种使用次数熟练度，或继续 S16 SQLite。
+
+*v15.94 | 2026-08-03 | Session 312 · S16 XDG 槽位系统菜单 UI*
+
+## 2026-08-03 — Session 313 · S10 战场退出残帧修复
+
+- Phase：**S10 / S21 战场回环修复**；不新增系统、规则、数据规模或存档字段。
+- 根因：Tier I/Tier II 战场级退出依赖旧 `sceneStack` 的 `popToScene('world')`；重复进入或读档后栈可能含多个 world/battlefield 帧，退出后残留旧战场上下文。
+- 修复：`battlefieldExit` 与 `exitNanjunBattlefield` 统一 `replaceStack({ scene: 'world' })`，并清理客户端 `battlefield/battle/melee` 瞬态；服务端权威结算端点不变。新增场景栈脏帧回归断言与真实浏览器脚本。
+- 验证：真实 Chrome `verify-bf-exit-regression` 同时通过 Tier I/Tier II 进入→退出→回大地图，console errors=0；shared **378/378**、client/server typecheck、`git diff --check` 通过。
+- **Next**：继续 S10 战斗深化或按用户指定修复项推进。
+
+*v15.95 | 2026-08-03 | Session 313 · S10 战场退出残帧修复*
+
+## 2026-08-03 — Session 314 · S10 敌军战法效果同源修复
+
+- Phase：**S10 战斗深化**；继续同一大系统，不扩 0-B、不新增字段/API/RNG/数据规模。
+- 修复：抽出 `server/src/battle/special-effects.ts` 的共享 `applySpecialEffect`，玩家
+  `castAbility` 与敌军 `runSimpleEnemyAi` 共用战法状态映射；敌军 `fire` 不再错误写入
+  `fire`，而是与玩家一致写入 `burn`（并保持眩晕/击退/混乱/冲锋等映射）。敌军 `morale`
+  降士气也与玩家一致改为 `floor(伤害×0.1)`，不再固定扣10。
+- 文档：同步 `docs/05-combat-system.md` §18.1.1、根目录 `HANDOFF.md`。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **14/14**；新增断言覆盖敌军
+  fire→burn。完整战斗/存档回归待继续收口。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+- **Next**：保持 S10；可继续战法效果/敌军 AI 回归，或待用户批准后设计正式特殊兵种使用次数熟练度。
+
+*v15.96 | 2026-08-03 | Session 314 · S10 敌军战法效果同源修复*
+
+## 2026-08-03 — Session 315 · S10 敌军 proficiency 适性门禁修复
+
+- Phase：**S10 战斗深化**；继续同一大系统，不扩 0-B、不新增字段/API/RNG/数据规模。
+- 修复：敌军 AI 选择 `proficiency` 战法前增加适性门禁；`NONE` 直接不可用，避免构造
+  Lv0 战法并施放。该路径现在与玩家 `castAbility` 的 `maxLevel===0` 校验一致；无适性时
+  回退普通移动/攻击。
+- 文档：同步 `docs/05-combat-system.md` §18.1.1、根目录 `HANDOFF.md`。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **16/16**；新增断言覆盖 NONE
+  适性不会施放战法或产生战法状态。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+- **Next**：保持 S10；继续战法/敌军 AI 一致性回归，或待用户批准后设计正式特殊兵种使用次数熟练度。
+
+*v15.97 | 2026-08-03 | Session 315 · S10 敌军 proficiency 适性门禁修复*
+
+## 2026-08-03 — Session 316 · S10 敌军战法 RNG 顺序修复
+
+- Phase：**S10 战斗深化**；继续同一大系统，不扩 0-B、不新增字段/API/RNG/数据规模。
+- 修复：敌军 AI 的战法执行现在先判命中，命中后再计算 `calcDamage` 与伤害浮动；失手
+  只消费命中 RNG，不再提前消费伤害 RNG，与玩家 `castAbility` 的权威顺序一致。
+- 文档：同步 `docs/05-combat-system.md` §18.1.1、根目录 `HANDOFF.md`。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **18/18**；新增失手 RNG 消费
+  断言，完整战斗/存档回归待继续收口。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+- **Next**：保持 S10；继续权威 RNG/战法一致性回归，或待用户批准后设计正式特殊兵种使用次数熟练度。
+
+*v15.98 | 2026-08-03 | Session 316 · S10 敌军战法 RNG 顺序修复*

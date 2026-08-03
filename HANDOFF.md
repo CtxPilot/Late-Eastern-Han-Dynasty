@@ -9,12 +9,116 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 300 收口**（版权/Agent 留存合规清理；Session 299 关系页签归并与 Session 298 战场退出修复保持） |
+| 会话 | **Session 316 收口**（S10 敌军战法 RNG 顺序修复；S16 槽位 UI 保持） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 300：移除商业作品参考表述，补齐 4 个 SPDX 标识；Session 299 `OfficerDetail` 关系页签归并、Session 298 战场退出修复与 Session 297 六角闭环保持 |
-| 文档最新 | 版权资产台账/进度与 Agent 留存门禁同步；Git 历史完成商业名称与疑似品牌截图清洗 |
-| 本交接用途 | 六角初始部署与多 unit 运行时闭环；三模式点值同源、标准战术矩阵仍保持；变阵状态机与战报解释 UI 后置 |
-| 下一步 | 六角战中变阵状态机评审（TP/阶段/每回合一次门禁），或继续处理用户指定的 UI 一致性问题。**未提交提醒**：Session 295~300 改动均在 working tree 未 commit；历史重写后需用户确认远端强制更新 |
+| 代码最新 | Session 316：敌军战法先判命中、后算伤害，修复失手额外消费伤害 RNG；Session 315 适性门禁、Session 314 效果同源、Session 313 战场退出及 S16 槽位 UI 保持 |
+| 文档最新 | `05`/`10-progress` 与本交接已同步战法 RNG 顺序修复；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
+| 本交接用途 | 六角初始部署、多 unit、变阵状态机、战报解释 UI、浏览器变阵→攻击链及敌军 leveled 兵种战法已闭环；三模式点值同源、标准战术矩阵仍保持 |
+| 下一步 | 保持 S10；可待用户批准后设计正式特殊兵种使用次数熟练度，或继续 S16 SQLite；**未提交提醒**：Session 301~316 改动尚未 commit |
+
+### Session 316 交接要点
+
+- 修复敌军 `proficiency/leveled` 战法 RNG 顺序：先消费命中判定，命中后才进入 `calcDamage` 与伤害浮动；失手不再提前消费伤害 RNG，与玩家 `castAbility` 路径一致。
+- 不改变战法伤害、气力、效果、字段或数据规模；仅修正权威 RNG 消费顺序。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **18/18**；完整战斗/存档回归待本轮收口后复跑。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 315 交接要点
+
+- 修复敌军 `runSimpleEnemyAi`：`proficiency` 战法候选现在先检查当前兵种适性，`NONE` 直接不可用；与玩家 `castAbility` 的 `maxLevel===0` 门禁一致。
+- 不新增 BattleState 字段、API、RNG 或数据规模；无适性敌军回退普通攻击/移动逻辑。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **16/16**；`verify-save-battle` **30/30**，shared **378/378**。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 314 交接要点
+
+- 修复 S10 六角敌军 AI 与玩家 `castAbility` 的战法效果分叉：抽出共享 `applySpecialEffect`，确保 `fire` 统一写入 `burn`，并保持眩晕/击退/混乱/冲锋等状态映射一致。
+- 敌军 `morale` 战法降士气改为与玩家路径一致的 `floor(伤害×0.1)`；不新增 BattleState 字段、API、RNG 或数据规模。
+- 验证：shared build、server typecheck、`verify-tactical-ai` **14/14**；完整战斗/存档回归待本轮收口后复跑。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 313 交接要点
+
+- 修复 Tier I `撤兵` 与 Tier II `退出战场`：不再从可能污染的旧 `sceneStack` 中 `popToScene`，而是强制重建唯一 `[world]` 根栈。
+- 同步清理前端 `battlefield/battle/melee` 瞬态，服务端退出端点与战斗规则不变。
+- 验证：真实 Chrome `verify-bf-exit-regression` 同时走通 Tier I、Tier II 进入→退出→回大地图，console errors=0；shared 378/378、typecheck、diff-check 通过。
+
+### Session 312 交接要点
+
+- S16 系统菜单槽位 UI 已实装：顶部“槽位存档”打开面板，支持安全槽位名、列表刷新、保存、覆盖确认和读取确认。
+- 读取后按服务端权威状态重建 world/battlefield/melee/battle 场景栈；不新增 GameState 字段、规则、RNG 或数据规模。
+- 验证：client/server typecheck；真实 Chrome `verify-s16-save-slots-ui` 通过（面板、保存、读取、190年1月恢复、console errors=0）。
+- 边界：SQLite、多用户/云同步仍未实装。
+
+### Session 311 交接要点
+
+- S16 XDG 服务端槽位已实装：`GET /api/game/save/slots`、`POST /api/game/save/slots/:slot`、`POST /api/game/save/slots/:slot/load`。
+- 文件目录为 `$XDG_DATA_HOME/leh/saves/`，未设置时回退 `~/.local/share/leh/saves/`；槽位名限制 1~32 位安全字符，保存先写同目录临时文件再原子 rename，读取限制 2MB。
+- 槽位读取统一复用浏览器导入的 `migrateSaveEnvelopeToCurrent`、剧本兼容、`GameStateSchema` 和 RNG 恢复；无新 GameState 字段、规则、数据规模。
+- 验证：server typecheck、shared build、`verify-save-slots` **4/4**；尚未实现系统菜单槽位 UI、SQLite、多用户/云同步。
+
+### Session 310 交接要点
+
+- S16 浏览器文件存档已实装：`GET /api/game/save/export` 返回完整 `SaveEnvelopeV1`（含权威 RNG），`POST /api/game/save/import` 复用现有迁移、剧本兼容检查、完整 `GameStateSchema` 和 RNG 恢复。
+- 顶部栏新增“导出存档/导入存档”；导出为 `leh-YYYY-MM.json` 下载，导入为用户选择的 JSON 文件。完整 0-A 快照已将 Express JSON 请求上限从 64KB 调至 2MB，内容校验不放宽。
+- 边界：仅浏览器文件层，不是 SQLite/XDG 多槽位；不进入 0-B，也未新增 GameState 字段。
+- 验证：shared 377/client 43 tests、三端 typecheck/lint；真实 Headless Chrome 点击导出按钮、选择并触发导入文件，月份从 3 恢复到 1，按钮与恢复链通过。
+
+### Session 309 交接要点
+
+- `castAbility` 与敌军六角 AI 现在都支持 `proficiency` 战法：0-A 暂以当前兵种适性 C/B/A/S
+  作为 `basePower→maxPower` 线性代理，消耗静态 `energyCost`，不新增字段或数据规模。
+- `aoe` 以目标为中心展开 1 格范围，主目标全额、邻格敌军 50% 溅射，状态效果和整方存活判定保持同一结算链。
+- 真实 0-B 特殊兵种数据和正式使用次数熟练度仍未落库；不宣称特殊兵种全量或 P5-01 全局 AI 完成。
+- 验证：server typecheck、shared build、validate-data、`verify-tactical-ai` **13/13**；未新增浏览器 UI，原因是既有战法按钮/战报链可复用。
+
+### Session 307 交接要点
+
+- 敌军回合新增主动单挑最小切片：从相邻敌我单位中稳定选择候选，使用共享 `duelTriggerChance`
+  （六角 8% 基础率 + 勇猛/士气差），通过 `canChallenge` 门禁后复用既有 `createDuel`、权威 RNG、
+  四倾向默认 `delegate` 和 `applyDuelOutcome`；首次回合立即推进，随后由已有 DuelPanel 观看/跳过。
+- 玩家侧沿用现有自动接受策略；拒绝时写战报并继续普通敌军 AI，不新增 BattleState 字段或数据规模。
+- 边界：`proficiency` 特殊战法、范围战法多目标、敌军变阵/包围/撤退仍未完成；不宣称 P5-01 全局 AI。
+- 验证：server typecheck、shared build、`verify-tactical-ai` **9/9**、`verify-save-battle` **30/30**；Session 308 已补真实 Chrome 敌军主动单挑物理点击链，`verify-s10-enemy-duel-ui` 退出码 0、console errors=0。
+
+### Session 306 交接要点
+
+- `verify-fm4-hex-formation` 现在会对变阵后的战斗切片执行 JSON 序列化/反序列化，再经
+  `GameStateBattleSchema` 恢复；TP、变阵前后阵型和战报 TP 解释均保持。
+- 验证：FM-P4 **14/14**、`verify-save-battle` **30/30**、`verify-tactical-ai` **9/9**、shared build 通过。
+- 边界：本轮为存档契约验收，不是完整存档 UI；主动单挑、多目标特殊战法仍未完成。
+
+### Session 305 交接要点
+
+- 敌军六角回合现在会在目标进入 1~2 格时读取兵种 `leveled` 战法，按兵种适性和气力选择最高可用层级。
+- 结算复用既有六角伤害、阵型点值与权威 RNG；成功施放会写伤害/状态效果并结束行动，失手只扣气力。
+- `verify-tactical-ai` 9/9、`verify-battle-rng` 5/5、`verify-save-battle` 26/26、server typecheck 通过。
+- `proficiency` 特殊战法、多目标范围展开、敌军主动单挑/变阵/包围/撤退仍未做，不宣称 P5-01 完成。
+
+### Session 304 交接要点
+
+- `BattleReport` 仍展示最近六条日志，但额外固定展示最近一次结构化 `formation` 解释；因此变阵后经过敌军回合和攻击，仍可见“变阵：前阵→后阵；TP 前→后”。
+- 真实 Chrome 1440×900 已再次完成选择我军→变阵→结束行动→移动→攻击；报告面板同时命中“变阵：”与“阵型贡献：”，console errors=0。
+- 验证：`verify-fm4-report-ui`、`verify-fm4-hex-formation` 11/11、typecheck/lint/test/build/validate-data 全绿。
+
+### Session 303 交接要点
+
+- `verify-fm4-report-ui` 使用 CDP `Input.dispatchMouseEvent`，读取当前页面实际可用阵型，兼容不同主将精通表。
+- 浏览器实际完成进入六角战场、选中我军、变阵、结束行动、逐步移动、攻击；面板同时显示“变阵：…”与“阵型贡献：…”，console errors=0。
+- 验证：`verify-fm4-hex-formation` 11/11；shared 377/client 43；typecheck/test/build 全绿。
+
+### Session 302 交接要点
+
+- `BattleState.log[]` 的可选 `explanation` 由服务端生成，旧存档/旧日志无需迁移；客户端不自行计算规则。
+- `BattleReport` testid 为 `battle-report`，阻断原因 testid 为 `battle-report-error`；当前面板展示最近六条记录。
+- 验证：`verify-fm4-hex-formation` 11/11；typecheck/lint/build；Chrome 1440×900 进入六角战场检查面板出现、console error=0。
+
+### Session 301 交接要点
+
+- **六角变阵状态机**：`BattleState` 维护 TP（初始 5，智力 ≥80 +1，上限 10）和本回合已用 TP；`POST /battle/formation` 服务端校验玩家阶段、主将未行动、1 TP、每回合一次、精通/兵种/被围条件。
+- **状态变更**：成功后同步攻方存活 `BattleUnit` 阵型，主将 `hasActed=true`、MP 清零，仍留在六角玩家阶段；敌军阶段完成后 TP 增长并重置门禁。
+- **结算/UI**：退出六角时将实际阵型写回 `MeleeState.attackerFormation`；`BattleView` 提供六基础阵型按钮，按钮仅展示服务端状态。
+- **验证**：`verify-fm4-hex-formation` 9/9；typecheck 已通过；完整测试、构建和浏览器实测待收口。
 
 ### Session 300 交接要点
 

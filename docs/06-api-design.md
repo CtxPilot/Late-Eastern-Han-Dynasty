@@ -74,7 +74,7 @@ POST   /api/v1/games/:id/load/:saveId
   Response: { gameState: GameState }
 ```
 
-> **实现状态（Session 157）**：以上三个存档 HTTP 端点仍是设计稿，当前不可调用。代码层已经具备严格 v1 信封、完整 `GameState` 校验、迁移分派、受锁内存恢复和 `xorshift32-v1` 状态恢复；尚未接入磁盘/SQLite、存档列表、正式 API 或前端 UI。
+> **实现状态（Session 311/312）**：浏览器文件层仍可用；另已实装 XDG 命名槽位：`GET /api/game/save/slots` 列表，`POST /api/game/save/slots/:slot` 保存到 `$XDG_DATA_HOME/leh/saves/`（未设置时为 `~/.local/share/leh/saves/`），`POST /api/game/save/slots/:slot/load` 读取并复用同一迁移、剧本兼容、完整 Schema 与 RNG 校验链。顶部系统菜单已接通槽位列表、保存/覆盖确认、读取确认及场景栈恢复。槽位名限制为 1~32 位字母/数字/`_`/`-`，写入采用临时文件原子替换；SQLite、多用户和云同步仍未实现。
 
 ### 2.2 内政
 

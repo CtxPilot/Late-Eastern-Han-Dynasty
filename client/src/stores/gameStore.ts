@@ -51,6 +51,9 @@ interface Store {
   usableAbilities: UsableAbility[];
 
   boot: () => Promise<void>;
+  importSave: (envelope: unknown) => Promise<void>;
+  saveToSlot: (slot: string) => Promise<void>;
+  loadFromSlot: (slot: string) => Promise<void>;
   startGame: (scenarioId: number, factionId: number, eventLayers: EventSourceClass[]) => Promise<void>;
   openScenarioSelect: () => void;
   selectCity: (id: number | null) => void;
@@ -124,6 +127,7 @@ interface Store {
   castAbility: (targetId: string, abilityId: string) => Promise<void>;
   loadAbilities: (unitId: string) => Promise<void>;
   finishPlayer: () => Promise<void>;
+  changeBattleFormation: (targetFormation: import('@leh/shared').FormationType) => Promise<void>;
   runEnemy: () => Promise<void>;
   exitBattle: () => Promise<void>;
   duelChallenge: (challengerUnitId: string, targetUnitId: string, stance: import('@leh/shared').DuelStance) => Promise<void>;
@@ -202,6 +206,16 @@ export const useGameStore = create<Store>((set, get) => ({
   grandStrategistLoading: false,
   clearError: () => set({ error: null }),
 
+  importSave: async (envelope) => {
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      const game = await api.importSave(envelope);
+      set({ game, battle: game.activeBattles[0] ?? null, loading: false, lastActionOk: '存档已恢复' });
+    } catch (e) {
+      set({ error: errMsg(e, '导入存档失败'), loading: false });
+    }
+  },
+
   pushSceneFrame: (frame) => set((s) => { const stack = pushScene(s.sceneStack, frame); return { sceneStack: stack, screen: screenOf(stack) }; }),
   popSceneFrame: () => set((s) => { const stack = popScene(s.sceneStack); return { sceneStack: stack, screen: screenOf(stack) }; }),
   popToSceneFrame: (scene) => set((s) => { const stack = popToScene(s.sceneStack, scene); return { sceneStack: stack, screen: screenOf(stack) }; }),
@@ -235,8 +249,9 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const game = await api.exitNanjunBattlefield();
-      const after = popToScene(get().sceneStack, 'world');
-      const worldStack = after.some((frame) => frame.scene === 'world') ? after : replaceStack({ scene: 'world' });
+      // 战场是从大地图进入的根级场景；退出必须丢弃所有历史瞬态帧。
+      // 只 popToScene 在重复进入/读档后可能保留旧 battlefield 残帧，导致再次退出回环。
+      const worldStack = replaceStack({ scene: 'world' });
       set({
         game,
         battlefieldInstance: null,
@@ -375,6 +390,43 @@ export const useGameStore = create<Store>((set, get) => ({
   },
 
   openScenarioSelect: () => set({ sceneStack: replaceStack({ scene: 'scenario' }), screen: 'scenario', error: null }),
+
+  saveToSlot: async (slot) => {
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      await api.saveToSlot(slot);
+      set({ loading: false, lastActionOk: `已保存至槽位「${slot}」` });
+    } catch (e) {
+      set({ error: errMsg(e, '保存槽位失败'), loading: false });
+      throw e;
+    }
+  },
+
+  loadFromSlot: async (slot) => {
+    set({ loading: true, error: null, lastActionOk: null });
+    try {
+      const game = await api.loadFromSlot(slot);
+      const activeBattle = await api.getActiveBattle();
+      const activeMelee = !activeBattle ? await api.getMelee() : null;
+      const activeBattlefield = !activeBattle && !activeMelee ? await api.getBattlefield() : null;
+      const activeBattlefieldInstance = !activeBattle && !activeMelee && !activeBattlefield
+        ? await api.getBattlefieldInstance()
+        : null;
+      const sceneStack = activeBattle
+        ? [{ scene: 'world' as const }, { scene: 'battle' as const, battleId: activeBattle.id }]
+        : activeMelee
+          ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeMelee.battlefieldId }, { scene: 'melee' as const, encounterId: `${activeMelee.attackerArmyId}:${activeMelee.defenderArmyId}` }]
+          : activeBattlefield
+            ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeBattlefield.id }]
+            : activeBattlefieldInstance
+              ? [{ scene: 'world' as const }, { scene: 'battlefield' as const, battlefieldId: activeBattlefieldInstance.id }]
+              : replaceStack({ scene: 'world' });
+      set({ game, battle: activeBattle, melee: activeMelee, battlefield: activeBattlefield, battlefieldInstance: activeBattlefieldInstance, sceneStack, screen: screenOf(sceneStack), loading: false, lastActionOk: `已读取槽位「${slot}」` });
+    } catch (e) {
+      set({ error: errMsg(e, '读取槽位失败'), loading: false });
+      throw e;
+    }
+  },
 
   selectCity: (id) => set({ selectedCityId: id, lastActionOk: null, error: null }),
 
@@ -935,6 +987,17 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  changeBattleFormation: async (targetFormation: import('@leh/shared').FormationType) => {
+    const unitId = get().selectedUnitId;
+    if (!unitId) return;
+    try {
+      const battle = await api.battleChangeFormation(unitId, targetFormation);
+      set({ battle, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
+    } catch (e) {
+      set({ error: errMsg(e, '变阵失败') });
+    }
+  },
+
   runEnemy: async () => {
     const battle = await api.battleEnemyPhase();
     set({ battle });
@@ -951,6 +1014,7 @@ export const useGameStore = create<Store>((set, get) => ({
         game,
         battle: null,
         melee: resolvedMelee,
+        battlefieldInstance: game.activeBattlefieldInstance ?? null,
         sceneStack: after,
         screen: resolvedMelee ? 'melee' : screenOf(after),
         selectedUnitId: null,
@@ -1093,10 +1157,8 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const game = await api.battlefieldExit();
-      // 退出必须同时回收瞬态场景栈；只改 screen 会留下 battlefield 残帧，
-      // 下一次从大地图进入战斗后撤军会错误落到空战场面板。
-      const after = popToScene(get().sceneStack, 'world');
-      const worldStack = after.some((frame) => frame.scene === 'world') ? after : replaceStack({ scene: 'world' });
+      // 退出必须同时回收瞬态场景栈；战场退出是根级回收，不能保留旧 battlefield 残帧。
+      const worldStack = replaceStack({ scene: 'world' });
       set({ game, battlefield: null, battlefieldInstance: game.activeBattlefieldInstance ?? null, melee: null, battle: null, sceneStack: worldStack, screen: 'world', loading: false });
     } catch (e) {
       set({ error: errMsg(e, '退出战场失败'), loading: false });

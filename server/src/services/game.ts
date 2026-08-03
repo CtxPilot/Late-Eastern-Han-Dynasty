@@ -16,6 +16,7 @@ import {
   maskGameStateForPlayer,
   meritLevelFor,
   parseCurrentSaveEnvelope,
+  CURRENT_SAVE_SCHEMA_VERSION,
   splitDemographics,
   syncMerit,
   deriveCityFactions,
@@ -50,6 +51,7 @@ import {
   attackUnit,
   castAbility,
   castFireTactic,
+  changeBattleFormation,
   challengeDuel,
   createBattle,
   finishPlayerAction,
@@ -124,6 +126,7 @@ import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
 import { grantNobility } from '../engine/nobility.js';
 import { broadcast } from '../ws/broadcast.js';
+import { listSaveSlots, readSaveSlot, writeSaveSlot, type SaveSlotMeta } from './save-store.js';
 import { getRuntimeRngState, resetRuntimeRng, restoreRuntimeRng, runtimeRandom } from '../runtime-rng.js';
 import { createDuel, DEFAULT_DUEL_CONFIG, runDuelToCompletion, stepDuel } from '../battle/duel.js';
 import { PlotType, SpyCaptiveAction, SpyMissionType, type BattlefieldDuelContext, type BattlefieldInstance, type BattlefieldMap, type CampaignArmy, type CampaignFormationOptions, type CampaignNode, type DuelStance, type MeleeEntryMode, type MeleeState, type PositionTrack, type StructureType, FIRST_BATCH_COUNTY_IDS, generateCommanderyBattlefield, getCommanderyIds, getCommanderyTemplate } from '@leh/shared';
@@ -346,6 +349,32 @@ function buildGameState(
 export function getGame(): GameState {
   if (!currentGame) throw new Error('尚无进行中的游戏');
   return currentGame;
+}
+
+/** 导出浏览器文件用的完整权威存档信封；不使用脱敏客户端投影。 */
+export function exportSaveEnvelope() {
+  const snapshot = getGame();
+  const now = new Date().toISOString();
+  return {
+    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+    createdAt: now,
+    updatedAt: now,
+    scenarioId: snapshot.scenarioId,
+    rng: getRuntimeRngState(),
+    snapshot,
+  } as const;
+}
+
+export function listDiskSaveSlots(): SaveSlotMeta[] {
+  return listSaveSlots();
+}
+
+export function saveGameToDisk(slot: string): SaveSlotMeta {
+  return writeSaveSlot(slot, exportSaveEnvelope());
+}
+
+export function loadGameFromDisk(slot: string): GameState {
+  return restoreGameFromEnvelope(readSaveSlot(slot));
 }
 
 /**
@@ -920,6 +949,16 @@ export function battleFinishPlayer(): BattleState {
   });
 }
 
+export function battleChangeFormation(unitId: string, targetFormation: import('@leh/shared').FormationType): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = changeBattleFormation(battle, unitId, targetFormation, getGame());
+    commitActiveBattle(nextBattle);
+    return nextBattle;
+  });
+}
+
 /** S10 §8 玩家发起单挑 */
 export function battleChallengeDuel(
   challengerUnitId: string,
@@ -995,7 +1034,7 @@ export function exitBattle(): GameState {
       && state.activeMelee.tacticalBattleId === battle.id
       ? state.activeMelee
       : null;
-    if (tacticalMelee) {
+  if (tacticalMelee) {
       if (battle.phase !== 'over') throw new Error('六角微操尚未结束，不能提前结算');
       const attackerTroops = battle.units
         .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
@@ -1009,6 +1048,7 @@ export function exitBattle(): GameState {
         defenderTroops,
         attackerMorale: battle.units.find((unit) => unit.side === 'attacker')?.morale ?? 0,
         defenderMorale: battle.units.find((unit) => unit.side === 'defender')?.morale ?? 0,
+        attackerFormation: battle.units.find((unit) => unit.side === 'attacker')?.formation ?? tacticalMelee.attackerFormation,
         phase: battle.winner === 'attacker' ? 'attacker_victory' : 'defender_victory',
         eventLog: [...tacticalMelee.eventLog, `六角微操结算：${battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
       };

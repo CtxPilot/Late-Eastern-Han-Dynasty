@@ -26,7 +26,9 @@ export function createApp(config: SecurityConfig = loadSecurityConfig()): Expres
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
-  app.use(express.json({ limit: '64kb', strict: true }));
+  // S16 浏览器导入包含完整 0-A GameState；传输上限只放宽请求体，内容仍由路由内
+  // 的 SaveEnvelope/GameStateSchema 严格校验，避免把“大”误当成“可信”。
+  app.use(express.json({ limit: '2mb', strict: true }));
   app.get('/health', (_req, res) => res.json({ ok: true }));
   app.use('/api/game', fixedWindowRateLimit(config), requireApiAuthorization(config), gameRouter);
   app.use(errorMiddleware);

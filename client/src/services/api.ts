@@ -102,6 +102,38 @@ export async function getGameState(): Promise<GameState> {
   return data;
 }
 
+export async function exportSave(): Promise<import('@leh/shared').SaveEnvelopeV1> {
+  const { data } = await http.get<import('@leh/shared').SaveEnvelopeV1>('/save/export');
+  return data;
+}
+
+export async function importSave(envelope: unknown): Promise<GameState> {
+  const { data } = await http.post<GameState>('/save/import', envelope);
+  return data;
+}
+
+export interface SaveSlotMeta {
+  slot: string;
+  updatedAt: string;
+  scenarioId: number;
+  sizeBytes: number;
+}
+
+export async function listSaveSlots(): Promise<SaveSlotMeta[]> {
+  const { data } = await http.get<{ slots?: SaveSlotMeta[] }>('/save/slots');
+  return data.slots ?? [];
+}
+
+export async function saveToSlot(slot: string): Promise<SaveSlotMeta> {
+  const { data } = await http.post<SaveSlotMeta>(`/save/slots/${encodeURIComponent(slot)}`);
+  return data;
+}
+
+export async function loadFromSlot(slot: string): Promise<GameState> {
+  const { data } = await http.post<GameState>(`/save/slots/${encodeURIComponent(slot)}/load`);
+  return data;
+}
+
 export async function endTurn(): Promise<GameState> {
   const { data } = await http.post<GameState>('/end-turn');
   return data;
@@ -477,6 +509,11 @@ export async function battleAbility(
 
 export async function battleFinishPlayer(): Promise<BattleState> {
   const { data } = await http.post<BattleState>('/battle/finish-player');
+  return data;
+}
+
+export async function battleChangeFormation(unitId: string, targetFormation: import('@leh/shared').FormationType): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/formation', { unitId, targetFormation });
   return data;
 }
 

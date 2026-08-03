@@ -179,14 +179,26 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
         terrain: z.array(z.array(z.nativeEnum(TerrainType))),
       })
       .strict(),
-    log: z.array(z.object({ turn: z.number().int().positive(), message: z.string() }).strict()),
+    log: z.array(z.object({
+      turn: z.number().int().positive(), message: z.string(),
+      explanation: z.object({
+        kind: z.enum(['attack', 'formation']),
+        attackerFormation: z.nativeEnum(FormationType).optional(), defenderFormation: z.nativeEnum(FormationType).optional(),
+        formationAttack: z.number().finite().optional(), formationDefense: z.number().finite().optional(),
+        tacticalPointsBefore: NonNegativeIntSchema.max(10).optional(), tacticalPointsAfter: NonNegativeIntSchema.max(10).optional(),
+        formationBefore: z.nativeEnum(FormationType).optional(), formationAfter: z.nativeEnum(FormationType).optional(),
+      }).strict().optional(),
+    }).strict()),
     actionHistory: z.array(z.object({
-      id: z.string().min(1), kind: z.enum(['move', 'attack']), unitId: z.string().min(1),
+      id: z.string().min(1), kind: z.enum(['move', 'attack', 'formation']), unitId: z.string().min(1),
       logicalTimestamp: NonNegativeIntSchema, source: z.enum(['player', 'ai', 'system']), reversible: z.boolean(),
       beforePosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(),
       afterPosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(), beforeMp: z.number().nonnegative().optional(),
+      beforeFormation: z.nativeEnum(FormationType).optional(), afterFormation: z.nativeEnum(FormationType).optional(),
     }).strict()).max(3).optional(),
     message: z.string(),
+    tacticalPoints: NonNegativeIntSchema.max(10).optional(),
+    tacticalPointsUsed: NonNegativeIntSchema.max(10).optional(),
     duel: DuelStateRuntimeSchema.nullable().optional(),
   })
   .strict()

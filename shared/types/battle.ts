@@ -45,11 +45,25 @@ export interface BattleUnit {
 export interface BattleLogEntry {
   turn: number;
   message: string;
+  /** FM-P4：供战报 UI 展示的可解释分项；旧存档可省略。 */
+  explanation?: BattleLogExplanation;
+}
+
+export interface BattleLogExplanation {
+  kind: 'attack' | 'formation';
+  attackerFormation?: FormationType;
+  defenderFormation?: FormationType;
+  formationAttack?: number;
+  formationDefense?: number;
+  tacticalPointsBefore?: number;
+  tacticalPointsAfter?: number;
+  formationBefore?: FormationType;
+  formationAfter?: FormationType;
 }
 
 export interface BattleActionRecord {
   id: string;
-  kind: 'move' | 'attack';
+  kind: 'move' | 'attack' | 'formation';
   unitId: string;
   logicalTimestamp: number;
   source: 'player' | 'ai' | 'system';
@@ -57,6 +71,8 @@ export interface BattleActionRecord {
   beforePosition?: HexCoord;
   afterPosition?: HexCoord;
   beforeMp?: number;
+  beforeFormation?: FormationType;
+  afterFormation?: FormationType;
 }
 
 export interface BattleState {
@@ -83,6 +99,10 @@ export interface BattleState {
   log: BattleLogEntry[];
   /** 最近三条玩家战术操作；移动在攻击/RNG 前可撤，攻击仅留审计且不可撤。 */
   actionHistory?: BattleActionRecord[];
+  /** 六角战中变阵资源；旧档缺省按 5 点、当回合已用 0 点兼容。 */
+  tacticalPoints?: number;
+  /** 当前回合已消耗的六角战术点；变阵后主将行动结束。 */
+  tacticalPointsUsed?: number;
   message: string;
   /** Active duel (S10 §8); while set, battle is paused until duel resolves. */
   duel?: DuelState | null;

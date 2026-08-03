@@ -17,7 +17,8 @@
     "verify-save-entities": "pnpm --filter @leh/server verify-save-entities",
     "verify-save-campaign": "pnpm --filter @leh/server verify-save-campaign",
   "verify-save-battle": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-battle",
-  "verify-fm3-hex-deployment": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-fm3-hex-formation.ts",
+    "verify-fm3-hex-deployment": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-fm3-hex-formation.ts",
+    "verify-fm4-hex-formation": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-fm4-hex-formation.ts",
     "verify-melee-modes": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-melee-modes.ts",
     "verify-save-battlefield-instance": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-battlefield-instance",
     "verify-historical-geography": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-historical-geography",
@@ -116,7 +117,12 @@
     "verify-session271-ui": "node scripts/verify-session271-ui.mjs",
     "verify-session272-ui": "node scripts/verify-session272-ui.mjs",
     "verify-session274-ui": "node scripts/verify-session274-ui.mjs",
-    "verify-session277-ui": "node scripts/verify-session277-ui.mjs"
+    "verify-session277-ui": "node scripts/verify-session277-ui.mjs",
+    "verify-fm4-report-ui": "node scripts/verify-fm4-report-ui.mjs",
+    "verify-s10-enemy-duel-ui": "node scripts/verify-s10-enemy-duel-ui.mjs",
+    "verify-save-slots": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-save-slots",
+    "verify-s16-save-slots-ui": "node scripts/verify-s16-save-slots-ui.mjs",
+    "verify-bf-exit-regression": "node scripts/verify-bf-exit-regression.mjs"
   },
   "engines": {
     "node": ">=20"
