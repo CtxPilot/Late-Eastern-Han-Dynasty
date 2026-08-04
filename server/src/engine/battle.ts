@@ -4,6 +4,7 @@
 import {
   FormationType,
   OfficerStatus,
+  Season,
   aristocracyDefenderMoralePenalty,
   armsCombatMultiplier,
   defenderMilitia,
@@ -40,6 +41,7 @@ import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
 import { hexFormationMods } from '../battle/hex-formation.js';
+import { effectiveMovement, effectiveUnitRange } from '../battle/weather.js';
 import { applySpecialEffect } from '../battle/special-effects.js';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
 import {
@@ -97,6 +99,37 @@ export interface CreateBattleOpts {
   /** 可选战役编成；缺省时保留 0-A 单位演示入口。 */
   attackerArmy?: CampaignArmy;
   defenderArmy?: CampaignArmy;
+}
+
+const WEATHER_CHANGE_MIN = 3;
+const WEATHER_CHANGE_MAX = 8;
+
+/** 05 §3.2：按季节概率抽取下一天气，排除当前天气以保证“切换”语义。 */
+function rollNextWeather(current: Weather, season: Season, rng: CritRng): Weather {
+  const weights: Array<[Weather, number]> = season === Season.WINTER
+    ? [[Weather.CLEAR, 55], [Weather.CLOUDY, 15], [Weather.FOG, 10], [Weather.SNOW, 20]]
+    : season === Season.SUMMER
+      ? [[Weather.CLEAR, 45], [Weather.CLOUDY, 15], [Weather.RAIN, 25], [Weather.STORM, 5], [Weather.FOG, 10]]
+      : [[Weather.CLEAR, 60], [Weather.CLOUDY, 15], [Weather.RAIN, 15], [Weather.FOG, 10]];
+  const candidates = weights.filter(([weather]) => weather !== current);
+  const total = candidates.reduce((sum, [, weight]) => sum + weight, 0);
+  let cursor = rng() * total;
+  for (const [weather, weight] of candidates) {
+    cursor -= weight;
+    if (cursor < 0) return weather;
+  }
+  return candidates.at(-1)![0];
+}
+
+function tickBattleWeather(battle: BattleState, season: Season, rng: CritRng): { weather: Weather; timer?: number; changed: boolean } {
+  if (battle.weatherChangeTimer == null) return { weather: battle.weather, changed: false };
+  const remaining = battle.weatherChangeTimer - 1;
+  if (remaining > 0) return { weather: battle.weather, timer: remaining, changed: false };
+  return {
+    weather: rollNextWeather(battle.weather, season, rng),
+    timer: WEATHER_CHANGE_MIN + Math.floor(rng() * (WEATHER_CHANGE_MAX - WEATHER_CHANGE_MIN + 1)),
+    changed: true,
+  };
 }
 
 function allocateTroops(squads: readonly CampaignSquad[], total: number): number[] {
@@ -320,6 +353,7 @@ export function createBattle(
     id: `battle-${cityId}-${Date.now()}`,
     turn: 1,
     weather: Weather.CLEAR,
+    weatherChangeTimer: WEATHER_CHANGE_MIN,
     attackerFaction: playerFaction,
     defenderFaction,
     isSiege: true,
@@ -509,8 +543,22 @@ export function attackUnit(
   const unitMap = getUnitByType();
   const atkT = unitMap[attacker.unitType];
   const defT = unitMap[defender.unitType];
+  if (!atkT || !defT) throw new Error('兵种数据缺失');
+  if (attacker.hasActed) throw new Error('该部队已行动');
+  if (attacker.isDestroyed || attacker.troopCount <= 0) throw new Error('部队已溃');
+  if (defender.isDestroyed || defender.troopCount <= 0) throw new Error('目标已溃');
   const weapon = attacker.unitType === UnitType.SPEARMAN ? 'spear' : attacker.unitType === UnitType.HEAVY_INFANTRY ? 'axe' : 'sword';
-  const targetCheck = checkMeleeTarget(attacker.position, attacker.facing ?? 0, defender.position, weapon);
+  const distance = hexDistance(attacker.position, defender.position);
+  if (atkT.range > 1) {
+    if (battle.weather === Weather.FOG) throw new Error('雾天远程兵种不可射击');
+    const range = effectiveUnitRange(atkT.range, battle.weather);
+    if (distance < 1 || distance > range) {
+      throw new Error(`普通攻击射程为1-${range}格（当前${distance}格）`);
+    }
+  }
+  const targetCheck = atkT.range > 1
+    ? { inRange: true, arc: 'front' as const, attackModifier: 0, distance }
+    : checkMeleeTarget(attacker.position, attacker.facing ?? 0, defender.position, weapon);
   if (!targetCheck.inRange) throw new Error(`不在白刃攻击范围或朝向之外（${weapon} ${targetCheck.distance}格/${targetCheck.arc}）`);
 
   const atkO = state.officers[attacker.commanderId];
@@ -535,6 +583,7 @@ export function attackUnit(
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
       terrain: atkTerrain,
+      weather: battle.weather,
       matchup,
       formationAtk: hexFormationMods(attacker.formation).atk,
     },
@@ -547,6 +596,7 @@ export function attackUnit(
       maxTroops: defender.maxTroops,
       morale: defender.morale,
       terrain: defTerrain,
+      weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
       formationDef: hexFormationMods(defender.formation).def,
     },
@@ -862,6 +912,8 @@ export function getUsableAbilities(
   if (!unit || unit.isDestroyed || unit.troopCount <= 0) return [];
   const tmpl = getUnitByType()[unit.unitType];
   if (!tmpl) return [];
+  // 05 §1.3：雾天弓兵不可射击；能力列表与服务端施放门禁保持同源。
+  if (battle.weather === Weather.FOG && tmpl.range > 1) return [];
   const prof = getOfficerProficiency(state, unit.commanderId, unit.unitType);
   const maxLevel = proficiencyToMaxLevel(prof);
   if (maxLevel === 0) return [];
@@ -907,6 +959,7 @@ export function castAbility(
   if (!tmpl) throw new Error('兵种数据缺失');
   const ability = (tmpl.abilities ?? []).find((a) => a.id === abilityId);
   if (!ability) throw new Error('该兵种无此战法');
+  if (battle.weather === Weather.FOG && tmpl.range > 1) throw new Error('雾天弓兵不可射击');
   // 适性等级门槛
   const prof = getOfficerProficiency(state, attacker.commanderId, attacker.unitType);
   const maxLevel = proficiencyToMaxLevel(prof);
@@ -972,6 +1025,7 @@ export function castAbility(
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
       terrain: battle.hexGrid.terrain[attacker.position.r][attacker.position.q],
+      weather: battle.weather,
       matchup,
       formationAtk: hexFormationMods(attacker.formation).atk,
     },
@@ -984,6 +1038,7 @@ export function castAbility(
       maxTroops: target.maxTroops,
       morale: target.morale,
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
+      weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
       formationDef: hexFormationMods(target.formation).def,
     },
@@ -1083,7 +1138,7 @@ function tryEnemyDuel(
 ): BattleState | null {
   if (battle.duel) return battle;
   const candidates = battle.units
-    .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0 && (unit.energy ?? 0) >= DEFAULT_DUEL_CONFIG.challengeEnergyCost)
+    .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0 && !unit.hasActed && (unit.energy ?? 0) >= DEFAULT_DUEL_CONFIG.challengeEnergyCost)
     .flatMap((challenger) => battle.units
       .filter((defender) => defender.side === 'attacker' && !defender.isDestroyed && defender.troopCount > 0)
       .filter((defender) => hexDistance(challenger.position, defender.position) <= 1)
@@ -1164,7 +1219,13 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
   const officerStats = Object.fromEntries(
     Object.values(state.officers).map((o: Officer) => [
       o.id,
-      { war: o.stats.war, leadership: o.stats.leadership, name: o.name },
+      {
+        // 与玩家 attackUnit/castAbility 共用有效属性：功绩与装备不能因操作者是 AI 而消失。
+        war: o.stats.war + meritStatBonus(o, 'war') + (equipBonusFor(o).war ?? 0),
+        leadership: o.stats.leadership + meritStatBonus(o, 'leadership') + (equipBonusFor(o).leadership ?? 0),
+        armorDefense: equipArmorDefenseFor(o),
+        name: o.name,
+      },
     ]),
   );
 
@@ -1196,6 +1257,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
   }
 
   // 新回合：恢复气力 = 智/10
+  const weatherTick = tickBattleWeather(battle, state.season, rng);
   const units = result.units.map((u) => {
     if (u.side === 'attacker' && !u.isDestroyed) {
       const int = state.officers[u.commanderId]?.stats.intelligence ?? 50;
@@ -1205,7 +1267,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
       return {
         ...u,
         hasActed: false,
-        mp: u.maxMp,
+        mp: effectiveMovement(u.maxMp, weatherTick.weather),
         energy: Math.min(maxE, cur + recover),
       };
     }
@@ -1213,9 +1275,12 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
   });
 
   const burnMsg = burned.burnNotes.length ? burned.burnNotes.join('；') + ' | ' : '';
+  const weatherMsg = weatherTick.changed ? `天气转为${weatherTick.weather}` : '';
   return {
     ...battle,
     units,
+    weather: weatherTick.weather,
+    ...(weatherTick.timer == null ? {} : { weatherChangeTimer: weatherTick.timer }),
     turn: battle.turn + 1,
     phase: 'player',
     tacticalPoints: Math.min(
@@ -1224,13 +1289,14 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
         + ((state.officers[battle.units.find((unit) => unit.side === 'attacker')?.commanderId ?? 0]?.stats.intelligence ?? 50) >= 80 ? 1 : 0),
     ),
     tacticalPointsUsed: 0,
-    message: burnMsg + result.message + ' | 你的回合',
+    message: [burnMsg + result.message, weatherMsg, '你的回合'].filter(Boolean).join(' | '),
     log: [
       ...(duelBattle?.log ?? battle.log),
       ...(burned.burnNotes.length
         ? [{ turn: battle.turn, message: burned.burnNotes.join('；') }]
         : []),
       { turn: battle.turn, message: result.message },
+      ...(weatherMsg ? [{ turn: battle.turn, message: weatherMsg }] : []),
     ],
   };
 }
@@ -1318,7 +1384,10 @@ export function stepBattleDuel(
   const challenger = state.officers[battle.duel.challengerId];
   const defender = state.officers[battle.duel.defenderId];
   if (!challenger || !defender) return battle;
-  const duel = stepDuel(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng);
+  const duel = stepDuel(battle.duel, challenger, defender, DEFAULT_DUEL_CONFIG, rng, {
+    [challenger.id]: duelEquipBonusFor(challenger),
+    [defender.id]: duelEquipBonusFor(defender),
+  });
   return applyDuelPhase(battle, duel, state);
 }
 

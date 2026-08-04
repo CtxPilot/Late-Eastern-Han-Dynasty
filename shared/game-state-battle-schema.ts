@@ -163,6 +163,7 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
     id: z.string().min(1),
     turn: z.number().int().positive(),
     weather: z.nativeEnum(Weather),
+    weatherChangeTimer: z.number().int().min(1).max(8).optional(),
     attackerFaction: PositiveIdSchema,
     defenderFaction: PositiveIdSchema,
     isSiege: z.boolean(),

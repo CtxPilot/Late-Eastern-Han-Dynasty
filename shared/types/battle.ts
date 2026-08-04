@@ -79,6 +79,8 @@ export interface BattleState {
   id: string;
   turn: number;
   weather: Weather;
+  /** 天气自动切换倒计时；旧存档缺省时保持静态天气兼容。 */
+  weatherChangeTimer?: number;
   attackerFaction: FactionId;
   defenderFaction: FactionId;
   isSiege: boolean;

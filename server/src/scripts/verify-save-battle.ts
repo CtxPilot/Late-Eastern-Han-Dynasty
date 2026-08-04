@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType } from '@leh/shared';
+import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType, Weather } from '@leh/shared';
 import {
   battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
-import { runEnemyPhase } from '../engine/battle.js';
+import { attackUnit, runEnemyPhase } from '../engine/battle.js';
 
 let passed = 0;
 let failed = 0;
@@ -42,6 +42,7 @@ if (!targetCityId) throw new Error('没有可用于真实战斗验证的相邻�
 const result = startMarch(targetCityId, fromCity.id, 1000);
 const parsedBattle = BattleStateRuntimeSchema.parse(result.battle);
 check('真实出征生成的 BattleState 通过严格解析', parsedBattle.units.length === 2);
+check('真实出征初始化天气切换倒计时', parsedBattle.weatherChangeTimer === 3);
 check('真实战斗攻守势力与单位归属一致', parsedBattle.units.every((unit) => unit.factionId === (unit.side === 'attacker' ? parsedBattle.attackerFaction : parsedBattle.defenderFaction)));
 check('真实战场尺寸与二维地形一致', parsedBattle.hexGrid.terrain.length === parsedBattle.hexGrid.height && parsedBattle.hexGrid.terrain.every((row) => row.length === parsedBattle.hexGrid.width));
 check('服务层当前战斗与出征结果一致', getBattle()?.id === parsedBattle.id);
@@ -86,6 +87,48 @@ check('敌军相邻主将可按触发判定进入 DuelState', Boolean(enemyDuel.
 check('敌军主动单挑先推进一回合且战斗保持可恢复阶段', enemyDuel.duel?.round === 1 && enemyDuel.phase === 'enemy');
 check('敌军主动单挑扣除20气力', enemyDuel.units.find((unit) => unit.id === duelDefender.id)?.energy === 80);
 check('敌军主动单挑快照通过严格解析', BattleStateRuntimeSchema.parse(enemyDuel).duel?.challengerId === challengerOfficer.id);
+const actedEnemyPhase = {
+  ...duelBattle,
+  phase: 'enemy' as const,
+  duel: undefined,
+  units: duelBattle.units.map((unit) => unit.id === duelDefender.id
+    ? { ...unit, position: { q: duelAttacker.position.q + 1, r: duelAttacker.position.r }, hasActed: true, mp: 0 }
+    : unit),
+};
+const actedEnemyResult = runEnemyPhase(actedEnemyPhase, getGame(), () => {
+  throw new Error('已行动敌军不应再次消费主动单挑 RNG');
+});
+check('已行动敌军不会重入主动单挑候选', !actedEnemyResult.duel && actedEnemyResult.message.includes('敌军待机'));
+const weatherChanged = runEnemyPhase({ ...actedEnemyPhase, weather: Weather.CLEAR, weatherChangeTimer: 1 }, getGame(), (() => {
+  const rolls = [0, 0.5];
+  return () => rolls.shift() ?? 0.5;
+})());
+check('天气倒计时归零后按权威 RNG 切换天气', weatherChanged.weather === Weather.CLOUDY);
+check('天气切换后重置 3~8 回合倒计时', weatherChanged.weatherChangeTimer === 6);
+exitBattle();
+
+// Session 327：玩家普通攻击与敌军 AI 共用 UnitTemplate.range；远程兵种不走白刃朝向判定。
+createGame(1, 2);
+const rangedCity = Object.values(getGame().cities).find((city) => city.ruler !== getGame().playerFactionId);
+if (!rangedCity) throw new Error('没有可用于玩家远程普通攻击验证的敌城');
+const rangedBattle = startBattle(rangedCity.id);
+const rangedAttacker = rangedBattle.units.find((unit) => unit.side === 'attacker')!;
+const rangedDefender = rangedBattle.units.find((unit) => unit.side === 'defender')!;
+const rangedReady = {
+  ...rangedBattle,
+  weather: Weather.CLEAR,
+  phase: 'player' as const,
+  units: rangedBattle.units.map((unit) => unit.id === rangedAttacker.id
+    ? { ...unit, unitType: UnitType.ARCHER, position: { q: 2, r: 2 }, facing: 0 as const }
+    : { ...unit, position: { q: 4, r: 2 } }),
+};
+const rangedAfter = attackUnit(rangedReady, rangedAttacker.id, rangedDefender.id, getGame(), () => 0.5);
+check('玩家远程普通攻击可在兵种射程内命中', rangedAfter.units.find((unit) => unit.id === rangedDefender.id)!.troopCount < rangedDefender.troopCount);
+const fogRanged = { ...rangedReady, weather: Weather.FOG };
+let fogRangedRejected = false;
+try { attackUnit(fogRanged, rangedAttacker.id, rangedDefender.id, getGame(), () => { throw new Error('雾天远程攻击不应消费 RNG'); }); }
+catch (error) { fogRangedRejected = error instanceof Error && error.message.includes('雾天远程兵种不可射击'); }
+check('玩家普通远程攻击与雾天禁射门禁一致', fogRangedRejected);
 exitBattle();
 
 // Tier I / Tier II：使用真实 service 流程，并仅在测试准备阶段注入一支敌军，

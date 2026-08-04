@@ -1519,7 +1519,10 @@ export function stepBattlefieldDuel(): GameState {
     const challenger = state.officers[context.challengerId];
     const defender = state.officers[context.defenderId];
     if (!challenger || !defender) throw new Error('单挑武将不存在');
-    const duel = stepDuel(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom);
+    const duel = stepDuel(context.duel, challenger, defender, DEFAULT_DUEL_CONFIG, runtimeRandom, {
+      [challenger.id]: duelEquipBonusFor(challenger),
+      [defender.id]: duelEquipBonusFor(defender),
+    });
     const next = { ...context, duel };
     const nextState = { ...state, activeBattlefieldInstance: { ...inst, activeDuel: next } };
     currentGame = duel.phase === 'resolved' ? settleBattlefieldDuel(nextState, next) : nextState;

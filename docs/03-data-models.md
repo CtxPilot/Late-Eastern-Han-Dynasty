@@ -1577,8 +1577,8 @@ export interface BattleState {
     gateDurability: number;
   };
 
-  // 天气倒计时
-  weatherChangeTimer: number;
+  // 天气倒计时；旧存档缺失时保持静态天气兼容，运行时范围为3~8
+  weatherChangeTimer?: number;
 
   // 战斗日志
   log: BattleLogEntry[];

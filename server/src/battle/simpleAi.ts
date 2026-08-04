@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, UnitProficiency, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
+import { Weather, UnitProficiency, meritEffects, meritLevelFor, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
 import { hexFormationMods } from './hex-formation.js';
 import { applySpecialEffect } from './special-effects.js';
 import { resolveAttack as resolveCritAttack, type AttackActor, type CritRng } from './crit.js';
+import { equipCritRateFor } from '../engine/items.js';
+import { effectiveMovement, effectiveUnitRange } from './weather.js';
+
+export interface EnemyOfficerStats {
+  war: number;
+  leadership: number;
+  name: string;
+  /** 玩家攻击路径同源的装备护甲加成；旧调用缺省为 0。 */
+  armorDefense?: number;
+}
 
 function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
   return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
@@ -18,7 +28,7 @@ export function runSimpleEnemyAi(
   units: BattleUnit[],
   terrainMap: TerrainType[][],
   unitTemplates: Record<string, UnitTemplate>,
-  officerStats: Record<number, { war: number; leadership: number; name: string }>,
+  officerStats: Record<number, EnemyOfficerStats>,
   cols: number,
   rows: number,
   enemySide: 'attacker' | 'defender',
@@ -29,14 +39,19 @@ export function runSimpleEnemyAi(
   battleTurn?: number,
   weather: Weather = Weather.CLEAR,
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } {
-  const enemies = units.filter((u) => u.side === enemySide && !u.isDestroyed && u.troopCount > 0);
+  // 行动状态是回合契约的一部分：重入 AI（例如重复请求/恢复）不得让已行动单位再次执行。
+  const liveEnemies = units.filter((u) => u.side === enemySide && !u.isDestroyed && u.troopCount > 0);
+  const enemies = liveEnemies.filter((u) => !u.hasActed);
   const players = units.filter((u) => u.side === playerSide && !u.isDestroyed && u.troopCount > 0);
 
-  if (enemies.length === 0) {
+  if (liveEnemies.length === 0) {
     return { units, message: '敌军全灭', over: true, winner: playerSide };
   }
   if (players.length === 0) {
     return { units, message: '我军全灭', over: true, winner: enemySide };
+  }
+  if (enemies.length === 0) {
+    return { units, message: '敌军待机', over: false, winner: null };
   }
 
   let next = units.map((u) => ({ ...u }));
@@ -53,7 +68,7 @@ export function runSimpleEnemyAi(
     if (!ut) continue;
     const dist = hexDistance(live.position, target.position);
 
-    const ability = tryAbilityTactic(next, live, target, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng);
+    const ability = tryAbilityTactic(next, live, target, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather);
     if (ability) {
       next = ability.units;
       messages.push(ability.message);
@@ -69,8 +84,15 @@ export function runSimpleEnemyAi(
       continue;
     }
 
-    if (dist <= ut.range) {
-      const r = doAttack(next, live, target, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn);
+    const unitRange = effectiveUnitRange(ut.range, weather);
+    if (dist <= unitRange) {
+      if (weather === Weather.FOG && ut.range > 1) {
+        const name = officerStats[live.commanderId]?.name ?? '敌军';
+        next = next.map((u) => u.id === live.id ? { ...u, hasActed: true, mp: 0 } : u);
+        messages.push(`${name} 雾中无法射击`);
+        continue;
+      }
+      const r = doAttack(next, live, target, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
       next = r.units;
       messages.push(r.message);
       if (r.over) return { units: next, message: messages.join('；'), over: true, winner: r.winner };
@@ -84,7 +106,7 @@ export function runSimpleEnemyAi(
     );
     const range = reachable(
       live.position,
-      live.maxMp,
+      effectiveMovement(live.maxMp, weather),
       cols,
       rows,
       (h) => terrainMap[h.r]?.[h.q] ?? ('plain' as TerrainType),
@@ -105,16 +127,16 @@ export function runSimpleEnemyAi(
 
     if (best) {
       next = next.map((u) =>
-        u.id === live.id ? { ...u, position: { q: best!.q, r: best!.r } } : u,
+        u.id === live.id ? { ...u, position: { q: best!.q, r: best!.r }, hasActed: true, mp: 0 } : u,
       );
       const name = officerStats[live.commanderId]?.name ?? '敌军';
       messages.push(`${name} 向我军移动`);
       const moved = next.find((u) => u.id === live.id)!;
       const movedTarget = selectTarget(moved, next, playerSide, unitTemplates, strongAgainst);
-      if (movedTarget && hexDistance(moved.position, movedTarget.position) <= ut.range) {
+      if (movedTarget && hexDistance(moved.position, movedTarget.position) <= effectiveUnitRange(ut.range, weather) && !(weather === Weather.FOG && ut.range > 1)) {
         const still = next.find((u) => u.id === movedTarget.id && !u.isDestroyed);
         if (still) {
-          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn);
+          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
           next = r.units;
           messages.push(r.message);
           if (r.over) {
@@ -143,13 +165,30 @@ function proficiencyRank(value: UnitProficiency | undefined): number {
   }
 }
 
+/** 与玩家 castAbility 相同：功绩 Lv14 的全兵种适性+1 也作用于敌军 AI。 */
+function effectiveProficiency(officer: Officer, unitType: UnitType): UnitProficiency {
+  const raw = officer.unitProficiency[unitType] ?? UnitProficiency.NONE;
+  const level = meritLevelFor(officer.merit ?? 0);
+  if (meritEffects(level, officer.meritPath ?? 'neutral').proficiencyBoost <= 0) return raw;
+  switch (raw) {
+    case UnitProficiency.NONE: return UnitProficiency.C;
+    case UnitProficiency.C: return UnitProficiency.B;
+    case UnitProficiency.B: return UnitProficiency.A;
+    case UnitProficiency.A: return UnitProficiency.S;
+    default: return UnitProficiency.S;
+  }
+}
+
 function availableEnemyAbility(
   unit: BattleUnit,
   target: BattleUnit,
   template: UnitTemplate,
   officer: Officer,
+  weather: Weather,
 ): { ability: CombatAbilityDef; level: CombatAbilityLevel } | null {
-  const maxLevel = proficiencyRank(officer.unitProficiency[unit.unitType]);
+  if (weather === Weather.FOG && template.range > 1) return null;
+  const effective = effectiveProficiency(officer, unit.unitType);
+  const maxLevel = proficiencyRank(effective);
   // 与玩家 castAbility 的适性门禁保持一致：NONE 不得使用 proficiency 战法。
   if (maxLevel === 0) return null;
   const energy = unit.energy ?? 0;
@@ -163,7 +202,7 @@ function availableEnemyAbility(
           energyCost: ability.energyCost ?? 0,
           power: (ability.basePower ?? 1) + ((ability.maxPower ?? ability.basePower ?? 1) - (ability.basePower ?? 1)) * ((maxLevel - 1) / 4),
           hitRateBonus: ability.hitRateBonus ?? 0,
-          requiredProficiency: officer.unitProficiency[unit.unitType]!,
+          requiredProficiency: effective,
         };
       return level && level.energyCost <= energy && distance >= Math.max(1, ability.minRange) && distance <= ability.maxRange
         ? { ability, level }
@@ -179,10 +218,11 @@ function tryAbilityTactic(
   defender: BattleUnit,
   terrainMap: TerrainType[][],
   unitTemplates: Record<string, UnitTemplate>,
-  officerStats: Record<number, { war: number; leadership: number; name: string }>,
+  officerStats: Record<number, EnemyOfficerStats>,
   officers: Record<number, Officer> | undefined,
   strongAgainst: Record<string, UnitType[]>,
   rng: CritRng,
+  weather: Weather,
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } | null {
   const atkOfficer = officers?.[attacker.commanderId];
   const defOfficer = officers?.[defender.commanderId];
@@ -192,7 +232,7 @@ function tryAbilityTactic(
   const defStats = officerStats[defender.commanderId];
   if (!atkOfficer || !defOfficer || !template || !defTemplate || !atkStats || !defStats) return null;
 
-  const chosen = availableEnemyAbility(attacker, defender, template, atkOfficer);
+  const chosen = availableEnemyAbility(attacker, defender, template, atkOfficer, weather);
   if (!chosen) return null;
   const { ability, level } = chosen;
   const matchup = getUnitMatchup(attacker.unitType, defender.unitType, strongAgainst);
@@ -210,12 +250,15 @@ function tryAbilityTactic(
       unitAttack: template.attack, unitDefense: template.defense, officerWar: atkStats.war,
       officerLeadership: atkStats.leadership, troops: attacker.troopCount, maxTroops: attacker.maxTroops,
       morale: attacker.morale, terrain: terrainMap[attacker.position.r]?.[attacker.position.q] ?? 'plain', matchup,
+      weather,
       formationAtk: hexFormationMods(attacker.formation).atk,
     },
     {
       unitAttack: defTemplate.attack, unitDefense: defTemplate.defense, officerWar: defStats.war,
       officerLeadership: defStats.leadership, troops: defender.troopCount, maxTroops: defender.maxTroops,
       morale: defender.morale, terrain: terrainMap[defender.position.r]?.[defender.position.q] ?? 'plain',
+      weather,
+      armorDefense: defStats.armorDefense,
       formationDef: hexFormationMods(defender.formation).def,
     },
     rng,
@@ -343,11 +386,12 @@ function doAttack(
   defender: BattleUnit,
   terrainMap: TerrainType[][],
   unitTemplates: Record<string, UnitTemplate>,
-  officerStats: Record<number, { war: number; leadership: number; name: string }>,
+  officerStats: Record<number, EnemyOfficerStats>,
   rng: CritRng,
   strongAgainst: Record<string, UnitType[]> = {},
   officers?: Record<number, Officer>,
   battleTurn?: number,
+  weather: Weather = Weather.CLEAR,
 ): {
   units: BattleUnit[];
   message: string;
@@ -375,6 +419,7 @@ function doAttack(
       maxTroops: attacker.maxTroops,
       morale: attacker.morale,
       terrain: atkTerrain,
+      weather,
       matchup,
       formationAtk: hexFormationMods(attacker.formation).atk,
     },
@@ -387,6 +432,8 @@ function doAttack(
       maxTroops: defender.maxTroops,
       morale: defender.morale,
       terrain: defTerrain,
+      weather,
+      armorDefense: defO.armorDefense,
       formationDef: hexFormationMods(defender.formation).def,
     },
     rng,
@@ -416,6 +463,8 @@ function doAttack(
       attackerTerrain: atkTerrain, defenderTerrain: defTerrain,
       distance: hexDistance(attacker.position, defender.position),
       isFirstRound: battleTurn === 1, attackerMoved: attacker.mp < attacker.maxMp,
+      attackerCritBonus: equipCritRateFor(fullAtkO),
+      defenderCritBonus: equipCritRateFor(fullDefO),
       rng,
     });
     totalDamage = result.damage + result.chainDamage;
@@ -440,6 +489,8 @@ function doAttack(
         ...u,
         troopCount: attackerTroopsAfter,
         isDestroyed: attackerDestroyed,
+        hasActed: true,
+        mp: 0,
         energy: Math.max(0, (u.energy ?? 100) - (totalDamage > dmg ? 5 : 0)),
       };
     }

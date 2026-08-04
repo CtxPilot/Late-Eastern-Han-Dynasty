@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import type { TerrainType, UnitType } from '@leh/shared';
+import { Weather, type TerrainType, type UnitType } from '@leh/shared';
 import { TERRAIN_TABLE } from './terrain.js';
 
 export interface DamageInput {
@@ -13,6 +13,8 @@ export interface DamageInput {
   maxTroops: number;
   morale: number;
   terrain: TerrainType;
+  /** 六角战天气；省略时保持旧档/旧脚本的晴天中性行为。 */
+  weather?: Weather;
   matchup?: number;
   /** 装备防御加成（S13 Session 266：黑铁甲/革甲 baseEffect defense）。 */
   armorDefense?: number;
@@ -52,12 +54,26 @@ export function calcDamage(
   const atkTerrain = 1 + TERRAIN_TABLE[attacker.terrain].attackMod;
   const matchup = attacker.matchup ?? 1.0;
 
-  const finalAttack = baseAttack * matchup * atkTerrain * troopFactor * moraleFactor;
+  const finalAttack = baseAttack * matchup * atkTerrain * troopFactor * moraleFactor * weatherAttackMultiplier(attacker.weather);
   const defTerrain = 1 + TERRAIN_TABLE[defender.terrain].defenseMod;
-  const finalDefense = baseDefense * defTerrain;
+  const finalDefense = baseDefense * defTerrain * weatherDefenseMultiplier(defender.weather);
 
   // floor so near-parity stats still deal meaningful troop loss (05 §6.1 structure)
   const raw = Math.max(1.5, finalAttack - finalDefense + 2);
   const roll = 0.9 + rng() * 0.2;
   return Math.max(1, Math.round(raw * (attacker.troops / 30) * roll));
+}
+
+function weatherAttackMultiplier(weather: Weather | undefined): number {
+  switch (weather) {
+    case Weather.RAIN:
+    case Weather.STORM: return 0.95;
+    case Weather.FOG:
+    case Weather.SNOW: return 0.9;
+    default: return 1;
+  }
+}
+
+function weatherDefenseMultiplier(weather: Weather | undefined): number {
+  return weather === Weather.SNOW ? 1.1 : 1;
 }

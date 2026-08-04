@@ -9,12 +9,102 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 316 收口**（S10 敌军战法 RNG 顺序修复；S16 槽位 UI 保持） |
+| 会话 | **Session 330 收口**（S10 六角移动路径预览与撤销 UI 收口；S16 槽位 UI 保持） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 316：敌军战法先判命中、后算伤害，修复失手额外消费伤害 RNG；Session 315 适性门禁、Session 314 效果同源、Session 313 战场退出及 S16 槽位 UI 保持 |
-| 文档最新 | `05`/`10-progress` 与本交接已同步战法 RNG 顺序修复；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
+| 代码最新 | Session 330：BattleView 六角移动悬停路径摘要与可逆移动撤销按钮已接入既有权威接口；Session 329 六角 BattleView 顶部显示天气、移动/射程修正、雾天禁射提示与变化倒计时；Session 328 天气修正函数接入玩家移动范围/路径、敌军 AI 走位与双方普通远程攻击；雨/暴雨/雾移动力-1，雪-2；雨/暴雨/雪一般射程-1，雾-2；Session 327 玩家普通攻击按 `UnitTemplate.range` 区分远程距离门禁与白刃朝向规则，雾天远程普攻与战法共享禁射；Session 326 雾天对所有 `range > 1` 远程兵种统一禁射，玩家能力列表/施放与敌军 AI 普攻/战法共享门禁；Session 325 六角天气倒计时归零后按当前季节与权威 RNG 切换天气并重置3~8回合；Session 324 六角天气进入玩家/敌军普攻与战法的同一伤害公式；Session 323 敌军主动单挑候选与普通行动统一受 `hasActed` 重入门禁；Session 320 敌军 AI 普攻/战法读取功绩与装备后的有效武力/统帅/护甲；Session 318 普攻/战法/火计/移动统一写入 `hasActed=true, mp=0` |
+| 文档最新 | `03`/`05`/`07`/`21`/`10-progress` 与本交接已同步天气字段/计时/禁射/一般移动与射程/HUD 规则；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
 | 本交接用途 | 六角初始部署、多 unit、变阵状态机、战报解释 UI、浏览器变阵→攻击链及敌军 leveled 兵种战法已闭环；三模式点值同源、标准战术矩阵仍保持 |
-| 下一步 | 保持 S10；可待用户批准后设计正式特殊兵种使用次数熟练度，或继续 S16 SQLite；**未提交提醒**：Session 301~316 改动尚未 commit |
+| 下一步 | 保持 S10；继续权威战法/敌军 AI/天气一致性回归；天气主动技能待规则确认；正式特殊兵种使用次数熟练度仍待用户批准；**未提交提醒**：Session 301~330 改动尚未 commit |
+
+### Session 330 交接要点
+
+- 六角 BattleView 现在在可达格悬停时显示服务端路径摘要，并在最后一次移动仍可逆时显示“撤销移动”。
+- 新增 `data-testid="move-path-summary"` 与 `data-testid="btn-battle-undo"`；不新增规则、字段或 API。
+- `verify-session277-ui` 真实 Headless Chrome 已通过：路径预览、移动、撤销恢复、console errors=0。
+
+### Session 329 交接要点
+
+- 六角 `BattleView` 顶部新增 `data-testid="battle-weather"`：显示天气、修正摘要、雾天远程禁射及天气变化倒计时。
+- HUD 只读消费 `BattleState`，无新字段/API/RNG；真实 Headless Chrome 已进入战斗并读取到“天气：晴 · 移动/射程无修正 · 3回合后变化”。
+- client typecheck、client 43/43、diff-check 通过。旧 Session 277 脚本在路径悬停摘要前置断言失败，已单独记录，不作为 HUD 失败。
+
+### Session 328 交接要点
+
+- 新增 `server/src/battle/weather.ts`：移动与一般远程射程天气修正集中管理；火计/兵种战法专属范围不套用。
+- 玩家移动范围/路径、敌军 AI 走位、双方普通远程攻击共享修正；天气变更后的新玩家回合按新天气重置有效移动力。
+- 验证：`verify-tactical-ai` **39/39**、`verify-save-battle` **36/36**、shared build、server typecheck、`git diff --check` 通过。
+- 边界：天气主动切换技能、地形可见范围、移动后特殊连击、正式特殊兵种熟练度、0-B 数据、阵型协同包围/撤退仍未完成。
+
+### Session 327 交接要点
+
+- 玩家 `attackUnit` 现在对 `UnitTemplate.range > 1` 使用 1~兵种射程距离门禁；远程单位不再错误套用剑/枪/斧白刃朝向判定，白刃单位规则保持不变。
+- 雾天玩家普通远程攻击与玩家战法共享禁射门禁；玩家服务端同时拒绝已行动、已溃单位攻击。
+- 验证：`verify-save-battle` **36/36**（含玩家弓兵 2 格普通攻击与雾天拒绝不消费 RNG）、`verify-tactical-ai` **32/32**、shared build、server typecheck、`git diff --check` 通过。
+- 边界：一般射程天气修正、移动消耗、天气主动技能、正式特殊兵种熟练度、0-B 数据、阵型协同包围/撤退仍未完成。
+
+### Session 326 交接要点
+
+- 雾天对 `UnitTemplate.range > 1` 的远程兵种统一禁射：玩家能力列表、玩家施放、敌军战法候选、敌军普攻和移动后追击均遵守同一门禁；当前 0-A 数据中实际远程模板为弓箭手。
+- 被雾禁射的敌军仍结束本回合行动，写入 `hasActed=true, mp=0`，不消费攻击 RNG，并记录“雾中无法射击”；一般射程/移动天气修正仍未实装。
+- 验证：`verify-tactical-ai` **32/32**、shared build、server typecheck 通过。
+- 边界：本轮不是完整天气系统或 P5-01 全局 AI；正式特殊兵种熟练度、0-B 数据、阵型协同包围/撤退仍未完成。
+
+### Session 325 交接要点
+
+- 六角 `BattleState` 新增可选 `weatherChangeTimer`：新建战斗从3回合开始；敌军阶段完成进入玩家新回合时递减，归零后按 `GameState.season` 和权威 RNG 抽取不同天气并重置3~8回合。
+- 天气变化写入战斗快照与战报；旧存档/旧脚本缺失该字段时保持静态天气兼容，不额外消费 RNG。
+- 验证：`verify-save-battle` **34/34**、`verify-tactical-ai` **29/29**、shared **378/378**、server typecheck、`git diff --check` 全部通过。
+- 边界：移动消耗、射程、雾天弓兵禁射和天气主动技能仍未实装；正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 324 交接要点
+
+- 六角 `BattleState.weather` 已接入玩家普攻、玩家战法、敌军普攻与敌军战法的 `calcDamage`；雨/暴雨攻方×0.95，雾/雪攻方×0.90，雪天守方×1.10，晴/阴天中性。
+- 移动、射程、雾天弓兵禁射和天气自动切换仍未实装；火计天气规则保持既有行为。
+- 验证：`verify-tactical-ai` 29/29、`verify-save-battle` 31/31、server typecheck/lint、shared build、diff-check 全绿。
+
+### Session 323 交接要点
+
+- 敌军主动单挑候选新增 `!hasActed` 门禁；已行动敌军不会在同一敌军阶段重复发起单挑或消费单挑 RNG。
+- 验证脚本新增真实 `runEnemyPhase` 重入断言；不新增 BattleState 字段、API、RNG 或数据规模。
+- 正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 322 交接要点
+
+- 六角战中与郡域阵前单挑的逐回合 `stepDuel` 现在传入双方 `duelEquipBonusFor`；与既有跳过路径统一，装备的武力/单挑加成不会因观看方式丢失。
+- 验证：duel/装备回归、server typecheck/lint、shared build/test、`git diff --check` 全部通过。
+- 不新增 BattleState 字段、API、RNG 或数据规模；正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 320 交接要点
+
+- 敌军 AI 普攻/战法现在读取战斗引擎计算后的有效武力、统帅和装备护甲；功绩与装备不再因 AI 操作而丢失，旧简化调用的护甲字段缺省为 0。
+- 验证：shared build、server typecheck/lint、`verify-tactical-ai` **26/26**。
+- 不新增 BattleState 字段、API、RNG 或数据规模；正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 321 交接要点
+
+- 敌军 AI 普攻进入完整暴击/反击链时，已复用玩家路径的装备 `crit_rate`；攻方装备影响敌军暴击，守方装备影响敌军反击暴击，旧简化调用缺省为 0。
+- 验证：`verify-tactical-ai` **28/28**（含固定 RNG 无装备/青龙偃月刀对照）；shared build 已通过，类型检查/lint/共享测试已在本轮收口。
+- 不新增 BattleState 字段、API、RNG 或数据规模；正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 319 交接要点
+
+- 敌军 AI 现在先区分“存活敌军”和“本回合未行动敌军”：重复调用时返回“敌军待机”，不重复消费 RNG、移动或伤害；不改变终局判定。
+- 验证：shared build、server typecheck/lint、`verify-tactical-ai` **25/25**。
+- 不新增 BattleState 字段、API、RNG 或数据规模；正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 318 交接要点
+
+- 敌军 AI 完成普攻、战法、火计或移动后统一写入 `hasActed=true`、`mp=0`，与玩家动作路径及战斗快照契约一致。
+- 不新增 BattleState 字段、API、RNG 或数据规模；只修正既有 BattleUnit 状态。
+- 验证：shared build、server typecheck/lint、`verify-tactical-ai` **23/23**。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
+
+### Session 317 交接要点
+
+- 修复敌军 `runSimpleEnemyAi` 与玩家 `castAbility` 的功绩适性分叉：功绩 Lv14 及以上的全兵种适性+1 现在同样作用于敌军战法候选，NONE→C、C→B、B→A、A→S，S 封顶。
+- 不新增 BattleState 字段、API、RNG 或数据规模；仅统一战法可用等级与适性门禁。
+- 验证：shared build、server typecheck/lint、`verify-tactical-ai` **19/19**。
+- 边界：正式特殊兵种使用次数熟练度、0-B 特殊兵种数据、阵型切换/协同包围/撤退仍未完成。
 
 ### Session 316 交接要点
 
