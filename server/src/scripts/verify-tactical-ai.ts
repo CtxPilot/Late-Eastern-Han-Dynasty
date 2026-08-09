@@ -3,7 +3,7 @@
 
 import { FormationType, TerrainType, UnitProficiency, UnitType, Weather, type BattleUnit, type Officer, type UnitTemplate } from '@leh/shared';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
-import { effectiveMovement, effectiveUnitRange } from '../battle/weather.js';
+import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from '../battle/weather.js';
 
 let passed = 0;
 function assert(condition: unknown, label: string): asserts condition {
@@ -43,6 +43,32 @@ assert(effectiveUnitRange(3, Weather.CLEAR) === 3, '晴天保持远程兵种射�
 assert(effectiveUnitRange(3, Weather.RAIN) === 2, '雨天一般射程减少1');
 assert(effectiveUnitRange(3, Weather.FOG) === 1, '雾天一般射程减少2且保留最低值1');
 assert(effectiveUnitRange(3, Weather.SNOW) === 2, '雪天一般射程减少1');
+assert(!hasMovedThisTurn(1, 3, Weather.SNOW), '雪天按有效上限恢复后不误判为已移动');
+assert(hasMovedThisTurn(0, 3, Weather.SNOW), '雪天实际消耗移动力后标记为已移动');
+
+const forcedMarchOfficer = {
+  ...officer(2, '雪地骑将', 50),
+  skills: [{ skillId: 'forcedMarch', level: 1 }],
+  unitProficiency: { [UnitType.HEAVY_CAVALRY]: UnitProficiency.C },
+} as Officer;
+const forcedMarchTemplates = {
+  ...templates,
+  [UnitType.HEAVY_CAVALRY]: template(UnitType.HEAVY_CAVALRY, 7),
+  [UnitType.ARCHER]: template(UnitType.ARCHER, 5),
+};
+const forcedMarchRun = (mp: number) => {
+  const rolls = [0.5, 0.99, 0.12, 0.99];
+  return runSimpleEnemyAi(
+    [{ ...unit('snow-cavalry', 'defender', 2, 2, 1000, 2, UnitType.HEAVY_CAVALRY), mp }, unit('snow-target', 'attacker', 3, 2, 1000, 1, UnitType.ARCHER)],
+    terrain,
+    forcedMarchTemplates,
+    { 1: { war: 70, leadership: 70, name: '目标' }, 2: { war: 80, leadership: 80, name: '雪地骑将' } },
+    6, 5, 'defender', 'attacker', () => rolls.shift() ?? 0.99,
+    {}, { 1: officer(1, '目标', 50), 2: forcedMarchOfficer }, 2, Weather.SNOW,
+  );
+};
+assert(!forcedMarchRun(1).message.includes('连击'), '雪天原地攻击不误触发强行军连击加成');
+assert(forcedMarchRun(0).message.includes('连击'), '雪天实际移动后仍可触发强行军连击加成');
 
 const targetResult = runSimpleEnemyAi(
   [unit('enemy', 'defender', 2, 2, 1000, 2), unit('healthy', 'attacker', 1, 2, 1000, 1), unit('weak', 'attacker', 3, 2, 100, 3)],
@@ -60,6 +86,40 @@ const replayResult = runSimpleEnemyAi(
 );
 assert(replayResult.message === '敌军待机', '已行动敌军重入 AI 时保持待机');
 assert(replayResult.units.find((u) => u.id === 'weak')!.troopCount === targetResult.units.find((u) => u.id === 'weak')!.troopCount, 'AI 重入不重复结算伤害');
+
+const blockedUnits = [
+  unit('blocked-enemy', 'defender', 2, 2, 1000, 2),
+  unit('blocked-target', 'attacker', 4, 2, 1000, 1),
+  { ...unit('block-a', 'defender', 3, 2, 1000, 2), hasActed: true, mp: 0 },
+  { ...unit('block-b', 'defender', 1, 2, 1000, 2), hasActed: true, mp: 0 },
+  { ...unit('block-c', 'defender', 2, 1, 1000, 2), hasActed: true, mp: 0 },
+  { ...unit('block-d', 'defender', 2, 3, 1000, 2), hasActed: true, mp: 0 },
+  { ...unit('block-e', 'defender', 1, 3, 1000, 2), hasActed: true, mp: 0 },
+  { ...unit('block-f', 'defender', 3, 1, 1000, 2), hasActed: true, mp: 0 },
+];
+const blockedResult = runSimpleEnemyAi(
+  blockedUnits, terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '目标' }, 2: { war: 80, leadership: 80, name: '受阻敌军' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('被阻挡待机不应消费攻击 RNG'); },
+);
+assert(blockedResult.message.includes('无法接近目标'), '完全阻挡时敌军写入待机战报');
+assert(blockedResult.units.find((u) => u.id === 'blocked-enemy')!.hasActed, '完全阻挡时敌军结束本回合行动');
+assert(blockedResult.units.find((u) => u.id === 'blocked-enemy')!.mp === 0, '完全阻挡时敌军移动力归零');
+const blockedReplay = runSimpleEnemyAi(
+  blockedResult.units, terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '目标' }, 2: { war: 80, leadership: 80, name: '受阻敌军' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('完全阻挡的敌军不应重入行动'); },
+);
+assert(blockedReplay.message === '敌军待机', '完全阻挡敌军重入时保持待机');
+
+const missingTemplateUnit = unit('missing-template', 'defender', 2, 2, 1000, 2, 'missing-unit' as UnitType);
+const missingTemplateResult = runSimpleEnemyAi(
+  [missingTemplateUnit, unit('template-target', 'attacker', 4, 2, 1000, 1)], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '目标' }, 2: { war: 80, leadership: 80, name: '残缺敌军' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('缺失兵种模板待机不应消费 RNG'); },
+);
+assert(missingTemplateResult.message.includes('兵种数据缺失'), '缺失兵种模板时敌军写入异常待机战报');
+assert(missingTemplateResult.units.find((u) => u.id === 'missing-template')!.hasActed, '缺失兵种模板时结束敌军行动');
 
 const plainDefenseResult = runSimpleEnemyAi(
   [unit('enemy', 'defender', 2, 2, 1000, 2), unit('player', 'attacker', 3, 2, 1000, 1)],

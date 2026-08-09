@@ -1030,9 +1030,11 @@ POST /api/game/battle/undo                     → BattleState
 POST /api/game/melee/round { actionType, targetFormation? }
 ```
 
-`move-path` 是非权威预览；`battle/move` 提交时服务端重新执行同一 A*。`undo` 仅接受玩家阶段
-最后一条可逆移动，攻击/技能/结束行动后返回400。白刃 `change_formation` 仅接受0-A六基础阵型，
-消耗1战术点。详细返回结构、错误码与调用示例见 `27-tactical-wargame-system.md` §2.1。
+`move-path` 是非权威预览；`battle/move` 提交时服务端重新执行同一 A*。`undo` 仅接受当前玩家回合
+最后一条同回合、来源为玩家的可逆移动；攻击/技能/结束行动或进入敌军阶段后返回400。
+Session 334 新增 `UNDO_TURN_LOCKED` 与 `UNDO_STATE_MISMATCH` 失败语义，所有拒绝均保持战斗快照不变。
+白刃 `change_formation` 仅接受0-A六基础阵型，消耗1战术点。详细返回结构、错误码与调用示例见
+`27-tactical-wargame-system.md` §2.1。
 
 ### Session 279 · 阵型整合 API 规划边界
 

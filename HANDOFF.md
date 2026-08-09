@@ -9,12 +9,38 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 330 收口**（S10 六角移动路径预览与撤销 UI 收口；S16 槽位 UI 保持） |
+| 会话 | **Session 334 收口**（S10 移动撤销回合边界；S16 槽位 UI 保持） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 330：BattleView 六角移动悬停路径摘要与可逆移动撤销按钮已接入既有权威接口；Session 329 六角 BattleView 顶部显示天气、移动/射程修正、雾天禁射提示与变化倒计时；Session 328 天气修正函数接入玩家移动范围/路径、敌军 AI 走位与双方普通远程攻击；雨/暴雨/雾移动力-1，雪-2；雨/暴雨/雪一般射程-1，雾-2；Session 327 玩家普通攻击按 `UnitTemplate.range` 区分远程距离门禁与白刃朝向规则，雾天远程普攻与战法共享禁射；Session 326 雾天对所有 `range > 1` 远程兵种统一禁射，玩家能力列表/施放与敌军 AI 普攻/战法共享门禁；Session 325 六角天气倒计时归零后按当前季节与权威 RNG 切换天气并重置3~8回合；Session 324 六角天气进入玩家/敌军普攻与战法的同一伤害公式；Session 323 敌军主动单挑候选与普通行动统一受 `hasActed` 重入门禁；Session 320 敌军 AI 普攻/战法读取功绩与装备后的有效武力/统帅/护甲；Session 318 普攻/战法/火计/移动统一写入 `hasActed=true, mp=0` |
-| 文档最新 | `03`/`05`/`07`/`21`/`10-progress` 与本交接已同步天气字段/计时/禁射/一般移动与射程/HUD 规则；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
+| 代码最新 | Session 334：所有 `player→enemy` 交权路径封闭可逆移动审计；服务端按来源/种类/创建回合与位置 MP 不变式复验撤销，跨回合返回 `UNDO_TURN_LOCKED`，伪造快照返回 `UNDO_STATE_MISMATCH`；BattleView 只显示当前回合的可逆玩家移动；Session 333：普攻/火计/战法/结束行动在 `player→enemy` 边界恢复存活敌军 `hasActed=false` 与天气有效 MP，敌军不再首轮后永久待机；玩家/敌军已移动判定以天气有效 MP 为基线；Session 332：敌军缺少目标或兵种模板的异常快照也写入 `hasActed=true, mp=0` 并待机；Session 331：敌军完全阻挡时也封闭行动；Session 330：BattleView 路径摘要与撤销按钮接入权威接口；Session 329~324：天气 HUD、移动/射程/禁射/伤害/倒计时已接运行时 |
+| 文档最新 | `03`/`05`/`06`/`07`/`27`/`10-progress` 与本交接已同步移动撤销的回合、交权、错误码、UI 显隐与旧档降权边界；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
 | 本交接用途 | 六角初始部署、多 unit、变阵状态机、战报解释 UI、浏览器变阵→攻击链及敌军 leveled 兵种战法已闭环；三模式点值同源、标准战术矩阵仍保持 |
-| 下一步 | 保持 S10；继续权威战法/敌军 AI/天气一致性回归；天气主动技能待规则确认；正式特殊兵种使用次数熟练度仍待用户批准；**未提交提醒**：Session 301~330 改动尚未 commit |
+| 下一步 | 保持 S10；优先收口单挑期间战场暂停门禁，再处理敌军主动单挑结算后的敌军阶段续行；撤销前朝向恢复与审计序号唯一性为相邻技术债；天气主动技能和正式特殊兵种熟练度仍待用户批准；**提交状态**：本轮累计工作已收口，工作树应保持 clean |
+
+### Session 334 交接要点
+
+- 交权时保留最近3条 `actionHistory` 供审计，但把可逆记录封闭；服务端仍独立校验记录回合、来源与单位/落点/MP 快照，UI 不是安全边界。
+- 修复前 stale `reversible=true` 旧档不需迁移：Schema 仍接受，运行时返回 `UNDO_TURN_LOCKED`；快照不一致返回 `UNDO_STATE_MISMATCH`，两者均不改状态。
+- 验证：`verify-save-battle` **47/47**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、FM-P4 **14/14**、shared **378/378**、client **43/43**、全仓 typecheck/lint 通过；Headless Chrome 实际完成同回合撤销、交权、新回合旧按钮隐藏/API 拒绝、新移动再撤销，`consoleErrors=0`。
+- 边界：本轮不新增 Schema/API/RNG/数据规模；撤销尚未恢复移动前 `facing`，审计历史达3条后的同回合 sequence/ID 仍可重复；单挑暂停与敌军单挑续行仍待后续切片。
+
+### Session 333 交接要点
+
+- 玩家普攻、火计、战法或结束行动交权时，现在统一恢复存活敌军 `hasActed=false` 与当前天气有效 MP；敌军可在后续回合再次行动，同一敌军阶段重入仍保持待机。
+- 玩家与敌军的“已移动”判定改以天气有效 MP 为基线；雪天原地攻击不再误触发强行军连击加成。
+- 验证：`verify-save-battle` **42/42**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、FM-P4 **14/14**、shared **378/378**、server typecheck/lint、`git diff --check` 通过。
+- 不新增 BattleState 字段、API、数据规模或随机源；跨回合撤销、单挑暂停门禁与敌军主动单挑续行仍待后续切片。
+
+### Session 332 交接要点
+
+- 敌军 AI 遇到缺失目标或兵种模板的异常战斗快照时，现在记录异常待机并写入 `hasActed=true, mp=0`，不消费攻击 RNG，避免重复调用卡在同一单位。
+- 验证：`verify-tactical-ai` **45/45**、`verify-save-battle` **36/36**、server typecheck、shared build、`git diff --check` 通过。
+- 不新增 BattleState 字段、API、RNG 或数据规模；天气主动技能、地形可见范围、移动后特殊连击、正式特殊兵种熟练度、0-B 数据和阵型协同包围/撤退仍未完成。
+
+### Session 331 交接要点
+
+- 敌军 AI 若被其他单位完全堵住、找不到可达格，现在记录“无法接近目标，待机”，并写入 `hasActed=true, mp=0`；重入调用返回“敌军待机”，不重复寻路或消费攻击 RNG。
+- 验证：`verify-tactical-ai` **43/43**、`verify-save-battle` **36/36**、server typecheck、shared build、`git diff --check` 通过。
+- 不新增 BattleState 字段、API、RNG 或数据规模；天气主动技能、地形可见范围、移动后特殊连击、正式特殊兵种熟练度、0-B 数据和阵型协同包围/撤退仍未完成。
 
 ### Session 330 交接要点
 

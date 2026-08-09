@@ -34,6 +34,7 @@ import {
   projectHexDeployment,
   resolveFormationDeployment,
   duelTriggerChance,
+  tacticalTurnFromTimestamp,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
@@ -41,7 +42,7 @@ import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
 import { hexFormationMods } from '../battle/hex-formation.js';
-import { effectiveMovement, effectiveUnitRange } from '../battle/weather.js';
+import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from '../battle/weather.js';
 import { applySpecialEffect } from '../battle/special-effects.js';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
 import {
@@ -65,6 +66,21 @@ const HEX_TACTICAL_POINT_CAP = 10;
 
 function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
   return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+}
+
+/**
+ * 玩家把控制权交给敌军时，开启一个新的敌军行动窗口。
+ * 同一敌军阶段内仍由 hasActed 阻止重入；只有这条 player -> enemy 边界会恢复敌军行动资格。
+ */
+function enterEnemyPhase(battle: BattleState): BattleState {
+  return {
+    ...battle,
+    phase: 'enemy',
+    actionHistory: battle.actionHistory?.map((action) => action.reversible ? { ...action, reversible: false } : action),
+    units: battle.units.map((unit) => unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0
+      ? { ...unit, hasActed: false, mp: effectiveMovement(unit.maxMp, battle.weather) }
+      : unit),
+  };
 }
 
 function buildStrongAgainstMap(): Record<string, UnitType[]> {
@@ -517,7 +533,20 @@ export function undoLastBattleAction(battle: BattleState): BattleState {
   if (battle.phase !== 'player') throw new Error('UNDO_PHASE_LOCKED');
   const last = battle.actionHistory?.at(-1);
   if (!last) throw new Error('UNDO_EMPTY');
-  if (!last.reversible || last.kind !== 'move' || !last.beforePosition || last.beforeMp == null) throw new Error(`UNDO_IRREVERSIBLE:${last.kind}`);
+  if (tacticalTurnFromTimestamp(last.logicalTimestamp) !== battle.turn) throw new Error('UNDO_TURN_LOCKED');
+  if (last.source !== 'player' || !last.reversible || last.kind !== 'move' || !last.beforePosition || !last.afterPosition || last.beforeMp == null) throw new Error(`UNDO_IRREVERSIBLE:${last.kind}`);
+  const unit = battle.units.find((candidate) => candidate.id === last.unitId);
+  const beforeInBounds = last.beforePosition.q >= 0 && last.beforePosition.q < battle.hexGrid.width
+    && last.beforePosition.r >= 0 && last.beforePosition.r < battle.hexGrid.height;
+  const beforeOccupied = battle.units.some((candidate) => candidate.id !== last.unitId
+    && !candidate.isDestroyed && candidate.troopCount > 0
+    && candidate.position.q === last.beforePosition!.q && candidate.position.r === last.beforePosition!.r);
+  if (!unit || unit.side !== 'attacker' || unit.isDestroyed || unit.troopCount <= 0
+    || unit.position.q !== last.afterPosition.q || unit.position.r !== last.afterPosition.r
+    || !beforeInBounds || beforeOccupied || !Number.isFinite(last.beforeMp)
+    || last.beforeMp < 0 || last.beforeMp > unit.maxMp) {
+    throw new Error('UNDO_STATE_MISMATCH');
+  }
   return {
     ...battle,
     units: battle.units.map((unit) => unit.id === last.unitId ? { ...unit, position: last.beforePosition!, mp: last.beforeMp! } : unit),
@@ -621,7 +650,7 @@ export function attackUnit(
     defenderTerrain: defTerrain,
     distance: hexDistance(attacker.position, defender.position),
     isFirstRound: battle.turn === 1,
-    attackerMoved: attacker.mp < attacker.maxMp,
+    attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, battle.weather),
     attackerCritBonus: equipCritRateFor(atkO),
     defenderCritBonus: equipCritRateFor(defO),
     rng,
@@ -672,25 +701,23 @@ export function attackUnit(
   }
 
   if (result.defenderDestroyed) {
-    return {
+    return enterEnemyPhase({
       ...battle,
       units,
       actionHistory,
-      phase: 'enemy',
       winner: null,
       message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel} — 击败 ${defO.name}，敌军仍有部队${result.counterDamage ? `（反击-${result.counterDamage}）` : ''}`,
       log: [...battle.log, { turn: battle.turn, message: `击败 ${defO.name}${eventLabel}`, explanation: { kind: 'attack' as const, attackerFormation: attacker.formation, defenderFormation: defender.formation, formationAttack: hexFormationMods(attacker.formation).atk, formationDefense: hexFormationMods(defender.formation).def } }],
-    };
+    });
   }
 
-  return {
+  return enterEnemyPhase({
     ...battle,
     units,
     actionHistory,
-    phase: 'enemy',
     message: `${atkO.name} 造成 ${totalDamage} 伤害${matchupLabel}${eventLabel}（敌剩余 ${result.defenderTroopsAfter}）${result.counterDamage ? ` · 反击-${result.counterDamage}` : ''} — 敌军回合…`,
     log: [...battle.log, { turn: battle.turn, message: `${atkO.name} 攻 ${defO.name} ${totalDamage}${eventLabel}${result.details.length ? ' | ' + result.details.join(' ') : ''}`, explanation: { kind: 'attack' as const, attackerFormation: attacker.formation, defenderFormation: defender.formation, formationAttack: hexFormationMods(attacker.formation).atk, formationDefense: hexFormationMods(defender.formation).def } }],
-  };
+  });
 }
 
 export function finishPlayerAction(battle: BattleState): BattleState {
@@ -698,12 +725,11 @@ export function finishPlayerAction(battle: BattleState): BattleState {
   const units = battle.units.map((u) =>
     u.side === 'attacker' ? { ...u, hasActed: true, mp: 0 } : u,
   );
-  return {
+  return enterEnemyPhase({
     ...battle,
     units,
-    phase: 'enemy',
     message: '敌军回合…',
-  };
+  });
 }
 
 const FIRE_COST = 30;
@@ -768,16 +794,15 @@ export function castFireTactic(
   );
 
   if (roll >= successRate) {
-    return {
+    return enterEnemyPhase({
       ...battle,
       units: spent,
-      phase: 'enemy',
       message: `${atkO.name} 火计失败（成功率${successRate}%）— 敌军回合…`,
       log: [
         ...battle.log,
         { turn: battle.turn, message: `${atkO.name} 火计失手` },
       ],
-    };
+    });
   }
 
   const mult = FIRE_MULT[level] ?? FIRE_MULT[0];
@@ -834,16 +859,15 @@ export function castFireTactic(
     };
   }
 
-  return {
+  return enterEnemyPhase({
     ...battle,
     units,
-    phase: 'enemy',
     message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote}（敌剩余 ${newTroops}）— 敌军回合…`,
     log: [
       ...battle.log,
       { turn: battle.turn, message: `${skillNote} 对 ${defO.name} 造成 ${dmg}` },
     ],
-  };
+  });
 }
 
 // ====== S10 战法引擎（最小切片） ======
@@ -998,13 +1022,12 @@ export function castAbility(
   );
 
   if (!isHit) {
-    return {
+    return enterEnemyPhase({
       ...battle,
       units: spent,
-      phase: 'enemy',
       message: `${atkO.name} ${ability.name} 未命中（命中率${baseHit}%）— 敌军回合…`,
       log: [...battle.log, { turn: battle.turn, message: `${atkO.name} ${ability.name} 失手` }],
-    };
+    });
   }
 
   // 计算伤害：基础伤害（用 calcDamage 的结构）× power 倍率
@@ -1084,13 +1107,12 @@ export function castAbility(
     };
   }
 
-  return {
+  return enterEnemyPhase({
     ...battle,
     units,
-    phase: 'enemy',
     message: `${atkO.name} ${fullLabel} 造成 ${dmg} 伤害${effectLabel}（敌剩余 ${newTroops}）${splashLabel} — 敌军回合…`,
     log: [...battle.log, { turn: battle.turn, message: `${fullLabel} 对 ${defO.name} 造成 ${dmg}${effectLabel}${splashLabel}` }],
-  };
+  });
 }
 
 function tickBurnAndEnergy(

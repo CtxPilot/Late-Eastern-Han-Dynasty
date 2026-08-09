@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Stage, Layer, Circle, Text, Group, Line, RegularPolygon } from 'react-konva';
-import { FORMATION_LABEL, FormationType, TerrainType, Weather, type Officer, type BattleSideContext, type BattleLogExplanation, type DuelStance } from '@leh/shared';
+import { FORMATION_LABEL, FormationType, TerrainType, Weather, tacticalTurnFromTimestamp, type Officer, type BattleSideContext, type BattleLogExplanation, type DuelStance } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
 import { ExpressionPortrait } from '../officer/ExpressionPortrait';
@@ -35,7 +35,7 @@ export function BattleView() {
   useEffect(() => { const el = containerRef.current; if (!el) return; const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight })); ro.observe(el); return () => ro.disconnect(); }, []);
   const corners = useMemo(() => hexCorners(HEX_SIZE - 1), []);
   if (!battle || !game) return null;
-  const playerTurn = battle.phase === 'player'; const selected = battle.units.find((u) => u.id === selectedUnitId); const attacker = battle.units.find((u) => u.side === 'attacker' && !u.isDestroyed); const defender = battle.units.find((u) => u.side === 'defender' && !u.isDestroyed); const selectedArmy = selected ? game.campaignArmies.find((army) => army.id === selected.armyId) : undefined; const mainAttacker = attacker ? battle.units.find((unit) => unit.side === 'attacker' && unit.commanderId === (game.campaignArmies.find((army) => army.id === unit.armyId)?.commanderId ?? unit.commanderId)) ?? attacker : undefined; const canUndoMove = Boolean(playerTurn && battle.actionHistory?.at(-1)?.reversible && battle.actionHistory.at(-1)?.kind === 'move'); const canChangeFormation = Boolean(playerTurn && selected && mainAttacker?.id === selected.id && !selected.hasActed && (battle.tacticalPoints ?? 5) >= 1 && (battle.tacticalPointsUsed ?? 0) < 1);
+  const playerTurn = battle.phase === 'player'; const selected = battle.units.find((u) => u.id === selectedUnitId); const attacker = battle.units.find((u) => u.side === 'attacker' && !u.isDestroyed); const defender = battle.units.find((u) => u.side === 'defender' && !u.isDestroyed); const selectedArmy = selected ? game.campaignArmies.find((army) => army.id === selected.armyId) : undefined; const mainAttacker = attacker ? battle.units.find((unit) => unit.side === 'attacker' && unit.commanderId === (game.campaignArmies.find((army) => army.id === unit.armyId)?.commanderId ?? unit.commanderId)) ?? attacker : undefined; const lastBattleAction = battle.actionHistory?.at(-1); const canUndoMove = Boolean(playerTurn && lastBattleAction?.source === 'player' && lastBattleAction.reversible && lastBattleAction.kind === 'move' && tacticalTurnFromTimestamp(lastBattleAction.logicalTimestamp) === battle.turn); const canChangeFormation = Boolean(playerTurn && selected && mainAttacker?.id === selected.id && !selected.hasActed && (battle.tacticalPoints ?? 5) >= 1 && (battle.tacticalPointsUsed ?? 0) < 1);
   // Keep the latest formation explanation pinned in the compact report. A formation
   // change is followed by the enemy phase and may otherwise scroll out after one
   // attack, leaving the player unable to understand the next damage result.
@@ -65,7 +65,7 @@ export function BattleView() {
         {duelMode && <div data-testid="duel-stance-picker" className="flex gap-1">{(['assault', 'steady', 'bait', 'delegate'] as const).map((v) => <button key={v} className="rounded border px-2 py-1 text-xs" onClick={() => setDuelStance(v)}>{v === 'assault' ? '强攻' : v === 'steady' ? '持重' : v === 'bait' ? '诱敌' : '委任'}</button>)}</div>}
         {attacker && selected?.id === attacker.id && !attacker.hasActed && usableAbilities.length > 0 && <div className="flex gap-1 flex-wrap">{usableAbilities.map((ab) => <button key={ab.id} data-testid={`btn-ability-${ab.id}`} className="px-2 py-1 rounded border text-xs" disabled={(attacker.energy ?? 0) < ab.energyCost} onClick={() => { setAbilitySel(abilitySel === ab.id ? null : ab.id); setFireMode(false); }}>{ab.name}</button>)}</div>}
       </>}
-      {canUndoMove && <button data-testid="btn-battle-undo" title="仅可撤销尚未攻击或消耗 RNG 的最后一次移动" className="px-3 py-1.5 rounded bg-sky-950 border border-sky-700 text-sm text-sky-200" onClick={() => void undoBattleAction()}>撤销移动</button>}
+      {canUndoMove && <button data-testid="btn-battle-undo" title="仅可撤销本回合尚未攻击、施法、结束行动或消耗 RNG 的最后一次移动" className="px-3 py-1.5 rounded bg-sky-950 border border-sky-700 text-sm text-sky-200" onClick={() => void undoBattleAction()}>撤销移动</button>}
       <button data-testid="btn-exit-battle" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-sm" onClick={() => void exitBattle()}>{battle.phase === 'over' && battle.winner === 'attacker' ? '返回并占城' : battle.phase === 'over' ? '返回大地图' : '撤军返回'}</button>
     </div>
     {battle.duel && <DuelPanel duel={battle.duel} />}

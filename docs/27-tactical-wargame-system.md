@@ -2,6 +2,7 @@
 
 > S10 / S21 当前运行技术边界。Session 277 首个正式切片。
 > Session 279 仅补充原设定优先的整合边界；运行时代码、Schema、API、RNG 和静态数据均未改变。
+> Session 334 收紧同回合撤销、交权封闭和旧档 stale 记录的运行时降权边界。
 > 后续实施计划见 `29-formation-integration-development-plan.md`，须经用户另行明确启动。
 
 ## 一、设计目标与边界
@@ -50,7 +51,8 @@ POST /api/game/melee/round { actionType, targetFormation? }
 ```
 
 错误码/消息：`INVALID_GRID`、`OUT_OF_BOUNDS`、`BLOCKED`、`UNREACHABLE`、
-`UNDO_EMPTY`、`UNDO_PHASE_LOCKED`、`UNDO_IRREVERSIBLE:<kind>`。Express 统一映射为 HTTP 400；
+`UNDO_EMPTY`、`UNDO_PHASE_LOCKED`、`UNDO_TURN_LOCKED`、`UNDO_IRREVERSIBLE:<kind>`、
+`UNDO_STATE_MISMATCH`。Express 统一映射为 HTTP 400；
 校验失败前不得修改状态。
 
 ## 三、坐标、索引与转换
@@ -244,8 +246,15 @@ turn_start → move → attack → skill → turn_end → enemy ─┬→ turn_s
 `player/ai/system` 来源，不使用墙钟时间破坏确定性回放。事件总线同步处理权威归约，异步处理
 动画/遥测；异步失败不得回滚已提交事件。
 
-`BattleState.actionHistory` 随存档保存最近三条操作。移动保存前后坐标和移动力，可在攻击、
-施法、结束行动前撤销；攻击写入 `reversible=false` 审计记录，因为它已经消费 RNG 并揭示结果。
+`BattleState.actionHistory` 随存档保存最近三条操作。移动保存前后坐标和移动力，只可在创建它的
+当前玩家回合、攻击/施法/结束行动之前撤销；攻击写入 `reversible=false` 审计记录，因为它已经消费
+RNG 并揭示结果。进入任一 `player → enemy` 边界时，历史不删除，但所有尚可逆记录均封闭。
+
+服务端撤销必须依次满足：当前为玩家阶段；最后记录来源为 `player`、种类为 `move`、
+`reversible=true`；`floor(logicalTimestamp/1000) === BattleState.turn`；单位为存活攻方，当前位置匹配
+`afterPosition`，`beforePosition` 在图内且未被其他存活单位占用，`beforeMp` 不超过单位上限。
+回合不符返回 `UNDO_TURN_LOCKED`，快照不符返回 `UNDO_STATE_MISMATCH`；拒绝前不改坐标、MP、历史或战报。
+修复前已保存的 stale `reversible=true` 记录仍按原 Schema 读取，仅在运行时拒绝，不升存档版本。
 这是撤销的明确安全边界，而非客户端任意回滚。
 
 ## 八、规则插件与扩展指南
@@ -293,9 +302,9 @@ P = clamp(配置基础率 + 勇猛×1% + (挑战方士气-守方士气)×0.2%, 0
 | 纯核心 | `tactical-grid/tactical-system/melee-engagement` 17项 |
 | 性能 | 100×100 A* `<100ms` |
 | 覆盖率 | statements≥90%、functions≥90%、lines≥90%、branches≥80% |
-| 权威集成 | `verify-save-battle`：A*落子、审计、撤销、存档 |
+| 权威集成 | `verify-save-battle`：A*落子、同回合撤销、交权封闭、旧档跨回合拒绝、快照不变 |
 | 白刃模式 | `verify-melee-modes`：三模式、变阵、非法阵型 |
-| 浏览器 | `verify-session277-ui`：悬停预览→动画→权威落子→撤销 |
+| 浏览器 | `verify-session277-ui`：同回合撤销→交权→新回合隐藏/端点拒绝→新移动再可撤 |
 
 注释覆盖率没有可靠自动测量工具，本项目不伪造“90%注释率”；核心公共 API 与关键算法均使用
 TSDoc/行内规则注释，按代码审查门禁执行。
@@ -306,4 +315,4 @@ TSDoc/行内规则注释，按代码审查门禁执行。
 攻/守阵型贡献，非法变阵显示服务端阻断原因。面板不在客户端重算规则，旧日志无需迁移；浏览器 1440×900 实测
 面板出现且 console error=0。
 
-*v1.2 | 2026-08-03 | Session 302 · FM-P4 战报解释 UI*
+*v1.3 | 2026-08-09 | Session 334 · 移动撤销回合边界*

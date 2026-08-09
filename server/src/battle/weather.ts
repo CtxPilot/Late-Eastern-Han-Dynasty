@@ -18,6 +18,11 @@ export function effectiveMovement(maxMp: number, weather: Weather): number {
   return Math.max(0, maxMp - weatherMovementPenalty(weather));
 }
 
+/** 以当前天气下的回合初始移动力为基线，避免雨雪天把“尚未移动”误判为“已经移动”。 */
+export function hasMovedThisTurn(mp: number, maxMp: number, weather: Weather): boolean {
+  return mp < effectiveMovement(maxMp, weather);
+}
+
 /** 一般兵种射程不低于1；雾天远程禁射由既有门禁单独处理。 */
 export function effectiveUnitRange(baseRange: number, weather: Weather): number {
   if (baseRange <= 1) return baseRange;

@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import configJson from './data/tactical-system.v1.json';
 import v2ConfigJson from './data/tactical-system.v2.json';
-import { BattleRuleRegistry, TACTIC_SYNERGY_NEUTRAL, TacticalEventBus, TacticalUndoStack, duelTriggerChance, migrateTacticalV1ToV2, parseTacticalConfig, parseTacticalConfigV2, resolveFormationTactic, resolveTacticSynergy, tacticModifiers, transitionTacticalPhase } from './tactical-system.js';
+import { BattleRuleRegistry, TACTIC_SYNERGY_NEUTRAL, TacticalEventBus, TacticalUndoStack, duelTriggerChance, migrateTacticalV1ToV2, parseTacticalConfig, parseTacticalConfigV2, resolveFormationTactic, resolveTacticSynergy, tacticModifiers, tacticalTurnFromTimestamp, transitionTacticalPhase } from './tactical-system.js';
 
 describe('tactical-system', () => {
   it('配置 v1 经 Zod 校验且含5阵3术', () => { const c = parseTacticalConfig(configJson); expect(c.formations).toHaveLength(5); expect(c.tactics).toHaveLength(3); });
@@ -18,6 +18,7 @@ describe('tactical-system', () => {
   it('v1 文件保持只读，不因迁移改变', () => { expect(configJson.formations).toHaveLength(5); expect(configJson.schemaVersion).toBe(1); });
   it('阶段仅允许规定方向且记录确定性来源时间', () => {
     expect(transitionTacticalPhase('turn_start', 'move', 2, 4, 'system')).toMatchObject({ logicalTimestamp: 2004, source: 'system' });
+    expect(tacticalTurnFromTimestamp(2004)).toBe(2);
     expect(() => transitionTacticalPhase('move', 'skill', 1, 1, 'player')).toThrow('INVALID_PHASE_TRANSITION');
   });
   it('事件总线支持同步、异步与退订', async () => {

@@ -25,6 +25,11 @@ export function transitionTacticalPhase(current: TacticalPhase, to: TacticalPhas
   return { from: current, to, logicalTimestamp: turn * 1000 + sequence, source };
 }
 
+/** 从确定性逻辑时间戳还原创建该记录的战斗回合。 */
+export function tacticalTurnFromTimestamp(logicalTimestamp: number): number {
+  return Math.floor(logicalTimestamp / 1000);
+}
+
 export type TacticalEvent =
   | { type: 'phase.changed'; payload: TacticalTransition }
   | { type: 'unit.moved'; payload: { unitId: string; from: string; to: string; cost: number } }

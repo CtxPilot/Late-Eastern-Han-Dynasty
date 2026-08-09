@@ -3,10 +3,10 @@
 
 import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType, Weather } from '@leh/shared';
 import {
-  battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
+  battleEnemyPhase, battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
-import { attackUnit, runEnemyPhase } from '../engine/battle.js';
+import { attackUnit, finishPlayerAction, runEnemyPhase, undoLastBattleAction } from '../engine/battle.js';
 
 let passed = 0;
 let failed = 0;
@@ -53,6 +53,36 @@ const moved = battleMove(mover.id, previewQ, previewR);
 check('A* 可达格执行后写入可撤销审计记录', moved.actionHistory?.at(-1)?.kind === 'move' && moved.units.find((unit) => unit.id === mover.id)?.position.q === previewQ);
 const undone = battleUndo();
 check('攻击前可撤销移动并恢复位置/移动力', undone.units.find((unit) => unit.id === mover.id)?.position.q === mover.position.q && undone.units.find((unit) => unit.id === mover.id)?.mp === mover.mp);
+
+// Session 334：移动撤销权只属于创建它的玩家回合，交权后不能跨敌军回合回滚。
+const boundaryMove = battleMove(mover.id, previewQ, previewR);
+const mismatchedAction = boundaryMove.actionHistory!.at(-1)!;
+const mismatchedSnapshot = BattleStateRuntimeSchema.parse({
+  ...boundaryMove,
+  actionHistory: [...boundaryMove.actionHistory!.slice(0, -1), { ...mismatchedAction, afterPosition: mismatchedAction.beforePosition }],
+});
+const mismatchedBefore = JSON.stringify(mismatchedSnapshot);
+let mismatchError = '';
+try { undoLastBattleAction(mismatchedSnapshot); } catch (error) { mismatchError = error instanceof Error ? error.message : String(error); }
+check('撤销拒绝与当前落点不符的伪造记录且不改状态', mismatchError === 'UNDO_STATE_MISMATCH' && JSON.stringify(mismatchedSnapshot) === mismatchedBefore);
+const handedOff = battleFinishPlayer();
+check('交权进入敌军阶段时封闭本回合移动记录', handedOff.actionHistory?.at(-1)?.kind === 'move' && handedOff.actionHistory.at(-1)?.reversible === false);
+const nextPlayerTurn = battleEnemyPhase();
+check('敌军阶段结束后进入下一玩家回合', nextPlayerTurn.phase === 'player' && nextPlayerTurn.turn === parsedBattle.turn + 1);
+const beforeLateUndo = nextPlayerTurn.units.find((unit) => unit.id === mover.id)!;
+const beforeLateUndoSnapshot = JSON.stringify(nextPlayerTurn);
+let lateUndoError = '';
+try { battleUndo(); } catch (error) { lateUndoError = error instanceof Error ? error.message : String(error); }
+const afterLateUndo = getBattle()!;
+check('跨回合撤销返回专用错误码且不改写权威状态', lateUndoError === 'UNDO_TURN_LOCKED' && JSON.stringify(afterLateUndo) === beforeLateUndoSnapshot && afterLateUndo.units.find((unit) => unit.id === mover.id)?.position.q === beforeLateUndo.position.q && afterLateUndo.units.find((unit) => unit.id === mover.id)?.position.r === beforeLateUndo.position.r && afterLateUndo.units.find((unit) => unit.id === mover.id)?.mp === beforeLateUndo.mp);
+const legacyStaleSnapshot = BattleStateRuntimeSchema.parse({
+  ...nextPlayerTurn,
+  actionHistory: nextPlayerTurn.actionHistory?.map((action, index, history) => index === history.length - 1 ? { ...action, reversible: true } : action),
+});
+const legacyBefore = JSON.stringify(legacyStaleSnapshot);
+let legacyError = '';
+try { undoLastBattleAction(legacyStaleSnapshot); } catch (error) { legacyError = error instanceof Error ? error.message : String(error); }
+check('旧档 stale reversible 记录仍可解析但不可跨回合撤销', legacyError === 'UNDO_TURN_LOCKED' && JSON.stringify(legacyStaleSnapshot) === legacyBefore);
 
 const current = getGame();
 check('真实战斗已进入权威 GameState.activeBattles', current.activeBattles[0]?.id === parsedBattle.id);
@@ -105,6 +135,36 @@ const weatherChanged = runEnemyPhase({ ...actedEnemyPhase, weather: Weather.CLEA
 })());
 check('天气倒计时归零后按权威 RNG 切换天气', weatherChanged.weather === Weather.CLOUDY);
 check('天气切换后重置 3~8 回合倒计时', weatherChanged.weatherChangeTimer === 6);
+
+// Session 333：同一敌军阶段仍禁止重入，但玩家交回回合后必须恢复敌军行动资格。
+const twoRoundBattle = {
+  ...duelBattle,
+  phase: 'enemy' as const,
+  weather: Weather.SNOW,
+  weatherChangeTimer: undefined,
+  duel: undefined,
+  units: duelBattle.units.map((unit) => unit.side === 'attacker'
+    ? { ...unit, position: { q: 3, r: 2 }, troopCount: 5000, maxTroops: 5000, hasActed: true, mp: 0 }
+    : { ...unit, position: { q: 2, r: 2 }, troopCount: 5000, maxTroops: 5000, energy: 0, hasActed: false, mp: unit.maxMp }),
+};
+let firstRoundAttackRolls = 0;
+const firstEnemyRound = runEnemyPhase(twoRoundBattle, getGame(), () => {
+  firstRoundAttackRolls += 1;
+  return 0.5;
+});
+const troopsAfterFirstEnemyRound = firstEnemyRound.units.find((unit) => unit.side === 'attacker')!.troopCount;
+check('首个敌军阶段正常攻击并消费权威 RNG', troopsAfterFirstEnemyRound < 5000 && firstRoundAttackRolls > 0);
+const secondEnemyReady = finishPlayerAction(firstEnemyRound);
+const readyDefender = secondEnemyReady.units.find((unit) => unit.side === 'defender')!;
+check('玩家交回回合后恢复敌军行动资格', secondEnemyReady.phase === 'enemy' && !readyDefender.hasActed);
+check('新敌军阶段按当前天气恢复有效移动力', readyDefender.mp === Math.max(0, readyDefender.maxMp - 2));
+let secondRoundAttackRolls = 0;
+const secondEnemyRound = runEnemyPhase(secondEnemyReady, getGame(), () => {
+  secondRoundAttackRolls += 1;
+  return 0.5;
+});
+check('第二个敌军阶段会再次攻击而非永久待机', secondEnemyRound.units.find((unit) => unit.side === 'attacker')!.troopCount < troopsAfterFirstEnemyRound);
+check('跨回合恢复不绕过权威攻击 RNG', secondRoundAttackRolls > 0 && !secondEnemyRound.message.includes('敌军待机'));
 exitBattle();
 
 // Session 327：玩家普通攻击与敌军 AI 共用 UnitTemplate.range；远程兵种不走白刃朝向判定。
@@ -120,10 +180,11 @@ const rangedReady = {
   phase: 'player' as const,
   units: rangedBattle.units.map((unit) => unit.id === rangedAttacker.id
     ? { ...unit, unitType: UnitType.ARCHER, position: { q: 2, r: 2 }, facing: 0 as const }
-    : { ...unit, position: { q: 4, r: 2 } }),
+    : { ...unit, position: { q: 4, r: 2 }, hasActed: true, mp: 0 }),
 };
 const rangedAfter = attackUnit(rangedReady, rangedAttacker.id, rangedDefender.id, getGame(), () => 0.5);
 check('玩家远程普通攻击可在兵种射程内命中', rangedAfter.units.find((unit) => unit.id === rangedDefender.id)!.troopCount < rangedDefender.troopCount);
+check('玩家攻击交回回合时同样恢复敌军行动资格', !rangedAfter.units.find((unit) => unit.id === rangedDefender.id)!.hasActed);
 const fogRanged = { ...rangedReady, weather: Weather.FOG };
 let fogRangedRejected = false;
 try { attackUnit(fogRanged, rangedAttacker.id, rangedDefender.id, getGame(), () => { throw new Error('雾天远程攻击不应消费 RNG'); }); }

@@ -9,7 +9,7 @@ import { hexFormationMods } from './hex-formation.js';
 import { applySpecialEffect } from './special-effects.js';
 import { resolveAttack as resolveCritAttack, type AttackActor, type CritRng } from './crit.js';
 import { equipCritRateFor } from '../engine/items.js';
-import { effectiveMovement, effectiveUnitRange } from './weather.js';
+import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from './weather.js';
 
 export interface EnemyOfficerStats {
   war: number;
@@ -21,6 +21,10 @@ export interface EnemyOfficerStats {
 
 function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
   return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+}
+
+function markEnemyWaiting(units: BattleUnit[], unitId: string): BattleUnit[] {
+  return units.map((unit) => unit.id === unitId ? { ...unit, hasActed: true, mp: 0 } : unit);
 }
 
 /** S10 0-A tactical AI: deterministic scoring with attacks, fire tactics and terrain-aware movement. */
@@ -62,10 +66,18 @@ export function runSimpleEnemyAi(
     if (!live || live.isDestroyed) continue;
 
     const target = selectTarget(live, next, playerSide, unitTemplates, strongAgainst);
-    if (!target) continue;
+    if (!target) {
+      next = markEnemyWaiting(next, live.id);
+      messages.push(`${officerStats[live.commanderId]?.name ?? '敌军'} 无目标，待机`);
+      continue;
+    }
 
     const ut = unitTemplates[live.unitType];
-    if (!ut) continue;
+    if (!ut) {
+      next = markEnemyWaiting(next, live.id);
+      messages.push(`${officerStats[live.commanderId]?.name ?? '敌军'} 兵种数据缺失，待机`);
+      continue;
+    }
     const dist = hexDistance(live.position, target.position);
 
     const ability = tryAbilityTactic(next, live, target, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather);
@@ -88,7 +100,7 @@ export function runSimpleEnemyAi(
     if (dist <= unitRange) {
       if (weather === Weather.FOG && ut.range > 1) {
         const name = officerStats[live.commanderId]?.name ?? '敌军';
-        next = next.map((u) => u.id === live.id ? { ...u, hasActed: true, mp: 0 } : u);
+        next = markEnemyWaiting(next, live.id);
         messages.push(`${name} 雾中无法射击`);
         continue;
       }
@@ -144,6 +156,11 @@ export function runSimpleEnemyAi(
           }
         }
       }
+    } else {
+      // 被其他单位完全阻挡时也要结束本回合，避免重入 AI 无限重复寻路。
+      next = markEnemyWaiting(next, live.id);
+      const name = officerStats[live.commanderId]?.name ?? '敌军';
+      messages.push(`${name} 无法接近目标，待机`);
     }
   }
 
@@ -462,7 +479,7 @@ function doAttack(
       attacker: atkActor, defender: defActor, baseDamage: dmg, matchup,
       attackerTerrain: atkTerrain, defenderTerrain: defTerrain,
       distance: hexDistance(attacker.position, defender.position),
-      isFirstRound: battleTurn === 1, attackerMoved: attacker.mp < attacker.maxMp,
+      isFirstRound: battleTurn === 1, attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, weather),
       attackerCritBonus: equipCritRateFor(fullAtkO),
       defenderCritBonus: equipCritRateFor(fullDefO),
       rng,

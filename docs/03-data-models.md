@@ -2413,10 +2413,20 @@ pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段
 ### Session 277 · BattleState 战旗审计扩展
 
 - `BattleUnit.facing?: 0|1|2|3|4|5`：六方向朝向；旧档缺省时攻方按0、守方按3解释。
-- `BattleState.actionHistory?: BattleActionRecord[]`：最多3条移动/攻击操作，使用
+- `BattleState.actionHistory?: BattleActionRecord[]`：最多3条移动/攻击/变阵操作，使用
   `turn×1000+sequence` 逻辑时间和 `player/ai/system` 来源。移动含前后坐标与原移动力；
   攻击因消费权威 RNG 标为不可逆。两字段均 optional，旧存档兼容。
 - 路径预览 `PathResult/PathStep` 不进入存档，仅作为请求响应和动画协议。
+
+### Session 334 · 移动撤销回合边界
+
+- `reversible=true` 不单独构成撤销授权；只有当前玩家回合最后一条、来源为
+  `player`、种类为 `move` 且逻辑时间所属回合等于 `BattleState.turn` 的记录才可撤销。
+- 所有 `player → enemy` 交权路径保留最近3条审计历史，但会将尚可逆记录封闭为
+  `reversible=false`；敌军结算后不得回滚旧坐标或旧移动力。
+- 服务端撤销还会复验单位存活/阵营、当前落点与 `afterPosition`、原位置边界/占用以及
+  `beforeMp ≤ maxMp`；不信任存档中的审计记录。本轮不新增字段或升级存档版本；修复前遗留的
+  stale `reversible=true` 记录仍可解析，但运行时会被降权拒绝。
 
 ---
 
