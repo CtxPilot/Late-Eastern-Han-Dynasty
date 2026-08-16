@@ -51,7 +51,10 @@
     "index.ts",
     "campaign-utils.ts",
     "relations.ts",
+    "skill-consume.ts",
     "mandate-popular.ts",
+    "tournament.ts",
+    "civilian-farming.ts",
     "formation-core.ts"
   ]
 }

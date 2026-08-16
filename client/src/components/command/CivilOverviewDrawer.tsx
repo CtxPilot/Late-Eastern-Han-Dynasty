@@ -271,7 +271,7 @@ export function CivilOverviewDrawer() {
               </select>
             </label>
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
-              手工业、交通与卫生尚未实装；农业开发不等同于屯田。
+              手工业、交通与卫生尚未实装；农业开发不等同于屯田（民屯请用命令坞「屯田」）。
             </p>
           </>
         ) : facet === 'construction' ? (

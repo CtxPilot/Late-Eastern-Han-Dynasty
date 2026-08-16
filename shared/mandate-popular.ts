@@ -2,6 +2,7 @@
 
 import type { GameState } from './types/game.js';
 import type { Faction } from './types/faction.js';
+import { resolveAffinity } from './relations.js';
 
 export function computeMandate(faction: Faction, game: GameState): number {
   let base = 0;
@@ -63,11 +64,10 @@ function averageRelationScore(factionId: number, game: GameState): number {
   let count = 0;
   for (let i = 0; i < officers.length; i++) {
     for (let j = i + 1; j < officers.length; j++) {
-      const a = officers[i];
-      const b = officers[j];
-      const diff = Math.abs((a.hidden?.compatibility ?? 50) - (b.hidden?.compatibility ?? 50));
-      const affinity = (1 - diff / 150) * 100;
-      total += affinity;
+      // S24 Session 338：人心聚合读取运行时亲和（有覆写则用之，否则 pairAffinity 基线）
+      const affinity = resolveAffinity(officers[i], officers[j], game.relationAffinities);
+      // 亲和 -100~100 → 0~100 供人心加权
+      total += (affinity + 100) / 2;
       count++;
     }
   }

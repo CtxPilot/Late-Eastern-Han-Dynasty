@@ -39,6 +39,7 @@ import {
   developFarm,
   relief,
   trainTroops,
+  setCivilianFarming,
   type DevelopKind,
 } from '../engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
@@ -99,7 +100,7 @@ import {
   getKingRequirements,
   proclaimKing,
 } from '../engine/hegemony.js';
-import { launchPlot } from '../engine/plot.js';
+import { launchPlot, cancelPlot } from '../engine/plot.js';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
 import {
   dispatchMission,
@@ -334,6 +335,8 @@ function buildGameState(
     // 两个剧本均 190 年正月开局，汉帝此时在洛阳（董卓迁都长安是二月事件，开局未触发）。
     // 城池易主时本字段不变，"控制汉帝"由 controlsEmperor() 按当前城池归属动态判定。
     emperorLocation: 1,
+    // S24：运行时亲和度表（空表=全部回退 pairAffinity 基线）
+    relationAffinities: {},
   };
   // 子女补登：appearYear ≤ 开局年则直接入库（0-A 起 190 年通常无人）
   const withChildren = catchUpChildren(draft);
@@ -503,6 +506,13 @@ export function doConscript(cityId: number): GameState {
 export function doRelief(cityId: number): GameState {
   return withLock(() => {
     currentGame = relief(getGame(), cityId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+export function doSetCivilianFarming(cityId: number, households: number): GameState {
+  return withLock(() => {
+    currentGame = setCivilianFarming(getGame(), cityId, households);
     return getClientGame();
   });
 }
@@ -775,16 +785,25 @@ export function doLaunchPlot(
   targetOfficerId: number | undefined,
   agentId: string | undefined,
   casterOfficerId?: number,
+  feintCityId?: number,
 ): GameState {
   return withLock(() => {
     currentGame = launchPlot(getGame(), {
       type: type as PlotType,
       targetFactionId,
       targetCityId,
+      feintCityId,
       targetOfficerId,
       agentId: agentId || undefined,
       casterOfficerId,
     }, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+export function doCancelPlot(plotId: string): GameState {
+  return withLock(() => {
+    currentGame = cancelPlot(getGame(), plotId);
     return getClientGame();
   });
 }
@@ -2010,7 +2029,13 @@ export function grandStrategistStatus(): {
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { pairAffinity, relationState, skillPointsForMerit, traitPointsForMerit } from '@leh/shared';
+import {
+  mergeSkillsWithTree,
+  resolveAffinity,
+  relationState,
+  skillPointsForMerit,
+  traitPointsForMerit,
+} from '@leh/shared';
 import type { StaticRelation, OfficerRelation, SkillTreeDef } from '@leh/shared';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -2045,7 +2070,7 @@ export function getOfficerRelations(officerId: number): OfficerRelation[] {
       seen.add(key);
       const target = state.officers[rel.toId];
       if (!target) continue;
-      const aff = pairAffinity(officer, target);
+      const aff = resolveAffinity(officer, target, state.relationAffinities);
       result.push({
         targetId: rel.toId,
         targetName: target.name,
@@ -2060,7 +2085,7 @@ export function getOfficerRelations(officerId: number): OfficerRelation[] {
       seen.add(key);
       const target = state.officers[rel.fromId];
       if (!target) continue;
-      const aff = pairAffinity(officer, target);
+      const aff = resolveAffinity(officer, target, state.relationAffinities);
       result.push({
         targetId: rel.fromId,
         targetName: target.name,
@@ -2100,6 +2125,28 @@ export function getOfficerSkillState(officerId: number): {
   };
 }
 
+function baselineSkillsFor(officerId: number): import('@leh/shared').OfficerSkillStatic[] {
+  return staticData.officers.find((o) => o.id === officerId)?.skills ?? [];
+}
+
+/** 验证脚本专用：抬高 meritLevel 以获得技能点（不改累计 merit 叙事）。 */
+export const skillTreeTestHooks = {
+  setMeritLevelForTest(officerId: number, meritLevel: number): void {
+    withLock(() => {
+      const state = getGame();
+      const officer = state.officers[officerId];
+      if (!officer) throw new Error('武将不存在');
+      currentGame = {
+        ...state,
+        officers: {
+          ...state.officers,
+          [officerId]: { ...officer, meritLevel, peakMeritLevel: Math.max(officer.peakMeritLevel ?? 0, meritLevel) },
+        },
+      };
+    });
+  },
+};
+
 export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<typeof getOfficerSkillState> {
   return withLock(() => {
     const state = getGame();
@@ -2112,7 +2159,7 @@ export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<
       if (node) break;
     }
     if (!node) throw new Error('技能节点不存在');
-    const treeState = officer.skillTreeState ?? {};
+    const treeState = { ...(officer.skillTreeState ?? {}) };
     const currentLevel = treeState[nodeId] ?? 0;
     if (currentLevel >= node.maxLevel) throw new Error('已达最高等级');
     const spent = officer.skillPointsSpent ?? 0;
@@ -2122,6 +2169,13 @@ export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<
       if ((treeState[prereq] ?? 0) < 1) throw new Error(`前置技能 ${prereq} 未解锁`);
     }
     treeState[nodeId] = currentLevel + 1;
+    // S25：加点同步 officer.skills，供火计/暴击/单挑/内政消费（docs/30 §8.3）
+    const syncedSkills = mergeSkillsWithTree(
+      baselineSkillsFor(officerId),
+      officer.skills,
+      treeState,
+      trees,
+    );
     currentGame = {
       ...state,
       officers: {
@@ -2130,6 +2184,7 @@ export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<
           ...officer,
           skillTreeState: treeState,
           skillPointsSpent: spent + node.costPerLevel,
+          skills: syncedSkills,
         },
       },
     };
@@ -2169,6 +2224,14 @@ export function resetSkillTree(officerId: number): ReturnType<typeof getOfficerS
     const state = getGame();
     const officer = state.officers[officerId];
     if (!officer) throw new Error('武将不存在');
+    const trees = loadSkillTrees();
+    // 清空树后按静态基线重合并，避免树加点抬高的 skills 残留
+    const restoredSkills = mergeSkillsWithTree(
+      baselineSkillsFor(officerId),
+      officer.skills,
+      {},
+      trees,
+    );
     currentGame = {
       ...state,
       officers: {
@@ -2179,6 +2242,7 @@ export function resetSkillTree(officerId: number): ReturnType<typeof getOfficerS
           skillPointsSpent: 0,
           traitLevels: {},
           traitPointsSpent: 0,
+          skills: restoredSkills,
         },
       },
     };

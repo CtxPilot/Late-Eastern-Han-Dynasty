@@ -9,12 +9,52 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 336 收口**（S10 撤销恢复 facing + 审计序号唯一） |
+| 会话 | **Session 341**（主线③续：L2 暗渡陈仓） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 336：移动审计写 `beforeFacing`，撤销恢复朝向；`appendBattleAction`/`nextBattleActionSeq` 按同回合 max 序号+1 分配 id/时间戳，slice(-3) 后仍唯一。Session 335：单挑暂停门禁与敌军单挑 `afterDuel` 续行 |
-| 文档最新 | `03`/`05`/`06`/`09`/`12`/`35`/`10-progress` 与本交接已同步；S16 SQLite、多用户仍未实装 |
-| 本交接用途 | S10 相邻债（facing + 审计 ID）已收口；分布实施主线见 35 号文档 |
-| 下一步 | **保持 S10** 或经用户拍板进入主线②（S24/S25/S26 深化 / S19 / S21）。天气主动技能与特殊兵种熟练度仍待批准；**0-B 继续暂缓** |
+| 代码最新 | Session 341：暗渡陈仓引擎/AI 牵制/自动战攻防×1.2 + 命令坞双城入口 |
+| 文档最新 | `35`/`12`/`04`/`06`/`07`/`01`/`02`/`05`/`16`/`21`/`10-progress` 与本交接已同步 |
+| 本交接用途 | **L2 第二计已落地**；其余 L2/军屯后置 |
+| 下一步 | 其余 L2（如树上开花）或军屯；**0-B 继续暂缓** |
+
+### Session 341 交接要点
+
+- L2 暗渡陈仓：`PlotType.SECRET_CROSSING`；金200；两邻接敌城 surface；`feintCityId` 明修 + `targetCityId` 暗渡；PREP 1→ACTIVE 3。
+- 联动：明修守军 AI 不得轻离；第三方对明修攻权×2.2；对暗渡城自动战攻防×1.2；`cancelPlot` 可用。
+- 命令坞计略抽屉双城选择；API `feintCityId`。
+- 验证：`verify-l2-secret-crossing` **23/23**、undermine 18、plot-spy-rng 34、save-plot 9；StrategyOverviewDrawer 3/3；client/server typecheck。
+- 边界：其余 L2、L3、军屯、调虎离山（需女间谍+武将调动）未做。
+
+### Session 340 交接要点
+
+- S16：命名槽位介质改为 `$XDG_DATA_HOME/leh/saves.db`（`better-sqlite3`，WAL）；API 仍为 `/save/slots*`，信封/Schema/RNG 校验链不变。
+- 首次打开库时把旧 `leh/saves/*.json` 迁入 SQLite，原文件改名为 `*.json.migrated`；浏览器导入/导出 JSON 仍可用。
+- 验证：`verify-save-slots` **10/10**（含 SQLite 写入断言 + 遗留 JSON 迁移）；server typecheck 通过。
+- 边界：不新增 GameState 字段/规则/RNG/数据规模；多用户与云同步未做；无独立删除槽位 API。
+- 文档：`README`/`02`/`03`/`06`/`07`/`09`/`12`/`35`/`HANDOFF`/`10-progress` 已对齐。
+
+### Session 339 交接要点
+
+- L2 釜底抽薪：PREP 分期 6 月 → 权威 RNG 结算 → ACTIVE 6 月经济破坏；`cancelPlot` 沉没成本；出征士气/粮耗联动。
+- 民屯：命令坞真实入口；`POST /civil/civilian-farming`；月结产粮公式；同季限调一次。
+- 验证：l2-undermine 18、civilian-farming 7、plot-spy-rng 34、save-plot 9。
+- 边界：其余 10 计 L2、L3 国策、军屯、天气主动技能、0-B 未做。（**SQLite 已由 Session 340 收口**）
+- 文档：`README`/`01`/`09`/`12`/`16`/`35`/`04`/`06`/`07`/`HANDOFF` 交付表已与 Session 339 对齐。
+
+### Session 338 交接要点
+
+- S24：`relationAffinities`；同城/出征/被俘/联姻；叙事 actionLog。
+- S26：天命→结盟、人心→征兵、月度叛逃检定。
+- S19：每年正月 16 人单败大会瞬时结算（复用 duel，唯伤不杀）。
+- S21：`verify-s21-layers` 场景栈 L1~L4 + 三模式结算回写 **20/20**；演出打磨后置。
+- 验证：relations 10、mandate 7、tournament 7、s21 20、negotiation 40、shared 392、skill-consume 19。
+- 边界：天气主动技能/特殊兵种熟练度仍待批准；L2/屯田/SQLite/0-B 未做。（**L2 首计+民屯已由 Session 339 收口**）
+
+### Session 337 交接要点
+
+- 加点写回 `officer.skills`（`mergeSkillsWithTree`：max(静态基线, 树派生)；跨树同 skillId 取 max）；重置回基线。
+- 内政消费：开发/征兵/训练/寻访/辩才/医术；战斗火计·暴击·单挑沿用 skills 读取。
+- 验证：`verify-skill-consume` **19/19**、shared **383**、client **43**、negotiation-r2 **40/40**、merit-consume 17、typecheck 通过。
+- 边界：未扩数据规模；水计等未实装主动计策不宣称完成；全量自然体力恢复公式未启用（仅医术 +Lv）。
 
 ### Session 336 交接要点
 
@@ -535,21 +575,21 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 季度衰减/保底/advanceTurn 日志/三字段过完整 Schema）、`verify-merit-headless` **7/7**
 | S01 | 回合 | M+ | `turn.ts`；全势力金粮同步 |
 | S02 | 地图 | M | Natural Earth；官道；LOD |
-| S03 | 内政 | M | 农/商/城、征兵、训练、施米；**军屯/民屯未实装** |
+| S03 | 内政 | M | 农/商/城、征兵、训练、施米；**民屯 Session 339 最小切片**；军屯未实装 |
 | S04 | 人口经济 | M | 四桶 demographics + 粮耗 |
 **适配**：verify-hc-p0（8c/8i 夏侯惇/曹仁夹具补 Lv6 功绩）、verify-hc-p1-3（maxOfficer
 夹具补 Lv6 功绩）。**后置**：等级表属性/技能/特殊效果数值消费（体力保持 meritLevel×2
 | S07 | 谍报 | M+ | 女间谍 / 献美点化 |
 | S08 | 外交 | M+ | 进贡/结盟/献美 |
 | S09 | 美女资源 | M | stock；**非历史女** |
-| S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗、单挑引擎、暴击/反击/连击与战役 Army 编成/行军/围城/自动战斗 + **三层战斗架构实装**：战场地图画面（Tier I 节点子集渲染/行军/交战） + 白刃战标准模式（Tier II 战术点系统/阵型选择/runMeleeRound引擎） + 入口三选弹窗。**单挑嵌套锁已修复**，战役单挑仍是简化事件。**已设计**：阵型双轴成长体系（§4, Session 120）+ 工程器械6种Lv1~Lv3+城防体系+瓮城阶段式守城（§15, Session 121）。**部曲、军屯/民屯、爵位加成、S21串联、战略点、战场工程建造、陷阱系统未实装** |
+| S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗、单挑引擎、暴击/反击/连击与战役 Army 编成/行军/围城/自动战斗 + **三层战斗架构实装**：战场地图画面（Tier I 节点子集渲染/行军/交战） + 白刃战标准模式（Tier II 战术点系统/阵型选择/runMeleeRound引擎） + 入口三选弹窗。**单挑嵌套锁已修复**，战役单挑仍是简化事件。**已设计**：阵型双轴成长体系（§4, Session 120）+ 工程器械6种Lv1~Lv3+城防体系+瓮城阶段式守城（§15, Session 121）。**部曲、军屯、爵位加成、战略点、战场工程建造、陷阱系统未实装**（民屯归 S03；S21 串联见 Session 338） |
 | S11 | 人事 | **M+** | 搜索/登用 + 任命三轨 |
 | S12 | 官职功绩体力 | **S/M** | 精简任命；meritLevel 未实现；体力完整 |
 | S13 | 宝物 | S | 薄 |
 ```bash
 | S15 | AI | M+ | 内政占位 + 出征占城 + **总军师自动态势切换** |
 | S16 | 剧本/存档 | **M/D** | 两剧本选择与白名单已可玩；无 SQLite |
-| S17 | 计谋 | **S/M+** | **三层体系设计完成**：L1 美人计/离间/假情报/空城 ✅ · L2 釜底抽薪/调虎离山/暗渡陈仓等 11 计 · L3 以逸待劳/远交近攻等 8 国策 · 行政↔战场联动总表；文档 §31 全量重写；战役层自动战斗算法已预留 S17 计谋修正项 |
+| S17 | 计谋 | **S/M+** | L1 四计 ✅ · **L2 釜底抽薪 ✅ Session 339** · 其余 L2/L3 设计；行政↔战场联动 |
 | S18 | 家族 | **M+** | 婚配/跟随/子女引擎 ✅；父辈/族谱 ❌ |
 # 迷雾出征: pnpm verify-march-fog        # 7项权威边界断言
 | S20 | **前端体验** | **S/D** | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报及人事统一终审窗；Session 124 将详情升级为人物简册，并加入吕布/关羽/诸葛亮/曹操首批程序化头像与快捷入口。W4 其余子项与 W1~W3 仍为设计中，详见 `07-ui-design.md` §11.1.4/§12 |
@@ -578,7 +618,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 |:--:|------|:------:|-----------|
 | S01 | 回合 | **M+** | `turn.ts`；1回合=1月，季度首月/年度显式节拍；12回合验证28/28；全势力金粮同步 |
 | S02 | 地图 | M | Natural Earth；官道；LOD；**郡域迷雾已实装（BF-P5 Session 256）**：`shared/commandery-fog.ts` + mask 投影；**守方 Army 入郡域场景已完成（R6，Session 258）**：揭示源并入守方 Army 所在县 |
-| S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；文化/工艺/交通/卫生、**军屯/民屯未实装** |
+| S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；**民屯田 Session 339 最小切片**（分配+月结+季限）；文化/工艺/交通/卫生、**军屯未实装** |
 | S04 | 人口经济 | **M+** | 四桶 demographics + 民军粮耗 + 12月金粮预算 + 递增多城行政成本；俸禄仍未实装 |
 | S05 | 军事 | M+ | 邻接出征→战→占城；战役 Army 主/副将/参谋；**爵位加成未接入** |
 | S06 | 迷雾 | **M+** | UI + 服务端 `maskGameStateForPlayer` |
@@ -591,12 +631,12 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S13 | 宝物 | **M** | **0-A 完整闭环已实装（Session 266）**：`shared/items.ts` 纯函数 + `Officer.equipment` 5 槽 + `Faction.inventory`；装备/卸下/赏赐（忠诚+5~20 按品质）/搜索真宝物入库（零新增 RNG）/初始宝配；六维加成进有效属性 + baseEffect 可落地（defense/crit_rate/duel_boost 机制）；`/items/equip|unequip|grant` API；OfficerDetail 装备 tab + 六维装+N；verify-items 32/32 + verify-s266-ui 17/17。**后置（0-B）**：8+2 槽/套装/专属共鸣/消耗品/缴获传承/items 全量 |
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
 | S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
-| S16 | 剧本/存档 | **M/D** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；所有行动后结算 RNG 已收口；S15 行为复现、生产存取与 SQLite 未做 |
-| S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30/30）；L2 11计/L3 8国策仍设计；AI 发起决策仍属 S15 |
+| S16 | 剧本/存档 | **M+** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；浏览器 JSON 导入/导出 + **Session 340 SQLite 命名槽位**（`$XDG_DATA_HOME/leh/saves.db`，遗留 JSON 一次性迁入）；系统菜单槽位 UI 已接通。多用户/云同步仍后置 |
+| S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30+/30）；**L2 釜底抽薪 Session 339**；**L2 暗渡陈仓 Session 341**（明修牵制/暗渡攻防×1.2）；其余 L2 与 L3 仍设计；AI 发起决策仍属 S15 |
 | S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；父辈/族谱 ❌ |
-| S19 | **单挑大会** | **D** | §8.17 独立锦标赛：赛制/押注/称号/叙事/数据结构设计完成，引擎待实现 |
-| S20 | **前端体验** | **M+** | CMD-P0～P38 完成；现有运行时域命令坞迁移阶段收口，家族旧壳归零；屯田仍设计中。详见 `07-ui-design.md` §11.1.4/§12 |
-| S21 | **战争四层串联** | **S/M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写 |
+| S19 | **单挑大会** | **S/M** | **Session 338 最小闭环**：每年正月 16 人单败瞬时结算；押注/观战 UI 后置 |
+| S20 | **前端体验** | **M+** | CMD-P0～P38 完成；现有运行时域命令坞迁移阶段收口，家族旧壳归零；**Session 339：屯田域民屯真实入口 + 计略抽屉釜底抽薪**；**Session 341：计略抽屉暗渡陈仓（明修/暗渡双选）**。详见 `07-ui-design.md` §11.1.4/§12 |
+| S21 | **战争四层串联** | **M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写；**Session 338** `verify-s21-layers` 20/20 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体 Ma Shan Zheng，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字重扩展。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
 
 ### 关键路径
@@ -764,7 +804,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | meritLevel 运行时 | stamina 临时用 merit |
 | S18 父辈/族谱 | 子女已做 |
 | 0-B 全量 | **暂缓** |
-| 存档 SQLite | 未做 |
+| 存档 SQLite | **Session 340 首切片已做**（单机命名槽位）；多用户/云同步未做 |
 | **190全势力开局** | 当前只有董卓/袁绍/曹操/孙坚四槽技术切片；约30势力名单、营地/寄驻/从属军和全量事件池未入库 |
 | **S20 前端体验** | M：CMD-P0～P25 已完成命令壳及朝廷、人事、外交、军事、内政原子迁移；总览含明确标注的 S09 跨系统寻访 |
 | `docs/12-system-map.md` | **22 系统**（v4.8：Session 108 文档漂移校正；含 S22 与 D-0B-13） |
@@ -776,7 +816,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 ## 6.5 武将详情页 UI 迭代收口声明（强制边界）
 
 | `docs/07-ui-design.md` | UI 设计（**v3.4：武将名册/详情 + 人事终审窗已实装；§12 其余命令 UI 仍设计中**） |
-| `docs/35-phased-implementation-roadmap.md` | **分布实施主线**（Session 335 固化；Session 336 勾除 facing/审计 ID）：S10→大系统深化→L2/屯田→SQLite→0-B 暂缓 |
+| `docs/35-phased-implementation-roadmap.md` | **分布实施主线**（Session 335 固化；336 facing/审计 ID；337 S25；338 S24/S26/S19/S21；339 L2/民屯；**340 SQLite 槽位**）：S10→大系统深化→L2/屯田→SQLite→0-B 暂缓 |
 
 **后续对此界面的改动应基于具体的新功能需求**（如列传扩展、俸禄系统实装后的展示接入），**而非继续审计既有展示是否"完整"**——已知的技术债（特性系统/俸禄系统/装备系统/兵种缺口/列传扩展/阵型缺口）均已登记，按各自技术债编号（D-0B-9 等）在对应系统实装时一并解决，**不再单独为 UI 展示发起审计**。
 

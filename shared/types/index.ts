@@ -22,6 +22,7 @@ export * from './plot.js';
 export * from './scenario.js';
 export * from './save.js';
 export * from './duel.js';
+export * from './tournament.js';
 export * from './campaign.js';
 export * from './battlefield.js';
 export * from './battlefield-instance.js';

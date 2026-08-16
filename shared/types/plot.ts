@@ -24,6 +24,16 @@ export interface PlotResult {
   inverted?: boolean;
 }
 
+/** L2 分期投入（docs/04 §31.3） */
+export interface PlotInstallments {
+  goldPerMonth: number;
+  months: number;
+  /** 已完投月数（用于成功率 +5%/期） */
+  paidMonths: number;
+}
+
+export type PlotLayer = 'tactical' | 'strategic' | 'policy';
+
 export interface Plot {
   id: string;
   type: PlotType;
@@ -35,6 +45,11 @@ export interface Plot {
   targetFactionId?: number;
   /** Target city (for honey trap targeting an officer in a city) */
   targetCityId?: number;
+  /**
+   * L2 暗渡陈仓：明修城（吸引守备/AI 牵制）。
+   * `targetCityId` 为暗渡城（出征攻防加成方向）。
+   */
+  feintCityId?: number;
   /** Target officer (optional, for honey trap) */
   targetOfficerId?: number;
   /** Female spy agent assigned to this plot (optional, boosts success) */
@@ -43,8 +58,14 @@ export interface Plot {
   /** Months remaining in preparation; 0 = ready to resolve */
   monthsLeft: number;
   cost: PlotCost;
-  /** Result filled when stage === 'resolved' */
+  /** Result filled when stage === 'resolved' (or ACTIVE after resolve) */
   result?: PlotResult;
   year: number;
   month: number;
+  /** 所属层级；缺省视为 L1 tactical（旧存档兼容） */
+  layer?: PlotLayer;
+  /** L2 进度 0~100 */
+  progress?: number;
+  /** L2 分期投入 */
+  installments?: PlotInstallments;
 }

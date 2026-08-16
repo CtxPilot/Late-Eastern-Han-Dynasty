@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { PlotStage, PlotType } from './enums/index.js';
 import type { GameState } from './types/game.js';
-import type { Plot, PlotCost, PlotResult } from './types/plot.js';
+import type { Plot, PlotCost, PlotInstallments, PlotResult } from './types/plot.js';
 
 const PositiveIdSchema = z.number().int().positive();
 const NonNegativeIntSchema = z.number().int().nonnegative();
@@ -28,6 +28,12 @@ export const PlotResultRuntimeSchema: z.ZodType<PlotResult> = z.object({
   inverted: z.boolean().optional(),
 }).strict();
 
+export const PlotInstallmentsRuntimeSchema: z.ZodType<PlotInstallments> = z.object({
+  goldPerMonth: NonNegativeIntSchema,
+  months: z.number().int().positive(),
+  paidMonths: NonNegativeIntSchema,
+}).strict();
+
 export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   id: z.string().min(1),
   type: z.nativeEnum(PlotType),
@@ -35,6 +41,7 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   casterOfficerId: PositiveIdSchema.optional(),
   targetFactionId: PositiveIdSchema.optional(),
   targetCityId: PositiveIdSchema.optional(),
+  feintCityId: PositiveIdSchema.optional(),
   targetOfficerId: PositiveIdSchema.optional(),
   agentId: z.string().min(1).optional(),
   stage: z.nativeEnum(PlotStage),
@@ -43,6 +50,9 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   result: PlotResultRuntimeSchema.optional(),
   year: z.number().int().nonnegative(),
   month: z.number().int().min(1).max(12),
+  layer: z.enum(['tactical', 'strategic', 'policy']).optional(),
+  progress: z.number().min(0).max(100).optional(),
+  installments: PlotInstallmentsRuntimeSchema.optional(),
 }).strict().superRefine((plot, ctx) => {
   if (plot.stage === PlotStage.PREP && (plot.monthsLeft < 1 || plot.result != null)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['stage'], message: '准备期计谋必须保留正数倒计时且不能提前写入结果' });
@@ -70,6 +80,21 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   }
   if (plot.result?.inverted != null && plot.type !== PlotType.EMPTY_FORT) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['result', 'inverted'], message: '只有空城疑兵可以记录识破反转' });
+  }
+  if (plot.type === PlotType.UNDERMINE && plot.layer != null && plot.layer !== 'strategic') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layer'], message: '釜底抽薪必须为 strategic 层' });
+  }
+  if (plot.type === PlotType.SECRET_CROSSING) {
+    if (plot.layer != null && plot.layer !== 'strategic') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layer'], message: '暗渡陈仓必须为 strategic 层' });
+    }
+    if (plot.feintCityId == null) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['feintCityId'], message: '暗渡陈仓必须指定明修城' });
+    } else if (plot.targetCityId != null && plot.feintCityId === plot.targetCityId) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['feintCityId'], message: '明修城与暗渡城不可相同' });
+    }
+  } else if (plot.feintCityId != null) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['feintCityId'], message: '只有暗渡陈仓可以指定明修城' });
   }
 });
 

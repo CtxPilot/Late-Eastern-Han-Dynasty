@@ -348,6 +348,10 @@ export enum PlotType {
   FALSE_INTEL = 'falseIntel',
   /** 空城疑兵 — 粮 + 己方寡兵城；ACTIVE 期敌 AI 暂缓攻此城；识破则优先攻 */
   EMPTY_FORT = 'emptyFort',
+  /** L2 釜底抽薪 — 金300 + 60/月×6；目标城 detailed；成功后商业/金库月耗 + 出兵士气/粮耗惩罚 */
+  UNDERMINE = 'undermine',
+  /** L2 暗渡陈仓 — 金200；两邻接敌城 surface；明修城吸引守备，对暗渡城出征攻防+20% */
+  SECRET_CROSSING = 'secretCrossing',
 }
 
 /** 计谋阶段 */

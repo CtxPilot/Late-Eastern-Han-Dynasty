@@ -74,7 +74,7 @@ POST   /api/v1/games/:id/load/:saveId
   Response: { gameState: GameState }
 ```
 
-> **实现状态（Session 311/312）**：浏览器文件层仍可用；另已实装 XDG 命名槽位：`GET /api/game/save/slots` 列表，`POST /api/game/save/slots/:slot` 保存到 `$XDG_DATA_HOME/leh/saves/`（未设置时为 `~/.local/share/leh/saves/`），`POST /api/game/save/slots/:slot/load` 读取并复用同一迁移、剧本兼容、完整 Schema 与 RNG 校验链。顶部系统菜单已接通槽位列表、保存/覆盖确认、读取确认及场景栈恢复。槽位名限制为 1~32 位字母/数字/`_`/`-`，写入采用临时文件原子替换；SQLite、多用户和云同步仍未实现。
+> **实现状态（Session 311/312/340）**：浏览器文件层仍可用；命名槽位 API 不变：`GET /api/game/save/slots` 列表，`POST /api/game/save/slots/:slot` 保存，`POST /api/game/save/slots/:slot/load` 读取并复用同一迁移、剧本兼容、完整 Schema 与 RNG 校验链。**Session 340** 起服务端介质为 `$XDG_DATA_HOME/leh/saves.db`（`better-sqlite3`，未设置 XDG 时为 `~/.local/share/leh/saves.db`）；旧目录 `leh/saves/*.json` 在首次打开库时迁入并改名为 `*.json.migrated`。顶部系统菜单槽位 UI 已接通。槽位名限制为 1~32 位字母/数字/`_`/`-`，单档 ≤2MB；多用户和云同步仍未实现。
 
 ### 2.2 内政
 
@@ -184,20 +184,24 @@ POST   /api/game/intel/captive         { agentId, action: hold|execute|release|e
 // 本轮只迁移入口、草稿、终审与确认前复验，不改端点、引擎、RNG 或存档契约。
 // /intel/plant-female 是 S07∩S08∩S09 交叉链；外交只积累额度，情报负责点化。
 
-POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|emptyFort|..., targetFactionId?, targetCityId?, targetOfficerId?, agentId? }
+POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|emptyFort|undermine|secretCrossing|..., targetFactionId?, targetCityId?, feintCityId?, targetOfficerId?, agentId? }
                                      // L1 战术计谋：honeyTrap(美人计)·sowDiscord(离间)·falseIntel(假情报)·emptyFort(空城)
                                      // CMD-P29：四计仅由命令坞抽屉复用本端点；旧左栏入口已删除
                                      // 客户端终审前复验上限/情报/盟友/资源/目标，服务端仍作最终权威校验
-                                     // L2 战略计谋：undermine(釜底抽薪)·lureOut(调虎离山)·feint(暗渡陈仓)·bluff(树上开花)
-                                     //             instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
-                                     //             watchFire(隔岸观火)·swapPillar(偷梁换柱)·edict(借尸还魂)·killChicken(指桑骂槐)
+                                     // L2 战略计谋：undermine(釜底抽薪 · Session 339)·secretCrossing(暗渡陈仓 · Session 341；feintCityId=明修、targetCityId=暗渡)
+                                     //             ·lureOut(调虎离山)·bluff(树上开花)·instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
+                                     //             ·watchFire(隔岸观火)·swapPillar(偷梁换柱)·edict(借尸还魂)·killChicken(指桑骂槐)
                                      // L2 投入规则：prep 消耗按月扣 · progress 进度条 · 可提前终止
+                                     // Session 341：暗渡陈仓须两邻接敌城 surface；成功后明修牵制 + 暗渡自动战攻防×1.2
 
 POST   /api/game/plot/cancel          { plotId }
-                                     // 提前终止 L2 战略计谋，沉没成本不返还
+                                     // Session 339：提前终止 L2 战略计谋，沉没成本不返还
 
 GET    /api/game/plot/progress        → { plots: Plot[], progress: { [plotId]: number } }
-                                     // L2 执行进度，供 UI 进度条渲染
+                                     // L2 执行进度（亦可直接读 GameState.plots[].progress）
+
+POST   /api/game/civil/civilian-farming { cityId, households }
+                                     // Session 339：民屯田分配（0~上限）；每城每季限一次；无金消耗
 
 POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNear|playFool|guestHost|... }
                                      // L3 国策态势切换，单次冷却 6 月
@@ -603,7 +607,8 @@ GET    /api/v1/data/skills
 
 ```
 GET    /api/game/relations/:officerId
-  获取武将关系列表
+  获取武将关系列表（Session 338：亲和度优先读 GameState.relationAffinities 运行时覆写，
+  缺省回退 pairAffinity 基线；状态由 relationState 派生）
   Response: OfficerRelation[]
 ```
 
@@ -619,7 +624,7 @@ GET    /api/game/officer/:id/skills
   Response: { skillTreeState, skillPointsSpent, totalSkillPoints, traitLevels, traitPointsSpent, totalTraitPoints }
 
 POST   /api/game/skill-tree/upgrade
-  技能树加点
+  技能树加点；成功后同步 `officer.skills`（跨树同 skillId 取 max(基线, 树等级)），供战斗/内政消费
   Body: { officerId: number, nodeId: string }
   Response: OfficerSkillState
 
@@ -629,7 +634,7 @@ POST   /api/game/trait/upgrade
   Response: OfficerSkillState
 
 POST   /api/game/skill-tree/reset
-  重置技能点
+  重置技能树与特性点，并将 `officer.skills` 恢复为静态基线与空树合并结果
   Body: { officerId: number }
   Response: OfficerSkillState
 ```
@@ -641,6 +646,9 @@ GET    /api/game/faction/overview
   获取势力总览（含天命/人心）
   Response: { factionId, factionName, mandate, mandateLabel, mandateDiplomacyModifier, popularWill, popularWillLabel, popularWillDesertionModifier, popularWillRecruitModifier, cityCount, officerCount, commanderyCount }
 ```
+
+> Session 338 效果消费：`calculateAllianceChance` 含 `mandateModifier`（天命权重×100 百分点）；
+> `conscript` 乘以 `1 + popularWillRecruitModifier`；月度 `tickPopularWillDesertion`（基率 2%×人心叛逃修正）。
 
 ### 2.17 城级派系与门阀 API（S27）
 

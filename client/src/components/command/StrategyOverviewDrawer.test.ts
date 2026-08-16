@@ -85,7 +85,7 @@ describe('strategy launch validation', () => {
       3: { id: 3, name: '孙权军', isAlive: true },
     },
     cities: {
-      1: { id: 1, name: '洛阳', ruler: 1, gold: 200, food: 200, troops: 3000 },
+      1: { id: 1, name: '洛阳', ruler: 1, gold: 400, food: 200, troops: 3000 },
       2: { id: 2, name: '宛城', ruler: 2, gold: 300, food: 500, troops: 5000 },
     },
     diplomacy: [{ factionA: 1, factionB: 3, relation: 'allied' }],
@@ -107,22 +107,25 @@ describe('strategy launch validation', () => {
 
   it('accepts each of the four authoritative plot prerequisites', () => {
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.HONEY_TRAP, targetCityId: 2, targetFactionId: null, agentId: 'a',
+      type: PlotType.HONEY_TRAP, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: 'a',
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, targetFactionId: 2, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.FALSE_INTEL, targetCityId: 2, targetFactionId: null, agentId: null,
+      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.EMPTY_FORT, targetCityId: 1, targetFactionId: null, agentId: null,
+      type: PlotType.EMPTY_FORT, targetCityId: 1, feintCityId: null, targetFactionId: null, agentId: null,
+    })).toBeNull();
+    expect(validateStrategyLaunch(baseGame, {
+      type: PlotType.UNDERMINE, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
     })).toBeNull();
   });
 
   it('rejects alliance, stale intel/agent and the active plot cap', () => {
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, targetFactionId: 3, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 3, agentId: null,
     })).toContain('盟友');
 
     const staleIntel = {
@@ -130,7 +133,7 @@ describe('strategy launch validation', () => {
       intel: { ...baseGame.intel, cities: {} },
     } as unknown as GameState;
     expect(validateStrategyLaunch(staleIntel, {
-      type: PlotType.FALSE_INTEL, targetCityId: 2, targetFactionId: null, agentId: null,
+      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
     })).toContain('detailed');
 
     const capped = {
@@ -142,7 +145,7 @@ describe('strategy launch validation', () => {
       })),
     } as unknown as GameState;
     expect(validateStrategyLaunch(capped, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, targetFactionId: 2, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null,
     })).toContain('上限');
   });
 });

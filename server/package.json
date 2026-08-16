@@ -64,16 +64,26 @@
     "verify-geo-google": "tsx src/scripts/verify-geo-google.ts",
     "start": "node dist/index.js",
     "verify-items": "tsx src/scripts/verify-items.ts",
+    "verify-skill-consume": "tsx src/scripts/verify-skill-consume.ts",
+    "verify-relations-runtime": "tsx src/scripts/verify-relations-runtime.ts",
+    "verify-mandate-consume": "tsx src/scripts/verify-mandate-consume.ts",
+    "verify-tournament": "tsx src/scripts/verify-tournament.ts",
+    "verify-s21-layers": "tsx src/scripts/verify-s21-layers.ts",
+    "verify-l2-undermine": "tsx src/scripts/verify-l2-undermine.ts",
+    "verify-l2-secret-crossing": "tsx src/scripts/verify-l2-secret-crossing.ts",
+    "verify-civilian-farming": "tsx src/scripts/verify-civilian-farming.ts",
     "verify-save-slots": "tsx src/scripts/verify-save-slots.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",
+    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "ws": "^8.18.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",

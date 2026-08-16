@@ -4,7 +4,7 @@
 
 用户批准顺序见 [`35-phased-implementation-roadmap.md`](35-phased-implementation-roadmap.md)：
 
-1. **S10 战斗收口**（当前）→ 2. 关系网/技能树/天命深化 + 单挑大会/四层串联 → 3. L2 计谋与屯田 → 4. 存档 SQLite → 5. **0-B 暂缓**。
+1. **S10 战斗收口** → 2. 关系网/技能树/天命深化 + 单挑大会/四层串联 → 3. L2 计谋与屯田（**339 釜底抽薪+民屯；341 暗渡陈仓**） → 4. 存档 SQLite（**340**） → 5. **0-B 暂缓**。
 
 - Session 335：S10「单挑战场暂停门禁」与「敌军主动单挑结算后续行」。
 - Session 336：S10「撤销恢复 facing」与「同回合审计序号/ID 唯一」。
@@ -231,7 +231,7 @@
 | FM-P1 | `Formation` Zod/Type、TacticalConfig v2、7阵目录与 146 将精通迁移 | [x] | 已实装（Session 288）；v1 只读兼容 |
 | FM-P2 | 共享合法性、阵型贡献、五部部署与解释纯函数 | [x] | 已实装（Session 289）`shared/formation-core.ts`；不创建第四套伤害公式 |
 | FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）+ **六角战斗阵型贡献**（295，`hexFormationMods` 点值投影，三模式点值同源闭环）+ **标准模式战术协同矩阵**（296，`MeleeState.tactic?` 持久战术 + TacticalConfig v2 T_base/synergy + `/melee/tactic`）；六角部署注入后置 |
-| FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [~] | Session 302~310 已完成战报解释、变阵存档往返、敌军主动单挑浏览器链及浏览器 JSON 导入/导出；完整公平 AI、SQLite/XDG 多槽位仍后置 |
+| FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [~] | Session 302~312 已完成战报解释、变阵存档往返、敌军主动单挑浏览器链、浏览器 JSON 导入/导出及 XDG 槽位 UI；**Session 340 槽位介质改为 SQLite**；完整公平 AI 仍后置 |
 | FM-P5 | 平衡、独特性、经典体验、IP 与文档总验收 | [ ] | 通过后仍不代表 0-B 完成 |
 | FM-P6 | 27阵/水阵/双轴成长扩展 | [ ] | 仅 0-A 验收完成且用户重启 0-B 后可做 |
 
@@ -264,11 +264,11 @@
 | P5-02 | AI 战争决策 + 兵力分配 | P5-01 |
 | P5-03 | AI 外交决策(弱势求盟) | P5-01 |
 | P5-04 | 套装系统计算引擎 | P4-08 |
-| P5-05 | 存档/读档(SQLite) | P0-04 |
+| P5-05 | 存档/读档(SQLite) | **Session 340 完成首切片**：命名槽位 `saves.db` + 遗留 JSON 迁移；多用户后置 | P0-04 |
 | P5-06 | 多剧本完善 | P0-14 |
 | P5-07 | UI 美化(Tailwind主题+动画) | P1~P4 |
 | P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） | P5-07 |
-| P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves/` + 前端一键导入导出 Blob） | **进行中：Session 311/312 已完成服务端命名槽位、列表、原子写入、校验恢复及系统菜单槽位 UI；SQLite、多用户留后续** | P5-05 |
+| P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves.db` + 前端一键导入导出 Blob） | **完成：Session 311/312 槽位 API/UI；Session 340 介质改为 SQLite；多用户留后续** | P5-05 |
 | P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
 | P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄） | P5-07 |
 | P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核） | P5-07 |
@@ -377,6 +377,7 @@
 
 - [x] **S24 关系网系统**：`shared/relations.ts` pairAffinity/relationState/evolveAffinity 纯函数；`server/src/data/relations.json` 首批 31 对重点关系（史源分层）；服务端 `GET /api/game/relations/:officerId`；客户端 OfficerDetail 新增「社交」tab（关系列表 + SVG 径向图谱）；家族 tab 更名为「关系」，婚姻区块扩展妾/姬（`Officer.consortIds`）
 - [x] **S25 技能树系统**：`shared/types/skill-tree.ts` 类型；`server/src/data/skill-trees.json` 5 棵子树（战略计策/战术计策/单挑技能/统军/内政），30 技能按战斗层映射；技能点绑定 merit 等级，特性点每 5 级 +1；服务端 5 个 API 端点；客户端 OfficerDetail 新增「技能」tab（子树切换 + 节点列表 + 加点按钮 + 特性点概览）
+- [x] **Session 337 · S25 效果消费**：`shared/skill-consume.ts` + 加点同步 `officer.skills`；内政/人事/医术/结盟辩才接通；`pnpm verify-skill-consume` 19/19
 - [x] **S26 天命人心系统**：`shared/mandate-popular.ts` 纯函数（computeMandate/computePopularWill）；Faction 新增 mandate/popularWill 字段；turn.ts 月度结算接入；服务端 `GET /api/game/faction/overview`；命令坞新增「势力」入口（FactionOverviewDrawer 双轨进度条 + 效果预览）
 - [x] 数据层：Officer 新增 skillTreeState/skillPointsSpent/traitLevels/traitPointsSpent/consortIds（全部 optional，旧档兼容）；Zod schema 同步
 - [x] 回归：typecheck / test（shared 311 + client 42）全绿

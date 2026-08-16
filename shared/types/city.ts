@@ -112,4 +112,13 @@ export interface City extends CityStatic {
   factionPatrolStamp?: number;
   /** S27 深化：官宦弹劾城主事件（docs/34 §十一）。optional，旧档兼容。 */
   pendingImpeachment?: import('../city-factions.js').PendingImpeachment;
+  /**
+   * 民屯田已分配户数（docs/04 §2.8）。optional，旧档缺省=0。
+   * 与 stats.farm 平行：不花金、占人口、月结直接产粮。
+   */
+  civilianFarmingHouseholds?: number;
+  /**
+   * 民屯分配季度戳（year*4+quarter）。同季仅可调一次；旧档缺省表示本季未调。
+   */
+  civilianFarmingAssignQuarter?: number;
 }

@@ -5,6 +5,8 @@ import { DipRelation, OfficerStatus } from './enums/index.js';
 import type { PoliticalStage } from './types/faction.js';
 import type { GameState } from './types/game.js';
 import type { Officer } from './types/officer.js';
+import { eloquenceAllianceModifier } from './skill-consume.js';
+import { computeMandate, mandateDiplomacyModifier } from './mandate-popular.js';
 
 /** R2 概率统一下限/上限；所有输入与输出均为百分点。 */
 export const NEGOTIATION_CHANCE_MIN = 5;
@@ -80,6 +82,10 @@ export interface AllianceChanceBreakdown {
   treatyModifier: number;
   /** HC-P0-5：发起方政治阶段（霸府/王/帝）带来的成功率百分点修正，vassal=0。 */
   hegemonyModifier: number;
+  /** S25：使者辩才技能百分点修正（Session 337）。 */
+  eloquenceModifier: number;
+  /** S26：发起方天命外交权重百分点修正（Session 338）。 */
+  mandateModifier: number;
 }
 
 function isWarRelation(relation: string): boolean {
@@ -179,6 +185,14 @@ export function calculateAllianceChance(
   const hegemonyModifier = hegemonyAllianceModifier(
     state.factions[sourceFactionId]?.politicalStage,
   );
+  // S25：使者辩才每级 +1 百分点（Session 337）
+  const eloquenceModifier = eloquenceAllianceModifier(envoy);
+  // S26：天命外交权重 → 百分点（Session 338）
+  const sourceFaction = state.factions[sourceFactionId];
+  const mandate = sourceFaction
+    ? computeMandate(sourceFaction, state)
+    : 0;
+  const mandateModifier = Math.round(mandateDiplomacyModifier(mandate) * 100);
 
   const chance = clampNegotiationChance(
     35 +
@@ -187,7 +201,9 @@ export function calculateAllianceChance(
       envoy.stats.charisma * 0.15 +
       commonEnemyModifier +
       treatyModifier +
-      hegemonyModifier,
+      hegemonyModifier +
+      eloquenceModifier +
+      mandateModifier,
   );
 
   return {
@@ -199,5 +215,7 @@ export function calculateAllianceChance(
     commonEnemyModifier,
     treatyModifier,
     hegemonyModifier,
+    eloquenceModifier,
+    mandateModifier,
   };
 }

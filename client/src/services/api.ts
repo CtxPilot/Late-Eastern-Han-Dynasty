@@ -191,6 +191,12 @@ export async function reclaimLand(cityId: number, officerId: number): Promise<Ga
   return data;
 }
 
+/** 民屯田分配（docs/04 §2.8） */
+export async function setCivilianFarming(cityId: number, households: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/civilian-farming', { cityId, households });
+  return data;
+}
+
 /** S27 巡查：乡政派系命令（30金；武≥60 武将） */
 export async function patrolCity(cityId: number, officerId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/patrol', { cityId, officerId });
@@ -362,6 +368,7 @@ export async function launchPlot(
   opts: {
     targetFactionId?: number;
     targetCityId?: number;
+    feintCityId?: number;
     targetOfficerId?: number;
     agentId?: string;
   },
@@ -370,6 +377,11 @@ export async function launchPlot(
     type,
     ...opts,
   });
+  return data;
+}
+
+export async function cancelPlot(plotId: string): Promise<GameState> {
+  const { data } = await http.post<GameState>('/plot/cancel', { plotId });
   return data;
 }
 

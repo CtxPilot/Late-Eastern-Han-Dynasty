@@ -72,3 +72,10 @@ reasonix.toml
 # Compliance exports and local audit evidence must live outside the repository.
 agent-exports/
 audit-evidence/
+
+# Runtime SQLite / WAL (production path is XDG; never commit local DB files)
+*.db
+*.db-wal
+*.db-shm
+!**/fixtures/**/*.db
+

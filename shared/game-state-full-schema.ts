@@ -17,7 +17,7 @@ const ROOT_KEYS = [
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
   'plots', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
-  'actionLog', 'emperorLocation',
+  'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {
@@ -234,6 +234,7 @@ export const GameStateSchema = z
       requireRef(factionIds.has(plot.casterFactionId), ['plots', index, 'casterFactionId'], '计谋施计势力不存在', ctx);
       if (plot.targetFactionId != null) requireRef(factionIds.has(plot.targetFactionId), ['plots', index, 'targetFactionId'], '计谋目标势力不存在', ctx);
       if (plot.targetCityId != null) requireRef(cityIds.has(plot.targetCityId), ['plots', index, 'targetCityId'], '计谋目标城市不存在', ctx);
+      if (plot.feintCityId != null) requireRef(cityIds.has(plot.feintCityId), ['plots', index, 'feintCityId'], '计谋明修城不存在', ctx);
       if (plot.targetOfficerId != null) requireRef(officerIds.has(plot.targetOfficerId), ['plots', index, 'targetOfficerId'], '计谋目标武将不存在', ctx);
       if (plot.agentId != null) requireRef(spyIds.has(plot.agentId), ['plots', index, 'agentId'], '计谋特工不存在', ctx);
       plot.result?.favorChanges?.forEach((change, changeIndex) => {

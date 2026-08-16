@@ -7,6 +7,7 @@ import {
   PlotType,
   SpyStatus,
   isAllied,
+  roadNeighbors,
   type GameState,
   type Plot,
 } from '@leh/shared';
@@ -16,12 +17,15 @@ import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction } from './commandShellState';
 
 const MAX_ACTIVE_PLOTS = 4;
+const MAX_ACTIVE_L2 = 2;
 
 const PLOT_LABEL: Record<PlotType, string> = {
   [PlotType.HONEY_TRAP]: '美人计',
   [PlotType.SOW_DISCORD]: '离间计',
   [PlotType.FALSE_INTEL]: '假情报',
   [PlotType.EMPTY_FORT]: '空城疑兵',
+  [PlotType.UNDERMINE]: '釜底抽薪',
+  [PlotType.SECRET_CROSSING]: '暗渡陈仓',
 };
 
 const STAGE_LABEL: Record<PlotStage, string> = {
@@ -35,11 +39,19 @@ const PLOT_COST: Record<PlotType, string> = {
   [PlotType.SOW_DISCORD]: '金 200',
   [PlotType.FALSE_INTEL]: '金 120',
   [PlotType.EMPTY_FORT]: '目标城粮 150',
+  [PlotType.UNDERMINE]: '金 300 + 60/月×6',
+  [PlotType.SECRET_CROSSING]: '金 200（两邻接敌城 surface）',
 };
+
+function isL2Type(type: PlotType): boolean {
+  return type === PlotType.UNDERMINE || type === PlotType.SECRET_CROSSING;
+}
 
 export type StrategyLaunchDraft = {
   type: PlotType;
   targetCityId: number | null;
+  /** 暗渡陈仓：明修城 */
+  feintCityId: number | null;
   targetFactionId: number | null;
   agentId: string | null;
 };
@@ -55,11 +67,38 @@ export function validateStrategyLaunch(
   ).length;
   const canPayGold = (cost: number) => ownCities.some((city) => city.gold >= cost);
   if (activeCount >= MAX_ACTIVE_PLOTS) return `进行中计谋已达上限 ${MAX_ACTIVE_PLOTS}。`;
+  const l2Active = (game.plots ?? []).filter(
+    (plot) =>
+      plot.casterFactionId === factionId
+      && plot.stage !== PlotStage.RESOLVED
+      && (plot.layer === 'strategic' || isL2Type(plot.type)),
+  ).length;
+  if (isL2Type(draft.type) && l2Active >= MAX_ACTIVE_L2) {
+    return `进行中战略计谋已达上限 ${MAX_ACTIVE_L2}。`;
+  }
 
   if (draft.type === PlotType.SOW_DISCORD) {
     const target = draft.targetFactionId == null ? null : game.factions[draft.targetFactionId];
     if (!target || !target.isAlive || target.id === factionId) return '请选择仍存续的敌对势力。';
     if (isAllied(game.diplomacy, factionId, target.id)) return '不能对盟友施展离间计。';
+    if (!canPayGold(200)) return '没有己方城池能够支付金 200。';
+    return null;
+  }
+
+  if (draft.type === PlotType.SECRET_CROSSING) {
+    const secret = draft.targetCityId == null ? null : game.cities[draft.targetCityId];
+    const feint = draft.feintCityId == null ? null : game.cities[draft.feintCityId];
+    if (!secret || !feint) return '请选择邻接的明修城与暗渡城。';
+    if (secret.id === feint.id) return '明修城与暗渡城不可相同。';
+    if (secret.ruler == null || secret.ruler === factionId || feint.ruler == null || feint.ruler === factionId) {
+      return '明修城与暗渡城均须为敌城。';
+    }
+    if (!roadNeighbors(secret.id).includes(feint.id)) return '明修城与暗渡城须官道邻接。';
+    const secretDepth = game.intel?.cities?.[secret.id]?.depth;
+    const feintDepth = game.intel?.cities?.[feint.id]?.depth;
+    if (secretDepth == null || feintDepth == null) {
+      return '需先对两城取得至少 surface 情报。';
+    }
     if (!canPayGold(200)) return '没有己方城池能够支付金 200。';
     return null;
   }
@@ -82,6 +121,9 @@ export function validateStrategyLaunch(
   }
   if (draft.type === PlotType.FALSE_INTEL) {
     return canPayGold(120) ? null : '没有己方城池能够支付金 120。';
+  }
+  if (draft.type === PlotType.UNDERMINE) {
+    return canPayGold(300) ? null : '没有己方城池能够支付金 300。';
   }
   if ((game.factions[factionId]?.courtNetwork ?? 0) < 2) return '宫廷人脉不足（需 2）。';
   if (!canPayGold(150)) return '没有己方城池能够支付金 150。';
@@ -108,6 +150,8 @@ export type StrategyPlotSummary = {
   monthsLeft: number;
   message: string | null;
   detected: boolean;
+  progress: number | null;
+  cancellable: boolean;
 };
 
 export type StrategyOverview = {
@@ -123,6 +167,11 @@ export type StrategyOverview = {
 };
 
 function getPlotTarget(game: GameState, plot: Plot): string {
+  if (plot.type === PlotType.SECRET_CROSSING && plot.targetCityId != null) {
+    const secret = game.cities[plot.targetCityId]?.name ?? '暗渡';
+    const feint = plot.feintCityId != null ? game.cities[plot.feintCityId]?.name ?? '明修' : '明修';
+    return `明修${feint}/暗渡${secret}`;
+  }
   if (plot.targetCityId != null) return game.cities[plot.targetCityId]?.name ?? '未知城池';
   if (plot.targetFactionId != null) return game.factions[plot.targetFactionId]?.name ?? '未知势力';
   return '—';
@@ -168,13 +217,17 @@ export function buildStrategyOverview(game: GameState): StrategyOverview {
     plots: playerPlots.map((plot) => ({
       id: plot.id,
       type: plot.type,
-      label: PLOT_LABEL[plot.type],
+      label: PLOT_LABEL[plot.type] ?? plot.type,
       stage: plot.stage,
       stageLabel: STAGE_LABEL[plot.stage],
       target: getPlotTarget(game, plot),
       monthsLeft: plot.monthsLeft,
       message: plot.result?.message ?? null,
       detected: plot.result?.detected ?? false,
+      progress: plot.progress ?? null,
+      cancellable:
+        plot.stage !== PlotStage.RESOLVED
+        && (plot.layer === 'strategic' || isL2Type(plot.type)),
     })),
   };
 }
@@ -194,12 +247,14 @@ export function StrategyOverviewDrawer({
 }) {
   const game = useGameStore((state) => state.game);
   const launchPlot = useGameStore((state) => state.launchPlot);
+  const cancelPlot = useGameStore((state) => state.cancelPlot);
   const loading = useGameStore((state) => state.loading);
   const error = useGameStore((state) => state.error);
   const [facet, setFacet] = useState<StrategyFacet>('situation');
   const [draft, setDraft] = useState<StrategyLaunchDraft>({
     type: PlotType.HONEY_TRAP,
     targetCityId: null,
+    feintCityId: null,
     targetFactionId: null,
     agentId: null,
   });
@@ -230,10 +285,24 @@ export function StrategyOverviewDrawer({
   const isCityTarget = draft.type !== PlotType.SOW_DISCORD;
   const isHoney = draft.type === PlotType.HONEY_TRAP;
   const isEmpty = draft.type === PlotType.EMPTY_FORT;
+  const isSecretCrossing = draft.type === PlotType.SECRET_CROSSING;
   const launchReason = validateStrategyLaunch(game, draft);
   const targetName = draft.type === PlotType.SOW_DISCORD
     ? game.factions[draft.targetFactionId ?? -1]?.name ?? '未选目标'
-    : game.cities[draft.targetCityId ?? -1]?.name ?? '未选目标';
+    : isSecretCrossing
+      ? `明修${game.cities[draft.feintCityId ?? -1]?.name ?? '？'}/暗渡${game.cities[draft.targetCityId ?? -1]?.name ?? '？'}`
+      : game.cities[draft.targetCityId ?? -1]?.name ?? '未选目标';
+
+  const surfaceEnemyCities = enemyCities.filter((city) => {
+    const depth = game.intel?.cities?.[city.id]?.depth;
+    return depth === 'surface' || depth === 'detailed';
+  });
+  const feintCandidates = surfaceEnemyCities.filter((city) =>
+    draft.targetCityId == null
+      || (city.id !== draft.targetCityId && roadNeighbors(draft.targetCityId).includes(city.id)));
+  const secretCandidates = surfaceEnemyCities.filter((city) =>
+    draft.feintCityId == null
+      || (city.id !== draft.feintCityId && roadNeighbors(draft.feintCityId).includes(city.id)));
 
   return (
     <div
@@ -288,6 +357,7 @@ export function StrategyOverviewDrawer({
               onChange={(event) => setDraft({
                 type: event.target.value as PlotType,
                 targetCityId: null,
+                feintCityId: null,
                 targetFactionId: null,
                 agentId: null,
               })}
@@ -296,6 +366,8 @@ export function StrategyOverviewDrawer({
               <option value={PlotType.SOW_DISCORD}>离间计（非盟友势力、金200）</option>
               <option value={PlotType.FALSE_INTEL}>假情报（探秘情报、金120）</option>
               <option value={PlotType.EMPTY_FORT}>空城疑兵（寡兵城、粮150）</option>
+              <option value={PlotType.UNDERMINE}>釜底抽薪（L2·探秘·金300+60×6）</option>
+              <option value={PlotType.SECRET_CROSSING}>暗渡陈仓（L2·邻接双城 surface·金200）</option>
             </select>
           </label>
 
@@ -315,6 +387,43 @@ export function StrategyOverviewDrawer({
                 {enemyFactions.map((faction) => <option key={faction.id} value={faction.id}>{faction.name}</option>)}
               </select>
             </label>
+          ) : isSecretCrossing ? (
+            <>
+              <label className="block text-[10px] text-stone-500">
+                明修城（牵制）
+                <select
+                  data-testid="command-strategy-feint-city"
+                  className="mt-1 w-full rounded border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200"
+                  value={draft.feintCityId ?? ''}
+                  onChange={(event) => setDraft((current) => ({
+                    ...current,
+                    feintCityId: event.target.value ? Number(event.target.value) : null,
+                  }))}
+                >
+                  <option value="">选择至少 surface 的邻接敌城…</option>
+                  {feintCandidates.map((city) => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-[10px] text-stone-500">
+                暗渡城（出击）
+                <select
+                  data-testid="command-strategy-target-city"
+                  className="mt-1 w-full rounded border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200"
+                  value={draft.targetCityId ?? ''}
+                  onChange={(event) => setDraft((current) => ({
+                    ...current,
+                    targetCityId: event.target.value ? Number(event.target.value) : null,
+                  }))}
+                >
+                  <option value="">选择与明修城邻接的敌城…</option>
+                  {secretCandidates.map((city) => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
+              </label>
+            </>
           ) : (
             <label className="block text-[10px] text-stone-500">
               {isEmpty ? '己方寡兵城' : '目标敌城'}
@@ -371,10 +480,10 @@ export function StrategyOverviewDrawer({
               onClick={() => dispatch({
                 type: 'select-command',
                 domain: 'intel',
-                commandId: 'recon',
+                commandId: isSecretCrossing ? 'recon' : 'recon',
               })}
             >
-              前往情报 · 探秘
+              前往情报 · {isSecretCrossing ? '侦查/探秘' : '探秘'}
             </button>
           ) : null}
           <button
@@ -409,12 +518,25 @@ export function StrategyOverviewDrawer({
               </div>
               <p className="mt-1 text-[10px] text-stone-500">
                 {plot.stage === PlotStage.RESOLVED ? '已完成' : `剩余 ${plot.monthsLeft} 月`}
+                {plot.progress != null ? ` · 进度 ${plot.progress}%` : ''}
                 {plot.detected ? ' · 已暴露' : ''}
               </p>
               {plot.message ? <p className="text-[10px] text-stone-400">{plot.message}</p> : null}
+              {plot.cancellable ? (
+                <button
+                  type="button"
+                  data-testid={`command-strategy-cancel-${plot.id}`}
+                  data-command-write="true"
+                  disabled={loading}
+                  className="mt-2 w-full rounded border border-amber-900 bg-amber-950/40 px-2 py-1 text-[10px] text-amber-100 disabled:opacity-40"
+                  onClick={() => void cancelPlot(plot.id)}
+                >
+                  提前终止（沉没成本不返还）
+                </button>
+              ) : null}
             </article>
           ))}
-          <p className="text-[10px] text-stone-600">中止与反制尚无权威规则，不提供占位按钮。</p>
+          <p className="text-[10px] text-stone-600">L2 战略计谋可提前终止；L1 战术计谋不可取消。</p>
         </section>
       )}
       <CommandConfirmDialog
@@ -440,12 +562,19 @@ export function StrategyOverviewDrawer({
         onConfirm={async () => {
           await launchPlot(draft.type, {
             targetCityId: isCityTarget ? draft.targetCityId ?? undefined : undefined,
+            feintCityId: isSecretCrossing ? draft.feintCityId ?? undefined : undefined,
             targetFactionId: draft.type === PlotType.SOW_DISCORD ? draft.targetFactionId ?? undefined : undefined,
             agentId: isHoney ? draft.agentId ?? undefined : undefined,
           });
           if (!useGameStore.getState().error) {
             setConfirmOpen(false);
-            setDraft((current) => ({ ...current, targetCityId: null, targetFactionId: null, agentId: null }));
+            setDraft((current) => ({
+              ...current,
+              targetCityId: null,
+              feintCityId: null,
+              targetFactionId: null,
+              agentId: null,
+            }));
           }
         }}
       />

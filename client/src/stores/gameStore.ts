@@ -103,10 +103,13 @@ interface Store {
     opts: {
       targetFactionId?: number;
       targetCityId?: number;
+      feintCityId?: number;
       targetOfficerId?: number;
       agentId?: string;
     },
   ) => Promise<void>;
+  cancelPlot: (plotId: string) => Promise<void>;
+  setCivilianFarming: (cityId: number, households: number) => Promise<void>;
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
   establishHegemony: () => Promise<void>;
@@ -548,6 +551,16 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  setCivilianFarming: async (cityId, households) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.setCivilianFarming(cityId, households);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '民屯已调整' });
+    } catch (e) {
+      set({ error: errMsg(e, '民屯调整失败'), loading: false });
+    }
+  },
+
   patrolCity: async (cityId, officerId) => {
     const id = cityId ?? get().selectedCityId;
     if (id == null) {
@@ -766,6 +779,16 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '计谋已发起' });
     } catch (e) {
       set({ error: errMsg(e, '计谋发起失败'), loading: false });
+    }
+  },
+
+  cancelPlot: async (plotId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.cancelPlot(plotId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '计谋已终止' });
+    } catch (e) {
+      set({ error: errMsg(e, '终止计谋失败'), loading: false });
     }
   },
 

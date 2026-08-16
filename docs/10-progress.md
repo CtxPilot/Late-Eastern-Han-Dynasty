@@ -1,5 +1,60 @@
 # 开发进度跟踪
 
+## 2026-08-17 — Session 341 · 主线③续（L2 暗渡陈仓）
+
+- Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
+- 暗渡陈仓：
+  - `PlotType.SECRET_CROSSING` + `Plot.feintCityId`；金200；两邻接敌城 surface；PREP 1→ACTIVE 3。
+  - 明修：AI 不得从此城出征；第三方攻权×2.2。暗渡：自动战攻防×1.2。
+  - 命令坞计略抽屉明修/暗渡双选；`POST /plot/launch` 增 `feintCityId`；可 `cancelPlot`。
+- 验证：`verify-l2-secret-crossing` **23/23**、undermine **18/18**、plot-spy-rng **34/34**、save-plot **9/9**；StrategyOverviewDrawer **3/3**；client/server typecheck。
+- 文档对齐：`01`/`02`/`04`/`05`/`16`/`21`/`HANDOFF` 交付表补暗渡陈仓与 SQLite 现况（三十六计表 #8、诚实边界、plot.ts 行数等）。
+- 文档：`04`/`06`/`07`/`12`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（树上开花等）或军屯；0-B 继续暂缓。
+
+## 2026-08-16 — Session 340 · 主线④ 切片（S16 SQLite 命名槽位）
+
+- Phase：**主线④**；不扩数据规模、不启动 0-B；多用户/云同步仍后置。
+- S16 持久化介质：
+  - `better-sqlite3` 写入 `$XDG_DATA_HOME/leh/saves.db`（未设置时 `~/.local/share/leh/saves.db`）；WAL + 事务 upsert。
+  - 表 `save_slots` 存完整 `SaveEnvelopeV1` JSON 文本；槽位 API `/save/slots*` 与读档校验链不变。
+  - 首次打开库一次性迁入旧 `leh/saves/*.json`，原文件改名为 `*.json.migrated`。
+  - 浏览器导入/导出 JSON 信封保持可用。
+- 验证：`verify-save-slots` **10/10**（SQLite 落盘 + 读回 + 非法槽位名 + 遗留 JSON 迁移）；server typecheck 通过。
+- 文档对齐：`README`/`02`/`03`/`06`/`07`/`09`/`12`/`35`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2 / 军屯，或 SQLite 深化（删除槽位等）；0-B 继续暂缓。
+
+## 2026-08-16 — Session 339 · 主线③ 切片（L2 釜底抽薪 + 民屯月结）
+
+- Phase：**主线③**；不扩数据规模、不启动 0-B；L3 国策与军屯仍后置。
+- S17 L2 首计 **釜底抽薪**：
+  - `PlotType.UNDERMINE`；首付 300 + 分期 60×6；L2 公式与取消 API；ACTIVE 商业/金库月耗；出兵士气−15、粮耗×1.5。
+  - 命令坞计略抽屉可选发起/进度/提前终止；`POST /plot/cancel`。
+- 民屯田最小切片：
+  - `City.civilianFarmingHouseholds` + 每季一次分配；月结产粮；占用户口扣农商劳力与征兵池。
+  - 命令坞「屯田」真实入口（非假面板）；军屯仍设计中。
+- 验证：`verify-l2-undermine` **18/18**、`verify-civilian-farming` **7/7**、`verify-plot-spy-rng` **34/34**、`verify-save-plot` **9/9**；shared/client typecheck；StrategyOverviewDrawer 3/3。
+- 文档对齐：`README` Honest scope、`01`/`09`/`12`/`16`/`35`、`HANDOFF` 交付表、`04`§31/`06`/`07` 与实现口径同步；历史 CMD 会话注记加 Session 339 更正脚注。
+- **Next**：主线④ SQLite 已由 Session 340 收口；其余 L2 计（可选）或军屯；0-B 继续暂缓。
+
+## 2026-08-16 — Session 338 · 主线② 收口（S24/S26/S19/S21）
+
+- Phase：**主线②**；不扩数据规模、不启动 0-B。
+- S24/S26/S19 见上；S21：`verify-s21-layers` **20/20**（场景栈 + 三模式结算回写）。
+- **Next**：主线③ L2 计谋与屯田；0-B 继续暂缓。
+
+## 2026-08-16 — Session 337 · S25 技能树效果消费（战斗/内政打通）
+
+- Phase：**主线② · S25**；不扩数据规模、不启动 0-B。
+- 运行时：
+  - `shared/skill-consume.ts`：树状态合并到 `officer.skills`（跨树同 skillId 取 max）+ 内政/人事消费系数。
+  - `upgradeSkillNode` / `resetSkillTree` 同步写回 skills（重置回静态基线）。
+  - 内政：农政/商政/筑城→开发增益；征兵/训练→效率；寻访→搜索率；辩才→登用/结盟百分点；医术→月度体力 +Lv。
+  - 战斗：火计/暴击/单挑既有 `officer.skills` 路径自动吃到树加点。
+- 验证：`verify-skill-consume` **19/19**、shared **383**（+5）、client **43**、`verify-negotiation-r2` **40/40**、`verify-merit-consume` 17、三端 typecheck 通过。
+- 文档：`30`/`35`/`12`/`06`/`HANDOFF`/`10-progress` 双写。
+- **Next**：主线②择一深化（S24/S26/S19/S21）或经批准继续 S10；0-B 继续暂缓。
+
 ## 2026-08-16 — Session 336 · S10 撤销朝向恢复 + 审计序号唯一
 
 - Phase：**S10 战斗收口**；不扩数据规模、不启动 0-B。
@@ -643,7 +698,7 @@
 | P5-02 | AI 战争决策 | [ ] | P5-01 |
 | P5-03 | AI 外交决策 | [ ] | P5-01 |
 | P5-04 | 套装系统引擎 | [ ] | P4-08 |
-| P5-05 | 存档/读档(SQLite) | [ ] | P0-04 |
+| P5-05 | 存档/读档(SQLite) | [x] Session 340 命名槽位首切片；多用户后置 | P0-04 |
 | P5-06 | 多剧本完善 | [~] | 0-A两剧本选择已实现；首批7历史剧本与全量势力后置 |
 | P5-07 | UI 美化+动画 | [ ] | P1~P4 |
 | P5-08 | Canvas 动画 | [ ] | P1-03, P3-01 |

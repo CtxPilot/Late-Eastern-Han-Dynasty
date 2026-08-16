@@ -57,6 +57,8 @@ import {
   MERIT_FIELD_ROUT,
   pickDefenderCommander,
 } from './militaryMerit.js';
+import { applyCapturedRelations, applyJointExpeditionRelations } from './relations.js';
+import { getUndermineArmyModifiers, getSecretCrossingBattleMul } from './plot.js';
 
 // 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
 const MERIT_SIEGE_SURRENDER = 30;
@@ -328,6 +330,8 @@ export function startCampaignForFaction(
   const troops = Math.floor(opts.troopCount);
   const food = Math.floor(opts.food);
   const commander = state.officers[opts.commanderId];
+  const undermine = getUndermineArmyModifiers(state, opts.fromNodeId);
+  const baseMorale = 85 - (undermine?.moralePenalty ?? 0);
 
   // 扣出发城兵力/粮草
   const cities = {
@@ -357,7 +361,7 @@ export function startCampaignForFaction(
     maxTroops: troops,
     food,
     maxFood: Math.max(food, troops * 3),
-    morale: 85,
+    morale: Math.max(1, baseMorale),
     organization: 80,
     experience: 0,
     fatigue: 0,
@@ -389,10 +393,14 @@ export function startCampaignForFaction(
     campaignArmies: [...state.campaignArmies, army],
     campaignNodes: syncNodesFromCities({ ...state, cities }),
   };
+  next = applyJointExpeditionRelations(next, allMilIds);
+  const undermineNote = undermine
+    ? `；釜底抽薪：士气−${undermine.moralePenalty}、行军粮耗×${undermine.foodCostMul}`
+    : '';
   next = pushLog(
     next,
     'campaign_start',
-    `${army.name} 自 ${from.name} 出征 ${targetName(state, opts.targetNodeId)}（兵 ${troops}，粮 ${food}）`,
+    `${army.name} 自 ${from.name} 出征 ${targetName(state, opts.targetNodeId)}（兵 ${troops}，粮 ${food}${undermineNote}）`,
   );
   return { state: next, army };
 }
@@ -495,7 +503,14 @@ export function tickCampaignMarch(state: GameState): GameState {
 
     // 补给消耗
     const terrainMul = 1.0; // 0-A 简化：平原
-    const foodCost = Math.max(1, Math.floor((a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul));
+    const undermineMul =
+      a.fromNodeId != null
+        ? (getUndermineArmyModifiers(state, a.fromNodeId)?.foodCostMul ?? 1)
+        : 1;
+    const foodCost = Math.max(
+      1,
+      Math.floor((a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul * undermineMul),
+    );
     let food = a.food - foodCost;
     let morale = a.morale - MARCH_MORALE_DECAY;
     let organization = a.organization - MARCH_ORG_DECAY;
@@ -841,6 +856,13 @@ export function runAutoBattle(
   const atkSide: BattleSide = { army: atkArmy, commander: atkCmd, subCommanders: atkSubs, advisor: atkAdv, unitType: atkArmy.unitType, siegeEquipBonus, wallPenalty };
   const defSide: BattleSide = { army: defArmy ?? atkArmy, commander: defCmd, subCommanders: defSubs, advisor: defAdv, unitType: defUnitType };
 
+  // L2 暗渡陈仓：对暗渡城方向攻防 ×1.2
+  const secretTargetId = defCity?.cityId ?? atkArmy.targetNodeId;
+  const secretCrossingMul =
+    secretTargetId != null
+      ? getSecretCrossingBattleMul(state, atkArmy.factionId, secretTargetId)
+      : 1;
+
   // FM-P3：自动战斗阵型战力修正（每回合按当回合组织度求值；守城无 Army 时无阵型贡献，
   // 城墙惩罚/wallPenalty 已表达守势，不虚拟守方阵型）
   const atkFormMod = (org: number) => autoFormationMods(atkArmy.formation, org, atkArmy.squads);
@@ -869,8 +891,16 @@ export function runAutoBattle(
   const atkInitial = atkArmy.troops;
   const defInitial = defTroopsInitial;
 
+  if (secretCrossingMul > 1) {
+    events.push({
+      round: 0,
+      type: 'stratagem',
+      description: `暗渡陈仓：攻防×${secretCrossingMul}`,
+    });
+  }
+
   // §17.3 模拟回合数
-  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) });
+  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul;
   const defPower0 = defArmy
     ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
     : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) });
@@ -878,7 +908,7 @@ export function runAutoBattle(
   const rounds = Math.min(10, 3 + Math.floor(totalPowerDiff / 1000));
 
   for (let r = 1; r <= rounds; r++) {
-    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * (0.9 + rng() * 0.2);
+    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul * (0.9 + rng() * 0.2);
     const defP = (defArmy
       ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
       : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
@@ -1175,6 +1205,8 @@ function applyBattleResultToState(
     ...(resolution.enemyArmyId ? [resolution.enemyArmyId] : []),
   ]);
   const armies = state.campaignArmies.filter((a) => !participantIds.has(a.id));
+  const captivesByAttacker: number[] = [];
+  const captivesByDefender: number[] = [];
 
   // 更新攻方 Army
   const updatedArmy: CampaignArmy = {
@@ -1204,6 +1236,7 @@ function applyBattleResultToState(
               officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
             } else if (status === 'captured') {
               officers[oid] = { ...o, status: OfficerStatus.PRISONER };
+              captivesByAttacker.push(oid);
             } else if (status === 'wounded') {
               officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
             }
@@ -1229,10 +1262,40 @@ function applyBattleResultToState(
       officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
     } else if (status === 'captured') {
       officers[oid] = { ...o, status: OfficerStatus.PRISONER };
+      captivesByDefender.push(oid);
     } else if (status === 'wounded') {
       officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
     }
   }
+
+  const sealCaptures = (s: GameState): GameState => {
+    let out = s;
+    if (captivesByAttacker.length > 0) {
+      out = applyCapturedRelations(out, captivesByAttacker, army.commanderId);
+    }
+    if (captivesByDefender.length > 0) {
+      const enemyCmd =
+        resolution.enemyArmyId != null
+          ? state.campaignArmies.find((a) => a.id === resolution.enemyArmyId)?.commanderId
+          : undefined;
+      let siegeDefCmd: number | undefined;
+      if (enemyCmd == null && resolution.defCityId != null) {
+        const defCity = cities[resolution.defCityId] ?? state.cities[resolution.defCityId];
+        if (defCity?.ruler != null) {
+          siegeDefCmd = pickDefenderCommander(
+            { ...state, cities, officers },
+            defCity,
+            defCity.ruler,
+          )?.id;
+        }
+      }
+      const captorId = enemyCmd ?? siegeDefCmd;
+      if (captorId != null) {
+        out = applyCapturedRelations(out, captivesByDefender, captorId);
+      }
+    }
+    return out;
+  };
 
   // 攻方胜且 defCityId → 占城
   if (result.winner === 'attacker' && resolution.defCityId != null) {
@@ -1302,7 +1365,7 @@ function applyBattleResultToState(
       const msg = resolution.type === 'siege_surrender'
         ? `${target.name} 开城投降！${army.name} 占领`
         : `${army.name} 攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}`;
-      return pushLog(after, 'campaign_capture', msg);
+      return sealCaptures(pushLog(after, 'campaign_capture', msg));
     }
   }
 
@@ -1334,11 +1397,11 @@ function applyBattleResultToState(
     if (result.attackerRemaining > MIN_CAMPAIGN_TROOPS) {
       armies.push({ ...updatedArmy, phase: 'garrison', currentNodeId: army.fromNodeId, targetNodeId: undefined, path: [] });
     }
-    return pushLog(
+    return sealCaptures(pushLog(
       defeatedState,
       'campaign_defeat',
       `${army.name} 战败，残部 ${result.attackerRemaining} 退回`,
-    );
+    ));
   }
 
   // 野战胜（无 defCityId）：Army 驻守当前节点
@@ -1355,11 +1418,11 @@ function applyBattleResultToState(
     army.commanderId,
     defRouted ? MERIT_FIELD_ANNIHILATE : MERIT_FIELD_ROUT,
   );
-  return pushLog(
+  return sealCaptures(pushLog(
     fieldState,
     'campaign_field_win',
     `${army.name} 野战胜利，敌军溃退`,
-  );
+  ));
 }
 
 function recomputeFactionCities(

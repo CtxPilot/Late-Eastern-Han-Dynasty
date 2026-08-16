@@ -14,6 +14,13 @@ import {
   meritLevelFor,
   deriveCityFactions,
   refugeeConscriptMultiplier,
+  developSkillBonus,
+  recruitSkillBonus,
+  trainSkillBonus,
+  computePopularWill,
+  popularWillRecruitModifier,
+  maxCivilianFarmingHouseholds,
+  quarterKey,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
@@ -187,6 +194,7 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
   }
   const conf = DEVELOPMENT_PROJECTS[project.kind];
   // 开发效率加成（等级表 文 Lv3/4 开发+5%/+10%，Session 265：指派将执行）
+  // S25：农政/商政/筑城技能每级 +5%（Session 337）
   let gain = conf.gain;
   const assignee = state.officers[project.assignedOfficerId];
   if (assignee) {
@@ -194,7 +202,9 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
       meritLevelFor(assignee.merit ?? 0),
       assignee.meritPath ?? 'neutral',
     ).developBonus;
-    if (developBonus > 0) gain = Math.floor(conf.gain * (1 + developBonus));
+    const skillBonus = developSkillBonus(assignee, project.kind);
+    const totalBonus = developBonus + skillBonus;
+    if (totalBonus > 0) gain = Math.floor(conf.gain * (1 + totalBonus));
   }
   // S27 开发满意度联动：农业完成→世家+3、商业完成→商贾+3（固定值不耗 RNG，docs/08 §十七）
   const factionKind = project.kind === 'farm' ? 'aristocracy' : project.kind === 'commerce' ? 'merchants' : null;
@@ -230,6 +240,8 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
 
   const d = ensureDemographics(city);
   let maxMen = maxConscriptable(d);
+  // 民屯占用户数不参与征兵池（docs/04 §2.8）
+  maxMen = Math.max(0, maxMen - (city.civilianFarmingHouseholds ?? 0));
   // S27 流民满意度 ≥70 → 征兵上限 +20%（docs/08 §十七）
   const entries = city.cityFactions ?? deriveCityFactions(cityId);
   const refugeeMod = 1 + refugeeConscriptMultiplier(entries);
@@ -238,8 +250,16 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
 
   const troopsGain = 300 + Math.floor(rng() * 151);
   const bonus = Math.floor(city.stats.farm / 50) + Math.floor((city.stats.morale ?? 70) / 40);
-  // 内政效率加成（城主功绩，Session 265；不消耗 RNG）
-  const want = Math.floor((troopsGain + bonus * 10) * (1 + civilEfficiencyOf(state, city)));
+  // 内政效率加成（城主功绩 Session 265 + 征兵技能 Session 337；不消耗 RNG）
+  const lord = state.officers[city.officers[0]];
+  // S26：人心募兵效率（Session 338）
+  const playerFaction = state.factions[state.playerFactionId];
+  const popularWill = playerFaction ? computePopularWill(playerFaction, state) : 50;
+  const popularRecruit = popularWillRecruitModifier(popularWill);
+  const want = Math.floor(
+    (troopsGain + bonus * 10) *
+      (1 + civilEfficiencyOf(state, city) + recruitSkillBonus(lord) + popularRecruit),
+  );
   const total = Math.min(want, maxMen);
 
   const nextDemo = { ...d, adultMale: d.adultMale - total };
@@ -327,7 +347,10 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   if (city.food < foodCost) throw new Error('粮食不足');
   if (city.troops < 100) throw new Error('兵力不足，无法训练');
 
-  const gain = Math.floor((5 + Math.floor(rng() * 6)) * (1 + civilEfficiencyOf(state, city)));
+  const gain = Math.floor(
+    (5 + Math.floor(rng() * 6)) *
+      (1 + civilEfficiencyOf(state, city) + trainSkillBonus(state.officers[city.officers[0]])),
+  );
   const prev = city.troopsMorale ?? 70;
   const next = Math.min(100, prev + gain);
 
@@ -357,4 +380,43 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
     };
   }
   return after;
+}
+
+/**
+ * 民屯田分配（docs/04 §2.8）：每城每季可调一次，户数 0~max，无金消耗。
+ */
+export function setCivilianFarming(
+  state: GameState,
+  cityId: number,
+  households: number,
+): GameState {
+  const city = requirePlayerCity(state, cityId);
+  if (!Number.isInteger(households) || households < 0) {
+    throw new Error('民屯户数须为非负整数');
+  }
+  const max = maxCivilianFarmingHouseholds(city);
+  if (households > max) {
+    throw new Error(`民屯户数超限（上限 ${max}）`);
+  }
+  const q = quarterKey(state.currentYear, state.currentMonth);
+  if (
+    city.civilianFarmingAssignQuarter != null &&
+    city.civilianFarmingAssignQuarter === q &&
+    (city.civilianFarmingHouseholds ?? 0) !== households
+  ) {
+    throw new Error('本季已调整过民屯，下季初再议');
+  }
+
+  const nextCity: City = {
+    ...city,
+    civilianFarmingHouseholds: households,
+    civilianFarmingAssignQuarter: q,
+  };
+  const label =
+    households === 0
+      ? `${city.name} 停办民屯`
+      : `${city.name} 民屯分配 ${households} 户（上限 ${max}）`;
+  return pushLog(state, 'civilian_farming', label, {
+    cities: { ...state.cities, [cityId]: nextCity },
+  });
 }

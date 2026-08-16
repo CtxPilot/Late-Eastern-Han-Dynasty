@@ -73,7 +73,7 @@ gameRouter.post('/save/import', (req, res) => {
   }
 });
 
-/** S16 XDG 存档：服务端命名槽位列表。 */
+/** S16 命名槽位：服务端 SQLite 列表（Session 340）。 */
 gameRouter.get('/save/slots', (_req, res) => {
   try {
     res.json({ slots: gameService.listDiskSaveSlots() });
@@ -82,7 +82,7 @@ gameRouter.get('/save/slots', (_req, res) => {
   }
 });
 
-/** S16 XDG 存档：当前权威状态保存到用户数据目录。 */
+/** S16 命名槽位：当前权威状态写入 `$XDG_DATA_HOME/leh/saves.db`。 */
 gameRouter.post('/save/slots/:slot', (req, res) => {
   try {
     res.json(gameService.saveGameToDisk(req.params.slot));
@@ -91,7 +91,7 @@ gameRouter.post('/save/slots/:slot', (req, res) => {
   }
 });
 
-/** S16 XDG 存档：读取槽位，复用浏览器导入的完整校验/迁移链。 */
+/** S16 命名槽位：读取并复用浏览器导入的完整校验/迁移链。 */
 gameRouter.post('/save/slots/:slot/load', (req, res) => {
   try {
     res.json(gameService.loadGameFromDisk(req.params.slot));
@@ -181,6 +181,19 @@ gameRouter.post('/civil/reclaim', (req, res) => {
     res.json(gameService.doReclaimLand(cityId, officerId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'reclaim failed' });
+  }
+});
+
+/** 民屯田分配（docs/04 §2.8）：每城每季一次 */
+gameRouter.post('/civil/civilian-farming', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const households = Number(req.body.households);
+    if (!Number.isInteger(cityId)) throw new Error('无效城池');
+    if (!Number.isInteger(households)) throw new Error('民屯户数须为整数');
+    res.json(gameService.doSetCivilianFarming(cityId, households));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'civilian farming failed' });
   }
 });
 
@@ -431,13 +444,14 @@ gameRouter.post('/intel/captive', (req, res) => {
 
 gameRouter.post('/plot/launch', (req, res) => {
   try {
-    const { type, targetFactionId, targetCityId, targetOfficerId, agentId, casterOfficerId } = req.body as {
+    const { type, targetFactionId, targetCityId, targetOfficerId, agentId, casterOfficerId, feintCityId } = req.body as {
       type: string;
       targetFactionId?: number;
       targetCityId?: number;
       targetOfficerId?: number;
       agentId?: string;
       casterOfficerId?: number;
+      feintCityId?: number;
     };
     res.json(
       gameService.doLaunchPlot(
@@ -447,10 +461,19 @@ gameRouter.post('/plot/launch', (req, res) => {
         targetOfficerId != null ? Number(targetOfficerId) : undefined,
         agentId ? String(agentId) : undefined,
         casterOfficerId != null ? Number(casterOfficerId) : undefined,
+        feintCityId != null ? Number(feintCityId) : undefined,
       ),
     );
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'plot launch failed' });
+  }
+});
+
+gameRouter.post('/plot/cancel', (req, res) => {
+  try {
+    res.json(gameService.doCancelPlot(String(req.body.plotId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'plot cancel failed' });
   }
 });
 

@@ -17,7 +17,7 @@ import {
   type GameState,
   type Officer,
 } from '@leh/shared';
-import { getPlotAttackModifier, isEmptyFortDeterring } from './plot.js';
+import { getPlotAttackModifier, isEmptyFortDeterring, isSecretCrossingGarrisonHold } from './plot.js';
 import { assaultForFaction, startCampaignForFaction } from './campaign.js';
 
 export const AI_MILITARY_CONFIG = Object.freeze({
@@ -334,6 +334,8 @@ function aiMilitaryTurn(
     const cands: Cand[] = [];
     for (const from of Object.values(s.cities).filter((city) => city.ruler === factionId)) {
       if (usedSources.has(from.id) || from.troops < AI_MILITARY_CONFIG.minRaidSourceTroops) continue;
+      // 暗渡陈仓明修：守军不得轻离此城出征
+      if (isSecretCrossingGarrisonHold(s, from.id)) continue;
       for (const target of Object.values(s.cities)) {
         if (target.ruler == null || target.ruler === factionId) continue;
         if (!canAiAttackFaction(s, factionId, target.ruler)) continue;

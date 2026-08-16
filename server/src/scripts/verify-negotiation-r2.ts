@@ -175,10 +175,13 @@ assert(
           30 * 0.35 +
           alliance.envoyCharisma * 0.15 +
           alliance.commonEnemyModifier +
-          5,
+          5 +
+          alliance.hegemonyModifier +
+          alliance.eloquenceModifier +
+          alliance.mandateModifier,
       ),
     ),
-  '外交公式必须按百分点逐项相加且只 clamp 一次',
+  '外交公式必须按百分点逐项相加（含霸府/辩才/天命）且只 clamp 一次',
 );
 const lowerFavorState: GameState = {
   ...prepared,
@@ -212,8 +215,22 @@ const lowState: GameState = {
   ) as GameState['officers'],
 };
 assert(
-  calculateAllianceChance(lowState, 3).chance === 5,
-  '外交成功率下界必须为 5%',
+  calculateAllianceChance(lowState, 3).chance ===
+    Math.min(
+      90,
+      Math.max(
+        5,
+        35 +
+          -100 * 0.35 +
+          1 * 0.15 +
+          calculateAllianceChance(lowState, 3).commonEnemyModifier +
+          0 +
+          calculateAllianceChance(lowState, 3).hegemonyModifier +
+          calculateAllianceChance(lowState, 3).eloquenceModifier +
+          calculateAllianceChance(lowState, 3).mandateModifier,
+      ),
+    ),
+  '外交低端按公式结算（含天命）并受 5% 下界保护',
 );
 const highState: GameState = {
   ...prepared,

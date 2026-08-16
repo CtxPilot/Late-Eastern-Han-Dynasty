@@ -189,6 +189,8 @@ export const CityRuntimeSchema: z.ZodType<City> = z
       })
       .strict()
       .optional(),
+    civilianFarmingHouseholds: z.number().int().nonnegative().optional(),
+    civilianFarmingAssignQuarter: z.number().int().optional(),
   })
   .strict()
   .superRefine((city, ctx) => {

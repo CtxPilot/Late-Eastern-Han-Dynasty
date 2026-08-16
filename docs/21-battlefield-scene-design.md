@@ -530,7 +530,7 @@ Encounter + 历史节点标签
 
 **【已批准方案】必须现在预留，原型即可中途存档。**
 
-S16 当前虽没有生产存取 UI/SQLite，但 `GameState` 完整 Schema 已覆盖进行中 `BattlefieldMap`、`MeleeState`、`BattleState` 与 PRNG 状态。新系统不能倒退为“战斗中禁止存档”。
+S16 已有生产存取：浏览器 JSON 导入/导出 + **Session 340** `$XDG_DATA_HOME/leh/saves.db` 命名槽位；`GameState` 完整 Schema 已覆盖进行中 `BattlefieldMap`、`MeleeState`、`BattleState` 与 PRNG 状态。新系统不能倒退为“战斗中禁止存档”。
 
 ### 8.2 建议实例结构
 

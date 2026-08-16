@@ -48,4 +48,7 @@ export * from './game-state-plot-schema.js';
 export * from './game-state-full-schema.js';
 export * from './types/debate.js';
 export * from './relations.js';
+export * from './skill-consume.js';
 export * from './mandate-popular.js';
+export * from './tournament.js';
+export * from './civilian-farming.js';

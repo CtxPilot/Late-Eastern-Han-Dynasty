@@ -15,6 +15,7 @@ import type { Officer } from './officer.js';
 import type { IntelState } from './intel.js';
 import type { Plot } from './plot.js';
 import type { EventSourceClass } from './event.js';
+import type { TournamentState } from './tournament.js';
 
 export interface GameAction {
   year: number;
@@ -77,4 +78,17 @@ export interface GameState {
    * optional 追加，旧存档无此字段时按 null 兜底，不升 schema 版本。
    */
   emperorLocation?: number | null;
+
+  /**
+   * S24 关系网运行时亲和度（Session 338）。
+   * key = relationPairKey(minId, maxId)，value = 当前亲和度 -100~100。
+   * 缺省时 GET relations 回退 pairAffinity 基线；旧档兼容，不升 schema 版本。
+   */
+  relationAffinities?: Record<string, number>;
+
+  /**
+   * S19 单挑大会（Session 338 最小闭环）。
+   * 每年正月自动举办并瞬时结算；押注/观战 UI 后置。旧档缺省兼容。
+   */
+  tournament?: TournamentState;
 }

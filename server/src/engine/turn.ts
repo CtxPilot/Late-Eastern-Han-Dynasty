@@ -25,6 +25,8 @@ import {
   shortestCountyPath,
   decideDefenderArmyAction,
   merchantCommerceMultiplier,
+  medicineSkillLevel,
+  civilianFarmingFoodProduced,
   type City,
   type CityDemographics,
   type GameState,
@@ -42,6 +44,9 @@ import { syncFactionResources } from './economy.js';
 import { tickImperialAuthorityQuarter } from './hegemony.js';
 import { tickDevelopmentProject } from './civil.js';
 import { tickFactionPolitics } from './factionPolitics.js';
+import { tickSameCityRelations, loadStaticRelations } from './relations.js';
+import { tickPopularWillDesertion } from './mandateEffects.js';
+import { runAnnualTournament } from './tournament.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -145,12 +150,21 @@ export function settleCityMonthDetailed(
   d = age.next;
 
   const labor = laborForce(d);
-  const laborFactor = Math.min(1.4, 0.4 + labor / Math.max(sumSafe(d), 1));
+  const farmingHouseholds = city.civilianFarmingHouseholds ?? 0;
+  // 民屯占用户口不计入农业/商业劳力（docs/04 §2.8）
+  const effectiveLabor = Math.max(0, labor - farmingHouseholds);
+  const laborFactor = Math.min(1.4, 0.4 + effectiveLabor / Math.max(sumSafe(d), 1));
   const foodMul =
     season === Season.WINTER ? 0.7 : season === Season.AUTUMN ? 1.25 : season === Season.SPRING ? 1.1 : 1;
   const goldMul = season === Season.WINTER ? 1.1 : season === Season.SUMMER ? 1.1 : 1;
 
-  const foodProduced = Math.floor(city.stats.farm * 3.2 * laborFactor * foodMul);
+  const farmFood = Math.floor(city.stats.farm * 3.2 * laborFactor * foodMul);
+  const civilianFood = civilianFarmingFoodProduced(
+    farmingHouseholds,
+    season,
+    city.province,
+  );
+  const foodProduced = farmFood + civilianFood;
   const adultShare = (d.adultMale + d.adultFemale) / Math.max(sumSafe(d), 1);
   // S27 商贾满意度修正：≥70 商业 +15%、<30 −15%（docs/08 §十七）
   const merchantMod = 1 + merchantCommerceMultiplier(city.cityFactions ?? []);
@@ -279,10 +293,16 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = runAiMilitary(nextState, rng, rng);
   // 家族跟随 S18：在野武将自动投奔检定
   nextState = tickFollowCheck(nextState, rng);
+  // S26：人心叛逃月度检定（Session 338）
+  nextState = tickPopularWillDesertion(nextState, rng);
   // S27 城级派系：满意度回归 / 兵装月产 / 叛乱判定 / 每季声望衰减
   nextState = tickFactionPolitics(nextState, rng, isQuarterStart);
   // 子女 S18：每年 1 月 appearYear 登场
   nextState = tickChildrenAppear(nextState);
+  // S19：每年正月单挑大会（瞬时结算；押注/UI 后置）
+  if (isYearStart) {
+    nextState = runAnnualTournament(nextState, rng);
+  }
   // 事件 S14：自动触发无选项事件
   nextState = tickEvents(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
@@ -294,6 +314,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     const decay = applyMeritDecayQuarter(nextState, currentYear);
     nextState = { ...nextState, officers: decay.officers };
     meritDecayNotes = decay.notes;
+    // S24：季度同城亲和演变（静态关系表中同城配对 +1）
+    nextState = tickSameCityRelations(nextState, loadStaticRelations());
   }
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {
@@ -313,12 +335,15 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
       Object.entries(nextState.officers).map(([id, o]) => {
         let next: typeof o = { ...o, actionsPerMonth: 1 };
         // 等级表 Lv20 体力恢复+5/月（docs/04 §十 6.2，Session 265；封顶体力上限）
+        // S25：医术技能每月 +Lv 体力（Session 337；不启用全量自然恢复公式，避免平衡漂移）
         if (o.status !== 'dead') {
           const effects = meritEffects(meritLevelFor(o.merit ?? 0), o.meritPath ?? 'neutral');
-          if (effects.staminaRecovery > 0) {
+          const med = medicineSkillLevel(o);
+          const recover = effects.staminaRecovery + med;
+          if (recover > 0) {
             const level = o.meritLevel ?? meritLevelFor(o.merit ?? 0);
             const max = calcStaminaMax(o, level, currentYear - o.birthYear);
-            next = { ...next, stamina: Math.min(max, (o.stamina ?? max) + effects.staminaRecovery) };
+            next = { ...next, stamina: Math.min(max, (o.stamina ?? max) + recover) };
           }
         }
         return [id, next] as const;

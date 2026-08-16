@@ -356,6 +356,13 @@ function upgradeSkillNode(state, officerId, nodeId) {
 - Headless Chrome：技能 tab 渲染/加点/重置/特性面板/console error=0
 - 回归：typecheck / test / lint / validate-data
 
+### Phase 5 — 效果消费（Session 337 完成）
+
+1. `shared/skill-consume.ts`：树状态→`officer.skills` 合并（跨树同 skillId 取 max）+ 内政/人事消费系数
+2. `upgradeSkillNode` / `resetSkillTree` 同步写回 `officer.skills`（战斗火计/暴击/单挑既有路径自动生效）
+3. 内政：农政/商政/筑城→开发增益；征兵/训练→即时效率；寻访→搜索率；辩才→登用/结盟；医术→月度体力 +Lv
+4. `pnpm verify-skill-consume` **19/19**
+
 ---
 
 ## 十一、边界与后置

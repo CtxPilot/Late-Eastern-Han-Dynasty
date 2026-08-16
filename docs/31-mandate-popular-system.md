@@ -132,7 +132,13 @@ function computePopularWill(faction: Faction, game: GameState): number {
 2. 客户端 `FactionOverviewDrawer.tsx` 组件
 3. 命令坞注册「势力」入口
 
-### Phase 3 — 文档
+### Phase 3 — 效果消费（Session 338）
+
+1. 天命 → `calculateAllianceChance.mandateModifier`
+2. 人心 → `conscript` 募兵效率
+3. 人心 → 月度叛逃检定 `tickPopularWillDesertion`
+
+### Phase 4 — 文档
 
 1. 本文档定稿
 2. `12-system-map.md` 注册 S26（26→27）
@@ -145,6 +151,9 @@ function computePopularWill(faction: Faction, game: GameState): number {
 
 | 项 | 状态 | 说明 |
 |----|:----:|------|
+| 天命影响结盟成功率 | ✅ Session 338 | `mandateModifier` 百分点 |
+| 人心影响征兵 | ✅ Session 338 | `popularWillRecruitModifier` |
+| 人心叛逃检定 | ✅ Session 338 | 月度基率 2%×修正；忠诚≥80/君主豁免 |
 | 天命影响 AI 外交决策 | ❌ 后置 | 属 S15 AI 深化 |
 | 禅让/废立事件链 | ❌ 后置 | HC-P2 范畴 |
 | 人心影响城池自发抵抗 | ❌ 后置 | 需城池攻防引擎扩展 |

@@ -1,7 +1,7 @@
 # 技术架构
 
-> 文档状态：核心架构对齐 Session 157（2026-07-23）
-> S16 已有 v1 信封、完整快照校验、迁移分派、受锁内存恢复与可序列化 PRNG；生产存取/API/UI/SQLite 尚未实现，图中数据库层仍以虚线标注
+> 文档状态：核心架构对齐 Session 340（2026-08-16）
+> S16 已有 v1 信封、完整快照校验、迁移分派、受锁内存恢复、可序列化 PRNG、浏览器导入/导出与系统菜单槽位 UI；**Session 340** 起命名槽位介质为 `better-sqlite3`（`$XDG_DATA_HOME/leh/saves.db`）。多用户/云同步仍后置。
 
 ## 一、总体架构图
 
@@ -99,7 +99,7 @@
 | CSS | Tailwind CSS | 实用优先，快速响应式布局 |
 | 后端框架 | Express + TypeScript | 轻量灵活，生态成熟 |
 | 实时通信 | ws (WebSocket) | AI回合结束/战斗状态推送 |
-| 数据库 | better-sqlite3 (已装，未用) | 生产存取介质待实现；现有 S16 仅完成格式、校验、迁移和内存恢复契约 |
+| 数据库 | better-sqlite3 | **Session 340**：命名槽位生产介质 `$XDG_DATA_HOME/leh/saves.db`；信封仍为完整 `SaveEnvelopeV1` JSON 文本列；多用户/云同步后置 |
 | 运行时校验 | Zod | TypeScript 仅编译时，JSON 数据需运行时校验 |
 | 包管理 | pnpm workspace | Monorepo原生支持，磁盘高效 |
 | HTTP客户端 | axios | 前端API调用 |
@@ -411,7 +411,7 @@ GameLayout
 | | `battle/simpleAi.ts` | — | 简易战斗 AI（占位） |
 | **出征** | `engine/march.ts` | — | 扣兵粮 · 开战 · 胜败占城/撤退/回流 |
 | **谍报** | `engine/spy.ts` | 1118 | 招募 · 探秘 · 驻守反间 · 枕边风 · AI间谍 |
-| **计谋** | `engine/plot.ts` | 659 | S17 三层：L1 美人计·离间·假情报·空城 ✅ / L2 战略计谋(釜底抽薪/调虎离山/暗渡陈仓等) / L3 国策态势(以逸待劳/远交近攻等) |
+| **计谋** | `engine/plot.ts` | 1066 | S17 三层：L1 美人计·离间·假情报·空城 ✅ / L2 **釜底抽薪 ✅339** · **暗渡陈仓 ✅341**（调虎离山等其余仍设计） / L3 国策态势(以逸待劳/远交近攻等·设计) |
 | **外交** | `engine/diplomacy.ts` | — | 进贡 · 结盟 · 献美 |
 | **事件** | `engine/event.ts` | — | tickEvents 条件触发 · pending 选项队列 |
 | **家族** | `engine/family.ts` | — | 妻子跟随 · 自动投奔检定 · 释放出仕 |
@@ -479,7 +479,8 @@ server/src/data/loader.ts
 | 2026-07-15 | REST + WebSocket 而非全 REST | AI 回合需推送通知 |
 | 2026-07-15 | Konva.js 而非原生 Canvas | React 集成更好、分层渲染 |
 | 2026-07-15 | Zustand 而非 Redux | 轻量，适合游戏高频状态更新 |
-| 2026-07-15 | better-sqlite3 已装，存档待 S16 | 单机游戏不需要独立数据库 |
+| 2026-08-16 | Session 340：`better-sqlite3` 命名槽位库 `$XDG_DATA_HOME/leh/saves.db` | 单机游戏不需要独立数据库服务；多用户/云同步后置 |
+| 2026-07-15 | better-sqlite3 选型写入架构表 | 存档介质当时仍待 S16 实装 |
 | 2026-07-15 | pnpm workspace monorepo | shared types 共享，避免代码重复 |
 | 2026-07-15 | Zod 运行时校验 | JSON 非 TS 类型，需运行时防错 |
 | 2026-07-16 | Phase 0-A → 0-B 分拆 | 先小数据验证架构再扩容 |

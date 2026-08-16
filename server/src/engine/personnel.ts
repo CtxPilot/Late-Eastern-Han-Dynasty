@@ -13,6 +13,8 @@ import {
   calculateRecruitChance,
   canMarchAlongRoad,
   panelStatsDisplay,
+  discoverSkillRateBonus,
+  eloquenceRecruitModifier,
   type FemaleCharacter,
   type GameState,
   type Officer,
@@ -21,6 +23,7 @@ import { joinFaction } from './family.js';
 import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
 import { searchTreasureIntoInventory } from './items.js';
+import { applyMarriedRelations, loadStaticRelations } from './relations.js';
 
 // 功绩获取数值（docs/04 §6.1 人事条；固定值不消耗权威 RNG，待平衡）
 const MERIT_SEARCH_FOUND = 8;
@@ -114,7 +117,9 @@ export function searchTalent(
     0.15,
     Math.min(
       0.85,
-      searcher.stats.intelligence / 150 + searcher.stats.charisma / 200,
+      searcher.stats.intelligence / 150 +
+        searcher.stats.charisma / 200 +
+        discoverSkillRateBonus(searcher),
     ),
   );
 
@@ -215,14 +220,14 @@ export function searchTalent(
 }
 
 /**
- * 登用率：40% + 魅差×0.3 + (1-|相性差|/150)×40% − 野心×3% + 义理×2%
+ * 登用率：40% + 魅差×0.3 + (1-|相性差|/150)×40% − 野心×3% + 义理×2% + 辩才技能
  * 返回 0~100 百分数
  */
 export function calcRecruitChance(
   recruiter: Officer,
   target: Officer,
 ): number {
-  return calculateRecruitChance(recruiter, target);
+  return calculateRecruitChance(recruiter, target, eloquenceRecruitModifier(recruiter));
 }
 
 /**
@@ -289,6 +294,7 @@ export function recruitOfficer(
   };
 
   const chance = calcRecruitChance(recruiter, target);
+
   if (rng() * 100 >= chance) {
     return pushLog(
       s,
@@ -434,7 +440,7 @@ export function marryFemale(
   };
   officers = { ...withMerit.officers, [officerId]: nextOfficer };
 
-  return pushLog(
+  let nextState: GameState = pushLog(
     withMerit,
     'marry',
     `赐婚：${female.name} 配 ${officer.name}（正妻，忠诚+${MARRY_LOYALTY}，耗金 ${MARRY_GOLD}）`,
@@ -444,4 +450,7 @@ export function marryFemale(
       officers,
     },
   );
+  // S24：联姻强化丈夫与同势力义亲/配偶静态关系
+  nextState = applyMarriedRelations(nextState, officerId, loadStaticRelations());
+  return nextState;
 }

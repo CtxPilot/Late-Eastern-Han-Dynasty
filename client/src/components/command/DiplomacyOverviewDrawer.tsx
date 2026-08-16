@@ -320,7 +320,14 @@ export function DiplomacyOverviewDrawer() {
                     </p>
                     {allianceChance ? (
                       <p className="mt-1 text-[10px] text-stone-600">
-                        使者 {game.officers[allianceChance.envoyId]?.name ?? '未知'} · 魅力 {allianceChance.envoyCharisma}
+                        使者 {game.officers[allianceChance.envoyId]?.name ?? '未知'} · 魅力{' '}
+                        {allianceChance.envoyCharisma}
+                        {allianceChance.eloquenceModifier > 0
+                          ? ` · 辩才+${allianceChance.eloquenceModifier}%`
+                          : ''}
+                        {allianceChance.mandateModifier !== 0
+                          ? ` · 天命${allianceChance.mandateModifier > 0 ? '+' : ''}${allianceChance.mandateModifier}%`
+                          : ''}
                       </p>
                     ) : null}
                   </div>
