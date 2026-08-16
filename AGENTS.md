@@ -2,7 +2,8 @@
 
 > 本文件是给执行agent（Claude Code等）看的精简操作规则，详细设计见 `docs/` 下文档。
 > 每次会话开始前必须先读根目录 `HANDOFF.md`，再读 `docs/10-progress.md`，
-> 并扫一眼 `docs/12-system-map.md`（大系统清单与扩充顺序），
+> 并扫一眼 `docs/12-system-map.md`（大系统清单与扩充顺序）与
+> `docs/35-phased-implementation-roadmap.md`（分布实施主线），
 > 按 `11-context-management.md` 的流程加载上下文。
 
 ## 核心规则

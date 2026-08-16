@@ -1,5 +1,28 @@
 # 开发进度跟踪
 
+## 2026-08-16 — Session 336 · S10 撤销朝向恢复 + 审计序号唯一
+
+- Phase：**S10 战斗收口**；不扩数据规模、不启动 0-B。
+- 运行时：
+  - 移动审计写入 `beforeFacing`（缺省按 0）；`undoLastBattleAction` 在字段存在时恢复朝向。
+  - `appendBattleAction` / `nextBattleActionSeq`：同回合取 `max(logicalTimestamp%1000)+1`，移动/攻击/变阵共用；`slice(-3)` 后 ID 仍唯一。
+- Schema：`BattleActionRecord.beforeFacing` optional + Zod 同步；旧档兼容。
+- 验证：`verify-save-battle` **59/59**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、shared **378/378**；server typecheck 通过。
+- 文档：`03`/`05`/`06`/`09`/`12`/`35`/`HANDOFF`/`10-progress` 双写。
+- **Next**：保持 S10（天气主动技能/特殊兵种熟练度须批准）或进入主线②；0-B 继续暂缓。
+
+## 2026-08-16 — Session 335 · 分布实施主线 + S10 单挑暂停/续行
+
+- Phase：**S10 战斗收口**；同时固化用户批准的五段主线（见 `docs/35-phased-implementation-roadmap.md`），不启动 0-B。
+- 运行时：
+  - `assertBattleNotPausedForDuel`：单挑未结算时拒绝移动/撤销/普攻/火计/战法/变阵/结束行动（`DUEL_BATTLE_PAUSED`）；移动范围与可用战法查询返回空。
+  - `runEnemyPhase`：进行中单挑保持暂停，不得经敌军阶段推进单挑。
+  - 敌军主动单挑结算后 `runEnemyPhase(..., { afterDuel: true })` 跳过重复灼烧与二次单挑，续行剩余 AI 再交回玩家；玩家发起单挑结算后仍回玩家回合。
+- 验证：`verify-save-battle` **54/54**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**；shared build、server typecheck 通过。
+- 文档：`35-phased-implementation-roadmap.md` 新建；`05`/`09`/`12`/`HANDOFF`/`10-progress` 双写。
+- 诚实边界：天气主动技能、特殊兵种熟练度未做；S24/S25/S26 已有 Session 284 首轮，主线②为深化而非从零新建。（facing/审计 ID 见 Session 336）
+- **Next**：保持 S10 相邻债，或经用户拍板进入主线②；0-B 继续暂缓。
+
 ## 2026-08-04 — Session 322 · S10 单挑观看/跳过装备属性同源
 
 - Phase：**S10 战斗深化**；继续同一大系统，郡域阵前入口为最小依赖修补，不扩数据规模。

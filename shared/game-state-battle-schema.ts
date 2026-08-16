@@ -195,6 +195,7 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
       logicalTimestamp: NonNegativeIntSchema, source: z.enum(['player', 'ai', 'system']), reversible: z.boolean(),
       beforePosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(),
       afterPosition: z.object({ q: z.number().int(), r: z.number().int() }).strict().optional(), beforeMp: z.number().nonnegative().optional(),
+      beforeFacing: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
       beforeFormation: z.nativeEnum(FormationType).optional(), afterFormation: z.nativeEnum(FormationType).optional(),
     }).strict()).max(3).optional(),
     message: z.string(),

@@ -16,6 +16,7 @@ import {
   meritEffects,
   meritLevelFor,
   meritStatBonus,
+  type BattleActionRecord,
   type BattleState,
   type BattleUnit,
   type CampaignArmy,
@@ -392,6 +393,39 @@ export function createBattle(
  * 六角战中变阵：只改变本次六角战的攻方 BattleUnit 快照，不调用白刃回合。
  * 规则：1 TP、每回合一次、主将未行动、变阵后主将行动结束；合法性由共享阵型解析器裁决。
  */
+/** 单挑进行中战场暂停：禁止一切军阵动作，仅允许 duel step/skip。 */
+function assertBattleNotPausedForDuel(battle: BattleState): void {
+  if (battle.duel && battle.duel.phase !== 'resolved') {
+    throw new Error('DUEL_BATTLE_PAUSED');
+  }
+}
+
+/**
+ * 同回合审计序号：取当前回合已有记录的 max(timestamp%1000)+1。
+ * 不能用 history.length——slice(-3) 后长度封顶会导致 ID/时间戳重复。
+ */
+function nextBattleActionSeq(battle: BattleState): number {
+  let maxSeq = 0;
+  for (const action of battle.actionHistory ?? []) {
+    if (tacticalTurnFromTimestamp(action.logicalTimestamp) !== battle.turn) continue;
+    maxSeq = Math.max(maxSeq, action.logicalTimestamp % 1000);
+  }
+  return maxSeq + 1;
+}
+
+function appendBattleAction(
+  battle: BattleState,
+  idPrefix: 'move' | 'attack' | 'formation',
+  record: Omit<BattleActionRecord, 'id' | 'logicalTimestamp'>,
+): BattleActionRecord[] {
+  const seq = nextBattleActionSeq(battle);
+  return [...(battle.actionHistory ?? []), {
+    ...record,
+    id: `${idPrefix}-${battle.turn}-${seq}`,
+    logicalTimestamp: battle.turn * 1000 + seq,
+  }].slice(-3);
+}
+
 export function changeBattleFormation(
   battle: BattleState,
   unitId: string,
@@ -399,7 +433,7 @@ export function changeBattleFormation(
   state: GameState,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
-  if (battle.duel) throw new Error('单挑进行中不能变阵');
+  assertBattleNotPausedForDuel(battle);
   const mainUnit = battle.units.find((unit) => unit.id === unitId && unit.side === 'attacker');
   if (!mainUnit || mainUnit.isDestroyed || mainUnit.troopCount <= 0) throw new Error('变阵主将不存在或已溃');
   const army = state.campaignArmies.find((candidate) => candidate.id === mainUnit.armyId);
@@ -433,16 +467,14 @@ export function changeBattleFormation(
   const units = battle.units.map((unit) => unit.side === 'attacker' && !unit.isDestroyed && unit.troopCount > 0
     ? { ...unit, formation: targetFormation }
     : unit);
-  const actionHistory = [...(battle.actionHistory ?? []), {
-    id: `formation-${battle.turn}-${(battle.actionHistory?.length ?? 0) + 1}`,
-    kind: 'formation' as const,
+  const actionHistory = appendBattleAction(battle, 'formation', {
+    kind: 'formation',
     unitId: commanderUnit.id,
-    logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1,
-    source: 'player' as const,
+    source: 'player',
     reversible: false,
     beforeFormation: commanderUnit.formation,
     afterFormation: targetFormation,
-  }].slice(-3);
+  });
   return {
     ...battle,
     units: units.map((unit) => unit.id === commanderUnit.id ? { ...unit, hasActed: true, mp: 0 } : unit),
@@ -465,6 +497,7 @@ export function changeBattleFormation(
 }
 
 export function getMoveRange(battle: BattleState, unitId: string): string[] {
+  if (battle.duel && battle.duel.phase !== 'resolved') return [];
   const unit = battle.units.find((u) => u.id === unitId);
   if (!unit || unit.hasActed || unit.side !== 'attacker') return [];
   const blocked = new Set(
@@ -489,6 +522,9 @@ export function getMoveRange(battle: BattleState, unitId: string): string[] {
  * 因此使用 amphibious；实体单位映射为 unit 障碍，不能穿越或落在占用格。
  */
 export function getMovePath(battle: BattleState, unitId: string, q: number, r: number): PathResult {
+  if (battle.duel && battle.duel.phase !== 'resolved') {
+    return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
+  }
   const unit = battle.units.find((candidate) => candidate.id === unitId);
   if (!unit || unit.hasActed || unit.side !== 'attacker') return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
   const occupied = new Set(battle.units.filter((candidate) => candidate.id !== unitId && !candidate.isDestroyed && candidate.troopCount > 0).map((candidate) => hexKey(candidate.position)));
@@ -506,6 +542,7 @@ export function getMovePath(battle: BattleState, unitId: string, q: number, r: n
 
 export function moveUnit(battle: BattleState, unitId: string, q: number, r: number): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
   const unit = battle.units.find((u) => u.id === unitId);
   if (!unit || unit.side !== 'attacker' || unit.hasActed) throw new Error('无法移动该部队');
 
@@ -520,17 +557,23 @@ export function moveUnit(battle: BattleState, unitId: string, q: number, r: numb
     units,
     message: `已移动 ${plan.path.length - 1} 格，消耗 ${plan.totalCost} 移动力，剩余 ${plan.path.at(-1)?.remaining ?? 0}；可攻击或结束行动`,
     log: [...battle.log, { turn: battle.turn, message: `${unit.commanderName} 行军 ${plan.path.length - 1} 格（耗${plan.totalCost}）` }],
-    actionHistory: [...(battle.actionHistory ?? []), {
-      id: `move-${battle.turn}-${(battle.actionHistory?.length ?? 0) + 1}`, kind: 'move' as const, unitId,
-      logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1, source: 'player' as const,
-      reversible: true, beforePosition: unit.position, afterPosition: { q, r }, beforeMp: unit.mp,
-    }].slice(-3),
+    actionHistory: appendBattleAction(battle, 'move', {
+      kind: 'move',
+      unitId,
+      source: 'player',
+      reversible: true,
+      beforePosition: unit.position,
+      afterPosition: { q, r },
+      beforeMp: unit.mp,
+      beforeFacing: unit.facing ?? 0,
+    }),
   };
 }
 
 /** 仅撤销尚未被攻击/技能/RNG 消费封闭的最后一次玩家移动。 */
 export function undoLastBattleAction(battle: BattleState): BattleState {
   if (battle.phase !== 'player') throw new Error('UNDO_PHASE_LOCKED');
+  assertBattleNotPausedForDuel(battle);
   const last = battle.actionHistory?.at(-1);
   if (!last) throw new Error('UNDO_EMPTY');
   if (tacticalTurnFromTimestamp(last.logicalTimestamp) !== battle.turn) throw new Error('UNDO_TURN_LOCKED');
@@ -549,7 +592,14 @@ export function undoLastBattleAction(battle: BattleState): BattleState {
   }
   return {
     ...battle,
-    units: battle.units.map((unit) => unit.id === last.unitId ? { ...unit, position: last.beforePosition!, mp: last.beforeMp! } : unit),
+    units: battle.units.map((unit) => unit.id === last.unitId
+      ? {
+          ...unit,
+          position: last.beforePosition!,
+          mp: last.beforeMp!,
+          ...(last.beforeFacing !== undefined ? { facing: last.beforeFacing } : {}),
+        }
+      : unit),
     actionHistory: battle.actionHistory!.slice(0, -1),
     message: '已撤销上一次移动',
     log: [...battle.log, { turn: battle.turn, message: `撤销移动 ${last.id}` }],
@@ -564,6 +614,7 @@ export function attackUnit(
   rng: CritRng,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
   const attacker = battle.units.find((u) => u.id === attackerId);
   const defender = battle.units.find((u) => u.id === defenderId);
   if (!attacker || !defender) throw new Error('单位不存在');
@@ -677,10 +728,12 @@ export function attackUnit(
     }
     return u;
   });
-  const actionHistory = [...(battle.actionHistory ?? []), {
-    id: `attack-${battle.turn}-${(battle.actionHistory?.length ?? 0) + 1}`, kind: 'attack' as const, unitId: attacker.id,
-    logicalTimestamp: battle.turn * 1000 + (battle.actionHistory?.length ?? 0) + 1, source: 'player' as const, reversible: false,
-  }].slice(-3);
+  const actionHistory = appendBattleAction(battle, 'attack', {
+    kind: 'attack',
+    unitId: attacker.id,
+    source: 'player',
+    reversible: false,
+  });
 
   const attackerAlive = sideAlive(units, 'attacker');
   const defenderAlive = sideAlive(units, 'defender');
@@ -722,6 +775,7 @@ export function attackUnit(
 
 export function finishPlayerAction(battle: BattleState): BattleState {
   if (battle.phase !== 'player') return battle;
+  assertBattleNotPausedForDuel(battle);
   const units = battle.units.map((u) =>
     u.side === 'attacker' ? { ...u, hasActed: true, mp: 0 } : u,
   );
@@ -757,6 +811,7 @@ export function castFireTactic(
   rng: () => number,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
   if (battle.weather === Weather.SNOW) throw new Error('雪天不可用火计');
 
   const attacker = battle.units.find((u) => u.id === attackerId);
@@ -932,6 +987,7 @@ export function getUsableAbilities(
   battle: BattleState,
   unitId: string,
 ): { ability: CombatAbilityDef; level: number; levelData: CombatAbilityLevel }[] {
+  if (battle.duel && battle.duel.phase !== 'resolved') return [];
   const unit = battle.units.find((u) => u.id === unitId);
   if (!unit || unit.isDestroyed || unit.troopCount <= 0) return [];
   const tmpl = getUnitByType()[unit.unitType];
@@ -967,6 +1023,7 @@ export function castAbility(
   rng: () => number,
 ): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
 
   const attacker = battle.units.find((u) => u.id === attackerId);
   const target = battle.units.find((u) => u.id === targetId);
@@ -1211,29 +1268,46 @@ function tryEnemyDuel(
   };
 }
 
-export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRng): BattleState {
+export function runEnemyPhase(
+  battle: BattleState,
+  state: GameState,
+  rng: CritRng,
+  options?: { afterDuel?: boolean },
+): BattleState {
   if (battle.phase !== 'enemy') return battle;
+  // 单挑未结算时战场暂停：不得经敌军阶段推进单挑或继续 AI。
+  if (!options?.afterDuel && battle.duel && battle.duel.phase !== 'resolved') {
+    return battle;
+  }
 
-  const burned = tickBurnAndEnergy(battle.units, state);
+  const afterDuel = options?.afterDuel === true;
+  const burned = afterDuel
+    ? { units: battle.units, burnNotes: [] as string[] }
+    : tickBurnAndEnergy(battle.units, state);
   if (!sideAlive(burned.units, 'defender')) {
     const atkAlive = sideAlive(burned.units, 'attacker');
     if (atkAlive) {
       return {
         ...battle,
         units: burned.units,
+        duel: null,
         phase: 'over',
         winner: 'attacker',
-        message: `灼烧持续 — 敌军溃败！${burned.burnNotes.join('；')}`,
+        message: afterDuel
+          ? `单挑后灼烧检定 — 敌军溃败！`
+          : `灼烧持续 — 敌军溃败！${burned.burnNotes.join('；')}`,
         log: [
           ...battle.log,
-          { turn: battle.turn, message: burned.burnNotes.join('；') || '灼烧击破' },
+          { turn: battle.turn, message: burned.burnNotes.join('；') || (afterDuel ? '单挑后续行' : '灼烧击破') },
         ],
       };
     }
   }
 
-  const duelBattle = tryEnemyDuel({ ...battle, units: burned.units }, state, rng);
-  if (duelBattle?.duel) {
+  const duelBattle = afterDuel
+    ? { ...battle, units: burned.units, duel: null }
+    : tryEnemyDuel({ ...battle, units: burned.units }, state, rng);
+  if (!afterDuel && duelBattle?.duel) {
     // 和玩家发起单挑保持一致：先推进一回合，之后由 DuelPanel 继续观看或跳过。
     return stepBattleDuel(duelBattle, state, rng);
   }
@@ -1271,6 +1345,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
     return {
       ...battle,
       units: result.units,
+      duel: null,
       phase: 'over',
       winner: result.winner,
       message: result.message,
@@ -1297,10 +1372,12 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
   });
 
   const burnMsg = burned.burnNotes.length ? burned.burnNotes.join('；') + ' | ' : '';
+  const duelResumeMsg = afterDuel ? '单挑结束，敌军续行 | ' : '';
   const weatherMsg = weatherTick.changed ? `天气转为${weatherTick.weather}` : '';
   return {
     ...battle,
     units,
+    duel: null,
     weather: weatherTick.weather,
     ...(weatherTick.timer == null ? {} : { weatherChangeTimer: weatherTick.timer }),
     turn: battle.turn + 1,
@@ -1311,7 +1388,7 @@ export function runEnemyPhase(battle: BattleState, state: GameState, rng: CritRn
         + ((state.officers[battle.units.find((unit) => unit.side === 'attacker')?.commanderId ?? 0]?.stats.intelligence ?? 50) >= 80 ? 1 : 0),
     ),
     tacticalPointsUsed: 0,
-    message: [burnMsg + result.message, weatherMsg, '你的回合'].filter(Boolean).join(' | '),
+    message: [duelResumeMsg + burnMsg + result.message, weatherMsg, '你的回合'].filter(Boolean).join(' | '),
     log: [
       ...(duelBattle?.log ?? battle.log),
       ...(burned.burnNotes.length
@@ -1410,7 +1487,7 @@ export function stepBattleDuel(
     [challenger.id]: duelEquipBonusFor(challenger),
     [defender.id]: duelEquipBonusFor(defender),
   });
-  return applyDuelPhase(battle, duel, state);
+  return applyDuelPhase(battle, duel, state, rng);
 }
 
 /** 跳过单挑动画, 直接结算 (fast/skip). */
@@ -1420,7 +1497,7 @@ export function skipBattleDuel(
   rng: import('../battle/duel.js').DuelRng,
 ): BattleState {
   if (!battle.duel) return battle;
-  if (battle.duel.phase === 'resolved') return applyDuelOutcome(battle, state);
+  if (battle.duel.phase === 'resolved') return applyDuelOutcome(battle, state, rng);
   const challenger = state.officers[battle.duel.challengerId];
   const defender = state.officers[battle.duel.defenderId];
   if (!challenger || !defender) return battle;
@@ -1428,18 +1505,27 @@ export function skipBattleDuel(
     [challenger.id]: duelEquipBonusFor(challenger),
     [defender.id]: duelEquipBonusFor(defender),
   });
-  return applyDuelPhase(battle, duel, state);
+  return applyDuelPhase(battle, duel, state, rng);
 }
 
-function applyDuelPhase(battle: BattleState, duel: DuelState, state: GameState): BattleState {
+function applyDuelPhase(
+  battle: BattleState,
+  duel: DuelState,
+  state: GameState,
+  rng: import('../battle/duel.js').DuelRng,
+): BattleState {
   if (duel.phase !== 'resolved') {
     return { ...battle, duel, message: duel.roundHistory[duel.roundHistory.length - 1]?.description ?? battle.message };
   }
-  return applyDuelOutcome({ ...battle, duel }, state);
+  return applyDuelOutcome({ ...battle, duel }, state, rng);
 }
 
 /** 单挑结算: 将结果应用到战场单位与武将. */
-function applyDuelOutcome(battle: BattleState, state: GameState): BattleState {
+function applyDuelOutcome(
+  battle: BattleState,
+  state: GameState,
+  rng?: import('../battle/duel.js').DuelRng,
+): BattleState {
   const duel = battle.duel;
   if (!duel || !duel.result) return battle;
 
@@ -1522,12 +1608,22 @@ function applyDuelOutcome(battle: BattleState, state: GameState): BattleState {
     };
   }
 
-  return {
+  const settled: BattleState = {
     ...battle,
     units,
     duel: null,
+    message: `单挑结束 — ${message}`,
+    log: [...battle.log, { turn: battle.turn, message: `单挑: ${result.epilogue}` }],
+  };
+
+  // 敌军阶段发起的单挑：结算后跳过重复灼烧/二次单挑，直接续行剩余敌军 AI。
+  if (battle.phase === 'enemy' && rng) {
+    return runEnemyPhase(settled, state, rng, { afterDuel: true });
+  }
+
+  return {
+    ...settled,
     phase: 'player',
     message: `单挑结束 — ${message} | 你的回合`,
-    log: [...battle.log, { turn: battle.turn, message: `单挑: ${result.epilogue}` }],
   };
 }

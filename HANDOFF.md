@@ -9,19 +9,34 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 334 收口**（S10 移动撤销回合边界；S16 槽位 UI 保持） |
+| 会话 | **Session 336 收口**（S10 撤销恢复 facing + 审计序号唯一） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 334：所有 `player→enemy` 交权路径封闭可逆移动审计；服务端按来源/种类/创建回合与位置 MP 不变式复验撤销，跨回合返回 `UNDO_TURN_LOCKED`，伪造快照返回 `UNDO_STATE_MISMATCH`；BattleView 只显示当前回合的可逆玩家移动；Session 333：普攻/火计/战法/结束行动在 `player→enemy` 边界恢复存活敌军 `hasActed=false` 与天气有效 MP，敌军不再首轮后永久待机；玩家/敌军已移动判定以天气有效 MP 为基线；Session 332：敌军缺少目标或兵种模板的异常快照也写入 `hasActed=true, mp=0` 并待机；Session 331：敌军完全阻挡时也封闭行动；Session 330：BattleView 路径摘要与撤销按钮接入权威接口；Session 329~324：天气 HUD、移动/射程/禁射/伤害/倒计时已接运行时 |
-| 文档最新 | `03`/`05`/`06`/`07`/`27`/`10-progress` 与本交接已同步移动撤销的回合、交权、错误码、UI 显隐与旧档降权边界；S16 文档保持槽位 UI 边界，SQLite、多用户仍未实装 |
-| 本交接用途 | 六角初始部署、多 unit、变阵状态机、战报解释 UI、浏览器变阵→攻击链及敌军 leveled 兵种战法已闭环；三模式点值同源、标准战术矩阵仍保持 |
-| 下一步 | 保持 S10；优先收口单挑期间战场暂停门禁，再处理敌军主动单挑结算后的敌军阶段续行；撤销前朝向恢复与审计序号唯一性为相邻技术债；天气主动技能和正式特殊兵种熟练度仍待用户批准；**提交状态**：本轮累计工作已收口，工作树应保持 clean |
+| 代码最新 | Session 336：移动审计写 `beforeFacing`，撤销恢复朝向；`appendBattleAction`/`nextBattleActionSeq` 按同回合 max 序号+1 分配 id/时间戳，slice(-3) 后仍唯一。Session 335：单挑暂停门禁与敌军单挑 `afterDuel` 续行 |
+| 文档最新 | `03`/`05`/`06`/`09`/`12`/`35`/`10-progress` 与本交接已同步；S16 SQLite、多用户仍未实装 |
+| 本交接用途 | S10 相邻债（facing + 审计 ID）已收口；分布实施主线见 35 号文档 |
+| 下一步 | **保持 S10** 或经用户拍板进入主线②（S24/S25/S26 深化 / S19 / S21）。天气主动技能与特殊兵种熟练度仍待批准；**0-B 继续暂缓** |
+
+### Session 336 交接要点
+
+- 撤销移动恢复 `facing`：新移动写入 `BattleActionRecord.beforeFacing`（缺省按 0）；旧档无该字段时撤销不改朝向。
+- 审计序号：不再用 `history.length+1`；同回合取 `max(logicalTimestamp%1000)+1`，移动/攻击/变阵共用。
+- 验证：`verify-save-battle` **59/59**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、shared **378/378**；server typecheck 通过。
+- 边界：未扩数据规模；天气主动技能、特殊兵种熟练度、阵型协同包围/撤退仍后置。
+
+### Session 335 交接要点
+
+- 用户批准分布实施：S10 收口 → 设计中大系统 → L2/屯田 → SQLite → 0-B（暂缓）；详见 `docs/35-phased-implementation-roadmap.md`。
+- 单挑暂停：玩家军阵写操作与敌军阶段均不得在 `duel` 未结算时改写战场；仅 `step`/`skip` 可推进单挑。
+- 敌军主动单挑：结算后跳过重复灼烧与同阶段二次单挑，续行 AI；玩家发起单挑结算后仍回玩家回合。
+- 验证：`verify-save-battle` **54/54**（含暂停/续行 7 项）、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**；shared build + server typecheck 通过。
+- 边界：未改 Schema/数据规模；天气主动技能、特殊兵种熟练度未做。（facing/审计 ID 已由 Session 336 收口）
 
 ### Session 334 交接要点
 
 - 交权时保留最近3条 `actionHistory` 供审计，但把可逆记录封闭；服务端仍独立校验记录回合、来源与单位/落点/MP 快照，UI 不是安全边界。
 - 修复前 stale `reversible=true` 旧档不需迁移：Schema 仍接受，运行时返回 `UNDO_TURN_LOCKED`；快照不一致返回 `UNDO_STATE_MISMATCH`，两者均不改状态。
 - 验证：`verify-save-battle` **47/47**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、FM-P4 **14/14**、shared **378/378**、client **43/43**、全仓 typecheck/lint 通过；Headless Chrome 实际完成同回合撤销、交权、新回合旧按钮隐藏/API 拒绝、新移动再撤销，`consoleErrors=0`。
-- 边界：本轮不新增 Schema/API/RNG/数据规模；撤销尚未恢复移动前 `facing`，审计历史达3条后的同回合 sequence/ID 仍可重复；单挑暂停与敌军单挑续行仍待后续切片。
+- 边界：本轮不新增 Schema/API/RNG/数据规模；当时撤销尚未恢复移动前 `facing`，审计历史达3条后的同回合 sequence/ID 仍可重复；单挑暂停与敌军单挑续行仍待后续切片。（**已由 Session 335/336 收口**）
 
 ### Session 333 交接要点
 
@@ -761,6 +776,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 ## 6.5 武将详情页 UI 迭代收口声明（强制边界）
 
 | `docs/07-ui-design.md` | UI 设计（**v3.4：武将名册/详情 + 人事终审窗已实装；§12 其余命令 UI 仍设计中**） |
+| `docs/35-phased-implementation-roadmap.md` | **分布实施主线**（Session 335 固化；Session 336 勾除 facing/审计 ID）：S10→大系统深化→L2/屯田→SQLite→0-B 暂缓 |
 
 **后续对此界面的改动应基于具体的新功能需求**（如列传扩展、俸禄系统实装后的展示接入），**而非继续审计既有展示是否"完整"**——已知的技术债（特性系统/俸禄系统/装备系统/兵种缺口/列传扩展/阵型缺口）均已登记，按各自技术债编号（D-0B-9 等）在对应系统实装时一并解决，**不再单独为 UI 展示发起审计**。
 

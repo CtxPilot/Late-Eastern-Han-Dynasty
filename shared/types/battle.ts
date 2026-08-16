@@ -71,6 +71,8 @@ export interface BattleActionRecord {
   beforePosition?: HexCoord;
   afterPosition?: HexCoord;
   beforeMp?: number;
+  /** 移动前朝向；旧档缺省时撤销不改 facing。 */
+  beforeFacing?: 0 | 1 | 2 | 3 | 4 | 5;
   beforeFormation?: FormationType;
   afterFormation?: FormationType;
 }

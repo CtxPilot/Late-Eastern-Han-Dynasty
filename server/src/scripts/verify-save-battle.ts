@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType, Weather } from '@leh/shared';
+import { BattleStateRuntimeSchema, FormationType, GameStateBattleSchema, GameStateSchema, UnitType, Weather, directionTo } from '@leh/shared';
 import {
   battleEnemyPhase, battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
-import { attackUnit, finishPlayerAction, runEnemyPhase, undoLastBattleAction } from '../engine/battle.js';
+import { attackUnit, finishPlayerAction, moveUnit, runEnemyPhase, skipBattleDuel, undoLastBattleAction } from '../engine/battle.js';
 
 let passed = 0;
 let failed = 0;
@@ -50,9 +50,58 @@ const mover = parsedBattle.units.find((unit) => unit.side === 'attacker')!;
 const previewKey = battleMoveRange(mover.id)[0]!;
 const [previewQ, previewR] = previewKey.split(',').map(Number);
 const moved = battleMove(mover.id, previewQ, previewR);
-check('A* 可达格执行后写入可撤销审计记录', moved.actionHistory?.at(-1)?.kind === 'move' && moved.units.find((unit) => unit.id === mover.id)?.position.q === previewQ);
+const movedUnit = moved.units.find((unit) => unit.id === mover.id)!;
+check('A* 可达格执行后写入可撤销审计记录', moved.actionHistory?.at(-1)?.kind === 'move' && movedUnit.position.q === previewQ);
+check('移动审计记录移动前朝向', moved.actionHistory?.at(-1)?.beforeFacing === (mover.facing ?? 0));
+check('移动后朝向已按路径更新', movedUnit.facing === directionTo(mover.position, { q: previewQ, r: previewR }));
 const undone = battleUndo();
-check('攻击前可撤销移动并恢复位置/移动力', undone.units.find((unit) => unit.id === mover.id)?.position.q === mover.position.q && undone.units.find((unit) => unit.id === mover.id)?.mp === mover.mp);
+const undoneUnit = undone.units.find((unit) => unit.id === mover.id)!;
+check('攻击前可撤销移动并恢复位置/移动力', undoneUnit.position.q === mover.position.q && undoneUnit.mp === mover.mp);
+check('撤销移动同时恢复朝向', undoneUnit.facing === (mover.facing ?? 0));
+
+// Session 336：slice(-3) 后同回合审计序号仍单调递增且 ID 唯一
+const seqProbe = BattleStateRuntimeSchema.parse({
+  ...undone,
+  phase: 'player',
+  turn: undone.turn,
+  actionHistory: [
+    {
+      id: `move-${undone.turn}-8`,
+      kind: 'move' as const,
+      unitId: mover.id,
+      logicalTimestamp: undone.turn * 1000 + 8,
+      source: 'player' as const,
+      reversible: false,
+      beforePosition: mover.position,
+      afterPosition: { q: previewQ, r: previewR },
+      beforeMp: mover.mp,
+    },
+    {
+      id: `attack-${undone.turn}-9`,
+      kind: 'attack' as const,
+      unitId: mover.id,
+      logicalTimestamp: undone.turn * 1000 + 9,
+      source: 'player' as const,
+      reversible: false,
+    },
+    {
+      id: `formation-${undone.turn}-10`,
+      kind: 'formation' as const,
+      unitId: mover.id,
+      logicalTimestamp: undone.turn * 1000 + 10,
+      source: 'player' as const,
+      reversible: false,
+    },
+  ],
+  units: undone.units.map((unit) => unit.id === mover.id
+    ? { ...unit, position: mover.position, mp: mover.mp, facing: mover.facing ?? 0, hasActed: false }
+    : unit),
+});
+const seqMoved = moveUnit(seqProbe, mover.id, previewQ, previewR);
+const seqIds = (seqMoved.actionHistory ?? []).map((action) => action.id);
+const seqLast = seqMoved.actionHistory?.at(-1);
+check('历史满3条后再移动仍分配新序号', seqLast?.id === `move-${undone.turn}-11` && seqLast.logicalTimestamp === undone.turn * 1000 + 11);
+check('审计窗口内 ID 唯一', new Set(seqIds).size === seqIds.length);
 
 // Session 334：移动撤销权只属于创建它的玩家回合，交权后不能跨敌军回合回滚。
 const boundaryMove = battleMove(mover.id, previewQ, previewR);
@@ -117,6 +166,41 @@ check('敌军相邻主将可按触发判定进入 DuelState', Boolean(enemyDuel.
 check('敌军主动单挑先推进一回合且战斗保持可恢复阶段', enemyDuel.duel?.round === 1 && enemyDuel.phase === 'enemy');
 check('敌军主动单挑扣除20气力', enemyDuel.units.find((unit) => unit.id === duelDefender.id)?.energy === 80);
 check('敌军主动单挑快照通过严格解析', BattleStateRuntimeSchema.parse(enemyDuel).duel?.challengerId === challengerOfficer.id);
+
+// Session 335：单挑期间战场暂停 + 结算后续行敌军阶段
+const pausedPlayerView = { ...enemyDuel, phase: 'player' as const };
+let pausedMoveBlocked = false;
+try {
+  moveUnit(pausedPlayerView, duelAttacker.id, duelAttacker.position.q + 1, duelAttacker.position.r);
+} catch (error) {
+  pausedMoveBlocked = error instanceof Error && error.message === 'DUEL_BATTLE_PAUSED';
+}
+check('单挑进行中拒绝移动并返回 DUEL_BATTLE_PAUSED', pausedMoveBlocked);
+let pausedAttackBlocked = false;
+try {
+  attackUnit(pausedPlayerView, duelAttacker.id, duelDefender.id, getGame(), () => 0.5);
+} catch (error) {
+  pausedAttackBlocked = error instanceof Error && error.message === 'DUEL_BATTLE_PAUSED';
+}
+check('单挑进行中拒绝普攻', pausedAttackBlocked);
+let pausedUndoBlocked = false;
+try {
+  undoLastBattleAction(pausedPlayerView);
+} catch (error) {
+  pausedUndoBlocked = error instanceof Error && error.message === 'DUEL_BATTLE_PAUSED';
+}
+check('单挑进行中拒绝撤销移动', pausedUndoBlocked);
+const pausedEnemyReentry = runEnemyPhase(enemyDuel, getGame(), () => {
+  throw new Error('单挑暂停期间敌军阶段不应消费 RNG');
+});
+check('单挑未结算时敌军阶段保持暂停不推进', pausedEnemyReentry.duel?.round === enemyDuel.duel?.round
+  && pausedEnemyReentry.phase === 'enemy'
+  && pausedEnemyReentry.message === enemyDuel.message);
+const afterEnemyDuel = skipBattleDuel(enemyDuel, getGame(), () => 0.5);
+check('敌军主动单挑结算后清空 duel', afterEnemyDuel.duel == null);
+check('敌军主动单挑结算后续行并交回玩家回合', afterEnemyDuel.phase === 'player' && afterEnemyDuel.message.includes('单挑结束'));
+check('敌军主动单挑续行快照通过严格解析', BattleStateRuntimeSchema.parse(afterEnemyDuel).phase === 'player');
+
 const actedEnemyPhase = {
   ...duelBattle,
   phase: 'enemy' as const,

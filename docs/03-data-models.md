@@ -2428,6 +2428,14 @@ pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段
   `beforeMp ≤ maxMp`；不信任存档中的审计记录。本轮不新增字段或升级存档版本；修复前遗留的
   stale `reversible=true` 记录仍可解析，但运行时会被降权拒绝。
 
+### Session 336 · 撤销朝向与审计序号
+
+- `BattleActionRecord.beforeFacing?: 0|1|2|3|4|5`（optional）：移动写入移动前朝向；撤销时一并恢复。
+  旧档缺省该字段时撤销仍只恢复坐标/MP，不改 facing（兼容）。
+- 同回合审计序号改为 `max(同回合 logicalTimestamp%1000)+1`，不再用 `history.length+1`；
+  因此 `slice(-3)` 窗口满后新记录仍单调递增且窗口内 `id` 唯一。移动/攻击/变阵共用
+  `appendBattleAction`。
+
 ---
 
 ## 二十四、技能树类型

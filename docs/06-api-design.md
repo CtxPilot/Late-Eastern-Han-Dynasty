@@ -1033,6 +1033,12 @@ POST /api/game/melee/round { actionType, targetFormation? }
 `move-path` 是非权威预览；`battle/move` 提交时服务端重新执行同一 A*。`undo` 仅接受当前玩家回合
 最后一条同回合、来源为玩家的可逆移动；攻击/技能/结束行动或进入敌军阶段后返回400。
 Session 334 新增 `UNDO_TURN_LOCKED` 与 `UNDO_STATE_MISMATCH` 失败语义，所有拒绝均保持战斗快照不变。
+Session 335：当 `BattleState.duel` 存在且未 `resolved` 时，`battle/move|undo|attack|fire|ability|formation|finish`
+返回 400/`DUEL_BATTLE_PAUSED`（状态不变）；`move-range`/`move-path`/`abilities` 返回空；`battle/enemy`
+保持暂停不推进单挑。单挑仅经 `duel/step` 与 `duel/skip` 推进；敌军主动单挑在 `skip`/`step` 结算后服务端
+以 `afterDuel` 续行剩余敌军 AI 再交回玩家回合。
+Session 336：`battle/move` 审计写入 `beforeFacing`；`battle/undo` 在字段存在时恢复朝向。审计 `id`/
+`logicalTimestamp` 按同回合最大序号 +1 分配，窗口满 3 条后仍唯一。
 白刃 `change_formation` 仅接受0-A六基础阵型，消耗1战术点。详细返回结构、错误码与调用示例见
 `27-tactical-wargame-system.md` §2.1。
 

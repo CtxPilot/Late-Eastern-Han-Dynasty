@@ -12,6 +12,7 @@
 | D | 仅设计 | S | 壳 | M | Demo 可玩 | C | 主路径完整 | P | 打磨 |
 
 策略：玩法优先 · 30 城 · **暂缓 0-B**。
+分布实施主线见 `docs/35-phased-implementation-roadmap.md`（S10 收口 → 大系统深化 → L2/屯田 → SQLite → 0-B）。
 
 ---
 
