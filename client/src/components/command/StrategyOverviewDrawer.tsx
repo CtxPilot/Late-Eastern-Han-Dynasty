@@ -26,6 +26,7 @@ const PLOT_LABEL: Record<PlotType, string> = {
   [PlotType.EMPTY_FORT]: '空城疑兵',
   [PlotType.UNDERMINE]: '釜底抽薪',
   [PlotType.SECRET_CROSSING]: '暗渡陈仓',
+  [PlotType.BLOSSOM]: '树上开花',
 };
 
 const STAGE_LABEL: Record<PlotStage, string> = {
@@ -41,10 +42,15 @@ const PLOT_COST: Record<PlotType, string> = {
   [PlotType.EMPTY_FORT]: '目标城粮 150',
   [PlotType.UNDERMINE]: '金 300 + 60/月×6',
   [PlotType.SECRET_CROSSING]: '金 200（两邻接敌城 surface）',
+  [PlotType.BLOSSOM]: '金 150 + 目标城粮 100',
 };
 
 function isL2Type(type: PlotType): boolean {
-  return type === PlotType.UNDERMINE || type === PlotType.SECRET_CROSSING;
+  return (
+    type === PlotType.UNDERMINE
+    || type === PlotType.SECRET_CROSSING
+    || type === PlotType.BLOSSOM
+  );
 }
 
 export type StrategyLaunchDraft = {
@@ -105,14 +111,21 @@ export function validateStrategyLaunch(
 
   const target = draft.targetCityId == null ? null : game.cities[draft.targetCityId];
   if (!target) {
-    return draft.type === PlotType.EMPTY_FORT
-      ? '请选择符合条件的己方寡兵城。'
+    return draft.type === PlotType.EMPTY_FORT || draft.type === PlotType.BLOSSOM
+      ? '请选择符合条件的己方城。'
       : '请选择已获探秘情报的敌城。';
   }
   if (draft.type === PlotType.EMPTY_FORT) {
     if (target.ruler !== factionId || target.troops >= 3500 || target.food < 150) {
       return '空城疑兵目标需为己方城，且兵力＜3500、粮≥150。';
     }
+    return null;
+  }
+  if (draft.type === PlotType.BLOSSOM) {
+    if (target.ruler !== factionId || target.food < 100) {
+      return '树上开花目标需为己方城，且粮≥100。';
+    }
+    if (!canPayGold(150)) return '没有己方城池能够支付金 150。';
     return null;
   }
   if (target.ruler == null || target.ruler === factionId) return '计谋目标必须是敌方城池。';
@@ -163,6 +176,7 @@ export type StrategyOverview = {
   detailedEnemyCities: string[];
   idleFemaleAgents: string[];
   emptyFortCandidates: string[];
+  blossomCandidates: string[];
   plots: StrategyPlotSummary[];
 };
 
@@ -204,6 +218,10 @@ export function buildStrategyOverview(game: GameState): StrategyOverview {
       && city.food >= 150)
     .sort((a, b) => a.troops - b.troops || a.id - b.id)
     .map((city) => city.name);
+  const blossomCandidates = Object.values(game.cities)
+    .filter((city) => city.ruler === game.playerFactionId && city.food >= 100)
+    .sort((a, b) => a.id - b.id)
+    .map((city) => city.name);
 
   return {
     activeCount: playerPlots.filter((plot) => plot.stage !== PlotStage.RESOLVED).length,
@@ -214,6 +232,7 @@ export function buildStrategyOverview(game: GameState): StrategyOverview {
     detailedEnemyCities,
     idleFemaleAgents,
     emptyFortCandidates,
+    blossomCandidates,
     plots: playerPlots.map((plot) => ({
       id: plot.id,
       type: plot.type,
@@ -269,6 +288,9 @@ export function StrategyOverviewDrawer({
     .filter((city) =>
       city.ruler === game.playerFactionId && city.troops < 3500 && city.food >= 150)
     .sort((a, b) => a.troops - b.troops || a.id - b.id);
+  const blossomCities = Object.values(game.cities)
+    .filter((city) => city.ruler === game.playerFactionId && city.food >= 100)
+    .sort((a, b) => a.id - b.id);
   const enemyFactions = Object.values(game.factions)
     .filter((faction) =>
       faction.id !== game.playerFactionId
@@ -286,6 +308,7 @@ export function StrategyOverviewDrawer({
   const isHoney = draft.type === PlotType.HONEY_TRAP;
   const isEmpty = draft.type === PlotType.EMPTY_FORT;
   const isSecretCrossing = draft.type === PlotType.SECRET_CROSSING;
+  const isBlossom = draft.type === PlotType.BLOSSOM;
   const launchReason = validateStrategyLaunch(game, draft);
   const targetName = draft.type === PlotType.SOW_DISCORD
     ? game.factions[draft.targetFactionId ?? -1]?.name ?? '未选目标'
@@ -342,6 +365,7 @@ export function StrategyOverviewDrawer({
           <InfoList title="已获探秘情报的敌城" items={overview.detailedEnemyCities} empty="暂无；美人计与假情报尚无可用敌城。" />
           <InfoList title="空闲女间谍" items={overview.idleFemaleAgents} empty="暂无；美人计仍可不派女间谍。" />
           <InfoList title="空城疑兵候选" items={overview.emptyFortCandidates} empty="暂无兵力＜3500且粮≥150的己方城。" />
+          <InfoList title="树上开花候选" items={overview.blossomCandidates} empty="暂无粮≥100的己方城。" />
           <p className="border border-stone-800 bg-stone-900/50 px-3 py-2 text-[10px] text-stone-500">
             总军师任免归朝廷；未来战略态势与献策才进入计略。
           </p>
@@ -368,6 +392,7 @@ export function StrategyOverviewDrawer({
               <option value={PlotType.EMPTY_FORT}>空城疑兵（寡兵城、粮150）</option>
               <option value={PlotType.UNDERMINE}>釜底抽薪（L2·探秘·金300+60×6）</option>
               <option value={PlotType.SECRET_CROSSING}>暗渡陈仓（L2·邻接双城 surface·金200）</option>
+              <option value={PlotType.BLOSSOM}>树上开花（L2·己方城·金150粮100）</option>
             </select>
           </label>
 
@@ -426,7 +451,7 @@ export function StrategyOverviewDrawer({
             </>
           ) : (
             <label className="block text-[10px] text-stone-500">
-              {isEmpty ? '己方寡兵城' : '目标敌城'}
+              {isEmpty || isBlossom ? '己方城' : '目标敌城'}
               <select
                 data-testid="command-strategy-target-city"
                 className="mt-1 w-full rounded border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200"
@@ -436,12 +461,12 @@ export function StrategyOverviewDrawer({
                   targetCityId: event.target.value ? Number(event.target.value) : null,
                 }))}
               >
-                <option value="">{isEmpty ? '兵力＜3500且粮≥150…' : '选择已获 detailed 情报的敌城…'}</option>
-                {(isEmpty ? weakCities : enemyCities).map((city) => {
+                <option value="">{isEmpty ? '兵力＜3500且粮≥150…' : isBlossom ? '粮≥100的己方城…' : '选择已获 detailed 情报的敌城…'}</option>
+                {(isEmpty ? weakCities : isBlossom ? blossomCities : enemyCities).map((city) => {
                   const detailed = game.intel?.cities?.[city.id]?.depth === 'detailed';
                   return (
-                    <option key={city.id} value={city.id} disabled={!isEmpty && !detailed}>
-                      {city.name} {isEmpty ? `兵${city.troops} 粮${city.food}` : detailed ? '✓' : '（需探秘）'}
+                    <option key={city.id} value={city.id} disabled={!isEmpty && !isBlossom && !detailed}>
+                      {city.name} {isEmpty ? `兵${city.troops} 粮${city.food}` : isBlossom ? `粮${city.food}` : detailed ? '✓' : '（需探秘）'}
                     </option>
                   );
                 })}
@@ -472,7 +497,7 @@ export function StrategyOverviewDrawer({
             <p>当前进行中：{overview.activeCount}/{overview.maxActive}</p>
           </div>
           {launchReason ? <p data-testid="command-strategy-launch-reason" className="text-[10px] text-amber-500">{launchReason}</p> : null}
-          {!isEmpty && draft.type !== PlotType.SOW_DISCORD ? (
+          {!isEmpty && !isBlossom && draft.type !== PlotType.SOW_DISCORD ? (
             <button
               type="button"
               data-testid="command-strategy-go-intel"
@@ -548,7 +573,7 @@ export function StrategyOverviewDrawer({
           { label: '目标', value: targetName },
           { label: '立即消耗', value: PLOT_COST[draft.type], tone: 'warning' },
           { label: '执行者', value: isHoney && draft.agentId ? game.intel?.agents?.[draft.agentId]?.name ?? '女间谍已失效' : '势力计略（不指定武将）' },
-          { label: '结算', value: isEmpty ? '立即布置防御效果' : '进入准备／成功率判定' },
+          { label: '结算', value: isEmpty ? '立即布置防御效果' : isBlossom ? '准备 1 月后虚张生效' : '进入准备／成功率判定' },
           { label: '失败后果', value: '已消耗资源不返还' },
         ]}
         loading={loading}

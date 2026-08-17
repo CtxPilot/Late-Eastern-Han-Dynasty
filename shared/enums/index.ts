@@ -352,6 +352,8 @@ export enum PlotType {
   UNDERMINE = 'undermine',
   /** L2 暗渡陈仓 — 金200；两邻接敌城 surface；明修城吸引守备，对暗渡城出征攻防+20% */
   SECRET_CROSSING = 'secretCrossing',
+  /** L2 树上开花 — 金150+粮100；己方城；ACTIVE 期对敌显示兵力×2~3、AI 攻击权重×0.4 */
+  BLOSSOM = 'blossom',
 }
 
 /** 计谋阶段 */

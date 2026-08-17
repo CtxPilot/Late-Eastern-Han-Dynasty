@@ -1,5 +1,17 @@
 # 开发进度跟踪
 
+## 2026-08-17 — Session 342 · 主线③续（L2 树上开花）
+
+- Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
+- 树上开花：
+  - `PlotType.BLOSSOM` + `Plot.feintCityId` 不适用（无新字段）；金150+粮100；己方城；PREP 1→ACTIVE 4。
+  - **前置放宽（用户拍板）**：设计表"己方城 surface"因侦查禁止对己方城执行而天然不可达，改为无情报前置；docs/04 §31.5 同步修订。
+  - 联动：AI 攻击权重×0.4（`getPlotAttackModifier`）；迷雾兵力虚报 ×2~3 按城市 ID 奇偶确定性派生（`getBlossomTroopMul`，不引入 RNG）。
+  - 命令坞计略抽屉己方城入口；可 `cancelPlot`；L2 并行上限 2 生效。
+- 验证：`verify-l2-blossom` **34/34**、undermine **18/18**、secret-crossing **23/23**、plot-spy-rng **34/34**、save-plot **9/9**；shared **396** + client **43**；三端 typecheck/lint、diff-check 全绿；真实 Chrome：发起→结束回合→"树上开花成功：洛阳 对敌显示兵力×3，AI 暂缓来攻（4 月）"生效中，console 无新错误。
+- 文档对齐：`01`/`02`/`03`/`04`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（趁火打劫/指桑骂槐等）或军屯；0-B 继续暂缓。
+
 ## 2026-08-17 — Session 341 · 主线③续（L2 暗渡陈仓）
 
 - Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
@@ -10,7 +22,7 @@
 - 验证：`verify-l2-secret-crossing` **23/23**、undermine **18/18**、plot-spy-rng **34/34**、save-plot **9/9**；StrategyOverviewDrawer **3/3**；client/server typecheck。
 - 文档对齐：`01`/`02`/`04`/`05`/`16`/`21`/`HANDOFF` 交付表补暗渡陈仓与 SQLite 现况（三十六计表 #8、诚实边界、plot.ts 行数等）。
 - 文档：`04`/`06`/`07`/`12`/`35`/`README`/`HANDOFF`/`10-progress`。
-- **Next**：其余 L2（树上开花等）或军屯；0-B 继续暂缓。
+- **Next**：其余 L2（趁火打劫/指桑骂槐等）或军屯；0-B 继续暂缓。
 
 ## 2026-08-16 — Session 340 · 主线④ 切片（S16 SQLite 命名槽位）
 

@@ -189,10 +189,12 @@ POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|em
                                      // CMD-P29：四计仅由命令坞抽屉复用本端点；旧左栏入口已删除
                                      // 客户端终审前复验上限/情报/盟友/资源/目标，服务端仍作最终权威校验
                                      // L2 战略计谋：undermine(釜底抽薪 · Session 339)·secretCrossing(暗渡陈仓 · Session 341；feintCityId=明修、targetCityId=暗渡)
-                                     //             ·lureOut(调虎离山)·bluff(树上开花)·instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
+                                     //             ·blossom(树上开花 · Session 342；己方城、金150+粮100，无情报前置)
+                                     //             ·lureOut(调虎离山)·instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
                                      //             ·watchFire(隔岸观火)·swapPillar(偷梁换柱)·edict(借尸还魂)·killChicken(指桑骂槐)
                                      // L2 投入规则：prep 消耗按月扣 · progress 进度条 · 可提前终止
                                      // Session 341：暗渡陈仓须两邻接敌城 surface；成功后明修牵制 + 暗渡自动战攻防×1.2
+                                     // Session 342：树上开花成功后该城 AI 攻击权重×0.4、迷雾兵力虚报×2~3（按城市 ID 派生）
 
 POST   /api/game/plot/cancel          { plotId }
                                      // Session 339：提前终止 L2 战略计谋，沉没成本不返还

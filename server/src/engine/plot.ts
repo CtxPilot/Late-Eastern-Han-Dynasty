@@ -41,6 +41,15 @@ export const SECRET_CROSSING_BATTLE_MUL = 1.2;
 /** 明修城吸引第三方进攻权重（同假情报诱饵量级） */
 export const SECRET_CROSSING_FEINT_ATTACK_MUL = 2.2;
 
+/** 树上开花：金150+粮100；ACTIVE 4 月；对敌显示兵力×2~3、AI 攻击权重×0.4 */
+export const BLOSSOM_GOLD = 150;
+export const BLOSSOM_FOOD = 100;
+export const BLOSSOM_EFFECT_MONTHS = 4;
+export const BLOSSOM_AI_ATTACK_MUL = 0.4;
+/** 虚报倍数下界/上界（按城市 ID 确定性派生，不引入 RNG） */
+export const BLOSSOM_TROOP_MUL_MIN = 2;
+export const BLOSSOM_TROOP_MUL_MAX = 3;
+
 /**
  * 计谋执行武将缺省解析：势力内 ACTIVE 非君主智最高者（军师类武将出谋）。
  */
@@ -92,6 +101,12 @@ const SECRET_CROSSING_COST: PlotCost = {
   requiresIntel: 'surface',
 };
 
+/** 树上开花：金 150 + 粮 100（己方城，无情报前置，Session 342 用户拍板放宽） */
+const BLOSSOM_COST: PlotCost = {
+  gold: BLOSSOM_GOLD,
+  food: BLOSSOM_FOOD,
+};
+
 const PREP_MONTHS = 1;
 /** 假情报 / 空城 生效持续月数 */
 const EFFECT_MONTHS = 3;
@@ -101,7 +116,11 @@ const MAX_ACTIVE_PLOTS = 4;
 export const EMPTY_FORT_TROOP_MAX = 3500;
 
 function isL2Plot(type: PlotType): boolean {
-  return type === PlotType.UNDERMINE || type === PlotType.SECRET_CROSSING;
+  return (
+    type === PlotType.UNDERMINE ||
+    type === PlotType.SECRET_CROSSING ||
+    type === PlotType.BLOSSOM
+  );
 }
 
 function countActiveL2(plots: Plot[], factionId: number): number {
@@ -166,6 +185,8 @@ function plotTypeLabel(type: PlotType): string {
       return '釜底抽薪';
     case PlotType.SECRET_CROSSING:
       return '暗渡陈仓';
+    case PlotType.BLOSSOM:
+      return '树上开花';
     default:
       return String(type);
   }
@@ -233,6 +254,7 @@ export function isSecretCrossingGarrisonHold(state: GameState, cityId: number): 
  * - 空城疑兵识破：×2.5
  * - 假情报诱饵（非施计方）：×2.2
  * - 暗渡陈仓明修城（非施计方）：×2.2
+ * - 树上开花成功：×0.4
  */
 export function getPlotAttackModifier(
   state: GameState,
@@ -256,9 +278,33 @@ export function getPlotAttackModifier(
       p.casterFactionId !== attackerFactionId
     ) {
       mod *= SECRET_CROSSING_FEINT_ATTACK_MUL;
+    } else if (
+      p.type === PlotType.BLOSSOM &&
+      p.targetCityId === cityId &&
+      p.result?.success === true &&
+      !p.result?.detected
+    ) {
+      mod *= BLOSSOM_AI_ATTACK_MUL;
     }
   }
   return mod;
+}
+
+/**
+ * 树上开花迷雾层兵力虚报：ACTIVE 成功未识破时，该城对敌显示兵力 ×2~3
+ * （按城市 ID 奇偶确定性派生，不引入 RNG）；否则返回 1（真实兵力）。
+ */
+export function getBlossomTroopMul(state: GameState, cityId: number): number {
+  const hit = (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.BLOSSOM &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === cityId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+  if (!hit) return 1;
+  return cityId % 2 === 0 ? BLOSSOM_TROOP_MUL_MIN : BLOSSOM_TROOP_MUL_MAX;
 }
 
 /** 是否有对该城的空城威慑（成功未识破） */
@@ -394,6 +440,19 @@ export function launchPlot(
     }
     feintCityId = opts.feintCityId;
     targetFactionId = secretCity.ruler;
+  } else if (type === PlotType.BLOSSOM) {
+    cost = BLOSSOM_COST;
+    layer = 'strategic';
+    prepMonths = PREP_MONTHS;
+    progress = 0;
+    if (targetCityId == null) throw new Error('树上开花需指定己方城');
+    const targetCity = state.cities[targetCityId];
+    if (!targetCity) throw new Error('目标城不存在');
+    if (targetCity.ruler !== fid) throw new Error('树上开花只能用于己方城');
+    if (targetCity.food < (cost.food ?? 0)) {
+      throw new Error(`${targetCity.name} 粮草不足（需 ${cost.food}）`);
+    }
+    targetFactionId = undefined;
   } else {
     throw new Error(`计谋类型 ${type} 暂未实现`);
   }
@@ -876,6 +935,22 @@ function resolvePlot(
       message = `暗渡陈仓被识破（明修 ${feintName} / 暗渡 ${cityName}）`;
     } else {
       message = `暗渡陈仓失败（${cityName}）`;
+    }
+  }
+  // —— L2 树上开花 ——
+  else if (plot.type === PlotType.BLOSSOM) {
+    if (success && !detected) {
+      enterActive = true;
+      activeMonths = BLOSSOM_EFFECT_MONTHS;
+      const troopMul =
+        plot.targetCityId != null && plot.targetCityId % 2 === 0
+          ? BLOSSOM_TROOP_MUL_MIN
+          : BLOSSOM_TROOP_MUL_MAX;
+      message = `树上开花成功：${cityName} 对敌显示兵力×${troopMul}，AI 暂缓来攻（${BLOSSOM_EFFECT_MONTHS} 月）`;
+    } else if (detected) {
+      message = `树上开花被识破（${cityName}）`;
+    } else {
+      message = `树上开花失败（${cityName}）`;
     }
   }
   // —— 美人计 / 离间（即时结算） ——

@@ -67,10 +67,10 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['agentId'], message: '只有美人计可以绑定女间谍' });
   }
 
-  const requiresFaction = plot.type !== PlotType.EMPTY_FORT;
+  const requiresFaction = plot.type !== PlotType.EMPTY_FORT && plot.type !== PlotType.BLOSSOM;
   const requiresCity = plot.type !== PlotType.SOW_DISCORD;
   if (requiresFaction !== (plot.targetFactionId != null)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetFactionId'], message: requiresFaction ? '该计谋必须指定目标势力' : '空城疑兵不能指定目标势力' });
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetFactionId'], message: requiresFaction ? '该计谋必须指定目标势力' : '空城疑兵/树上开花不能指定目标势力' });
   }
   if (requiresCity !== (plot.targetCityId != null)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetCityId'], message: requiresCity ? '该计谋必须指定目标城市' : '离间计不能指定目标城市' });
@@ -83,6 +83,9 @@ export const PlotRuntimeSchema: z.ZodType<Plot> = z.object({
   }
   if (plot.type === PlotType.UNDERMINE && plot.layer != null && plot.layer !== 'strategic') {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layer'], message: '釜底抽薪必须为 strategic 层' });
+  }
+  if (plot.type === PlotType.BLOSSOM && plot.layer != null && plot.layer !== 'strategic') {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['layer'], message: '树上开花必须为 strategic 层' });
   }
   if (plot.type === PlotType.SECRET_CROSSING) {
     if (plot.layer != null && plot.layer !== 'strategic') {

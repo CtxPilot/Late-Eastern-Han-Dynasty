@@ -71,6 +71,7 @@
     "verify-s21-layers": "tsx src/scripts/verify-s21-layers.ts",
     "verify-l2-undermine": "tsx src/scripts/verify-l2-undermine.ts",
     "verify-l2-secret-crossing": "tsx src/scripts/verify-l2-secret-crossing.ts",
+    "verify-l2-blossom": "tsx src/scripts/verify-l2-blossom.ts",
     "verify-civilian-farming": "tsx src/scripts/verify-civilian-farming.ts",
     "verify-save-slots": "tsx src/scripts/verify-save-slots.ts"
   },

@@ -46,6 +46,14 @@ describe('GameStatePlotSchema', () => {
     expect(() => GameStatePlotSchema.parse(emptyFort)).not.toThrow();
     emptyFort.plots[0].targetFactionId = 2;
     expect(() => GameStatePlotSchema.parse(emptyFort)).toThrow(/不能指定目标势力/);
+    const blossom = validPlot();
+    blossom.plots[0] = { ...blossom.plots[0], type: PlotType.BLOSSOM, targetFactionId: undefined, layer: 'strategic' as const };
+    expect(() => GameStatePlotSchema.parse(blossom)).not.toThrow();
+    blossom.plots[0].targetFactionId = 2;
+    expect(() => GameStatePlotSchema.parse(blossom)).toThrow(/不能指定目标势力/);
+    blossom.plots[0].targetFactionId = undefined;
+    blossom.plots[0].layer = 'tactical' as const;
+    expect(() => GameStatePlotSchema.parse(blossom)).toThrow(/树上开花必须为 strategic/);
   });
 
   it('restricts agent, officer and inverted fields to supported plot types', () => {
