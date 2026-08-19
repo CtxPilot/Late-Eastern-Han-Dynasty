@@ -1477,6 +1477,7 @@ export interface GameState {
   diplomacy: DiplomacyLink[];
   intel: IntelState;
   plots: Plot[];
+  nationalPolicies?: NationalPolicy[]; // Session 348 L3；旧档缺省=[]
 
   // 事件状态
   completedEvents: number[];
@@ -2225,7 +2226,9 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 `shared/game-state-intel-schema.ts` 增加第六个组合部件 `GameStateIntelSchema`，严格覆盖情报报告、特工、城级反间、任务日志、序号及献美点化额度。除日期、等级、技能和资源范围外，还校验特工 Record 键与 `id` 一致、被俘状态与俘获势力成对、死亡特工无所在城市，以及反间驻守记录与特工 `counter_duty` 状态/位置双向一致；同一特工不得驻守多城。`pnpm verify-save-intel` 会解析两个真实剧本，并实际执行招募、驻守反间、撤防后逐步重新解析权威状态。本轮同时修复 `pruneExpiredIntel()` 重建情报状态时漏掉 `plantableBeauty`、导致献美点化额度随回合清理丢失的问题。城市与势力引用是否存在仍属于完整组合 Schema 的跨切片职责。
 
-`shared/game-state-plot-schema.ts` 增加第七个组合部件 `GameStatePlotSchema`，严格覆盖 `Plot[]`、成本与结算结果。计谋 ID 必须唯一；准备期必须有正数倒计时且无结果，生效期必须有正数倒计时和结果，已结算状态必须倒计时归零且有结果。目标形状与当前引擎收口：离间计只指定目标势力，假情报指定敌势力与城市，空城疑兵只指定己方城市，美人计可额外指定武将及女间谍；`inverted` 仅属于空城疑兵；**L2 釜底抽薪**指定敌城（detailed）；**L2 暗渡陈仓（Session 341）**须 `targetCityId`（暗渡）+ `feintCityId`（明修）两邻接敌城；**L2 树上开花（Session 342）**只指定己方城、无 `targetFactionId`、层必须为 strategic。`pnpm verify-save-plot` 会解析两个真实剧本，并实际执行离间计发起、扣除 200 金和推进一回合结算，每一步重新解析权威状态。势力、城市、武将及特工引用是否存在仍由下一步完整组合 Schema 统一检查。
+`shared/game-state-plot-schema.ts` 增加第七个组合部件 `GameStatePlotSchema`，严格覆盖 `Plot[]`、成本与结算结果。计谋 ID 必须唯一；准备期必须有正数倒计时且无结果，生效期必须有正数倒计时和结果，已结算状态必须倒计时归零且有结果。目标形状与当前引擎收口：离间计只指定目标势力，假情报指定敌势力与城市，空城疑兵只指定己方城市，美人计可额外指定武将及女间谍；`inverted` 仅属于空城疑兵；**L2 釜底抽薪**指定敌城（detailed）；**L2 暗渡陈仓（Session 341）**须 `targetCityId`（暗渡）+ `feintCityId`（明修）两邻接敌城；**L2 树上开花（Session 342）**只指定己方城、无 `targetFactionId`、层必须为 strategic；**L2 指桑骂槐（Session 343）**无城/势力目标、可选 `targetOfficerId`（儆猴）、层必须为 strategic、即时 RESOLVED；**L2 趁火打劫（Session 344）**须 `targetFactionId`（目标势力）、无城目标、层必须为 strategic、即时 RESOLVED、无识破；**L2 调虎离山（Session 346）**须敌城 + `agentId` 女间谍 + 可选 `targetOfficerId`、层必须为 strategic；**L2 借刀杀人（Session 347）**须敌城 + `feintCityId` 第三方源城 + `secondaryFactionId` + `agentId` 女间谍；**L2 秘密挖角**须敌城 + `targetOfficerId`；**L2 隔岸观火**须两势力 `targetFactionId`+`secondaryFactionId`、无城；**L2 偷梁换柱**须敌城 + `agentId` 密探；**L2 借尸还魂**须 `targetFactionId`、无城。`pnpm verify-save-plot` 会解析两个真实剧本，并实际执行离间计发起、扣除 200 金和推进一回合结算，每一步重新解析权威状态。势力、城市、武将及特工引用是否存在仍由下一步完整组合 Schema 统一检查。
+
+`shared/game-state-policy-schema.ts`（Session 348）增加 `GameStatePolicySchema`，覆盖可选 `nationalPolicies[]`：每势力至多一条；坚壁清野必须 `targetCityId`。旧档缺省由存档迁移补 `[]`。City 另增 `garrisonFamilies` / `familyBackupCityId` / `familyRelocateQuarter`（质任）。
 
 `shared/game-state-full-schema.ts` 将上述七个切片组合为严格 `GameStateSchema`：根字段禁止遗漏或混入瞬态字段，并统一校验城市、势力、武将、女性角色、战役节点、CampaignArmy、三级战斗、外交、谍报和计谋的跨切片引用；事件完成/待处理/失效三账本不得交叉。组合层复用各切片 Schema，不复制域内规则。`BattleUnit.armyId` 是六角战斗内部编组 ID，不是旧 `GameState.armys` 外键；出征后 `Officer.location` 可保留行政归属，因此城市驻留清单只采用“清单内武将必须指向本城”的单向一致性约束。`pnpm verify-save-game-state` 覆盖两剧本、真实计谋和 7 类非法跨引用/根字段，10/10；三级战斗验证另以真实进行中状态确认完整 Schema，24/24。
 

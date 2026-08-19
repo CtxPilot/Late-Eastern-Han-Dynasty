@@ -40,7 +40,7 @@ describe('GameStatePlotSchema', () => {
     discord.plots[0] = { ...discord.plots[0], type: PlotType.SOW_DISCORD, targetCityId: undefined };
     expect(() => GameStatePlotSchema.parse(discord)).not.toThrow();
     discord.plots[0].targetCityId = 8;
-    expect(() => GameStatePlotSchema.parse(discord)).toThrow(/离间计不能指定目标城市/);
+    expect(() => GameStatePlotSchema.parse(discord)).toThrow(/不能指定目标城市/);
     const emptyFort = validPlot();
     emptyFort.plots[0] = { ...emptyFort.plots[0], type: PlotType.EMPTY_FORT, targetFactionId: undefined };
     expect(() => GameStatePlotSchema.parse(emptyFort)).not.toThrow();
@@ -54,6 +54,74 @@ describe('GameStatePlotSchema', () => {
     blossom.plots[0].targetFactionId = undefined;
     blossom.plots[0].layer = 'tactical' as const;
     expect(() => GameStatePlotSchema.parse(blossom)).toThrow(/树上开花必须为 strategic/);
+    const killChicken = validPlot();
+    killChicken.plots[0] = {
+      ...killChicken.plots[0],
+      type: PlotType.KILL_CHICKEN,
+      targetFactionId: undefined,
+      targetCityId: undefined,
+      targetOfficerId: 10,
+      layer: 'strategic' as const,
+      stage: PlotStage.RESOLVED,
+      monthsLeft: 0,
+      cost: { gold: 100 },
+      result: { success: true, detected: false, message: '指桑骂槐成功' },
+    };
+    expect(() => GameStatePlotSchema.parse(killChicken)).not.toThrow();
+    killChicken.plots[0].targetCityId = 8;
+    expect(() => GameStatePlotSchema.parse(killChicken)).toThrow(/不能指定目标城市/);
+    killChicken.plots[0].targetCityId = undefined;
+    killChicken.plots[0].layer = 'tactical' as const;
+    expect(() => GameStatePlotSchema.parse(killChicken)).toThrow(/指桑骂槐必须为 strategic/);
+    const strikeWhileHot = validPlot();
+    strikeWhileHot.plots[0] = {
+      ...strikeWhileHot.plots[0],
+      type: PlotType.STRIKE_WHILE_HOT,
+      targetCityId: undefined,
+      targetOfficerId: undefined,
+      layer: 'strategic' as const,
+      stage: PlotStage.RESOLVED,
+      monthsLeft: 0,
+      cost: { gold: 150 },
+      result: { success: true, detected: false, message: '趁火打劫成功' },
+    };
+    expect(() => GameStatePlotSchema.parse(strikeWhileHot)).not.toThrow();
+    strikeWhileHot.plots[0].targetFactionId = undefined;
+    expect(() => GameStatePlotSchema.parse(strikeWhileHot)).toThrow(/必须指定目标势力/);
+    strikeWhileHot.plots[0].targetFactionId = 2;
+    strikeWhileHot.plots[0].targetCityId = 8;
+    expect(() => GameStatePlotSchema.parse(strikeWhileHot)).toThrow(/不能指定目标城市/);
+    strikeWhileHot.plots[0].targetCityId = undefined;
+    strikeWhileHot.plots[0].stage = PlotStage.PREP;
+    strikeWhileHot.plots[0].monthsLeft = 1;
+    expect(() => GameStatePlotSchema.parse(strikeWhileHot)).toThrow(/必须 RESOLVED/);
+    const lureTiger = validPlot();
+    lureTiger.plots[0] = {
+      ...lureTiger.plots[0],
+      type: PlotType.LURE_TIGER,
+      agentId: 'spy-1',
+      targetOfficerId: 10,
+      layer: 'strategic' as const,
+      cost: { gold: 200, requiresIntel: 'detailed' as const },
+    };
+    expect(() => GameStatePlotSchema.parse(lureTiger)).not.toThrow();
+    lureTiger.plots[0].layer = 'tactical' as const;
+    expect(() => GameStatePlotSchema.parse(lureTiger)).toThrow(/调虎离山必须为 strategic/);
+    lureTiger.plots[0].layer = 'strategic' as const;
+    lureTiger.plots[0].agentId = undefined;
+    expect(() => GameStatePlotSchema.parse(lureTiger)).toThrow(/必须绑定女间谍/);
+    const watchFire = validPlot();
+    watchFire.plots[0] = {
+      ...watchFire.plots[0],
+      type: PlotType.WATCH_FIRE,
+      targetCityId: undefined,
+      secondaryFactionId: 3,
+      layer: 'strategic' as const,
+      cost: { gold: 400 },
+    };
+    expect(() => GameStatePlotSchema.parse(watchFire)).not.toThrow();
+    watchFire.plots[0].targetCityId = 8;
+    expect(() => GameStatePlotSchema.parse(watchFire)).toThrow(/不能指定目标城市/);
   });
 
   it('restricts agent, officer and inverted fields to supported plot types', () => {

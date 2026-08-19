@@ -53,6 +53,12 @@ function makeGame(overrides?: {
 }
 
 describe('buildCourtViewModel (CMD-P2)', () => {
+  it('exposes L3 policy slot with no active policy by default', () => {
+    const model = buildCourtViewModel(makeGame());
+    expect(model?.policy.active).toBeNull();
+    expect(model?.policy.cooldown).toBe(0);
+  });
+
   it('derives ruler, stage and emperor control from the same authoritative state as the legacy entry', () => {
     const model = buildCourtViewModel(makeGame());
 

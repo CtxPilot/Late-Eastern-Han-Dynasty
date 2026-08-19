@@ -9,6 +9,8 @@
  * - 其余：仅城名等地理公开信息
  */
 import { DipRelation, type FactionId } from './enums/index.js';
+import { PolicyType } from './enums/index.js';
+import { factionHasActivePolicy } from './national-policy.js';
 import type { DiplomacyLink } from './types/diplomacy.js';
 import type { City } from './types/city.js';
 import type { CityIntelEntry, IntelState } from './types/intel.js';
@@ -146,9 +148,10 @@ export function getCityVisibility(state: GameState, cityId: number): CityVisibil
   }
 
   const report = state.intel?.cities?.[cityId];
+  let vis: CityVisibility;
   if (report && intelStillValid(report, state.currentYear, state.currentMonth)) {
     if (report.depth === 'detailed') {
-      return {
+      vis = {
         kind: 'scouted',
         showFaction: true,
         showExactTroops: true,
@@ -159,8 +162,26 @@ export function getCityVisibility(state: GameState, cityId: number): CityVisibil
         showWall: true,
         intelDepth: 'detailed',
       };
+    } else {
+      vis = {
+        kind: 'scouted',
+        showFaction: true,
+        showExactTroops: false,
+        showTroopsBand: true,
+        showEconomy: false,
+        showDemographics: false,
+        showMorale: false,
+        showWall: true,
+        intelDepth: 'surface',
+      };
     }
-    return {
+  } else {
+    vis = fogVis();
+  }
+
+  // L3 深藏不露：目标城对敌模糊化；己方视野−1（detailed→surface，surface→fog）
+  if (ruler != null && factionHasActivePolicy(state, ruler, PolicyType.HIDE_STRENGTH) && vis.intelDepth === 'detailed') {
+    vis = {
       kind: 'scouted',
       showFaction: true,
       showExactTroops: false,
@@ -172,8 +193,24 @@ export function getCityVisibility(state: GameState, cityId: number): CityVisibil
       intelDepth: 'surface',
     };
   }
-
-  return fogVis();
+  if (factionHasActivePolicy(state, player, PolicyType.HIDE_STRENGTH)) {
+    if (vis.intelDepth === 'detailed') {
+      vis = {
+        kind: 'scouted',
+        showFaction: true,
+        showExactTroops: false,
+        showTroopsBand: true,
+        showEconomy: false,
+        showDemographics: false,
+        showMorale: false,
+        showWall: true,
+        intelDepth: 'surface',
+      };
+    } else if (vis.intelDepth === 'surface' && vis.kind === 'scouted') {
+      vis = fogVis();
+    }
+  }
+  return vis;
 }
 
 function fogVis(): CityVisibility {

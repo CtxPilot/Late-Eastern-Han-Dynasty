@@ -28,6 +28,7 @@ import {
   type GameState,
   type Officer,
   type ScenarioStatic,
+  PolicyType,
 } from '@leh/shared';
 import { staticData } from '../data/loader.js';
 import { advanceTurn, tickBattlefieldInstance } from '../engine/turn.js';
@@ -40,6 +41,8 @@ import {
   relief,
   trainTroops,
   setCivilianFarming,
+  setMilitaryFarming,
+  relocateGarrisonFamilies,
   type DevelopKind,
 } from '../engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
@@ -101,6 +104,7 @@ import {
   proclaimKing,
 } from '../engine/hegemony.js';
 import { launchPlot, cancelPlot } from '../engine/plot.js';
+import { setNationalPolicy } from '../engine/policy.js';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../engine/family.js';
 import {
   dispatchMission,
@@ -319,6 +323,7 @@ function buildGameState(
     diplomacy: startState.initialDiplomacy,
     intel: emptyIntel(),
     plots: [],
+    nationalPolicies: [],
     completedEvents: [...startState.completedEvents],
     pendingEvents: [],
     invalidatedEvents: [],
@@ -513,6 +518,29 @@ export function doRelief(cityId: number): GameState {
 export function doSetCivilianFarming(cityId: number, households: number): GameState {
   return withLock(() => {
     currentGame = setCivilianFarming(getGame(), cityId, households);
+    return getClientGame();
+  });
+}
+
+export function doSetMilitaryFarming(cityId: number, enabled: boolean): GameState {
+  return withLock(() => {
+    currentGame = setMilitaryFarming(getGame(), cityId, enabled);
+    return getClientGame();
+  });
+}
+
+export function doRelocateGarrisonFamilies(fromCityId: number, toCityId: number): GameState {
+  return withLock(() => {
+    currentGame = relocateGarrisonFamilies(getGame(), fromCityId, toCityId);
+    return getClientGame();
+  });
+}
+
+export function doSetNationalPolicy(type: string, targetCityId?: number): GameState {
+  return withLock(() => {
+    currentGame = setNationalPolicy(getGame(), type as PolicyType, {
+      targetCityId,
+    });
     return getClientGame();
   });
 }
@@ -786,6 +814,7 @@ export function doLaunchPlot(
   agentId: string | undefined,
   casterOfficerId?: number,
   feintCityId?: number,
+  secondaryFactionId?: number,
 ): GameState {
   return withLock(() => {
     currentGame = launchPlot(getGame(), {
@@ -793,6 +822,7 @@ export function doLaunchPlot(
       targetFactionId,
       targetCityId,
       feintCityId,
+      secondaryFactionId,
       targetOfficerId,
       agentId: agentId || undefined,
       casterOfficerId,

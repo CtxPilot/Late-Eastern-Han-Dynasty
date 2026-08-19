@@ -1,5 +1,79 @@
 # 开发进度跟踪
 
+## 2026-08-19 — Session 348 · L3 国策 + 家属质任
+
+- Phase：**S17 L3 + 军屯深化 §5.8.2**；不扩数据规模、不启动 0-B。
+- L3 八国策：一次一策；切换立即结束、下月生效、冷却 6 月；朝廷入口。
+- 家属质任：征兵绑定家属；迁家属金500/季一次；失陷士气−40（治所质任全国）。善待/镇压后置。
+- 验证：`verify-l3-policy` **15/15**；`verify-hostage-families` **9/9**；`verify-save-game-state` 10；三端 typecheck。
+- 文档对齐：`01`/`03`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：天气主动技能 / 特殊兵种熟练度（需批准）或 0-B；0-B 继续暂缓。
+
+## 2026-08-19 — Session 347 · 主线③收口（L2 十一计齐）
+
+- Phase：**主线③收口 · S17 L2**；不扩数据规模、不启动 0-B。
+- 剩余五计：
+  - 借刀杀人 `INSTIGATE`：金300 + 女间谍 + 邻接第三方源城；PREP 2→ACTIVE 2；宣战 + AI 强制出征。
+  - 秘密挖角 `POACH`：金100~500 + 50×2；投奔首都、带走部分守军（不转城）。
+  - 隔岸观火 `WATCH_FIRE`：金400 + 80×3；两势力友好≥40；月降友好至开战。
+  - 偷梁换柱 `SWAP_PILLAR`：金300 + 空闲密探；良将调离；统率−10。
+  - 借尸还魂 `EDICT`：金300；无献帝识破+25；民心−5/月。
+- 验证：`verify-l2-remaining` **30/30**；回归 lure-tiger 32、strike-while-hot 25、kill-chicken 31、plot-spy-rng 34、save-plot 9；shared **399** + client **48**；三端 typecheck。
+- 文档对齐：`01`/`03`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：L3 国策、家属质任（§5.8.2）或 0-B；0-B 继续暂缓。
+
+## 2026-08-19 — Session 346 · 主线③续（L2 调虎离山）
+
+- Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
+- 调虎离山：
+  - `PlotType.LURE_TIGER`；金200 + 50/月×2（设计 2~4 取下限）；敌城 **detailed** + **必派女间谍**；同势力≥2 城且有在职非君主守将。
+  - PREP 完投权威结算；成功诱离守将至邻接他城（无邻接则任意同势力他城）；ACTIVE 4 月自动战 `wallPenalty ×0.5`；效果结束或 `cancelPlot` 时原城仍属原势力则召回；取消归还女间谍。
+  - 命令坞计略抽屉：态势候选 + 发起页敌城/女间谍必派/可选守将；终审「分期 2 月后诱离守将，城防减半」。
+  - 0-A：六角 battle.ts 不接入。
+- 验证：`verify-l2-lure-tiger` **32/32**；回归 strike-while-hot 25、kill-chicken 31、undermine 18、plot-spy-rng 34、save-plot 9；shared **399** + client **46**；三端 typecheck/lint。
+- 真实 HTTP：场景2 导入 detailed+女间谍后 `POST /plot/launch` lureTiger → 洛阳 PREP。
+- 文档对齐：`01`/`03`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（借刀杀人、隔岸观火等）、军屯深化（家属质任 §5.8.2）或 0-B；0-B 继续暂缓。
+
+## 2026-08-18 — Session 345 · 主线③续（军屯田）
+
+- Phase：**主线③续 · 屯田**；不扩数据规模、不启动 0-B。
+- 军屯田（docs/05 §5.8.1）：
+  - `City.militaryFarming` / `militaryFarmingAssignQuarter`（季度锁，同季仅切一次；民屯同域平行开关）。
+  - 产粮 `militaryFarmingFoodProduced = floor(troops × (farm/100) × seasonMul × 0.5)`；seasonMul 春0.8/夏1.0/秋1.5/冬0.3；月结接入 turn.ts。
+  - 季度首月（isQuarterStart）扣 troopsMorale 3；**训练指令收益×0.5**（0-A 训练无经验概念，以士气增益代理）；组织度 −2/季延后 0-B Army 层（已标注文档）。
+  - 前置检查完整：兵力>0 + 城市未被 sieging/assaulting 围攻 + 无己方非 garrison 军队驻留本城（campaignArmies）。
+  - 命令坞屯田域：城池列表军屯状态行 + 开关按钮 + 终审（估产/驻军数）；开启/停办均走 CommandConfirmDialog。
+  - 新端点 `POST /api/game/civil/military-farming { cityId, enabled }`。
+- 验证：`verify-military-farming` **11/11**（公式/季度锁/前置拒绝/月结产粮/季度扣士气/停办）、shared **399** + client **45**；回归 kill-chicken 31、blossom 34、undermine 18、strike-while-hot 25、plot-spy-rng 34、save-plot 9、save-game-state 10、civilian-farming 7 全绿；三端 typecheck/lint、validate-data 全绿。
+- 真实浏览器（Chrome CDP 9242）：屯田抽屉→开启军屯→终审→季度锁「本季已调」→推进 190-02/03 不扣士气→190-04 季度首月士气 70→67→新季度解锁→停办军屯；console 无错误；`verify-s345-military-farming-ui` **19/19**。
+- 文档对齐：`01`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（调虎离山、借刀杀人等）、军屯深化（家属质任 §5.8.2）或 0-B；0-B 继续暂缓。
+
+## 2026-08-18 — Session 344 · 主线③续（L2 趁火打劫）
+
+- Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
+- 趁火打劫：
+  - `PlotType.STRIKE_WHILE_HOT`；金150；目标势力**同时与≥2家交战**（`countWarsForFaction`）；**即时 RESOLVED**（PREP 0 月）。
+  - 0-A：确定性成功、无识破、不可 cancel；`layer='strategic'`、无 `targetCityId`。
+  - 效果：自动战（`runAutoBattle`）**首回合 defLoss ×1.2**（首击伤害+20%，非整场攻防）；效果窗口 = 目标当前仍同时与≥2家 WAR，**停战自然消散**（无消耗标记/新字段，`getStrikeWhileHotFirstHitMul` 确定性读取）。
+  - 0-A 简化：仅接入自动战（campaign.ts），六角 battle.ts 不接入（与暗渡陈仓一致）。
+  - 命令坞计略抽屉：态势页候选（交战≥2家）+ 发起页目标势力下拉（仅多线交战势力，标注交战数）；终审文案「即时锁定首击伤害×1.2」；不占 ACTIVE、不可 cancel。
+- 验证：`verify-l2-strike-while-hot` **25/25**、kill-chicken **31/31**、blossom **34/34**、undermine **18/18**、plot-spy-rng **34/34**、save-plot **9/9**、save-game-state **10/10**；shared **396** + client **45**；三端 typecheck/lint 全绿；真实 Chrome（场景2关东义兵）：计略抽屉→趁火打劫→目标下拉董卓（交战3家）→终审「即时锁定首击伤害×1.2」→确认→RESOLVED 记录展示，金 2270→2120（−150），console 无新错误。
+- 文档对齐：`01`/`03`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（调虎离山、借刀杀人等）或军屯；0-B 继续暂缓。
+
+## 2026-08-17 — Session 343 · 主线③续（L2 指桑骂槐）
+
+- Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。
+- 指桑骂槐：
+  - `PlotType.KILL_CHICKEN`；金100；己方忠诚&lt;80（对齐 S26）在职非君主≥2；**即时 RESOLVED**。
+  - 0-A：确定性成功、无识破；儆猴固定 −15（可选 `targetOfficerId` / 否则权威 RNG）；其余在职非君主 +5~8；君主豁免。
+  - 命令坞计略抽屉低忠诚候选 + 可选儆猴；不占 ACTIVE、不可 cancel。
+- 验证：`verify-l2-kill-chicken` **31/31**、blossom **34/34**、undermine **18/18**、secret-crossing **23/23**、plot-spy-rng **34/34**、save-plot **9/9**；shared **396** + client **44**；三端 typecheck；真实 HTTP：压低忠诚存档导入→`POST /plot/launch`→「指桑骂槐成功：儆 黄忠 …」RESOLVED。
+- 文档对齐：`01`/`03`/`04`/`06`/`07`/`09`/`12`/`35`/`README`/`HANDOFF`/`10-progress`。
+- **Next**：其余 L2（趁火打劫等）或军屯；0-B 继续暂缓。
+
 ## 2026-08-17 — Session 342 · 主线③续（L2 树上开花）
 
 - Phase：**主线③续 · S17 L2**；不扩数据规模、不启动 0-B。

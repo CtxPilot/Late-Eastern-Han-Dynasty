@@ -197,6 +197,54 @@ gameRouter.post('/civil/civilian-farming', (req, res) => {
   }
 });
 
+/** 军屯田开关（docs/05 §5.8.1）：每城每季一次 */
+gameRouter.post('/civil/military-farming', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const enabled = Boolean(req.body.enabled);
+    if (!Number.isInteger(cityId)) throw new Error('无效城池');
+    res.json(gameService.doSetMilitaryFarming(cityId, enabled));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'military farming failed' });
+  }
+});
+
+gameRouter.post('/civil/relocate-families', (req, res) => {
+  try {
+    const fromCityId = Number(req.body.fromCityId);
+    const toCityId = Number(req.body.toCityId);
+    if (!Number.isInteger(fromCityId) || !Number.isInteger(toCityId)) throw new Error('无效城池');
+    res.json(gameService.doRelocateGarrisonFamilies(fromCityId, toCityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'relocate families failed' });
+  }
+});
+
+gameRouter.post('/policy/set', (req, res) => {
+  try {
+    const type = String(req.body.type ?? '');
+    const targetCityId = req.body.targetCityId != null ? Number(req.body.targetCityId) : undefined;
+    res.json(gameService.doSetNationalPolicy(type, targetCityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'policy set failed' });
+  }
+});
+
+gameRouter.get('/policy/current', (_req, res) => {
+  try {
+    const game = gameService.getClientGame();
+    const fid = game.playerFactionId;
+    const mine = (game.nationalPolicies ?? []).filter((p) => p.factionId === fid);
+    res.json({
+      activePolicies: mine.filter((p) => p.active),
+      pending: mine.find((p) => !p.active) ?? null,
+      cooldown: Math.max(0, ...mine.map((p) => p.cooldown), 0),
+    });
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'policy current failed' });
+  }
+});
+
 /** S27 巡查：乡政派系命令 */
 gameRouter.post('/civil/patrol', (req, res) => {
   try {
@@ -444,7 +492,7 @@ gameRouter.post('/intel/captive', (req, res) => {
 
 gameRouter.post('/plot/launch', (req, res) => {
   try {
-    const { type, targetFactionId, targetCityId, targetOfficerId, agentId, casterOfficerId, feintCityId } = req.body as {
+    const { type, targetFactionId, targetCityId, targetOfficerId, agentId, casterOfficerId, feintCityId, secondaryFactionId } = req.body as {
       type: string;
       targetFactionId?: number;
       targetCityId?: number;
@@ -452,6 +500,7 @@ gameRouter.post('/plot/launch', (req, res) => {
       agentId?: string;
       casterOfficerId?: number;
       feintCityId?: number;
+      secondaryFactionId?: number;
     };
     res.json(
       gameService.doLaunchPlot(
@@ -462,6 +511,7 @@ gameRouter.post('/plot/launch', (req, res) => {
         agentId ? String(agentId) : undefined,
         casterOfficerId != null ? Number(casterOfficerId) : undefined,
         feintCityId != null ? Number(feintCityId) : undefined,
+        secondaryFactionId != null ? Number(secondaryFactionId) : undefined,
       ),
     );
   } catch (e) {

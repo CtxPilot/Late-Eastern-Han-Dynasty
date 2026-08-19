@@ -121,4 +121,25 @@ export interface City extends CityStatic {
    * 民屯分配季度戳（year*4+quarter）。同季仅可调一次；旧档缺省表示本季未调。
    */
   civilianFarmingAssignQuarter?: number;
+  /**
+   * 军屯田开关（docs/05 §5.8.1）。optional，旧档缺省=关。
+   * 开启时驻军月结产粮、每季士气−3、训练收益减半。
+   */
+  militaryFarming?: boolean;
+  /**
+   * 军屯调整季度戳（year*4+quarter）。同季仅可切换一次；旧档缺省表示本季未调。
+   */
+  militaryFarmingAssignQuarter?: number;
+  /**
+   * 本城驻军家属人口（docs/05 §5.8.2）。征兵时绑定；旧档缺省=0。
+   */
+  garrisonFamilies?: number;
+  /**
+   * 质任制：家属迁往的后方城（空=家属仍在本城）。
+   */
+  familyBackupCityId?: number;
+  /**
+   * 迁家属季度戳。每城每季限一次。
+   */
+  familyRelocateQuarter?: number;
 }

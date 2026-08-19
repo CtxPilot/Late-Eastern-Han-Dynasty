@@ -35,9 +35,9 @@ Underneath are 27 interlocking systems, including hidden attributes, faction pol
 
 ### Honest scope · 诚实边界
 
-**EN** — The current build is a **0-A playable prototype**: two scenarios (Hero Assembly + a four-faction 190 CE slice), 24 scenario events, and the deterministic campaign/combat spine described above are playable today via the web client. Still intentionally absent: multi-user/cloud sync, the full historical scenario set, delegated armies, private retinues, **military colonies (军屯)**, full formation progression (dual-axis growth / tech tree), the remaining L2/L3 ploy set beyond 釜底抽薪/暗渡陈仓/树上开花, and the 0-B dataset expansion. **Civilian farming (民屯)**, a minimal annual duel tournament, **SQLite named save slots**, and **L2 暗渡陈仓/树上开花** are now in the runtime (Session 338–342).
+**EN** — The current build is a **0-A playable prototype**: two scenarios (Hero Assembly + a four-faction 190 CE slice), 24 scenario events, and the deterministic campaign/combat spine described above are playable today via the web client. Still intentionally absent: multi-user/cloud sync, the full historical scenario set, delegated armies, private retinues, full formation progression (dual-axis growth / tech tree), and the 0-B dataset expansion. **Civilian farming (民屯)** and **military colonies (军屯, Session 345)**, **family hostages (质任, Session 348)**, a minimal annual duel tournament, **SQLite named save slots**, **all 11 L2 strategic ploys (Session 339–347)**, and **8 L3 national policies (Session 348)** are now in the runtime.
 
-**中文** — 当前构建是 **0-A 可玩原型**：两个剧本（英雄集结 + 190《关东义兵》四势力切片）、24 个场景事件与上述确定性战役/战斗主线已在 Web 客户端可玩。尚未实装：多用户/云同步、全量历史剧本、委任军团、部曲私兵、**军屯**、完整阵型成长（双轴/科技树）、L2 除釜底抽薪/暗渡陈仓/树上开花外的其余计谋与 L3 国策，以及 0-B 数据扩容。**民屯田**、**单挑大会最小闭环**、**SQLite 命名槽位**与 **L2 暗渡陈仓/树上开花**已有运行时（Session 338–342）。
+**中文** — 当前构建是 **0-A 可玩原型**：两个剧本（英雄集结 + 190《关东义兵》四势力切片）、24 个场景事件与上述确定性战役/战斗主线已在 Web 客户端可玩。尚未实装：多用户/云同步、全量历史剧本、委任军团、部曲私兵、完整阵型成长（双轴/科技树），以及 0-B 数据扩容。**民屯田**与**军屯田（Session 345）**、**质任迁家属（Session 348）**、**单挑大会最小闭环**、**SQLite 命名槽位**、**L2 十一计（Session 339–347）**与 **L3 八国策（Session 348）**已有运行时。
 
 System-by-system maturity lives in [docs/12-system-map.md](docs/12-system-map.md); the detailed playable path is in [docs/16-demo-build-playbook.md](docs/16-demo-build-playbook.md).
 

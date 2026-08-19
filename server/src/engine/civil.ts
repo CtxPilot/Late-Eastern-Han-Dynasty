@@ -20,11 +20,19 @@ import {
   computePopularWill,
   popularWillRecruitModifier,
   maxCivilianFarmingHouseholds,
+  militaryFarmingFoodProduced,
+  PolicyType,
+  POLICY_HIGH_WALLS_CONSCRIPT_MUL,
+  POLICY_HIGH_WALLS_WALL_MUL,
+  factionHasActivePolicy,
+  familiesGainedOnConscript,
+  FAMILY_RELOCATE_GOLD,
   quarterKey,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
   type GameState,
+  type Season,
 } from '@leh/shared';
 import { grantMeritTo } from './meritGrant.js';
 import { FAME_RELIEF, grantFame, ARMS_CONSCRIPT_PER_HUNDRED, ARMS_TRAIN_COST } from './factionPolitics.js';
@@ -206,6 +214,13 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
     const totalBonus = developBonus + skillBonus;
     if (totalBonus > 0) gain = Math.floor(conf.gain * (1 + totalBonus));
   }
+  if (
+    project.kind === 'wall' &&
+    city.ruler != null &&
+    factionHasActivePolicy(state, city.ruler, PolicyType.HIGH_WALLS)
+  ) {
+    gain = Math.floor(gain * POLICY_HIGH_WALLS_WALL_MUL);
+  }
   // S27 开发满意度联动：农业完成→世家+3、商业完成→商贾+3（固定值不耗 RNG，docs/08 §十七）
   const factionKind = project.kind === 'farm' ? 'aristocracy' : project.kind === 'commerce' ? 'merchants' : null;
   const cityFactions = factionKind
@@ -260,7 +275,11 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
     (troopsGain + bonus * 10) *
       (1 + civilEfficiencyOf(state, city) + recruitSkillBonus(lord) + popularRecruit),
   );
-  const total = Math.min(want, maxMen);
+  let total = Math.min(want, maxMen);
+  if (factionHasActivePolicy(state, state.playerFactionId, PolicyType.HIGH_WALLS)) {
+    total = Math.floor(total * POLICY_HIGH_WALLS_CONSCRIPT_MUL);
+  }
+  if (total < 1) throw new Error('征兵人数过少');
 
   const nextDemo = { ...d, adultMale: d.adultMale - total };
   // S27 兵装消耗：每征 100 兵消耗 1 件（docs/08 §十七）；流民满意度 −3
@@ -273,6 +292,7 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
     troops: city.troops + total,
     demographics: nextDemo,
     population: city.population,
+    garrisonFamilies: (city.garrisonFamilies ?? 0) + familiesGainedOnConscript(total, city),
     stats: {
       ...city.stats,
       morale: Math.max(0, (city.stats.morale ?? 70) - 2),
@@ -351,8 +371,10 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
     (5 + Math.floor(rng() * 6)) *
       (1 + civilEfficiencyOf(state, city) + trainSkillBonus(state.officers[city.officers[0]])),
   );
+  // 军屯期间训练收益减半（docs/05 §5.8.1；0-A 训练无经验，以士气增益代理）
+  const halved = (city.militaryFarming ?? false) ? Math.floor(gain * 0.5) : gain;
   const prev = city.troopsMorale ?? 70;
-  const next = Math.min(100, prev + gain);
+  const next = Math.min(100, prev + halved);
 
   const nextCity: City = {
     ...city,
@@ -364,7 +386,7 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_TRAIN),
     'train',
-    `${city.name} 训练部队 士气+${gain}（${prev}→${next}，耗粮${foodCost}；兵装−${ARMS_TRAIN_COST}）`,
+    `${city.name} 训练部队 士气+${halved}${halved !== gain ? `（军屯中，原+${gain}减半）` : ''}（${prev}→${next}，耗粮${foodCost}；兵装−${ARMS_TRAIN_COST}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
   if (faction && (faction.arms ?? 0) > 0) {
@@ -418,5 +440,95 @@ export function setCivilianFarming(
       : `${city.name} 民屯分配 ${households} 户（上限 ${max}）`;
   return pushLog(state, 'civilian_farming', label, {
     cities: { ...state.cities, [cityId]: nextCity },
+  });
+}
+
+/**
+ * 军屯田开关（docs/05 §5.8.1）：每季可切换一次。
+ * 开启条件：兵力>0、城市未被围攻（sieging/assaulting）、无己方出征部队驻留本城。
+ * 关闭无前置条件。
+ */
+export function setMilitaryFarming(
+  state: GameState,
+  cityId: number,
+  enabled: boolean,
+): GameState {
+  const city = requirePlayerCity(state, cityId);
+  const q = quarterKey(state.currentYear, state.currentMonth);
+  if (
+    city.militaryFarmingAssignQuarter != null &&
+    city.militaryFarmingAssignQuarter === q &&
+    (city.militaryFarming ?? false) !== enabled
+  ) {
+    throw new Error('本季已调整过该城军屯，下季初再议');
+  }
+
+  if (enabled) {
+    if (city.troops <= 0) throw new Error('该城无驻军，无法开屯');
+    const underSiege = state.campaignArmies.some(
+      (army) =>
+        army.targetNodeId === cityId &&
+        (army.phase === 'sieging' || army.phase === 'assaulting'),
+    );
+    if (underSiege) throw new Error('该城正在交战，无法开屯');
+    const troopsAway = state.campaignArmies.some(
+      (army) =>
+        army.factionId === state.playerFactionId &&
+        army.currentNodeId === cityId &&
+        army.phase !== 'garrison',
+    );
+    if (troopsAway) throw new Error('该城部队正在出征，无法开屯');
+  }
+
+  const nextCity: City = {
+    ...city,
+    militaryFarming: enabled,
+    militaryFarmingAssignQuarter: q,
+  };
+  const label = enabled
+    ? `${city.name} 驻军开屯（驻军${city.troops}人，月结产粮）`
+    : `${city.name} 停办军屯（恢复正常训练）`;
+  return pushLog(state, 'military_farming', label, {
+    cities: { ...state.cities, [cityId]: nextCity },
+  });
+}
+
+/** 军屯月结产粮（docs/05 §5.8.1；0-A 确定性，无 RNG） */
+export function militaryFarmingMonthlyFood(city: City, season: Season): number {
+  if (!(city.militaryFarming ?? false)) return 0;
+  return militaryFarmingFoodProduced(city.troops, city.stats.farm, season);
+}
+
+/**
+ * 质任制迁家属（docs/05 §5.8.2）：金500，每城每季一次，迁往己方后方城。
+ */
+export function relocateGarrisonFamilies(
+  state: GameState,
+  fromCityId: number,
+  toCityId: number,
+): GameState {
+  const from = requirePlayerCity(state, fromCityId);
+  const dest = requirePlayerCity(state, toCityId);
+  if (fromCityId === toCityId) throw new Error('家属已在本城');
+  const families = from.garrisonFamilies ?? 0;
+  if (families <= 0) throw new Error('该城无驻军家属可迁');
+  if (from.gold < FAMILY_RELOCATE_GOLD) throw new Error(`金钱不足（需${FAMILY_RELOCATE_GOLD}）`);
+  const q = quarterKey(state.currentYear, state.currentMonth);
+  if (from.familyRelocateQuarter != null && from.familyRelocateQuarter === q) {
+    throw new Error('本季已迁过该城家属，下季初再议');
+  }
+  const nextFrom: City = {
+    ...from,
+    gold: from.gold - FAMILY_RELOCATE_GOLD,
+    garrisonFamilies: 0,
+    familyBackupCityId: toCityId,
+    familyRelocateQuarter: q,
+  };
+  const nextDest: City = {
+    ...dest,
+    garrisonFamilies: (dest.garrisonFamilies ?? 0) + families,
+  };
+  return pushLog(state, 'family_relocate', `${from.name} 迁家属 ${families} 口至 ${dest.name}（耗金${FAMILY_RELOCATE_GOLD}）`, {
+    cities: { ...state.cities, [fromCityId]: nextFrom, [toCityId]: nextDest },
   });
 }

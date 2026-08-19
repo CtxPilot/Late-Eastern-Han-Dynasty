@@ -48,11 +48,16 @@ export interface Plot {
   /**
    * L2 暗渡陈仓：明修城（吸引守备/AI 牵制）。
    * `targetCityId` 为暗渡城（出征攻防加成方向）。
+   * L2 借刀杀人：第三方出征源城（官道邻接目标城）。
    */
   feintCityId?: number;
+  /**
+   * L2 隔岸观火：第二势力；借刀杀人：第三方势力（与 feintCityId 同源）。
+   */
+  secondaryFactionId?: number;
   /** Target officer (optional, for honey trap) */
   targetOfficerId?: number;
-  /** Female spy agent assigned to this plot (optional, boosts success) */
+  /** Female spy：美人计可选；调虎离山必填 */
   agentId?: string;
   stage: PlotStage;
   /** Months remaining in preparation; 0 = ready to resolve */

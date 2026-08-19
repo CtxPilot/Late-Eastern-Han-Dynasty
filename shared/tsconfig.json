@@ -47,6 +47,7 @@
     "game-state-diplomacy-schema.ts",
     "game-state-intel-schema.ts",
     "game-state-plot-schema.ts",
+    "game-state-policy-schema.ts",
     "game-state-full-schema.ts",
     "index.ts",
     "campaign-utils.ts",
@@ -55,6 +56,9 @@
     "mandate-popular.ts",
     "tournament.ts",
     "civilian-farming.ts",
-    "formation-core.ts"
+    "formation-core.ts",
+    "military-farming.ts",
+    "national-policy.ts",
+    "hostage-families.ts"
   ]
 }

@@ -14,6 +14,7 @@ import type { Faction } from './faction.js';
 import type { Officer } from './officer.js';
 import type { IntelState } from './intel.js';
 import type { Plot } from './plot.js';
+import type { NationalPolicy } from './policy.js';
 import type { EventSourceClass } from './event.js';
 import type { TournamentState } from './tournament.js';
 
@@ -62,6 +63,10 @@ export interface GameState {
   intel: IntelState;
   /** 计谋 S17：进行中/已结算的计谋列表 */
   plots: Plot[];
+  /**
+   * L3 国策（Session 348）。每势力至多一条；旧档缺省=[]。
+   */
+  nationalPolicies?: NationalPolicy[];
 
   completedEvents: number[];
   pendingEvents: number[];

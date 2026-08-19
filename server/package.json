@@ -72,7 +72,14 @@
     "verify-l2-undermine": "tsx src/scripts/verify-l2-undermine.ts",
     "verify-l2-secret-crossing": "tsx src/scripts/verify-l2-secret-crossing.ts",
     "verify-l2-blossom": "tsx src/scripts/verify-l2-blossom.ts",
+    "verify-l2-kill-chicken": "tsx src/scripts/verify-l2-kill-chicken.ts",
+    "verify-l2-strike-while-hot": "tsx src/scripts/verify-l2-strike-while-hot.ts",
+    "verify-l2-lure-tiger": "tsx src/scripts/verify-l2-lure-tiger.ts",
+    "verify-l2-remaining": "tsx src/scripts/verify-l2-remaining.ts",
     "verify-civilian-farming": "tsx src/scripts/verify-civilian-farming.ts",
+    "verify-military-farming": "tsx src/scripts/verify-military-farming.ts",
+    "verify-l3-policy": "tsx src/scripts/verify-l3-policy.ts",
+    "verify-hostage-families": "tsx src/scripts/verify-hostage-families.ts",
     "verify-save-slots": "tsx src/scripts/verify-save-slots.ts"
   },
   "dependencies": {

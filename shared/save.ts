@@ -177,6 +177,18 @@ function migrateRetiredNamedFemaleGifts(input: unknown): unknown {
     : input;
 }
 
+function migrateMissingNationalPolicies(input: unknown): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const envelope = input as { snapshot?: unknown };
+  if (typeof envelope.snapshot !== 'object' || envelope.snapshot === null) return input;
+  const snapshot = envelope.snapshot as { nationalPolicies?: unknown };
+  if (Array.isArray(snapshot.nationalPolicies)) return input;
+  return {
+    ...envelope,
+    snapshot: { ...snapshot, nationalPolicies: [] },
+  };
+}
+
 /**
  * 将任意已解析的存档信封分派到当前版本。
  *
@@ -188,8 +200,10 @@ export function migrateSaveEnvelopeToCurrent(input: unknown): unknown {
 
   switch (version) {
     case CURRENT_SAVE_SCHEMA_VERSION:
-      return migrateRetiredNamedFemaleGifts(
-        migrateLegacyCourtNetworkFields(migrateLegacyNobilityRanks(input)),
+      return migrateMissingNationalPolicies(
+        migrateRetiredNamedFemaleGifts(
+          migrateLegacyCourtNetworkFields(migrateLegacyNobilityRanks(input)),
+        ),
       );
     default:
       throw new UnsupportedSaveVersionError(version);

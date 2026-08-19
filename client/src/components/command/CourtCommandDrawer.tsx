@@ -11,6 +11,14 @@ import {
   NobilityRank,
   OfficerStatus,
   nextNobilityRank,
+  ALL_POLICY_TYPES,
+  POLICY_LABELS,
+  POLICY_SUMMARIES,
+  PolicyType,
+  getActivePolicyType,
+  getFactionPolicy,
+  isBorderCity,
+  policySwitchCooldown,
   type GameState,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -69,6 +77,14 @@ export function buildCourtViewModel(game: GameState) {
     emperorCity,
     emperorController:
       emperorCity?.ruler == null ? null : game.factions[emperorCity.ruler] ?? null,
+    policy: {
+      active: getActivePolicyType(game, factionId),
+      record: getFactionPolicy(game, factionId) ?? null,
+      cooldown: policySwitchCooldown(game, factionId),
+      borderCities: Object.values(game.cities).filter(
+        (city) => city.ruler === factionId && isBorderCity(game, city.id),
+      ),
+    },
     targets: Object.values(game.factions)
       .filter((target) => target.id !== factionId && target.isAlive)
       .map((target) => ({
@@ -129,10 +145,12 @@ export function CourtCommandDrawer({
   const proclaimKing = useGameStore((state) => state.proclaimKing);
   const falseDecreeWar = useGameStore((state) => state.falseDecreeWar);
   const grantNobility = useGameStore((state) => state.grantNobility);
+  const setNationalPolicy = useGameStore((state) => state.setNationalPolicy);
   const loading = useGameStore((state) => state.loading);
   const error = useGameStore((state) => state.error);
   const clearError = useGameStore((state) => state.clearError);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [policyReviewOpen, setPolicyReviewOpen] = useState(false);
   const [kingRequirements, setKingRequirements] = useState<KingRequirementsDto | null>(null);
   const [requirementsError, setRequirementsError] = useState<string | null>(null);
   const model = useMemo(() => (game ? buildCourtViewModel(game) : null), [game]);
@@ -245,6 +263,90 @@ export function CourtCommandDrawer({
             ) : null}
             {requirementsError ? <p className="mt-1 text-[10px] text-rose-300">{requirementsError}</p> : null}
           </div>
+        </section>
+
+        <section className="border-t border-stone-800 pt-3" data-testid="command-court-policy">
+          <h3 className="text-[11px] tracking-widest text-amber-300">国策态势</h3>
+          <p className="mt-1 text-[10px] leading-relaxed text-stone-600">
+            一次只能启用一策；切换立即结束旧策，新策下月生效，冷却 6 月。
+          </p>
+          <p className="mt-2 text-[11px] text-stone-300">
+            当前：
+            {model.policy.record && !model.policy.record.active
+              ? `待生效「${POLICY_LABELS[model.policy.record.type]}」`
+              : model.policy.active
+                ? POLICY_LABELS[model.policy.active]
+                : '未设'}
+            {model.policy.cooldown > 0 ? ` · 冷却 ${model.policy.cooldown} 月` : ''}
+          </p>
+          <select
+            data-testid="command-court-policy-type"
+            value={typeof draft?.parameters.policyType === 'string' ? draft.parameters.policyType : ''}
+            disabled={loading || model.policy.cooldown > 0}
+            onChange={(event) => {
+              clearError();
+              dispatch({
+                type: 'select-command',
+                domain: 'court',
+                commandId: 'set-policy',
+                parameters: {
+                  policyType: event.target.value,
+                  targetCityId: draft?.parameters.targetCityId,
+                },
+              });
+            }}
+            className="mt-2 w-full border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200 disabled:text-stone-600"
+          >
+            <option value="">选择国策</option>
+            {ALL_POLICY_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {POLICY_LABELS[type]}
+              </option>
+            ))}
+          </select>
+          {draft?.parameters.policyType === PolicyType.SCORCHED_EARTH ? (
+            <select
+              data-testid="command-court-policy-city"
+              value={typeof draft.parameters.targetCityId === 'number' ? draft.parameters.targetCityId : ''}
+              onChange={(event) => {
+                dispatch({
+                  type: 'update-draft',
+                  domain: 'court',
+                  parameters: { targetCityId: Number(event.target.value) },
+                });
+              }}
+              className="mt-2 w-full border border-stone-700 bg-stone-900 px-2 py-2 text-stone-200"
+            >
+              <option value="">选择边境城</option>
+              {model.policy.borderCities.map((city) => (
+                <option key={city.id} value={city.id}>{city.name}</option>
+              ))}
+            </select>
+          ) : null}
+          {typeof draft?.parameters.policyType === 'string' && draft.parameters.policyType in POLICY_SUMMARIES ? (
+            <p className="mt-1 text-[10px] text-stone-500">
+              {POLICY_SUMMARIES[draft.parameters.policyType as PolicyType]}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            data-testid="command-court-policy-submit"
+            data-command-write="true"
+            disabled={
+              loading
+              || model.policy.cooldown > 0
+              || typeof draft?.parameters.policyType !== 'string'
+              || (draft.parameters.policyType === PolicyType.SCORCHED_EARTH
+                && typeof draft.parameters.targetCityId !== 'number')
+            }
+            onClick={() => {
+              clearError();
+              setPolicyReviewOpen(true);
+            }}
+            className="mt-2 w-full border border-amber-800 bg-amber-950/30 px-3 py-2 text-left text-amber-100 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
+          >
+            送交终审 · 改行国策
+          </button>
         </section>
 
         <section className="border-t border-stone-800 pt-3">
@@ -596,6 +698,61 @@ export function CourtCommandDrawer({
           await falseDecreeWar(selectedTarget.faction.id);
           if (useGameStore.getState().error) return;
           setReviewOpen(false);
+          dispatch({ type: 'submit-succeeded', domain: 'court' });
+        }}
+      />
+      <CommandConfirmDialog
+        open={policyReviewOpen}
+        category="朝廷 · 国策"
+        command={`确认改行国策「${
+          typeof draft?.parameters.policyType === 'string'
+            ? POLICY_LABELS[draft.parameters.policyType as PolicyType] ?? draft.parameters.policyType
+            : '—'
+        }」`}
+        summary="当前国策立即结束，新策下月生效；6 月内不可再切。"
+        items={[
+          {
+            label: '国策',
+            value:
+              typeof draft?.parameters.policyType === 'string'
+                ? POLICY_LABELS[draft.parameters.policyType as PolicyType]
+                : '—',
+          },
+          {
+            label: '效果',
+            value:
+              typeof draft?.parameters.policyType === 'string'
+                ? POLICY_SUMMARIES[draft.parameters.policyType as PolicyType]
+                : '—',
+          },
+          { label: '冷却', value: '6 月', tone: 'warning' },
+        ]}
+        loading={loading}
+        error={error}
+        fallbackFocusSelector='[data-testid="command-domain-court"]'
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const latestModel = latest ? buildCourtViewModel(latest) : null;
+          if (!latestModel) return '朝廷状态已失效，请返回检查。';
+          if (latestModel.policy.cooldown > 0) return `国策冷却中（剩余${latestModel.policy.cooldown}月）`;
+          if (typeof draft?.parameters.policyType !== 'string') return '请选择国策';
+          if (
+            draft.parameters.policyType === PolicyType.SCORCHED_EARTH
+            && typeof draft.parameters.targetCityId !== 'number'
+          ) {
+            return '坚壁清野须指定边境城';
+          }
+          return null;
+        }}
+        onCancel={() => setPolicyReviewOpen(false)}
+        onConfirm={async () => {
+          if (typeof draft?.parameters.policyType !== 'string') return;
+          await setNationalPolicy(
+            draft.parameters.policyType,
+            typeof draft.parameters.targetCityId === 'number' ? draft.parameters.targetCityId : undefined,
+          );
+          if (useGameStore.getState().error) return;
+          setPolicyReviewOpen(false);
           dispatch({ type: 'submit-succeeded', domain: 'court' });
         }}
       />

@@ -27,6 +27,10 @@ import {
   merchantCommerceMultiplier,
   medicineSkillLevel,
   civilianFarmingFoodProduced,
+  PolicyType,
+  POLICY_HIGH_WALLS_FOOD_MUL,
+  factionHasActivePolicy,
+  isScorchedCity,
   type City,
   type CityDemographics,
   type GameState,
@@ -42,7 +46,8 @@ import { tickChildrenAppear } from './child.js';
 import { tickEvents } from './event.js';
 import { syncFactionResources } from './economy.js';
 import { tickImperialAuthorityQuarter } from './hegemony.js';
-import { tickDevelopmentProject } from './civil.js';
+import { tickDevelopmentProject, militaryFarmingMonthlyFood } from './civil.js';
+import { tickNationalPolicies } from './policy.js';
 import { tickFactionPolitics } from './factionPolitics.js';
 import { tickSameCityRelations, loadStaticRelations } from './relations.js';
 import { tickPopularWillDesertion } from './mandateEffects.js';
@@ -129,6 +134,7 @@ function applyFamineDeaths(d: CityDemographics, deaths: number): CityDemographic
 export function settleCityMonthDetailed(
   city: City,
   season: Season,
+  opts?: { foodMulExtra?: number; zeroFoodProd?: boolean },
 ): {
   city: City;
   famineNote?: string;
@@ -164,7 +170,11 @@ export function settleCityMonthDetailed(
     season,
     city.province,
   );
-  const foodProduced = farmFood + civilianFood;
+  const militaryFood = militaryFarmingMonthlyFood(city, season);
+  let foodProduced = farmFood + civilianFood + militaryFood;
+  const extraMul = opts?.foodMulExtra ?? 1;
+  if (opts?.zeroFoodProd) foodProduced = 0;
+  else if (extraMul !== 1) foodProduced = Math.floor(foodProduced * extraMul);
   const adultShare = (d.adultMale + d.adultFemale) / Math.max(sumSafe(d), 1);
   // S27 商贾满意度修正：≥70 商业 +15%、<30 −15%（docs/08 §十七）
   const merchantMod = 1 + merchantCommerceMultiplier(city.cityFactions ?? []);
@@ -241,7 +251,24 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     if (projectResult.note) developmentNotes.push(projectResult.note);
     const projectCost = Math.max(0, afterAdministration.gold - projectResult.city.gold);
     const beforeFood = city.food;
-    const result = settleCityMonthDetailed(projectResult.city, season);
+    const foodMulExtra =
+      city.ruler != null && factionHasActivePolicy(state, city.ruler, PolicyType.HIGH_WALLS)
+        ? POLICY_HIGH_WALLS_FOOD_MUL
+        : 1;
+    let result = settleCityMonthDetailed(projectResult.city, season, {
+      foodMulExtra,
+      zeroFoodProd: isScorchedCity(state, city.id),
+    });
+    // 军屯每季首月扣驻军士气（docs/05 §5.8.1；组织度−2 随 0-B Army 层延后）
+    if (isQuarterStart && (result.city.militaryFarming ?? false)) {
+      result = {
+        ...result,
+        city: {
+          ...result.city,
+          troopsMorale: Math.max(0, (result.city.troopsMorale ?? 70) - 3),
+        },
+      };
+    }
     cities[city.id] = result.city;
     if (result.famineNote) famineNotes.push(result.famineNote);
 
@@ -289,6 +316,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   // 计谋 S17：AI 发起 → 月度推进（准备→结算/ACTIVE）
   nextState = runAllAiPlots(nextState, rng, rng);
   nextState = tickPlotsMonth(nextState, rng);
+  nextState = tickNationalPolicies(nextState, isQuarterStart);
   // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
   nextState = runAiMilitary(nextState, rng, rng);
   // 家族跟随 S18：在野武将自动投奔检定

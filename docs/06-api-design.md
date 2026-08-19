@@ -190,11 +190,20 @@ POST   /api/game/plot/launch          { type: honeyTrap|sowDiscord|falseIntel|em
                                      // 客户端终审前复验上限/情报/盟友/资源/目标，服务端仍作最终权威校验
                                      // L2 战略计谋：undermine(釜底抽薪 · Session 339)·secretCrossing(暗渡陈仓 · Session 341；feintCityId=明修、targetCityId=暗渡)
                                      //             ·blossom(树上开花 · Session 342；己方城、金150+粮100，无情报前置)
-                                     //             ·lureOut(调虎离山)·instigate(借刀杀人)·strikeWhileHot(趁火打劫)·poach(秘密挖角)
-                                     //             ·watchFire(隔岸观火)·swapPillar(偷梁换柱)·edict(借尸还魂)·killChicken(指桑骂槐)
-                                     // L2 投入规则：prep 消耗按月扣 · progress 进度条 · 可提前终止
+                                     //             ·killChicken(指桑骂槐 · Session 343；即时、金100、己方低忠诚≥2；可选 targetOfficerId)
+                                     //             ·strikeWhileHot(趁火打劫 · Session 344；即时、金150、目标同时交战≥2；targetFactionId；首击×1.2)
+                                     //             ·lureTiger(调虎离山 · Session 346；金200+50×2、detailed+女间谍必派、可选 targetOfficerId；PREP→诱离 ACTIVE 城防×0.5)
+                                     //             ·instigate(借刀杀人 · Session 347；金300+女间谍、detailed、feintCityId=第三方源城、secondaryFactionId)
+                                     //             ·poach(秘密挖角 · Session 347；金100~500+50×2、detailed、targetOfficerId 必填)
+                                     //             ·watchFire(隔岸观火 · Session 347；金400+80×3、targetFactionId+secondaryFactionId、友好≥40)
+                                     //             ·swapPillar(偷梁换柱 · Session 347；金300+密探、detailed)
+                                     //             ·edict(借尸还魂 · Session 347；金300、targetFactionId；无献帝识破+25)
+                                     // L2 投入规则：prep 消耗按月扣 · progress 进度条 · 可提前终止（指桑骂槐/趁火打劫即时 RESOLVED 无需终止）
                                      // Session 341：暗渡陈仓须两邻接敌城 surface；成功后明修牵制 + 暗渡自动战攻防×1.2
                                      // Session 342：树上开花成功后该城 AI 攻击权重×0.4、迷雾兵力虚报×2~3（按城市 ID 派生）
+                                     // Session 343：指桑骂槐即时成功；儆猴忠诚−15；其余在职非君主+5~8
+                                     // Session 344：趁火打劫即时成功（无识破、不可取消）；效果窗口=目标当前仍≥2家交战；自动战首回合 defLoss×1.2
+                                     // Session 347：L2 十一计收口；launch 可带 secondaryFactionId；借刀/挖角/观火/换柱/还魂已实装
 
 POST   /api/game/plot/cancel          { plotId }
                                      // Session 339：提前终止 L2 战略计谋，沉没成本不返还
@@ -205,9 +214,17 @@ GET    /api/game/plot/progress        → { plots: Plot[], progress: { [plotId]:
 POST   /api/game/civil/civilian-farming { cityId, households }
                                      // Session 339：民屯田分配（0~上限）；每城每季限一次；无金消耗
 
-POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNear|playFool|guestHost|... }
-                                     // L3 国策态势切换，单次冷却 6 月
-GET    /api/game/policy/current       → { activePolicies: NationalPolicy[], cooldown: number }
+POST   /api/game/civil/military-farming { cityId, enabled }
+                                     // Session 345：军屯田开关；每城每季限一次；开启需兵力>0/非围攻/非出征
+                                     // 月结产粮 floor(troops×(farm/100)×seasonMul×0.5)；季度首月士气−3；训练收益减半
+
+POST   /api/game/civil/relocate-families { fromCityId, toCityId }
+                                     // Session 348：质任迁家属；金500；每城每季一次；家属口迁入后方城
+
+POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNear|playFool|guestHost|highWallsGrain|strikeWeak|scorchedEarth|hideStrength, targetCityId? }
+                                     // Session 348：L3 国策切换；当前策立即结束；新策下月生效；冷却 6 月
+                                     // scorchedEarth 须 targetCityId=己方边境城
+GET    /api/game/policy/current       → { activePolicies: NationalPolicy[], pending: NationalPolicy|null, cooldown: number }
 
 POST   /api/game/diplomacy/tribute     { targetFactionId }  // 进贡 200金，友好+15
 POST   /api/game/diplomacy/court-network { targetFactionId, amount? }  // 宫廷人脉−n/对方+n，友好+12×n（1~5）

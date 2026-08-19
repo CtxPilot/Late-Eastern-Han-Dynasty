@@ -9,12 +9,72 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 342**（主线③续：L2 树上开花） |
+| 会话 | **Session 348**（L3 国策 + 家属质任） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 342：树上开花引擎/AI 攻权×0.4/迷雾兵力×2~3 + 计略抽屉己方城入口 |
-| 文档最新 | `35`/`12`/`04`/`06`/`07`/`01`/`02`/`03`/`05`/`16`/`09`/`README`/`10-progress` 与本交接已同步 |
-| 本交接用途 | **L2 第三计已落地**；其余 L2/军屯后置 |
-| 下一步 | 其余 L2（如趁火打劫/指桑骂槐）或军屯；**0-B 继续暂缓** |
+| 代码最新 | Session 348：八国策开关 + 质任迁家属 |
+| 文档最新 | `35`/`12`/`04`/`05`/`06`/`07`/`01`/`03`/`09`/`16`/`README`/`10-progress` 与本交接已同步 |
+| 本交接用途 | **L3 国策 0-A 已接通**；家属质任迁徙/失陷士气已接通 |
+| 下一步 | 天气主动技能 / 正式特殊兵种熟练度（需批准）；善待/镇压家属选项后置；**0-B 继续暂缓** |
+
+### Session 348 交接要点
+
+- L3 八国策：`NationalPolicy` / `GameState.nationalPolicies`；`POST /policy/set`、`GET /policy/current`；朝廷抽屉改行；切换立即结束旧策、下月生效、冷却 6 月。
+- 0-A 效果：以逸待劳自动战首回合攻防+10%（六角移动−1后置）；远交近攻月改友好；假痴不癫显示兵力×0.5 且 AI 攻权×1.8；反客为主驻盟友城每季取 5% 金粮、友好−2/月；高筑墙城防完成+30%、粮产+15%、征兵−20%、士气−1/月；避实击虚最弱敌城伤害+15%/其余−10%；坚壁清野边境城清粮+一年停产+过境耗粮×1.5；深藏不露对敌模糊+己方视野−1。
+- 家属质任：征兵绑定 `garrisonFamilies`；`POST /civil/relocate-families` 金500/每季一次；家属所在城失陷则相关城士气−40（治所质任=全国）。善待/镇压选项后置（默认中立冲击）。
+- 验证：`verify-l3-policy` **15/15**、`verify-hostage-families` **9/9**；save-game-state 10；shared 新增单测 + client 朝廷 4；三端 typecheck。
+- 边界：天气主动技能、特殊兵种熟练度、0-B、家属善待/镇压 UI、六角移动−1 未做。
+
+### Session 347 交接要点
+
+- L2 收口五计：`INSTIGATE` / `POACH` / `WATCH_FIRE` / `SWAP_PILLAR` / `EDICT`；Plot 增 `secondaryFactionId`。
+- 借刀杀人：金300 + 女间谍 + 邻接第三方源城；PREP 2→ACTIVE 2；宣战 + AI 强制出征（攻权×5、跳过犹豫）。
+- 秘密挖角：金100~500（统率公式）+ 50×2；投奔首都并带走 min(800, 驻军×10%)。
+- 隔岸观火：金400 + 80×3；两势力友好≥40；ACTIVE 月降友好至 WAR。
+- 偷梁换柱：金300 + 空闲密探（0-A 反间）；良将调离；守军统率−10（自动战战报）。
+- 借尸还魂：金300；无献帝识破+25；民心−5/月、将忠−2/月。
+- 命令坞计略抽屉五计入口 + `verify-l2-remaining` **30/30**。
+- 验证：remaining 30；回归 lure-tiger 32、strike-while-hot 25、kill-chicken 31、plot-spy-rng 34、save-plot 9；shared **399** + client **48**；三端 typecheck。
+- 边界：L3 国策、家属质任、0-B、天气主动技能未做。
+
+### Session 346 交接要点
+
+- L2 调虎离山：`PlotType.LURE_TIGER`；金200 + 50/月×2（设计 2~4 取下限）；敌城 **detailed** + **必派女间谍**；同势力≥2 城且有在职非君主守将。
+- PREP 完投权威结算；成功则诱离守将至邻接他城（无邻接则任意同势力他城）；ACTIVE 4 月攻城 `wallPenalty ×0.5`；效果结束/取消时原城仍属原势力则召回。
+- 命令坞计略抽屉：态势页候选城 + 发起页敌城/女间谍（必派）/可选守将；终审「分期 2 月后诱离守将，城防减半」；可 `cancelPlot`（归还女间谍）。
+- 0-A：六角 battle.ts 不接入（同暗渡陈仓）；组织度/部曲不改。
+- 验证：`verify-l2-lure-tiger` **32/32**；回归 strike-while-hot 25、kill-chicken 31、undermine 18、plot-spy-rng 34、save-plot 9；shared **399** + client **46**；三端 typecheck/lint。
+- 真实 HTTP：场景2 导入 detailed+女间谍后 `POST /plot/launch` lureTiger → 洛阳 PREP。
+- 边界：借刀杀人（第三方自动出征）、其余 L2、L3、家属质任、0-B 未做。
+
+### Session 345 交接要点
+
+- 军屯田（docs/05 §5.8.1）：`City.militaryFarming` / `militaryFarmingAssignQuarter`（季度锁，同季仅切一次；与民屯平行）。
+- 产粮 `militaryFarmingFoodProduced = floor(troops × (farm/100) × seasonMul × 0.5)`（春0.8/夏1.0/秋1.5/冬0.3）；月结接入 turn.ts。
+- 季度首月扣 troopsMorale 3；训练指令收益×0.5（0-A 无经验概念，士气增益代理）；**组织度 −2/季延后 0-B Army 层**（文档已标注）。
+- 前置检查完整：兵力>0 + 城市未被 sieging/assaulting 围攻 + 无己方非 garrison 军队驻留（campaignArmies）。
+- 新端点 `POST /api/game/civil/military-farming { cityId, enabled }`；客户端屯田域军屯区块（状态行/开关/终审估产）。
+- 验证：`verify-military-farming` **11/11**、shared **399** + client **45**；回归 kill-chicken 31、blossom 34、undermine 18、strike-while-hot 25、plot-spy-rng 34、save-plot 9、save-game-state 10、civilian-farming 7 全绿；三端 typecheck/lint、validate-data。
+- 真实 Chrome（CDP 9242，场景2 陈留）：屯田抽屉→开启军屯→终审→季度锁→190-02/03 不扣士气→190-04 士气 70→67→新季度解锁→停办；`verify-s345-military-farming-ui` **19/19**，console 无错误。
+- 注意：client store 只在 action/reload 后同步，UI 验证推进月份需 reload 再验季度解锁；end-turn 会被 pendingEvents 拦截（需先 `POST /api/game/event/choose`）。
+- 边界：调虎离山（需女间谍+武将调动）、借刀杀人、其余 L2、L3、家属质任（§5.8.2）、组织度扣减（0-B）、0-B 未做。
+
+### Session 344 交接要点
+
+- L2 趁火打劫：`PlotType.STRIKE_WHILE_HOT`；金150；目标势力**同时与≥2家交战**（`countWarsForFaction`）；**即时 RESOLVED**（确定性成功、无识破、不可 cancel、layer=strategic、无 targetCityId）。
+- 效果：自动战（`runAutoBattle`）**首回合 defLoss ×1.2**（首击+20%，非整场攻防）；效果窗口 = 目标当前仍≥2家 WAR，**停战自然消散**（`getStrikeWhileHotFirstHitMul` 确定性读取，零新字段）。
+- 0-A 简化：仅自动战接入（campaign.ts），六角 battle.ts 不接入（同暗渡陈仓）。
+- 命令坞计略抽屉：态势页候选（交战≥2家）+ 发起页目标势力下拉（仅多线交战势力、标注交战数）；终审「即时锁定首击伤害×1.2」。
+- 验证：`verify-l2-strike-while-hot` **25/25**、kill-chicken 31、blossom 34、undermine 18、plot-spy-rng 34、save-plot 9、save-game-state 10；shared **396** + client **45**；三端 typecheck/lint；真实 Chrome（场景2）：抽屉→趁火打劫→目标下拉董卓（交战3家）→终审→确认→RESOLVED，金 2270→2120，console 无新错误。
+- 场景前置：190 关东义兵切片 initialDiplomacy 中势力4（董卓）同时与 1/2/3 war；英雄集结剧本需先制造多线交战。
+- 边界：调虎离山（需女间谍+武将调动）、借刀杀人、其余 L2、L3、军屯、0-B 未做。
+
+### Session 343 交接要点
+
+- L2 指桑骂槐：`PlotType.KILL_CHICKEN`；金100；己方忠诚&lt;80 在职非君主≥2；**即时 RESOLVED**（确定性成功、无识破）。
+- 效果：儆猴忠诚−15（可选 `targetOfficerId` / 否则权威 RNG）；其余在职非君主 +5~8；君主豁免。
+- 命令坞计略抽屉：低忠诚候选列表 + 可选儆猴目标；不占 ACTIVE 槽、不可 cancel。
+- 验证：`verify-l2-kill-chicken` **31/31**、blossom 34、undermine 18、secret-crossing 23、plot-spy-rng 34、save-plot 9；shared **396** + client **44**；三端 typecheck；真实 HTTP：import 压低忠诚→`POST /plot/launch` killChicken→「指桑骂槐成功：儆 黄忠 …」RESOLVED。
+- 边界：趁火打劫（交战检测+首伤）、调虎离山、其余 L2、L3、军屯、0-B 未做。
 
 ### Session 342 交接要点
 
@@ -596,7 +656,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 ```bash
 | S15 | AI | M+ | 内政占位 + 出征占城 + **总军师自动态势切换** |
 | S16 | 剧本/存档 | **M/D** | 两剧本选择与白名单已可玩；无 SQLite |
-| S17 | 计谋 | **S/M+** | L1 四计 ✅ · **L2 釜底抽薪 ✅ Session 339** · 其余 L2/L3 设计；行政↔战场联动 |
+| S17 | 计谋 | **S/M+** | L1 四计 ✅ · **L2 十一计 ✅ Session 339–347** · L3 设计；行政↔战场联动 |
 | S18 | 家族 | **M+** | 婚配/跟随/子女引擎 ✅；父辈/族谱 ❌ |
 # 迷雾出征: pnpm verify-march-fog        # 7项权威边界断言
 | S20 | **前端体验** | **S/D** | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报及人事统一终审窗；Session 124 将详情升级为人物简册，并加入吕布/关羽/诸葛亮/曹操首批程序化头像与快捷入口。W4 其余子项与 W1~W3 仍为设计中，详见 `07-ui-design.md` §11.1.4/§12 |
@@ -625,7 +685,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 |:--:|------|:------:|-----------|
 | S01 | 回合 | **M+** | `turn.ts`；1回合=1月，季度首月/年度显式节拍；12回合验证28/28；全势力金粮同步 |
 | S02 | 地图 | M | Natural Earth；官道；LOD；**郡域迷雾已实装（BF-P5 Session 256）**：`shared/commandery-fog.ts` + mask 投影；**守方 Army 入郡域场景已完成（R6，Session 258）**：揭示源并入守方 Army 所在县 |
-| S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；**民屯田 Session 339 最小切片**（分配+月结+季限）；文化/工艺/交通/卫生、**军屯未实装** |
+| S03 | 内政 | **M+** | 农/商/城已迁持续项目；一城一项、月费、人员暂停和进度损失；征兵/训练/施米仍即时；**民屯田 Session 339 最小切片**（分配+月结+季限）；**军屯田 Session 345**；文化/工艺/交通/卫生 |
 | S04 | 人口经济 | **M+** | 四桶 demographics + 民军粮耗 + 12月金粮预算 + 递增多城行政成本；俸禄仍未实装 |
 | S05 | 军事 | M+ | 邻接出征→战→占城；战役 Army 主/副将/参谋；**爵位加成未接入** |
 | S06 | 迷雾 | **M+** | UI + 服务端 `maskGameStateForPlayer` |
@@ -639,10 +699,10 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
 | S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
 | S16 | 剧本/存档 | **M+** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；浏览器 JSON 导入/导出 + **Session 340 SQLite 命名槽位**（`$XDG_DATA_HOME/leh/saves.db`，遗留 JSON 一次性迁入）；系统菜单槽位 UI 已接通。多用户/云同步仍后置 |
-| S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城创建与结算接权威 PRNG（S07/S17 合并 30+/30）；**L2 釜底抽薪 Session 339**；**L2 暗渡陈仓 Session 341**（明修牵制/暗渡攻防×1.2）；**L2 树上开花 Session 342**（己方城/迷雾兵力×2~3/AI 攻权×0.4）；其余 L2 与 L3 仍设计；AI 发起决策仍属 S15 |
+| S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城 ✅ 且创建/结算接权威 PRNG（S07/S17 合并验证 30+/30）；**L2 十一计 Session 339–347 已齐**（含借刀/挖角/观火/换柱/还魂）；L3 仍设计；AI 发起决策仍属 S15 |
 | S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；父辈/族谱 ❌ |
 | S19 | **单挑大会** | **S/M** | **Session 338 最小闭环**：每年正月 16 人单败瞬时结算；押注/观战 UI 后置 |
-| S20 | **前端体验** | **M+** | CMD-P0～P38 完成；现有运行时域命令坞迁移阶段收口，家族旧壳归零；**Session 339：屯田域民屯真实入口 + 计略抽屉釜底抽薪**；**Session 341：计略抽屉暗渡陈仓（明修/暗渡双选）**；**Session 342：计略抽屉树上开花（己方城/金粮双耗）**。详见 `07-ui-design.md` §11.1.4/§12 |
+| S20 | **前端体验** | **M+** | CMD-P0～P38 完成；**Session 347：计略抽屉 L2 十一计入口齐**（借刀/挖角/观火/换柱/还魂）。详见 `07-ui-design.md` §11.1.4/§12 |
 | S21 | **战争四层串联** | **M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写；**Session 338** `verify-s21-layers` 20/20 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体 Ma Shan Zheng，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字重扩展。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
 

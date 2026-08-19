@@ -19,6 +19,7 @@ export * from './diplomacy.js';
 export * from './spy.js';
 export * from './intel.js';
 export * from './plot.js';
+export * from './policy.js';
 export * from './scenario.js';
 export * from './save.js';
 export * from './duel.js';

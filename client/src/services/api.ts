@@ -197,6 +197,22 @@ export async function setCivilianFarming(cityId: number, households: number): Pr
   return data;
 }
 
+/** 军屯田开关（docs/05 §5.8.1） */
+export async function setMilitaryFarming(cityId: number, enabled: boolean): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/military-farming', { cityId, enabled });
+  return data;
+}
+
+export async function relocateGarrisonFamilies(fromCityId: number, toCityId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/relocate-families', { fromCityId, toCityId });
+  return data;
+}
+
+export async function setNationalPolicy(type: string, targetCityId?: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/policy/set', { type, targetCityId });
+  return data;
+}
+
 /** S27 巡查：乡政派系命令（30金；武≥60 武将） */
 export async function patrolCity(cityId: number, officerId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/patrol', { cityId, officerId });
@@ -369,6 +385,7 @@ export async function launchPlot(
     targetFactionId?: number;
     targetCityId?: number;
     feintCityId?: number;
+    secondaryFactionId?: number;
     targetOfficerId?: number;
     agentId?: string;
   },

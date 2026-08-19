@@ -8,6 +8,7 @@ import { GameStateDiplomacySchema } from './game-state-diplomacy-schema.js';
 import { GameStateEntitiesSchema } from './game-state-entity-schema.js';
 import { GameStateIntelSchema } from './game-state-intel-schema.js';
 import { GameStatePlotSchema } from './game-state-plot-schema.js';
+import { GameStatePolicySchema } from './game-state-policy-schema.js';
 import { GameStateTimelineSchema } from './game-state-schema.js';
 import type { GameState } from './types/game.js';
 
@@ -16,7 +17,7 @@ const ROOT_KEYS = [
   'season', 'playerFactionId', 'officers', 'cities', 'factions', 'females', 'armys',
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
-  'plots', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
+  'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
 ] as const satisfies readonly (keyof GameState)[];
 
@@ -64,6 +65,7 @@ export const GameStateSchema = z
       GameStateDiplomacySchema.safeParse(pickState(state, ['diplomacy'])),
       GameStateIntelSchema.safeParse(pickState(state, ['intel'])),
       GameStatePlotSchema.safeParse(pickState(state, ['plots'])),
+      GameStatePolicySchema.safeParse(pickState(state, ['nationalPolicies'])),
     ];
     sliceResults.forEach((result) => forwardIssues(result, ctx));
 
@@ -124,6 +126,9 @@ export const GameStateSchema = z
           ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...base, 'officers', index], message: '城市武将清单与武将所在地不一致' });
         }
       });
+      if (city.familyBackupCityId != null) {
+        requireRef(cityIds.has(city.familyBackupCityId), [...base, 'familyBackupCityId'], '质任后方城不存在', ctx);
+      }
     });
 
     Object.values(state.officers).forEach((officer) => {
@@ -230,9 +235,17 @@ export const GameStateSchema = z
       if (mission.targetCityId != null) requireRef(cityIds.has(mission.targetCityId), ['intel', 'recentMissions', index, 'targetCityId'], '谍报日志目标城市不存在', ctx);
     });
 
+    (state.nationalPolicies ?? []).forEach((policy, index) => {
+      requireRef(factionIds.has(policy.factionId), ['nationalPolicies', index, 'factionId'], '国策势力不存在', ctx);
+      if (policy.targetCityId != null) {
+        requireRef(cityIds.has(policy.targetCityId), ['nationalPolicies', index, 'targetCityId'], '国策目标城不存在', ctx);
+      }
+    });
+
     state.plots.forEach((plot, index) => {
       requireRef(factionIds.has(plot.casterFactionId), ['plots', index, 'casterFactionId'], '计谋施计势力不存在', ctx);
       if (plot.targetFactionId != null) requireRef(factionIds.has(plot.targetFactionId), ['plots', index, 'targetFactionId'], '计谋目标势力不存在', ctx);
+      if (plot.secondaryFactionId != null) requireRef(factionIds.has(plot.secondaryFactionId), ['plots', index, 'secondaryFactionId'], '计谋第二势力不存在', ctx);
       if (plot.targetCityId != null) requireRef(cityIds.has(plot.targetCityId), ['plots', index, 'targetCityId'], '计谋目标城市不存在', ctx);
       if (plot.feintCityId != null) requireRef(cityIds.has(plot.feintCityId), ['plots', index, 'feintCityId'], '计谋明修城不存在', ctx);
       if (plot.targetOfficerId != null) requireRef(officerIds.has(plot.targetOfficerId), ['plots', index, 'targetOfficerId'], '计谋目标武将不存在', ctx);

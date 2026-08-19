@@ -17,7 +17,8 @@ import {
   type GameState,
   type Officer,
 } from '@leh/shared';
-import { getPlotAttackModifier, isEmptyFortDeterring, isSecretCrossingGarrisonHold } from './plot.js';
+import { getPlotAttackModifier, isEmptyFortDeterring, isInstigateForcedAttack, isSecretCrossingGarrisonHold } from './plot.js';
+import { getPolicyAttackModifier } from './policy.js';
 import { assaultForFaction, startCampaignForFaction } from './campaign.js';
 
 export const AI_MILITARY_CONFIG = Object.freeze({
@@ -340,7 +341,7 @@ function aiMilitaryTurn(
         if (target.ruler == null || target.ruler === factionId) continue;
         if (!canAiAttackFaction(s, factionId, target.ruler)) continue;
         if (!canMarchAlongRoad(from.id, target.id)) continue;
-        const mod = getPlotAttackModifier(s, target.id, factionId);
+        const mod = getPlotAttackModifier(s, target.id, factionId) * getPolicyAttackModifier(s, target.id, factionId);
         const base = Math.max(100, 12000 - target.troops);
         const score = base * mod;
         cands.push({ fromId: from.id, targetId: target.id, score, mod });
@@ -355,20 +356,21 @@ function aiMilitaryTurn(
     if (!from || !target) break;
     usedSources.add(from.id);
 
+    const forced = isInstigateForcedAttack(s, factionId, best.targetId);
     const factionName = s.factions[factionId]?.name ?? '某军';
     const targetName = target.name;
     const aggression = getFactionAggression(s, factionId);
 
-    if (best.mod < 0.3 || isEmptyFortDeterring(s, best.targetId)) {
+    if (!forced && (best.mod < 0.3 || isEmptyFortDeterring(s, best.targetId))) {
       s = pushLog(s, 'ai_military', `${factionName}因空城疑兵暂缓进攻 ${targetName}`);
       continue;
     }
 
-    const baited = best.mod >= 2;
+    const baited = best.mod >= 2 && !forced;
     const reserve = requiredReserve(s, factionId, from.id);
     const canCapture =
       from.troops - reserve >= AI_MILITARY_CONFIG.minCampaignTroops &&
-      from.troops >= target.troops * AI_MILITARY_CONFIG.minSourceTargetRatio &&
+      (forced || from.troops >= target.troops * AI_MILITARY_CONFIG.minSourceTargetRatio) &&
       !baited;
 
     if (canCapture) {
@@ -377,7 +379,7 @@ function aiMilitaryTurn(
         AI_MILITARY_CONFIG.maxCampaignChance,
         Math.max(0.05, (AI_MILITARY_CONFIG.baseCampaignChance + advantage * 0.15) * aggression),
       );
-      if (decisionRng() < captureChance) {
+      if (forced || decisionRng() < captureChance) {
         const commander = pickCommander(s, factionId, from.id);
         if (commander) {
           const troopShare = Math.min(0.9, 0.7 + (aggression - 0.75) * 0.3);

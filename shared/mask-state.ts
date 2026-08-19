@@ -10,6 +10,8 @@ import {
   troopsBandLabel,
   type CityVisibility,
 } from './intel.js';
+import { playFoolTroopMul } from './national-policy.js';
+import { PlotStage, PlotType } from './enums/index.js';
 import { maskBattlefieldInstanceForPlayer } from './commandery-fog.js';
 import type { City, CityDemographics } from './types/city.js';
 import type { GameState } from './types/game.js';
@@ -35,7 +37,27 @@ function round100(n: number): number {
   return Math.round(n / 100) * 100;
 }
 
-function maskCity(city: City, vis: CityVisibility): City {
+function blossomTroopMul(state: GameState, cityId: number): number {
+  const hit = (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.BLOSSOM &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === cityId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+  if (!hit) return 1;
+  return cityId % 2 === 0 ? 2 : 3;
+}
+
+function displayTroops(state: GameState, city: City, vis: CityVisibility): number {
+  if (vis.kind === 'own' || vis.intelDepth === 'full') return city.troops;
+  const mul = blossomTroopMul(state, city.id) * playFoolTroopMul(state, city.id);
+  return Math.max(0, Math.floor(city.troops * mul));
+}
+
+function maskCity(state: GameState, city: City, vis: CityVisibility): City {
+  const troops = displayTroops(state, city, vis);
   if (vis.kind === 'own' || vis.intelDepth === 'full') {
     return city;
   }
@@ -48,7 +70,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       population: 0,
       demographics: EMPTY_DEMO,
       courtNetworkOpportunities: 0,
-      troops: bandMidTroops(city.troops),
+      troops: bandMidTroops(troops),
       troopsMorale: 0,
       officers: [],
       stats: {
@@ -69,6 +91,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       population: round100(city.population),
       demographics: EMPTY_DEMO,
       courtNetworkOpportunities: 0,
+      troops,
       troopsMorale: 0,
       officers: city.officers,
       stats: {
@@ -88,7 +111,7 @@ function maskCity(city: City, vis: CityVisibility): City {
       population: 0,
       demographics: EMPTY_DEMO,
       courtNetworkOpportunities: 0,
-      troops: bandMidTroops(city.troops),
+      troops: bandMidTroops(troops),
       troopsMorale: 0,
       officers: [],
       stats: {
@@ -212,7 +235,7 @@ export function maskGameStateForPlayer(state: GameState): GameState {
   const cities: GameState['cities'] = {};
   for (const c of Object.values(state.cities)) {
     const vis = getCityVisibility(state, c.id);
-    cities[c.id] = maskCity(c, vis);
+    cities[c.id] = maskCity(state, c, vis);
   }
 
   const officers: GameState['officers'] = {};
@@ -287,6 +310,7 @@ export function maskGameStateForPlayer(state: GameState): GameState {
       plantableBeauty: intel.plantableBeauty ?? {},
     },
     plots,
+    nationalPolicies: (state.nationalPolicies ?? []).filter((p) => p.factionId === playerId),
     activeBattlefieldInstance,
   };
 }

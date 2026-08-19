@@ -2,17 +2,20 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
- * 计谋主引擎 S17：L1 美人计/离间/假情报/空城 + L2 釜底抽薪 / 暗渡陈仓
+ * 计谋主引擎 S17：L1 四计 + L2 十一计（主线③）
  * 设计真源 docs/04 §31
  */
 import {
+  DipRelation,
   PlotStage,
   PlotType,
   SpyStatus,
+  controlsEmperor,
   findDiplomacy,
   isAllied,
   roadNeighbors,
   type GameState,
+  type Officer,
   type Plot,
   type PlotCost,
 } from '@leh/shared';
@@ -49,6 +52,73 @@ export const BLOSSOM_AI_ATTACK_MUL = 0.4;
 /** 虚报倍数下界/上界（按城市 ID 确定性派生，不引入 RNG） */
 export const BLOSSOM_TROOP_MUL_MIN = 2;
 export const BLOSSOM_TROOP_MUL_MAX = 3;
+
+/**
+ * 指桑骂槐：金100；即时结算（Session 343）。
+ * 忠诚偏低门槛与 S26 LOYALTY_SAFE 对齐（&lt;80）；需≥2 人；
+ * 0-A：确定性成功（己方内务，无识破）；儆猴固定 −15；其余在职非君主 +5~8（权威 RNG）。
+ */
+export const KILL_CHICKEN_GOLD = 100;
+export const KILL_CHICKEN_LOYALTY_THRESHOLD = 80;
+export const KILL_CHICKEN_MIN_LOW = 2;
+export const KILL_CHICKEN_VICTIM_DROP = 15;
+export const KILL_CHICKEN_BOOST_MIN = 5;
+export const KILL_CHICKEN_BOOST_MAX = 8;
+
+/**
+ * 趁火打劫：金150；目标势力同时与≥2家交战；即时 RESOLVED（Session 344）。
+ * 0-A：确定性成功、无识破；效果 = 施计方对目标势力的自动战首击伤害×1.2。
+ */
+export const STRIKE_WHILE_HOT_GOLD = 150;
+/** 目标需同时与多少家其他势力交战 */
+export const STRIKE_WHILE_HOT_MIN_WARS = 2;
+/** 首击伤害倍率（docs/04 §31.5：首次伤害+20%） */
+export const STRIKE_WHILE_HOT_FIRST_HIT_MUL = 1.2;
+
+/**
+ * 调虎离山：金200 + 50/月×2（设计 2~4 月取下限）；敌城 detailed + 女间谍必派。
+ * PREP 完投权威结算；成功则诱离守将至同势力他城（邻接优先），ACTIVE 4 月城防减半。
+ * 效果结束或提前终止时，若原城仍属原势力则召回武将。
+ */
+export const LURE_TIGER_UPFRONT_GOLD = 200;
+export const LURE_TIGER_MONTHLY_GOLD = 50;
+export const LURE_TIGER_INSTALLMENT_MONTHS = 2;
+export const LURE_TIGER_EFFECT_MONTHS = 4;
+export const LURE_TIGER_WALL_MUL = 0.5;
+
+/** 借刀杀人：金300；PREP 2 月；煽动窗口 ACTIVE 2 月 */
+export const INSTIGATE_GOLD = 300;
+export const INSTIGATE_PREP_MONTHS = 2;
+export const INSTIGATE_EFFECT_MONTHS = 2;
+export const INSTIGATE_AI_ATTACK_MUL = 5;
+
+/** 秘密挖角：金 100~500 + 50/月×2 */
+export const POACH_GOLD_MIN = 100;
+export const POACH_GOLD_MAX = 500;
+export const POACH_MONTHLY_GOLD = 50;
+export const POACH_INSTALLMENT_MONTHS = 2;
+export const POACH_TROOP_TAKE_MAX = 800;
+
+/** 隔岸观火：金400 + 80/月×3；友好≥40 */
+export const WATCH_FIRE_UPFRONT_GOLD = 400;
+export const WATCH_FIRE_MONTHLY_GOLD = 80;
+export const WATCH_FIRE_INSTALLMENT_MONTHS = 3;
+export const WATCH_FIRE_MIN_FAVOR = 40;
+export const WATCH_FIRE_MAX_ACTIVE_MONTHS = 12;
+
+/** 偷梁换柱：金300；PREP 2 → ACTIVE 4；统率−10 */
+export const SWAP_PILLAR_GOLD = 300;
+export const SWAP_PILLAR_PREP_MONTHS = 2;
+export const SWAP_PILLAR_EFFECT_MONTHS = 4;
+export const SWAP_PILLAR_LEADERSHIP_PENALTY = 10;
+
+/** 借尸还魂：金300；PREP 1 → ACTIVE 4；民心−5/月 */
+export const EDICT_GOLD = 300;
+export const EDICT_PREP_MONTHS = 1;
+export const EDICT_EFFECT_MONTHS = 4;
+export const EDICT_MORALE_DROP = 5;
+export const EDICT_LOYALTY_DROP = 2;
+export const EDICT_FORGE_DETECT_BONUS = 25;
 
 /**
  * 计谋执行武将缺省解析：势力内 ACTIVE 非君主智最高者（军师类武将出谋）。
@@ -107,6 +177,39 @@ const BLOSSOM_COST: PlotCost = {
   food: BLOSSOM_FOOD,
 };
 
+/** 指桑骂槐：金 100；无情报前置；即时结算 */
+const KILL_CHICKEN_COST: PlotCost = {
+  gold: KILL_CHICKEN_GOLD,
+};
+
+/** 趁火打劫：金 150；无情报前置；即时结算 */
+const STRIKE_WHILE_HOT_COST: PlotCost = {
+  gold: STRIKE_WHILE_HOT_GOLD,
+};
+
+const LURE_TIGER_COST: PlotCost = {
+  gold: LURE_TIGER_UPFRONT_GOLD,
+  requiresIntel: 'detailed',
+};
+
+const INSTIGATE_COST: PlotCost = {
+  gold: INSTIGATE_GOLD,
+  requiresIntel: 'detailed',
+};
+
+const WATCH_FIRE_COST: PlotCost = {
+  gold: WATCH_FIRE_UPFRONT_GOLD,
+};
+
+const SWAP_PILLAR_COST: PlotCost = {
+  gold: SWAP_PILLAR_GOLD,
+  requiresIntel: 'detailed',
+};
+
+const EDICT_COST: PlotCost = {
+  gold: EDICT_GOLD,
+};
+
 const PREP_MONTHS = 1;
 /** 假情报 / 空城 生效持续月数 */
 const EFFECT_MONTHS = 3;
@@ -119,8 +222,183 @@ function isL2Plot(type: PlotType): boolean {
   return (
     type === PlotType.UNDERMINE ||
     type === PlotType.SECRET_CROSSING ||
-    type === PlotType.BLOSSOM
+    type === PlotType.BLOSSOM ||
+    type === PlotType.KILL_CHICKEN ||
+    type === PlotType.STRIKE_WHILE_HOT ||
+    type === PlotType.LURE_TIGER ||
+    type === PlotType.INSTIGATE ||
+    type === PlotType.POACH ||
+    type === PlotType.WATCH_FIRE ||
+    type === PlotType.SWAP_PILLAR ||
+    type === PlotType.EDICT
   );
+}
+
+export function poachGoldCost(officer: Officer): number {
+  return Math.min(POACH_GOLD_MAX, Math.max(POACH_GOLD_MIN, 100 + officer.stats.leadership * 4));
+}
+
+/** 己方在职非君主、忠诚偏低的武将（按 id 升序，供 UI/发起校验） */
+export function listKillChickenCandidates(
+  state: GameState,
+  factionId: number,
+): Officer[] {
+  const rulerId = state.factions[factionId]?.rulerId;
+  return Object.values(state.officers)
+    .filter(
+      (o) =>
+        o.faction === factionId &&
+        String(o.status) === 'active' &&
+        o.id !== rulerId &&
+        o.loyalty < KILL_CHICKEN_LOYALTY_THRESHOLD,
+    )
+    .sort((a, b) => a.id - b.id);
+}
+
+/** 目标城可诱离的在职非君主守将（武力降序） */
+export function listLureTigerCandidates(state: GameState, cityId: number): Officer[] {
+  const city = state.cities[cityId];
+  if (!city || city.ruler == null) return [];
+  const rulerId = state.factions[city.ruler]?.rulerId;
+  return city.officers
+    .map((id) => state.officers[id])
+    .filter((o): o is Officer =>
+      !!o
+      && o.faction === city.ruler
+      && String(o.status) === 'active'
+      && o.id !== rulerId,
+    )
+    .sort((a, b) => b.stats.war - a.stats.war || a.id - b.id);
+}
+
+/** 同势力他城；若有官道邻接则只返回邻接城 */
+export function listLureTigerDestCities(state: GameState, fromCityId: number) {
+  const city = state.cities[fromCityId];
+  if (!city || city.ruler == null) return [];
+  const same = Object.values(state.cities)
+    .filter((c) => c.ruler === city.ruler && c.id !== fromCityId)
+    .sort((a, b) => a.id - b.id);
+  const neighbors = same.filter((c) => roadNeighbors(fromCityId).includes(c.id));
+  return neighbors.length > 0 ? neighbors : same;
+}
+
+/** 目标城官道邻接、属于第三方（非施计方、非守城方）的源城 */
+export function listInstigateSourceCities(
+  state: GameState,
+  targetCityId: number,
+  casterFactionId: number,
+) {
+  const target = state.cities[targetCityId];
+  if (!target || target.ruler == null) return [];
+  return roadNeighbors(targetCityId)
+    .map((id) => state.cities[id])
+    .filter((c) =>
+      !!c
+      && c.ruler != null
+      && c.ruler !== casterFactionId
+      && c.ruler !== target.ruler
+      && (state.factions[c.ruler]?.isAlive ?? false),
+    )
+    .sort((a, b) => a.id - b.id);
+}
+
+export function listPoachCandidates(state: GameState, cityId: number): Officer[] {
+  const city = state.cities[cityId];
+  if (!city || city.ruler == null) return [];
+  const rulerId = state.factions[city.ruler]?.rulerId;
+  const deployed = new Set(state.campaignArmies.flatMap((army) => [
+    army.commanderId,
+    ...army.subCommanderIds,
+    ...(army.advisorId == null ? [] : [army.advisorId]),
+    ...(army.subAdvisorId == null ? [] : [army.subAdvisorId]),
+  ]));
+  return city.officers
+    .map((id) => state.officers[id])
+    .filter((o): o is Officer =>
+      !!o
+      && o.faction === city.ruler
+      && String(o.status) === 'active'
+      && o.id !== rulerId
+      && !deployed.has(o.id),
+    )
+    .sort((a, b) => a.loyalty - b.loyalty || a.id - b.id);
+}
+
+export function listWatchFirePartners(state: GameState, factionA: number, casterFactionId: number) {
+  return Object.values(state.factions)
+    .filter((f) => f.isAlive && f.id !== factionA && f.id !== casterFactionId)
+    .filter((f) => {
+      const link = findDiplomacy(state.diplomacy, factionA, f.id);
+      return (link?.favorability ?? 0) >= WATCH_FIRE_MIN_FAVOR;
+    })
+    .sort((a, b) => a.id - b.id);
+}
+
+function relocateOfficer(
+  cities: GameState['cities'],
+  officers: GameState['officers'],
+  officerId: number,
+  toCityId: number,
+): { cities: GameState['cities']; officers: GameState['officers'] } {
+  const officer = officers[officerId];
+  if (!officer) return { cities, officers };
+  const fromId = officer.location;
+  let nextCities = { ...cities };
+  if (fromId != null && nextCities[fromId]) {
+    const from = nextCities[fromId]!;
+    nextCities[fromId] = {
+      ...from,
+      officers: from.officers.filter((id) => id !== officerId),
+    };
+  }
+  const to = nextCities[toCityId];
+  if (to && !to.officers.includes(officerId)) {
+    nextCities[toCityId] = { ...to, officers: [...to.officers, officerId] };
+  }
+  return {
+    cities: nextCities,
+    officers: { ...officers, [officerId]: { ...officer, location: toCityId } },
+  };
+}
+
+/** ACTIVE 结束/取消：原城仍属原势力则召回 */
+function recallLureTigerOfficer(
+  cities: GameState['cities'],
+  officers: GameState['officers'],
+  plot: Plot,
+): { cities: GameState['cities']; officers: GameState['officers'] } {
+  if (plot.targetOfficerId == null || plot.targetCityId == null || plot.targetFactionId == null) {
+    return { cities, officers };
+  }
+  const origin = cities[plot.targetCityId];
+  const officer = officers[plot.targetOfficerId];
+  if (!origin || !officer) return { cities, officers };
+  if (origin.ruler !== plot.targetFactionId) return { cities, officers };
+  if (officer.faction !== plot.targetFactionId) return { cities, officers };
+  if (officer.location === plot.targetCityId) return { cities, officers };
+  return relocateOfficer(cities, officers, officer.id, plot.targetCityId);
+}
+
+function idlePlotAgent(
+  intel: GameState['intel'],
+  plot: Plot,
+  cooldownMonths: number,
+): GameState['intel'] {
+  if (!plot.agentId || !intel?.agents?.[plot.agentId]) return intel;
+  const agent = intel.agents[plot.agentId];
+  if (agent.status === SpyStatus.CAPTIVE || agent.status === SpyStatus.DEAD) return intel;
+  return {
+    ...intel,
+    agents: {
+      ...intel.agents,
+      [plot.agentId]: {
+        ...agent,
+        status: SpyStatus.IDLE,
+        locationCityId: agent.homeCityId,
+        cooldownMonths,
+      },
+    },
+  };
 }
 
 function countActiveL2(plots: Plot[], factionId: number): number {
@@ -187,6 +465,22 @@ function plotTypeLabel(type: PlotType): string {
       return '暗渡陈仓';
     case PlotType.BLOSSOM:
       return '树上开花';
+    case PlotType.KILL_CHICKEN:
+      return '指桑骂槐';
+    case PlotType.STRIKE_WHILE_HOT:
+      return '趁火打劫';
+    case PlotType.LURE_TIGER:
+      return '调虎离山';
+    case PlotType.INSTIGATE:
+      return '借刀杀人';
+    case PlotType.POACH:
+      return '秘密挖角';
+    case PlotType.WATCH_FIRE:
+      return '隔岸观火';
+    case PlotType.SWAP_PILLAR:
+      return '偷梁换柱';
+    case PlotType.EDICT:
+      return '借尸还魂';
     default:
       return String(type);
   }
@@ -285,6 +579,15 @@ export function getPlotAttackModifier(
       !p.result?.detected
     ) {
       mod *= BLOSSOM_AI_ATTACK_MUL;
+    } else if (
+      p.type === PlotType.INSTIGATE &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === cityId &&
+      p.secondaryFactionId === attackerFactionId &&
+      p.result?.success === true &&
+      !p.result?.detected
+    ) {
+      mod *= INSTIGATE_AI_ATTACK_MUL;
     }
   }
   return mod;
@@ -319,6 +622,114 @@ export function isEmptyFortDeterring(state: GameState, cityId: number): boolean 
 }
 
 /**
+ * 目标势力当前同时与多少家其他势力处于战争（WAR）关系。
+ * 交战真源 = diplomacy links 的 relation==='war'（isHostileOrAtWar 口径）。
+ */
+export function countWarsForFaction(
+  state: GameState,
+  factionId: number,
+): number {
+  return (state.diplomacy ?? []).filter(
+    (l) =>
+      (l.factionA === factionId || l.factionB === factionId) &&
+      l.relation === DipRelation.WAR,
+  ).length;
+}
+
+/**
+ * 趁火打劫战场联动：施计方（attackerFactionId）对目标势力发起自动战时，
+ * 若存在成功的趁火打劫 RESOLVED 记录且目标当前仍同时与≥2家交战 → 首击伤害×1.2；
+ * 否则 1（目标已停战则效果自然消散，趁火打劫需"趁火"）。
+ */
+export function getStrikeWhileHotFirstHitMul(
+  state: GameState,
+  attackerFactionId: number,
+  targetFactionId: number,
+): number {
+  const hit = (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.STRIKE_WHILE_HOT &&
+      p.stage === PlotStage.RESOLVED &&
+      p.casterFactionId === attackerFactionId &&
+      p.targetFactionId === targetFactionId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+  if (!hit) return 1;
+  return countWarsForFaction(state, targetFactionId) >= STRIKE_WHILE_HOT_MIN_WARS
+    ? STRIKE_WHILE_HOT_FIRST_HIT_MUL
+    : 1;
+}
+
+/**
+ * 调虎离山战场联动：目标城 ACTIVE 且诱离成功 → 攻城 wallPenalty ×0.5。
+ */
+export function getLureTigerWallMul(state: GameState, cityId: number): number {
+  const hit = (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.LURE_TIGER &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === cityId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+  return hit ? LURE_TIGER_WALL_MUL : 1;
+}
+
+export function isInstigateForcedAttack(
+  state: GameState,
+  attackerFactionId: number,
+  targetCityId: number,
+): boolean {
+  return (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.INSTIGATE &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === targetCityId &&
+      p.secondaryFactionId === attackerFactionId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+}
+
+export function getSwapPillarLeadershipPenalty(state: GameState, cityId: number): number {
+  const hit = (state.plots ?? []).some(
+    (p) =>
+      p.type === PlotType.SWAP_PILLAR &&
+      p.stage === PlotStage.ACTIVE &&
+      p.targetCityId === cityId &&
+      p.result?.success === true &&
+      !p.result?.detected,
+  );
+  return hit ? SWAP_PILLAR_LEADERSHIP_PENALTY : 0;
+}
+
+function setDipWar(
+  diplomacy: GameState['diplomacy'],
+  a: number,
+  b: number,
+): GameState['diplomacy'] {
+  const existing = findDiplomacy(diplomacy, a, b);
+  if (!existing) {
+    return [
+      ...diplomacy,
+      { factionA: a, factionB: b, relation: DipRelation.WAR, favorability: -60 },
+    ];
+  }
+  return diplomacy.map((l) => {
+    const match =
+      (l.factionA === a && l.factionB === b) ||
+      (l.factionA === b && l.factionB === a);
+    if (!match) return l;
+    return {
+      ...l,
+      relation: DipRelation.WAR,
+      favorability: Math.min(l.favorability, -60),
+    };
+  });
+}
+
+/**
  * 发起计谋
  */
 export function launchPlot(
@@ -328,8 +739,10 @@ export function launchPlot(
     factionId?: number;
     targetFactionId?: number;
     targetCityId?: number;
-    /** 暗渡陈仓：明修城 */
+    /** 暗渡陈仓：明修城；借刀杀人：第三方源城 */
     feintCityId?: number;
+    /** 隔岸观火：第二势力；借刀杀人可省略（由源城派生） */
+    secondaryFactionId?: number;
     targetOfficerId?: number;
     agentId?: string;
     casterOfficerId?: number;
@@ -357,10 +770,12 @@ export function launchPlot(
   let targetFactionId: number | undefined = opts.targetFactionId;
   let targetCityId: number | undefined = opts.targetCityId;
   let feintCityId: number | undefined;
+  let secondaryFactionId: number | undefined = opts.secondaryFactionId;
   let prepMonths = PREP_MONTHS;
   let layer: Plot['layer'] = 'tactical';
   let installments: Plot['installments'];
   let progress: number | undefined;
+  let targetOfficerId = opts.targetOfficerId;
 
   if (type === PlotType.HONEY_TRAP) {
     cost = HONEY_TRAP_COST;
@@ -453,6 +868,159 @@ export function launchPlot(
       throw new Error(`${targetCity.name} 粮草不足（需 ${cost.food}）`);
     }
     targetFactionId = undefined;
+  } else if (type === PlotType.KILL_CHICKEN) {
+    cost = KILL_CHICKEN_COST;
+    layer = 'strategic';
+    prepMonths = 0;
+    const candidates = listKillChickenCandidates(state, fid);
+    if (candidates.length < KILL_CHICKEN_MIN_LOW) {
+      throw new Error(
+        `指桑骂槐需己方至少 ${KILL_CHICKEN_MIN_LOW} 名忠诚偏低（<${KILL_CHICKEN_LOYALTY_THRESHOLD}）的在职武将`,
+      );
+    }
+    if (opts.targetOfficerId != null) {
+      const chosen = candidates.find((o) => o.id === opts.targetOfficerId);
+      if (!chosen) {
+        throw new Error('儆猴目标须为己方忠诚偏低的在职武将');
+      }
+    }
+    targetFactionId = undefined;
+    targetCityId = undefined;
+  } else if (type === PlotType.STRIKE_WHILE_HOT) {
+    cost = STRIKE_WHILE_HOT_COST;
+    layer = 'strategic';
+    prepMonths = 0;
+    if (targetFactionId == null) throw new Error('趁火打劫需指定目标势力');
+    if (targetFactionId === fid) throw new Error('不能对自己施展趁火打劫');
+    const targetFac = state.factions[targetFactionId];
+    if (!targetFac?.isAlive) throw new Error('目标势力不存在或已灭亡');
+    if (countWarsForFaction(state, targetFactionId) < STRIKE_WHILE_HOT_MIN_WARS) {
+      throw new Error(
+        `趁火打劫需目标同时与≥${STRIKE_WHILE_HOT_MIN_WARS}家势力交战（当前 ${countWarsForFaction(state, targetFactionId)} 家）`,
+      );
+    }
+    targetCityId = undefined;
+  } else if (type === PlotType.LURE_TIGER) {
+    cost = LURE_TIGER_COST;
+    layer = 'strategic';
+    prepMonths = LURE_TIGER_INSTALLMENT_MONTHS;
+    progress = 0;
+    installments = {
+      goldPerMonth: LURE_TIGER_MONTHLY_GOLD,
+      months: LURE_TIGER_INSTALLMENT_MONTHS,
+      paidMonths: 0,
+    };
+    if (targetCityId == null) throw new Error('调虎离山需指定目标城');
+    const targetCity = state.cities[targetCityId];
+    if (!targetCity) throw new Error('目标城不存在');
+    if (targetCity.ruler == null) throw new Error('目标城无主');
+    if (targetCity.ruler === fid) throw new Error('调虎离山须针对敌城');
+    if (opts.agentId == null) throw new Error('调虎离山必须派遣女间谍');
+    const candidates = listLureTigerCandidates(state, targetCityId);
+    if (candidates.length === 0) {
+      throw new Error(`${targetCity.name} 无可诱离的守将（需在职非君主）`);
+    }
+    if (listLureTigerDestCities(state, targetCityId).length === 0) {
+      throw new Error(`${targetCity.name} 所属势力仅一座城，无法诱离`);
+    }
+    if (targetOfficerId != null) {
+      const chosen = candidates.find((o) => o.id === targetOfficerId);
+      if (!chosen) throw new Error('诱离目标须为该城在职非君主守将');
+    } else {
+      targetOfficerId = candidates[0]!.id;
+    }
+    targetFactionId = targetCity.ruler;
+  } else if (type === PlotType.INSTIGATE) {
+    cost = INSTIGATE_COST;
+    layer = 'strategic';
+    prepMonths = INSTIGATE_PREP_MONTHS;
+    progress = 0;
+    if (targetCityId == null) throw new Error('借刀杀人需指定目标城');
+    const targetCity = state.cities[targetCityId];
+    if (!targetCity) throw new Error('目标城不存在');
+    if (targetCity.ruler == null) throw new Error('目标城无主');
+    if (targetCity.ruler === fid) throw new Error('借刀杀人须针对敌城');
+    if (opts.agentId == null) throw new Error('借刀杀人必须派遣女间谍');
+    const sources = listInstigateSourceCities(state, targetCityId, fid);
+    if (sources.length === 0) {
+      throw new Error(`${targetCity.name} 无邻接第三方势力可煽动`);
+    }
+    if (opts.feintCityId == null) throw new Error('借刀杀人需指定第三方源城');
+    const source = sources.find((c) => c.id === opts.feintCityId);
+    if (!source) throw new Error('第三方源城须与目标城官道邻接且属第三方');
+    feintCityId = source.id;
+    secondaryFactionId = source.ruler!;
+    targetFactionId = targetCity.ruler;
+  } else if (type === PlotType.POACH) {
+    layer = 'strategic';
+    prepMonths = POACH_INSTALLMENT_MONTHS;
+    progress = 0;
+    installments = {
+      goldPerMonth: POACH_MONTHLY_GOLD,
+      months: POACH_INSTALLMENT_MONTHS,
+      paidMonths: 0,
+    };
+    if (targetCityId == null) throw new Error('秘密挖角需指定目标城');
+    const targetCity = state.cities[targetCityId];
+    if (!targetCity) throw new Error('目标城不存在');
+    if (targetCity.ruler == null) throw new Error('目标城无主');
+    if (targetCity.ruler === fid) throw new Error('秘密挖角须针对敌城');
+    const candidates = listPoachCandidates(state, targetCityId);
+    if (candidates.length === 0) {
+      throw new Error(`${targetCity.name} 无可挖角武将（需在职非君主且未出征）`);
+    }
+    if (targetOfficerId == null) throw new Error('秘密挖角必须指定目标武将');
+    const chosen = candidates.find((o) => o.id === targetOfficerId);
+    if (!chosen) throw new Error('挖角目标须为该城在职非君主且未出征');
+    cost = { gold: poachGoldCost(chosen), requiresIntel: 'detailed' };
+    targetFactionId = targetCity.ruler;
+  } else if (type === PlotType.WATCH_FIRE) {
+    cost = WATCH_FIRE_COST;
+    layer = 'strategic';
+    prepMonths = WATCH_FIRE_INSTALLMENT_MONTHS;
+    progress = 0;
+    installments = {
+      goldPerMonth: WATCH_FIRE_MONTHLY_GOLD,
+      months: WATCH_FIRE_INSTALLMENT_MONTHS,
+      paidMonths: 0,
+    };
+    if (targetFactionId == null || secondaryFactionId == null) {
+      throw new Error('隔岸观火需指定两家目标势力');
+    }
+    if (targetFactionId === fid || secondaryFactionId === fid) {
+      throw new Error('隔岸观火须针对两家其他势力');
+    }
+    if (targetFactionId === secondaryFactionId) throw new Error('隔岸观火两势力不可相同');
+    const fa = state.factions[targetFactionId];
+    const fb = state.factions[secondaryFactionId];
+    if (!fa?.isAlive || !fb?.isAlive) throw new Error('目标势力不存在或已灭亡');
+    const link = findDiplomacy(state.diplomacy, targetFactionId, secondaryFactionId);
+    if ((link?.favorability ?? 0) < WATCH_FIRE_MIN_FAVOR) {
+      throw new Error(`隔岸观火需两势力友好≥${WATCH_FIRE_MIN_FAVOR}（当前 ${link?.favorability ?? 0}）`);
+    }
+    targetCityId = undefined;
+  } else if (type === PlotType.SWAP_PILLAR) {
+    cost = SWAP_PILLAR_COST;
+    layer = 'strategic';
+    prepMonths = SWAP_PILLAR_PREP_MONTHS;
+    progress = 0;
+    if (targetCityId == null) throw new Error('偷梁换柱需指定目标城');
+    const targetCity = state.cities[targetCityId];
+    if (!targetCity) throw new Error('目标城不存在');
+    if (targetCity.ruler == null) throw new Error('目标城无主');
+    if (targetCity.ruler === fid) throw new Error('偷梁换柱须针对敌城');
+    if (opts.agentId == null) throw new Error('偷梁换柱须派遣密探作为反间');
+    targetFactionId = targetCity.ruler;
+  } else if (type === PlotType.EDICT) {
+    cost = EDICT_COST;
+    layer = 'strategic';
+    prepMonths = EDICT_PREP_MONTHS;
+    progress = 0;
+    if (targetFactionId == null) throw new Error('借尸还魂需指定目标势力');
+    if (targetFactionId === fid) throw new Error('不能对自己施展借尸还魂');
+    const targetFac = state.factions[targetFactionId];
+    if (!targetFac?.isAlive) throw new Error('目标势力不存在或已灭亡');
+    targetCityId = undefined;
   } else {
     throw new Error(`计谋类型 ${type} 暂未实现`);
   }
@@ -504,17 +1072,30 @@ export function launchPlot(
     }
   }
 
-  // 女间谍（仅美人计）
+  // 特工（美人计可选女间谍；调虎离山/借刀杀人必派女间谍；偷梁换柱任意密探=反间）
   if (opts.agentId) {
-    if (type !== PlotType.HONEY_TRAP) {
-      throw new Error('仅美人计可派女间谍');
+    const allowedAgent =
+      type === PlotType.HONEY_TRAP
+      || type === PlotType.LURE_TIGER
+      || type === PlotType.INSTIGATE
+      || type === PlotType.SWAP_PILLAR;
+    if (!allowedAgent) {
+      throw new Error('该计谋不可派遣特工');
     }
     const agent = state.intel?.agents?.[opts.agentId];
     if (!agent || agent.factionId !== fid) throw new Error('特工不存在');
-    if (agent.agentKind !== 'female') throw new Error('美人计仅可派女间谍');
-    if (agent.status !== 'idle' || agent.cooldownMonths > 0) {
+    if (type !== PlotType.SWAP_PILLAR && agent.agentKind !== 'female') {
+      throw new Error('须派遣女间谍');
+    }
+    if (agent.status !== SpyStatus.IDLE || agent.cooldownMonths > 0) {
       throw new Error('特工非空闲或冷却中');
     }
+  } else if (type === PlotType.LURE_TIGER) {
+    throw new Error('调虎离山必须派遣女间谍');
+  } else if (type === PlotType.INSTIGATE) {
+    throw new Error('借刀杀人必须派遣女间谍');
+  } else if (type === PlotType.SWAP_PILLAR) {
+    throw new Error('偷梁换柱须派遣密探作为反间');
   }
 
   if (type === PlotType.SOW_DISCORD && targetFactionId != null) {
@@ -538,6 +1119,120 @@ export function launchPlot(
   }
 
   const plotId = `plot-${fid}-${Math.floor(rng() * 0x1_0000_0000).toString(36)}-${plots.length + 1}`;
+
+  // —— L2 指桑骂槐：即时结算（无 PREP/ACTIVE） ——
+  if (type === PlotType.KILL_CHICKEN) {
+    const candidates = listKillChickenCandidates(state, fid);
+    let victim: Officer;
+    if (opts.targetOfficerId != null) {
+      victim = candidates.find((o) => o.id === opts.targetOfficerId)!;
+    } else {
+      victim = candidates[Math.floor(rng() * candidates.length)]!;
+    }
+
+    const rulerId = faction.rulerId;
+    let officers = { ...state.officers };
+    const beforeVictim = victim.loyalty;
+    officers[victim.id] = {
+      ...victim,
+      loyalty: Math.max(0, victim.loyalty - KILL_CHICKEN_VICTIM_DROP),
+    };
+
+    const boosted: Array<{ name: string; delta: number }> = [];
+    const others = Object.values(state.officers)
+      .filter(
+        (o) =>
+          o.faction === fid &&
+          String(o.status) === 'active' &&
+          o.id !== rulerId &&
+          o.id !== victim.id,
+      )
+      .sort((a, b) => a.id - b.id);
+    for (const o of others) {
+      const delta =
+        KILL_CHICKEN_BOOST_MIN +
+        Math.floor(
+          rng() * (KILL_CHICKEN_BOOST_MAX - KILL_CHICKEN_BOOST_MIN + 1),
+        );
+      const nextLoyalty = Math.min(100, o.loyalty + delta);
+      const applied = nextLoyalty - o.loyalty;
+      officers[o.id] = { ...o, loyalty: nextLoyalty };
+      if (applied > 0) boosted.push({ name: o.name, delta: applied });
+    }
+
+    const message = `指桑骂槐成功：儆 ${victim.name} 忠诚 ${beforeVictim}→${officers[victim.id]!.loyalty}（−${KILL_CHICKEN_VICTIM_DROP}）；其余 ${boosted.length} 将忠诚+${KILL_CHICKEN_BOOST_MIN}~${KILL_CHICKEN_BOOST_MAX}`;
+    const newPlot: Plot = {
+      id: plotId,
+      type,
+      casterFactionId: fid,
+      casterOfficerId: opts.casterOfficerId ?? resolveCasterOfficer(state, fid),
+      targetOfficerId: victim.id,
+      stage: PlotStage.RESOLVED,
+      monthsLeft: 0,
+      cost,
+      result: { success: true, detected: false, message },
+      year: state.currentYear,
+      month: state.currentMonth,
+      layer: 'strategic',
+    };
+
+    let nextState = pushLog(
+      state,
+      'plot_launch',
+      `${faction.name} 发起指桑骂槐（即时，耗 ${cost.gold}金）`,
+      { cities, factions, intel, officers, plots: [...plots, newPlot] },
+    );
+    nextState = pushLog(nextState, 'plot_resolve', message);
+    if (newPlot.casterOfficerId != null) {
+      nextState = grantMeritTo(
+        nextState,
+        newPlot.casterOfficerId,
+        MERIT_PLOT_SUCCESS,
+      );
+    }
+    return nextState;
+  }
+
+  // —— L2 趁火打劫：即时结算（无 PREP/ACTIVE；效果 = 对该势力自动战首击×1.2） ——
+  if (type === PlotType.STRIKE_WHILE_HOT) {
+    const targetFac = state.factions[targetFactionId!];
+    const wars = countWarsForFaction(state, targetFactionId!);
+    const newPlot: Plot = {
+      id: plotId,
+      type,
+      casterFactionId: fid,
+      casterOfficerId: opts.casterOfficerId ?? resolveCasterOfficer(state, fid),
+      targetFactionId,
+      stage: PlotStage.RESOLVED,
+      monthsLeft: 0,
+      cost,
+      result: {
+        success: true,
+        detected: false,
+        message: `趁火打劫成功：${targetFac?.name ?? '目标'}正同时与 ${wars} 家交战，可趁乱首击（伤害×${STRIKE_WHILE_HOT_FIRST_HIT_MUL}）`,
+      },
+      year: state.currentYear,
+      month: state.currentMonth,
+      layer: 'strategic',
+    };
+
+    let nextState = pushLog(
+      state,
+      'plot_launch',
+      `${faction.name} 发起趁火打劫（即时，耗 ${cost.gold}金）`,
+      { cities, factions, intel, plots: [...plots, newPlot] },
+    );
+    nextState = pushLog(nextState, 'plot_resolve', newPlot.result!.message);
+    if (newPlot.casterOfficerId != null) {
+      nextState = grantMeritTo(
+        nextState,
+        newPlot.casterOfficerId,
+        MERIT_PLOT_SUCCESS,
+      );
+    }
+    return nextState;
+  }
+
   const newPlot: Plot = {
     id: plotId,
     type,
@@ -546,7 +1241,8 @@ export function launchPlot(
     targetFactionId,
     targetCityId,
     feintCityId,
-    targetOfficerId: opts.targetOfficerId,
+    secondaryFactionId,
+    targetOfficerId,
     agentId: opts.agentId,
     stage: PlotStage.PREP,
     monthsLeft: prepMonths,
@@ -632,8 +1328,72 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
         }
       }
 
+      if (plot.type === PlotType.WATCH_FIRE && plot.result?.success && plot.targetFactionId != null && plot.secondaryFactionId != null) {
+        const drop = 8 + Math.floor(rng() * 8);
+        diplomacy = upsertDipFavor(
+          { ...s, diplomacy, cities, officers, factions, intel },
+          plot.targetFactionId,
+          plot.secondaryFactionId,
+          -drop,
+        );
+        const link = findDiplomacy(diplomacy, plot.targetFactionId, plot.secondaryFactionId);
+        const aName = factions[plot.targetFactionId]?.name ?? '甲';
+        const bName = factions[plot.secondaryFactionId]?.name ?? '乙';
+        messages.push(
+          `${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：隔岸观火 ${aName}↔${bName} 友好−${drop}（现 ${link?.favorability ?? 0}）`,
+        );
+        if (link?.relation === DipRelation.WAR || (link?.favorability ?? 0) <= -60) {
+          diplomacy = setDipWar(diplomacy, plot.targetFactionId, plot.secondaryFactionId);
+          nextPlots.push({
+            ...plot,
+            monthsLeft: 0,
+            stage: PlotStage.RESOLVED,
+            result: {
+              success: true,
+              detected: false,
+              message: `隔岸观火：${aName} 与 ${bName} 爆发战争`,
+            },
+          });
+          messages.push(`${aName} 与 ${bName} 因隔岸观火开战`);
+          continue;
+        }
+      }
+
+      if (plot.type === PlotType.EDICT && plot.result?.success && plot.targetFactionId != null) {
+        const targetFid = plot.targetFactionId;
+        for (const city of Object.values(cities)) {
+          if (city.ruler !== targetFid) continue;
+          cities = {
+            ...cities,
+            [city.id]: {
+              ...city,
+              stats: {
+                ...city.stats,
+                morale: Math.max(0, city.stats.morale - EDICT_MORALE_DROP),
+              },
+            },
+          };
+        }
+        for (const o of Object.values(officers)) {
+          if (o.faction !== targetFid || String(o.status) !== 'active') continue;
+          if (o.id === factions[targetFid]?.rulerId) continue;
+          officers = {
+            ...officers,
+            [o.id]: { ...o, loyalty: Math.max(0, o.loyalty - EDICT_LOYALTY_DROP) },
+          };
+        }
+        messages.push(
+          `${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：借尸还魂耗蚀 ${factions[targetFid]?.name ?? '目标'}（民心−${EDICT_MORALE_DROP}、将忠−${EDICT_LOYALTY_DROP}）`,
+        );
+      }
+
       const left = plot.monthsLeft - 1;
       if (left <= 0) {
+        if (plot.type === PlotType.LURE_TIGER && plot.result?.success) {
+          const recalled = recallLureTigerOfficer(cities, officers, plot);
+          cities = recalled.cities;
+          officers = recalled.officers;
+        }
         nextPlots.push({
           ...plot,
           monthsLeft: 0,
@@ -653,10 +1413,17 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
     }
 
     // PREP：L2 分期逐月扣金并推进进度
-    if (plot.type === PlotType.UNDERMINE && plot.installments) {
+    if (
+      (plot.type === PlotType.UNDERMINE
+        || plot.type === PlotType.LURE_TIGER
+        || plot.type === PlotType.POACH
+        || plot.type === PlotType.WATCH_FIRE)
+      && plot.installments
+    ) {
       const monthly = plot.installments.goldPerMonth;
       const paid = payFactionGold(cities, plot.casterFactionId, monthly);
       if (!paid) {
+        intel = idlePlotAgent(intel, plot, 0);
         nextPlots.push({
           ...plot,
           monthsLeft: 0,
@@ -665,11 +1432,11 @@ export function tickPlotsMonth(state: GameState, rng: () => number): GameState {
           result: {
             success: false,
             detected: false,
-            message: `釜底抽薪因金不足中止（已投 ${plot.installments.paidMonths} 期）`,
+            message: `${plotTypeLabel(plot.type)}因金不足中止（已投 ${plot.installments.paidMonths} 期）`,
           },
         });
         messages.push(
-          `${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：釜底抽薪因金不足中止`,
+          `${factions[plot.casterFactionId]?.name ?? `势力${plot.casterFactionId}`}：${plotTypeLabel(plot.type)}因金不足中止`,
         );
         continue;
       }
@@ -829,6 +1596,12 @@ function resolvePlot(
       const depth = getIntelDepth({ ...state, intel }, plot.targetCityId);
       if (depth === 'detailed') successChance += 10;
     }
+    if (plot.type === PlotType.EDICT && !controlsEmperor(state, fid)) {
+      detectChance += EDICT_FORGE_DETECT_BONUS;
+    }
+    if (plot.type === PlotType.EDICT && controlsEmperor(state, fid)) {
+      successChance += 10;
+    }
   } else {
     if (hasFemaleSpy) {
       successChance += 20;
@@ -869,6 +1642,7 @@ function resolvePlot(
   let message = '';
   let nextDiplomacy = diplomacy;
   let nextOfficers = officers;
+  let nextCities = cities;
   let nextIntel = intel;
   let inverted = false;
   let enterActive = false;
@@ -951,6 +1725,180 @@ function resolvePlot(
       message = `树上开花被识破（${cityName}）`;
     } else {
       message = `树上开花失败（${cityName}）`;
+    }
+  }
+  // —— L2 调虎离山 ——
+  else if (plot.type === PlotType.LURE_TIGER) {
+    const dests = listLureTigerDestCities({ ...state, cities: nextCities, officers: nextOfficers }, plot.targetCityId!);
+    const tigerId = plot.targetOfficerId;
+    const tiger = tigerId != null ? nextOfficers[tigerId] : undefined;
+    const stillInCity =
+      tiger != null
+      && plot.targetCityId != null
+      && (tiger.location === plot.targetCityId
+        || nextCities[plot.targetCityId]?.officers.includes(tiger.id));
+    if (success && !detected && tiger && stillInCity && dests.length > 0) {
+      const dest = dests[Math.floor(rng() * dests.length)]!;
+      const moved = relocateOfficer(nextCities, nextOfficers, tiger.id, dest.id);
+      nextCities = moved.cities;
+      nextOfficers = moved.officers;
+      enterActive = true;
+      activeMonths = LURE_TIGER_EFFECT_MONTHS;
+      message = `调虎离山成功：${tiger.name} 被诱往 ${dest.name}，${cityName} 城防减半（${LURE_TIGER_EFFECT_MONTHS} 月）`;
+    } else if (detected) {
+      message = `调虎离山被识破（对 ${cityName}）`;
+    } else if (!stillInCity) {
+      message = `调虎离山失败：目标已不在 ${cityName}`;
+    } else if (dests.length === 0) {
+      message = `调虎离山失败：${cityName} 已无他城可诱往`;
+    } else {
+      message = `调虎离山失败（${cityName}）`;
+    }
+  }
+  // —— L2 借刀杀人 ——
+  else if (plot.type === PlotType.INSTIGATE) {
+    const thirdName =
+      plot.secondaryFactionId != null
+        ? factions[plot.secondaryFactionId]?.name ?? '第三方'
+        : '第三方';
+    const sourceName =
+      plot.feintCityId != null ? cities[plot.feintCityId]?.name ?? '源城' : '源城';
+    if (success && !detected && plot.secondaryFactionId != null && plot.targetFactionId != null) {
+      nextDiplomacy = setDipWar(nextDiplomacy, plot.secondaryFactionId, plot.targetFactionId);
+      enterActive = true;
+      activeMonths = INSTIGATE_EFFECT_MONTHS;
+      message = `借刀杀人成功：煽动 ${thirdName} 自 ${sourceName} 攻 ${cityName}（宣战，${INSTIGATE_EFFECT_MONTHS} 月内必攻）`;
+    } else if (detected) {
+      message = `借刀杀人被识破（对 ${cityName}）`;
+    } else {
+      message = `借刀杀人失败（${cityName}）`;
+    }
+  }
+  // —— L2 秘密挖角 ——
+  else if (plot.type === PlotType.POACH) {
+    const victim = plot.targetOfficerId != null ? nextOfficers[plot.targetOfficerId] : undefined;
+    const home = Object.values(nextCities).find((c) => c.ruler === fid && c.isCapital)
+      ?? Object.values(nextCities).find((c) => c.ruler === fid);
+    const stillThere =
+      victim != null
+      && plot.targetCityId != null
+      && victim.faction === plot.targetFactionId
+      && (victim.location === plot.targetCityId || nextCities[plot.targetCityId]?.officers.includes(victim.id));
+    if (success && !detected && victim && stillThere && home) {
+      const fromCity = plot.targetCityId != null ? nextCities[plot.targetCityId] : undefined;
+      const take = fromCity
+        ? Math.min(POACH_TROOP_TAKE_MAX, Math.floor(fromCity.troops * 0.1))
+        : 0;
+      if (fromCity && take > 0) {
+        nextCities = {
+          ...nextCities,
+          [fromCity.id]: { ...fromCity, troops: fromCity.troops - take },
+        };
+      }
+      const dest = nextCities[home.id]!;
+      nextCities = {
+        ...nextCities,
+        [home.id]: { ...dest, troops: dest.troops + take, officers: dest.officers.includes(victim.id) ? dest.officers : [...dest.officers, victim.id] },
+      };
+      if (plot.targetCityId != null && nextCities[plot.targetCityId]) {
+        const origin = nextCities[plot.targetCityId]!;
+        nextCities = {
+          ...nextCities,
+          [origin.id]: { ...origin, officers: origin.officers.filter((id) => id !== victim.id) },
+        };
+      }
+      nextOfficers = {
+        ...nextOfficers,
+        [victim.id]: {
+          ...victim,
+          faction: fid,
+          location: home.id,
+          loyalty: 60,
+        },
+      };
+      message = `秘密挖角成功：${victim.name} 投奔，带走 ${take} 兵入 ${home.name}`;
+    } else if (detected) {
+      message = `秘密挖角被识破（${victim?.name ?? cityName}）`;
+    } else {
+      message = `秘密挖角失败（${victim?.name ?? cityName}）`;
+    }
+  }
+  // —— L2 隔岸观火 ——
+  else if (plot.type === PlotType.WATCH_FIRE) {
+    const aName = plot.targetFactionId != null ? factions[plot.targetFactionId]?.name ?? '甲' : '甲';
+    const bName = plot.secondaryFactionId != null ? factions[plot.secondaryFactionId]?.name ?? '乙' : '乙';
+    if (success && !detected) {
+      enterActive = true;
+      activeMonths = WATCH_FIRE_MAX_ACTIVE_MONTHS;
+      message = `隔岸观火成功：开始离间 ${aName} 与 ${bName}`;
+    } else if (detected) {
+      message = `隔岸观火被识破（${aName}/${bName}）`;
+    } else {
+      message = `隔岸观火失败（${aName}/${bName}）`;
+    }
+  }
+  // —— L2 偷梁换柱 ——
+  else if (plot.type === PlotType.SWAP_PILLAR) {
+    const city = plot.targetCityId != null ? nextCities[plot.targetCityId] : undefined;
+    const rulerId = city?.ruler != null ? factions[city.ruler]?.rulerId : undefined;
+    const inCity = (city?.officers ?? [])
+      .map((id) => nextOfficers[id])
+      .filter((o): o is Officer =>
+        !!o && o.faction === city?.ruler && String(o.status) === 'active' && o.id !== rulerId,
+      )
+      .sort((a, b) => b.stats.leadership - a.stats.leadership || a.id - b.id);
+    const others = city?.ruler != null
+      ? Object.values(nextCities).filter((c) => c.ruler === city.ruler && c.id !== city.id)
+      : [];
+    let weak: Officer | undefined;
+    let weakCityId: number | undefined;
+    for (const oc of others.sort((a, b) => a.id - b.id)) {
+      const pool = oc.officers
+        .map((id) => nextOfficers[id])
+        .filter((o): o is Officer =>
+          !!o && o.faction === oc.ruler && String(o.status) === 'active' && o.id !== rulerId,
+        )
+        .sort((a, b) => a.stats.leadership - b.stats.leadership || a.id - b.id);
+      if (pool[0]) {
+        weak = pool[0];
+        weakCityId = oc.id;
+        break;
+      }
+    }
+    const ace = inCity[0];
+    if (success && !detected && ace && city) {
+      if (weak && weakCityId != null) {
+        const movedAce = relocateOfficer(nextCities, nextOfficers, ace.id, weakCityId);
+        const movedWeak = relocateOfficer(movedAce.cities, movedAce.officers, weak.id, city.id);
+        nextCities = movedWeak.cities;
+        nextOfficers = movedWeak.officers;
+        message = `偷梁换柱成功：${ace.name} 调离 ${cityName}，${weak.name} 上位（统率−${SWAP_PILLAR_LEADERSHIP_PENALTY}，${SWAP_PILLAR_EFFECT_MONTHS} 月）`;
+      } else {
+        message = `偷梁换柱成功：${cityName} 守军统率−${SWAP_PILLAR_LEADERSHIP_PENALTY}（${SWAP_PILLAR_EFFECT_MONTHS} 月；无他城可对调）`;
+      }
+      enterActive = true;
+      activeMonths = SWAP_PILLAR_EFFECT_MONTHS;
+    } else if (detected) {
+      message = `偷梁换柱被识破（对 ${cityName}）`;
+    } else {
+      message = `偷梁换柱失败（${cityName}）`;
+    }
+  }
+  // —— L2 借尸还魂 ——
+  else if (plot.type === PlotType.EDICT) {
+    const hasEmperor = controlsEmperor(state, fid);
+    if (success && !detected) {
+      enterActive = true;
+      activeMonths = EDICT_EFFECT_MONTHS;
+      message = hasEmperor
+        ? `借尸还魂成功：以天子名义诋毁 ${targetFacName}（民心月降−${EDICT_MORALE_DROP}，${EDICT_EFFECT_MONTHS} 月）`
+        : `借尸还魂成功：伪造诏令诋毁 ${targetFacName}（民心月降−${EDICT_MORALE_DROP}，${EDICT_EFFECT_MONTHS} 月）`;
+    } else if (detected) {
+      message = hasEmperor
+        ? `借尸还魂被识破（对 ${targetFacName}）`
+        : `伪造诏令被揭穿（对 ${targetFacName}）`;
+    } else {
+      message = `借尸还魂失败（${targetFacName}）`;
     }
   }
   // —— 美人计 / 离间（即时结算） ——
@@ -1091,7 +2039,7 @@ function resolvePlot(
   }
 
   return {
-    cities,
+    cities: nextCities,
     officers: nextOfficers,
     diplomacy: nextDiplomacy,
     factions,
@@ -1121,6 +2069,14 @@ export function cancelPlot(state: GameState, plotId: string, factionId?: number)
   if (plot.stage === PlotStage.RESOLVED) throw new Error('计谋已结束');
 
   const nextPlots = [...plots];
+  let nextCities = state.cities;
+  let nextOfficers = state.officers;
+  let nextIntel = idlePlotAgent(state.intel, plot, 0);
+  if (plot.type === PlotType.LURE_TIGER && plot.stage === PlotStage.ACTIVE && plot.result?.success) {
+    const recalled = recallLureTigerOfficer(nextCities, nextOfficers, plot);
+    nextCities = recalled.cities;
+    nextOfficers = recalled.officers;
+  }
   nextPlots[idx] = {
     ...plot,
     monthsLeft: 0,
@@ -1136,6 +2092,6 @@ export function cancelPlot(state: GameState, plotId: string, factionId?: number)
     state,
     'plot_cancel',
     `${state.factions[fid]?.name ?? `势力${fid}`} 提前终止${plotTypeLabel(plot.type)}`,
-    { plots: nextPlots },
+    { plots: nextPlots, cities: nextCities, officers: nextOfficers, intel: nextIntel },
   );
 }

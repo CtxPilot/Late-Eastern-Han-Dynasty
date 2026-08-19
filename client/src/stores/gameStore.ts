@@ -104,12 +104,16 @@ interface Store {
       targetFactionId?: number;
       targetCityId?: number;
       feintCityId?: number;
+      secondaryFactionId?: number;
       targetOfficerId?: number;
       agentId?: string;
     },
   ) => Promise<void>;
   cancelPlot: (plotId: string) => Promise<void>;
   setCivilianFarming: (cityId: number, households: number) => Promise<void>;
+  setMilitaryFarming: (cityId: number, enabled: boolean) => Promise<void>;
+  relocateGarrisonFamilies: (fromCityId: number, toCityId: number) => Promise<void>;
+  setNationalPolicy: (type: string, targetCityId?: number) => Promise<void>;
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
   establishHegemony: () => Promise<void>;
@@ -558,6 +562,36 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '民屯已调整' });
     } catch (e) {
       set({ error: errMsg(e, '民屯调整失败'), loading: false });
+    }
+  },
+
+  setMilitaryFarming: async (cityId, enabled) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.setMilitaryFarming(cityId, enabled);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '军屯已调整' });
+    } catch (e) {
+      set({ error: errMsg(e, '军屯调整失败'), loading: false });
+    }
+  },
+
+  relocateGarrisonFamilies: async (fromCityId, toCityId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.relocateGarrisonFamilies(fromCityId, toCityId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '家属已迁移' });
+    } catch (e) {
+      set({ error: errMsg(e, '迁家属失败'), loading: false });
+    }
+  },
+
+  setNationalPolicy: async (type, targetCityId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.setNationalPolicy(type, targetCityId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '国策已改' });
+    } catch (e) {
+      set({ error: errMsg(e, '国策切换失败'), loading: false });
     }
   },
 

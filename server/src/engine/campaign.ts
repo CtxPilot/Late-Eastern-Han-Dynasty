@@ -33,6 +33,17 @@ import {
   meritStatBonus,
   resolveFormationContribution,
   UnitType,
+  PolicyType,
+  POLICY_PREPARE_FIRST_ROUND_MUL,
+  POLICY_PREPARE_INCOMING_MUL,
+  POLICY_SCORCHED_FOOD_COST_MUL,
+  POLICY_STRIKE_WEAK_HIT_MUL,
+  POLICY_STRIKE_WEAK_OTHER_MUL,
+  FAMILY_CAPTURE_MORALE_HIT,
+  citiesShockedByFamilyCapture,
+  factionHasActivePolicy,
+  isScorchedCity,
+  weakestHostileCityId,
   type AutoBattleResult,
   type CampaignArmy,
   type CampaignFormationOptions,
@@ -58,7 +69,7 @@ import {
   pickDefenderCommander,
 } from './militaryMerit.js';
 import { applyCapturedRelations, applyJointExpeditionRelations } from './relations.js';
-import { getUndermineArmyModifiers, getSecretCrossingBattleMul } from './plot.js';
+import { getUndermineArmyModifiers, getSecretCrossingBattleMul, getStrikeWhileHotFirstHitMul, getLureTigerWallMul, getSwapPillarLeadershipPenalty } from './plot.js';
 
 // 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
 const MERIT_SIEGE_SURRENDER = 30;
@@ -500,6 +511,7 @@ export function tickCampaignMarch(state: GameState): GameState {
 
     const nextNodeId = a.path[0];
     const restPath = a.path.slice(1);
+    const targetCity = state.cities[nextNodeId];
 
     // 补给消耗
     const terrainMul = 1.0; // 0-A 简化：平原
@@ -507,9 +519,16 @@ export function tickCampaignMarch(state: GameState): GameState {
       a.fromNodeId != null
         ? (getUndermineArmyModifiers(state, a.fromNodeId)?.foodCostMul ?? 1)
         : 1;
+    const scorchedMul =
+      targetCity &&
+      isScorchedCity(state, nextNodeId) &&
+      targetCity.ruler != null &&
+      targetCity.ruler !== a.factionId
+        ? POLICY_SCORCHED_FOOD_COST_MUL
+        : 1;
     const foodCost = Math.max(
       1,
-      Math.floor((a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul * undermineMul),
+      Math.floor((a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul * undermineMul * scorchedMul),
     );
     let food = a.food - foodCost;
     let morale = a.morale - MARCH_MORALE_DECAY;
@@ -538,7 +557,6 @@ export function tickCampaignMarch(state: GameState): GameState {
         other.phase !== 'retreating',
     );
     // 目标节点为敌方城 → 围城
-    const targetCity = state.cities[nextNodeId];
     const isEnemyCity =
       targetCity &&
       targetCity.ruler != null &&
@@ -798,6 +816,7 @@ export function runAutoBattle(
       : 0;
     defTroopsInitial = defCity.garrison + militia;
     wallPenalty = Math.min(0.4, defCity.wall / 1000 * 0.4) || 0.3;
+    wallPenalty *= getLureTigerWallMul(state, defCity.cityId);
     // 攻城器械：从 Army structures 取已完工最高级
     const built = atkArmy.structures.filter((s) => s.buildProgress >= 1);
     if (built.some((s) => s.type === 'catapult')) siegeEquipBonus = 0.5;
@@ -811,6 +830,13 @@ export function runAutoBattle(
         .filter((o): o is Officer => !!o && o.faction === city.ruler && o.status === OfficerStatus.ACTIVE);
       candidates.sort((a, b) => b.stats.war - a.stats.war);
       defCmd = candidates[0];
+      const leadPen = getSwapPillarLeadershipPenalty(state, defCity.cityId);
+      if (defCmd && leadPen > 0) {
+        defCmd = {
+          ...defCmd,
+          stats: { ...defCmd.stats, leadership: Math.max(1, defCmd.stats.leadership - leadPen) },
+        };
+      }
     }
   } else {
     // 无防守方：默认攻方胜
@@ -863,6 +889,17 @@ export function runAutoBattle(
       ? getSecretCrossingBattleMul(state, atkArmy.factionId, secretTargetId)
       : 1;
 
+  // L2 趁火打劫：目标势力仍多线交战时，首击伤害 ×1.2（docs/04 §31.5）
+  const defenderFactionId = defArmy
+    ? defArmy.factionId
+    : defCity
+      ? (state.cities[defCity.cityId]?.ruler ?? null)
+      : null;
+  const strikeWhileHotMul =
+    defenderFactionId != null
+      ? getStrikeWhileHotFirstHitMul(state, atkArmy.factionId, defenderFactionId)
+      : 1;
+
   // FM-P3：自动战斗阵型战力修正（每回合按当回合组织度求值；守城无 Army 时无阵型贡献，
   // 城墙惩罚/wallPenalty 已表达守势，不虚拟守方阵型）
   const atkFormMod = (org: number) => autoFormationMods(atkArmy.formation, org, atkArmy.squads);
@@ -898,6 +935,20 @@ export function runAutoBattle(
       description: `暗渡陈仓：攻防×${secretCrossingMul}`,
     });
   }
+  if (defCity && getLureTigerWallMul(state, defCity.cityId) < 1) {
+    events.push({
+      round: 0,
+      type: 'stratagem',
+      description: `调虎离山：城防减半`,
+    });
+  }
+  if (defCity && getSwapPillarLeadershipPenalty(state, defCity.cityId) > 0) {
+    events.push({
+      round: 0,
+      type: 'stratagem',
+      description: `偷梁换柱：守将统率−${getSwapPillarLeadershipPenalty(state, defCity.cityId)}`,
+    });
+  }
 
   // §17.3 模拟回合数
   const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul;
@@ -917,8 +968,44 @@ export function runAutoBattle(
     const ratio = atkP / Math.max(1, defP);
     const atkLossRatio = 0.05 + Math.max(0, (1 / ratio - 1)) * 0.1;
     const defLossRatio = 0.05 + Math.max(0, (ratio - 1)) * 0.1;
-    const atkLoss = Math.floor(atkTroops * Math.min(0.4, atkLossRatio));
-    const defLoss = Math.floor(defTroops * Math.min(0.4, defLossRatio));
+    let atkLoss = Math.floor(atkTroops * Math.min(0.4, atkLossRatio));
+    let defLoss = Math.floor(defTroops * Math.min(0.4, defLossRatio));
+    // L2 趁火打劫：首击伤害 ×1.2（仅第一回合，目标仍多线交战才生效）
+    if (r === 1 && strikeWhileHotMul > 1) {
+      defLoss = Math.floor(defLoss * strikeWhileHotMul);
+      events.push({
+        round: 1,
+        type: 'stratagem',
+        description: `趁火打劫：首击伤害×${strikeWhileHotMul}`,
+      });
+    }
+    if (r === 1) {
+      const atkPrep = factionHasActivePolicy(state, atkArmy.factionId, PolicyType.PREPARE_DEFENSE);
+      const defPrep =
+        defenderFactionId != null &&
+        factionHasActivePolicy(state, defenderFactionId, PolicyType.PREPARE_DEFENSE);
+      if (atkPrep) {
+        defLoss = Math.floor(defLoss * POLICY_PREPARE_FIRST_ROUND_MUL);
+        atkLoss = Math.floor(atkLoss * POLICY_PREPARE_INCOMING_MUL);
+        events.push({ round: 1, type: 'stratagem', description: '以逸待劳：首回合攻防+10%' });
+      }
+      if (defPrep) {
+        atkLoss = Math.floor(atkLoss * POLICY_PREPARE_FIRST_ROUND_MUL);
+        defLoss = Math.floor(defLoss * POLICY_PREPARE_INCOMING_MUL);
+        events.push({ round: 1, type: 'stratagem', description: '守方以逸待劳：首回合攻防+10%' });
+      }
+      if (factionHasActivePolicy(state, atkArmy.factionId, PolicyType.STRIKE_WEAK)) {
+        const weakId = weakestHostileCityId(state, atkArmy.factionId);
+        const targetId = defCity?.cityId ?? null;
+        if (targetId != null && weakId === targetId) {
+          defLoss = Math.floor(defLoss * POLICY_STRIKE_WEAK_HIT_MUL);
+          events.push({ round: 1, type: 'stratagem', description: '避实击虚：对该城伤害+15%' });
+        } else {
+          defLoss = Math.floor(defLoss * POLICY_STRIKE_WEAK_OTHER_MUL);
+          events.push({ round: 1, type: 'stratagem', description: '避实击虚：非弱点方向伤害−10%' });
+        }
+      }
+    }
     atkTroops = Math.max(0, atkTroops - atkLoss);
     defTroops = Math.max(0, defTroops - defLoss);
 
@@ -1303,6 +1390,8 @@ function applyBattleResultToState(
     const target = cities[targetId];
     if (target) {
       const prevRuler = target.ruler;
+      const familyShockIds =
+        prevRuler != null ? citiesShockedByFamilyCapture(state, targetId, prevRuler) : [];
       // 敌方同城武将 → 在野
       const freedIds: number[] = [];
       for (const oid of target.officers) {
@@ -1339,6 +1428,14 @@ function applyBattleResultToState(
         gold: Math.max(0, target.gold - result.spoils.gold),
         food: Math.max(0, target.food - result.spoils.food),
       };
+      for (const shockedId of familyShockIds) {
+        const shocked = cities[shockedId];
+        if (!shocked || shocked.ruler !== prevRuler) continue;
+        cities[shockedId] = {
+          ...shocked,
+          troopsMorale: Math.max(0, (shocked.troopsMorale ?? 70) - FAMILY_CAPTURE_MORALE_HIT),
+        };
+      }
       // 从出发城移除已迁入的武将
       if (army.fromNodeId != null && cities[army.fromNodeId]) {
         const from = cities[army.fromNodeId];
@@ -1364,7 +1461,9 @@ function applyBattleResultToState(
       after = syncFactionResources(after);
       const msg = resolution.type === 'siege_surrender'
         ? `${target.name} 开城投降！${army.name} 占领`
-        : `${army.name} 攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}`;
+        : `${army.name} 攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}${
+            familyShockIds.length > 0 ? `；家属所在城失陷，${familyShockIds.length} 城士气−${FAMILY_CAPTURE_MORALE_HIT}` : ''
+          }`;
       return sealCaptures(pushLog(after, 'campaign_capture', msg));
     }
   }

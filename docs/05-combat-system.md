@@ -1001,6 +1001,16 @@ interface Officer {
 
 #### 5.8.1 军屯田
 
+> ✅ **Session 345 已实装（0-A 口径）**：民屯田（Session 339）同域的独立开关，City 字段
+> `militaryFarming` / `militaryFarmingAssignQuarter`；引擎入口 `setMilitaryFarming`（server/src/engine/civil.ts），
+> 月结产粮与季度士气扣减在 turn.ts；客户端屯田域（FarmingOverviewDrawer）开关 + 终审。
+> 验证：`pnpm verify-military-farming`（引擎 11 项）+ `pnpm verify-s345-military-farming-ui`
+> （真实浏览器 19 项，需先起 dev server :3001 / vite :5173 / Chrome CDP 9242）。
+> 0-A 差异：训练无经验概念 → 「训练效果减半」以训练指令士气增益 ×0.5 代理；
+> 「组织度 −2/季」City 无组织度字段，延后至 0-B Army 层实装（季度仅扣 troopsMorale −3）。
+> 前置检查已实装完整版：兵力>0 + 城市未被 sieging/assaulting 围攻 + 无己方非 garrison
+> 军队驻留本城（campaignArmies）。
+
 驻军在非战时可选屯田自给，与训练并行（训练效果减半）。
 
 **机制**：
@@ -1041,12 +1051,14 @@ interface Officer {
 
 **质任制（曹魏政策）——迁移家属**：
 ```
-操作: 行政指令"迁家属"（每城每季限1次）
+操作: 行政指令"迁家属"（每城每季限1次）· Session 348 屯田抽屉
 消耗: 金500
 效果: 将该城全部士兵家属迁往指定后方城市（通常是首都）
-       city.garrisonFamilies → 目标城
-意义: 前线部队士气稳定，但首都若陷落则全国崩盘
+       city.garrisonFamilies → 目标城；familyBackupCityId 指向后方
+意义: 前线部队士气稳定，但后方/治所若陷落则相关城士气-40（治所质任=全国）
 ```
+
+**Session 348 实装边界**：征兵时 `garrisonFamilies += min(兵×2, 非男成人口)`；迁家属金500/季锁；占城默认按**中立**施加士气-40。善待/镇压选项、哀兵+10、流言/四面楚歌/将忠-50% 后置。
 
 **家属所在城市被攻占时的效果**：
 
@@ -3751,7 +3763,7 @@ Army 到达敌方城市/关隘节点时进入围城。
   调虎离山（诱敌）：0.85（被诱方）
   暗渡陈仓（偷袭）：1.2（奇袭方）— **Session 341 已接入自动战攻防×1.2**（对暗渡城）
   借刀杀人：0.9（目标方）
-  趁火打劫：1.15（趁乱方）
+  趁火打劫：1.15（趁乱方）— **Session 344 实装采用 docs/04 §31.5 口径：自动战首回合 defLoss ×1.2（首击伤害+20%），非整场攻防**；本系数表 1.15 为设计示例，未接入
   树上开花：不入自动战公式 — **Session 342 已接入 AI 层**（AI 对目标城攻击权重×0.4，见 docs/04 §31.5）
   （未标注 Session 的为设计示例，未接入运行时）
 
@@ -3764,6 +3776,8 @@ Army 到达敌方城市/关隘节点时进入围城。
   
   wallPenalty（城墙）：
     大城 -0.3 | 关隘 -0.4 | 无城墙 0
+    **Session 346 调虎离山**：目标城 ACTIVE 诱离成功时，自动战 `wallPenalty ×0.5`（城防减半）
+    **Session 347 偷梁换柱**：目标城 ACTIVE 时守将统率−10（自动战战报）
 
 七、总战力
   finalPower = basePower × commandMod × statusMod × envMod × stratagemMod × siegeMod

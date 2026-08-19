@@ -354,6 +354,46 @@ export enum PlotType {
   SECRET_CROSSING = 'secretCrossing',
   /** L2 树上开花 — 金150+粮100；己方城；ACTIVE 期对敌显示兵力×2~3、AI 攻击权重×0.4 */
   BLOSSOM = 'blossom',
+  /**
+   * L2 指桑骂槐 — 金100；己方忠诚偏低武将≥2；即时结算：
+   * 扣一人忠诚（杀鸡儆猴），其余在职将忠诚+5~8
+   */
+  KILL_CHICKEN = 'killChicken',
+  /**
+   * L2 趁火打劫 — 金150；目标势力同时与≥2家交战；即时 RESOLVED：
+   * 施计方对目标势力的下一场自动战首击伤害+20%（docs/04 §31.5）
+   */
+  STRIKE_WHILE_HOT = 'strikeWhileHot',
+  /**
+   * L2 调虎离山 — 金200 + 50/月×2；敌城 detailed + 女间谍；
+   * PREP 完投后诱离守将至同势力他城，ACTIVE 期内攻该城城防减半
+   */
+  LURE_TIGER = 'lureTiger',
+  /**
+   * L2 借刀杀人 — 金300 + 女间谍；敌城 detailed + 邻接第三方城；
+   * PREP 2 月后宣战并煽动第三方对该城出征
+   */
+  INSTIGATE = 'instigate',
+  /**
+   * L2 秘密挖角 — 金100~500（按统率）+ 50/月×2；敌将 detailed；
+   * 成功则武将带部分守军投奔施计方
+   */
+  POACH = 'poach',
+  /**
+   * L2 隔岸观火 — 金400 + 80/月×3；两势力友好≥40；
+   * ACTIVE 期持续削友好，降至敌对则爆发战争
+   */
+  WATCH_FIRE = 'watchFire',
+  /**
+   * L2 偷梁换柱 — 金300；敌城 detailed + 密探反间；
+   * 良将被调走、弱将上位，守军统率−10
+   */
+  SWAP_PILLAR = 'swapPillar',
+  /**
+   * L2 借尸还魂 — 金300；目标势力；PREP 1→ACTIVE 4；
+   * 有献帝则诋毁民心/忠诚，无献帝伪造识破风险升高
+   */
+  EDICT = 'edict',
 }
 
 /** 计谋阶段 */
@@ -361,6 +401,26 @@ export enum PlotStage {
   PREP = 'prep',
   ACTIVE = 'active',
   RESOLVED = 'resolved',
+}
+
+/** L3 国策态势（docs/04 §31.6）；一次一策，切换冷却 6 月 */
+export enum PolicyType {
+  /** 以逸待劳 — 首回合攻防+10% */
+  PREPARE_DEFENSE = 'prepareDefense',
+  /** 远交近攻 — 远势力友好+3/月，邻接−3/月 */
+  BEFRIEND_FAR = 'befriendFarFightNear',
+  /** 假痴不癫 — 对敌显示兵力×0.5 */
+  PLAY_FOOL = 'playFool',
+  /** 反客为主 — 驻盟友城获金粮 5%/季，友好−2/月 */
+  GUEST_HOST = 'guestHost',
+  /** 高筑墙广积粮 — 城防建设+30%、粮产+15%、征兵−20% */
+  HIGH_WALLS = 'highWallsGrain',
+  /** 避实击虚 — 最弱敌城伤害+15%，其余方向−10% */
+  STRIKE_WEAK = 'strikeWeak',
+  /** 坚壁清野 — 指定边境城焦土 */
+  SCORCHED_EARTH = 'scorchedEarth',
+  /** 深藏不露 — 己城情报模糊，己方视野−1 */
+  HIDE_STRENGTH = 'hideStrength',
 }
 
 export type FactionId = number;

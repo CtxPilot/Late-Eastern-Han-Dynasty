@@ -107,25 +107,54 @@ describe('strategy launch validation', () => {
 
   it('accepts each of the four authoritative plot prerequisites', () => {
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.HONEY_TRAP, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: 'a',
+      type: PlotType.HONEY_TRAP, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: 'a', targetOfficerId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null, targetOfficerId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
+      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.EMPTY_FORT, targetCityId: 1, feintCityId: null, targetFactionId: null, agentId: null,
+      type: PlotType.EMPTY_FORT, targetCityId: 1, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
     })).toBeNull();
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.UNDERMINE, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
+      type: PlotType.UNDERMINE, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
     })).toBeNull();
+  });
+
+  it('accepts strikeWhileHot only when target is at war with ≥2 factions', () => {
+    const atWarWithTwo = {
+      ...baseGame,
+      diplomacy: [
+        { factionA: 2, factionB: 3, relation: 'war' },
+        { factionA: 2, factionB: 4, relation: 'war' },
+      ],
+      factions: {
+        ...baseGame.factions,
+        4: { id: 4, name: '袁术军', isAlive: true },
+      },
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(atWarWithTwo, {
+      type: PlotType.STRIKE_WHILE_HOT, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null, targetOfficerId: null,
+    })).toBeNull();
+
+    const atWarWithOne = {
+      ...atWarWithTwo,
+      diplomacy: [{ factionA: 2, factionB: 3, relation: 'war' }],
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(atWarWithOne, {
+      type: PlotType.STRIKE_WHILE_HOT, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null, targetOfficerId: null,
+    })).toContain('交战');
+
+    expect(validateStrategyLaunch(atWarWithTwo, {
+      type: PlotType.STRIKE_WHILE_HOT, targetCityId: null, feintCityId: null, targetFactionId: 3, agentId: null, targetOfficerId: null,
+    })).toContain('交战');
   });
 
   it('rejects alliance, stale intel/agent and the active plot cap', () => {
     expect(validateStrategyLaunch(baseGame, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 3, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 3, agentId: null, targetOfficerId: null,
     })).toContain('盟友');
 
     const staleIntel = {
@@ -133,7 +162,7 @@ describe('strategy launch validation', () => {
       intel: { ...baseGame.intel, cities: {} },
     } as unknown as GameState;
     expect(validateStrategyLaunch(staleIntel, {
-      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null,
+      type: PlotType.FALSE_INTEL, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
     })).toContain('detailed');
 
     const capped = {
@@ -145,7 +174,87 @@ describe('strategy launch validation', () => {
       })),
     } as unknown as GameState;
     expect(validateStrategyLaunch(capped, {
-      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null,
+      type: PlotType.SOW_DISCORD, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null, targetOfficerId: null,
     })).toContain('上限');
+  });
+
+  it('accepts killChicken when ≥2 low-loyalty officers and gold available', () => {
+    const game = {
+      ...baseGame,
+      factions: {
+        ...baseGame.factions,
+        1: { ...baseGame.factions[1], rulerId: 1 },
+      },
+      officers: {
+        1: { id: 1, name: '曹操', faction: 1, status: 'active', loyalty: 100 },
+        2: { id: 2, name: '夏侯惇', faction: 1, status: 'active', loyalty: 55 },
+        3: { id: 3, name: '许褚', faction: 1, status: 'active', loyalty: 60 },
+      },
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.KILL_CHICKEN, targetCityId: null, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
+    })).toBeNull();
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.KILL_CHICKEN, targetCityId: null, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: 2,
+    })).toBeNull();
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.KILL_CHICKEN, targetCityId: null, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: 1,
+    })).toContain('儆猴目标');
+  });
+
+  it('accepts lureTiger only with detailed intel, female spy, lureable officer and a dest city', () => {
+    const game = {
+      ...baseGame,
+      cities: {
+        ...baseGame.cities,
+        2: { ...baseGame.cities[2], officers: [20] },
+        4: { id: 4, name: '许昌', ruler: 2, gold: 100, food: 200, troops: 2000, officers: [] },
+      },
+      factions: {
+        ...baseGame.factions,
+        2: { ...baseGame.factions[2], rulerId: 10 },
+      },
+      officers: {
+        10: { id: 10, name: '刘备', faction: 2, status: 'active', loyalty: 100, stats: { war: 80 } },
+        20: { id: 20, name: '关羽', faction: 2, status: 'active', loyalty: 90, stats: { war: 97 } },
+      },
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.LURE_TIGER, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: 'a', targetOfficerId: 20,
+    })).toBeNull();
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.LURE_TIGER, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: null, targetOfficerId: null,
+    })).toContain('女间谍');
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.LURE_TIGER, targetCityId: 2, feintCityId: null, targetFactionId: null, agentId: 'a', targetOfficerId: 10,
+    })).toContain('诱离目标');
+  });
+
+  it('accepts watchFire when two other factions have favor ≥40', () => {
+    const game = {
+      ...baseGame,
+      diplomacy: [
+        { factionA: 2, factionB: 3, relation: 'friendly', favorability: 50 },
+      ],
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.WATCH_FIRE, targetCityId: null, feintCityId: null, targetFactionId: 2, secondaryFactionId: 3, agentId: null, targetOfficerId: null,
+    })).toBeNull();
+    expect(validateStrategyLaunch(game, {
+      type: PlotType.WATCH_FIRE, targetCityId: null, feintCityId: null, targetFactionId: 2, secondaryFactionId: 3, agentId: null, targetOfficerId: null,
+    })).toBeNull();
+    const cold = {
+      ...game,
+      diplomacy: [{ factionA: 2, factionB: 3, relation: 'neutral', favorability: 10 }],
+    } as unknown as GameState;
+    expect(validateStrategyLaunch(cold, {
+      type: PlotType.WATCH_FIRE, targetCityId: null, feintCityId: null, targetFactionId: 2, secondaryFactionId: 3, agentId: null, targetOfficerId: null,
+    })).toContain('友好');
+  });
+
+  it('accepts edict against another living faction', () => {
+    expect(validateStrategyLaunch(baseGame, {
+      type: PlotType.EDICT, targetCityId: null, feintCityId: null, targetFactionId: 2, agentId: null, targetOfficerId: null,
+    })).toBeNull();
   });
 });
