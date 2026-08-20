@@ -30,6 +30,11 @@ const prepared: GameState = {
       faction: base.playerFactionId,
       location: sourceCity.id,
       status: OfficerStatus.ACTIVE,
+      // 预算脚本验证项目成本与基础收益；显式移除技能加成，避免把
+      // S25-S27 的运行时效率消费误判成成本回归。
+      skills: [],
+      merit: 0,
+      meritPath: 'neutral',
     },
   },
 };

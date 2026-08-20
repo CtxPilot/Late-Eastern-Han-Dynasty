@@ -28,6 +28,8 @@ import {
   familiesGainedOnConscript,
   FAMILY_RELOCATE_GOLD,
   quarterKey,
+  DEVELOPMENT_PROJECT_CONFIG,
+  developmentInitialGoldCost,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
@@ -45,14 +47,8 @@ const MERIT_CONSCRIPT = 3;
 const MERIT_RELIEF = 3;
 const MERIT_TRAIN = 3;
 
-export const DEVELOPMENT_PROJECTS: Record<
-  DevelopKind,
-  { totalGoldCost: number; label: string; stat: DevelopKind; totalMonths: number; gain: number }
-> = {
-  farm: { totalGoldCost: 300, label: '农业', stat: 'farm', totalMonths: 9, gain: 100 },
-  commerce: { totalGoldCost: 400, label: '商业', stat: 'commerce', totalMonths: 6, gain: 100 },
-  wall: { totalGoldCost: 500, label: '城防', stat: 'wall', totalMonths: 12, gain: 100 },
-};
+/** 兼容既有服务端专项脚本；数值真源已下沉至 shared/civil-development.ts。 */
+export const DEVELOPMENT_PROJECTS = DEVELOPMENT_PROJECT_CONFIG;
 
 function requirePlayerCity(state: GameState, cityId: number): City {
   const city = state.cities[cityId];
@@ -98,7 +94,7 @@ export function developCity(
     throw new Error('指派武将不在本城或不属己方');
   }
   if (officer.status !== 'active') throw new Error('指派武将当前不可执行内政');
-  const initialCost = Math.ceil(conf.totalGoldCost / 3);
+  const initialCost = developmentInitialGoldCost(kind);
   if (city.gold < initialCost) throw new Error('金钱不足');
   const project: DevelopmentProject = {
     kind,
@@ -210,7 +206,7 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
       meritLevelFor(assignee.merit ?? 0),
       assignee.meritPath ?? 'neutral',
     ).developBonus;
-    const skillBonus = developSkillBonus(assignee, project.kind);
+    const skillBonus = project.kind === 'culture' ? 0 : developSkillBonus(assignee, project.kind);
     const totalBonus = developBonus + skillBonus;
     if (totalBonus > 0) gain = Math.floor(conf.gain * (1 + totalBonus));
   }
@@ -234,7 +230,10 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
     city: {
       ...city,
       gold: city.gold - installment,
-      stats: { ...city.stats, [conf.stat]: Math.min(999, city.stats[conf.stat] + gain) },
+      stats: {
+        ...city.stats,
+        [conf.stat]: Math.min(999, (city.stats[conf.stat] ?? 0) + gain),
+      },
       activeDevelopment: undefined,
       ...(cityFactions ? { cityFactions } : {}),
     },

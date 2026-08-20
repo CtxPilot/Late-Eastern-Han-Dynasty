@@ -67,6 +67,14 @@ describe('formation-core', () => {
     expect(avail.map((a) => a.formationId)).toEqual([0, 1, 2, 3, 4, 6]);
   });
 
+  it('被协同包围时只保留方阵', () => {
+    const avail = getAvailableFormations({ catalog, mastered: [0, 1, 2, 3, 4, 6], isSurrounded: true });
+    const byId = Object.fromEntries(avail.map((a) => [a.formationId, a]));
+    expect(byId[0].available).toBe(true);
+    expect(byId[1].available).toBe(false);
+    expect(byId[1].blockReason).toBe('surrounded');
+  });
+
   it('resolveFormationContribution 读 tiers[0] 与 effects 暴击链', () => {
     const c = resolveFormationContribution(catalog, 1, 75);
     expect(c.attack).toBe(1);

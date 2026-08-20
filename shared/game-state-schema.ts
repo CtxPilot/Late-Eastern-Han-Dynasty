@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { Season } from './enums/index.js';
 import type { GameAction, GameState } from './types/game.js';
+import { PendingFamilyTreatmentSchema } from './hostage-families.js';
 
 const EventSourceClassSchema = z.enum([
   'official_history',
@@ -43,6 +44,7 @@ export const GameStateTimelineSchema: z.ZodType<
     | 'invalidatedEvents'
     | 'eventChoices'
     | 'actionLog'
+    | 'pendingFamilyTreatment'
   >
 > = z
   .object({
@@ -58,6 +60,7 @@ export const GameStateTimelineSchema: z.ZodType<
     invalidatedEvents: z.array(z.number().int().positive()),
     eventChoices: z.record(z.coerce.number().int().positive(), z.number().int().nonnegative()),
     actionLog: z.array(GameActionSchema),
+    pendingFamilyTreatment: PendingFamilyTreatmentSchema.nullable().optional(),
   })
   .strict()
   .superRefine((timeline, ctx) => {

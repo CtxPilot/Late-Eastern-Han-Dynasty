@@ -19,6 +19,7 @@ const ROOT_KEYS = [
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
+  'pendingFamilyTreatment',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {
@@ -58,7 +59,7 @@ export const GameStateSchema = z
   .superRefine((unknownState, ctx) => {
     const state = unknownState as GameState;
     const sliceResults = [
-      GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog'])),
+      GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog', 'pendingFamilyTreatment'])),
       GameStateEntitiesSchema.safeParse(pickState(state, ['officers', 'cities', 'factions', 'females'])),
       GameStateCampaignSchema.safeParse(pickState(state, ['armys', 'campaignArmies', 'campaignNodes', 'grandStrategists'])),
       GameStateBattleSchema.safeParse(pickState(state, ['activeBattles', 'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance'])),
@@ -120,6 +121,12 @@ export const GameStateSchema = z
       if (city.ruler != null && state.factions[city.ruler] && !state.factions[city.ruler].cityIds.includes(city.id)) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: [...base, 'ruler'], message: '城市归属与势力城市清单不一致' });
       }
+      if (city.familyTreatment) {
+        requireRef(factionIds.has(city.familyTreatment.previousFactionId), [...base, 'familyTreatment', 'previousFactionId'], '家属处置旧主势力不存在', ctx);
+        city.familyTreatment.affectedCityIds.forEach((id, index) => {
+          requireRef(cityIds.has(id), [...base, 'familyTreatment', 'affectedCityIds', index], '家属处置影响城市不存在', ctx);
+        });
+      }
       city.officers.forEach((id, index) => {
         requireRef(officerIds.has(id), [...base, 'officers', index], '城市引用的武将不存在', ctx);
         if (state.officers[id]?.location !== city.id) {
@@ -130,6 +137,15 @@ export const GameStateSchema = z
         requireRef(cityIds.has(city.familyBackupCityId), [...base, 'familyBackupCityId'], '质任后方城不存在', ctx);
       }
     });
+
+    if (state.pendingFamilyTreatment) {
+      const pending = state.pendingFamilyTreatment;
+      requireRef(cityIds.has(pending.cityId), ['pendingFamilyTreatment', 'cityId'], '待决家属处置城市不存在', ctx);
+      requireRef(factionIds.has(pending.previousFactionId), ['pendingFamilyTreatment', 'previousFactionId'], '待决家属处置旧主势力不存在', ctx);
+      pending.affectedCityIds.forEach((id, index) => {
+        requireRef(cityIds.has(id), ['pendingFamilyTreatment', 'affectedCityIds', index], '待决家属处置影响城市不存在', ctx);
+      });
+    }
 
     Object.values(state.officers).forEach((officer) => {
       const base = ['officers', officer.id] as (string | number)[];

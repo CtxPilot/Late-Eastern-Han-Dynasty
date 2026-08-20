@@ -59,6 +59,10 @@
     "formation-core.ts",
     "military-farming.ts",
     "national-policy.ts",
-    "hostage-families.ts"
+    "hostage-families.ts",
+    "weather-skill.ts",
+    "special-unit-proficiency.ts",
+    "hex-positioning.ts",
+    "civil-development.ts"
   ]
 }

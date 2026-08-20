@@ -4,6 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import { OfficerStatus, type GameState } from '@leh/shared';
 import {
+  buildFamilyGenealogy,
   buildFamilyOverview,
   validateFollowCheck,
   validateMarriageDraft,
@@ -77,6 +78,16 @@ describe('family read-only overview model', () => {
       wives: [{ name: '甄氏', canCommand: false }],
       children: [{ childName: '曹叡', status: '待登场' }],
     });
+    expect(overview.genealogy).toEqual([{
+      childId: 950,
+      childName: '曹叡',
+      birthYear: 204,
+      appearYear: 220,
+      source: 'history',
+      father: { id: 2, name: '曹丕' },
+      mother: { id: 201, name: '甄氏' },
+      status: '待登场',
+    }]);
     expect(overview.marriageFemales).toEqual([{ id: 202, name: '蔡琰' }]);
     expect(overview.marriageOfficers).toEqual([{ id: 1, name: '曹操' }]);
     expect(overview.freeOfficers[0]).toMatchObject({
@@ -85,6 +96,30 @@ describe('family read-only overview model', () => {
       hasTrigger: true,
     });
     expect(JSON.stringify(overview)).not.toContain('敌女');
+  });
+
+  it('keeps the genealogy projection scenario-scoped and does not leak enemy branches', () => {
+    const game = {
+      currentYear: 220,
+      playerFactionId: 1,
+      enabledChildEventIds: [950, 951],
+      females: {
+        201: { id: 201, name: '甄氏', factionId: 1, locationId: 1 },
+        202: { id: 202, name: '敌女', factionId: 2, locationId: 2 },
+      },
+      officers: {
+        1: { id: 1, name: '曹操', faction: 1 },
+        2: { id: 2, name: '曹丕', faction: 1 },
+        9: { id: 9, name: '敌将', faction: 2 },
+      },
+    } as unknown as GameState;
+    const children: FamilyChildEntry[] = [
+      { childId: 950, childName: '曹叡', fatherId: 2, motherId: 201, birthYear: 204, appearYear: 220, source: 'history' },
+      { childId: 951, childName: '敌将子', fatherId: 9, motherId: 202, birthYear: 205, appearYear: 221, source: 'history' },
+      { childId: 952, childName: '未启用子', fatherId: 2, motherId: 201, birthYear: 206, appearYear: 222, source: 'history' },
+    ];
+
+    expect(buildFamilyGenealogy(game, children).map((entry) => entry.childName)).toEqual(['曹叡']);
   });
 
   it('revalidates marriage and manual follow drafts against the latest state', () => {

@@ -6,7 +6,7 @@ import {
   battleEnemyPhase, battleFinishPlayer, battleMove, battleMoveRange, battleUndo, battlefieldExit, battlefieldInit, campaignStart, createGame, exitBattle, startBattle,
   getBattle, getBattlefield, getGame, getMelee, meleeExit, meleeRound, meleeSelectMode, meleeStart, startMarch,
 } from '../services/game.js';
-import { attackUnit, finishPlayerAction, moveUnit, runEnemyPhase, skipBattleDuel, undoLastBattleAction } from '../engine/battle.js';
+import { attackUnit, finishPlayerAction, getMoveRange, moveUnit, runEnemyPhase, skipBattleDuel, undoLastBattleAction } from '../engine/battle.js';
 
 let passed = 0;
 let failed = 0;
@@ -274,6 +274,25 @@ let fogRangedRejected = false;
 try { attackUnit(fogRanged, rangedAttacker.id, rangedDefender.id, getGame(), () => { throw new Error('雾天远程攻击不应消费 RNG'); }); }
 catch (error) { fogRangedRejected = error instanceof Error && error.message.includes('雾天远程兵种不可射击'); }
 check('玩家普通远程攻击与雾天禁射门禁一致', fogRangedRejected);
+
+const retreatedAttackerSnapshot = {
+  ...rangedReady,
+  units: rangedReady.units.map((unit) => unit.id === rangedAttacker.id ? { ...unit, isRetreated: true } : unit),
+};
+check('撤退单位不再获得六角移动范围', getMoveRange(retreatedAttackerSnapshot, rangedAttacker.id).length === 0);
+let retreatedAttackerRejected = false;
+try { attackUnit(retreatedAttackerSnapshot, rangedAttacker.id, rangedDefender.id, getGame(), () => { throw new Error('撤退单位不应消费 RNG'); }); }
+catch (error) { retreatedAttackerRejected = error instanceof Error && error.message === '部队已溃'; }
+check('撤退单位不能再次发起普通攻击', retreatedAttackerRejected);
+
+const retreatedDefenderSnapshot = {
+  ...rangedReady,
+  units: rangedReady.units.map((unit) => unit.id === rangedDefender.id ? { ...unit, isRetreated: true } : unit),
+};
+let retreatedDefenderRejected = false;
+try { attackUnit(retreatedDefenderSnapshot, rangedAttacker.id, rangedDefender.id, getGame(), () => { throw new Error('撤退目标不应消费 RNG'); }); }
+catch (error) { retreatedDefenderRejected = error instanceof Error && error.message === '目标已溃'; }
+check('普通攻击不能把已撤退部队当作目标', retreatedDefenderRejected);
 exitBattle();
 
 // Tier I / Tier II：使用真实 service 流程，并仅在测试准备阶段注入一支敌军，

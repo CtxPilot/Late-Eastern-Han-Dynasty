@@ -34,6 +34,7 @@ describe('civil read-only overview model', () => {
         farm: 40,
         commerce: 35,
         wall: 30,
+        culture: 0,
         morale: 70,
         adultMale: 300,
       }),
@@ -53,6 +54,7 @@ describe('civil read-only overview model', () => {
     expect(validateCivilOrder(game, 1, 'farm')).toBeNull();
     expect(validateCivilOrder(game, 1, 'commerce')).toBeNull();
     expect(validateCivilOrder(game, 1, 'wall')).toBeNull();
+    expect(validateCivilOrder(game, 1, 'culture')).toBeNull();
     expect(validateCivilOrder(game, 1, 'relief')).toBeNull();
     expect(validateCivilOrder({
       ...game,

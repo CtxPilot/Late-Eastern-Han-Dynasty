@@ -19,6 +19,16 @@ import type {
 import type { OfficerStats } from './common.js';
 import type { Equipment } from './item.js';
 
+/** 兵种使用/战法熟练记录（Session 350 proficiency 威力真源） */
+export interface UnitUsageRecord {
+  unitType: UnitType;
+  battlesUsed: number;
+  breakpointsHit: number;
+  bestFormationMatches: number;
+  /** proficiency 战法施放次数（含失手；扣气即计） */
+  abilityUses: number;
+}
+
 export interface CeilingBonus {
   attribute: CeilingAttribute;
   hiddenBonus: number;
@@ -115,4 +125,9 @@ export interface Officer extends OfficerStatic {
   traitPointsSpent?: number;
   /** 妾/姬列表（女性实体引用，数量不定） */
   consortIds?: { id: number; rank: 'concubine' | 'ji' }[];
+  /**
+   * 特殊兵种 / proficiency 战法使用次数（Session 350）。
+   * optional：旧档缺省按 0 次起算；不升 schema 版本。
+   */
+  unitUsageRecords?: UnitUsageRecord[];
 }

@@ -77,9 +77,14 @@
     "verify-l2-lure-tiger": "tsx src/scripts/verify-l2-lure-tiger.ts",
     "verify-l2-remaining": "tsx src/scripts/verify-l2-remaining.ts",
     "verify-civilian-farming": "tsx src/scripts/verify-civilian-farming.ts",
+    "verify-culture-development": "tsx src/scripts/verify-culture-development.ts",
     "verify-military-farming": "tsx src/scripts/verify-military-farming.ts",
     "verify-l3-policy": "tsx src/scripts/verify-l3-policy.ts",
     "verify-hostage-families": "tsx src/scripts/verify-hostage-families.ts",
+    "verify-family-treatment": "tsx src/scripts/verify-family-treatment.ts",
+    "verify-weather-skill": "tsx src/scripts/verify-weather-skill.ts",
+    "verify-special-proficiency": "tsx src/scripts/verify-special-proficiency.ts",
+    "verify-tactical-retreat": "tsx src/scripts/verify-tactical-retreat.ts",
     "verify-save-slots": "tsx src/scripts/verify-save-slots.ts"
   },
   "dependencies": {

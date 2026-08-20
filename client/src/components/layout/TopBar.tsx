@@ -60,6 +60,8 @@ export function TopBar() {
   if (!game) return null;
 
   const hasPendingEvent = (game.pendingEvents?.length ?? 0) > 0;
+  const hasPendingFamilyTreatment = game.pendingFamilyTreatment != null;
+  const hasBlockingDecision = hasPendingEvent || hasPendingFamilyTreatment;
   const faction = game.factions[game.playerFactionId];
   const { gold, food, troops, cityCount } = getFactionResourceTotals(
     game,
@@ -167,11 +169,11 @@ export function TopBar() {
           type="button"
           data-testid="btn-end-turn"
           className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-amber-100 text-sm hover:bg-amber-800 disabled:opacity-50"
-          disabled={loading || hasPendingEvent}
-          title={hasPendingEvent ? '请先处理待决事件' : undefined}
+          disabled={loading || hasBlockingDecision}
+          title={hasPendingEvent ? '请先处理待决事件' : hasPendingFamilyTreatment ? '请先处理家属处置' : undefined}
           onClick={() => void endTurn()}
         >
-          {hasPendingEvent ? '待决事件…' : '结束回合'}
+          {hasPendingEvent ? '待决事件…' : hasPendingFamilyTreatment ? '待处置家属…' : '结束回合'}
         </button>
       )}
     </header>

@@ -56,3 +56,7 @@ export * from './civilian-farming.js';
 export * from './military-farming.js';
 export * from './national-policy.js';
 export * from './hostage-families.js';
+export * from './weather-skill.js';
+export * from './special-unit-proficiency.js';
+export * from './hex-positioning.js';
+export * from './civil-development.js';

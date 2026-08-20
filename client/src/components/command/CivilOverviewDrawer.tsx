@@ -2,7 +2,14 @@
 // Copyright (c) 2026 CtxPilot
 
 import { useEffect, useMemo, useState } from 'react';
-import type { City, DevelopmentProject, GameState } from '@leh/shared';
+import {
+  DEVELOPMENT_PROJECT_CONFIG,
+  developmentInitialGoldCost,
+  type City,
+  type DevelopmentProject,
+  type DevelopmentProjectKind,
+  type GameState,
+} from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import { getAnnualBudget, type AnnualBudget } from '../../services/api';
@@ -18,6 +25,7 @@ export type CivilCitySummary = {
   farm: number;
   commerce: number;
   wall: number;
+  culture: number;
   morale: number;
   adultMale: number;
   adultFemale: number;
@@ -45,6 +53,7 @@ function toSummary(city: City): CivilCitySummary {
     farm: city.stats.farm,
     commerce: city.stats.commerce,
     wall: city.stats.wall,
+    culture: city.stats.culture ?? 0,
     morale: city.stats.morale,
     adultMale: city.demographics.adultMale,
     adultFemale: city.demographics.adultFemale,
@@ -55,16 +64,26 @@ function toSummary(city: City): CivilCitySummary {
 }
 
 type CivilFacet = 'overview' | 'industry' | 'construction' | 'relief' | 'faction';
-export type CivilOrder = 'farm' | 'commerce' | 'wall' | 'relief' | 'reclaim' | 'patrol';
+export type CivilOrder = DevelopmentProjectKind | 'relief' | 'reclaim' | 'patrol';
+
+function projectOrder(kind: DevelopmentProjectKind, label: string, summary: string) {
+  const config = DEVELOPMENT_PROJECT_CONFIG[kind];
+  return {
+    label,
+    cost: `首付${developmentInitialGoldCost(kind)}金 / 总计${config.totalGoldCost}金`,
+    summary,
+  };
+}
 
 const ORDER_CONFIG: Record<CivilOrder, {
   label: string;
   cost: string;
   summary: string;
 }> = {
-  farm: { label: '开发农业', cost: '首付100金 / 总计300金', summary: '持续9个月；完成后农业+100。' },
-  commerce: { label: '开发商业', cost: '首付134金 / 总计400金', summary: '持续6个月；完成后商业+100。' },
-  wall: { label: '开发城防', cost: '首付167金 / 总计500金', summary: '持续12个月；完成后城防+100。' },
+  farm: projectOrder('farm', '开发农业', '持续9个月；完成后农业+100。'),
+  commerce: projectOrder('commerce', '开发商业', '持续6个月；完成后商业+100。'),
+  wall: projectOrder('wall', '开发城防', '持续12个月；完成后城防+100。'),
+  culture: projectOrder('culture', '发展文化', '持续6个月；完成后文化+60。技术研发与人才吸引消费后置。'),
   relief: { label: '施米安民', cost: '150粮', summary: '民心由权威随机流提升8～12，上限100。' },
   reclaim: { label: '开垦荒地', cost: '50金', summary: '耗金50；智≥60武将执行：farm+20~40，流民满意度+8~15，世家−10~20。' },
   patrol: { label: '巡查缉捕', cost: '30金', summary: '耗金30；武≥60武将执行：商贾满意度+5~10，小势力−8~15，本月免叛乱判定。' },
@@ -87,7 +106,7 @@ export function validateCivilOrder(
     return city.gold < 30 ? `城市金不足（需30，当前${city.gold}）。` : null;
   }
   if (city.activeDevelopment) return `该城已有${city.activeDevelopment.kind}持续项目。`;
-  const goldCost = order === 'wall' ? 167 : order === 'commerce' ? 134 : 100;
+  const goldCost = developmentInitialGoldCost(order);
   return city.gold < goldCost ? `城市金不足（需${goldCost}，当前${city.gold}）。` : null;
 }
 
@@ -198,7 +217,9 @@ export function CivilOverviewDrawer() {
             <Fact label="民心" value={city.morale} />
             {city.activeDevelopment ? (
               <div className="border border-amber-900/70 bg-amber-950/10 px-3 py-2" data-testid="civil-active-project">
-                <strong className="text-amber-200">持续项目 · {city.activeDevelopment.kind}</strong>
+                <strong className="text-amber-200">
+                  持续项目 · {DEVELOPMENT_PROJECT_CONFIG[city.activeDevelopment.kind]?.label ?? city.activeDevelopment.kind}
+                </strong>
                 <p className="text-[10px] text-stone-400">
                   {city.activeDevelopment.status === 'paused' ? '暂停' : '推进中'}
                   {' · '}剩余{city.activeDevelopment.remainingMonths}个月
@@ -253,9 +274,11 @@ export function CivilOverviewDrawer() {
           <>
             <Fact label="农业开发" value={city.farm} testId="command-civil-value-farm" />
             <Fact label="商业开发" value={city.commerce} testId="command-civil-value-commerce" />
+            <Fact label="文化积累" value={city.culture} testId="command-civil-value-culture" />
             <div className="grid grid-cols-2 gap-2">
               <CivilButton order="farm" onClick={() => setDraft('farm')} />
               <CivilButton order="commerce" onClick={() => setDraft('commerce')} />
+              <CivilButton order="culture" onClick={() => setDraft('culture')} />
             </div>
             <label className="block text-[10px] text-stone-500">
               指派武将
@@ -271,7 +294,8 @@ export function CivilOverviewDrawer() {
               </select>
             </label>
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
-              手工业、交通与卫生尚未实装；农业开发不等同于屯田（民屯请用命令坞「屯田」）。
+              工艺、交通与卫生尚未实装；文化本轮先接通持续投入与存档展示，技术研发/人才吸引消费后置。
+              农业开发不等同于屯田（民屯请用命令坞「屯田」）。
             </p>
           </>
         ) : facet === 'construction' ? (

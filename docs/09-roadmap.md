@@ -8,7 +8,90 @@
 
 - Session 335：S10「单挑战场暂停门禁」与「敌军主动单挑结算后续行」。
 - Session 336：S10「撤销恢复 facing」与「同回合审计序号/ID 唯一」。
-- S10 剩余：天气主动技能、正式特殊兵种熟练度（须用户批准）；包围/撤退等后置。
+- S10 剩余：~~天气主动技能~~（Session 349）· ~~正式特殊兵种熟练度~~（Session 350）·
+  ~~协同包围/玩家战术撤退 0-A 最小切片~~（Session 352）· ~~敌军走位朝向前置修补~~（Session 353）·
+**敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）；完整追击/截击、攻城突围和多军团撤退后置。
+- Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
+
+### Session 362 · S03 文化持续投入 0-A
+
+- `DevelopmentProject.kind` 新增 `culture`，共享数值真源为总成本360金、首付120金、工期6个月、完成文化+60（封顶999）。
+- 服务端复用既有持续开发的人员门禁、月费、暂停/进度损失与完整 GameState Schema；客户端产业分面新增文化数值与统一终审入口。
+- 启动、月结、完成均不消费 RNG；技术研发/人才吸引消费、工艺/交通/卫生与 0-B 数据扩容仍后置。
+- 验证：`verify-culture-development` **10/10**、共享文化配置单测 **1/1**、R5 预算 **17/17**、即时内政 RNG **9/9**；浏览器运行时仍无连接，未宣称真实 DOM 点击验收。
+
+### Session 354 · S10 敌军协同包围走位最小切片
+
+- `runSimpleEnemyAi` 在已有一支敌军从有效接战方向贴住目标、但尚未形成受围时，优先寻找另一个可达且未占用的邻接格；落子后朝向目标。
+- 候选按剩余移动力、方向和坐标稳定排序，决策不消费 RNG；没有可行包抄位时保持原有距离/地形评分。
+- 验证：`verify-tactical-ai` **55/55**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。未新增字段、API、数据规模或 UI；浏览器当前无连接，未宣称真实 DOM 点击验收。
+- 边界：只覆盖“已有一翼→寻找第二翼”的敌军走位；完整敌军包围/撤退 AI、追击/截击、攻城突围、多军团协同与 0-B 仍后置。
+
+### Session 355 · S10 受围敌军突围走位最小切片
+
+- `runSimpleEnemyAi` 发现自身由 `resolveHexSurround` 派生为受围时，优先寻找可达且未占用、能将有效接战方向降到一支以内的空格；移动后更新朝向、重新选目标并复用既有战法/火计/普攻链。
+- 候选按接战方向数、剩余移动力和坐标稳定排序；不消费 RNG；没有合法落点时回退原有攻击/距离评分。
+- 验证：`verify-tactical-ai` **59/59**；未新增字段、API、数据规模或 UI；完整回归已通过（详见 `docs/10-progress.md`）。
+- 边界：这是解除一次派生包围的走位切片，不写 `isRetreated`、不直接结束战斗；完整敌军撤退/追击/截击、攻城突围、多军团协同与 0-B 仍后置。
+
+### Session 357 · S10 敌军主动撤退最小切片
+
+- `runSimpleEnemyAi` 在每支敌军行动、目标选择前检查：未受协同包围且士气≤20，或兵力≤最大兵力25%时，复用 `isRetreated=true` 标记撤出，写入 `hasActed=true/mp=0`，不消费 RNG。
+- 全部敌军成为非活跃单位时立即判定玩家胜利；受围低士气/重创单位不跳过既有突围走位，先沿原突围/战法/火计/普攻链行动。
+- 未新增 `BattleState`/`BattleUnit` 字段、API、RNG 或静态数据规模；追击/截击、攻城突围、多军团撤退仍后置。阈值真源为 `docs/08-data-dictionary.md` §二十七。
+- 验证：`verify-tactical-ai` **72/72**；S10 回归 `verify-save-battle` **62/62**、`verify-tactical-retreat` **9/9**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；浏览器连接为空，未宣称真实 DOM 点击验收。
+
+### Session 358 · S10 敌军主动撤退相邻截击门禁
+
+- 敌军满足主动撤退门槛但与任一活跃敌对单位相邻（1 格）时，不直接标记 `isRetreated`；写入“被截击”战报后继续既有战法、火计或普攻链。
+- 未被截击的低士气/重创敌军、受围突围、撤退终局与 `isRetreated` 非活跃语义保持不变；不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或静态数据规模。
+- 验证：`verify-tactical-ai` **75/75**；浏览器连接仍为空，未宣称真实 DOM 点击验收；完整追击/截击、攻城突围与多军团撤退仍后置。
+
+### Session 359 · S18 0-A 直系族谱只读分面
+
+- `FamilyOverviewDrawer` 新增“族谱”分面，按当前剧本启用的 `children` 目录派生父、母、子女、登场状态、生年/登场年与史料层。
+- 只显示至少一条直系关系连接到玩家势力的记录；不把 `hidden.bloodline` 当父子关系，不新增 API、存档字段、随机流程或静态数据规模。
+- 验证：`FamilyOverviewDrawer.test.ts` **3/3**、client 全量 **52/52**、client typecheck 通过；浏览器连接仍为空，未宣称真实 DOM 点击验收。
+- 边界：完整多代族谱、武将 `fatherId`/`motherId`、父兄跟随与 0-B 50+ 子女数据仍后置。
+
+### Session 360 · S10 截击后相邻目标优先
+
+- `runSimpleEnemyAi` 在相邻截击门禁成立时，先在相邻活跃敌对部队中按既有确定性评分选取行动目标；无相邻候选才回退全局目标评分。
+- 仍复用既有战法、火计、普攻与 RNG 顺序；不新增追击状态、`BattleState`/`BattleUnit` 字段、API、额外 RNG 或静态数据规模。
+- 验证：`verify-tactical-ai` **78/78**；浏览器连接仍为空，未宣称真实 DOM 点击验收；完整追击/截击、攻城突围和多军团撤退仍后置。
+
+### Session 361 · S10 BattleView 撤退态活跃单位边界
+
+- BattleView 复用既有 `isRetreated` 语义筛选活跃部队；撤退单位不再进入地图选择、攻击目标、红色可攻击标记或协同包围来源，残留 `selectedUnitId` 不会恢复成可操作选择。
+- 结束态仍展示未击破撤退部队的兵力摘要；不新增字段、API、RNG、规则数字或静态数据规模。
+- 验证：`battleViewState.test.ts` 2/2、client 全量 54/54、shared 416/416、`verify-tactical-ai` 78/78、workspace typecheck/build/validate-data/diff-check 全绿；浏览器连接为空，未宣称真实 DOM 点击验收。
+
+### Session 356 · S10 撤退态活跃单位语义收口
+
+- `isRetreated=true` 的现有单位从敌军 AI/战斗 `sideAlive`、目标选择、寻路占位、AOE、灼烧、敌军回合恢复、主动单挑和玩家六角动作门禁中统一排除；战后既有兵力快照与 50% 回流保持不变。
+- 验证：`verify-tactical-ai` 66/66、`verify-save-battle` 62/62、`verify-tactical-retreat` 9/9、`verify-battle-rng` 5/5、`verify-fm4-hex-formation` 14/14；全仓静态/构建/数据/合规检查通过。
+- 边界：不新增字段、API、RNG、数据规模或 UI；完整敌军撤退/追击/截击、攻城突围、多军团协同和 0-B 仍后置。浏览器当前无连接，未宣称真实 DOM 点击验收。
+
+### Session 353 · S10 敌军走位朝向与协同包围前置
+
+- `runSimpleEnemyAi` 移动后写回 `facing`，方向以新位置到当前目标为准；目标重选后按实际出手目标校正。
+- 该修补仅统一既有六角朝向语义，不新增存档字段、API、RNG 或静态数据规模。
+- 验证：`verify-tactical-ai` 51/51、`verify-save-battle` 59/59、`verify-tactical-retreat` 9/9；浏览器连接仍不可用，未宣称 DOM 点击验收。
+
+### Session 352 · S10 六角协同包围与战术撤退
+
+- `shared/hex-positioning.ts` 按六角邻接、朝向和存活状态派生包围，不新增 BattleState 字段；至少两个不同接战方向才成立。
+- 受围部队由服务端限制为方阵，暴击/反击接收既有 `isSurrounded` 判定；BattleView 显示受围数量与撤退阻断原因。
+- `POST /api/game/battle/retreat` 成功后标记存活攻方 `isRetreated`、战斗结束且不消费 RNG；`/battle/exit` 按 50% 回流率结算。
+- 验证：共享纯函数 4/4、战术撤退脚本 9/9、真实 HTTP 出征→撤退→退出链通过；浏览器运行环境无可用实例，未宣称 DOM 点击验收。
+- 边界：敌军主动包围/撤退 AI、追击/截击、攻城突围、多军团协同与 0-B 仍后置。
+
+### Session 351 · 家属质任处置
+
+- `pendingFamilyTreatment` 是攻城后的玩家待决项；`POST /api/game/civil/family-treatment` 只处理当前权威项。
+- 善待/中立/镇压写入 `City.familyTreatment`；季度善待余波、S27 叛乱倍率、战役自动攻城倍率读取同一状态。
+- 全局弹窗与 TopBar 回合门禁已接线；普通家族抽屉仍只展示家属位置与当前处置，不复制规则。
+- 暂后：六角直接战斗的镇压倍率、流言/四面楚歌/将忠联动、0-B。
 
 ## Phase 0 — 文档 & 项目骨架
 
@@ -230,7 +313,7 @@
 | FM-P0 | 权威契约、目录/逐将迁移表、数值映射与部署语义冻结 | [x] | 材料产出 + Gate M/N1/D 批准（Session 288） |
 | FM-P1 | `Formation` Zod/Type、TacticalConfig v2、7阵目录与 146 将精通迁移 | [x] | 已实装（Session 288）；v1 只读兼容 |
 | FM-P2 | 共享合法性、阵型贡献、五部部署与解释纯函数 | [x] | 已实装（Session 289）`shared/formation-core.ts`；不创建第四套伤害公式 |
-| FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）+ **六角战斗阵型贡献**（295，`hexFormationMods` 点值投影，三模式点值同源闭环）+ **标准模式战术协同矩阵**（296，`MeleeState.tactic?` 持久战术 + TacticalConfig v2 T_base/synergy + `/melee/tactic`）；六角部署注入后置 |
+| FM-P3 | 标准/自动/Campaign/六角同源消费与幂等回写 | [~] | crit + melee 注入 + 变阵幂等 + **自动入口恢复 runAutoBattle**（290）+ **标准模式点值迁移**（291，`tiers[0]` 点值 + 组织度执行档，`meleePercent` 退役）+ **自动战斗阵型贡献**（292，`autoFormationMods` 点值战力修正 + 五部侧击）+ **六角战斗阵型贡献**（295，`hexFormationMods` 点值投影，三模式点值同源闭环）+ **标准模式战术协同矩阵**（296，`MeleeState.tactic?` 持久战术 + TacticalConfig v2 T_base/synergy + `/melee/tactic`）+ **六角协同包围/玩家撤退最小切片**（352）+ **敌军协同包围与受围突围走位最小切片**（354~355）+ **撤退态活跃单位语义收口**（356）+ **敌军主动撤退与相邻截击最小切片**（357~358）；完整追击/截击/攻城突围与多军团仍后置 |
 | FM-P4 | 公平 AI、阵型 UI、浏览器流程与存档迁移 | [~] | Session 302~312 已完成战报解释、变阵存档往返、敌军主动单挑浏览器链、浏览器 JSON 导入/导出及 XDG 槽位 UI；**Session 340 槽位介质改为 SQLite**；完整公平 AI 仍后置 |
 | FM-P5 | 平衡、独特性、经典体验、IP 与文档总验收 | [ ] | 通过后仍不代表 0-B 完成 |
 | FM-P6 | 27阵/水阵/双轴成长扩展 | [ ] | 仅 0-A 验收完成且用户重启 0-B 后可做 |

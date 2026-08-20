@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, UnitProficiency, meritEffects, meritLevelFor, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
+import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
@@ -20,7 +20,12 @@ export interface EnemyOfficerStats {
 }
 
 function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
-  return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+  return units.some((unit) => unit.side === side && isActiveBattleUnit(unit));
+}
+
+/** 撤退单位仍可保留兵力快照，但不再是本场战斗的活跃部队。 */
+function isActiveBattleUnit(unit: BattleUnit): boolean {
+  return !unit.isDestroyed && !unit.isRetreated && unit.troopCount > 0;
 }
 
 function markEnemyWaiting(units: BattleUnit[], unitId: string): BattleUnit[] {
@@ -44,9 +49,9 @@ export function runSimpleEnemyAi(
   weather: Weather = Weather.CLEAR,
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } {
   // 行动状态是回合契约的一部分：重入 AI（例如重复请求/恢复）不得让已行动单位再次执行。
-  const liveEnemies = units.filter((u) => u.side === enemySide && !u.isDestroyed && u.troopCount > 0);
+  const liveEnemies = units.filter((u) => u.side === enemySide && isActiveBattleUnit(u));
   const enemies = liveEnemies.filter((u) => !u.hasActed);
-  const players = units.filter((u) => u.side === playerSide && !u.isDestroyed && u.troopCount > 0);
+  const players = units.filter((u) => u.side === playerSide && isActiveBattleUnit(u));
 
   if (liveEnemies.length === 0) {
     return { units, message: '敌军全灭', over: true, winner: playerSide };
@@ -63,9 +68,42 @@ export function runSimpleEnemyAi(
 
   for (const enemy of enemies) {
     const live = next.find((u) => u.id === enemy.id);
-    if (!live || live.isDestroyed) continue;
+    if (!live || !isActiveBattleUnit(live)) continue;
 
-    const target = selectTarget(live, next, playerSide, unitTemplates, strongAgainst);
+    // 0-A 最小撤退语义：低士气或重创且未被协同包围的敌军直接沿既有
+    // isRetreated 终态退出战场。受围单位先交给下面的突围/接战逻辑处理，
+    // 避免“被锁住却瞬间消失”；该判定确定性且不消费 RNG。
+    const retreatEligible = shouldEnemyRetreat(next, live);
+    const intercepted = retreatEligible && isEnemyIntercepted(next, live);
+    if (retreatEligible && !intercepted) {
+      next = next.map((unit) => unit.id === live.id
+        ? { ...unit, isRetreated: true, hasActed: true, mp: 0 }
+        : unit);
+      const name = officerStats[live.commanderId]?.name ?? '敌军';
+      messages.push(`${name} 撤退`);
+      if (!next.some((unit) => unit.side === enemySide && isActiveBattleUnit(unit))) {
+        return {
+          units: next,
+          message: `${messages.join('；')}；敌军撤退`,
+          over: true,
+          winner: playerSide,
+        };
+      }
+      continue;
+    }
+
+    if (intercepted) {
+      const name = officerStats[live.commanderId]?.name ?? '敌军';
+      messages.push(`${name} 被截击`);
+    }
+
+    // 被截击的撤退尝试必须先处理相邻截击者；否则全局目标评分可能让低士气部队
+    // 越过贴身敌军去攻击另一支更“划算”的目标，既不符合截击语义，也会让战报中的
+    // “被截击”只成为旁观标签。候选仍使用同一确定性评分，不消费额外 RNG。
+    const target = intercepted
+      ? selectInterceptionTarget(live, next, playerSide, unitTemplates, strongAgainst)
+        ?? selectTarget(live, next, playerSide, unitTemplates, strongAgainst)
+      : selectTarget(live, next, playerSide, unitTemplates, strongAgainst);
     if (!target) {
       next = markEnemyWaiting(next, live.id);
       messages.push(`${officerStats[live.commanderId]?.name ?? '敌军'} 无目标，待机`);
@@ -78,9 +116,39 @@ export function runSimpleEnemyAi(
       messages.push(`${officerStats[live.commanderId]?.name ?? '敌军'} 兵种数据缺失，待机`);
       continue;
     }
-    const dist = hexDistance(live.position, target.position);
+    // 受围且有空位时先尝试解除派生包围；这是一次走位，不新增“突围中”状态。
+    const breakoutPosition = chooseSurroundBreakoutPosition(next, live, terrainMap, cols, rows, weather);
+    let acting = live;
+    let actingTarget = target;
+    let brokeOut = false;
+    if (breakoutPosition) {
+      next = next.map((unit) => unit.id === live.id
+        ? {
+            ...unit,
+            position: breakoutPosition,
+            facing: directionTo(breakoutPosition, target.position),
+            hasActed: true,
+            mp: 0,
+          }
+        : unit);
+      acting = next.find((unit) => unit.id === live.id)!;
+      actingTarget = selectTarget(acting, next, playerSide, unitTemplates, strongAgainst)
+        ?? next.find((unit) => unit.id === target.id && isActiveBattleUnit(unit))
+        ?? target;
+      if (actingTarget.id !== target.id) {
+        next = next.map((unit) => unit.id === acting.id
+          ? { ...unit, facing: directionTo(unit.position, actingTarget.position) }
+          : unit);
+        acting = next.find((unit) => unit.id === live.id)!;
+      }
+      brokeOut = true;
+      const name = officerStats[live.commanderId]?.name ?? '敌军';
+      messages.push(`${name} 突围走位`);
+    }
 
-    const ability = tryAbilityTactic(next, live, target, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather);
+    const dist = hexDistance(acting.position, actingTarget.position);
+
+    const ability = tryAbilityTactic(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather);
     if (ability) {
       next = ability.units;
       messages.push(ability.message);
@@ -88,7 +156,7 @@ export function runSimpleEnemyAi(
       continue;
     }
 
-    const fire = tryFireTactic(next, live, target, terrainMap, officers, weather, rng);
+    const fire = tryFireTactic(next, acting, actingTarget, terrainMap, officers, weather, rng);
     if (fire) {
       next = fire.units;
       messages.push(fire.message);
@@ -104,16 +172,20 @@ export function runSimpleEnemyAi(
         messages.push(`${name} 雾中无法射击`);
         continue;
       }
-      const r = doAttack(next, live, target, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
+      const r = doAttack(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
       next = r.units;
       messages.push(r.message);
       if (r.over) return { units: next, message: messages.join('；'), over: true, winner: r.winner };
       continue;
     }
 
+    if (brokeOut) {
+      continue;
+    }
+
     const blocked = new Set(
       next
-        .filter((u) => u.id !== live.id && !u.isDestroyed && u.troopCount > 0)
+        .filter((u) => u.id !== live.id && isActiveBattleUnit(u))
         .map((u) => hexKey(u.position)),
     );
     const range = reachable(
@@ -126,27 +198,50 @@ export function runSimpleEnemyAi(
     );
     range.delete(hexKey(live.position));
 
-    let best: HexCoord | null = null;
-    let bestScore = movementScore(live.position, target, live, terrainMap);
-    for (const key of range.keys()) {
-      const [q, r] = key.split(',').map(Number);
-      const score = movementScore({ q, r }, target, live, terrainMap);
-      if (score < bestScore) {
-        bestScore = score;
-        best = { q, r };
+    // 先尝试最小协同包围走位：已有一支敌军从一个有效接战方向贴住目标时，
+    // 后续敌军优先占用另一个可达邻接格。包围仍由 shared 派生，不写入新状态。
+    const cooperativePosition = chooseCooperativeSurroundPosition(next, live, target, range);
+    let best: HexCoord | null = cooperativePosition;
+    if (!best) {
+      let bestScore = movementScore(live.position, target, live, terrainMap);
+      for (const key of range.keys()) {
+        const [q, r] = key.split(',').map(Number);
+        const score = movementScore({ q, r }, target, live, terrainMap);
+        if (score < bestScore) {
+          bestScore = score;
+          best = { q, r };
+        }
       }
     }
 
     if (best) {
       next = next.map((u) =>
-        u.id === live.id ? { ...u, position: { q: best!.q, r: best!.r }, hasActed: true, mp: 0 } : u,
+        u.id === live.id
+          ? {
+              ...u,
+              position: { q: best!.q, r: best!.r },
+              // AI 走位与玩家 moveUnit 保持同一朝向契约；否则移动后的敌军仍
+              // 保留旧朝向，六角协同包围派生会把它误判为背向目标。
+              facing: directionTo({ q: best!.q, r: best!.r }, target.position),
+              hasActed: true,
+              mp: 0,
+            }
+          : u,
       );
       const name = officerStats[live.commanderId]?.name ?? '敌军';
-      messages.push(`${name} 向我军移动`);
-      const moved = next.find((u) => u.id === live.id)!;
+      messages.push(cooperativePosition ? `${name} 迂回包抄` : `${name} 向我军移动`);
+      let moved = next.find((u) => u.id === live.id)!;
       const movedTarget = selectTarget(moved, next, playerSide, unitTemplates, strongAgainst);
       if (movedTarget && hexDistance(moved.position, movedTarget.position) <= effectiveUnitRange(ut.range, weather) && !(weather === Weather.FOG && ut.range > 1)) {
-        const still = next.find((u) => u.id === movedTarget.id && !u.isDestroyed);
+        // 目标评分可能因接敌距离变化而改选目标；若本回合继续攻击，朝向应
+        // 以真正出手的目标为准，保证后续包围态势与行动演出一致。
+        if (movedTarget.id !== target.id) {
+          next = next.map((u) => u.id === moved.id
+            ? { ...u, facing: directionTo(u.position, movedTarget.position) }
+            : u);
+          moved = next.find((u) => u.id === live.id)!;
+        }
+        const still = next.find((u) => u.id === movedTarget.id && isActiveBattleUnit(u));
         if (still) {
           const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
           next = r.units;
@@ -170,6 +265,117 @@ export function runSimpleEnemyAi(
     over: false,
     winner: null,
   };
+}
+
+/**
+ * 0-A 敌军主动撤退门槛：不受协同包围且士气≤20，或当前兵力≤最大兵力25%。
+ * 这是既有 isRetreated 终态的 AI 消费；相邻截击门禁在下方单独处理，不代表完整追击/截击/攻城突围规则。
+ */
+function shouldEnemyRetreat(units: readonly BattleUnit[], unit: BattleUnit): boolean {
+  if (isUnitSurrounded(units, unit.id)) return false;
+  return unit.morale <= 20 || unit.troopCount / Math.max(1, unit.maxTroops) <= 0.25;
+}
+
+/**
+ * 最小截击门禁：相邻且仍在场的敌对部队能封住瞬时脱离窗口。
+ * 这只阻断“直接标记 isRetreated”，不新增追击状态；单位随后继续原有战法、火计或普攻链。
+ */
+function isEnemyIntercepted(units: readonly BattleUnit[], unit: BattleUnit): boolean {
+  return units.some((candidate) => candidate.side !== unit.side
+    && isActiveBattleUnit(candidate)
+    && hexDistance(candidate.position, unit.position) === 1);
+}
+
+/**
+ * 在不新增战场状态的前提下，为敌军寻找第二个有效接战方向。
+ * 只在当前目标已有一个有效包围来源、且目标尚未被包围时触发；候选按可达剩余
+ * 移动力、方向和坐标稳定排序，保证同一快照重放得到同一走位且不消费 RNG。
+ */
+function chooseCooperativeSurroundPosition(
+  units: readonly BattleUnit[],
+  mover: BattleUnit,
+  target: BattleUnit,
+  range: ReadonlyMap<string, number>,
+): HexCoord | null {
+  const current = resolveHexSurround(units, target.id);
+  if (current.isSurrounded || current.enemyDirections.length === 0) return null;
+
+  const candidates = [...range.entries()]
+    .map(([key, remainingMp]) => {
+      const [q, r] = key.split(',').map(Number);
+      return { position: { q, r }, remainingMp };
+    })
+    .filter((candidate) => hexDistance(candidate.position, target.position) === 1)
+    .filter((candidate) => !current.enemyDirections.includes(directionTo(target.position, candidate.position)))
+    .map((candidate) => {
+      const hypothetical = units.map((unit) => unit.id === mover.id
+        ? {
+            ...unit,
+            position: candidate.position,
+            facing: directionTo(candidate.position, target.position),
+          }
+        : unit);
+      return { ...candidate, hypothetical };
+    })
+    .filter((candidate) => resolveHexSurround(candidate.hypothetical, target.id).isSurrounded)
+    .sort((a, b) => b.remainingMp - a.remainingMp
+      || directionTo(target.position, a.position) - directionTo(target.position, b.position)
+      || a.position.r - b.position.r
+      || a.position.q - b.position.q);
+
+  return candidates[0]?.position ?? null;
+}
+
+/**
+ * 受围敌军的最小突围走位：只接受能让派生包围消失的可达空格，优先减少接战方向，
+ * 再保留更多移动力，最后按坐标稳定排序。没有合法空格时交回原有攻击/走位逻辑。
+ */
+function chooseSurroundBreakoutPosition(
+  units: readonly BattleUnit[],
+  mover: BattleUnit,
+  terrainMap: TerrainType[][],
+  cols: number,
+  rows: number,
+  weather: Weather,
+): HexCoord | null {
+  if (!isUnitSurrounded(units, mover.id)) return null;
+
+  const blocked = new Set(
+    units
+      .filter((unit) => unit.id !== mover.id && isActiveBattleUnit(unit))
+      .map((unit) => hexKey(unit.position)),
+  );
+  const range = reachable(
+    mover.position,
+    effectiveMovement(mover.maxMp, weather),
+    cols,
+    rows,
+    (hex) => terrainMap[hex.r]?.[hex.q] ?? ('plain' as TerrainType),
+    blocked,
+  );
+  range.delete(hexKey(mover.position));
+
+  const candidates = [...range.entries()]
+    .map(([key, remainingMp]) => {
+      const [q, r] = key.split(',').map(Number);
+      return { position: { q, r }, remainingMp };
+    })
+    .map((candidate) => {
+      const hypothetical = units.map((unit) => unit.id === mover.id
+        ? { ...unit, position: candidate.position }
+        : unit);
+      return {
+        ...candidate,
+        enemyDirections: resolveHexSurround(hypothetical, mover.id).enemyDirections,
+      };
+    })
+    .filter((candidate) => candidate.enemyDirections.length < 2)
+    .sort((a, b) => a.enemyDirections.length - b.enemyDirections.length
+      || b.remainingMp - a.remainingMp
+      || a.position.r - b.position.r
+      || a.position.q - b.position.q);
+
+  return candidates[0]?.position ?? null;
 }
 
 function proficiencyRank(value: UnitProficiency | undefined): number {
@@ -210,14 +416,19 @@ function availableEnemyAbility(
   if (maxLevel === 0) return null;
   const energy = unit.energy ?? 0;
   const distance = hexDistance(unit.position, target.position);
+  const abilityUses = getUnitAbilityUses(officer, unit.unitType);
   const candidates = (template.abilities ?? [])
     .map((ability) => {
       const level = ability.leveling === 'leveled'
         ? (ability.perLevel ?? []).filter((entry) => entry.level <= maxLevel && entry.energyCost <= energy).at(-1)
         : {
-          level: maxLevel,
+          level: 1,
           energyCost: ability.energyCost ?? 0,
-          power: (ability.basePower ?? 1) + ((ability.maxPower ?? ability.basePower ?? 1) - (ability.basePower ?? 1)) * ((maxLevel - 1) / 4),
+          power: resolveProficiencyPower(
+            ability.basePower ?? 1,
+            ability.maxPower ?? ability.basePower ?? 1,
+            abilityUses,
+          ),
           hitRateBonus: ability.hitRateBonus ?? 0,
           requiredProficiency: effective,
         };
@@ -252,6 +463,9 @@ function tryAbilityTactic(
   const chosen = availableEnemyAbility(attacker, defender, template, atkOfficer, weather);
   if (!chosen) return null;
   const { ability, level } = chosen;
+  if (ability.leveling === 'proficiency') {
+    recordUnitAbilityUse(atkOfficer, attacker.unitType);
+  }
   const matchup = getUnitMatchup(attacker.unitType, defender.unitType, strongAgainst);
   const hitRate = Math.min(100, Math.max(15, 80 + level.hitRateBonus));
   const spent = units.map((unit) => unit.id === attacker.id
@@ -281,7 +495,7 @@ function tryAbilityTactic(
     rng,
   );
   const damage = Math.max(1, Math.round(base * level.power * (0.9 + rng() * 0.2)));
-  const affected = spent.filter((unit) => unit.side === defender.side && !unit.isDestroyed && unit.troopCount > 0 &&
+  const affected = spent.filter((unit) => unit.side === defender.side && isActiveBattleUnit(unit) &&
     (unit.id === defender.id || (ability.specialEffect === 'aoe' && hexDistance(unit.position, defender.position) <= 1)));
   const next = spent.map((unit) => {
     if (!affected.some((victim) => victim.id === unit.id)) return unit;
@@ -312,7 +526,7 @@ function selectTarget(
 ): BattleUnit | null {
   let best: BattleUnit | null = null;
   let bestScore = Infinity;
-  for (const p of units.filter((u) => u.side === side && !u.isDestroyed && u.troopCount > 0)) {
+  for (const p of units.filter((u) => u.side === side && isActiveBattleUnit(u))) {
     const d = hexDistance(unit.position, p.position);
     const matchup = getUnitMatchup(unit.unitType, p.unitType, strongAgainst);
     const hpRatio = p.troopCount / Math.max(1, p.maxTroops);
@@ -325,6 +539,22 @@ function selectTarget(
     }
   }
   return best;
+}
+
+/** 截击成立时，只在相邻活跃敌对部队中选目标，再回到普通评分作为稳定排序。 */
+function selectInterceptionTarget(
+  unit: BattleUnit,
+  units: BattleUnit[],
+  side: 'attacker' | 'defender',
+  unitTemplates: Record<string, UnitTemplate>,
+  strongAgainst: Record<string, UnitType[]>,
+): BattleUnit | null {
+  const adjacent = units.filter((candidate) =>
+    candidate.side === side
+      && isActiveBattleUnit(candidate)
+      && hexDistance(unit.position, candidate.position) === 1,
+  );
+  return selectTarget(unit, adjacent, side, unitTemplates, strongAgainst);
 }
 
 function movementScore(
@@ -482,6 +712,8 @@ function doAttack(
       isFirstRound: battleTurn === 1, attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, weather),
       attackerCritBonus: equipCritRateFor(fullAtkO),
       defenderCritBonus: equipCritRateFor(fullDefO),
+      attackerSurrounded: isUnitSurrounded(units, attacker.id),
+      defenderSurrounded: isUnitSurrounded(units, defender.id),
       rng,
     });
     totalDamage = result.damage + result.chainDamage;

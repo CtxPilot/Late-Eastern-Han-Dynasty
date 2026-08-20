@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, FamilyTreatmentMode, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult } from '@leh/shared';
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import * as api from '../services/api';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
@@ -62,7 +62,7 @@ interface Store {
   endTurn: () => Promise<void>;
   chooseEvent: (eventId: number, choiceIndex: number) => Promise<void>;
   developFarm: () => Promise<void>;
-  develop: (kind: 'farm' | 'commerce' | 'wall', cityId?: number, officerId?: number) => Promise<void>;
+  develop: (kind: import('@leh/shared').DevelopmentProjectKind, cityId?: number, officerId?: number) => Promise<void>;
   conscript: (cityId?: number) => Promise<void>;
   relief: (cityId?: number) => Promise<void>;
   trainTroops: (cityId?: number) => Promise<void>;
@@ -113,6 +113,7 @@ interface Store {
   setCivilianFarming: (cityId: number, households: number) => Promise<void>;
   setMilitaryFarming: (cityId: number, enabled: boolean) => Promise<void>;
   relocateGarrisonFamilies: (fromCityId: number, toCityId: number) => Promise<void>;
+  resolveFamilyTreatment: (mode: FamilyTreatmentMode) => Promise<void>;
   setNationalPolicy: (type: string, targetCityId?: number) => Promise<void>;
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
@@ -131,9 +132,11 @@ interface Store {
   undoBattleAction: () => Promise<void>;
   attack: (defenderId: string) => Promise<void>;
   castFire: (targetId: string) => Promise<void>;
+  castWeather: (weather: string) => Promise<void>;
   castAbility: (targetId: string, abilityId: string) => Promise<void>;
   loadAbilities: (unitId: string) => Promise<void>;
   finishPlayer: () => Promise<void>;
+  retreatBattle: () => Promise<void>;
   changeBattleFormation: (targetFormation: import('@leh/shared').FormationType) => Promise<void>;
   runEnemy: () => Promise<void>;
   exitBattle: () => Promise<void>;
@@ -447,6 +450,10 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ error: '请先处理待决事件' });
       return;
     }
+    if (get().game?.pendingFamilyTreatment) {
+      set({ error: '请先处理家属处置' });
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const game = await api.endTurn();
@@ -582,6 +589,17 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '家属已迁移' });
     } catch (e) {
       set({ error: errMsg(e, '迁家属失败'), loading: false });
+    }
+  },
+
+  resolveFamilyTreatment: async (mode) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.resolveFamilyTreatment(mode);
+      set({ game, loading: false, lastActionOk: mode === 'kindness' ? '已善待家属' : mode === 'repression' ? '已镇压家属' : '已中立处置家属' });
+    } catch (e) {
+      set({ error: errMsg(e, '家属处置失败'), loading: false });
+      throw e;
     }
   },
 
@@ -1005,6 +1023,22 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  castWeather: async (weather) => {
+    const attackerId = get().selectedUnitId;
+    if (!attackerId) return;
+    try {
+      let battle = await api.battleWeather(attackerId, weather);
+      set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      if (battle.phase === 'enemy') {
+        await new Promise((r) => setTimeout(r, 500));
+        battle = await api.battleEnemyPhase();
+        set({ battle });
+      }
+    } catch (e) {
+      set({ error: errMsg(e, '观天失败') });
+    }
+  },
+
   loadAbilities: async (unitId) => {
     try {
       const abilities = await api.battleUsableAbilities(unitId);
@@ -1041,6 +1075,15 @@ export const useGameStore = create<Store>((set, get) => ({
       }
     } catch (e) {
       set({ error: errMsg(e, '结束行动失败') });
+    }
+  },
+
+  retreatBattle: async () => {
+    try {
+      const battle = await api.battleRetreat();
+      set({ battle, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
+    } catch (e) {
+      set({ error: errMsg(e, '撤退失败') });
     }
   },
 

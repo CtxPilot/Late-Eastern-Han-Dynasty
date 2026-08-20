@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { CURRENT_SAVE_SCHEMA_VERSION, type GameState, type SaveEnvelopeV1 } from '@leh/shared';
+import {
+  CURRENT_SAVE_SCHEMA_VERSION,
+  relationPairKey,
+  type GameState,
+  type SaveEnvelopeV1,
+} from '@leh/shared';
 import { getRuntimeRngState } from '../runtime-rng.js';
 import {
   createGame, doConscript, doRelief, doTrain, getGame, restoreGameFromEnvelope,
@@ -34,19 +39,52 @@ createGame(1, 1);
 const initial = getGame();
 const city = Object.values(initial.cities).find((candidate) => candidate.ruler === initial.playerFactionId);
 if (!city) throw new Error('内政确定性验证缺少己方城市');
+const officerId = city.officers[0];
+if (officerId == null) throw new Error('内政确定性验证缺少城主');
+const playerFaction = initial.factions[initial.playerFactionId];
+if (!playerFaction) throw new Error('内政确定性验证缺少玩家势力');
+
+// 这里只测 RNG 序列，隔离已接入的 S25-S27 内政效率、人心与技能加成。
+// 把玩家城市、武将与运行时亲和统一到无修正区间，避免合法随机范围随静态
+// 剧本规模/关系数据漂移；同时保留原势力清单，令读档 Schema 仍是完整闭环。
+const playerCityIds = new Set(playerFaction.cityIds);
+const playerOfficerIds = new Set(playerFaction.officerIds);
+const relationAffinities = { ...(initial.relationAffinities ?? {}) };
+for (let i = 0; i < playerFaction.officerIds.length; i += 1) {
+  for (let j = i + 1; j < playerFaction.officerIds.length; j += 1) {
+    relationAffinities[relationPairKey(playerFaction.officerIds[i]!, playerFaction.officerIds[j]!)] = 0;
+  }
+}
 const prepared: GameState = {
   ...initial,
-  cities: {
-    ...initial.cities,
-    [city.id]: {
-      ...city,
-      gold: Math.max(city.gold, 5_000),
-      food: Math.max(city.food, 5_000),
-      troops: Math.max(city.troops, 2_000),
-      troopsMorale: 50,
-      stats: { ...city.stats, morale: 50 },
-    },
-  },
+  cities: Object.fromEntries(Object.values(initial.cities).map((candidate) => {
+    if (!playerCityIds.has(candidate.id)) return [candidate.id, candidate];
+    return [candidate.id, {
+      ...candidate,
+      stats: { ...candidate.stats, farm: 0, morale: 20 },
+      ...(candidate.id === city.id
+        ? {
+          gold: Math.max(candidate.gold, 5_000),
+          food: Math.max(candidate.food, 5_000),
+          troops: Math.max(candidate.troops, 2_000),
+          troopsMorale: 50,
+        }
+        : {}),
+    }];
+  })),
+  officers: Object.fromEntries(Object.values(initial.officers).map((officer) => [
+    officer.id,
+    playerOfficerIds.has(officer.id)
+      ? {
+        ...officer,
+        loyalty: 100,
+        skills: [],
+        merit: 0,
+        meritPath: 'neutral',
+      }
+      : officer,
+  ])),
+  relationAffinities,
 };
 const save: SaveEnvelopeV1 = {
   schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,

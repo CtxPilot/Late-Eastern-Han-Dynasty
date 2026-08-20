@@ -1,5 +1,151 @@
 # 开发进度跟踪
 
+## 2026-08-21 — Session 362 · S03 文化持续投入 0-A
+
+- Phase：**S03 内政深化**；继续 0-A，不扩静态数据规模，不启动 0-B；本轮不再推进 S10 完整追击/截击债。
+- 实装：新增共享 `DEVELOPMENT_PROJECT_CONFIG` 数值真源；`DevelopmentProject.kind` 支持 `culture`，城市运行时 `stats.culture` 旧档可缺省按0读取。
+- 运行时：文化项目首付120金/总计360金/持续6个月，完成文化+60（封顶999）；复用既有人员不可用暂停、月费与进度损失链，启动/月结/完成零 RNG。
+- 接口/UI：`POST /civil/develop` 接受 `kind:'culture'`；命令坞内政·产业显示文化积累、发展文化入口与终审摘要；不在客户端提前实现技术研发/人才吸引效果。
+- 文档同步：`01/03/04/06/07/08/09/10/12/35`、`HANDOFF.md`；相关数值先写入 `08-data-dictionary.md`。
+- 浏览器边界：当前运行时无可用浏览器实例，未宣称真实 DOM 点击验收；专项服务链用于功能验收。
+- 回归：文化专项 **10/10**、共享配置单测 **1/1**、client 全量 **54/54**、shared 全量 **417/417**、R5 预算 **17/17**、即时内政 RNG **9/9**；HTTP 启动文化项目实测通过；workspace typecheck/build、完整 GameState Schema、validate-data、compliance、`git diff --check` 通过。
+- **Next**：保持文化效果消费与工艺/交通/卫生后置；有浏览器连接时补产业分面实际点击，再由用户决定 S03 继续深化或回到 S10/S18；0-B 继续暂缓。
+
+## 2026-08-20 — Session 361 · S10 BattleView 撤退态活跃单位边界
+
+- Phase：**S10 战斗收口 · 撤退/截击 UI 一致性**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 修复：BattleView 统一用既有 `isRetreated` 语义过滤可操作部队；撤退单位不再被绘制为可选单位、攻击目标、红色可攻击标记或协同包围来源，残留的 `selectedUnitId` 也不会恢复成可操作选择。
+- 保持：结束态双方摘要仍可显示撤退部队的兵力快照；不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或数据规模，不在客户端复制服务端包围/撤退合法性判定。
+- 验证：新增 `battleViewState.test.ts` **2/2**；client 全量 **54/54**；shared **416/416**；`verify-tactical-ai` **78/78**；workspace typecheck/build/validate-data、`git diff --check` 全绿。
+- 动态验收边界：浏览器运行时连接列表仍为空，未宣称真实 DOM 点击；本轮以纯 UI 状态边界测试和既有战术回归验证为准。
+- 文档同步：`01/05/07/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 BattleView 撤退/截击链真实点击验收；随后再决定 S10 完整追击/截击债或回到 S18/S03，0-B 继续暂缓。
+
+## 2026-08-20 — Session 360 · S10 截击后相邻目标优先
+
+- Phase：**S10 战斗收口 · 撤退/截击语义修补**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：`runSimpleEnemyAi` 在低士气/重创敌军满足相邻截击门禁时，先从相邻活跃敌对部队中按既有确定性评分选取行动目标；仅无相邻候选时回退普通全局目标评分。这样“被截击”会实际约束本次行动，不会越过贴身截击者攻击远处目标。
+- 保持：既有 `isRetreated` 终态、受围突围、战法/火计/普攻、暴击/反击链、RNG 消费顺序和战后 50% 回流不变；不新增 `BattleState`/`BattleUnit` 字段、API、追击状态、额外 RNG 或静态数据规模。
+- 验证：`verify-tactical-ai` **78/78**；浏览器连接检查仍为 `agent.browsers.list()=[]`，未宣称真实 DOM 点击验收。
+- 文档同步：`01/05/08/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 BattleView 撤退/截击真实点击验收；之后再决定完整追击/截击债或回到 S18/S03，0-B 继续暂缓。
+
+## 2026-08-20 — Session 359 · S18 0-A 直系族谱只读分面
+
+- Phase：**S18 家族 UI 深化**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：`FamilyOverviewDrawer` 由四分面扩为 `总览｜族谱｜姻亲｜婚配｜跟随`；族谱从当前剧本启用的 `children` 目录派生父、母、子女、登场状态、生年/登场年与史料层。
+- 信息边界：仅显示至少一条直系关系连接到玩家势力的记录；不把 `hidden.bloodline` 当父子边，不泄露未关联敌方记录。
+- 决策：不新增 `Officer.fatherId/motherId`、`GameState`/存档字段、API、随机流程或静态数据规模；未录入父/母实体显示“未录”，多代祖先、父兄跟随与完整父母模型后置。
+- 验证：`FamilyOverviewDrawer.test.ts` **3/3**；client 全量 **52/52**；client typecheck 通过。浏览器连接检查返回 `agent.browsers.list()=[]`，未宣称真实 DOM 点击验收。
+- 文档同步：`01/03/04/07/09/10/12/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时实际点击命令坞“家族→族谱”验收；随后再决定 S10 完整追击/截击债或继续 S03/S18，0-B 继续暂缓。
+
+## 2026-08-20 — Session 358 · S10 敌军主动撤退相邻截击门禁
+
+- Phase：**S10 战斗收口 · 撤退/截击相邻债**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：`runSimpleEnemyAi` 对满足士气≤20或兵力≤最大兵力25%的主动撤退门槛追加 1 格相邻截击检查；若存在活跃敌对单位，则不直接标记 `isRetreated`，写入“被截击”战报并继续既有战法/火计/普攻链。
+- 保持：未被截击的低士气/重创敌军仍确定性撤退；受围单位先走既有突围逻辑；`isRetreated` 非活跃语义、全军撤退终局与战后 50% 回流不变。
+- 决策：截击距离 1 格写入 `docs/08-data-dictionary.md` §二十七；不新增 `BattleState`/`BattleUnit` 字段、API、追击状态、额外 RNG 或静态数据规模；这是相邻截击最小门禁，不是完整追击/截击、攻城突围或多军团规则。
+- 验证：`verify-tactical-ai` **75/75**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；`pnpm test` shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。
+- 动态验收边界：本轮无 UI/API 变更；浏览器连接仍为空，未宣称真实 DOM 点击验收。
+- 文档同步：`01/05/08/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 S10 BattleView 真实点击验收；随后再决定完整追击/截击债或回到 S18/S03，0-B 继续暂缓。
+
+## 2026-08-20 — Session 357 · S10 敌军主动撤退最小切片
+
+- Phase：**S10 战斗收口 · 敌军主动撤退**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：`runSimpleEnemyAi` 在每支敌军行动、目标选择前检查既有 `isSurrounded` 派生态势；未受协同包围且士气≤20，或兵力≤最大兵力25%时，复用 `isRetreated=true` 标记撤出，并写入 `hasActed=true/mp=0`。判定确定性、不消费 RNG。
+- 终局：若敌军已无活跃单位，立即返回 `over=true/winner=playerSide`；受围低士气/重创单位不跳过既有突围走位，先沿 Session 355 突围逻辑，再继续战法/火计/普攻链。
+- 决策：不新增 `BattleState`/`BattleUnit` 字段、API、RNG、静态数据规模或 UI；这是敌军主动撤退 0-A 最小切片，不是追击/截击、攻城突围或多军团撤退。阈值真源为 `docs/08-data-dictionary.md` §二十七。
+- 验证：`verify-tactical-ai` **72/72**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。浏览器连接检查执行后 `agent.browsers.list()=[]`，未宣称真实 DOM 点击验收。
+- 文档同步：`01/05/08/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补真实点击验收，之后再决定 S10 追击/截击债或回到 S18/S03；0-B 继续暂缓。
+
+## 2026-08-20 — Session 356 · S10 撤退态活跃单位语义收口
+
+- Phase：**S10 战斗收口 · 撤退/追击相邻债**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：既有 `isRetreated=true` 单位现在统一视为六角战非活跃部队：敌军 AI 与战斗 `sideAlive` 排除其存活/行动资格；目标选择、寻路占位、AOE 波及、灼烧推进、敌军回合恢复和敌军主动单挑候选均排除撤退单位。
+- 玩家门禁：变阵、移动、撤销、普攻、火计、观天、战法和单挑不能再操作撤退单位或把其当作目标；既有 `isRetreated`、兵力快照与战后 50% 回流逻辑保持不变。
+- 决策：不新增 `BattleState`/`BattleUnit` 字段、API、RNG、静态数据规模或 UI；这是对 Session 352 既有撤退语义的运行时一致性补齐，不是完整敌军撤退/追击实现。
+- 验证：`verify-tactical-ai` **66/66**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。
+- 动态验收边界：浏览器连接检查仍为 `agent.browsers.list()=[]`，未完成真实 DOM 点击；本轮专项/服务层验证不写成浏览器验收。
+- 边界：完整敌军撤退/追击/截击、攻城突围、多军团协同、地形可见范围和移动后特殊连击仍后置。
+- 文档同步：`03/05/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 BattleView 真实点击验收，之后再决定完整敌军撤退/追击债或转回 S18/S03；0-B 继续暂缓。
+
+## 2026-08-20 — Session 355 · S10 受围敌军突围走位最小切片
+
+- Phase：**S10 战斗收口 · 六角受围突围走位**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：`runSimpleEnemyAi` 发现自身由 `resolveHexSurround` 派生为受围时，优先寻找可达且未占用、能将有效接战方向降到一支以内的空格；移动后更新朝向、重新选目标并沿既有战法/火计/普攻链继续行动。
+- 决策：候选按接战方向数、剩余移动力和坐标稳定排序，不消费 RNG；没有合法落点时回退原有攻击/距离评分。不写 `isRetreated`，不直接结束战斗，未新增 `BattleState`/`BattleUnit` 字段、API、数据规模或 UI。
+- 边界：这是解除一次派生包围的走位切片，不是完整敌军撤退/追击/截击、攻城突围或多军团 AI。
+- 验证：`verify-tactical-ai` **59/59**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。浏览器当前无连接，未宣称真实 DOM 点击验收。
+- 文档同步：`01/03/05/08/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 BattleView 真实点击验收，之后再决定完整敌军撤退/追击债或转回 S18/S03；0-B 继续暂缓。
+
+## 2026-08-20 — Session 354 · S10 敌军协同包围走位最小切片
+
+- Phase：**S10 战斗收口 · 六角敌军协同走位**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 实装：`runSimpleEnemyAi` 在目标已有一支有效相邻敌军、但尚未形成受围时，优先寻找另一可达且未占用的目标邻接格；落子后复用 `directionTo` 写回朝向，随后沿既有战法/普攻链继续行动。
+- 决策：候选按剩余移动力、方向和坐标稳定排序，不消费 RNG；没有可行包抄位时保持原有距离/地形评分。未新增 `BattleState`/`BattleUnit` 字段、API、数据规模或 UI。
+- 边界：仅覆盖“已有一翼→寻找第二翼”的敌军走位；完整敌军包围/撤退 AI、追击/截击、攻城突围、多军团协同、地形可见范围与移动后特殊连击仍后置。
+- 验证：`verify-tactical-ai` **55/55**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。浏览器当前无连接，未宣称真实 DOM 点击验收。
+- 文档同步：`01/03/05/08/09/10/12/27/35`、`HANDOFF.md`。
+- **Next**：有浏览器连接时补 BattleView 真实点击验收，之后再决定完整包围/撤退/追击债或转回 S18/S03；0-B 继续暂缓。
+
+## 2026-08-20 — Session 353 · S10 敌军走位朝向与协同包围前置
+
+- Phase：**S10 战斗收口 · 六角敌军 AI 一致性修补**；继续 0-A，不扩静态数据规模、不启动 0-B。
+- 修复：`runSimpleEnemyAi` 敌军走位现在与玩家 `moveUnit` 共享 `facing` 契约；移动后朝向当前目标，若接敌时目标评分重新选目标则改朝实际出手目标，避免协同包围派生把移动后的敌军误判为背向。
+- 边界：不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或数据文件；不宣称完整敌军包围/撤退 AI、追击/截击、攻城突围或多军团协同完成。
+- 验证：`verify-tactical-ai` **51/51**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；共享 **416** + client **51**；全仓 typecheck/lint/build/validate-data/diff-check 全绿。
+- 动态验收边界：浏览器技能连接检查仍返回空列表，未完成真实 DOM 点击；本轮是服务端战术引擎修补，不以静态检查替代浏览器验收。
+- **Next**：有浏览器连接时补 BattleView 真实点击验收；之后再决定 S10 完整包围/追击债或转回 S18/S03，0-B 继续暂缓。
+
+## 2026-08-20 — Session 352 · S10 六角协同包围与战术撤退
+
+- Phase：**S10 战斗收口 · 阵型协同包围/撤退 0-A 最小切片**；不扩静态数据规模，不启动 0-B。
+- 实装：新增 `shared/hex-positioning.ts`，按存活单位的六角邻接、朝向与不同接战方向派生 `isSurrounded`；不新增 `BattleState` 存档字段。受围部队变阵仅可选方阵，玩家攻击/敌军 AI 攻击的暴击与反击链接收派生态势。
+- 撤退：新增 `POST /api/game/battle/retreat`；玩家回合成功时将存活攻方写入既有 `isRetreated`，战斗进入 `over/defender`，不消费 RNG；任一我军受围返回 `RETREAT_SURROUNDED` 且快照不变。legacy march 与 tactical `activeMelee` 退出均按 50% 保留撤退兵力。
+- UI：BattleView 增加 `battle-surround-status`、`btn-battle-retreat`、结束态 `btn-exit-battle`；撤退阻断码翻译为可读战报。
+- 验证：`hex-positioning.test.ts` + `formation-core.test.ts` **13/13**；`verify-tactical-retreat` **9/9**；S10 回归 `verify-save-battle` **59/59**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；HTTP 出征→撤退→退出链通过（战术撤退返回500兵）；`pnpm test` shared **416** + client **51**；全仓 typecheck/lint/build、validate-data、diff-check 通过。
+- 动态验收边界：浏览器技能连接流程已执行，但当前环境 `agent.browsers.list()` 为空，无法完成真实 DOM 点击；HTTP 验收不等同于浏览器验收，已保留该阻塞。
+- 文档：同步 `01/03/04/05/06/07/08/09/12/35`、`HANDOFF.md`。
+- 边界：完整敌军包围/撤退 AI、追击/截击、攻城突围、多军团协同和 0-B 仍后置。
+- **Next**：有浏览器连接时优先补 `BattleView` 的真实点击验收；随后由用户决定继续 S10 完整包围/追击债，或转回 S18/S03 交叉深化；0-B 继续暂缓。
+
+## 2026-08-20 — Session 351 · S18 家属质任处置 C 切片
+
+- Phase：**S18/S03/S05 交叉规则收口**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：攻城后按实际家属数量生成 `GameState.pendingFamilyTreatment`；玩家通过全局弹窗选择善待/中立/镇压；选择写入 `City.familyTreatment`，结束回合和服务端回合推进均受待决门禁保护。
+- 规则：善待新占城民心 +10、旧主相关驻军每季士气 −5 共 3 季、叛乱倍率 ×0.7；中立无追加效果；镇压民心 −20、旧主攻城 ×1.1、叛乱倍率 ×1.5。数字真源为 `docs/08-data-dictionary.md` §二十六。
+- 接口/UI：新增 `POST /api/game/civil/family-treatment`；TopBar 门禁；`FamilyTreatmentDialog` 三选一；屯田抽屉展示当前处置。
+- 兼容：`GameStateSchema`/City Zod 与 v1 存档同步，旧档缺省无待决项；campaign 与 legacy march 占城路径均生成待决项。
+- 验证：`verify-family-treatment` **15/15**；HTTP 导入待决存档→善待→结束回合 **通过**；`verify-save-game-state` 10、`verify-campaign` 71、`verify-hostage-families` 9；`pnpm test`：shared **411** + client **51**；全仓 typecheck/lint/build、validate-data 通过。
+- 动态验收边界：浏览器技能已按流程检查，但当前运行环境浏览器列表为空，无法完成真实按钮点击；已保留该阻塞，不以静态检查替代浏览器验收。
+- 文档：同步 `01/03/04/05/06/07/08/09/12/34/35`、`HANDOFF.md`。
+- **Next**：补浏览器真实点击验收；再由用户决定 S10 后置债 E 或继续 S18/S03 交叉深化；0-B 继续暂缓。
+
+## 2026-08-20 — Session 350 · S10 正式特殊兵种熟练度
+
+- Phase：**S10 战斗收口 · proficiency 使用次数**；不扩 units=9、不启动 0-B。
+- 实装：`unitUsageRecords.abilityUses` + `resolveProficiencyPower`（满档 50）；替换适性线性代理；玩家/敌军 AI 扣气记账。
+- 0-A 演示战法：轻骑兵「骑突」`cav_proficient_rush`；UI 显示「骑突·熟N」。
+- 验证：`verify-special-proficiency` **10/10**；shared 单测 2；tactical-ai 49；weather 15；save-battle 59；validate-data；typecheck。
+- 文档：`05`/`09`/`12`/`35`/`HANDOFF`/`10-progress`。
+- **Next**：依次 **C 善待/镇压家属 UI**；0-B 继续暂缓。
+
+## 2026-08-20 — Session 349 · S10 天气主动技能
+
+- Phase：**S10 战斗收口 · 天气主动**；不扩数据规模、不启动 0-B；不扩 skills.json 30 表。
+- 实装：
+  - `shared/weather-skill.ts`：白名单诸葛亮(4)/司马懿(12)；气力 40（孔明半额 20）；倒计时重置 5。
+  - `castWeatherSkill` + `POST /api/game/battle/weather`；确定性、零 RNG；交权敌军；单挑暂停门禁。
+  - BattleView「观天」+ 天气选择条（testid `btn-weather-skill` / `battle-weather-picker`）。
+- 验证：`verify-weather-skill` **15/15**；shared weather-skill 单测 3；`verify-save-battle` 59；server/client typecheck；真实 HTTP：诸葛亮借东风 晴→雨、气力−20、timer=5、交权敌军。
+- 文档对齐：`05`/`06`/`07`/`09`/`12`/`35`/`HANDOFF`/`10-progress`。
+- **Next**：依次 **B 正式特殊兵种熟练度**；善待/镇压家属后置；0-B 继续暂缓。（**熟练度已由 Session 350 收口**）
+
 ## 2026-08-19 — Session 348 · L3 国策 + 家属质任
 
 - Phase：**S17 L3 + 军屯深化 §5.8.2**；不扩数据规模、不启动 0-B。
@@ -7,7 +153,7 @@
 - 家属质任：征兵绑定家属；迁家属金500/季一次；失陷士气−40（治所质任全国）。善待/镇压后置。
 - 验证：`verify-l3-policy` **15/15**；`verify-hostage-families` **9/9**；`verify-save-game-state` 10；三端 typecheck。
 - 文档对齐：`01`/`03`/`04`/`05`/`06`/`07`/`09`/`12`/`16`/`35`/`README`/`HANDOFF`/`10-progress`。
-- **Next**：天气主动技能 / 特殊兵种熟练度（需批准）或 0-B；0-B 继续暂缓。
+- **Next**：天气主动技能 / 特殊兵种熟练度（需批准）或 0-B；0-B 继续暂缓。（**天气主动已由 Session 349 收口**）
 
 ## 2026-08-19 — Session 347 · 主线③收口（L2 十一计齐）
 

@@ -24,6 +24,17 @@ export type FamilyChildEntry = {
 
 export type FamilyOverview = ReturnType<typeof buildFamilyOverview>;
 
+export type FamilyGenealogyEntry = {
+  childId: number;
+  childName: string;
+  birthYear: number;
+  appearYear: number;
+  source: string;
+  father: { id: number; name: string } | null;
+  mother: { id: number; name: string } | null;
+  status: '待登场' | '已登场·本势力' | '已登场·在野' | '已登场·他势力';
+};
+
 export type MarriageDraft = {
   femaleId: number | null;
   officerId: number | null;
@@ -49,6 +60,7 @@ export function buildFamilyOverview(
     .sort((a, b) => a.name.localeCompare(b.name, 'zh'));
   const enabledIds = new Set(game.enabledChildEventIds);
   const enabledChildren = childrenCatalog.filter((child) => enabledIds.has(child.childId));
+  const genealogy = buildFamilyGenealogy(game, childrenCatalog);
   const branches = officers.map((officer) => {
     const wives = females.filter(
       (female) => female.husbandId === officer.id || officer.wifeId === female.id,
@@ -135,10 +147,56 @@ export function buildFamilyOverview(
     branches,
     enabledChildCount: enabledChildren.length,
     appearedChildCount: enabledChildren.filter((child) => game.officers[child.childId]).length,
+    genealogy,
     marriageFemales: marriageFemales.map((female) => ({ id: female.id, name: female.name })),
     marriageOfficers: marriageOfficers.map((officer) => ({ id: officer.id, name: officer.name })),
     freeOfficers,
   };
+}
+
+/**
+ * 0-A 族谱只读投影：只展示当前剧本已启用、且至少一条直系关系连接到玩家势力的固定子女记录。
+ * 关系来源仍是 children.json 的 fatherId/motherId；这里不把 hidden.bloodline 当作父子关系，也不创建新人物。
+ */
+export function buildFamilyGenealogy(
+  game: GameState,
+  childrenCatalog: readonly FamilyChildEntry[],
+): FamilyGenealogyEntry[] {
+  const factionId = game.playerFactionId;
+  const enabledIds = new Set(game.enabledChildEventIds);
+  return childrenCatalog
+    .filter((child) => enabledIds.has(child.childId))
+    .filter((child) => {
+      const father = game.officers[child.fatherId];
+      const mother = game.females[child.motherId];
+      const live = game.officers[child.childId];
+      return father?.faction === factionId
+        || mother?.factionId === factionId
+        || live?.faction === factionId;
+    })
+    .map((child) => {
+      const father = game.officers[child.fatherId];
+      const mother = game.females[child.motherId];
+      const live = game.officers[child.childId];
+      const status: FamilyGenealogyEntry['status'] = live
+        ? live.faction === factionId
+          ? '已登场·本势力'
+          : live.faction == null
+            ? '已登场·在野'
+            : '已登场·他势力'
+        : '待登场';
+      return {
+        childId: child.childId,
+        childName: child.childName,
+        birthYear: child.birthYear,
+        appearYear: child.appearYear,
+        source: child.source,
+        father: father ? { id: father.id, name: father.name } : null,
+        mother: mother ? { id: mother.id, name: mother.name } : null,
+        status,
+      };
+    })
+    .sort((a, b) => a.appearYear - b.appearYear || a.childId - b.childId);
 }
 
 export function validateMarriageDraft(game: GameState | null, draft: MarriageDraft): string | null {
@@ -167,10 +225,11 @@ export function validateFollowCheck(game: GameState | null): string | null {
   return hasFreeOfficer ? null : '当前没有可检定的在野武将。';
 }
 
-type FamilyFacet = 'overview' | 'kinship' | 'marriage' | 'follow';
+type FamilyFacet = 'overview' | 'genealogy' | 'kinship' | 'marriage' | 'follow';
 
 const FACETS: readonly { id: FamilyFacet; label: string }[] = [
   { id: 'overview', label: '总览' },
+  { id: 'genealogy', label: '族谱' },
   { id: 'kinship', label: '姻亲' },
   { id: 'marriage', label: '婚配' },
   { id: 'follow', label: '跟随' },
@@ -201,7 +260,7 @@ export function FamilyOverviewDrawer() {
       className="flex h-[min(34rem,calc(100vh-12rem))] min-h-0 flex-1 flex-col"
       data-testid="command-family-drawer"
     >
-      <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="家族分面">
+      <nav className="mb-3 grid grid-cols-5 gap-1" aria-label="家族分面">
         {FACETS.map((item) => (
           <button
             key={item.id}
@@ -221,7 +280,7 @@ export function FamilyOverviewDrawer() {
       </nav>
 
       <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
-        S18 家族总署：婚配与手动跟随均在此配置，并经统一终审后提交。
+        S18 家族总署：族谱只读展示固定史实关系；婚配与手动跟随均在此配置，并经统一终审后提交。
       </p>
 
       <section
@@ -236,6 +295,7 @@ export function FamilyOverviewDrawer() {
               label="固定子女"
               value={`${overview.appearedChildCount}/${overview.enabledChildCount} 已登场`}
             />
+            <Fact label="族谱记录" value={overview.genealogy.length} testId="command-family-genealogy-count" />
             <Fact label="在野候选" value={overview.freeOfficers.length} />
             <div className="space-y-1 pt-1">
               {overview.females.map((female) => (
@@ -247,6 +307,25 @@ export function FamilyOverviewDrawer() {
               ))}
             </div>
           </>
+        ) : facet === 'genealogy' ? (
+          overview.genealogy.length > 0 ? overview.genealogy.map((entry) => (
+            <article
+              key={entry.childId}
+              className="border border-stone-800 px-3 py-2"
+              data-testid={`command-family-genealogy-${entry.childId}`}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <strong className="text-amber-200">{entry.childName}</strong>
+                <span className="text-[10px] text-stone-500">{entry.status}</span>
+              </div>
+              <p className="mt-1 text-[10px] text-stone-400">
+                父：{entry.father?.name ?? '未录'}　母：{entry.mother?.name ?? '未录'}
+              </p>
+              <p className="text-[10px] text-stone-600">
+                生年 {entry.birthYear} · 登场 {entry.appearYear} · {entry.source === 'history' ? '正史' : entry.source === 'romance' ? '演义' : '传说'}
+              </p>
+            </article>
+          )) : <Empty>当前剧本没有与本势力相连的固定族谱记录。</Empty>
         ) : facet === 'kinship' ? (
           overview.branches.length > 0 ? overview.branches.map((branch) => (
             <div

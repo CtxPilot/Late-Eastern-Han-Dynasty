@@ -371,6 +371,8 @@ export interface UnitUsageRecord {
   battlesUsed: number;
   breakpointsHit: number;
   bestFormationMatches: number;
+  /** Session 350：proficiency 战法施放次数（含失手）；旧档缺省 0 */
+  abilityUses: number;
 }
 
 // ========================
@@ -645,6 +647,7 @@ export interface CityStats {
   commerce: number;    // 商业 0~1000
   wall: number;        // 城墙 0~1000
   morale: number;      // 民心 0~100
+  culture?: number;    // 文化 0~999；Session 362 旧档兼容可缺省，按0读取
 }
 
 /**
@@ -700,6 +703,12 @@ export interface City {
   specialProduct: string | null;
   resourceOutput: Partial<Record<ResourceType, number>>;  // 每季资源产出
   recruitableUnits: UnitType[];
+
+  // S18 质任家属（Session 348/351，均为旧档兼容 optional）
+  garrisonFamilies?: number;
+  familyBackupCityId?: number;
+  familyRelocateQuarter?: number;
+  familyTreatment?: FamilyTreatmentState;
 }
 ```
 
@@ -1300,6 +1309,13 @@ export interface ChildBirthEvent {
 }
 ```
 
+### Session 359 · 0-A 直系族谱只读投影
+
+`FamilyOverviewDrawer` 的“族谱”分面从当前剧本启用的 `ChildBirthDef` 派生父、母、子女与登场状态，
+只保留至少一条直系关系连接到玩家势力的记录。该投影不把 `Officer.hidden.bloodline` 解释为父子关系，
+不新增 `Officer.fatherId`/`motherId`、`GameState` 字段、API 或随机流程；未录入实体的父/母显示“未录”，
+完整多代族谱与武将系统化父母字段仍后置。
+
 ---
 
 ## 十五、历史事件 GameEvent
@@ -1484,6 +1500,8 @@ export interface GameState {
   pendingEvents: number[];
   invalidatedEvents: number[];
   eventChoices: Record<number, number>;
+  /** 玩家攻城后待选择的家属处置；null/缺省=无待决项。 */
+  pendingFamilyTreatment?: PendingFamilyTreatment | null;
 
   // 霸府/称王/称帝主线（docs/26，Session 188 Q1 已批准方案A，HC-P0-1 已实装）
   emperorLocation?: number | null;  // 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移
@@ -2228,7 +2246,7 @@ interface SaveEnvelopeV1<TSnapshot = GameState> {
 
 `shared/game-state-plot-schema.ts` 增加第七个组合部件 `GameStatePlotSchema`，严格覆盖 `Plot[]`、成本与结算结果。计谋 ID 必须唯一；准备期必须有正数倒计时且无结果，生效期必须有正数倒计时和结果，已结算状态必须倒计时归零且有结果。目标形状与当前引擎收口：离间计只指定目标势力，假情报指定敌势力与城市，空城疑兵只指定己方城市，美人计可额外指定武将及女间谍；`inverted` 仅属于空城疑兵；**L2 釜底抽薪**指定敌城（detailed）；**L2 暗渡陈仓（Session 341）**须 `targetCityId`（暗渡）+ `feintCityId`（明修）两邻接敌城；**L2 树上开花（Session 342）**只指定己方城、无 `targetFactionId`、层必须为 strategic；**L2 指桑骂槐（Session 343）**无城/势力目标、可选 `targetOfficerId`（儆猴）、层必须为 strategic、即时 RESOLVED；**L2 趁火打劫（Session 344）**须 `targetFactionId`（目标势力）、无城目标、层必须为 strategic、即时 RESOLVED、无识破；**L2 调虎离山（Session 346）**须敌城 + `agentId` 女间谍 + 可选 `targetOfficerId`、层必须为 strategic；**L2 借刀杀人（Session 347）**须敌城 + `feintCityId` 第三方源城 + `secondaryFactionId` + `agentId` 女间谍；**L2 秘密挖角**须敌城 + `targetOfficerId`；**L2 隔岸观火**须两势力 `targetFactionId`+`secondaryFactionId`、无城；**L2 偷梁换柱**须敌城 + `agentId` 密探；**L2 借尸还魂**须 `targetFactionId`、无城。`pnpm verify-save-plot` 会解析两个真实剧本，并实际执行离间计发起、扣除 200 金和推进一回合结算，每一步重新解析权威状态。势力、城市、武将及特工引用是否存在仍由下一步完整组合 Schema 统一检查。
 
-`shared/game-state-policy-schema.ts`（Session 348）增加 `GameStatePolicySchema`，覆盖可选 `nationalPolicies[]`：每势力至多一条；坚壁清野必须 `targetCityId`。旧档缺省由存档迁移补 `[]`。City 另增 `garrisonFamilies` / `familyBackupCityId` / `familyRelocateQuarter`（质任）。
+`shared/game-state-policy-schema.ts`（Session 348）增加 `GameStatePolicySchema`，覆盖可选 `nationalPolicies[]`：每势力至多一条；坚壁清野必须 `targetCityId`。旧档缺省由存档迁移补 `[]`。City 另增 `garrisonFamilies` / `familyBackupCityId` / `familyRelocateQuarter`（质任）。**Session 351** 新增 `City.familyTreatment` 与 `GameState.pendingFamilyTreatment`；`hostage-families.ts` 提供 `FamilyTreatmentState` / `PendingFamilyTreatment` Schema，完整根 Schema 同步校验城市与势力引用。
 
 `shared/game-state-full-schema.ts` 将上述七个切片组合为严格 `GameStateSchema`：根字段禁止遗漏或混入瞬态字段，并统一校验城市、势力、武将、女性角色、战役节点、CampaignArmy、三级战斗、外交、谍报和计谋的跨切片引用；事件完成/待处理/失效三账本不得交叉。组合层复用各切片 Schema，不复制域内规则。`BattleUnit.armyId` 是六角战斗内部编组 ID，不是旧 `GameState.armys` 外键；出征后 `Officer.location` 可保留行政归属，因此城市驻留清单只采用“清单内武将必须指向本城”的单向一致性约束。`pnpm verify-save-game-state` 覆盖两剧本、真实计谋和 7 类非法跨引用/根字段，10/10；三级战斗验证另以真实进行中状态确认完整 Schema，24/24。
 
@@ -2402,6 +2420,15 @@ Session 290（FM-P3）继续为 `MeleeState` 增加 `commandCache?: Record<strin
 pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段表示没有项目；
 实体组合 Schema 校验指派武将引用存在。既有 `developmentProgress` 三数字段继续保留作
 静态数据兼容，不再承担 R5 项目权威状态。
+
+### Session 362 · S03 文化持续投入
+
+`DevelopmentProject.kind` 扩展为 `farm | commerce | wall | culture`。文化项目复用既有
+`City.activeDevelopment` 单项目模型与 `tickDevelopmentProject` 月结链：首付 120 金、总计
+360 金、持续 6 个月，完成时写入 `City.stats.culture += 60`（封顶 999）。暂停、资源续费、
+人员不可用和超过 3 个月的进度损失与原三类项目相同；启动/推进/完成不消费 RNG。
+旧存档的 `culture` 与文化项目均可缺省；技术研发/人才吸引的文化消费不在本切片内，避免把
+S03 新字段直接耦合到 S11 人事公式。
 ### Session 302 · 六角战报解释字段
 
 当前运行时 `BattleLogEntry` 允许可选 `explanation`：变阵记录 TP 与前后阵型，攻击记录攻守阵型贡献。
@@ -2438,6 +2465,30 @@ pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段
 - 同回合审计序号改为 `max(同回合 logicalTimestamp%1000)+1`，不再用 `history.length+1`；
   因此 `slice(-3)` 窗口满后新记录仍单调递增且窗口内 `id` 唯一。移动/攻击/变阵共用
   `appendBattleAction`。
+
+### Session 352 · 协同包围与撤退的瞬时派生边界
+
+本切片不新增 `BattleState`、`BattleUnit` 或存档版本字段。`shared/hex-positioning.ts` 根据当前
+六角坐标、敌我阵营、`isDestroyed/isRetreated/troopCount` 与 `facing` 纯函数派生
+`HexSurroundState`；该结果只在变阵、暴击/反击和撤退请求中即时消费。主动撤退复用已有
+`BattleUnit.isRetreated` 标记，不新增“撤退状态”字段；旧式出征与 tactical `activeMelee` 均按
+50% 规则保留撤退兵力；战斗快照仍按原 Schema 校验，旧档缺省朝向
+继续使用攻方0/守方3的兼容解释。
+
+### Session 354 · 敌军协同走位不扩展模型
+
+敌军协同包围走位只读取现有单位坐标、朝向、兵力/存活状态和当前可达范围，直接复用
+`shared/hex-positioning.ts` 派生态势；不新增 `BattleState`、`BattleUnit`、存档版本字段或 API。
+
+### Session 355 · 受围突围走位不扩展模型
+
+受围敌军突围只读取现有坐标、朝向、存活状态与可达范围，寻找能解除 `resolveHexSurround` 派生态势的空格；
+移动后仍沿既有行动链继续处理。不新增 `BattleState`、`BattleUnit`、`isRetreated` 语义、存档版本字段或 API。
+
+### Session 356 · 撤退态活跃单位语义不扩展模型
+
+六角战运行时继续复用既有 `BattleUnit.isRetreated`：撤退单位保留兵力快照供战后回流，但不再参与存活、目标、寻路占位、AOE、
+灼烧、敌军回合恢复、主动单挑或玩家动作门禁。只补齐现有字段的消费边界，不新增 `BattleState`/`BattleUnit` 字段、存档版本或 API。
 
 ---
 

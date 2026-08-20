@@ -34,6 +34,7 @@ import {
   OfficerStaticSchema,
 } from './validators/index.js';
 import { CITY_FACTION_KINDS } from './city-factions.js';
+import { FamilyTreatmentStateSchema } from './hostage-families.js';
 
 const PositiveIdSchema = z.number().int().positive();
 const NullablePositiveIdSchema = PositiveIdSchema.nullable();
@@ -113,6 +114,19 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     traitLevels: z.record(z.string(), z.number().int().nonnegative()).optional(),
     traitPointsSpent: z.number().int().nonnegative().optional(),
     consortIds: z.array(z.object({ id: z.number().int(), rank: z.enum(['concubine', 'ji']) })).optional(),
+    unitUsageRecords: z
+      .array(
+        z
+          .object({
+            unitType: z.nativeEnum(UnitType),
+            battlesUsed: z.number().int().nonnegative(),
+            breakpointsHit: z.number().int().nonnegative(),
+            bestFormationMatches: z.number().int().nonnegative(),
+            abilityUses: z.number().int().nonnegative(),
+          })
+          .strict(),
+      )
+      .optional(),
   })
   .strict();
 
@@ -148,6 +162,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
         commerce: z.number().nonnegative(),
         wall: z.number().nonnegative(),
         morale: z.number().min(0).max(100),
+        culture: z.number().nonnegative().optional(),
       })
       .strict(),
     gold: z.number().nonnegative(),
@@ -168,7 +183,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
       .strict(),
     activeDevelopment: z
       .object({
-        kind: z.enum(['farm', 'commerce', 'wall']),
+        kind: z.enum(['farm', 'commerce', 'wall', 'culture']),
         assignedOfficerId: PositiveIdSchema,
         totalMonths: z.number().int().positive(),
         remainingMonths: z.number().int().nonnegative(),
@@ -196,6 +211,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     garrisonFamilies: z.number().int().nonnegative().optional(),
     familyBackupCityId: PositiveIdSchema.optional(),
     familyRelocateQuarter: z.number().int().optional(),
+    familyTreatment: FamilyTreatmentStateSchema.optional(),
   })
   .strict()
   .superRefine((city, ctx) => {

@@ -36,6 +36,7 @@ import {
   type GameState,
   type Officer,
   type PendingImpeachment,
+  familyTreatmentRevoltMultiplier,
 } from '@leh/shared';
 import { grantMeritTo } from './meritGrant.js';
 import { appointOfficer } from './appoint.js';
@@ -299,7 +300,9 @@ export function tickFactionPolitics(
     // 3. 叛乱判定
     const patrolled = city.factionPatrolStamp === stamp;
     const revoltFired =
-      !patrolled && hasUnrestMinorFaction(regressed) && rng() < REVOLT_CHANCE_PER_MONTH;
+      !patrolled &&
+      hasUnrestMinorFaction(regressed) &&
+      rng() < REVOLT_CHANCE_PER_MONTH * familyTreatmentRevoltMultiplier(city.familyTreatment?.mode);
     if (revoltFired) {
       const troops = Math.floor(city.troops * (1 - REVOLT_TROOPS_LOSS_RATE));
       const morale = Math.max(0, (city.stats.morale ?? 70) - REVOLT_MORALE_LOSS);

@@ -9,20 +9,134 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 348**（L3 国策 + 家属质任） |
+| 会话 | **Session 362**（S03 文化持续投入 0-A） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 348：八国策开关 + 质任迁家属 |
-| 文档最新 | `35`/`12`/`04`/`05`/`06`/`07`/`01`/`03`/`09`/`16`/`README`/`10-progress` 与本交接已同步 |
-| 本交接用途 | **L3 国策 0-A 已接通**；家属质任迁徙/失陷士气已接通 |
-| 下一步 | 天气主动技能 / 正式特殊兵种熟练度（需批准）；善待/镇压家属选项后置；**0-B 继续暂缓** |
+| 代码最新 | Session 362：S03 文化持续投入复用 `activeDevelopment`；Session 361 BattleView 撤退态边界、Session 360 截击后相邻目标优先与 Session 359 家族“族谱”只读分面保持有效 |
+| 文档最新 | `01/03/04/06/07/08/09/10/12/35` 与本交接已同步；其余既有设计文档保持有效 |
+| 本交接用途 | **S03 文化持续投入 0-A**；不启动工艺/交通/卫生、S10 完整追击/截击债或 0-B |
+| 下一步 | 有浏览器连接时实际点击内政·产业“发展文化”；随后由用户决定继续 S03 文化效果消费、回到 S10/S18，或保持后置；**0-B 继续暂缓** |
+
+### Session 362 交接要点
+
+- 新增 `shared/civil-development.ts` 作为持续项目数字真源：文化总成本360金、首付120金、工期6个月、完成文化+60，上限999。
+- `DevelopmentProject.kind` 支持 `culture`；`City.stats.culture` 为旧档兼容 optional，启动、月结、完成均复用既有人员门禁、月费、暂停/进度损失与完整 Schema 链。
+- API：`POST /api/game/civil/develop` 接受 `kind:'culture'`；UI：内政·产业显示文化积累、发展文化按钮和统一终审；文化只落库/展示，技术研发/人才吸引消费后置。
+- 验证：`verify-culture-development` **10/10**、共享文化配置单测 **1/1**、client 全量 **54/54**、shared 全量 **417/417**、R5 预算 **17/17**、即时内政 RNG **9/9**；HTTP 启动文化项目实测通过，workspace typecheck/build、完整 GameState Schema、validate-data、compliance、`git diff --check` 均通过。浏览器运行时无可用实例，未宣称 DOM 点击验收。
+- 边界：本轮不扩静态 JSON 规模，不新增 RNG，不实现工艺/交通/卫生或文化效果消费；0-B 继续暂缓。
+
+### Session 361 交接要点
+
+- `client/src/components/battle/battleViewState.ts` 统一 BattleView 的活跃部队筛选：撤退部队保留结束态摘要快照，但不再进入地图选择、攻击目标、可攻击标记、协同包围计数或任何玩家动作。
+- 既有 `selectedUnitId` 若指向撤退单位会被视为无活动选择；结束态仍保留未击破撤退部队的兵力摘要，便于对应 `/battle/exit` 的 50% 回流结算。
+- 不新增 `BattleState`/`BattleUnit` 字段、API、RNG、规则数字或静态数据；客户端只复用既有撤退语义，不复制服务端合法性判定。
+- 验证：`battleViewState.test.ts` **2/2**；client 全量 **54/54**；shared **416/416**；`verify-tactical-ai` **78/78**；workspace typecheck/build/validate-data、`git diff --check` 全绿。
+- 浏览器运行时 `agent.browsers.list()=[]`，未完成真实 DOM 点击验收；不要把本轮状态边界测试写成浏览器验收。
+- 边界：这是撤退态 UI 消费边界，不是完整追击/截击、攻城突围或多军团撤退；0-B 继续暂缓。
+
+### Session 360 交接要点
+
+- `runSimpleEnemyAi` 在低士气/重创敌军满足 1 格相邻截击门禁时，先在相邻活跃敌对部队中按既有确定性目标评分选取行动目标；只有无相邻候选时才回退全局目标评分。
+- 仍复用既有战法、火计、普攻、暴击/反击链与权威 RNG 顺序；不新增 `BattleState`/`BattleUnit` 字段、API、追击状态、额外 RNG 或静态数据规模。
+- 验证：`verify-tactical-ai` **78/78**；浏览器连接检查返回 `agent.browsers.list()=[]`，未宣称真实 DOM 点击验收。
+- 边界：这是截击后的目标语义修补，不是完整追击/截击、攻城突围或多军团撤退；0-B 继续暂缓。
+
+### Session 359 交接要点
+
+- `FamilyOverviewDrawer` 新增第五个分面 `族谱`，稳定 testid 为 `command-family-facet-genealogy`；每条记录 testid 为 `command-family-genealogy-{childId}`。
+- `buildFamilyGenealogy` 只读取当前剧本启用的 `children` 目录，按父/母实体或已登场子女与玩家势力的直系连接做投影；显示父、母、子女状态、生年/登场年和正史/演义/传说来源。
+- 不把 `Officer.hidden.bloodline` 当父子边；不新增 `Officer.fatherId/motherId`、`GameState`/存档字段、API、RNG 或静态数据规模；多代祖先、父兄跟随和完整父母模型后置。
+- 验证：`FamilyOverviewDrawer.test.ts` **3/3**；client 全量 **52/52**；client typecheck 通过。浏览器连接为空，未完成真实 DOM 点击验收。
+- 文档同步：`01/03/04/07/09/10/12/35`、`HANDOFF.md`。
+
+### Session 358 交接要点
+
+- `runSimpleEnemyAi` 对未受围且士气≤20或兵力≤最大兵力25%的敌军追加 1 格相邻截击门禁；若有活跃敌对单位相邻，不直接写 `isRetreated`，写入“被截击”战报后继续既有战法/火计/普攻链。
+- 未被截击的阈值撤退、受围低士气/重创单位的突围走位、撤退单位的非活跃语义、全军撤退胜负和 50% 回流均保持不变。
+- 不新增 `BattleState`/`BattleUnit` 字段、API、追击状态、额外 RNG 或静态数据规模；这是相邻截击最小门禁，不是完整追击/截击、攻城突围或多军团撤退。
+- 验证：`verify-tactical-ai` **75/75**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；`pnpm test`、typecheck/lint/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- 浏览器连接仍为空，未完成真实 DOM 点击验收；本轮无 UI/API 变更，专项/服务层验证不写成浏览器验收。
+
+### Session 357 交接要点
+
+- `runSimpleEnemyAi` 在每支敌军行动、目标选择前检查既有 `isSurrounded` 派生态势；未受围且士气≤20，或兵力≤最大兵力25%时，标记 `isRetreated=true`、`hasActed=true`、`mp=0`，不消费 RNG。
+- 若敌军已无活跃单位，六角战立即进入 `over/winner=attacker`；受围低士气/重创单位不直接撤退，先复用 Session 355 的突围走位，再沿既有战法/火计/普攻链行动。
+- 不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或静态数据规模；这是 0-A 敌军主动撤退最小切片；相邻截击门禁由 Session 358 补入，完整追击/截击、攻城突围或多军团撤退仍后置。
+- 验证：`verify-tactical-ai` **72/72**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。
+- 浏览器连接仍为空，未完成真实 DOM 点击验收；专项/服务层验证不等同浏览器验收。
+
+### Session 356 交接要点
+
+- `isRetreated=true` 现在是六角战中的非活跃终态：敌军 AI 与 `sideAlive` 不再把它计入存活/行动列表，选目标、寻路占位、AOE 波及、灼烧推进、敌军回合恢复和敌军主动单挑均排除撤退单位。
+- 玩家变阵、移动、撤销、普攻、火计、观天、战法、单挑等现有动作门禁也拒绝撤退单位；撤退快照仍保留既有 `troopCount`/`isRetreated` 供战后 50% 回流结算，不新增字段、API、RNG 或数据规模。
+- 验证：`verify-tactical-ai` **66/66**；`verify-save-battle` **62/62**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。
+- 浏览器连接仍为空，未宣称真实 DOM 点击验收；本轮 HTTP/服务层与专项验证不等同浏览器验收。
+- 边界：完整敌军撤退/追击/截击、攻城突围、多军团协同、地形可见范围和移动后特殊连击仍后置。
+
+### Session 355 交接要点
+
+- `runSimpleEnemyAi` 在自身由 `resolveHexSurround` 派生为受围且存在可达空位时，优先寻找能将有效接战方向降到一支以内的落点，更新 `facing`，重新选目标并复用既有战法/火计/普攻链。
+- 候选按接战方向数、剩余移动力和坐标稳定排序；不消费 RNG；没有合法落点时回退原有攻击/距离评分。
+- 不新增 `BattleState`/`BattleUnit` 字段、`isRetreated` 语义、API、RNG 或静态数据规模；这是解除一次派生包围的走位，不是完整撤退/追击/截击/攻城突围/多军团 AI。
+- 验证：`verify-tactical-ai` **59/59**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。浏览器当前无连接，未宣称真实 DOM 点击验收。
+
+### Session 354 交接要点
+
+- `runSimpleEnemyAi` 在目标已有一支有效相邻敌军、但尚未形成受围时，优先占用另一个可达且未占用的目标邻接格，并将 `facing` 写向目标。
+- 候选按剩余移动力、方向和坐标稳定排序；不消费 RNG；无可行包抄位时回退原有距离/地形评分。
+- 不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或静态数据规模；这是协同包围走位的 0-A 最小切片，不是完整敌军包围/撤退、追击/截击、攻城突围或多军团 AI。
+- 验证：`verify-tactical-ai` **55/55**；`verify-save-battle` **59/59**；`verify-tactical-retreat` **9/9**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **416** + client **51**；typecheck/lint/build/validate-data/verify-compliance 全绿，`git diff --check` 通过。浏览器当前无连接，未宣称真实 DOM 点击验收。
+
+### Session 353 交接要点
+
+- `runSimpleEnemyAi` 移动敌军现在写回 `facing=directionTo(新位置, 目标)`；移动后若目标评分改选，按实际攻击目标再次校正朝向。
+- 这是 Session 352 协同包围派生的前置一致性修补：不新增 `BattleState`/`BattleUnit` 字段、API、RNG 或数据规模；完整敌军包围/撤退 AI、追击/截击、攻城突围、多军团协同仍后置。
+- 验证：`verify-tactical-ai` **51/51**、`verify-save-battle` **59/59**、`verify-tactical-retreat` **9/9**；共享 **416** + client **51**；typecheck/lint/build/validate-data/diff-check 全绿。
+- 浏览器边界：按 browser skill 检查后 `agent.browsers.list()` 仍为空，未完成真实 DOM 点击；不要把本轮专项脚本写成浏览器验收。
+
+### Session 352 交接要点
+
+- 新增 `shared/hex-positioning.ts` / 单测：存活、未撤退且仍有兵力的相邻敌军，需至少两个不同接战方向且朝向允许接战，才派生 `isSurrounded`；无新存档字段。
+- `changeBattleFormation` 现在按每支存活攻方部队的派生态势校验，受围部队只能选方阵；`attackUnit` 与 `simpleAi` 将攻方/守方受围态势传给既有暴击/反击链。
+- 新端点 `POST /api/game/battle/retreat`：玩家回合成功时复用 `isRetreated`、结束战斗且 `winner=defender`、零 RNG；受围返回 `RETREAT_SURROUNDED`，状态不变。
+- `settleBattle` 与 tactical `activeMelee` 退出均按 50% 保留撤退兵力；BattleView 新增受围状态、战术撤退按钮、结束态退出按钮和错误翻译。
+- 验证：共享专项 **13/13**、`verify-tactical-retreat` **9/9**；S10 回归 `verify-save-battle` **59/59**、`verify-tactical-ai` **49/49**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；HTTP 场景1 出征宛→战术撤退→退出成功，出发城实际回流 500 兵；全量 `pnpm test` 为 shared **416** + client **51**，typecheck/lint/build/validate-data/diff-check 全绿。
+- 浏览器边界：已按 browser skill 连接流程检查，但 `agent.browsers.list()` 为空，未完成真实 DOM 点击；不要把 HTTP 链写成浏览器验收。
+- 边界：完整敌军包围/撤退 AI、追击/截击、攻城突围、多军团协同以及 0-B 仍后置。
+
+### Session 351 交接要点
+
+- 家属处置状态：`GameState.pendingFamilyTreatment`（待决）→ `City.familyTreatment`（已选）；攻城路径为 campaign 与 legacy march，只有玩家攻城生成待决项。
+- 新端点：`POST /api/game/civil/family-treatment { mode: kindness|neutral|repression }`；待决未处理时 `/end-turn` 服务端 400，客户端 TopBar 显示“待处置家属…”。
+- 善待：新占城民心 +10；`turn.ts` 每季度对 `affectedCityIds` 旧主驻军士气 −5，共 3 季；叛乱判定 ×0.7，状态到期清除。
+- 中立：仅保留失陷时的士气 −40；镇压：新占城民心 −20、旧主攻城战力 ×1.1、叛乱判定 ×1.5；六角直接战斗、流言/四面楚歌/将忠联动后置。
+- UI：`client/src/components/family/FamilyTreatmentDialog.tsx` 全局三选一；屯田抽屉城市行展示当前处置；规则不复制到普通家族面板。
+- 验证：`verify-family-treatment` **15/15**；HTTP 导入待决存档→`family-treatment(kindness)`→`end-turn` 真实链路通过；save-game-state 10、campaign 71、hostage-families 9；`pnpm test`：shared **411** + client **51**；全仓 typecheck/lint/build、validate-data 通过。
+- 浏览器边界：浏览器技能连接流程已执行，但当前环境 `agent.browsers.list()` 为空，未完成真实 DOM 点击；下一次有浏览器连接时优先运行 UI 验收。不得把 HTTP 验收写成浏览器验收。
+
+### Session 350 交接要点
+
+- proficiency 威力改读 `Officer.unitUsageRecords[].abilityUses`（满档 50 次 → maxPower）；适性仅门禁。
+- `castAbility` / 敌军 AI 扣气即记账；共享 `special-unit-proficiency.ts`；Zod optional 旧档兼容。
+- 0-A 演示：轻骑兵 `cav_proficient_rush`「骑突」（不扩 units=9）。
+- UI：proficiency 战法按钮显示「名·熟N」。
+- 验证：`verify-special-proficiency` **10/10**；shared 单测 2；tactical-ai 49；weather 15；save-battle 59；validate-data；typecheck。
+- 边界：0-B 虎豹骑等特殊兵种数据、兵种适性晋升消费 `battlesUsed` 仍后置。
+
+### Session 349 交接要点
+
+- S10 天气主动：`castWeatherSkill` + `POST /battle/weather { attackerId, weather }`；共享 `weather-skill.ts`（白名单 id 4/12）。
+- 气力基础 40，诸葛亮神算代理半额 20；目标天气须异于当前；确定性成功、零 RNG；`weatherChangeTimer` 重置为 5；结束行动并交权敌军；单挑暂停门禁复用。
+- UI：BattleView「观天」+ 天气选择条（`btn-weather-skill` / `battle-weather-picker`）。
+- 验证：`verify-weather-skill` **15/15**；shared weather-skill 单测 3；`verify-save-battle` 59；server/client typecheck；真实 HTTP：场景1 导入邻城敌占后 `POST /battle/weather` 诸葛亮 晴→雨、气力 100→80、timer=5、phase=enemy。
+- 边界：敌军 AI 不改天气；0-B 专属技能表全量；正式特殊兵种熟练度仍未做。（**熟练度已由 Session 350 收口**）
 
 ### Session 348 交接要点
 
 - L3 八国策：`NationalPolicy` / `GameState.nationalPolicies`；`POST /policy/set`、`GET /policy/current`；朝廷抽屉改行；切换立即结束旧策、下月生效、冷却 6 月。
 - 0-A 效果：以逸待劳自动战首回合攻防+10%（六角移动−1后置）；远交近攻月改友好；假痴不癫显示兵力×0.5 且 AI 攻权×1.8；反客为主驻盟友城每季取 5% 金粮、友好−2/月；高筑墙城防完成+30%、粮产+15%、征兵−20%、士气−1/月；避实击虚最弱敌城伤害+15%/其余−10%；坚壁清野边境城清粮+一年停产+过境耗粮×1.5；深藏不露对敌模糊+己方视野−1。
-- 家属质任：征兵绑定 `garrisonFamilies`；`POST /civil/relocate-families` 金500/每季一次；家属所在城失陷则相关城士气−40（治所质任=全国）。善待/镇压选项后置（默认中立冲击）。
+- 家属质任：征兵绑定 `garrisonFamilies`；`POST /civil/relocate-families` 金500/每季一次；家属所在城失陷则相关城士气−40（治所质任=全国）。**Session 351 已补善待/中立/镇压待决处置**。
 - 验证：`verify-l3-policy` **15/15**、`verify-hostage-families` **9/9**；save-game-state 10；shared 新增单测 + client 朝廷 4；三端 typecheck。
-- 边界：天气主动技能、特殊兵种熟练度、0-B、家属善待/镇压 UI、六角移动−1 未做。
+- 边界：0-B、六角移动−1、六角战斗处置倍率及流言/四面楚歌/将忠联动未做。（天气主动/熟练度/家属处置 UI 已分别由 Session 349/350/351 收口）
 
 ### Session 347 交接要点
 
@@ -657,7 +771,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S15 | AI | M+ | 内政占位 + 出征占城 + **总军师自动态势切换** |
 | S16 | 剧本/存档 | **M/D** | 两剧本选择与白名单已可玩；无 SQLite |
 | S17 | 计谋 | **S/M+** | L1 四计 ✅ · **L2 十一计 ✅ Session 339–347** · L3 设计；行政↔战场联动 |
-| S18 | 家族 | **M+** | 婚配/跟随/子女引擎 ✅；父辈/族谱 ❌ |
+| S18 | 家族 | **M+** | 婚配/跟随/子女引擎 ✅；Session 359 直系族谱只读分面 ✅；多代父辈/武将父母字段后置 |
 # 迷雾出征: pnpm verify-march-fog        # 7项权威边界断言
 | S20 | **前端体验** | **S/D** | Session 122 已实装己方武将名册、OfficerDetail、低忠诚警报及人事统一终审窗；Session 124 将详情升级为人物简册，并加入吕布/关羽/诸葛亮/曹操首批程序化头像与快捷入口。W4 其余子项与 W1~W3 仍为设计中，详见 `07-ui-design.md` §11.1.4/§12 |
 | S21 | **三级战斗串联** | **D** | Session 100 技术储备方案设计完成（零代码）。**§20.6 已重新映射**：W7 hex 沙盘降级为微操模式视图（非必经层级），W6→战场地图行军、W8→标准模式表现、W9→单挑演出 |
@@ -700,7 +814,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
 | S16 | 剧本/存档 | **M+** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；浏览器 JSON 导入/导出 + **Session 340 SQLite 命名槽位**（`$XDG_DATA_HOME/leh/saves.db`，遗留 JSON 一次性迁入）；系统菜单槽位 UI 已接通。多用户/云同步仍后置 |
 | S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城 ✅ 且创建/结算接权威 PRNG（S07/S17 合并验证 30+/30）；**L2 十一计 Session 339–347 已齐**（含借刀/挖角/观火/换柱/还魂）；L3 仍设计；AI 发起决策仍属 S15 |
-| S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；父辈/族谱 ❌ |
+| S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；Session 359 直系族谱只读分面 ✅；多代父辈与武将父母字段后置 |
 | S19 | **单挑大会** | **S/M** | **Session 338 最小闭环**：每年正月 16 人单败瞬时结算；押注/观战 UI 后置 |
 | S20 | **前端体验** | **M+** | CMD-P0～P38 完成；**Session 347：计略抽屉 L2 十一计入口齐**（借刀/挖角/观火/换柱/还魂）。详见 `07-ui-design.md` §11.1.4/§12 |
 | S21 | **战争四层串联** | **M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写；**Session 338** `verify-s21-layers` 20/20 |

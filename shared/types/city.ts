@@ -21,6 +21,8 @@ export interface CityRuntimeStats {
   commerce: number;
   wall: number;
   morale: number;
+  /** S03 0-A Session 362：文化持续投入值；旧存档缺省按 0 读取。 */
+  culture?: number;
 }
 
 /** Static JSON record (cities.json) */
@@ -64,7 +66,7 @@ export interface CityDemographics {
   elder: number;
 }
 
-export type DevelopmentProjectKind = 'farm' | 'commerce' | 'wall';
+export type DevelopmentProjectKind = 'farm' | 'commerce' | 'wall' | 'culture';
 
 export interface DevelopmentProject {
   kind: DevelopmentProjectKind;
@@ -142,4 +144,6 @@ export interface City extends CityStatic {
    * 迁家属季度戳。每城每季限一次。
    */
   familyRelocateQuarter?: number;
+  /** 家属失陷后的善待/中立/镇压处置状态。 */
+  familyTreatment?: import('../hostage-families.js').FamilyTreatmentState;
 }

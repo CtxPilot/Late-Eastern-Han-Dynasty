@@ -36,6 +36,14 @@ import {
   resolveFormationDeployment,
   duelTriggerChance,
   tacticalTurnFromTimestamp,
+  canUseWeatherActive,
+  weatherActiveEnergyCost,
+  isValidBattleWeather,
+  WEATHER_ACTIVE_TIMER_RESET,
+  getUnitAbilityUses,
+  recordUnitAbilityUse,
+  resolveProficiencyPower,
+  isUnitSurrounded,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
@@ -66,7 +74,12 @@ const HEX_TACTICAL_POINTS = 5;
 const HEX_TACTICAL_POINT_CAP = 10;
 
 function sideAlive(units: readonly BattleUnit[], side: 'attacker' | 'defender'): boolean {
-  return units.some((unit) => unit.side === side && !unit.isDestroyed && unit.troopCount > 0);
+  return units.some((unit) => unit.side === side && isActiveBattleUnit(unit));
+}
+
+/** 撤退单位可留在快照供战后结算，但不再参与六角战的活跃逻辑。 */
+function isActiveBattleUnit(unit: BattleUnit): boolean {
+  return !unit.isDestroyed && !unit.isRetreated && unit.troopCount > 0;
 }
 
 /**
@@ -78,7 +91,7 @@ function enterEnemyPhase(battle: BattleState): BattleState {
     ...battle,
     phase: 'enemy',
     actionHistory: battle.actionHistory?.map((action) => action.reversible ? { ...action, reversible: false } : action),
-    units: battle.units.map((unit) => unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0
+    units: battle.units.map((unit) => unit.side === 'defender' && isActiveBattleUnit(unit)
       ? { ...unit, hasActed: false, mp: effectiveMovement(unit.maxMp, battle.weather) }
       : unit),
   };
@@ -435,36 +448,33 @@ export function changeBattleFormation(
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   assertBattleNotPausedForDuel(battle);
   const mainUnit = battle.units.find((unit) => unit.id === unitId && unit.side === 'attacker');
-  if (!mainUnit || mainUnit.isDestroyed || mainUnit.troopCount <= 0) throw new Error('变阵主将不存在或已溃');
+  if (!mainUnit || !isActiveBattleUnit(mainUnit)) throw new Error('变阵主将不存在或已溃');
   const army = state.campaignArmies.find((candidate) => candidate.id === mainUnit.armyId);
   const commanderId = army?.commanderId ?? mainUnit.commanderId;
   const commanderUnit = battle.units.find((unit) => unit.side === 'attacker' && unit.commanderId === commanderId) ?? mainUnit;
+  if (!isActiveBattleUnit(commanderUnit)) throw new Error('变阵主将不存在或已溃');
   if (commanderUnit.hasActed) throw new Error('主将本回合已经行动，不能变阵');
   if ((battle.tacticalPoints ?? HEX_TACTICAL_POINTS) < 1) throw new Error('六角战术点不足');
   if ((battle.tacticalPointsUsed ?? 0) >= 1) throw new Error('本回合已经变阵');
   if (commanderUnit.formation === targetFormation) throw new Error('目标阵型与当前相同');
 
   const catalog = getStaticData().formations;
-  const enemyNearMain = battle.units.some((unit) =>
-    unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0
-      && hexDistance(unit.position, commanderUnit.position) <= 1,
-  );
   const mastery = state.officers[commanderId]?.formationMastery ?? [];
   const checks = battle.units
-    .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && unit.troopCount > 0)
+    .filter((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit))
     .map((unit) => getAvailableFormations({
-      catalog,
-      mastered: mastery,
-      unitType: unit.unitType,
-      terrain: battle.hexGrid.terrain[unit.position.r]?.[unit.position.q],
-      isSurrounded: enemyNearMain,
-    }).find((entry) => entry.formationId === targetFormation));
+        catalog,
+        mastered: mastery,
+        unitType: unit.unitType,
+        terrain: battle.hexGrid.terrain[unit.position.r]?.[unit.position.q],
+        isSurrounded: isUnitSurrounded(battle.units, unit.id),
+      }).find((entry) => entry.formationId === targetFormation));
   if (!checks.length || checks.some((entry) => !entry?.available)) {
     const reason = checks.find((entry) => entry && !entry.available)?.blockReason ?? 'unknown';
     throw new Error(`不能变更为目标阵型（${reason}）`);
   }
 
-  const units = battle.units.map((unit) => unit.side === 'attacker' && !unit.isDestroyed && unit.troopCount > 0
+  const units = battle.units.map((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit)
     ? { ...unit, formation: targetFormation }
     : unit);
   const actionHistory = appendBattleAction(battle, 'formation', {
@@ -499,10 +509,10 @@ export function changeBattleFormation(
 export function getMoveRange(battle: BattleState, unitId: string): string[] {
   if (battle.duel && battle.duel.phase !== 'resolved') return [];
   const unit = battle.units.find((u) => u.id === unitId);
-  if (!unit || unit.hasActed || unit.side !== 'attacker') return [];
+  if (!unit || !isActiveBattleUnit(unit) || unit.hasActed || unit.side !== 'attacker') return [];
   const blocked = new Set(
     battle.units
-      .filter((u) => u.id !== unitId && !u.isDestroyed && u.troopCount > 0)
+      .filter((u) => u.id !== unitId && isActiveBattleUnit(u))
       .map((u) => hexKey(u.position)),
   );
   const range = reachable(
@@ -526,8 +536,8 @@ export function getMovePath(battle: BattleState, unitId: string, q: number, r: n
     return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
   }
   const unit = battle.units.find((candidate) => candidate.id === unitId);
-  if (!unit || unit.hasActed || unit.side !== 'attacker') return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
-  const occupied = new Set(battle.units.filter((candidate) => candidate.id !== unitId && !candidate.isDestroyed && candidate.troopCount > 0).map((candidate) => hexKey(candidate.position)));
+  if (!unit || !isActiveBattleUnit(unit) || unit.hasActed || unit.side !== 'attacker') return { found: false, path: [], totalCost: 0, visited: 0, reason: 'UNREACHABLE' };
+  const occupied = new Set(battle.units.filter((candidate) => candidate.id !== unitId && isActiveBattleUnit(candidate)).map((candidate) => hexKey(candidate.position)));
   const grid: TacticalGrid = {
     width: battle.hexGrid.width,
     height: battle.hexGrid.height,
@@ -544,7 +554,7 @@ export function moveUnit(battle: BattleState, unitId: string, q: number, r: numb
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   assertBattleNotPausedForDuel(battle);
   const unit = battle.units.find((u) => u.id === unitId);
-  if (!unit || unit.side !== 'attacker' || unit.hasActed) throw new Error('无法移动该部队');
+  if (!unit || !isActiveBattleUnit(unit) || unit.side !== 'attacker' || unit.hasActed) throw new Error('无法移动该部队');
 
   const plan = getMovePath(battle, unitId, q, r);
   if (!plan.found) throw new Error(`目标不在移动范围内（${plan.reason ?? 'UNREACHABLE'}）`);
@@ -582,9 +592,9 @@ export function undoLastBattleAction(battle: BattleState): BattleState {
   const beforeInBounds = last.beforePosition.q >= 0 && last.beforePosition.q < battle.hexGrid.width
     && last.beforePosition.r >= 0 && last.beforePosition.r < battle.hexGrid.height;
   const beforeOccupied = battle.units.some((candidate) => candidate.id !== last.unitId
-    && !candidate.isDestroyed && candidate.troopCount > 0
+    && isActiveBattleUnit(candidate)
     && candidate.position.q === last.beforePosition!.q && candidate.position.r === last.beforePosition!.r);
-  if (!unit || unit.side !== 'attacker' || unit.isDestroyed || unit.troopCount <= 0
+  if (!unit || unit.side !== 'attacker' || !isActiveBattleUnit(unit)
     || unit.position.q !== last.afterPosition.q || unit.position.r !== last.afterPosition.r
     || !beforeInBounds || beforeOccupied || !Number.isFinite(last.beforeMp)
     || last.beforeMp < 0 || last.beforeMp > unit.maxMp) {
@@ -625,8 +635,8 @@ export function attackUnit(
   const defT = unitMap[defender.unitType];
   if (!atkT || !defT) throw new Error('兵种数据缺失');
   if (attacker.hasActed) throw new Error('该部队已行动');
-  if (attacker.isDestroyed || attacker.troopCount <= 0) throw new Error('部队已溃');
-  if (defender.isDestroyed || defender.troopCount <= 0) throw new Error('目标已溃');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(defender)) throw new Error('目标已溃');
   const weapon = attacker.unitType === UnitType.SPEARMAN ? 'spear' : attacker.unitType === UnitType.HEAVY_INFANTRY ? 'axe' : 'sword';
   const distance = hexDistance(attacker.position, defender.position);
   if (atkT.range > 1) {
@@ -704,6 +714,8 @@ export function attackUnit(
     attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, battle.weather),
     attackerCritBonus: equipCritRateFor(atkO),
     defenderCritBonus: equipCritRateFor(defO),
+    attackerSurrounded: isUnitSurrounded(battle.units, attacker.id),
+    defenderSurrounded: isUnitSurrounded(battle.units, defender.id),
     rng,
   });
 
@@ -786,6 +798,33 @@ export function finishPlayerAction(battle: BattleState): BattleState {
   });
 }
 
+/**
+ * 六角战术撤退：将当前仍有兵力的攻方单位标记为有序撤出，并把战斗交给
+ * 结算层回流残兵。包围是派生态势；若任一存活攻方单位已被协同包围，拒绝
+ * 撤退，避免“被两翼锁住却瞬间全军脱离”的漏洞。该动作不消费 RNG。
+ */
+export function retreatBattle(battle: BattleState): BattleState {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+  const attackers = battle.units.filter((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit));
+  if (attackers.length === 0) throw new Error('我军已无可撤部队');
+  const surrounded = attackers.filter((unit) => isUnitSurrounded(battle.units, unit.id));
+  if (surrounded.length > 0) {
+    throw new Error(`RETREAT_SURROUNDED:${surrounded.map((unit) => unit.commanderName).join('、')}`);
+  }
+  const names = attackers.map((unit) => unit.commanderName).join('、');
+  return {
+    ...battle,
+    units: battle.units.map((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit)
+      ? { ...unit, isRetreated: true, hasActed: true, mp: 0 }
+      : unit),
+    phase: 'over',
+    winner: 'defender',
+    message: `我军有序撤退（${names}），残部将返回出发城`,
+    log: [...battle.log, { turn: battle.turn, message: `战术撤退：${names}` }],
+  };
+}
+
 const FIRE_COST = 30;
 const FIRE_MULT = [0.8, 1.0, 1.3, 1.6, 2.0, 2.5] as const;
 
@@ -821,8 +860,8 @@ export function castFireTactic(
     throw new Error('火计只能对敌军施放');
   }
   if (attacker.hasActed) throw new Error('该部队已行动');
-  if (attacker.isDestroyed || attacker.troopCount <= 0) throw new Error('部队已溃');
-  if (target.isDestroyed || target.troopCount <= 0) throw new Error('目标已溃');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(target)) throw new Error('目标已溃');
 
   const energy = attacker.energy ?? 100;
   if (energy < FIRE_COST) throw new Error(`气力不足（需${FIRE_COST}，当前${energy}）`);
@@ -925,6 +964,68 @@ export function castFireTactic(
   });
 }
 
+const WEATHER_LABEL_ZH: Record<Weather, string> = {
+  [Weather.CLEAR]: '晴',
+  [Weather.CLOUDY]: '阴',
+  [Weather.RAIN]: '雨',
+  [Weather.STORM]: '暴雨',
+  [Weather.FOG]: '雾',
+  [Weather.SNOW]: '雪',
+};
+
+/**
+ * 05 §3.2 天气主动技能（0-A）：诸葛亮/司马懿专属。
+ * 确定性成功、不消费 RNG；切换后重置 weatherChangeTimer；结束该部队行动并交权敌军。
+ */
+export function castWeatherSkill(
+  battle: BattleState,
+  attackerId: string,
+  targetWeather: string,
+  state: GameState,
+): BattleState {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+  if (!isValidBattleWeather(targetWeather)) throw new Error('目标天气无效');
+  if (targetWeather === battle.weather) throw new Error('目标天气须不同于当前');
+
+  const attacker = battle.units.find((u) => u.id === attackerId);
+  if (!attacker) throw new Error('单位不存在');
+  if (attacker.side !== 'attacker') throw new Error('仅我军可改天气');
+  if (attacker.hasActed) throw new Error('该部队已行动');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!canUseWeatherActive(attacker.commanderId)) {
+    throw new Error('主将无观天专属（仅诸葛亮/司马懿）');
+  }
+
+  const cost = weatherActiveEnergyCost(attacker.commanderId);
+  const energy = attacker.energy ?? 100;
+  if (energy < cost) throw new Error(`气力不足（需${cost}，当前${energy}）`);
+
+  const atkO = state.officers[attacker.commanderId];
+  if (!atkO) throw new Error('缺少主将');
+
+  const units = battle.units.map((u) =>
+    u.id === attacker.id
+      ? { ...u, energy: energy - cost, hasActed: true, mp: 0 }
+      : u,
+  );
+  const fromLabel = WEATHER_LABEL_ZH[battle.weather];
+  const toLabel = WEATHER_LABEL_ZH[targetWeather];
+  const skillNote = attacker.commanderId === 4 ? '借东风' : '观天';
+
+  return enterEnemyPhase({
+    ...battle,
+    weather: targetWeather,
+    weatherChangeTimer: WEATHER_ACTIVE_TIMER_RESET,
+    units,
+    message: `${atkO.name} ${skillNote}：${fromLabel}→${toLabel} — 敌军回合…`,
+    log: [
+      ...battle.log,
+      { turn: battle.turn, message: `${atkO.name} ${skillNote}：天气 ${fromLabel}→${toLabel}` },
+    ],
+  });
+}
+
 // ====== S10 战法引擎（最小切片） ======
 
 /** 适性 → 可用战法等级上限（S→5, A→3, B→2, C→1, NONE→0） */
@@ -963,19 +1064,23 @@ function getOfficerProficiency(state: GameState, officerId: number, unitType: Un
   return effects.proficiencyBoost > 0 ? boostProficiency(prof) : prof;
 }
 
-function resolveAbilityExecution(ability: CombatAbilityDef, proficiency: UnitProficiency): CombatAbilityLevel | null {
+function resolveAbilityExecution(
+  ability: CombatAbilityDef,
+  proficiency: UnitProficiency,
+  abilityUses = 0,
+): CombatAbilityLevel | null {
   const maxLevel = proficiencyToMaxLevel(proficiency);
   if (maxLevel === 0) return null;
   if (ability.leveling === 'leveled') {
     return (ability.perLevel ?? []).filter((level) => level.level <= maxLevel).at(-1) ?? null;
   }
+  // Session 350：proficiency 正式按使用次数插值；适性仅作门禁（已由 maxLevel===0 拒绝）。
   const base = ability.basePower ?? 1;
   const max = ability.maxPower ?? base;
-  const ratio = Math.max(0, Math.min(1, (maxLevel - 1) / 4));
   return {
-    level: maxLevel,
+    level: 1,
     energyCost: ability.energyCost ?? 0,
-    power: base + (max - base) * ratio,
+    power: resolveProficiencyPower(base, max, abilityUses),
     hitRateBonus: ability.hitRateBonus ?? 0,
     requiredProficiency: proficiency,
   };
@@ -989,7 +1094,7 @@ export function getUsableAbilities(
 ): { ability: CombatAbilityDef; level: number; levelData: CombatAbilityLevel }[] {
   if (battle.duel && battle.duel.phase !== 'resolved') return [];
   const unit = battle.units.find((u) => u.id === unitId);
-  if (!unit || unit.isDestroyed || unit.troopCount <= 0) return [];
+  if (!unit || !isActiveBattleUnit(unit)) return [];
   const tmpl = getUnitByType()[unit.unitType];
   if (!tmpl) return [];
   // 05 §1.3：雾天弓兵不可射击；能力列表与服务端施放门禁保持同源。
@@ -997,10 +1102,12 @@ export function getUsableAbilities(
   const prof = getOfficerProficiency(state, unit.commanderId, unit.unitType);
   const maxLevel = proficiencyToMaxLevel(prof);
   if (maxLevel === 0) return [];
+  const officer = state.officers[unit.commanderId];
+  const abilityUses = getUnitAbilityUses(officer, unit.unitType);
 
   const result: { ability: CombatAbilityDef; level: number; levelData: CombatAbilityLevel }[] = [];
   for (const ability of tmpl.abilities ?? []) {
-    const levelData = resolveAbilityExecution(ability, prof);
+    const levelData = resolveAbilityExecution(ability, prof, abilityUses);
     if (levelData) result.push({ ability, level: levelData.level, levelData });
   }
   return result;
@@ -1032,8 +1139,8 @@ export function castAbility(
     throw new Error('战法只能对敌军施放');
   }
   if (attacker.hasActed) throw new Error('该部队已行动');
-  if (attacker.isDestroyed || attacker.troopCount <= 0) throw new Error('部队已溃');
-  if (target.isDestroyed || target.troopCount <= 0) throw new Error('目标已溃');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(target)) throw new Error('目标已溃');
 
   // 查找战法定义
   const tmpl = getUnitByType()[attacker.unitType];
@@ -1046,8 +1153,9 @@ export function castAbility(
   const maxLevel = proficiencyToMaxLevel(prof);
   if (maxLevel === 0) throw new Error('适性不足，无法施放战法');
 
-  // 玩家选择层级 = 可用最高层（最小切片简化；后续可加 UI 选层）
-  const levelData = resolveAbilityExecution(ability, prof);
+  const atkOEarly = state.officers[attacker.commanderId];
+  const abilityUses = getUnitAbilityUses(atkOEarly, attacker.unitType);
+  const levelData = resolveAbilityExecution(ability, prof, abilityUses);
   if (!levelData) throw new Error('无可用战法层级');
 
   // 气力消耗
@@ -1065,6 +1173,11 @@ export function castAbility(
   const atkO = state.officers[attacker.commanderId];
   const defO = state.officers[target.commanderId];
   if (!atkO || !defO) throw new Error('缺少主将');
+
+  // proficiency：扣气即计使用次数（正式熟练度记账）
+  if (ability.leveling === 'proficiency') {
+    recordUnitAbilityUse(atkO, attacker.unitType);
+  }
 
   // 命中率
   const baseHit = 80 + levelData.hitRateBonus;
@@ -1125,7 +1238,7 @@ export function castAbility(
     rng,
   );
   const dmg = Math.max(1, Math.round(baseDmg * levelData.power * (0.9 + rng() * 0.2)));
-  const affected = spent.filter((u) => u.side === 'defender' && !u.isDestroyed && u.troopCount > 0 &&
+  const affected = spent.filter((u) => u.side === 'defender' && isActiveBattleUnit(u) &&
     (u.id === target.id || (ability.specialEffect === 'aoe' && hexDistance(u.position, target.position) <= 1)));
   const damageById = new Map(affected.map((u) => [u.id, u.id === target.id ? dmg : Math.max(1, Math.round(dmg * 0.5))]));
   const effectLabels = new Set<string>();
@@ -1178,7 +1291,7 @@ function tickBurnAndEnergy(
 ): { units: BattleUnit[]; burnNotes: string[] } {
   const burnNotes: string[] = [];
   const next = units.map((u) => {
-    if (u.isDestroyed || u.troopCount <= 0) return u;
+    if (!isActiveBattleUnit(u)) return u;
     let troops = u.troopCount;
     const effects: typeof u.statusEffects = [];
     for (const e of u.statusEffects) {
@@ -1217,9 +1330,9 @@ function tryEnemyDuel(
 ): BattleState | null {
   if (battle.duel) return battle;
   const candidates = battle.units
-    .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && unit.troopCount > 0 && !unit.hasActed && (unit.energy ?? 0) >= DEFAULT_DUEL_CONFIG.challengeEnergyCost)
+    .filter((unit) => unit.side === 'defender' && isActiveBattleUnit(unit) && !unit.hasActed && (unit.energy ?? 0) >= DEFAULT_DUEL_CONFIG.challengeEnergyCost)
     .flatMap((challenger) => battle.units
-      .filter((defender) => defender.side === 'attacker' && !defender.isDestroyed && defender.troopCount > 0)
+      .filter((defender) => defender.side === 'attacker' && isActiveBattleUnit(defender))
       .filter((defender) => hexDistance(challenger.position, defender.position) <= 1)
       .map((defender) => ({ challenger, defender })))
     .sort((a, b) => {
@@ -1356,7 +1469,7 @@ export function runEnemyPhase(
   // 新回合：恢复气力 = 智/10
   const weatherTick = tickBattleWeather(battle, state.season, rng);
   const units = result.units.map((u) => {
-    if (u.side === 'attacker' && !u.isDestroyed) {
+    if (u.side === 'attacker' && isActiveBattleUnit(u)) {
       const int = state.officers[u.commanderId]?.stats.intelligence ?? 50;
       const recover = Math.max(1, Math.floor(int / 10));
       const maxE = u.maxEnergy ?? 100;
@@ -1420,7 +1533,7 @@ export function challengeDuel(
   const defUnit = battle.units.find((u) => u.id === targetUnitId);
   if (!atkUnit || !defUnit) throw new Error('单位不存在');
   if (atkUnit.side !== 'attacker' || defUnit.side !== 'defender') throw new Error('只能向敌将发起单挑');
-  if (atkUnit.isDestroyed || defUnit.isDestroyed) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(atkUnit) || !isActiveBattleUnit(defUnit)) throw new Error('部队已溃');
 
   const challenger = state.officers[atkUnit.commanderId];
   const defender = state.officers[defUnit.commanderId];
@@ -1593,8 +1706,8 @@ function applyDuelOutcome(
   });
 
   // 检查战斗是否结束
-  const atkAlive = units.some((u) => u.side === 'attacker' && !u.isDestroyed && u.troopCount > 0);
-  const defAlive = units.some((u) => u.side === 'defender' && !u.isDestroyed && u.troopCount > 0);
+  const atkAlive = units.some((u) => u.side === 'attacker' && isActiveBattleUnit(u));
+  const defAlive = units.some((u) => u.side === 'defender' && isActiveBattleUnit(u));
 
   if (!atkAlive || !defAlive) {
     return {

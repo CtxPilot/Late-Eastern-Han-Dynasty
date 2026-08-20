@@ -40,7 +40,9 @@ import {
   POLICY_STRIKE_WEAK_HIT_MUL,
   POLICY_STRIKE_WEAK_OTHER_MUL,
   FAMILY_CAPTURE_MORALE_HIT,
+  buildPendingFamilyTreatment,
   citiesShockedByFamilyCapture,
+  familyRepressionAttackMultiplier,
   factionHasActivePolicy,
   isScorchedCity,
   weakestHostileCityId,
@@ -888,6 +890,10 @@ export function runAutoBattle(
     secretTargetId != null
       ? getSecretCrossingBattleMul(state, atkArmy.factionId, secretTargetId)
       : 1;
+  const familyRepressionMul =
+    defCity != null
+      ? familyRepressionAttackMultiplier(state.cities[defCity.cityId], atkArmy.factionId)
+      : 1;
 
   // L2 趁火打劫：目标势力仍多线交战时，首击伤害 ×1.2（docs/04 §31.5）
   const defenderFactionId = defArmy
@@ -935,6 +941,13 @@ export function runAutoBattle(
       description: `暗渡陈仓：攻防×${secretCrossingMul}`,
     });
   }
+  if (familyRepressionMul > 1) {
+    events.push({
+      round: 0,
+      type: 'stratagem',
+      description: `家属镇压激怒旧主：攻城战力×${familyRepressionMul.toFixed(1)}`,
+    });
+  }
   if (defCity && getLureTigerWallMul(state, defCity.cityId) < 1) {
     events.push({
       round: 0,
@@ -951,7 +964,7 @@ export function runAutoBattle(
   }
 
   // §17.3 模拟回合数
-  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul;
+  const atkPower0 = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul * familyRepressionMul;
   const defPower0 = defArmy
     ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
     : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) });
@@ -959,7 +972,7 @@ export function runAutoBattle(
   const rounds = Math.min(10, 3 + Math.floor(totalPowerDiff / 1000));
 
   for (let r = 1; r <= rounds; r++) {
-    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul * (0.9 + rng() * 0.2);
+    const atkP = computePower({ ...atkSide, troops: atkTroops, morale: atkMorale, organization: atkOrg, experience: atkArmy.experience, fatigue: atkArmy.fatigue, armsMod: atkArmsMod, formationMod: atkFormMod(atkOrg) }) * secretCrossingMul * familyRepressionMul * (0.9 + rng() * 0.2);
     const defP = (defArmy
       ? computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: defArmy.experience, fatigue: defArmy.fatigue, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
       : computePower({ ...defSide, troops: defTroops, morale: defMorale, organization: defOrg, experience: 0, fatigue: 0, wallPenalty: 0, armsMod: defArmsMod, formationMod: defFormMod(defOrg) })
@@ -1392,6 +1405,8 @@ function applyBattleResultToState(
       const prevRuler = target.ruler;
       const familyShockIds =
         prevRuler != null ? citiesShockedByFamilyCapture(state, targetId, prevRuler) : [];
+      const pendingFamilyTreatment =
+        prevRuler != null ? buildPendingFamilyTreatment(state, targetId, prevRuler) : null;
       // 敌方同城武将 → 在野
       const freedIds: number[] = [];
       for (const oid of target.officers) {
@@ -1427,6 +1442,7 @@ function applyBattleResultToState(
         officers: [...movedCmdIds, ...freedIds],
         gold: Math.max(0, target.gold - result.spoils.gold),
         food: Math.max(0, target.food - result.spoils.food),
+        familyTreatment: undefined,
       };
       for (const shockedId of familyShockIds) {
         const shocked = cities[shockedId];
@@ -1447,7 +1463,15 @@ function applyBattleResultToState(
       // 重新计算势力城池
       factions = recomputeFactionCities(cities, factions);
       // 清反间 + 抢美女
-      let after: GameState = { ...state, cities, officers, factions, campaignArmies: [...armies, updatedArmy] };
+      let after: GameState = {
+        ...state,
+        cities,
+        officers,
+        factions,
+        campaignArmies: [...armies, updatedArmy],
+        pendingFamilyTreatment:
+          army.factionId === state.playerFactionId ? pendingFamilyTreatment : null,
+      };
       // 军事功绩：破城 +30（Army 主将）；若占城导致目标势力覆灭再 +50（灭国）
       after = grantMeritTo(after, army.commanderId, MERIT_CAPTURE_CITY);
       // S27 声望：强攻破城 +20 / 开城投降占城 +10；灭国再 +50（docs/08 §十七）
@@ -1463,7 +1487,7 @@ function applyBattleResultToState(
         ? `${target.name} 开城投降！${army.name} 占领`
         : `${army.name} 攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}${
             familyShockIds.length > 0 ? `；家属所在城失陷，${familyShockIds.length} 城士气−${FAMILY_CAPTURE_MORALE_HIT}` : ''
-          }`;
+          }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}`;
       return sealCaptures(pushLog(after, 'campaign_capture', msg));
     }
   }

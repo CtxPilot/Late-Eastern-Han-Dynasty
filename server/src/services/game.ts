@@ -29,6 +29,7 @@ import {
   type Officer,
   type ScenarioStatic,
   PolicyType,
+  type FamilyTreatmentMode,
 } from '@leh/shared';
 import { staticData } from '../data/loader.js';
 import { advanceTurn, tickBattlefieldInstance } from '../engine/turn.js';
@@ -46,6 +47,7 @@ import {
   type DevelopKind,
 } from '../engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
+import { resolveFamilyTreatment } from '../engine/hostageFamilies.js';
 import {
   lootBeautyOnCapture,
   rewardBeautyStock,
@@ -55,6 +57,7 @@ import {
   attackUnit,
   castAbility,
   castFireTactic,
+  castWeatherSkill,
   changeBattleFormation,
   challengeDuel,
   createBattle,
@@ -64,6 +67,7 @@ import {
   getUsableAbilities,
   moveUnit,
   runEnemyPhase,
+  retreatBattle,
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
@@ -222,6 +226,7 @@ function buildGameState(
         commerce: c.initialStats.commerce,
         wall: c.initialStats.wall,
         morale: 70,
+        culture: 0,
       },
       gold: 2000 + c.initialStats.commerce,
       food: 3000 + c.initialStats.farm,
@@ -328,6 +333,7 @@ function buildGameState(
     pendingEvents: [],
     invalidatedEvents: [],
     eventChoices: {},
+    pendingFamilyTreatment: null,
     actionLog: [
       {
         year: startState.year,
@@ -438,6 +444,9 @@ export function endTurn(): GameState {
     if ((before.pendingEvents ?? []).length > 0) {
       throw new Error('请先处理待决事件');
     }
+    if (before.pendingFamilyTreatment) {
+      throw new Error('请先处理家属处置');
+    }
     broadcast({ type: 'turn_progress', phase: 'ai', message: '回合结算中…', progress: 10 });
     let next = advanceTurn(before, runtimeRandom);
     // 战役层：行军推进 + 驻守恢复（0-A 最小切片，玩家 Army 与 AI Army 同步推进）
@@ -465,6 +474,13 @@ export function endTurn(): GameState {
       if (lastEvent) {
         broadcast({ type: 'event_triggered', name: 'event', message: lastEvent.message });
       }
+    }
+    if (g.pendingFamilyTreatment) {
+      broadcast({
+        type: 'event_triggered',
+        name: 'family_treatment',
+        message: `待处置家属 ${g.pendingFamilyTreatment.familyCount} 口`,
+      });
     }
     return g;
   });
@@ -532,6 +548,13 @@ export function doSetMilitaryFarming(cityId: number, enabled: boolean): GameStat
 export function doRelocateGarrisonFamilies(fromCityId: number, toCityId: number): GameState {
   return withLock(() => {
     currentGame = relocateGarrisonFamilies(getGame(), fromCityId, toCityId);
+    return getClientGame();
+  });
+}
+
+export function doResolveFamilyTreatment(mode: FamilyTreatmentMode): GameState {
+  return withLock(() => {
+    currentGame = resolveFamilyTreatment(getGame(), mode);
     return getClientGame();
   });
 }
@@ -960,6 +983,17 @@ export function battleFire(attackerId: string, targetId: string): BattleState {
   });
 }
 
+/** S10 05 §3.2 天气主动技能 */
+export function battleWeather(attackerId: string, weather: string): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = castWeatherSkill(battle, attackerId, weather, getGame());
+    commitActiveBattle(nextBattle);
+    return nextBattle;
+  });
+}
+
 /** S10 战法施放 */
 export function battleAbility(attackerId: string, targetId: string, abilityId: string): BattleState {
   return withLock(() => {
@@ -972,10 +1006,26 @@ export function battleAbility(attackerId: string, targetId: string, abilityId: s
 }
 
 /** S10 查询可用战法列表 */
-export function battleUsableAbilities(unitId: string): { id: string; name: string; level: number; energyCost: number; power: number; specialEffect: string; minRange: number; maxRange: number }[] {
+export function battleUsableAbilities(unitId: string): {
+  id: string;
+  name: string;
+  level: number;
+  energyCost: number;
+  power: number;
+  specialEffect: string;
+  minRange: number;
+  maxRange: number;
+  leveling: string;
+  abilityUses: number;
+}[] {
   const battle = getActiveBattle();
   if (!battle) return [];
-  const abilities = getUsableAbilities(getGame(), battle, unitId);
+  const state = getGame();
+  const unit = battle.units.find((u) => u.id === unitId);
+  const abilityUses = unit
+    ? (state.officers[unit.commanderId]?.unitUsageRecords?.find((r) => r.unitType === unit.unitType)?.abilityUses ?? 0)
+    : 0;
+  const abilities = getUsableAbilities(state, battle, unitId);
   return abilities.map(({ ability, level, levelData }) => ({
     id: ability.id,
     name: ability.name,
@@ -985,6 +1035,8 @@ export function battleUsableAbilities(unitId: string): { id: string; name: strin
     specialEffect: ability.specialEffect,
     minRange: ability.minRange,
     maxRange: ability.maxRange,
+    leveling: ability.leveling,
+    abilityUses: ability.leveling === 'proficiency' ? abilityUses : 0,
   }));
 }
 
@@ -993,6 +1045,17 @@ export function battleFinishPlayer(): BattleState {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
     const nextBattle = finishPlayerAction(battle);
+    commitActiveBattle(nextBattle);
+    return nextBattle;
+  });
+}
+
+/** S10 六角战术撤退：标记有序撤出，随后由 exitBattle 统一回写残兵。 */
+export function battleRetreat(): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = retreatBattle(battle);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -1085,9 +1148,15 @@ export function exitBattle(): GameState {
       : null;
   if (tacticalMelee) {
       if (battle.phase !== 'over') throw new Error('六角微操尚未结束，不能提前结算');
-      const attackerTroops = battle.units
-        .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
+      const voluntaryRetreat = battle.units.some((unit) => unit.side === 'attacker' && unit.isRetreated);
+      const attackerTroopsBeforeRetreat = battle.units
+        .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed)
         .reduce((sum, unit) => sum + unit.troopCount, 0);
+      const attackerTroops = voluntaryRetreat
+        ? Math.floor(attackerTroopsBeforeRetreat * 0.5)
+        : battle.units
+          .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
+          .reduce((sum, unit) => sum + unit.troopCount, 0);
       const defenderTroops = battle.units
         .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && !unit.isRetreated)
         .reduce((sum, unit) => sum + unit.troopCount, 0);
@@ -1099,7 +1168,7 @@ export function exitBattle(): GameState {
         defenderMorale: battle.units.find((unit) => unit.side === 'defender')?.morale ?? 0,
         attackerFormation: battle.units.find((unit) => unit.side === 'attacker')?.formation ?? tacticalMelee.attackerFormation,
         phase: battle.winner === 'attacker' ? 'attacker_victory' : 'defender_victory',
-        eventLog: [...tacticalMelee.eventLog, `六角微操结算：${battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
+        eventLog: [...tacticalMelee.eventLog, `六角微操结算：${voluntaryRetreat ? '战术撤退（50%回流）' : battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
       };
       const withoutBattle = {
         ...state,

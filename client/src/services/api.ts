@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, EventSourceClass, GameState, GrandStrategist, ItemStatic, MeleeRoundResult, MeleeState, OfficerRelation, ScenarioFactionSetup, SkillTreeDef, StrategyModifiers, StrategyType } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, DevelopmentProjectKind, EventSourceClass, FamilyTreatmentMode, GameState, GrandStrategist, ItemStatic, MeleeRoundResult, MeleeState, OfficerRelation, ScenarioFactionSetup, SkillTreeDef, StrategyModifiers, StrategyType } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -139,7 +139,7 @@ export async function endTurn(): Promise<GameState> {
   return data;
 }
 
-export type DevelopKind = 'farm' | 'commerce' | 'wall';
+export type DevelopKind = DevelopmentProjectKind;
 export interface AnnualBudget {
   cityCount: number;
   months: 12;
@@ -205,6 +205,11 @@ export async function setMilitaryFarming(cityId: number, enabled: boolean): Prom
 
 export async function relocateGarrisonFamilies(fromCityId: number, toCityId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/relocate-families', { fromCityId, toCityId });
+  return data;
+}
+
+export async function resolveFamilyTreatment(mode: FamilyTreatmentMode): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/family-treatment', { mode });
   return data;
 }
 
@@ -505,6 +510,11 @@ export async function battleFire(attackerId: string, targetId: string): Promise<
   return data;
 }
 
+export async function battleWeather(attackerId: string, weather: string): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/weather', { attackerId, weather });
+  return data;
+}
+
 export interface UsableAbility {
   id: string;
   name: string;
@@ -514,6 +524,8 @@ export interface UsableAbility {
   specialEffect: string;
   minRange: number;
   maxRange: number;
+  leveling?: string;
+  abilityUses?: number;
 }
 
 export async function battleUsableAbilities(unitId: string): Promise<UsableAbility[]> {
@@ -538,6 +550,11 @@ export async function battleAbility(
 
 export async function battleFinishPlayer(): Promise<BattleState> {
   const { data } = await http.post<BattleState>('/battle/finish-player');
+  return data;
+}
+
+export async function battleRetreat(): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/retreat');
   return data;
 }
 

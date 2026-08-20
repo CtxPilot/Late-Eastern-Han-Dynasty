@@ -9,7 +9,10 @@
  */
 import {
   OfficerStatus,
+  FAMILY_CAPTURE_MORALE_HIT,
   canMarchAlongRoad,
+  buildPendingFamilyTreatment,
+  citiesShockedByFamilyCapture,
   playerCitiesAdjacentTo,
   type BattleState,
   type City,
@@ -225,6 +228,7 @@ export function settleBattle(
   const finished = battle.phase === 'over';
   const attackerWon = finished && battle.winner === 'attacker';
   const defenderWon = finished && battle.winner === 'defender';
+  const voluntaryRetreat = battle.units.some((unit) => unit.side === 'attacker' && unit.isRetreated);
 
   let cities = { ...state.cities };
   let officers = { ...state.officers };
@@ -234,6 +238,10 @@ export function settleBattle(
   if (attackerWon) {
     // —— 占城 ——
     const prevRuler = target.ruler;
+    const familyShockIds =
+      prevRuler != null ? citiesShockedByFamilyCapture(state, targetId, prevRuler) : [];
+    const pendingFamilyTreatment =
+      prevRuler != null ? buildPendingFamilyTreatment(state, targetId, prevRuler) : null;
     const garrison = Math.max(0, atkLeft);
     const nextTarget: City = {
       ...target,
@@ -246,6 +254,7 @@ export function settleBattle(
         wall: Math.max(0, target.stats.wall - 10),
       },
       officers: [],
+      familyTreatment: undefined,
     };
 
     // 敌方同城武将 → 在野
@@ -290,6 +299,14 @@ export function settleBattle(
     nextTarget.officers = [...movedCmdIds, ...freedIds];
 
     cities[targetId] = nextTarget;
+    for (const shockedId of familyShockIds) {
+      const shocked = cities[shockedId];
+      if (!shocked || shocked.ruler !== prevRuler) continue;
+      cities[shockedId] = {
+        ...shocked,
+        troopsMorale: Math.max(0, (shocked.troopsMorale ?? 70) - FAMILY_CAPTURE_MORALE_HIT),
+      };
+    }
     const factions = recomputeFactionCities(cities, state.factions);
 
     // 首都失守但势力尚存时，君主必须随新首都迁移，不能与普通败将一起流落在野。
@@ -334,10 +351,19 @@ export function settleBattle(
     }
 
     const freeMsg = freed.length ? `；${freed.join('、')} 流落在野` : '';
-    message = `攻占 ${target.name}！驻军 ${garrison}${freeMsg}`;
+    message = `攻占 ${target.name}！驻军 ${garrison}${freeMsg}${
+      familyShockIds.length > 0 ? `；家属所在城失陷，${familyShockIds.length} 城士气−${FAMILY_CAPTURE_MORALE_HIT}` : ''
+    }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}`;
     type = 'capture';
 
-    let after: GameState = { ...state, cities, officers, factions: nextFactions };
+    let after: GameState = {
+      ...state,
+      cities,
+      officers,
+      factions: nextFactions,
+      pendingFamilyTreatment:
+        battle.attackerFaction === state.playerFactionId ? pendingFamilyTreatment : null,
+    };
     // 军事功绩：破城 +30（攻方主将）；若占城导致目标势力覆灭再 +50（灭国）
     const attackerCommanderId = battle.units.find(
       (u) => u.side === 'attacker' && !u.isDestroyed,
@@ -365,7 +391,7 @@ export function settleBattle(
   }
 
   // —— 败北或中途撤退：守军回写；攻方残兵部分回流 ——
-  const returnRate = defenderWon ? 0.15 : finished ? 0.15 : 0.5; // 中途撤 50%，败 15%
+  const returnRate = voluntaryRetreat ? 0.5 : defenderWon ? 0.15 : finished ? 0.15 : 0.5; // 有序撤退/中途撤 50%，败 15%
   const returned = Math.floor(atkLeft * returnRate);
 
   cities[targetId] = {
@@ -382,7 +408,10 @@ export function settleBattle(
     };
   }
 
-  if (defenderWon) {
+  if (voluntaryRetreat) {
+    message = `自 ${target.name} 战术撤退，${returned} 兵返回出发城`;
+    type = 'march_retreat';
+  } else if (defenderWon) {
     message = `攻打 ${target.name} 失败，残部 ${returned} 退回`;
     type = 'march_defeat';
   } else if (!finished) {

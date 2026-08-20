@@ -17,6 +17,7 @@ import type { Plot } from './plot.js';
 import type { NationalPolicy } from './policy.js';
 import type { EventSourceClass } from './event.js';
 import type { TournamentState } from './tournament.js';
+import type { PendingFamilyTreatment } from '../hostage-families.js';
 
 export interface GameAction {
   year: number;
@@ -96,4 +97,7 @@ export interface GameState {
    * 每年正月自动举办并瞬时结算；押注/观战 UI 后置。旧档缺省兼容。
    */
   tournament?: TournamentState;
+
+  /** 玩家攻城后待选择的家属处置；旧存档缺省表示没有待决项。 */
+  pendingFamilyTreatment?: PendingFamilyTreatment | null;
 }

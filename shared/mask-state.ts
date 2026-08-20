@@ -78,6 +78,7 @@ function maskCity(state: GameState, city: City, vis: CityVisibility): City {
         farm: 0,
         commerce: 0,
         morale: 0,
+        culture: 0,
         // wall visible for ally
       },
     };
@@ -98,6 +99,7 @@ function maskCity(state: GameState, city: City, vis: CityVisibility): City {
         ...city.stats,
         farm: round100(city.stats.farm),
         commerce: round100(city.stats.commerce),
+        ...(city.stats.culture == null ? {} : { culture: round100(city.stats.culture) }),
       },
     };
   }
@@ -119,6 +121,7 @@ function maskCity(state: GameState, city: City, vis: CityVisibility): City {
         commerce: 0,
         wall: city.stats.wall,
         morale: 0,
+        culture: 0,
       },
     };
   }
@@ -140,6 +143,7 @@ function maskCity(state: GameState, city: City, vis: CityVisibility): City {
       commerce: 0,
       wall: 0,
       morale: 0,
+      culture: 0,
     },
   };
 }

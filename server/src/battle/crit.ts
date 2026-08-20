@@ -493,6 +493,10 @@ export interface ResolveAttackOpts {
   attackerCritBonus?: number;
   /** 守方装备暴率加成（反击暴击用）。 */
   defenderCritBonus?: number;
+  /** 六角派生态势：攻方被协同包围时，乱战暴击规则生效。 */
+  attackerSurrounded?: boolean;
+  /** 六角派生态势：守方被协同包围时，反击暴击规则生效。 */
+  defenderSurrounded?: boolean;
   rng: CritRng;
 }
 
@@ -514,6 +518,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
   const atkCritCtx: CritContext = {
     officer: atkOff, unitType: attacker.unit.unitType, formation: attacker.unit.formation,
     proficiency: attacker.proficiency, terrain: opts.attackerTerrain, matchup,
+    isSurrounded: opts.attackerSurrounded,
     equipCritBonus: opts.attackerCritBonus,
   };
   const critRate = computeCritRate(atkCritCtx);
@@ -558,6 +563,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
         const defCritCtx: CritContext = {
           officer: defOff, unitType: defender.unit.unitType, formation: defender.unit.formation,
           proficiency: defender.proficiency, terrain: opts.defenderTerrain, matchup: 1 / matchup,
+          isSurrounded: opts.defenderSurrounded,
           equipCritBonus: opts.defenderCritBonus,
         };
         const counterCritRate = clamp(computeCritRate(defCritCtx) + 0.05, 0.02, 0.6);

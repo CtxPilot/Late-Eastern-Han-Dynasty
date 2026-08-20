@@ -2,8 +2,8 @@
 // Copyright (c) 2026 CtxPilot
 
 import { Router, type Router as ExpressRouter } from 'express';
-import type { EventSourceClass } from '@leh/shared';
-import { getCommanderyIds } from '@leh/shared';
+import type { EventSourceClass, FamilyTreatmentMode } from '@leh/shared';
+import { FAMILY_TREATMENT_MODES, getCommanderyIds } from '@leh/shared';
 import { z } from 'zod';
 import * as gameService from '../services/game.js';
 
@@ -139,7 +139,7 @@ gameRouter.post('/civil/develop-farm', (req, res) => {
 gameRouter.post('/civil/develop', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);
-    const kind = String(req.body.kind ?? 'farm') as 'farm' | 'commerce' | 'wall';
+    const kind = String(req.body.kind ?? 'farm') as 'farm' | 'commerce' | 'wall' | 'culture';
     const officerId = Number(req.body.officerId);
     if (!Number.isInteger(officerId)) throw new Error('必须指派本城武将');
     res.json(gameService.doDevelop(cityId, kind, officerId));
@@ -217,6 +217,17 @@ gameRouter.post('/civil/relocate-families', (req, res) => {
     res.json(gameService.doRelocateGarrisonFamilies(fromCityId, toCityId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'relocate families failed' });
+  }
+});
+
+/** 家属质任处置：攻城后仅允许处理服务端当前待决项。 */
+gameRouter.post('/civil/family-treatment', (req, res) => {
+  try {
+    const mode = String(req.body.mode ?? '') as FamilyTreatmentMode;
+    if (!FAMILY_TREATMENT_MODES.includes(mode)) throw new Error('无效的家属处置方式');
+    res.json(gameService.doResolveFamilyTreatment(mode));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'family treatment failed' });
   }
 });
 
@@ -705,6 +716,16 @@ gameRouter.post('/battle/fire', (req, res) => {
   }
 });
 
+/** S10 05 §3.2 天气主动技能：诸葛亮/司马懿专属 */
+gameRouter.post('/battle/weather', (req, res) => {
+  try {
+    const { attackerId, weather } = req.body as { attackerId: string; weather: string };
+    res.json(gameService.battleWeather(attackerId, weather));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'weather failed' });
+  }
+});
+
 /** S10 查询可用战法 */
 gameRouter.get('/battle/abilities/:unitId', (req, res) => {
   try {
@@ -733,6 +754,15 @@ gameRouter.post('/battle/finish-player', (_req, res) => {
     res.json(gameService.battleFinishPlayer());
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'finish failed' });
+  }
+});
+
+/** S10 六角战术撤退：服务端派生态势校验后进入战斗结束态。 */
+gameRouter.post('/battle/retreat', (_req, res) => {
+  try {
+    res.json(gameService.battleRetreat());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'retreat failed' });
   }
 });
 

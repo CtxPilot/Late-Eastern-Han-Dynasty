@@ -52,6 +52,7 @@ import { tickFactionPolitics } from './factionPolitics.js';
 import { tickSameCityRelations, loadStaticRelations } from './relations.js';
 import { tickPopularWillDesertion } from './mandateEffects.js';
 import { runAnnualTournament } from './tournament.js';
+import { tickFamilyTreatment } from './hostageFamilies.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -319,6 +320,10 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickNationalPolicies(nextState, isQuarterStart);
   // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
   nextState = runAiMilitary(nextState, rng, rng);
+  // S18 质任家属：善待余波在季度首月扣旧主驻军士气，状态到期自动清除。
+  if (isQuarterStart) {
+    nextState = tickFamilyTreatment(nextState);
+  }
   // 家族跟随 S18：在野武将自动投奔检定
   nextState = tickFollowCheck(nextState, rng);
   // S26：人心叛逃月度检定（Session 338）

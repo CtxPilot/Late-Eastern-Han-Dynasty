@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { FormationType, TerrainType, UnitProficiency, UnitType, Weather, type BattleUnit, type Officer, type UnitTemplate } from '@leh/shared';
+import { directionTo, FormationType, isUnitSurrounded, TerrainType, UnitProficiency, UnitType, Weather, type BattleUnit, type Officer, type UnitTemplate } from '@leh/shared';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
+import { hexDistance } from '../battle/hex.js';
 import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from '../battle/weather.js';
 
 let passed = 0;
@@ -79,6 +80,148 @@ assert(targetResult.units.find((u) => u.id === 'weak')!.troopCount < 100, '同�
 assert(targetResult.units.find((u) => u.id === 'healthy')!.troopCount === 1000, '不会机械攻击列表中的首个目标');
 assert(targetResult.units.find((u) => u.id === 'enemy')!.hasActed, '敌军普攻后标记已行动');
 assert(targetResult.units.find((u) => u.id === 'enemy')!.mp === 0, '敌军普攻后移动力归零');
+const movingEnemyResult = runSimpleEnemyAi(
+  [unit('moving-enemy', 'defender', 0, 2, 1000, 2), unit('distant-target', 'attacker', 5, 2, 1000, 1)],
+  terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '远方目标' }, 2: { war: 80, leadership: 80, name: '行军敌将' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('仅走位不应消费攻击 RNG'); },
+);
+const movingEnemy = movingEnemyResult.units.find((u) => u.id === 'moving-enemy')!;
+const distantTarget = movingEnemyResult.units.find((u) => u.id === 'distant-target')!;
+assert(movingEnemy.position.q > 0, '敌军走位会向目标推进');
+assert(movingEnemy.facing === directionTo(movingEnemy.position, distantTarget.position), '敌军走位后朝向真正目标');
+
+const surroundTarget = unit('surround-target', 'attacker', 3, 3, 1000, 1);
+const surroundFront = {
+  ...unit('surround-front', 'defender', 3, 2, 1000, 2),
+  facing: directionTo({ q: 3, r: 2 }, surroundTarget.position),
+};
+const surroundFlank = unit('surround-flank', 'defender', 0, 3, 1000, 2);
+const surroundResult = runSimpleEnemyAi(
+  [surroundTarget, surroundFront, surroundFlank],
+  terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '被围目标' }, 2: { war: 80, leadership: 80, name: '包围敌军' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+const surroundTargetAfter = surroundResult.units.find((u) => u.id === surroundTarget.id)!;
+const surroundFlankAfter = surroundResult.units.find((u) => u.id === surroundFlank.id)!;
+assert(surroundResult.message.includes('迂回包抄'), '已有接战方向时敌军优先执行迂回包抄');
+assert(hexDistance(surroundFlankAfter.position, surroundTargetAfter.position) === 1, '包抄敌军占据目标另一邻接格');
+assert(isUnitSurrounded(surroundResult.units, surroundTarget.id), '敌军协同走位后派生为受围态势');
+assert(surroundFlankAfter.facing === directionTo(surroundFlankAfter.position, surroundTargetAfter.position), '包抄走位后朝向目标');
+
+const breakoutEnemy = { ...unit('breakout-enemy', 'defender', 3, 3, 1000, 2), facing: 0 as const };
+const breakoutWingA = {
+  ...unit('breakout-wing-a', 'attacker', 3, 2, 1000, 1),
+  facing: directionTo({ q: 3, r: 2 }, breakoutEnemy.position),
+};
+const breakoutWingB = {
+  ...unit('breakout-wing-b', 'attacker', 4, 3, 1000, 1),
+  facing: directionTo({ q: 4, r: 3 }, breakoutEnemy.position),
+};
+assert(isUnitSurrounded([breakoutEnemy, breakoutWingA, breakoutWingB], breakoutEnemy.id), '突围前敌军确实处于两翼包围');
+const breakoutResult = runSimpleEnemyAi(
+  [breakoutEnemy, breakoutWingA, breakoutWingB], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '包围我军' }, 2: { war: 80, leadership: 80, name: '突围敌将' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+const breakoutAfter = breakoutResult.units.find((u) => u.id === breakoutEnemy.id)!;
+assert(breakoutResult.message.includes('突围走位'), '受围敌军优先写入突围走位战报');
+assert(breakoutAfter.position.q !== 3 || breakoutAfter.position.r !== 3, '受围敌军离开原包围中心');
+assert(!isUnitSurrounded(breakoutResult.units, breakoutEnemy.id), '突围走位后解除派生包围');
+
+const moraleRetreatEnemy = { ...unit('morale-retreat-enemy', 'defender', 2, 2, 1000, 2), morale: 20 };
+const moraleRetreatResult = runSimpleEnemyAi(
+  [moraleRetreatEnemy, unit('retreat-target', 'attacker', 5, 2, 1000, 1)], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '追击目标' }, 2: { war: 80, leadership: 80, name: '低士气守将' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('主动撤退不应消费 RNG'); },
+);
+assert(moraleRetreatResult.message.includes('低士气守将 撤退'), '低士气敌军优先主动撤退');
+assert(moraleRetreatResult.over && moraleRetreatResult.winner === 'attacker', '敌军全数撤退后判定我军胜利');
+assert(moraleRetreatResult.units.find((u) => u.id === moraleRetreatEnemy.id)?.isRetreated === true, '主动撤退复用既有 isRetreated 终态');
+
+const troopRetreatEnemy = { ...unit('troop-retreat-enemy', 'defender', 2, 2, 250, 2), morale: 80 };
+const troopRetreatResult = runSimpleEnemyAi(
+  [troopRetreatEnemy, unit('troop-retreat-target', 'attacker', 5, 2, 1000, 1)], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '残兵目标' }, 2: { war: 80, leadership: 80, name: '残兵守将' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('重创撤退不应消费 RNG'); },
+);
+assert(troopRetreatResult.units.find((u) => u.id === troopRetreatEnemy.id)?.isRetreated === true, '兵力降至25%时敌军主动撤退');
+
+const interceptedRetreatEnemy = { ...unit('intercepted-retreat-enemy', 'defender', 2, 2, 1000, 2), morale: 20 };
+const interceptor = unit('interceptor', 'attacker', 3, 2, 1000, 1);
+const interceptedRetreatResult = runSimpleEnemyAi(
+  [interceptedRetreatEnemy, interceptor], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '截击将' }, 2: { war: 80, leadership: 80, name: '被截低士气守将' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+assert(interceptedRetreatResult.message.includes('被截击'), '相邻我军存在时敌军主动撤退先写入截击战报');
+assert(interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.isRetreated === false, '被相邻我军截击的敌军不能瞬时撤退');
+assert(interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.hasActed === true, '被截击敌军继续既有接战链并结束行动');
+
+const interceptionPriorityTemplates = {
+  ...templates,
+  [UnitType.HEAVY_INFANTRY]: template(UnitType.HEAVY_INFANTRY, 1),
+  [UnitType.SPEARMAN]: template(UnitType.SPEARMAN, 120),
+};
+const interceptionPriorityEnemy = { ...unit('interception-priority-enemy', 'defender', 2, 2, 1000, 2), morale: 20 };
+const interceptionPriorityResult = runSimpleEnemyAi(
+  [
+    interceptionPriorityEnemy,
+    unit('adjacent-interceptor', 'attacker', 3, 2, 1000, 1, UnitType.HEAVY_INFANTRY),
+    unit('distant-high-threat', 'attacker', 4, 2, 1000, 3, UnitType.SPEARMAN),
+  ], terrain, interceptionPriorityTemplates,
+  { 1: { war: 70, leadership: 70, name: '相邻截击者' }, 2: { war: 80, leadership: 80, name: '被截敌将' }, 3: { war: 70, leadership: 70, name: '远处高威胁' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+assert(interceptionPriorityResult.message.includes('攻击 相邻截击者'), '截击时优先攻击相邻截击者而非远处高威胁目标');
+assert(interceptionPriorityResult.units.find((u) => u.id === 'adjacent-interceptor')!.troopCount < 1000, '截击者确实承受被截后的反击');
+assert(interceptionPriorityResult.units.find((u) => u.id === 'distant-high-threat')!.troopCount === 1000, '截击优先级不波及远处目标');
+
+const surroundedRetreatEnemy = { ...unit('surrounded-retreat-enemy', 'defender', 3, 3, 1000, 2), morale: 20, facing: 0 as const };
+const surroundedRetreatWingA = {
+  ...unit('surrounded-retreat-wing-a', 'attacker', 3, 2, 1000, 1),
+  facing: directionTo({ q: 3, r: 2 }, surroundedRetreatEnemy.position),
+};
+const surroundedRetreatWingB = {
+  ...unit('surrounded-retreat-wing-b', 'attacker', 4, 3, 1000, 1),
+  facing: directionTo({ q: 4, r: 3 }, surroundedRetreatEnemy.position),
+};
+const surroundedRetreatResult = runSimpleEnemyAi(
+  [surroundedRetreatEnemy, surroundedRetreatWingA, surroundedRetreatWingB], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '包围我军' }, 2: { war: 80, leadership: 80, name: '受围低士气敌将' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+assert(surroundedRetreatResult.units.find((u) => u.id === surroundedRetreatEnemy.id)?.isRetreated === false, '受围低士气敌军不会跳过包围态势直接撤退');
+assert(surroundedRetreatResult.message.includes('突围走位'), '受围低士气敌军先沿既有突围逻辑行动');
+
+const withdrawnEnemy = { ...unit('withdrawn-enemy', 'defender', 2, 2, 1000, 2), isRetreated: true };
+const withdrawnEnemyResult = runSimpleEnemyAi(
+  [withdrawnEnemy, unit('active-target', 'attacker', 3, 2, 1000, 1)], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '目标' }, 2: { war: 80, leadership: 80, name: '已撤敌将' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('撤退敌军不应消费 RNG'); },
+);
+assert(withdrawnEnemyResult.over && withdrawnEnemyResult.winner === 'attacker', '敌军仅剩撤退单位时判定我军胜利');
+assert(withdrawnEnemyResult.units.find((u) => u.id === withdrawnEnemy.id)?.isRetreated === true, '敌军撤退快照保持原标记');
+
+const withdrawnPlayer = { ...unit('withdrawn-player', 'attacker', 3, 2, 1000, 1), isRetreated: true };
+const withdrawnPlayerResult = runSimpleEnemyAi(
+  [unit('active-enemy', 'defender', 2, 2, 1000, 2), withdrawnPlayer], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '已撤我军' }, 2: { war: 80, leadership: 80, name: '敌将' } },
+  6, 5, 'defender', 'attacker', () => { throw new Error('敌军已无活跃目标时不应消费 RNG'); },
+);
+assert(withdrawnPlayerResult.over && withdrawnPlayerResult.winner === 'defender', '我军仅剩撤退单位时判定敌军胜利');
+
+const withdrawnTarget = { ...unit('a-retreated-target', 'attacker', 3, 2, 1000, 1), isRetreated: true };
+const activeTarget = unit('b-active-target', 'attacker', 2, 3, 1000, 1);
+const withdrawnTargetResult = runSimpleEnemyAi(
+  [unit('targeting-enemy', 'defender', 2, 2, 1000, 2), withdrawnTarget, activeTarget], terrain, templates,
+  { 1: { war: 70, leadership: 70, name: '我军' }, 2: { war: 80, leadership: 80, name: '敌将' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+assert(withdrawnTargetResult.units.find((u) => u.id === withdrawnTarget.id)?.troopCount === withdrawnTarget.troopCount, '敌军不会攻击已撤退目标');
+assert(withdrawnTargetResult.units.find((u) => u.id === activeTarget.id)!.troopCount < activeTarget.troopCount, '敌军会改选仍在场的活跃目标');
+
 const replayResult = runSimpleEnemyAi(
   targetResult.units, terrain, templates,
   { 1: { war: 70, leadership: 70, name: '甲' }, 2: { war: 80, leadership: 80, name: '敌' }, 3: { war: 70, leadership: 70, name: '乙' } },
@@ -257,6 +400,15 @@ assert(specialResult.message.includes('试箭雨'), '特殊兵种可按适性施
 assert(specialResult.message.includes('波及1队'), 'aoe 战法会命中目标周围的第二支敌军');
 assert(specialResult.units.find((u) => u.id === 'nearby')!.troopCount < 1000, '范围战法对邻格目标造成溅射伤害');
 assert(specialResult.units.find((u) => u.id === 'enemy')!.energy === 70, '特殊战法消耗静态气力');
+
+const specialWithdrawnNearby = { ...unit('withdrawn-nearby', 'attacker', 3, 3, 1000, 3), isRetreated: true };
+const specialWithdrawnResult = runSimpleEnemyAi(
+  [unit('enemy-withdrawn-check', 'defender', 2, 2, 1000, 2), unit('active-aoe-target', 'attacker', 3, 2, 1000, 1), specialWithdrawnNearby],
+  terrain, specialTemplates, { 1: { war: 70, leadership: 70, name: '活跃目标' }, 2: { war: 70, leadership: 80, name: '精锐将' }, 3: { war: 70, leadership: 70, name: '已撤旁军' } },
+  6, 5, 'defender', 'attacker', () => 0, {}, specialOfficers, 1, Weather.CLEAR,
+);
+assert(specialWithdrawnResult.units.find((u) => u.id === specialWithdrawnNearby.id)!.troopCount === specialWithdrawnNearby.troopCount, 'AOE 战法不会波及已撤退部队');
+assert(specialWithdrawnResult.units.find((u) => u.id === 'active-aoe-target')!.troopCount < 1000, 'AOE 战法仍会命中活跃目标');
 
 const meritAbilityOfficers = {
   1: officer(1, '前锋', 50),

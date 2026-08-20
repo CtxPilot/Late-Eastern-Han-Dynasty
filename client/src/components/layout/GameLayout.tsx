@@ -6,6 +6,7 @@ import { LeftPanel } from './LeftPanel';
 import { RightPanel } from './RightPanel';
 import { MapCanvas } from '../map/MapCanvas';
 import { EventDialog } from '../events/EventDialog';
+import { FamilyTreatmentDialog } from '../family/FamilyTreatmentDialog';
 import { CommandShell } from '../command/CommandShell';
 
 /** P1-06 主三栏布局 + 命令坞；左右栏只保留只读态势与未迁移的战役/军师入口。 */
@@ -22,6 +23,7 @@ export function GameLayout() {
       </div>
       <CommandShell />
       <EventDialog />
+      <FamilyTreatmentDialog />
     </div>
   );
 }

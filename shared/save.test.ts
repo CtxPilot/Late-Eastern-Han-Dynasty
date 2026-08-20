@@ -57,9 +57,12 @@ describe('parseSaveEnvelopeV1', () => {
 });
 
 describe('current save migration dispatch', () => {
-  it('dispatches the current v1 envelope through the identity migration', () => {
+  it('dispatches the current v1 envelope and fills optional policy defaults', () => {
     const envelope = validEnvelope();
-    expect(migrateSaveEnvelopeToCurrent(envelope)).toBe(envelope);
+    expect(migrateSaveEnvelopeToCurrent(envelope)).toEqual({
+      ...envelope,
+      snapshot: { ...envelope.snapshot, nationalPolicies: [] },
+    });
   });
 
   it('maps the legacy five-rank nobility strings before strict snapshot validation', () => {

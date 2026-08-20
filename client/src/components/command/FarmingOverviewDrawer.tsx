@@ -10,6 +10,7 @@ import {
   quarterKey,
   FAMILY_RELOCATE_GOLD,
   type City,
+  type FamilyTreatmentMode,
   type GameState,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -30,6 +31,7 @@ export type FarmingCityRow = {
   garrisonFamilies: number;
   familyBackupCityId: number | null;
   familyLocked: boolean;
+  familyTreatment: FamilyTreatmentMode | null;
 };
 
 export function buildFarmingOverview(game: GameState): FarmingCityRow[] {
@@ -64,6 +66,7 @@ function toRow(city: City, season: Season, currentQuarter: number): FarmingCityR
     familyLocked:
       city.familyRelocateQuarter != null
       && city.familyRelocateQuarter === currentQuarter,
+    familyTreatment: city.familyTreatment?.mode ?? null,
   };
 }
 
@@ -138,6 +141,7 @@ export function FarmingOverviewDrawer() {
                   家属 {row.garrisonFamilies} 口
                   {row.familyBackupCityId != null ? ` · 质任于城${row.familyBackupCityId}` : ''}
                   {row.familyLocked ? ' · 本季已迁' : ''}
+                  {row.familyTreatment != null ? ` · ${row.familyTreatment === 'kindness' ? '善待' : row.familyTreatment === 'repression' ? '镇压' : '中立'}` : ''}
                 </p>
               </button>
             </li>

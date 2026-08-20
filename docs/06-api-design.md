@@ -111,11 +111,11 @@ POST   /api/game/end-turn            → GameState
   每次只推进 1 月；含人口生育衰老、结构粮耗、产粮、AI、事件 tick
   每月 actionLog 写 end_turn；新月份为 1/4/7/10 时写 quarter_start；
   跨年至 1 月时同时写 year_start
-  有 pendingEvents 时 400「请先处理待决事件」
+  有 pendingEvents 或 pendingFamilyTreatment 时 400「请先处理待决项」
 POST   /api/game/event/choose        { eventId, choiceIndex } → GameState
   // S14：只允许处理 pendingEvents[0]；应用效果并写 completedEvents/eventChoices
 
-POST   /api/game/civil/develop       { cityId, kind: 'farm'|'commerce'|'wall' }
+POST   /api/game/civil/develop       { cityId, kind: 'farm'|'commerce'|'wall'|'culture', officerId }
 POST   /api/game/civil/develop-farm  { cityId }   // 兼容
 POST   /api/game/civil/conscript     { cityId }   // 扣 adultMale，见 04§28
 POST   /api/game/civil/relief        { cityId }   // 施米
@@ -221,6 +221,10 @@ POST   /api/game/civil/military-farming { cityId, enabled }
 POST   /api/game/civil/relocate-families { fromCityId, toCityId }
                                      // Session 348：质任迁家属；金500；每城每季一次；家属口迁入后方城
 
+POST   /api/game/civil/family-treatment { mode: kindness|neutral|repression }
+                                     // Session 351：处理当前玩家攻城产生的 pendingFamilyTreatment；
+                                     // 选择前不可结束回合；成功后返回完整 GameState
+
 POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNear|playFool|guestHost|highWallsGrain|strikeWeak|scorchedEarth|hideStrength, targetCityId? }
                                      // Session 348：L3 国策切换；当前策立即结束；新策下月生效；冷却 6 月
                                      // scorchedEarth 须 targetCityId=己方边境城
@@ -254,8 +258,10 @@ GET    /api/game/march/can-reach/:targetCityId → { ok: boolean }
 // 左栏战役写按钮已删除；所有动作进入统一终审并在提交前复验最新阶段/参谋/资源。
 // 本轮复用既有端点，无请求、响应、Schema、规则或数值变化。
 POST   /api/game/battle/start        { cityId, fromCityId? }  // 兼容，内部走出征
-POST   /api/game/battle/move|attack|fire|finish-player|enemy-phase
+POST   /api/game/battle/move|attack|fire|weather|finish-player|enemy-phase
   // fire: { attackerId, targetId } 火计，耗气30
+  // weather: { attackerId, weather } 观天主动改天气（诸葛亮/司马懿专属，Session 349）
+POST   /api/game/battle/retreat   → BattleState  // 玩家回合有序撤退；受围时400
 GET    /api/game/battle/abilities/:unitId → { abilities: UsableAbility[] }  // S10 可用战法
 POST   /api/game/battle/ability   { attackerId, targetId, abilityId }  // S10 施放战法
 POST   /api/game/battle/exit         → GameState  // 结算占城或残兵回流
@@ -1024,9 +1030,13 @@ Session 245 新增 `POST /api/game/melee/mode`，请求 `{ mode: 'auto'|'standar
 返回关联 `battle`，完成后由既有 `/battle/exit` 幂等回写白刃战与 Army。
 
 Session 246 将 `POST /api/game/civil/develop` 请求改为
-`{ cityId, kind: 'farm'|'commerce'|'wall', officerId }`。成功只启动持续项目并扣首付，
+`{ cityId, kind: 'farm'|'commerce'|'wall'|'culture', officerId }`。成功只启动持续项目并扣首付，
 不再即时增加开发度；项目冲突、非己方城、武将不可用或首付不足返回400。旧
 `/civil/develop-farm` 仅作兼容入口，自动使用本城首名武将。
+
+Session 362 将 `kind` 扩展为 `culture`：沿用同一持续项目响应与错误契约；文化项目启动扣
+120金、持续6个月，完成写入 `stats.culture +60`。该端点不消费 RNG，也不提前把技术研发/人才
+吸引效果复制到人事接口。
 
 新增只读 `GET /api/game/civil/budget`，返回当前玩家势力12月预算：
 `cityCount / goldIncome / foodProduced / civilianAndMilitaryFood / projectGold /
@@ -1068,6 +1078,15 @@ Session 336：`battle/move` 审计写入 `beforeFacing`；`battle/undo` 在字�
 `logicalTimestamp` 按同回合最大序号 +1 分配，窗口满 3 条后仍唯一。
 白刃 `change_formation` 仅接受0-A六基础阵型，消耗1战术点。详细返回结构、错误码与调用示例见
 `27-tactical-wargame-system.md` §2.1。
+
+### Session 352 · 六角协同包围与战术撤退 API
+
+`POST /api/game/battle/retreat` 无请求体，返回最新 `BattleState`。服务端从六角邻接与朝向实时派生
+包围状态，不信任客户端布尔值；存活我军至少一队被两个不同接战方向的敌军夹击时返回
+`400 RETREAT_SURROUNDED:<部队名>`，状态、随机流和行动历史均不改变。否则存活攻方写入
+`isRetreated=true`、`hasActed=true`、`mp=0`，并将战斗置为 `phase=over/winner=defender`，该动作
+不消费 RNG。客户端随后调用既有 `/battle/exit`，战役层识别撤退标记并按 50% 返回率结算。
+这是 0-A 最小切片；敌军主动撤退、追击/截击、攻城突围和多军团协同仍后置。
 
 ### Session 279 · 阵型整合 API 规划边界
 
