@@ -10,8 +10,29 @@
 - Session 336：S10「撤销恢复 facing」与「同回合审计序号/ID 唯一」。
 - S10 剩余：~~天气主动技能~~（Session 349）· ~~正式特殊兵种熟练度~~（Session 350）·
   ~~协同包围/玩家战术撤退 0-A 最小切片~~（Session 352）· ~~敌军走位朝向前置修补~~（Session 353）·
-**敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）；完整追击/截击、攻城突围和多军团撤退后置。
+**敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）；完整追击/截击、攻城突围和多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
+
+### Session 366 · S10 刚烈反击暴击一次性结算
+
+- `resolveAttack` 合并独立反击暴击与刚烈必暴状态后统一套用一次暴击倍率；独立 roll 仍消费，保持既有 RNG 顺序。
+- 新增确定性回归：刚烈反击在独立暴击 roll 命中/落空两条路径的最终伤害一致；不新增字段、API、存档或数据规模。
+- **验证**：`verify-crit` 全部断言通过；`verify-tactical-ai` **78/78**；`verify-save-battle` **62/62**；`verify-battle-rng` **5/5**；`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- **Next**：继续 S10 后置追击/截击等设计债；0-B 继续暂缓。
+
+### Session 364 · S03 文化门槛只读预览 UI 收口
+
+- 产业分面新增原生文化进度条 `command-civil-culture-progress`，显示共享上限内的当前文化/999；门槛等级、下一门槛和差值仍由 `cultureThresholdProgress` 同源派生。
+- 不新增 API、存档字段、RNG、静态数据规模或正式技艺/人才效果消费；浏览器运行时无连接，未宣称 DOM 点击验收。
+- **Next**：浏览器连接恢复后补产业分面真实点击，再由用户决定正式技艺研发/人才吸引切片或回到 S10/S18；0-B 继续暂缓。
+
+### Session 363 · S03 文化门槛只读预览
+
+- 共享 `cultureThresholdProgress` 固化既有技艺门槛 `[100,250,500,700,900]` 的只读投影；文化值先夹紧到0～999。
+- 内政·产业显示文化进度条、已达 `LvN/5`、下一门槛和差值；不新增 API、存档字段、RNG 或任何技艺/人才效果消费。
+- 验证：共享专项 **3/3**、文化持续项目 **10/10**、R5 预算 **17/17**、全仓 shared **420/420** + client **54/54**；
+  workspace typecheck/build、validate-data、compliance、`git diff --check` 全绿。浏览器运行时无连接，未宣称 DOM 点击验收。
+- 边界：正式技艺研发、文化对人才吸引的加成及浏览器点击验收仍后置；0-B 继续暂缓。
 
 ### Session 362 · S03 文化持续投入 0-A
 

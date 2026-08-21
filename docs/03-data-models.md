@@ -2429,6 +2429,12 @@ pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段
 人员不可用和超过 3 个月的进度损失与原三类项目相同；启动/推进/完成不消费 RNG。
 旧存档的 `culture` 与文化项目均可缺省；技术研发/人才吸引的文化消费不在本切片内，避免把
 S03 新字段直接耦合到 S11 人事公式。
+
+### Session 363 · S03 文化门槛只读投影
+
+共享 `cultureThresholdProgress` 将 `City.stats.culture`（旧档缺省按0）投影为已达技艺级数、下一门槛与剩余文化；
+门槛为 `[100, 250, 500, 700, 900]`，运行时文化先夹紧到0～999。该投影是 UI 读模型，不新增 `GameState`/
+存档字段，不承担技艺解锁、研发速度或人才吸引效果。
 ### Session 302 · 六角战报解释字段
 
 当前运行时 `BattleLogEntry` 允许可选 `explanation`：变阵记录 TP 与前后阵型，攻击记录攻守阵型贡献。

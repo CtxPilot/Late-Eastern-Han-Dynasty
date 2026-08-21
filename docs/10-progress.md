@@ -1,5 +1,43 @@
 # 开发进度跟踪
 
+## 2026-08-21 — Session 366 · S10 刚烈反击暴击一次性结算
+
+- Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 修复：`resolveAttack` 将独立反击暴击与刚烈必暴合并为一个最终暴击状态，反击暴击倍率只结算一次；独立 roll 仍按既有顺序消费，避免改变权威 RNG 序列。
+- 回归：新增确定性刚烈双路径测试，独立反击暴击 roll 命中/落空时最终反击伤害一致；`verify-crit` 全部断言通过。
+- 验证：`verify-tactical-ai` **78/78**、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。
+- 边界：不新增字段、API、存档、RNG 或静态数据；完整追击/截击、攻城突围、多军团与 0-B 仍后置。本轮为服务端引擎修补，无浏览器 UI 验收声明。
+- 文档同步：`05/09/10/12/35` 与 `HANDOFF.md`。
+- **Next**：继续 S10 后置追击/截击等设计债；0-B 继续暂缓。
+
+## 2026-08-21 — Session 365 · S03 文化切片交接复验
+
+- Phase：**S03 内政深化**；本轮不新增功能、不扩静态数据规模、不启动 0-B。
+- 浏览器验收：按 `browser:control-in-app-browser` 技能尝试连接并检查浏览器列表，结果为 `[]`；因此未宣称真实 DOM 点击“发展文化→进度条→门槛提示”。
+- 复验：`verify-culture-development` **10/10**；shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。
+- 设计边界：正式技艺研发需要确定研发速度/首都声教门槛消费与朝廷入口；当前设计将公式留给后续校准，本轮不擅自定数值。
+- **Next**：浏览器连接恢复后补 S03 真实点击验收；随后请在“正式技艺研发/人才吸引消费”与回到 S10/S18 之间拍板，0-B 继续暂缓。
+
+## 2026-08-21 — Session 364 · S03 文化门槛只读预览 UI 收口
+
+- Phase：**S03 内政深化**；继续 0-A，不扩静态数据规模，不启动 0-B；文化效果消费仍后置。
+- UI：产业分面将共享 `CULTURE_RUNTIME_MAX` 与当前文化值渲染为原生 `<progress>`，新增稳定标识 `command-civil-culture-progress`；等级、下一门槛与差值继续由 `cultureThresholdProgress` 同源派生。
+- 边界：不新增 `GameState`/存档字段、API、RNG 或正式技艺/人才效果；文化上限仍为 999。
+- 验证：`verify-culture-development` **10/10**、R5 预算 **17/17**、shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。
+- 浏览器动态验收：浏览器运行时无可用实例，未宣称真实 DOM 点击验收。
+- 文档同步：`01/07/09/10/12/35`、`HANDOFF.md`；`03/04/06/08` 无接口、模型或数字真源变化。
+- **Next**：浏览器连接恢复后补产业分面“发展文化→进度条→门槛提示”点击验收；随后由用户决定正式技艺研发/人才吸引切片或回到 S10/S18；0-B 继续暂缓。
+
+## 2026-08-21 — Session 363 · S03 文化门槛只读预览
+
+- Phase：**S03 内政深化**；继续 0-A，不扩静态数据规模，不启动 0-B；文化效果消费仍后置。
+- 实装：新增共享 `cultureThresholdProgress` 与门槛真源 `[100,250,500,700,900]`；文化值按 0～999 夹紧，派生已达技艺级数、下一门槛与差值。
+- UI：内政·产业新增文化进度条、“技艺门槛预览 LvN/5”与下一门槛提示；文案明确只读，不产生技艺解锁、研发速度或人才吸引加成。
+- 边界：不新增 `GameState`/存档字段、API、RNG 或技艺/人才效果消费；浏览器运行时无实例，未宣称真实 DOM 点击验收。
+- 文档同步：`01/03/04/07/08/09/10/12/35`、`HANDOFF.md`。
+- 验证：共享专项 **3/3**、文化持续项目 **10/10**、R5 预算 **17/17**、shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、compliance、`git diff --check` 全绿。
+- **Next**：文化门槛只读预览保持不消费效果；有浏览器连接时补产业分面点击验收，再由用户决定正式技艺研发/人才吸引切片或回到 S10/S18；0-B 继续暂缓。
+
 ## 2026-08-21 — Session 362 · S03 文化持续投入 0-A
 
 - Phase：**S03 内政深化**；继续 0-A，不扩静态数据规模，不启动 0-B；本轮不再推进 S10 完整追击/截击债。

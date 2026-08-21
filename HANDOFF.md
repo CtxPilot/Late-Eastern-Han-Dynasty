@@ -9,12 +9,42 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 362**（S03 文化持续投入 0-A） |
+| 会话 | **Session 366**（S10 刚烈反击暴击一次性结算） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 362：S03 文化持续投入复用 `activeDevelopment`；Session 361 BattleView 撤退态边界、Session 360 截击后相邻目标优先与 Session 359 家族“族谱”只读分面保持有效 |
-| 文档最新 | `01/03/04/06/07/08/09/10/12/35` 与本交接已同步；其余既有设计文档保持有效 |
-| 本交接用途 | **S03 文化持续投入 0-A**；不启动工艺/交通/卫生、S10 完整追击/截击债或 0-B |
-| 下一步 | 有浏览器连接时实际点击内政·产业“发展文化”；随后由用户决定继续 S03 文化效果消费、回到 S10/S18，或保持后置；**0-B 继续暂缓** |
+| 代码最新 | Session 366：S10 刚烈反击暴击倍率一次性结算；Session 364：S03 文化门槛只读预览补原生文化进度条；Session 363 门槛投影；Session 362 文化持续投入复用 `activeDevelopment`；Session 361 BattleView 撤退态边界、Session 360 截击后相邻目标优先与 Session 359 家族“族谱”只读分面保持有效 |
+| 文档最新 | `05/09/10/12/35` 与本交接已同步；本轮无 API/存档/数据规模变化，`06` 与既有 `01/03/04/07/08` 保持有效 |
+| 本交接用途 | **S10 刚烈反击暴击结算幂等修补 0-A**；不启动完整追击/截击、攻城突围、多军团或 0-B |
+| 下一步 | 继续 S10 后置追击/截击等设计债；若回到 S03，正式技艺研发/人才吸引消费仍需用户拍板；**0-B 继续暂缓** |
+
+### Session 366 交接要点
+
+- `server/src/battle/crit.ts` 的刚烈反击现在把独立暴击 roll 与必暴状态合并后只套用一次暴击倍率；独立 roll 仍消费，权威 RNG 顺序不变。
+- `verify-crit.ts` 新增确定性回归：独立反击暴击 roll 命中/落空时，刚烈反击最终伤害一致且两者均标记为暴击。
+- 验证：`verify-crit` 全部断言通过；`verify-tactical-ai` **78/78**、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。
+- 本轮仅服务端战斗引擎修补，无浏览器 UI 验收声明；完整追击/截击、攻城突围、多军团与 0-B 仍后置。
+
+### Session 365 交接要点
+
+- 本轮没有新的运行时代码；保留 Session 364 的 S03 文化门槛只读预览与原生进度条。
+- 浏览器技能连接检查返回 `agent.browsers.list()=[]`，未完成真实 DOM 点击验收；不要把专项脚本、HTTP 或静态测试写成浏览器验收。
+- 复验结果：`verify-culture-development` **10/10**；shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。
+- 正式技艺研发的研发速度/首都声教门槛消费/朝廷入口仍需用户拍板；0-B 继续暂缓。
+
+### Session 364 交接要点
+
+- `CivilOverviewDrawer` 的产业分面将共享 `CULTURE_RUNTIME_MAX` 与当前文化值渲染为原生 `<progress>`，稳定标识为 `command-civil-culture-progress`；门槛等级与差值仍来自 `cultureThresholdProgress`。
+- 这是只读 UI 读模型收口，不新增 `GameState`/存档字段、API、RNG、静态数据规模或正式技艺/人才效果；文化上限仍为 999。
+- 验证：`verify-culture-development` **10/10**、R5 预算 **17/17**、shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、verify-compliance、`git diff --check` 全绿。浏览器运行时 `agent.browsers.list()=[]`，未宣称真实 DOM 点击验收。
+- 边界：正式技艺研发、文化对人才吸引的加成、工艺/交通/卫生、S10 完整追击/截击与 0-B 均后置。
+
+### Session 363 交接要点
+
+- 新增 `shared/culture.ts`：门槛 `[100,250,500,700,900]`；`cultureThresholdProgress` 将文化值夹紧到0～999，派生已达 `LvN/5`、下一门槛与剩余值。
+- UI：`CivilOverviewDrawer` 内政·产业显示 `command-civil-culture-progress`、`command-civil-culture-level` 与 `command-civil-culture-threshold`；只读预览，不解锁技艺、不改研发速度、不改人才公式。
+- 不新增 `GameState`/存档字段、API、RNG 或静态数据规模；仍复用 Session 362 的 `stats.culture` optional 兼容字段。
+- 验证：共享专项 **3/3**、文化持续项目 **10/10**、R5 预算 **17/17**、shared **420/420**、client **54/54**；workspace typecheck/build、validate-data、compliance、`git diff --check` 全绿。
+- 浏览器运行时 `agent.browsers.list()=[]`，未完成真实 DOM 点击验收；不要把单测或服务链写成浏览器验收。
+- 边界：正式技艺研发、文化对人才吸引的加成、工艺/交通/卫生、S10 完整追击/截击与 0-B 均后置。
 
 ### Session 362 交接要点
 

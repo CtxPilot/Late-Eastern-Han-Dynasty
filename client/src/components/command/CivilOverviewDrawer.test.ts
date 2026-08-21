@@ -20,7 +20,14 @@ describe('civil read-only overview model', () => {
     const game = {
       playerFactionId: 1,
       cities: {
-        2: { ...cityBase, id: 2, name: '陈留', province: '兖州', ruler: 1 },
+        2: {
+          ...cityBase,
+          id: 2,
+          name: '陈留',
+          province: '兖州',
+          ruler: 1,
+          stats: { ...cityBase.stats, culture: 500 },
+        },
         1: { ...cityBase, id: 1, name: '洛阳', ruler: 1 },
         3: { ...cityBase, id: 3, name: '宛城', ruler: 2 },
       },
@@ -35,10 +42,23 @@ describe('civil read-only overview model', () => {
         commerce: 35,
         wall: 30,
         culture: 0,
+        cultureMax: 999,
+        cultureLevel: 0,
+        cultureNextThreshold: 100,
+        cultureRemaining: 100,
         morale: 70,
         adultMale: 300,
       }),
-      expect.objectContaining({ cityId: 2, name: '陈留', province: '兖州' }),
+      expect.objectContaining({
+        cityId: 2,
+        name: '陈留',
+        province: '兖州',
+        culture: 500,
+        cultureMax: 999,
+        cultureLevel: 3,
+        cultureNextThreshold: 700,
+        cultureRemaining: 200,
+      }),
     ]);
   });
 

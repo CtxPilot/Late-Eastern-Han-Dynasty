@@ -567,13 +567,10 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
           equipCritBonus: opts.defenderCritBonus,
         };
         const counterCritRate = clamp(computeCritRate(defCritCtx) + 0.05, 0.02, 0.6);
-        counterCrit = rng() < counterCritRate;
+        // 独立反击暴击 roll 仍然消费；刚烈只把最终状态强制为暴击，避免重复套倍率。
+        const rolledCounterCrit = rng() < counterCritRate;
+        counterCrit = rolledCounterCrit || defU === 'ganglie';
         if (counterCrit) {
-          counterDamage = Math.round(counterDamage * computeCritMultiplier(defCritCtx));
-        }
-        // 刚烈: 反击必暴击
-        if (defU === 'ganglie') {
-          counterCrit = true;
           counterDamage = Math.round(counterDamage * computeCritMultiplier(defCritCtx));
         }
         attackerTroopsAfter = Math.max(0, attackerTroopsAfter - counterDamage);

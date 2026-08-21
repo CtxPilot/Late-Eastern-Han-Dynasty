@@ -161,6 +161,41 @@ function main(): void {
   };
   assert(computeCounterRate(ganglieCounter, 0.1) === 1.0, '刚烈必反击(100%)');
   assert(computeCounterCoeff(ganglieCounter) === 1.0, '刚烈反击系数 ×1.0(取代0.6)');
+
+  label('§6.3 刚烈反击暴击只结算一次');
+  const ganglieAtkUnit = stubUnit('ganglie-check-atk', 'attacker', generic.id, UnitType.HEAVY_INFANTRY, FormationType.SQUARE, 3000);
+  const ganglieDefUnit = stubUnit('ganglie-check-def', 'defender', ganglieOff.id, UnitType.SPEARMAN, FormationType.SQUARE, 3000);
+  const ganglieAtkActor: AttackActor = {
+    unit: ganglieAtkUnit, officer: generic,
+    template: { attack: 10, defense: 7, mobility: 3, range: 1 } as never,
+    proficiency: UnitProficiency.B,
+  };
+  const ganglieDefActor: AttackActor = {
+    unit: ganglieDefUnit, officer: ganglieOff,
+    template: { attack: 7, defense: 8, mobility: 3, range: 1 } as never,
+    proficiency: UnitProficiency.B,
+  };
+  const fixedRng = (rolls: readonly number[]): (() => number) => {
+    let index = 0;
+    return () => rolls[index++] ?? 0.99;
+  };
+  const ganglieRandomCrit = resolveAttack({
+    attacker: ganglieAtkActor, defender: ganglieDefActor, baseDamage: 500, matchup: 1.0,
+    attackerTerrain: 'plain' as never, defenderTerrain: 'plain' as never,
+    distance: 1, isFirstRound: false, attackerMoved: false,
+    // 主攻不暴击、刚烈反击触发、独立反击暴击命中、连击不触发。
+    rng: fixedRng([0.99, 0, 0, 0.99]),
+  });
+  const ganglieRandomNoCrit = resolveAttack({
+    attacker: ganglieAtkActor, defender: ganglieDefActor, baseDamage: 500, matchup: 1.0,
+    attackerTerrain: 'plain' as never, defenderTerrain: 'plain' as never,
+    distance: 1, isFirstRound: false, attackerMoved: false,
+    // 同样的刚烈反击，但独立反击暴击 roll 落空。
+    rng: fixedRng([0.99, 0, 0.99, 0.99]),
+  });
+  assert(ganglieRandomCrit.counterCrit && ganglieRandomNoCrit.counterCrit, '刚烈无论独立暴击 roll 结果都反击暴击');
+  assert(ganglieRandomCrit.counterDamage === ganglieRandomNoCrit.counterDamage, '刚烈暴击倍率只结算一次');
+
   const elaiCounter: CounterContext = {
     officer: dianWei, unitType: UnitType.HEAVY_INFANTRY, formation: FormationType.SQUARE,
     distance: 1, morale: 90, hasActed: false, confused: false,

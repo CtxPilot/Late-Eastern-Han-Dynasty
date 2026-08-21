@@ -3,8 +3,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
+  CULTURE_RUNTIME_MAX,
   DEVELOPMENT_PROJECT_CONFIG,
   developmentInitialGoldCost,
+  cultureThresholdProgress,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
@@ -26,6 +28,10 @@ export type CivilCitySummary = {
   commerce: number;
   wall: number;
   culture: number;
+  cultureMax: number;
+  cultureLevel: number;
+  cultureNextThreshold: number | null;
+  cultureRemaining: number;
   morale: number;
   adultMale: number;
   adultFemale: number;
@@ -42,6 +48,7 @@ export function selectCivilCities(game: GameState): CivilCitySummary[] {
 }
 
 function toSummary(city: City): CivilCitySummary {
+  const culturePreview = cultureThresholdProgress(city.stats.culture ?? 0);
   return {
     cityId: city.id,
     name: city.name,
@@ -53,7 +60,11 @@ function toSummary(city: City): CivilCitySummary {
     farm: city.stats.farm,
     commerce: city.stats.commerce,
     wall: city.stats.wall,
-    culture: city.stats.culture ?? 0,
+    culture: culturePreview.current,
+    cultureMax: CULTURE_RUNTIME_MAX,
+    cultureLevel: culturePreview.reachedLevels,
+    cultureNextThreshold: culturePreview.nextThreshold,
+    cultureRemaining: culturePreview.remaining,
     morale: city.stats.morale,
     adultMale: city.demographics.adultMale,
     adultFemale: city.demographics.adultFemale,
@@ -275,6 +286,27 @@ export function CivilOverviewDrawer() {
             <Fact label="农业开发" value={city.farm} testId="command-civil-value-farm" />
             <Fact label="商业开发" value={city.commerce} testId="command-civil-value-commerce" />
             <Fact label="文化积累" value={city.culture} testId="command-civil-value-culture" />
+            <div className="border border-stone-800 px-3 py-2" data-testid="command-civil-culture-progress">
+              <div className="mb-1 flex items-center justify-between text-[10px] text-stone-400">
+                <span>文化进度</span>
+                <span>{city.culture}/{city.cultureMax}</span>
+              </div>
+              <progress
+                aria-label={`${city.name}文化积累进度`}
+                value={city.culture}
+                max={city.cultureMax}
+                className="h-1.5 w-full accent-amber-700"
+              />
+            </div>
+            <Fact label="技艺门槛预览" value={`Lv${city.cultureLevel}/5`} testId="command-civil-culture-level" />
+            <p
+              className="border border-stone-800 px-3 py-2 text-[10px] text-stone-500"
+              data-testid="command-civil-culture-threshold"
+            >
+              {city.cultureNextThreshold == null
+                ? '已达 Lv5 门槛；技艺研发与人才吸引消费后置。'
+                : `距 Lv${city.cultureLevel + 1} 门槛 ${city.cultureNextThreshold} 还需 ${city.cultureRemaining} 点；本项只读，不产生解锁或加成。`}
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <CivilButton order="farm" onClick={() => setDraft('farm')} />
               <CivilButton order="commerce" onClick={() => setDraft('commerce')} />
