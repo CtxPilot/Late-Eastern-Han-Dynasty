@@ -33,6 +33,10 @@ function markEnemyWaiting(units: BattleUnit[], unitId: string): BattleUnit[] {
 }
 
 /** S10 0-A tactical AI: deterministic scoring with attacks, fire tactics and terrain-aware movement. */
+function siegeDefBonus(isSiege: boolean, side: 'attacker' | 'defender'): number {
+  return isSiege && side === 'defender' ? 3 : 0;
+}
+
 export function runSimpleEnemyAi(
   units: BattleUnit[],
   terrainMap: TerrainType[][],
@@ -47,6 +51,7 @@ export function runSimpleEnemyAi(
   officers?: Record<number, Officer>,
   battleTurn?: number,
   weather: Weather = Weather.CLEAR,
+  isSiege = false,
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } {
   // 行动状态是回合契约的一部分：重入 AI（例如重复请求/恢复）不得让已行动单位再次执行。
   const liveEnemies = units.filter((u) => u.side === enemySide && isActiveBattleUnit(u));
@@ -95,6 +100,32 @@ export function runSimpleEnemyAi(
     if (intercepted) {
       const name = officerStats[live.commanderId]?.name ?? '敌军';
       messages.push(`${name} 被截击`);
+      const pursuit = applyPursuitToRetreater(next, live, terrainMap, unitTemplates, officerStats, playerSide, strongAgainst, weather, isSiege);
+      if (pursuit) {
+        next = pursuit.units;
+        messages.push(pursuit.message);
+        const updated = next.find((unit) => unit.id === live.id);
+        if (!updated || updated.isDestroyed || updated.troopCount <= 0) {
+          if (pursuit.killed) {
+            if (!next.some((unit) => unit.side === enemySide && isActiveBattleUnit(unit))) {
+              return {
+                units: next,
+                message: messages.join('；'),
+                over: true,
+                winner: playerSide,
+              };
+            }
+          }
+          continue;
+        }
+        // 被截击但未溃灭的单位仍按原链继续行动，live 刷新为追击后的快照
+        const refreshed = next.find((unit) => unit.id === live.id);
+        if (refreshed) {
+          // 更新 live 引用供后续突围/目标选择使用（保持同一对象语义）
+          (live as unknown as { troopCount: number; morale: number }).troopCount = refreshed.troopCount;
+          (live as unknown as { morale: number }).morale = refreshed.morale;
+        }
+      }
     }
 
     // 被截击的撤退尝试必须先处理相邻截击者；否则全局目标评分可能让低士气部队
@@ -148,7 +179,7 @@ export function runSimpleEnemyAi(
 
     const dist = hexDistance(acting.position, actingTarget.position);
 
-    const ability = tryAbilityTactic(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather);
+    const ability = tryAbilityTactic(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, officers, strongAgainst, rng, weather, isSiege);
     if (ability) {
       next = ability.units;
       messages.push(ability.message);
@@ -172,7 +203,7 @@ export function runSimpleEnemyAi(
         messages.push(`${name} 雾中无法射击`);
         continue;
       }
-      const r = doAttack(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
+      const r = doAttack(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege);
       next = r.units;
       messages.push(r.message);
       if (r.over) return { units: next, message: messages.join('；'), over: true, winner: r.winner };
@@ -243,7 +274,7 @@ export function runSimpleEnemyAi(
         }
         const still = next.find((u) => u.id === movedTarget.id && isActiveBattleUnit(u));
         if (still) {
-          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather);
+          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege);
           next = r.units;
           messages.push(r.message);
           if (r.over) {
@@ -284,6 +315,72 @@ function isEnemyIntercepted(units: readonly BattleUnit[], unit: BattleUnit): boo
   return units.some((candidate) => candidate.side !== unit.side
     && isActiveBattleUnit(candidate)
     && hexDistance(candidate.position, unit.position) === 1);
+}
+
+/** 追击系数：按 08 §二十七 取基础伤害中位值 ×0.6。 */
+const PURSUIT_COEFF = 0.6;
+
+/**
+ * 被截击的撤退单位追加一次追击伤害。由相邻最强截击者出手，必中、不触发暴击/反击/连击，
+ * 中位随机（0.5→1.0），仅削减被截单位的兵力/士气；不消费权威 RNG 序列。
+ */
+function applyPursuitToRetreater(
+  units: BattleUnit[],
+  retreater: BattleUnit,
+  terrainMap: TerrainType[][],
+  unitTemplates: Record<string, UnitTemplate>,
+  officerStats: Record<number, EnemyOfficerStats>,
+  playerSide: 'attacker' | 'defender',
+  strongAgainst: Record<string, UnitType[]>,
+  weather: Weather,
+  isSiege = false,
+): { units: BattleUnit[]; message: string; killed: boolean } | null {
+  const interceptor = selectInterceptionTarget(retreater, units, playerSide, unitTemplates, strongAgainst);
+  if (!interceptor) return null;
+  const atkT = unitTemplates[interceptor.unitType];
+  const defT = unitTemplates[retreater.unitType];
+  const atkO = officerStats[interceptor.commanderId];
+  const defO = officerStats[retreater.commanderId];
+  if (!atkT || !defT || !atkO || !defO) return null;
+  const matchup = getUnitMatchup(interceptor.unitType, retreater.unitType, strongAgainst);
+  const atkTerrain = terrainMap[interceptor.position.r]?.[interceptor.position.q] ?? ('plain' as TerrainType);
+  const defTerrain = terrainMap[retreater.position.r]?.[retreater.position.q] ?? ('plain' as TerrainType);
+  const medianRng: CritRng = () => 0.5;
+  const base = calcDamage(
+    {
+      unitAttack: atkT.attack, unitDefense: atkT.defense, officerWar: atkO.war,
+      officerLeadership: atkO.leadership, troops: interceptor.troopCount, maxTroops: interceptor.maxTroops,
+      morale: interceptor.morale, terrain: atkTerrain, weather, matchup,
+      formationAtk: hexFormationMods(interceptor.formation).atk,
+    },
+    {
+      unitAttack: defT.attack, unitDefense: defT.defense, officerWar: defO.war,
+      officerLeadership: defO.leadership, troops: retreater.troopCount, maxTroops: retreater.maxTroops,
+      morale: retreater.morale, terrain: defTerrain, weather,
+      armorDefense: defO.armorDefense,
+      formationDef: hexFormationMods(retreater.formation).def + siegeDefBonus(isSiege, retreater.side),
+    },
+    medianRng,
+  );
+  const pursuitDamage = Math.max(1, Math.round(base * PURSUIT_COEFF));
+  const next = units.map((unit) => {
+    if (unit.id !== retreater.id) return unit;
+    const troops = Math.max(0, unit.troopCount - pursuitDamage);
+    return {
+      ...unit,
+      troopCount: troops,
+      isDestroyed: troops <= 0,
+      morale: Math.max(0, unit.morale - 2),
+    };
+  });
+  const killed = (next.find((unit) => unit.id === retreater.id)?.troopCount ?? 0) <= 0;
+  const interceptorName = officerStats[interceptor.commanderId]?.name ?? '截击者';
+  const retreaterName = officerStats[retreater.commanderId]?.name ?? '被截者';
+  return {
+    units: next,
+    message: `${interceptorName} 追击 ${retreaterName}，造成 ${pursuitDamage} 伤害${killed ? '—被追击溃灭' : ''}`,
+    killed,
+  };
 }
 
 /**
@@ -451,6 +548,7 @@ function tryAbilityTactic(
   strongAgainst: Record<string, UnitType[]>,
   rng: CritRng,
   weather: Weather,
+  isSiege = false,
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } | null {
   const atkOfficer = officers?.[attacker.commanderId];
   const defOfficer = officers?.[defender.commanderId];
@@ -490,7 +588,7 @@ function tryAbilityTactic(
       morale: defender.morale, terrain: terrainMap[defender.position.r]?.[defender.position.q] ?? 'plain',
       weather,
       armorDefense: defStats.armorDefense,
-      formationDef: hexFormationMods(defender.formation).def,
+      formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(isSiege, defender.side),
     },
     rng,
   );
@@ -639,6 +737,7 @@ function doAttack(
   officers?: Record<number, Officer>,
   battleTurn?: number,
   weather: Weather = Weather.CLEAR,
+  isSiege = false,
 ): {
   units: BattleUnit[];
   message: string;
@@ -681,7 +780,7 @@ function doAttack(
       terrain: defTerrain,
       weather,
       armorDefense: defO.armorDefense,
-      formationDef: hexFormationMods(defender.formation).def,
+      formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(isSiege, defender.side),
     },
     rng,
   );

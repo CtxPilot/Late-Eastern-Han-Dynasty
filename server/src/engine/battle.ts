@@ -82,6 +82,18 @@ function isActiveBattleUnit(unit: BattleUnit): boolean {
   return !unit.isDestroyed && !unit.isRetreated && unit.troopCount > 0;
 }
 
+/** 08 §二十八：守城防御加成（isSiege 时守方 formationDef +3）。 */
+function siegeDefBonus(battle: BattleState, side: 'attacker' | 'defender'): number {
+  return battle.isSiege && side === 'defender' ? 3 : 0;
+}
+
+function isEdgeForSiegeBreakout(unit: BattleUnit, battle: BattleState): boolean {
+  return unit.position.q === 0
+    || unit.position.q === battle.hexGrid.width - 1
+    || unit.position.r === 0
+    || unit.position.r === battle.hexGrid.height - 1;
+}
+
 /**
  * 玩家把控制权交给敌军时，开启一个新的敌军行动窗口。
  * 同一敌军阶段内仍由 hasActed 阻止重入；只有这条 player -> enemy 边界会恢复敌军行动资格。
@@ -660,7 +672,7 @@ export function attackUnit(
   const atkTerrain = battle.hexGrid.terrain[attacker.position.r][attacker.position.q];
   const defTerrain = battle.hexGrid.terrain[defender.position.r][defender.position.q];
 
-  // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266）
+  // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266；08 §二十八守城 +3）
   const atkEquip = equipBonusFor(atkO);
   const defEquip = equipBonusFor(defO);
   const baseDamage = Math.max(1, Math.round(calcDamage(
@@ -688,7 +700,7 @@ export function attackUnit(
       terrain: defTerrain,
       weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
-      formationDef: hexFormationMods(defender.formation).def,
+      formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(battle, 'defender'),
     },
     rng,
   ) * (1 + targetCheck.attackModifier)));
@@ -802,26 +814,116 @@ export function finishPlayerAction(battle: BattleState): BattleState {
  * 六角战术撤退：将当前仍有兵力的攻方单位标记为有序撤出，并把战斗交给
  * 结算层回流残兵。包围是派生态势；若任一存活攻方单位已被协同包围，拒绝
  * 撤退，避免“被两翼锁住却瞬间全军脱离”的漏洞。该动作不消费 RNG。
+ *
+ * Session 367 追击：成功撤退时，每支与活跃守军相邻的攻方部队按 08 §二十七
+ * 追击系数（0.6×基础伤害，中位值、必中）承受一次截击者追击；单名最强
+ * 相邻截击者出手，不触发暴击/反击/连击。
  */
+const RETREAT_PURSUIT_COEFF = 0.6;
+
+function bestRetreatPursuer(
+  _retreater: BattleUnit,
+  candidates: readonly BattleUnit[],
+  unitTemplates: Record<string, { attack: number }>,
+): BattleUnit | null {
+  let best: BattleUnit | null = null;
+  let bestScore = -Infinity;
+  for (const c of candidates) {
+    const tmpl = (unitTemplates as unknown as Record<string, { attack: number }>)[c.unitType];
+    const score = (tmpl?.attack ?? 0) * 10 + c.troopCount * 0.001;
+    if (score > bestScore || (score === bestScore && c.id < (best?.id ?? '\uffff'))) {
+      bestScore = score;
+      best = c;
+    }
+  }
+  return best;
+}
+
 export function retreatBattle(battle: BattleState): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   assertBattleNotPausedForDuel(battle);
   const attackers = battle.units.filter((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit));
   if (attackers.length === 0) throw new Error('我军已无可撤部队');
-  const surrounded = attackers.filter((unit) => isUnitSurrounded(battle.units, unit.id));
+  const surrounded = attackers.filter((unit) => isUnitSurrounded(battle.units, unit.id)
+    && !(battle.isSiege && isEdgeForSiegeBreakout(unit, battle)));
   if (surrounded.length > 0) {
     throw new Error(`RETREAT_SURROUNDED:${surrounded.map((unit) => unit.commanderName).join('、')}`);
   }
   const names = attackers.map((unit) => unit.commanderName).join('、');
+  const unitMap = getUnitByType();
+  const strongMap = buildStrongAgainstMap();
+  const PursuitMessages: string[] = [];
+  // 先对每支撤退部队结算追击，再统一标记退场
+  let working = battle.units.map((unit) => ({ ...unit }));
+  for (const retreater of attackers) {
+    const adjacent = working.filter((candidate) => candidate.side === 'defender'
+      && isActiveBattleUnit(candidate)
+      && hexDistance(candidate.position, retreater.position) === 1);
+    if (adjacent.length === 0) continue;
+    const pursuer = bestRetreatPursuer(retreater, adjacent, unitMap as unknown as Record<string, { attack: number }>);
+    if (!pursuer) continue;
+    const atkT = unitMap[pursuer.unitType];
+    const defT = unitMap[retreater.unitType];
+    if (!atkT || !defT) continue;
+    // Effective stats: use battle commanderName lookup via current working snapshot
+    // For 0-A, war/leadership fallback to 70 if officer missing, but battle pursuit
+    // should align with attacker/defender formation & terrain. Officer stats
+    // are fetched from runtime state? Here we approximate with base 70 + formation.
+    // To keep zero new deps, use unit template attack/def as proxy and assume
+    // officer war 70 for both sides if State not available; however retreatBattle
+    // does not receive GameState, so use neutral 70. Future full officer-aware
+    // pursuit should pass GameState explicitly.
+    const matchup = getUnitMatchup(pursuer.unitType, retreater.unitType, strongMap);
+    const atkTerrain = battle.hexGrid.terrain[pursuer.position.r]?.[pursuer.position.q] ?? TerrainType.PLAIN;
+    const defTerrain = battle.hexGrid.terrain[retreater.position.r]?.[retreater.position.q] ?? TerrainType.PLAIN;
+    const medianRng: CritRng = () => 0.5;
+    const base = calcDamage(
+      {
+        unitAttack: atkT.attack, unitDefense: atkT.defense, officerWar: 70,
+        officerLeadership: 70, troops: pursuer.troopCount, maxTroops: pursuer.maxTroops,
+        morale: pursuer.morale, terrain: atkTerrain, weather: battle.weather,
+        matchup, formationAtk: hexFormationMods(pursuer.formation).atk,
+      },
+      {
+        unitAttack: defT.attack, unitDefense: defT.defense, officerWar: 70,
+        officerLeadership: 70, troops: retreater.troopCount, maxTroops: retreater.maxTroops,
+        morale: retreater.morale, terrain: defTerrain, weather: battle.weather,
+        matchup: 1 / Math.max(0.1, matchup),
+        formationDef: hexFormationMods(retreater.formation).def,
+      },
+      medianRng,
+    );
+    const dmg = Math.max(1, Math.round(base * RETREAT_PURSUIT_COEFF));
+    working = working.map((unit) => {
+      if (unit.id !== retreater.id) return unit;
+      const troops = Math.max(0, unit.troopCount - dmg);
+      return {
+        ...unit,
+        troopCount: troops,
+        isDestroyed: troops <= 0,
+        morale: Math.max(0, unit.morale - 2),
+      };
+    });
+    const killed = (working.find((unit) => unit.id === retreater.id)?.troopCount ?? 0) <= 0;
+    PursuitMessages.push(`${pursuer.commanderName} 追击 ${retreater.commanderName}，造成 ${dmg} 伤害${killed ? '—被追击溃灭' : ''}`);
+  }
+  const pursuitLog = PursuitMessages.length ? `；追击：${PursuitMessages.join('；')}` : '';
   return {
     ...battle,
-    units: battle.units.map((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit)
-      ? { ...unit, isRetreated: true, hasActed: true, mp: 0 }
-      : unit),
+    units: working.map((unit) => {
+      if (unit.side !== 'attacker') return unit;
+      const original = attackers.find((candidate) => candidate.id === unit.id);
+      if (!original) return unit;
+      // 已被追击至溃灭的单位不再标记撤退，保留溃灭状态
+      if (unit.isDestroyed || unit.troopCount <= 0) {
+        return { ...unit, hasActed: true, mp: 0 };
+      }
+      return { ...unit, isRetreated: true, hasActed: true, mp: 0 };
+    }),
     phase: 'over',
     winner: 'defender',
-    message: `我军有序撤退（${names}），残部将返回出发城`,
-    log: [...battle.log, { turn: battle.turn, message: `战术撤退：${names}` }],
+    message: `我军有序撤退（${names}），残部将返回出发城${pursuitLog}`,
+    log: [...battle.log, { turn: battle.turn, message: `战术撤退：${names}${pursuitLog}` }],
   };
 }
 
@@ -1201,7 +1303,7 @@ export function castAbility(
   }
 
   // 计算伤害：基础伤害（用 calcDamage 的结构）× power 倍率
-  // 功绩属性加成计入有效武力/统帅（Session 265）
+  // 功绩属性加成计入有效武力/统帅（Session 265；08 §二十八守城 +3）
   const atkT = tmpl;
   const defT = getUnitByType()[target.unitType];
   const strongMap = buildStrongAgainstMap();
@@ -1233,7 +1335,7 @@ export function castAbility(
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
       weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
-      formationDef: hexFormationMods(target.formation).def,
+      formationDef: hexFormationMods(target.formation).def + siegeDefBonus(battle, 'defender'),
     },
     rng,
   );
@@ -1452,6 +1554,7 @@ export function runEnemyPhase(
     state.officers,
     battle.turn,
     battle.weather,
+    battle.isSiege,
   );
 
   if (result.over) {

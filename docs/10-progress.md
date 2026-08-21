@@ -1,5 +1,25 @@
 # 开发进度跟踪
 
+## 2026-08-21 — Session 368 · S10 攻城守城与城门突围 0-A 切片
+
+- Phase：**S10 战斗收口 · 攻城突围**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：`isSiege` 时守方 `formationDef` +3（约 +30% 有效防御，`hexFormationMods` 外的攻城修正）；攻方 `retreatBattle` 对位于地图边缘（城门）的受围单位放宽 `RETREAT_SURROUNDED`，仍可突围但照常承受相邻守军 0.6 系数追击。非攻城或非边缘受围仍阻断。
+- 数值真源：`docs/08-data-dictionary.md` §二十八（守城加成/城门边缘/突围追击/确定性）。
+- 验证：`verify-tactical-ai` **86/86**（含守城追击减伤 2 项）、`verify-tactical-retreat` **18/18**（含边缘突围 3 项）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。浏览器运行时无实例，未宣称真实 DOM 点击验收。
+- 边界：不新增字段、API、存档、RNG、静态数据或 UI；多军团撤退与地形可见范围等仍后置。
+- 文档同步：`05/08/09/10/12/27/28/35` 与 `HANDOFF.md`。
+- **Next**：继续 S10 多军团等后置债；0-B 继续暂缓。
+
+## 2026-08-21 — Session 367 · S10 追击伤害 0-A 切片
+
+- Phase：**S10 战斗收口 · 追击/截击深化**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：敌军满足撤退门槛被 1 格相邻截击时，由最强相邻截击者结算 `calcDamage` 中位值×0.6（必中、至少 1，不触发暴击/反击/连击，士气 −2，不消费权威 RNG）；若追击致溃则标记 `isDestroyed`。玩家 `retreatBattle` 成功时对每支相邻退兵同系数追击。
+- 数值真源：`docs/08-data-dictionary.md` §二十七（追击触发/系数/择优/玩家撤退追击四行）。
+- 验证：`verify-tactical-ai` **84/84**（含截击追击 6 项）、`verify-tactical-retreat` **15/15**（含相邻/非相邻追击）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。浏览器运行时无实例，未宣称真实 DOM 点击验收。
+- 边界：不新增字段、API、存档、RNG、静态数据或 UI；攻城突围与多军团撤退仍后置。
+- 文档同步：`05/08/09/10/12/27/35` 与 `HANDOFF.md`。
+- **Next**：继续 S10 攻城突围/多军团等后置债；0-B 继续暂缓。
+
 ## 2026-08-21 — Session 366 · S10 刚烈反击暴击一次性结算
 
 - Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。

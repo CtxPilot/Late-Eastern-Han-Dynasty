@@ -9,12 +9,28 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 366**（S10 刚烈反击暴击一次性结算） |
+| 会话 | **Session 368**（S10 攻城守城与城门突围 0-A 切片） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 366：S10 刚烈反击暴击倍率一次性结算；Session 364：S03 文化门槛只读预览补原生文化进度条；Session 363 门槛投影；Session 362 文化持续投入复用 `activeDevelopment`；Session 361 BattleView 撤退态边界、Session 360 截击后相邻目标优先与 Session 359 家族“族谱”只读分面保持有效 |
-| 文档最新 | `05/09/10/12/35` 与本交接已同步；本轮无 API/存档/数据规模变化，`06` 与既有 `01/03/04/07/08` 保持有效 |
-| 本交接用途 | **S10 刚烈反击暴击结算幂等修补 0-A**；不启动完整追击/截击、攻城突围、多军团或 0-B |
-| 下一步 | 继续 S10 后置追击/截击等设计债；若回到 S03，正式技艺研发/人才吸引消费仍需用户拍板；**0-B 继续暂缓** |
+| 代码最新 | Session 368：`isSiege` 守方 +3 防与边缘城门 `RETREAT_SURROUNDED` 放宽；Session 367：截击追击 0.6 系数；Session 366：刚烈反击幂等；Session 364~362 文化持续投入与门槛预览、Session 361 撤退边界与 Session 360 截击优先级保持有效 |
+| 文档最新 | `05/08/09/10/12/27/35` 与本交接已同步；本轮无 API/存档/数据规模变化，`06` 与既有 `01/03/04/07` 保持有效 |
+| 本交接用途 | **S10 攻城突围 0-A 切片**；不启动多军团或 0-B |
+| 下一步 | 继续 S10 多军团等后置债；若回到 S03，正式技艺研发/人才吸引消费仍需用户拍板；**0-B 继续暂缓** |
+
+### Session 368 交接要点
+
+- `server/src/engine/battle.ts`：`isSiege` 时守方 `formationDef` +3（约 +30% 有效防御，`siegeDefBonus`）；`retreatBattle` 对位于地图边缘（城门）的受围攻方放宽 `RETREAT_SURROUNDED`，仍可突围但照常承受 0.6 追击。`shared` 不新增字段，`isSiege` 复用既有 `BattleState` 标志。
+- `server/src/battle/simpleAi.ts`：`runSimpleEnemyAi` 新增可选 `isSiege` 分支，`tryAbilityTactic`/`doAttack`/`applyPursuitToRetreater` 的 `calcDamage` 对守方（`side==='defender'`）叠加同 `+3` 守城修正；`battle.ts` 的 `runEnemyPhase` 已传入 `battle.isSiege`。
+- 数值真源：`docs/08-data-dictionary.md` 新增 §二十八（守城加成/城门边缘/突围追击/确定性）；`05` §5.6.3 与 `27` 新增 Session 368 段落同步。
+- 验证：`verify-tactical-ai` **86/86**（含守城追击减伤 2 项）、`verify-tactical-retreat` **18/18**（含边缘突围 3 项）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- 本轮仅服务端战斗引擎修补，无浏览器 UI 验收声明；多军团与地形可见范围等仍后置，0-B 继续暂缓。
+
+### Session 367 交接要点
+
+- `server/src/battle/simpleAi.ts` 在敌军被 `isEnemyIntercepted` 截击时，由最强相邻截击者追加 `calcDamage` 中位值×0.6 追击（必中、至少 1、士气 −2，不触发暴击/反击/连击，不消费权威 RNG）；若追击致溃则标记 `isDestroyed` 并结束该单位本回合链。
+- `server/src/engine/battle.ts` 的 `retreatBattle` 在玩家战术撤退成功时，对每支与活跃守军相邻的攻方退兵按同系数追加一次追击，多名截击者时仅最强一名出手；无相邻守军时无追击。
+- 数值真源：`docs/08-data-dictionary.md` §二十七新增追击四行（触发/系数/择优/玩家撤退追击）；`05` §5.6.3 与 `27` 新增 Session 367 段落同步。
+- 验证：`verify-tactical-ai` **84/84**（含截击追击 6 项）、`verify-tactical-retreat` **15/15**（相邻/非相邻追击对比）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- 本轮仅服务端战斗引擎与撤退结算修补，无浏览器 UI 验收声明；攻城突围与多军团仍后置，0-B 继续暂缓。
 
 ### Session 366 交接要点
 

@@ -118,6 +118,35 @@ const oneSide = battle([
   unit('d1', 'defender', { q: 4, r: 3 }, 3),
 ]);
 check('单支贴身敌军仍可撤退', retreatBattle(oneSide).phase === 'over');
+const pursued = retreatBattle(oneSide);
+check('相邻守军对撤退追加追击', pursued.message.includes('追击'));
+check('追击削减退兵兵力', (pursued.units.find((unit) => unit.id === 'a1')?.troopCount ?? 1000) < 1000);
+check('追击后仍标记撤退', pursued.units.find((unit) => unit.id === 'a1')?.isRetreated === true);
+check('追击后士气 -2', (pursued.units.find((unit) => unit.id === 'a1')?.morale ?? 80) === 78);
+
+const distant = battle([
+  unit('a1', 'attacker', { q: 1, r: 1 }, 0),
+  unit('d1', 'defender', { q: 6, r: 6 }, 3),
+]);
+const distantRetreat = retreatBattle(distant);
+check('无相邻守军时撤退不触发追击', !distantRetreat.message.includes('追击'));
+check('无追击时兵力保持', distantRetreat.units.find((unit) => unit.id === 'a1')?.troopCount === 1000);
+
+const edgeSurrounded = battle([
+  unit('a1', 'attacker', { q: 0, r: 0 }, 0),
+  unit('d1', 'defender', { q: 1, r: 0 }, 3),
+  unit('d2', 'defender', { q: 0, r: 1 }, 2),
+]);
+check('边缘受围由 isSiege 城门放宽仍可撤退', retreatBattle(edgeSurrounded).phase === 'over');
+check('边缘突围仍承受追击', retreatBattle(edgeSurrounded).message.includes('追击'));
+const nonSiegeEdge = { ...edgeSurrounded, isSiege: false } as BattleState;
+let edgeRejection = '';
+try {
+  retreatBattle(nonSiegeEdge);
+} catch (e) {
+  edgeRejection = e instanceof Error ? e.message : String(e);
+}
+check('非攻城时边缘仍按受围阻断', edgeRejection.startsWith('RETREAT_SURROUNDED'));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exitCode = 1;

@@ -158,6 +158,20 @@ const interceptedRetreatResult = runSimpleEnemyAi(
 assert(interceptedRetreatResult.message.includes('被截击'), '相邻我军存在时敌军主动撤退先写入截击战报');
 assert(interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.isRetreated === false, '被相邻我军截击的敌军不能瞬时撤退');
 assert(interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.hasActed === true, '被截击敌军继续既有接战链并结束行动');
+assert(interceptedRetreatResult.message.includes('追击'), '被截击时追加一次追击伤害');
+assert((interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.troopCount ?? 1000) < 1000, '追击削减被截单位兵力（0.6 系数，中位值，不消费 RNG）');
+assert((interceptedRetreatResult.units.find((u) => u.id === interceptedRetreatEnemy.id)?.morale ?? 20) < 20, '追击附加士气 -2');
+
+// 极残血被截击时追击可直接溃灭
+const fragileIntercepted = { ...unit('fragile-intercepted', 'defender', 2, 2, 5, 2), morale: 20 };
+const fragileResult = runSimpleEnemyAi(
+  [fragileIntercepted, unit('fragile-interceptor', 'attacker', 3, 2, 1000, 1)], terrain, templates,
+  { 1: { war: 80, leadership: 80, name: '强截击将' }, 2: { war: 70, leadership: 70, name: '残血被截将' } },
+  6, 5, 'defender', 'attacker', () => 0.5,
+);
+assert(fragileResult.message.includes('追击'), '残血被截击仍触发追击');
+assert(fragileResult.units.find((u) => u.id === fragileIntercepted.id)?.isDestroyed === true, '追击可致残血被截单位直接溃灭');
+assert(fragileResult.units.find((u) => u.id === fragileIntercepted.id)?.isRetreated === false, '被追击溃灭的单位不再标记撤退');
 
 const interceptionPriorityTemplates = {
   ...templates,
@@ -420,5 +434,26 @@ const meritAbilityResult = runSimpleEnemyAi(
   6, 5, 'defender', 'attacker', () => 0, {}, meritAbilityOfficers, 1, Weather.CLEAR,
 );
 assert(meritAbilityResult.message.includes('试箭雨'), '敌军 AI 复用功绩 Lv14 适性升档');
+
+const siegeTemplates = {
+  ...templates,
+  [UnitType.HEAVY_CAVALRY]: template(UnitType.HEAVY_CAVALRY, 30),
+};
+const siegeRetreaterBase = { ...unit('siege-retreater', 'defender', 2, 2, 1000, 2), morale: 20 };
+const siegeInterceptorUnit = unit('siege-interceptor', 'attacker', 3, 2, 1000, 1, UnitType.HEAVY_CAVALRY);
+const noSiegePursuitResult = runSimpleEnemyAi(
+  [siegeRetreaterBase, siegeInterceptorUnit], terrain, siegeTemplates,
+  { 1: { war: 70, leadership: 70, name: '截击将' }, 2: { war: 70, leadership: 70, name: '守城将' } },
+  6, 5, 'defender', 'attacker', () => 0.5, {}, undefined, 1, Weather.CLEAR, false,
+);
+const siegePursuitResult = runSimpleEnemyAi(
+  [{ ...unit('siege-retreater', 'defender', 2, 2, 1000, 2), morale: 20 }, siegeInterceptorUnit], terrain, siegeTemplates,
+  { 1: { war: 70, leadership: 70, name: '截击将' }, 2: { war: 70, leadership: 70, name: '守城将' } },
+  6, 5, 'defender', 'attacker', () => 0.5, {}, undefined, 1, Weather.CLEAR, true,
+);
+const noSiegeTroops = noSiegePursuitResult.units.find((u) => u.id === 'siege-retreater')!.troopCount;
+const siegeTroops = siegePursuitResult.units.find((u) => u.id === 'siege-retreater')!.troopCount;
+assert(noSiegeTroops < siegeTroops, '攻城守军追击承受的伤害降低（守城防御 +3 生效）');
+assert(siegePursuitResult.message.includes('追击'), '攻城时被截击仍触发追击');
 
 console.log(`\n=== 结果: ${passed} passed, 0 failed ===`);

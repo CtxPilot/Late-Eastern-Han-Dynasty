@@ -10,8 +10,24 @@
 - Session 336：S10「撤销恢复 facing」与「同回合审计序号/ID 唯一」。
 - S10 剩余：~~天气主动技能~~（Session 349）· ~~正式特殊兵种熟练度~~（Session 350）·
   ~~协同包围/玩家战术撤退 0-A 最小切片~~（Session 352）· ~~敌军走位朝向前置修补~~（Session 353）·
-**敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）；完整追击/截击、攻城突围和多军团撤退后置。
+**敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
+
+### Session 368 · S10 攻城守城与城门突围 0-A 切片
+
+- `isSiege` 时守方 `formationDef` +3（约 +30% 有效防御，`hexFormationMods` 外的攻城修正，enemy AI 的 `calcDamage` 含 `isSiege` 分支）。
+- 攻方战术撤退：`isSiege` 且攻方单位位于地图边缘（城门）时，`RETREAT_SURROUNDED` 对该单位放宽，仍可突围但照常承受相邻守军 0.6 系数追击；非攻城或非边缘受围仍阻断。
+- 不新增字段/API/存档/RNG；数值真源见 `08` §二十八。
+- **验证**：`verify-tactical-ai` **86/86**（含守城追击减伤）、`verify-tactical-retreat` **18/18**（含边缘突围与守城对比）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- **Next**：继续 S10 多军团等后置债；0-B 继续暂缓。
+
+### Session 367 · S10 追击伤害 0-A 切片
+
+- 敌军被截击时由最强相邻截击者追加一次追击：`calcDamage` 中位值×0.6，必中、至少 1，不触发暴击/反击/连击，士气 −2；若追击致溃则标记 `isDestroyed` 并结束该单位本回合行动链。
+- 玩家 `retreatBattle` 成功时，对每支与活跃守军相邻的攻方退兵按同系数追加一次追击，多名截击者时仅最强一名出手。
+- 不新增字段/API/存档/RNG 消费；数值真源见 `08` §二十七。
+- **验证**：`verify-tactical-ai` **84/84**（含截击追击与残血溃灭）、`verify-tactical-retreat` **15/15**（含相邻/非相邻追击对比）、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。
+- **Next**：继续 S10 攻城突围/多军团等后置债；0-B 继续暂缓。
 
 ### Session 366 · S10 刚烈反击暴击一次性结算
 
