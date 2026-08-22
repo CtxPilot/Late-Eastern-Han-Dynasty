@@ -26,9 +26,14 @@ export function assertSaveSlotName(slot: string): void {
   }
 }
 
-/** UTF-8 编码下的 JSON 信封字节数（与服务端 Buffer.byteLength 对齐）。 */
+/** UTF-8 编码下的 JSON 信封字节数（与服务端 Buffer.byteLength 对齐；不依赖 DOM/Node 全局）。 */
 export function envelopeByteLength(envelopeJson: string): number {
-  return new TextEncoder().encode(envelopeJson).length;
+  let bytes = 0;
+  for (const char of envelopeJson) {
+    const codePoint = char.codePointAt(0) ?? 0;
+    bytes += codePoint <= 0x7f ? 1 : codePoint <= 0x7ff ? 2 : codePoint <= 0xffff ? 3 : 4;
+  }
+  return bytes;
 }
 
 export function assertSaveSize(bytes: number): void {

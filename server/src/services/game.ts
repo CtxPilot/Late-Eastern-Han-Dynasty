@@ -2,39 +2,20 @@
 // Copyright (c) 2026 CtxPilot
 
 import {
-  CivilPosition,
-  LocalPosition,
-  MilitaryPosition,
   NobilityRank,
   OfficerStatus,
-  Season,
-  TerrainType,
-  initialCourtNetworkOpportunities,
-  calcStaminaMax,
-  emptyIntel,
   grantMerit,
   maskGameStateForPlayer,
-  meritLevelFor,
-  parseCurrentSaveEnvelope,
-  CURRENT_SAVE_SCHEMA_VERSION,
-  splitDemographics,
-  syncMerit,
-  deriveCityFactions,
   type BattleState,
-  type City,
-  type FemaleCharacter,
-  type Faction,
   type EventSourceClass,
   type GameState,
   type Officer,
-  type ScenarioStatic,
   PolicyType,
   type FamilyTreatmentMode,
 } from '@leh/shared';
+import { adoptSaveEnvelope, buildGameState, buildSaveEnvelope, runEndTurnPipeline } from '../engine/state-pipeline.js';
 import { staticData } from '../data/loader.js';
-import { advanceTurn, tickBattlefieldInstance } from '../engine/turn.js';
-import { catchUpChildren } from '../engine/child.js';
-import { applyInitialItems, duelEquipBonusFor, equipItem, grantTreasure, unequipItem } from '../engine/items.js';
+import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem } from '../engine/items.js';
 import {
   conscript,
   developCity,
@@ -75,15 +56,12 @@ import {
 import {
   advisorAction as campaignAdvisorAction,
   assault as campaignAssaultEngine,
-  buildCampaignNodes,
   buildStructure as campaignBuildStructure,
   getCampaignNodes,
   orderMarch as campaignOrderMarch,
   retreatArmy as campaignRetreatArmy,
+  runAutoBattle,
   startCampaign as campaignStartCampaign,
-  tickCampaignGarrison,
-  tickCampaignMarch,
-  tickConstruction,
   trySiegeSurrender as campaignTrySiegeSurrender,
   type AdvisorAction,
 } from '../engine/campaign.js';
@@ -93,7 +71,6 @@ import {
   prepareMarch,
   settleBattle,
 } from '../engine/march.js';
-import { runAutoBattle } from '../engine/campaign.js';
 import {
   marryFemale,
   recruitOfficer,
@@ -119,7 +96,6 @@ import {
   plantFemaleFromGift,
   unstationCounter,
 } from '../engine/spy.js';
-import { syncFactionResources } from '../engine/economy.js';
 import { buildAnnualBudget } from '../engine/budget.js';
 import { extractBattlefieldNodes, generateBattlefield, tickBattlefieldMarch } from '../engine/battlefield.js';
 import { applyMeleeRoundResult, createMeleeState, getTacticalActionCost, refreshMeleeState, runMeleeRound } from '../engine/meleeRound.js';
@@ -127,7 +103,6 @@ import {
   appointGrandStrategist as gsAppoint,
   dismissGrandStrategist as gsDismiss,
   switchStrategy as gsSwitchStrategy,
-  tickGrandStrategists as gsTick,
   getFactionStrategy,
   calcStrategyModifiers,
 } from '../engine/grandStrategist.js';
@@ -180,185 +155,6 @@ export function createGame(
   });
 }
 
-function buildGameState(
-  scenario: ScenarioStatic,
-  playerFactionId: number,
-  enabledEventLayers: EventSourceClass[],
-): GameState {
-  const { startState } = scenario;
-  const officers: Record<number, Officer> = {};
-  const availableOfficerIds = new Set(scenario.availableOfficerIds);
-  for (const o of staticData.officers.filter((item) => availableOfficerIds.has(item.id))) {
-    const pos = startState.officerPositions.find((p) => p.officerId === o.id);
-    officers[o.id] = syncMerit({
-      ...o,
-      skills: o.skills.map((s) => ({ ...s, useCount: 0 })),
-      faction: pos?.factionId ?? null,
-      location: pos?.cityId ?? null,
-      loyalty: pos?.loyalty ?? 50,
-      experience: 0,
-      status: pos ? OfficerStatus.ACTIVE : OfficerStatus.FREE,
-      civilPosition: (pos?.civilPosition as CivilPosition) ?? CivilPosition.NONE,
-      localPosition: (pos?.localPosition as LocalPosition) ?? LocalPosition.NONE,
-      militaryPosition: (pos?.militaryPosition as MilitaryPosition) ?? MilitaryPosition.NONE,
-      nobilityRank: (pos?.nobilityRank as NobilityRank) ?? NobilityRank.NONE,
-      merit: pos?.merit ?? 0,
-      stamina: calcStaminaMax(o, meritLevelFor(pos?.merit ?? 0), scenario.noLifespan ? 40 : (startState.year - o.birthYear)),
-      actionsPerMonth: 1,
-      wifeId: null,
-      beauties: [],
-    });
-  }
-
-  const cities: Record<number, City> = {};
-  for (const c of staticData.cities) {
-    const ruler = startState.cityOwnership[String(c.id)] ?? null;
-    const cityOfficers = startState.officerPositions
-      .filter((p) => p.cityId === c.id)
-      .map((p) => p.officerId);
-    const population = Math.floor(c.maxPopulation * 0.7);
-    const demographics = splitDemographics(population);
-    cities[c.id] = {
-      ...c,
-      terrain: TerrainType.PLAIN,
-      stats: {
-        farm: c.initialStats.farm,
-        commerce: c.initialStats.commerce,
-        wall: c.initialStats.wall,
-        morale: 70,
-        culture: 0,
-      },
-      gold: 2000 + c.initialStats.commerce,
-      food: 3000 + c.initialStats.farm,
-      population,
-      demographics,
-      courtNetworkOpportunities: initialCourtNetworkOpportunities({
-        isCapital: c.isCapital,
-        commerce: c.initialStats.commerce,
-        morale: 70,
-      }),
-      troops: 5000,
-      troopsMorale: 70,
-      officers: cityOfficers,
-      ruler,
-      facilities: c.facilities ?? [],
-      policy: c.policy ?? null,
-      developmentProgress: c.developmentProgress ?? { farm: 0, commerce: 0, wall: 0 },
-      cityFactions: deriveCityFactions(c.id),
-    };
-  }
-
-  const factions: Record<number, Faction> = {};
-  for (const fid of startState.activeFactionIds) {
-    const setup = scenario.factionSetups.find((item) => item.id === fid);
-    if (!setup) throw new Error(`势力 ${fid} 缺少剧本定义`);
-    const cityIds = Object.entries(startState.cityOwnership)
-      .filter(([, v]) => v === fid)
-      .map(([k]) => Number(k));
-    const officerIds = startState.officerPositions
-      .filter((p) => p.factionId === fid)
-      .map((p) => p.officerId);
-    if (cityIds.length === 0) throw new Error(`0-A 势力「${setup.name}」至少需要一个补给据点`);
-    if (!cityIds.includes(setup.capitalCityId)) throw new Error(`势力「${setup.name}」的开局治所不在控制据点中`);
-    if (!officerIds.includes(setup.rulerId)) throw new Error(`势力「${setup.name}」的领袖未在本剧本登场`);
-    factions[fid] = {
-      id: fid,
-      name: setup.name,
-      color: setup.color,
-      rulerId: setup.rulerId,
-      capitalCityId: setup.capitalCityId,
-      scenarioMode: setup.mode,
-      headquartersLabel: setup.headquartersLabel,
-      gold: 5000,
-      food: 8000,
-      courtNetwork: 0,
-      cityIds,
-      officerIds,
-      isPlayer: fid === playerFactionId,
-      isAlive: true,
-      fame: 100,
-      politicalStage: 'vassal',
-    };
-  }
-
-  const females: Record<number, FemaleCharacter> = {};
-  const availableFemaleIds = new Set(scenario.availableFemaleIds);
-  for (const f of staticData.females.filter((item) => availableFemaleIds.has(item.id))) {
-    const pos = startState.femalePositions.find((p) => p.femaleId === f.id);
-    const husbandId = pos?.husbandId ?? f.initialHusbandId;
-    females[f.id] = {
-      ...f,
-      status: pos?.status ?? f.initialStatus,
-      husbandId,
-      factionId: pos?.factionId ?? f.factionId,
-      locationId: pos?.cityId ?? f.locationId,
-      giftedToOfficerId: null,
-    };
-    // 开局已婚：回写武将 wifeId
-    if (husbandId != null && officers[husbandId]) {
-      officers[husbandId] = {
-        ...officers[husbandId],
-        wifeId: f.id,
-      };
-    }
-  }
-
-  // 初始化季节（与 turn.monthToSeason 一致）
-  const season = Math.floor((startState.month - 1) / 3) as Season;
-
-  const draft: GameState = {
-    scenarioId: scenario.id,
-    enabledEventLayers: [...enabledEventLayers],
-    enabledChildEventIds: [...scenario.childEventIds],
-    currentYear: startState.year,
-    currentMonth: startState.month,
-    season,
-    playerFactionId,
-    officers,
-    cities,
-    factions,
-    females,
-    armys: [],
-    campaignArmies: [],
-    campaignNodes: [], // 在 syncFactionResources 之后用 buildCampaignNodes 填充
-    grandStrategists: [],
-    activeBattles: [],
-    activeBattlefield: null,
-    activeMelee: null,
-    diplomacy: startState.initialDiplomacy,
-    intel: emptyIntel(),
-    plots: [],
-    nationalPolicies: [],
-    completedEvents: [...startState.completedEvents],
-    pendingEvents: [],
-    invalidatedEvents: [],
-    eventChoices: {},
-    pendingFamilyTreatment: null,
-    actionLog: [
-      {
-        year: startState.year,
-        month: startState.month,
-        type: 'game_start',
-        message: `开始剧本「${scenario.name}」，扮演 ${factions[playerFactionId]?.name}`,
-      },
-    ],
-    // HC-P0-1（docs/26 Q1 方案A）：汉献帝开局在洛阳（id=1）。
-    // 两个剧本均 190 年正月开局，汉帝此时在洛阳（董卓迁都长安是二月事件，开局未触发）。
-    // 城池易主时本字段不变，"控制汉帝"由 controlsEmperor() 按当前城池归属动态判定。
-    emperorLocation: 1,
-    // S24：运行时亲和度表（空表=全部回退 pairAffinity 基线）
-    relationAffinities: {},
-  };
-  // 子女补登：appearYear ≤ 开局年则直接入库（0-A 起 190 年通常无人）
-  const withChildren = catchUpChildren(draft);
-  // 初始宝配：签名武将装备 + 其余 initial 宝物入势力库存（S13 Session 266）
-  const withItems = applyInitialItems(withChildren);
-  // 城池金粮为真源，开局即同步 faction 缓存
-  const synced = syncFactionResources(withItems);
-  // 战役节点：基于同步后的城池状态生成
-  return { ...synced, campaignNodes: buildCampaignNodes(synced) };
-}
-
 /** 服务端真源（全量，勿直接下发客户端） */
 export function getGame(): GameState {
   if (!currentGame) throw new Error('尚无进行中的游戏');
@@ -367,16 +163,7 @@ export function getGame(): GameState {
 
 /** 导出浏览器文件用的完整权威存档信封；不使用脱敏客户端投影。 */
 export function exportSaveEnvelope() {
-  const snapshot = getGame();
-  const now = new Date().toISOString();
-  return {
-    schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
-    createdAt: now,
-    updatedAt: now,
-    scenarioId: snapshot.scenarioId,
-    rng: getRuntimeRngState(),
-    snapshot,
-  } as const;
+  return buildSaveEnvelope(getGame(), getRuntimeRngState());
 }
 
 export function listDiskSaveSlots(): SaveSlotMeta[] {
@@ -400,17 +187,9 @@ export function loadGameFromDisk(slot: string): GameState {
  */
 export function restoreGameFromEnvelope(input: unknown): GameState {
   return withLock(() => {
-    const envelope = parseCurrentSaveEnvelope(input);
-    const scenario = staticData.scenarios.find((item) => item.id === envelope.scenarioId);
-    if (!scenario) throw new Error('存档引用的剧本不存在');
-
-    const availableLayers = new Set(scenario.availableEventLayers);
-    if (envelope.snapshot.enabledEventLayers.some((layer) => !availableLayers.has(layer))) {
-      throw new Error('存档事件史料层与当前剧本不兼容');
-    }
-
-    restoreRuntimeRng(envelope.rng);
-    currentGame = envelope.snapshot;
+    const adopted = adoptSaveEnvelope(input);
+    restoreRuntimeRng(adopted.rng);
+    currentGame = adopted.snapshot;
     return getClientGame();
   });
 }
@@ -448,15 +227,7 @@ export function endTurn(): GameState {
       throw new Error('请先处理家属处置');
     }
     broadcast({ type: 'turn_progress', phase: 'ai', message: '回合结算中…', progress: 10 });
-    let next = advanceTurn(before, runtimeRandom);
-    // 战役层：行军推进 + 驻守恢复（0-A 最小切片，玩家 Army 与 AI Army 同步推进）
-    next = tickCampaignMarch(next);
-    next = tickCampaignGarrison(next);
-    next = tickConstruction(next); // 设施建造回合化推进
-    next = gsTick(next, runtimeRandom); // 总军师系统：忠诚/被俘自动解职
-    next = tickBattlefieldInstance(next, runtimeRandom); // BF-P2 Q9 + R6：郡域战场月度 tick（驻军消耗 + 补给线切断 + 守方 Army 主动行动）
-    next = { ...next, campaignNodes: getCampaignNodes(next) };
-    currentGame = next;
+    currentGame = runEndTurnPipeline(before, runtimeRandom);
     const g = getClientGame();
     broadcast({
       type: 'turn_complete',
