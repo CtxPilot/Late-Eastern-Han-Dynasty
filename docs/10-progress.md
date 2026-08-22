@@ -9,7 +9,7 @@
 - Worker 权威引擎：`client/src/workers/game.worker.ts` 逐函数镜像 services 层（withLock/currentGame/commitActiveBattle/脱敏投影）约 80 个指令；静态数据经 `browser-loader` shim + Vite 虚拟模块 `virtual:leh-data`（构建期读同一份磁盘 JSON，单一真源）；插件三件套 `leh-browser-loader`（重定向引擎内 '../data/loader.js'）/`leh-data-virtual`/`leh-node-shims`（fs/path/url 无害化）；S24 静态关系表经既有测试钩子预注入，运行时不触 fs。
 - 网关策略：`gateway.ts` 按 `?offline=1` 或 `VITE_OFFLINE=1` 合并离线子集覆盖在线实现，未覆盖指令回退在线（断网时以既有错误提示呈现）；`gameStore` 仅改一行导入。
 - Pages 默认可玩：`deploy.yml` 构建注入 `VITE_OFFLINE=1`；README 在线段改写为「在线试玩·离线可玩」，启动失败文案同步更新。
-- 验证：新增 `verify-s372-offline-loop` **11/11**（真实 Chrome ?offline=1：boot→选剧本/势力→世界屏→结束回合推进月份→槽位保存进 IndexedDB→读档恢复→无非网络控制台错误/无未处理拒绝）；typecheck 三端、shared **422** + client **54**、validate-data、compliance（715 files）、`git diff --check` 全绿；save-slots **10/10**。
+- 验证：新增 `verify-s372-offline-loop` **11/11**，且在 **GitHub Pages 线上产物复测通过**（deploy run 32586860063；Pages 默认离线，无需参数）；typecheck 三端、shared **422** + client **54**、validate-data、compliance（715 files）、`git diff --check` 全绿；save-slots **10/10**。上线前修复：Worker 子构建插件继承（`worker.plugins`）与 6 处组件直连 api 改走网关。
 - 边界：白刃战/郡域战场实例/总军师/势力总览/技能树/关系查询等约 30 个读接口离线未覆盖（回退在线，断网时报错提示）；PWA 预缓存（关页面后完全离线冷启动）为 Phase 4 后置——当前离线依赖本次会话已加载的资源；存档仅存浏览器本地，跨设备用导出/导入信封；多军团与 0-B 不变仍后置。
 - 文档同步：`02`（无接口变化不涉及）、`06`（无 API 变化）、`09/12/35`、`README`、本文件与 `HANDOFF.md`。
 

@@ -11,7 +11,7 @@
 |----|------|
 | 会话 | **Session 372**（离线可玩版最小闭环：Worker 权威引擎 + IndexedDB 存档） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 372：`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
+| 代码最新 | Session 372（495883e）：`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
 | 文档最新 | `README`（在线试玩·离线可玩）、`09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
 | 本交接用途 | **离线可玩上线**：<https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/> 无需后端即可游玩（选剧本/回合/内政/六角战/IndexedDB 存读档） |
 | 下一步 | Phase 4：PWA 预缓存（完全离线冷启动）；离线覆盖面扩充（白刃战/郡域/总军师等约 30 接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
@@ -23,7 +23,10 @@
 - 存档：槽位介质双轨——服务端 SQLite（XDG）不变；浏览器 IndexedDB `leh/save_slots`（`save-idb.ts`），槽位正则/2MB 上限收敛到 `shared/save-limits.ts` 单一真源；信封生成/读档校验链仍在权威侧（`buildSaveEnvelope`/`adoptSaveEnvelope`）。
 - Pages：构建 env `GITHUB_PAGES_BASE` + `VITE_OFFLINE='1'`；本地 dev 不设后者保持在线；`?offline=1` 可在任意本地地址切离线调试。
 - 已知边界：①离线未覆盖约 30 个读/写接口（白刃战 melee、郡域 battlefield-instance、总军师、势力总览、技能树、relations 查询、battlefield Tier I 等）——断网点击会看到既有网络错误提示；②PWA 未做，刷新页面需资源已缓存（首次访问后浏览器 HTTP 缓存通常够用，但非保证）；③存档不跨浏览器。
-- 验证锚点：`pnpm verify-s372-offline-loop` **11/11**（Chrome CDP 9242，需 vite:5173 在跑）；回归 save-slots **10/10**、save-battle **62/62**、tactical-ai **86/86**、battle-rng **5/5**、ai-military-rng **38/38**、campaign **71/71**、shared **422** + client **54**。
+- 验证锚点：`pnpm verify-s372-offline-loop` **11/11**——本地 dev 与 **GitHub Pages 线上均实测通过**（deploy run 32586860063 success；`SMOKE_URL=https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/ node scripts/verify-s372-offline-loop.mjs`，无需任何参数即默认离线）。Worker 以独立 chunk 发布（`assets/game.worker-*.js` 200）。
+- 上线前修复两处：①生产构建 Worker 子 Rollup 不继承顶层插件 → `vite.config.ts` 增 `worker:{format:'es',plugins}`；②槽位面板等 6 处组件直连 `services/api` 绕过网关 → 全部重路由 `gateway.gameApi`（TopBar/CivilOverviewDrawer/FactionOverviewDrawer/OfficerDetail/CourtCommandDrawer）。
+- 脚本注意：读档触发原生 confirm，脚本已自动应答；无头环境覆盖确认会静默取消，冒烟使用唯一槽名；Chrome 强杀后需清理 profile 的 SingletonLock 再启动。
+- 回归：save-slots **10/10**、save-battle **62/62**、tactical-ai **86/86**、battle-rng **5/5**、ai-military-rng **38/38**、campaign **71/71**、shared **422** + client **54**。
 
 ### Session 371 交接要点
 
