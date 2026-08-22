@@ -37,6 +37,7 @@ export * from './commandery-defender-ai.js';
 export * from './campaign-utils.js';
 export * from './formation-core.js';
 export * from './save.js';
+export * from './save-limits.js';
 export * from './rng.js';
 export * from './runtime-rng.js';
 export * from './game-state-schema.js';

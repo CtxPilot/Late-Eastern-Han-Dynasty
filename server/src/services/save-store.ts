@@ -14,13 +14,13 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
+// 离线可玩版（Session 372 Phase 1）：槽位规则与体量上限收敛到 @leh/shared 单一真源。
+import { MAX_SAVE_BYTES, isValidSaveSlotName } from '@leh/shared';
 import type { SaveEnvelopeV1 } from '@leh/shared';
 
 const SAVE_DIR_NAME = 'leh';
 const LEGACY_JSON_DIR = 'saves';
 const DB_FILE_NAME = 'saves.db';
-const SLOT_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$/;
-const MAX_SAVE_BYTES = 2 * 1024 * 1024;
 
 export interface SaveSlotMeta {
   slot: string;
@@ -57,7 +57,7 @@ function legacyJsonDirectory(): string {
 }
 
 function assertSlot(slot: string): string {
-  if (!SLOT_PATTERN.test(slot)) {
+  if (!isValidSaveSlotName(slot)) {
     throw new Error('存档槽位名须为 1~32 位字母、数字、下划线或短横线');
   }
   return slot;
@@ -113,7 +113,7 @@ function migrateLegacyJsonSlots(database: Database.Database): void {
     const migrateOne = database.transaction((names: string[]) => {
       for (const name of names) {
         const slot = name.slice(0, -5);
-        if (!SLOT_PATTERN.test(slot)) continue;
+        if (!isValidSaveSlotName(slot)) continue;
         const path = join(directory, name);
         const stat = statSync(path);
         if (stat.size > MAX_SAVE_BYTES) {
