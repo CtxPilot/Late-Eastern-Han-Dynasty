@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 import { useEffect, useState } from 'react';
-import * as api from '../../services/api';
+import { gameApi } from '../../services/gateway';
+import type * as api from '../../services/api';
 import { useGameStore } from '../../stores/gameStore';
 
 export function FactionOverviewDrawer({ onClose }: { onClose: () => void }) {
@@ -12,7 +13,7 @@ export function FactionOverviewDrawer({ onClose }: { onClose: () => void }) {
   const storeError = useGameStore((state) => state.error);
   useEffect(() => {
     setLoading(true);
-    void api.getFactionOverview().then((d) => { setData(d); setLoading(false); }).catch((e) => { setError(e instanceof Error ? e.message : '加载失败'); setLoading(false); });
+    void gameApi.getFactionOverview().then((d) => { setData(d); setLoading(false); }).catch((e) => { setError(e instanceof Error ? e.message : '加载失败'); setLoading(false); });
   }, [storeError]);
   if (loading) return <div className="p-4 text-stone-500 text-xs">加载势力总览…</div>;
   if (error) return <div className="p-4 text-red-400 text-xs">{error}</div>;

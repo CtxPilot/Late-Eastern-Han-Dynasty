@@ -14,7 +14,8 @@ import {
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
-import { getAnnualBudget, type AnnualBudget } from '../../services/api';
+import { gameApi } from '../../services/gateway';
+import type { AnnualBudget } from '../../services/api';
 
 export type CivilCitySummary = {
   cityId: number;
@@ -164,7 +165,7 @@ export function CivilOverviewDrawer() {
     : [];
   useEffect(() => {
     if (!game) return;
-    void getAnnualBudget().then(setBudget).catch(() => setBudget(null));
+    void gameApi.getAnnualBudget().then(setBudget).catch(() => setBudget(null));
   }, [game]);
   useEffect(() => {
     setOfficerId(eligibleOfficers[0]?.id ?? null);

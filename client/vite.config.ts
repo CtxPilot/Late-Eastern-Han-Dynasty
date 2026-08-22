@@ -106,9 +106,19 @@ function lehBrowserLoader(): Plugin {
   };
 }
 
+/**
+ * 引擎解析插件组：主线程与 Worker 子构建（vite:worker-import-meta-url 独立
+ * Rollup 流程）都需要；生产构建下 worker.plugins 不会自动继承顶层插件。
+ */
+const engineResolvePlugins = (): Plugin[] => [lehBrowserLoader(), lehDataVirtual(), lehNodeShims()];
+
 export default defineConfig({
   base,
-  plugins: [react(), rebasePublicFontUrls(), lehBrowserLoader(), lehDataVirtual(), lehNodeShims()],
+  plugins: [react(), rebasePublicFontUrls(), ...engineResolvePlugins()],
+  worker: {
+    format: 'es',
+    plugins: engineResolvePlugins,
+  },
   server: {
     port: 5173,
     fs: {

@@ -22,7 +22,8 @@ import {
   type GameState,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
-import { getKingRequirements, type KingRequirementsDto } from '../../services/api';
+import { gameApi } from '../../services/gateway';
+import type { KingRequirementsDto } from '../../services/api';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction, CommandShellState } from './commandShellState';
 
@@ -175,7 +176,7 @@ export function CourtCommandDrawer({
 
   useEffect(() => {
     let active = true;
-    void getKingRequirements()
+    void gameApi.getKingRequirements()
       .then((requirements) => {
         if (!active) return;
         setKingRequirements(requirements);

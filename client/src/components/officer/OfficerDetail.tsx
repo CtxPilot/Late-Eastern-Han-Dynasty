@@ -29,7 +29,8 @@ import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
-import * as api from '../../services/api';
+import { gameApi } from '../../services/gateway';
+import type * as api from '../../services/api';
 
 const STAT_ROWS = [
   ['统帅', 'leadership', false],
@@ -602,7 +603,7 @@ function RelationsTab({ officer, game }: { officer: Officer; game: GameState }) 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
-    void api.getOfficerRelations(officer.id).then((r) => { setRelations(r); setLoading(false); });
+    void gameApi.getOfficerRelations(officer.id).then((r) => { setRelations(r); setLoading(false); });
   }, [officer.id]);
   if (loading) return <p className="text-stone-500 text-xs">加载社交关系…</p>;
   if (relations.length === 0) return <p className="text-stone-600 text-xs">暂无社交关系记录</p>;
@@ -674,8 +675,8 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
   useEffect(() => {
     setLoading(true);
     void Promise.all([
-      api.getSkillTrees(),
-      api.getOfficerSkillState(officer.id),
+      gameApi.getSkillTrees(),
+      gameApi.getOfficerSkillState(officer.id),
     ]).then(([t, s]) => { setTrees(t); setSkillState(s); setLoading(false); });
   }, [officer.id]);
   if (loading) return <p className="text-stone-500 text-xs">加载技能树…</p>;
@@ -689,7 +690,7 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
   const traitRemaining = traitTotal - traitUsed;
   const handleUpgrade = async (nodeId: string) => {
     try {
-      const next = await api.upgradeSkillNode(officer.id, nodeId);
+      const next = await gameApi.upgradeSkillNode(officer.id, nodeId);
       setSkillState(next);
       setError(null);
     } catch (e) {
@@ -698,7 +699,7 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
   };
   const handleReset = async () => {
     try {
-      const next = await api.resetSkillTree(officer.id);
+      const next = await gameApi.resetSkillTree(officer.id);
       setSkillState(next);
       setError(null);
     } catch (e) {

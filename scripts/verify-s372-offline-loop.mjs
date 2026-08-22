@@ -13,6 +13,11 @@ const consoleErrors = [];
 let nextId = 0;
 ws.onmessage = (e) => {
   const m = JSON.parse(e.data);
+  if (m.method === 'Page.javascriptDialogOpening') {
+    // 自动接受读档覆盖确认等原生对话框，避免无头环境阻塞
+    void cmd('Page.handleJavaScriptDialog', { accept: true });
+    return;
+  }
   if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') {
     consoleErrors.push(m.params.args.map((a) => a.value ?? a.description).join(' '));
   }
@@ -63,7 +68,9 @@ await cmd('Page.addScriptToEvaluateOnNewDocument', {
   source: "window.__errs=[]; window.addEventListener('unhandledrejection', function(e){ window.__errs.push(String((e.reason && e.reason.message) || e.reason)); });",
 });
 await cmd('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
-await cmd('Page.navigate', { url: 'http://localhost:5173/?offline=1' });
+// 目标地址可用 SMOKE_URL 覆盖（默认本地 dev 离线参数）；生产产物验证时指向 Pages 子路径
+const targetUrl = process.env.SMOKE_URL ?? 'http://localhost:5173/?offline=1';
+await cmd('Page.navigate', { url: targetUrl });
 await pause(2500);
 
 assert(await waitFor(`return !!document.querySelector('[data-testid="scenario-content-notice"]')`), '离线 boot：fetchStatic 经 Worker，进入剧本选择');
@@ -100,12 +107,7 @@ await evaluate(`return (() => {
   return true;
 })();`);
 await evaluate(`return (() => { document.querySelector('[data-testid="btn-save-slot"]')?.click(); return true; })();`);
-assert(await waitFor(`
-  return import('/src/services/gateway.ts').then(async (m) => {
-    const slots = await m.gameApi.listSaveSlots();
-    return slots.some((s) => s.slot === '${slot}');
-  });
-`, 12000), `保存成功（IndexedDB 出现 ${slot}）`);
+assert(await waitFor(`return !!document.querySelector('[data-testid="btn-load-slot-${slot}"]')`, 12000), `保存成功（槽位列表出现 ${slot}）`);
 
 // 读档恢复
 await evaluate(`return (() => { document.querySelector('[data-testid="btn-load-slot-${slot}"]')?.click(); return true; })();`);

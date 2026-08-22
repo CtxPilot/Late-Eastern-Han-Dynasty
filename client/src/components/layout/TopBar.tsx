@@ -4,8 +4,9 @@
 import { Season } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
-import { exportSave } from '../../services/api';
-import { listSaveSlots, type SaveSlotMeta } from '../../services/api';
+// 离线可玩版（Session 372）：槽位/信封走网关，离线时落 IndexedDB 与 Worker。
+import { gameApi } from '../../services/gateway';
+import type { SaveSlotMeta } from '../../services/api';
 import { useEffect, useRef, useState } from 'react';
 
 const SEASON_LABEL: Record<number, string> = {
@@ -34,11 +35,11 @@ export function TopBar() {
   useEffect(() => {
     if (!slotsOpen) return;
     setSlotsLoading(true);
-    void listSaveSlots().then(setSlots).catch(() => useGameStore.setState({ error: '读取存档槽位列表失败' })).finally(() => setSlotsLoading(false));
+    void gameApi.listSaveSlots().then(setSlots).catch(() => useGameStore.setState({ error: '读取存档槽位列表失败' })).finally(() => setSlotsLoading(false));
   }, [slotsOpen]);
 
   const refreshSlots = async () => {
-    setSlots(await listSaveSlots());
+    setSlots(await gameApi.listSaveSlots());
   };
 
   const handleSlotSave = async () => {
@@ -72,7 +73,7 @@ export function TopBar() {
 
   const handleExport = async () => {
     try {
-      const envelope = await exportSave();
+      const envelope = await gameApi.exportSave();
       const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
