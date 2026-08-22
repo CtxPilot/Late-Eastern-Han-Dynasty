@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 CtxPilot
+
+# GitHub Pages 静态预览部署（Session 370）。
+#
+# 范围：仅构建 client 产物并发布到 Pages，作为在线构建产物预览；
+# 游戏引擎仍在 server（Express + SQLite），Pages 访客会看到启动提示，
+# 完整游玩需本地 `pnpm dev`。离线可玩版为后续独立切片。
+#
+# 字体：woff2 不入 git（.gitignore），CI 从本仓库 Release assets-fonts-v1
+# 固定下载并按 client/public/fonts/README.md 的 SHA-256 校验。
+
+name: deploy-pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore packaged font assets (SIL OFL 1.1)
+        run: |
+          mkdir -p client/public/fonts
+          base="https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/releases/download/assets-fonts-v1"
+          curl -fsSL "$base/NotoSerifCJKsc-Regular.woff2" -o client/public/fonts/NotoSerifCJKsc-Regular.woff2
+          curl -fsSL "$base/NotoSerifCJKsc-Bold.woff2" -o client/public/fonts/NotoSerifCJKsc-Bold.woff2
+          curl -fsSL "$base/MaShanZheng-Regular.woff2" -o client/public/fonts/MaShanZheng-Regular.woff2
+          cd client/public/fonts
+          sha256sum -c - <<'EOF'
+          f76a4c2b177d8fe6b3a15197e17c0d2dd26129b7af99b7e1cf1a77fe9215cdb5  NotoSerifCJKsc-Regular.woff2
+          7dc0feb5d15b5979bafd55118f1111328ef9e7ac77fad1c44cee48b1d1da332a  NotoSerifCJKsc-Bold.woff2
+          f3178053ce6bad1c47ba1c2ae6cec4382daacfbfa8f3479dabed1270dbba3e20  MaShanZheng-Regular.woff2
+          EOF
+
+      - name: Build shared + client (GitHub Pages base)
+        run: |
+          pnpm --filter @leh/shared build
+          pnpm --filter @leh/client build
+        env:
+          GITHUB_PAGES_BASE: /Late-Eastern-Han-Dynasty/
+
+      - name: Ensure .nojekyll
+        run: touch client/dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

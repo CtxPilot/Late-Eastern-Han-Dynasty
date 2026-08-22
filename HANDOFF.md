@@ -9,12 +9,31 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 368**（S10 攻城守城与城门突围 0-A 切片） |
+| 会话 | **Session 370**（GitHub Pages 静态预览部署） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 368：`isSiege` 守方 +3 防与边缘城门 `RETREAT_SURROUNDED` 放宽；Session 367：截击追击 0.6 系数；Session 366：刚烈反击幂等；Session 364~362 文化持续投入与门槛预览、Session 361 撤退边界与 Session 360 截击优先级保持有效 |
-| 文档最新 | `05/08/09/10/12/27/35` 与本交接已同步；本轮无 API/存档/数据规模变化，`06` 与既有 `01/03/04/07` 保持有效 |
-| 本交接用途 | **S10 攻城突围 0-A 切片**；不启动多军团或 0-B |
-| 下一步 | 继续 S10 多军团等后置债；若回到 S03，正式技艺研发/人才吸引消费仍需用户拍板；**0-B 继续暂缓** |
+| 代码最新 | Session 370：`vite base` 环境变量注入 + CSS 字体 URL 构建期重写插件 + MapCanvas BASE_URL + 启动失败静态提示 + `.github/workflows/deploy.yml`（push main 自动发布 Pages）；Session 369 三个 `verify-s369-*` 验收脚本与既有运行时全部保持有效 |
+| 文档最新 | `README`（Online preview）、`client/public/fonts/README`（CI 分发）、`09/10/35` 与本交接已同步；无 API/存档/规则/数据规模变化 |
+| 本交接用途 | **Pages 静态预览上线**：https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/ （不可玩，构建产物预览） |
+| 下一步 | 继续 S10 多军团等后置债，或由用户拍板启动「离线可玩版」切片（引擎下沉 Worker+IndexedDB）；**0-B 继续暂缓** |
+
+### Session 370 交接要点
+
+- Pages 部署链：push `main` → `deploy-pages` workflow → pnpm install → Release [`assets-fonts-v1`](https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/releases/tag/assets-fonts-v1) 下载三个 woff2（SHA-256 校验与 `client/public/fonts/README.md` 同表，实测核对一致）→ `GITHUB_PAGES_BASE=/Late-Eastern-Han-Dynasty/` 构建 → `.nojekyll` → `actions/deploy-pages@v4`。首次启用需在仓库 Settings→Pages 把 Source 设为 **GitHub Actions**。
+- 技术要点：Vite 6 的 public 资产不参与 CSS base 重写且 `%BASE_URL%` 在 CSS url() 会 decodeURI 报错；现用 `client/vite.config.ts` 内联插件 `leh-rebase-public-font-urls` 仅在 build 且 base≠`/` 时重写产物 CSS 的 `url(/fonts/…)`。dev 行为零变化（已验证默认构建产物与改动前一致）。
+- 字体更新流程：替换本地 woff2 → 核对 SHA-256 → 同步更新 Release 资产与 fonts README 表，禁止只改单处。
+- 边界：Pages 版打开停留在「完整游玩需本地启动服务端」提示属预期；离线可玩版（server 引擎下沉 Worker、SQLite→IndexedDB、安全裁剪）未动工，需另行拍板分切片实施。
+- 回归：typecheck、shared **420/420** + client **54/54**、validate-data、verify-compliance（701 files）、`git diff --check` 全绿；本地子路径伺服冒烟 **5/5**。
+
+### Session 369 交接要点
+
+- 浏览器环境恢复可用（本机 google-chrome + CDP 9242，headless=new，1440×900）。此前 Session 351~365 反复记录的“浏览器列表为空”阻塞已解除。
+- 三个新验收脚本（均已实跑通过，console errors=0）：
+  - `pnpm verify-s369-culture-ui` **36/36**：发展文化→终审→首付扣金→项目卡片→重复发起门禁→6个月完成+60→进度条/差值更新。
+  - `pnpm verify-s369-family-genealogy-ui` **14/14**：场景1 族谱曹丕记录（父/史料层），场景2 空态文案。
+  - `pnpm verify-s369-family-treatment-ui` **17/17**：导出→注入待决→导入（合法存档链）→三选一点击善待→写入 kindness→TopBar 门禁禁用/解除→结束后合恢复。
+- 注意事项：家属待决项的注入必须指向**玩家新占城**（服务端校验 `city.ruler === playerFactionId`，否则 400「已不归玩家控制」）；脚本内已按此构造。
+- 回归：shared **420/420**、client **54/54**、typecheck、validate-data、verify-compliance、`git diff --check` 全绿；`verify-culture-development` 10/10、`verify-family-treatment` 15/15、`verify-hostage-families` 9/9 复验通过。
+- 边界：纯验收轮，无规则/字段/API/RNG/静态数据变化；S10 BattleView 撤退/截击链的完整对局级真实点击（需打完整六角战）仍后置；0-B 继续暂缓。
 
 ### Session 368 交接要点
 

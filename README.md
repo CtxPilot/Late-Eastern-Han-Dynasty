@@ -99,6 +99,10 @@ pnpm dev
 
 Open `http://localhost:5173` (API on `http://localhost:3001`); on first launch, choose a scenario and a faction. The bundled CJK fonts are excluded from Git — follow [client/public/fonts/README.md](client/public/fonts/README.md) if they are missing. 打开 `http://localhost:5173`（API 在 `http://localhost:3001`）；首次进入选择剧本与势力。中文字体未随 Git 分发，缺失时按 [client/public/fonts/README.md](client/public/fonts/README.md) 就位。
 
+### Online preview · 在线静态预览（GitHub Pages）
+
+Every push to `main` builds the client and publishes a **static preview** to <https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/> (workflow: `.github/workflows/deploy.yml`). The game engine still runs on the local server, so the online page stops at the boot screen with a hint — it is a build-artifact preview, not a playable deployment. 完整游玩请按上文本地启动；在线页仅作构建产物预览，打开后停留在启动提示属预期行为。
+
 | Map and territories · 大地图 | City operations · 城政 |
 |:---:|:---:|
 | ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) |

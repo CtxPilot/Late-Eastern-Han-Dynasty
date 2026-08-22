@@ -13,6 +13,23 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 370 · GitHub Pages 静态预览部署
+
+- `vite base` 由 `GITHUB_PAGES_BASE` 注入（缺省 `/` 本地不变）；构建期插件重写产物 CSS 内 `/fonts/` 引用；MapCanvas 底图改 `BASE_URL` 拼接。
+- 新增 `.github/workflows/deploy.yml`：Release `assets-fonts-v1` 固定下载 woff2（SHA-256 校验同 fonts README）→ 构建 → Pages 发布。
+- Pages 版为**构建产物预览不可玩**（引擎在服务端），启动失败态补静态预览提示文案；离线可玩版后置。
+- 验证：本地子路径静态伺服冒烟 5/5（字体加载/启动屏/console 干净）；typecheck、shared 420 + client 54、validate-data、compliance 全绿。
+- **Next**：S10 多军团等后置债或离线可玩版切片由用户拍板；0-B 继续暂缓。
+
+### Session 369 · 浏览器真实点击验收补课（S03/S18）
+
+- 浏览器环境恢复可用（Chrome CDP 9242）；一次性清偿 Session 351~365 期间被阻塞的真实 DOM 点击验收债。
+- 新增三个验收脚本并登记 package.json：`verify-s369-culture-ui` **36/36**（发展文化全链+完成+60）、
+  `verify-s369-family-genealogy-ui` **14/14**（族谱曹丕记录/空态）、`verify-s369-family-treatment-ui` **17/17**
+  （待决弹窗三选一/TopBar 门禁/结束后合恢复）。console errors 均为 0。
+- 纯验收轮：无生产代码、规则、字段、API、RNG 或静态数据改动；回归 shared **420** + client **54** 全绿。
+- **Next**：继续 S10 多军团等后置债；BattleView 完整对局级点击验收后置；0-B 继续暂缓。
+
 ### Session 368 · S10 攻城守城与城门突围 0-A 切片
 
 - `isSiege` 时守方 `formationDef` +3（约 +30% 有效防御，`hexFormationMods` 外的攻城修正，enemy AI 的 `calcDamage` 含 `isSiege` 分支）。

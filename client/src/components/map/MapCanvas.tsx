@@ -202,7 +202,8 @@ export function MapCanvas() {
 
   useEffect(() => {
     const img = new window.Image();
-    img.src = '/geo-basemap.png';
+    // BASE_URL 兼容 GitHub Pages 子路径部署（vite base 由 GITHUB_PAGES_BASE 注入）
+    img.src = `${import.meta.env.BASE_URL}geo-basemap.png`;
     img.onload = () => setMapImg(img);
   }, []);
 

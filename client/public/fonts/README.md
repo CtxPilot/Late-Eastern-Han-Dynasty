@@ -43,6 +43,13 @@
 
 `.gitignore` 已排除 `*.woff2`，字体不入 git，但本目录文件可在本地直接使用。
 
+### CI 分发（Session 370）
+
+GitHub Pages 构建（`.github/workflows/deploy.yml`）从本仓库 Release
+[`assets-fonts-v1`](https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/releases/tag/assets-fonts-v1)
+下载上述三个 woff2 并按同一张 SHA-256 表校验后放入本目录。更新字体时：替换本地文件 →
+核对校验和 → 同步更新 Release 资产与本表，禁止只改单处。
+
 ## 字体未放入时的行为
 
 `client/src/utils/fontBarrier.ts` 使用 `document.fonts.load('12px HanDynastySerif')` 阻塞等待。

@@ -53,7 +53,12 @@ export default function App() {
     <div className="h-full flex items-center justify-center flex-col gap-3 bg-stone-950">
       <h1 className="text-2xl text-amber-400 font-semibold">晚东汉末 · 可玩演示</h1>
       <p className="text-stone-400 text-sm">{loading ? '正在创建游戏…' : error ?? '启动中'}</p>
-      {error && <button type="button" className="px-4 py-2 rounded bg-amber-900 border border-amber-600" onClick={() => void boot()}>重试</button>}
+      {error && <>
+        <p className="text-stone-500 text-xs max-w-xl px-4 text-center">
+          在线静态页为构建产物预览；完整游玩需本地启动服务端（pnpm dev）后访问 http://localhost:5173。
+        </p>
+        <button type="button" className="px-4 py-2 rounded bg-amber-900 border border-amber-600" onClick={() => void boot()}>重试</button>
+      </>}
     </div>
   );
   if (screen === 'scenario') return <ScenarioSelect />;

@@ -1,5 +1,30 @@
 # 开发进度跟踪
 
+## 2026-08-22 — Session 370 · GitHub Pages 静态预览部署
+
+- Phase：**部署基建**；不新增玩法、不改规则/API/RNG/存档/静态数据规模，不启动 0-B。
+- 实装：
+  - `client/vite.config.ts`：`base` 由 `GITHUB_PAGES_BASE` 环境变量注入（缺省 `/` 本地行为不变）；新增构建期插件把产物 CSS 内 `/fonts/` 绝对引用重写为 base 前缀（Vite 6 的 public 资产不参与 CSS base 重写，`%BASE_URL%` 在 CSS url() 会触发 decodeURI 报错，故用插件方案）。
+  - `client/src/components/map/MapCanvas.tsx`：底图路径改 `${import.meta.env.BASE_URL}geo-basemap.png`。
+  - `client/src/App.tsx`：启动失败态新增「在线静态页为构建产物预览；完整游玩需本地启动服务端」提示文案。
+  - `.github/workflows/deploy.yml`：push main / 手动触发 → pnpm install → 从本仓库 Release `assets-fonts-v1` 下载三个 woff2 并按 README 同表 SHA-256 校验 → shared+client 构建（注入 base）→ `touch .nojekyll` → upload/deploy-pages。
+  - 字体 CI 分发：创建 Release [assets-fonts-v1](https://github.com/CtxPilot/Late-Eastern-Han-Dynasty/releases/tag/assets-fonts-v1)（3 woff2 + OFL-1.1.txt），SHA-256 与 `client/public/fonts/README.md` 完全一致（下载实测核对通过）；fonts README 增补 CI 分发小节。
+- 验证：本地以子路径静态伺服 `dist` 模拟 Pages——`node /tmp/opencode/verify-pages-static.mjs` **5/5**（标题加载、双字体 `document.fonts.check` 通过、启动屏渲染、静态预览提示出现、console errors=0）；默认无环境变量构建产物与改动前一致（`url(/fonts/...)` 与 `/assets/*` 未变）；typecheck、shared **420** + client **54**、validate-data、verify-compliance（701 tracked files）、`git diff --check` 全绿。workflow YAML 解析通过、heredoc 校验片段本地实跑通过。
+- 边界：Pages 版**不可玩**（引擎在 Express+SQLite 服务端），打开停留在启动提示属预期；离线可玩版（引擎下沉 Worker + IndexedDB）与远端后端方案均为后续独立切片，未动工。
+- 文档同步：`README.md`（Online preview 小节）、`client/public/fonts/README.md`、`09/10/35` 与 `HANDOFF.md`。
+
+## 2026-08-22 — Session 369 · 浏览器真实点击验收补课（S03/S18）
+
+- Phase：**验收补课轮**；浏览器运行时恢复可用（Chrome CDP 9242 + Playwright 环境），一次性清偿此前多会话被阻塞的真实 DOM 点击验收债。不新增玩法功能、不改规则/字段/API/RNG/静态数据。
+- 实装（仅验证脚本与登记）：
+  - `scripts/verify-s369-culture-ui.mjs`：S03 产业分面「发展文化」全链——初始只读预览（0/999、Lv0/5、距 Lv1 门槛文案）→ 终审对话框成本摘要 → 首付扣金120 → 总览持续项目卡片 → 重复发起客户端门禁拦截且不扣金 → 推进6个月完成 → 文化+60、进度条与差值文案同步更新。
+  - `scripts/verify-s369-family-genealogy-ui.mjs`：S18 家族「族谱」分面——场景1 曹操军出现曹丕（953）记录含父/史料层；场景2 无启用子女时显示只读空态。
+  - `scripts/verify-s369-family-treatment-ui.mjs`：S18 家属质任待决处置——经合法导出→注入待决→导入链构造状态（同 Session 351 前置），真实点击三选一「善待」写入处置、TopBar 门禁禁用/解除、结束后合恢复推进。
+- 结果：**36/36 + 14/14 + 17/17 全部通过，console errors 均为 0**；三个入口已登记进根 `package.json`（`verify-s369-*`）。
+- 回归：shared **420/420**、client **54/54**；workspace typecheck、validate-data、verify-compliance、`git diff --check` 全绿；`verify-culture-development` 10/10、`verify-family-treatment` 15/15、`verify-hostage-families` 9/9 复验通过。
+- 边界：本轮为纯验收补课，无生产代码改动；S03 正式技艺研发/人才吸引消费仍需用户拍板数值；S10 BattleView 撤退/截击/包围链的完整对局级点击验收仍后置（需打完整六角战，非本轮范围）；0-B 继续暂缓。
+- 文档同步：`09/10/35` 与 `HANDOFF.md`。
+
 ## 2026-08-21 — Session 368 · S10 攻城守城与城门突围 0-A 切片
 
 - Phase：**S10 战斗收口 · 攻城突围**；继续 0-A，不扩静态数据规模，不启动 0-B。
