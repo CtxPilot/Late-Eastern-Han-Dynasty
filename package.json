@@ -130,6 +130,7 @@
     "verify-weather-skill": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-weather-skill",
     "verify-special-proficiency": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-special-proficiency",
     "verify-tactical-retreat": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-tactical-retreat",
+    "verify-cavalry-charge": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-cavalry-charge.ts",
     "verify-family-treatment": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-family-treatment",
     "verify-hostage-families": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-hostage-families",
     "verify-s345-military-farming-ui": "node scripts/verify-s345-military-farming-ui.mjs",

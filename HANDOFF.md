@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 370**（GitHub Pages 静态预览部署） |
+| 会话 | **Session 371**（S10 移动后冲锋 · 骑兵冲锋最小切片） |
 | 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 370：`vite base` 环境变量注入 + CSS 字体 URL 构建期重写插件 + MapCanvas BASE_URL + 启动失败静态提示 + `.github/workflows/deploy.yml`（push main 自动发布 Pages）；Session 369 三个 `verify-s369-*` 验收脚本与既有运行时全部保持有效 |
-| 文档最新 | `README`（Online preview）、`client/public/fonts/README`（CI 分发）、`09/10/35` 与本交接已同步；无 API/存档/规则/数据规模变化 |
-| 本交接用途 | **Pages 静态预览上线**：https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/ （不可玩，构建产物预览） |
-| 下一步 | 继续 S10 多军团等后置债，或由用户拍板启动「离线可玩版」切片（引擎下沉 Worker+IndexedDB）；**0-B 继续暂缓** |
+| 代码最新 | Session 371：`crit.ts` 新增 `resolveChargeBonus`/`applyChargeToBaseDamage` 与骑神连击联动，玩家 `attackUnit` 与敌军 AI `doAttack` 普攻路径接入冲锋乘区；新增 `verify-cavalry-charge`（26/26）。Session 370 Pages 部署链与既有运行时全部保持有效 |
+| 文档最新 | `05/08/09/12/35` 与本交接已同步；数值真源 `08` §二十九；无 API/存档/数据规模变化 |
+| 本交接用途 | **S10 移动后特殊连击收口**：骑兵冲锋 0-A 最小切片 |
+| 下一步 | 继续 S10 地形可见范围/多军团等后置债；0-B 继续暂缓 |
+
+### Session 371 交接要点
+
+- 冲锋触发：轻/重骑兵 + 本回合已移动（`hasMovedThisTurn`，与强行军连击同源）+ 普攻。伤害加成加法叠加：平原+20%、重骑兵+50%、冲阵(16)+80%；总 pct>0 才算触发并写「冲锋」标签；pct=0（如森林骑兵）按普通攻击处理。
+- 骑神(马超)专属联动：冲锋中连击率 +20%（`ChainContext.isCharging`）；冲阵冲锋时连击系数 0.6→0.72。
+- 零额外 RNG：乘区在 `calcDamage` 结果上确定性放大，不改变暴击/反击/连击既有消费顺序；不新增字段/API/RNG/静态数据。
+- 战法/火计/追击路径未接冲锋（`tryAbilityTactic`/`applyPursuitToRetreater` 不调用）——边界由代码结构保证并由回归覆盖。
+- 边界：重骑兵「首击」简化为每次冲锋生效；锥形阵突击×1.5、猛进/先登、0-B 特殊兵种冲锋后置；地形可见范围与多军团仍后置。
+- 验证：`verify-cavalry-charge` **26/26**；回归 tactical-ai **86**、save-battle **62**、battle-rng **5**、tactical-retreat **18**、fm4 **14**；shared **420** + client **54**；typecheck/build/validate-data/compliance 全绿。
 
 ### Session 370 交接要点
 

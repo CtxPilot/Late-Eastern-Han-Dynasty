@@ -7,7 +7,13 @@ import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
 import { hexFormationMods } from './hex-formation.js';
 import { applySpecialEffect } from './special-effects.js';
-import { resolveAttack as resolveCritAttack, type AttackActor, type CritRng } from './crit.js';
+import {
+  applyChargeToBaseDamage,
+  resolveAttack as resolveCritAttack,
+  resolveChargeBonus,
+  type AttackActor,
+  type CritRng,
+} from './crit.js';
 import { equipCritRateFor } from '../engine/items.js';
 import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from './weather.js';
 
@@ -755,7 +761,12 @@ function doAttack(
   const matchup = getUnitMatchup(attacker.unitType, defender.unitType, strongAgainst);
   const atkTerrain = terrainMap[attacker.position.r]?.[attacker.position.q] ?? ('plain' as TerrainType);
   const defTerrain = terrainMap[defender.position.r]?.[defender.position.q] ?? ('plain' as TerrainType);
-  const dmg = calcDamage(
+  // 移动后冲锋（docs/08 §二十九）：与玩家 attackUnit 同源判定，仅普攻路径生效
+  const attackerMoved = hasMovedThisTurn(attacker.mp, attacker.maxMp, weather);
+  const charge = attackerMoved
+    ? resolveChargeBonus({ unitType: attacker.unitType, terrain: atkTerrain, formation: attacker.formation })
+    : { bonusPct: 0 };
+  const dmg = applyChargeToBaseDamage(calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
@@ -783,7 +794,7 @@ function doAttack(
       formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(isSiege, defender.side),
     },
     rng,
-  );
+  ), charge.bonusPct);
 
   // §6.5 暴击/反击/连击 (若有完整 officers)
   const fullAtkO = officers?.[attacker.commanderId];
@@ -808,7 +819,8 @@ function doAttack(
       attacker: atkActor, defender: defActor, baseDamage: dmg, matchup,
       attackerTerrain: atkTerrain, defenderTerrain: defTerrain,
       distance: hexDistance(attacker.position, defender.position),
-      isFirstRound: battleTurn === 1, attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, weather),
+      isFirstRound: battleTurn === 1, attackerMoved,
+      chargePct: charge.bonusPct,
       attackerCritBonus: equipCritRateFor(fullAtkO),
       defenderCritBonus: equipCritRateFor(fullDefO),
       attackerSurrounded: isUnitSurrounded(units, attacker.id),

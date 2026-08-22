@@ -63,7 +63,9 @@ import {
   stepDuel,
 } from '../battle/duel.js';
 import {
+  applyChargeToBaseDamage,
   resolveAttack as resolveCritAttack,
+  resolveChargeBonus,
   type AttackActor,
   type CritRng,
 } from '../battle/crit.js';
@@ -675,7 +677,12 @@ export function attackUnit(
   // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266；08 §二十八守城 +3）
   const atkEquip = equipBonusFor(atkO);
   const defEquip = equipBonusFor(defO);
-  const baseDamage = Math.max(1, Math.round(calcDamage(
+  // 移动后冲锋（08 §二十九）：骑兵本回合已移动的普攻按来源叠加伤害加成
+  const attackerMoved = hasMovedThisTurn(attacker.mp, attacker.maxMp, battle.weather);
+  const charge = attackerMoved
+    ? resolveChargeBonus({ unitType: attacker.unitType, terrain: atkTerrain, formation: attacker.formation })
+    : { bonusPct: 0 };
+  const rawBaseDamage = calcDamage(
     {
       unitAttack: atkT.attack,
       unitDefense: atkT.defense,
@@ -703,7 +710,10 @@ export function attackUnit(
       formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(battle, 'defender'),
     },
     rng,
-  ) * (1 + targetCheck.attackModifier)));
+  );
+  const baseDamage = Math.max(1, Math.round(
+    applyChargeToBaseDamage(rawBaseDamage, charge.bonusPct) * (1 + targetCheck.attackModifier),
+  ));
 
   // §6.5 暴击/反击/连击事件流
   const atkActor: AttackActor = {
@@ -723,7 +733,8 @@ export function attackUnit(
     defenderTerrain: defTerrain,
     distance: hexDistance(attacker.position, defender.position),
     isFirstRound: battle.turn === 1,
-    attackerMoved: hasMovedThisTurn(attacker.mp, attacker.maxMp, battle.weather),
+    attackerMoved,
+    chargePct: charge.bonusPct,
     attackerCritBonus: equipCritRateFor(atkO),
     defenderCritBonus: equipCritRateFor(defO),
     attackerSurrounded: isUnitSurrounded(battle.units, attacker.id),

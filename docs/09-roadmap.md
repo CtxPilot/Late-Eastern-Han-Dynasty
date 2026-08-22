@@ -13,6 +13,14 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 371 · S10 移动后冲锋（骑兵冲锋最小切片）
+
+- 轻/重骑兵本回合已移动（`hasMovedThisTurn` 同源语义）的普攻触发冲锋：平原+20%、重骑+50%、冲阵(16)+80% 加法叠乘；pct=0 不触发。骑神冲锋连击率+20%、冲阵连击×1.2；战报「冲锋」标签；零额外 RNG。
+- 玩家 `attackUnit` 与敌军 AI `doAttack` 普攻路径同源接入；战法/火计/追击不触发。
+- 数值真源：`docs/08-data-dictionary.md` 新增 §二十九；`05` §5.6.3/边界行同步。
+- **验证**：新增 `verify-cavalry-charge` **26/26**（纯函数叠加、骑神联动、敌军 AI 与玩家路径固定 RNG 伤害比、森林不触发、步兵不触发）；回归 `verify-tactical-ai` **86/86**、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-tactical-retreat` **18/18**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；typecheck/build/validate-data/compliance 全绿。
+- **Next**：S10 地形可见范围与多军团仍后置；0-B 继续暂缓。
+
 ### Session 370 · GitHub Pages 静态预览部署
 
 - `vite base` 由 `GITHUB_PAGES_BASE` 注入（缺省 `/` 本地不变）；构建期插件重写产物 CSS 内 `/fonts/` 引用；MapCanvas 底图改 `BASE_URL` 拼接。

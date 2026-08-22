@@ -1,5 +1,15 @@
 # 开发进度跟踪
 
+## 2026-08-22 — Session 371 · S10 移动后冲锋（骑兵冲锋最小切片）
+
+- Phase：**S10 战斗收口 · 移动后特殊连击**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：轻/重骑兵本回合已移动（复用 `hasMovedThisTurn`，与强行军连击同源）的**普攻**触发冲锋——伤害乘区加法叠加：平原 +20%、重骑兵 +50%、冲阵阵型(16) +80%，`baseDamage × (1+pct/100)`；pct=0 视为未触发。骑神(马超)冲锋中连击率 +20%、冲阵冲锋连击系数 0.6→0.72（×1.2）。战报写「冲锋」标签。玩家 `attackUnit` 与敌军 AI `doAttack` 同源接入；战法/火计/追击不触发。
+- 数值真源：`docs/08-data-dictionary.md` 新增 §二十九；`05` §5.6.3 与边界行、`12` S10 补充、`35` 进度行同步。
+- 验证：新增 `verify-cavalry-charge` **26/26**（三源叠加纯函数、骑神联动、敌军 AI 与玩家路径固定 RNG ×1.2/×1.7/×2.0 精确比、森林与步兵不触发）；回归 `verify-tactical-ai` **86/86**、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-tactical-retreat` **18/18**、`verify-fm4-hex-formation` **14/14**；shared **420/420**、client **54/54**；workspace typecheck/build/validate-data/verify-compliance、`git diff --check` 全绿。浏览器运行时未使用，无 UI 变更。
+- 边界：重骑兵「首击+50%」0-A 简化为每次冲锋均生效（战斗内首击状态后置）；锥形阵(2)「骑兵突击×1.5」、猛进/先登特性与 0-B 特殊兵种冲锋数值仍后置；地形可见范围、多军团仍后置。
+- 文档同步：`05/08/09/12/35` 与 `HANDOFF.md`。
+- **Next**：S10 地形可见范围与多军团等后置债；0-B 继续暂缓。
+
 ## 2026-08-22 — Session 370 · GitHub Pages 静态预览部署
 
 - Phase：**部署基建**；不新增玩法、不改规则/API/RNG/存档/静态数据规模，不启动 0-B。

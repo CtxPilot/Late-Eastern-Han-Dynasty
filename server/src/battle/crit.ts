@@ -386,6 +386,8 @@ export interface ChainContext {
   staminaRatio: number;
   isFirstRound?: boolean;
   movedThisTurn?: boolean;
+  /** 移动后冲锋进行中（docs/08 §二十九）：骑神专属连击联动的门禁。 */
+  isCharging?: boolean;
 }
 
 export function computeChainRate(ctx: ChainContext): number {
@@ -413,6 +415,8 @@ export function computeChainRate(ctx: ChainContext): number {
   if (u === 'longdan') rate += 20;
   if (u === 'paoxiao' && ctx.isFirstRound) rate += 50;
   if (u === 'huchi' && ctx.morale < 20) rate += 30;
+  // 骑神冲锋联动（docs/08 §二十九）：冲锋中连击率+20%
+  if (u === 'qishen' && ctx.isCharging) rate += QISHEN_CHARGE_CHAIN_RATE;
 
   // 宝物
   rate += weaponChainBonus(o);
@@ -428,7 +432,48 @@ export function computeChainRate(ctx: ChainContext): number {
 export function computeChainCoeff(ctx: ChainContext): number {
   const u = uniqueOf(ctx.officer);
   if (u === 'wushuang') return 1.0; // 不衰减
+  // 骑神+冲阵冲锋联动（docs/08 §二十九）：冲阵连击伤害×1.2（0.6 基础 → 0.72）
+  if (u === 'qishen' && ctx.isCharging && ctx.formation === FormationType.CHARGE) return QISHEN_CHONGZHEN_CHAIN_COEFF;
   return 0.6;
+}
+
+// ---------------------------------------------------------------------------
+// 移动后冲锋 (docs/08 §二十九)
+// ---------------------------------------------------------------------------
+
+export const CAVALRY_CHARGE_PLAIN_PCT = 20;       // 平原骑兵冲锋 +20%（05 §2 地形表）
+export const HEAVY_CAVALRY_CHARGE_PCT = 50;       // 重骑兵冲锋 +50%（05 §5 单位表）
+export const CHONGZHEN_CHARGE_PCT = 80;           // 冲阵阵型(16) 仅骑兵冲锋 +80%（05 §4 阵型表）
+export const QISHEN_CHARGE_CHAIN_RATE = 20;       // 骑神冲锋连击率 +20%
+export const QISHEN_CHONGZHEN_CHAIN_COEFF = 0.72; // 骑神+冲阵连击伤害 ×1.2（0.6 → 0.72）
+
+export interface ChargeContext {
+  unitType: UnitType;
+  terrain: TerrainType;
+  formation: FormationType;
+}
+
+export interface ChargeResult {
+  /** 冲锋总加成百分比；0 = 未触发（轻/重骑 + 本回合已移动为前置，由调用方判定）。 */
+  bonusPct: number;
+}
+
+/**
+ * 移动后冲锋加成结算（确定性、零 RNG）。
+ * 加成来源独立叠加：平原地形 / 重骑兵兵种 / 冲阵阵型；总 pct>0 视为触发冲锋。
+ */
+export function resolveChargeBonus(ctx: ChargeContext): ChargeResult {
+  if (ctx.unitType !== 'lightCavalry' && ctx.unitType !== 'heavyCavalry') return { bonusPct: 0 };
+  let pct = 0;
+  if (ctx.terrain === ('plain' as TerrainType)) pct += CAVALRY_CHARGE_PLAIN_PCT;
+  if (ctx.unitType === 'heavyCavalry') pct += HEAVY_CAVALRY_CHARGE_PCT;
+  if (ctx.formation === FormationType.CHARGE) pct += CHONGZHEN_CHARGE_PCT;
+  return { bonusPct: pct };
+}
+
+/** 把冲锋加成乘到 calcDamage 基础伤害上；未触发时原值返回。 */
+export function applyChargeToBaseDamage(baseDamage: number, bonusPct: number): number {
+  return bonusPct > 0 ? Math.max(1, Math.round(baseDamage * (1 + bonusPct / 100))) : baseDamage;
 }
 
 /** 连击暴击率衰减 (§6.4). */
@@ -489,6 +534,8 @@ export interface ResolveAttackOpts {
   isFirstRound: boolean;
   /** 攻方本回合是否已移动(强行军连击) */
   attackerMoved: boolean;
+  /** 移动后冲锋总加成百分比（docs/08 §二十九；>0 时写「冲锋」标签并进入骑神连击联动语境）。 */
+  chargePct?: number;
   /** 攻方装备暴率加成（S13 Session 266，baseEffect crit_rate 累计）。 */
   attackerCritBonus?: number;
   /** 守方装备暴率加成（反击暴击用）。 */
@@ -508,6 +555,8 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
   const { attacker, defender, baseDamage, matchup, distance, isFirstRound, attackerMoved, rng } = opts;
   const labels: string[] = [];
   const details: string[] = [];
+  const charging = (opts.chargePct ?? 0) > 0;
+  if (charging) labels.push('冲锋');
 
   const atkOff = attacker.officer;
   const defOff = defender.officer;
@@ -589,6 +638,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
       officer: atkOff, unitType: attacker.unit.unitType, formation: attacker.unit.formation,
       proficiency: attacker.proficiency, morale: attacker.unit.morale,
       staminaRatio: (atkOff.stamina || 100) / 100, isFirstRound, movedThisTurn: attackerMoved,
+      isCharging: charging,
     };
     let chainRate = computeChainRate(chainCtx);
     // 天义: 必定二连击
