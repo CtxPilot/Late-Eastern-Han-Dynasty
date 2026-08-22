@@ -38,6 +38,7 @@ export * from './campaign-utils.js';
 export * from './formation-core.js';
 export * from './save.js';
 export * from './rng.js';
+export * from './runtime-rng.js';
 export * from './game-state-schema.js';
 export * from './game-state-entity-schema.js';
 export * from './game-state-campaign-schema.js';

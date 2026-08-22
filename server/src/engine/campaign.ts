@@ -786,7 +786,8 @@ export function runAutoBattle(
   atkArmy: CampaignArmy,
   defArmy: CampaignArmy | null,
   defCity: { cityId: number; garrison: number; wall: number; commanderId?: number } | null,
-  rng: () => number = Math.random,
+  // 离线可玩版（Session 372 Phase 0）：rng 必填，禁止静默回退 Math.random 破坏确定性续玩。
+  rng: () => number,
 ): AutoBattleResult {
   const atkCmd = state.officers[atkArmy.commanderId];
   const atkSubs = atkArmy.subCommanderIds.map((id) => state.officers[id]).filter(Boolean) as Officer[];
@@ -1122,7 +1123,8 @@ export function runAutoBattle(
 // ====== 围城 / 强攻 / 劝降 ======
 
 /** 劝降（§16.5） */
-export function trySiegeSurrender(state: GameState, armyId: string, rng: () => number = Math.random): {
+// 离线可玩版（Session 372 Phase 0）：rng 必填，禁止静默回退 Math.random。
+export function trySiegeSurrender(state: GameState, armyId: string, rng: () => number): {
   state: GameState;
   success: boolean;
 } {

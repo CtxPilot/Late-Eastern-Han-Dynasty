@@ -189,6 +189,9 @@ interface Store {
   grandStrategistRefresh: () => Promise<void>;
 }
 
+/** meleeRound 幂等 commandId 的回退单调计数（crypto.randomUUID 不可用时）。 */
+let commandIdSeq = 0;
+
 export const useGameStore = create<Store>((set, get) => ({
   screen: 'boot',
   sceneStack: [],
@@ -1295,9 +1298,14 @@ export const useGameStore = create<Store>((set, get) => ({
   meleeRound: async (actionType, targetFormation) => {
     set({ loading: true, error: null });
     try {
-      // FM-P3 动作级幂等：每次点击生成唯一 commandId，并用当前回合作为 expectedRound
+      // FM-P3 动作级幂等：每次点击生成唯一 commandId，并用当前回合作为 expectedRound。
+      // 离线可玩版（Session 372 Phase 0）：改用 crypto.randomUUID（回退单调计数），
+      // 避免与玩法随机流混淆的 Math.random 出现在客户端代码中。
       const currentRound = get().melee?.round ?? 0;
-      const commandId = `r${currentRound}-${actionType}-${targetFormation ?? ''}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const nonce = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${(++commandIdSeq).toString(36)}`;
+      const commandId = `r${currentRound}-${actionType}-${targetFormation ?? ''}-${nonce}`;
       const { game, result, melee } = await api.meleeRound(actionType, targetFormation, commandId, currentRound);
       set({ game, melee, meleeLastResult: result, loading: false });
     } catch (e) {
