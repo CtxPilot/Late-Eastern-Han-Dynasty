@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 371**（S10 移动后冲锋 · 骑兵冲锋最小切片） |
-| 阶段 | Phase 0-A + Demo 玩法环；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 371：`crit.ts` 新增 `resolveChargeBonus`/`applyChargeToBaseDamage` 与骑神连击联动，玩家 `attackUnit` 与敌军 AI `doAttack` 普攻路径接入冲锋乘区；新增 `verify-cavalry-charge`（26/26）。Session 370 Pages 部署链与既有运行时全部保持有效 |
-| 文档最新 | `05/08/09/12/35` 与本交接已同步；数值真源 `08` §二十九；无 API/存档/数据规模变化 |
-| 本交接用途 | **S10 移动后特殊连击收口**：骑兵冲锋 0-A 最小切片 |
-| 下一步 | 继续 S10 地形可见范围/多军团等后置债；0-B 继续暂缓 |
+| 会话 | **Session 372**（离线可玩版最小闭环：Worker 权威引擎 + IndexedDB 存档） |
+| 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
+| 代码最新 | Session 372：`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
+| 文档最新 | `README`（在线试玩·离线可玩）、`09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
+| 本交接用途 | **离线可玩上线**：<https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/> 无需后端即可游玩（选剧本/回合/内政/六角战/IndexedDB 存读档） |
+| 下一步 | Phase 4：PWA 预缓存（完全离线冷启动）；离线覆盖面扩充（白刃战/郡域/总军师等约 30 接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+
+### Session 372 交接要点
+
+- 架构：主线程 `gameStore → services/gateway.ts`，`?offline=1` 或 `VITE_OFFLINE=1` 时离线子集覆盖 `api.ts`，未覆盖指令回退在线实现（断网报错提示，不静默）。离线走 `offline-api.ts → game.worker.ts`（模块级 `currentGame + authoritativeRng` 单例 + withLock），结算复用 `server/src/engine/*` 纯函数与新增 `server/src/engine/state-pipeline.ts` 双端管线——**在线/离线逐字节一致由同源代码保证**。
+- 数据：Vite 虚拟模块 `virtual:leh-data` 构建期读仓库同一份 JSON；插件 `leh-browser-loader` 把引擎内 `'../data/loader.js'` 重定向到 `browser-loader.ts` shim；`leh-node-shims` 把 fs/path/url 替换为无害虚拟模块。S24 关系表经 `setStaticRelationsForTest` 预注入。
+- 存档：槽位介质双轨——服务端 SQLite（XDG）不变；浏览器 IndexedDB `leh/save_slots`（`save-idb.ts`），槽位正则/2MB 上限收敛到 `shared/save-limits.ts` 单一真源；信封生成/读档校验链仍在权威侧（`buildSaveEnvelope`/`adoptSaveEnvelope`）。
+- Pages：构建 env `GITHUB_PAGES_BASE` + `VITE_OFFLINE='1'`；本地 dev 不设后者保持在线；`?offline=1` 可在任意本地地址切离线调试。
+- 已知边界：①离线未覆盖约 30 个读/写接口（白刃战 melee、郡域 battlefield-instance、总军师、势力总览、技能树、relations 查询、battlefield Tier I 等）——断网点击会看到既有网络错误提示；②PWA 未做，刷新页面需资源已缓存（首次访问后浏览器 HTTP 缓存通常够用，但非保证）；③存档不跨浏览器。
+- 验证锚点：`pnpm verify-s372-offline-loop` **11/11**（Chrome CDP 9242，需 vite:5173 在跑）；回归 save-slots **10/10**、save-battle **62/62**、tactical-ai **86/86**、battle-rng **5/5**、ai-military-rng **38/38**、campaign **71/71**、shared **422** + client **54**。
 
 ### Session 371 交接要点
 

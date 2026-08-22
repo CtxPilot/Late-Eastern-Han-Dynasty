@@ -62,6 +62,9 @@ jobs:
           pnpm --filter @leh/client build
         env:
           GITHUB_PAGES_BASE: /Late-Eastern-Han-Dynasty/
+          # 离线可玩版（Session 372）：Pages 产物内嵌权威引擎（Web Worker），
+          # 访客无需本地服务端即可游玩；本地 dev 不设置此变量，保持纯在线链路。
+          VITE_OFFLINE: '1'
 
       - name: Ensure .nojekyll
         run: touch client/dist/.nojekyll

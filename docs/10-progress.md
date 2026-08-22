@@ -1,5 +1,18 @@
 # 开发进度跟踪
 
+## 2026-08-22 — Session 372 · 离线可玩版最小闭环（Worker 权威引擎 + IndexedDB 存档）
+
+- Phase：**离线可玩版 Phase 0~3**（用户拍板方案 A：引擎下沉 Worker + IndexedDB）；不扩静态数据规模，0-B 继续暂缓。
+- Phase 0 共享层：`shared/runtime-rng.ts` 上移权威 RNG 单例（server re-export 兼容）；`campaign.ts:789/1125` 两处 `Math.random` 默认参改必填 `rng`；store 的白刃战 `commandId` 改 `crypto.randomUUID()`（回退单调计数）。回归 battle-rng **5/5**、ai-military-rng **38/38**、campaign **71/71**。
+- Phase 1 存档介质：`shared/save-limits.ts` 单一真源（槽位正则/2MB/UTF-8 字节计），SQLite 与新浏览器介质共用；`client/src/services/save-idb.ts`（IndexedDB `leh/save_slots`，行为对齐 SQLite：槽名校验/体量上限/updatedAt 倒序）；真实 Chrome 冒烟 **6/6**。
+- 编排下沉：`server/src/engine/state-pipeline.ts` 承载双端共用管线——`buildGameState`/`runEndTurnPipeline`（advanceTurn→战役行军/驻守/建造→总军师→郡域 tick→节点重建）/`buildSaveEnvelope`/`adoptSaveEnvelope`，services 层改为委托，保证在线/离线结算一致；`applyMeleeSettlement` 同步下沉 meleeRound。save-battle **62/62** 复验。
+- Worker 权威引擎：`client/src/workers/game.worker.ts` 逐函数镜像 services 层（withLock/currentGame/commitActiveBattle/脱敏投影）约 80 个指令；静态数据经 `browser-loader` shim + Vite 虚拟模块 `virtual:leh-data`（构建期读同一份磁盘 JSON，单一真源）；插件三件套 `leh-browser-loader`（重定向引擎内 '../data/loader.js'）/`leh-data-virtual`/`leh-node-shims`（fs/path/url 无害化）；S24 静态关系表经既有测试钩子预注入，运行时不触 fs。
+- 网关策略：`gateway.ts` 按 `?offline=1` 或 `VITE_OFFLINE=1` 合并离线子集覆盖在线实现，未覆盖指令回退在线（断网时以既有错误提示呈现）；`gameStore` 仅改一行导入。
+- Pages 默认可玩：`deploy.yml` 构建注入 `VITE_OFFLINE=1`；README 在线段改写为「在线试玩·离线可玩」，启动失败文案同步更新。
+- 验证：新增 `verify-s372-offline-loop` **11/11**（真实 Chrome ?offline=1：boot→选剧本/势力→世界屏→结束回合推进月份→槽位保存进 IndexedDB→读档恢复→无非网络控制台错误/无未处理拒绝）；typecheck 三端、shared **422** + client **54**、validate-data、compliance（715 files）、`git diff --check` 全绿；save-slots **10/10**。
+- 边界：白刃战/郡域战场实例/总军师/势力总览/技能树/关系查询等约 30 个读接口离线未覆盖（回退在线，断网时报错提示）；PWA 预缓存（关页面后完全离线冷启动）为 Phase 4 后置——当前离线依赖本次会话已加载的资源；存档仅存浏览器本地，跨设备用导出/导入信封；多军团与 0-B 不变仍后置。
+- 文档同步：`02`（无接口变化不涉及）、`06`（无 API 变化）、`09/12/35`、`README`、本文件与 `HANDOFF.md`。
+
 ## 2026-08-22 — Session 371 · S10 移动后冲锋（骑兵冲锋最小切片）
 
 - Phase：**S10 战斗收口 · 移动后特殊连击**；继续 0-A，不扩静态数据规模，不启动 0-B。

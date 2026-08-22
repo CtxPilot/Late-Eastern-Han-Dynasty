@@ -27,6 +27,7 @@ import {
   type TacticalConfigV2,
   resolveTacticSynergy,
   tacticModifiers,
+  type GameState,
 } from '@leh/shared';
 import { applyOrganizationExecution, resolveFormationContribution } from '@leh/shared';
 
@@ -369,5 +370,26 @@ export function createMeleeState(
     phase: 'active',
     eventLog: [],
     commandCache: {},
+  };
+}
+
+/**
+ * 白刃战结算回写（Session 372 自 services/game.ts 下沉为双端共用）：
+ * 将兵力/士气写回参战 Army 并标记 settlementApplied；active 幂等短路。
+ */
+export function applyMeleeSettlement(state: GameState, melee: MeleeState): GameState {
+  if (melee.settlementApplied || melee.phase === 'active') return state;
+  return {
+    ...state,
+    campaignArmies: state.campaignArmies.map((army) => {
+      if (army.id === melee.attackerArmyId) {
+        return { ...army, troops: melee.attackerTroops, morale: melee.attackerMorale };
+      }
+      if (army.id === melee.defenderArmyId) {
+        return { ...army, troops: melee.defenderTroops, morale: melee.defenderMorale };
+      }
+      return army;
+    }),
+    activeMelee: { ...melee, settlementApplied: true },
   };
 }

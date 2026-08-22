@@ -137,6 +137,7 @@
     "verify-s369-culture-ui": "node scripts/verify-s369-culture-ui.mjs",
     "verify-s369-family-genealogy-ui": "node scripts/verify-s369-family-genealogy-ui.mjs",
     "verify-s369-family-treatment-ui": "node scripts/verify-s369-family-treatment-ui.mjs",
+    "verify-s372-offline-loop": "node scripts/verify-s372-offline-loop.mjs",
     "verify-s266-ui": "node scripts/verify-s266-ui.mjs",
     "verify-session268-ui": "node scripts/verify-session268-ui.mjs",
     "verify-session269-ui": "node scripts/verify-session269-ui.mjs",

@@ -4,7 +4,7 @@
 import { create } from 'zustand';
 import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, FamilyTreatmentMode, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult } from '@leh/shared';
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
-import * as api from '../services/api';
+import { gameApi as api } from '../services/gateway';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 
 type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee' | 'tactical' | 'duel';

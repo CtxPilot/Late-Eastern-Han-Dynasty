@@ -13,6 +13,15 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 372 · 离线可玩版最小闭环（Worker + IndexedDB）
+
+- Phase 0~3：权威 RNG 双端化（去 `Math.random` 默认参）→ `save-limits`/`save-idb` 存档双轨 →
+  `state-pipeline.ts` 编排下沉（在线/离线同源结算）→ `game.worker.ts` 权威引擎 + `gateway` 策略网关。
+- Pages 构建注入 `VITE_OFFLINE=1`：访客无需后端即可游玩；本地 dev 保持在线、`?offline=1` 切换调试。
+- **验证**：新增 `verify-s372-offline-loop` **11/11**（真实 Chrome 端到端：boot→剧本→回合推进→IndexedDB 存读档）；
+  回归全绿（shared 422 + client 54、save-battle 62、campaign 71 等）。
+- 边界：melee/郡域/总军师等约 30 接口离线未覆盖（回退在线）；PWA 预缓存（完全离线冷启动）为 Phase 4 后置。
+
 ### Session 371 · S10 移动后冲锋（骑兵冲锋最小切片）
 
 - 轻/重骑兵本回合已移动（`hasMovedThisTurn` 同源语义）的普攻触发冲锋：平原+20%、重骑+50%、冲阵(16)+80% 加法叠乘；pct=0 不触发。骑神冲锋连击率+20%、冲阵连击×1.2；战报「冲锋」标签；零额外 RNG。

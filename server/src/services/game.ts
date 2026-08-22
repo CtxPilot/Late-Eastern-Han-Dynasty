@@ -98,7 +98,7 @@ import {
 } from '../engine/spy.js';
 import { buildAnnualBudget } from '../engine/budget.js';
 import { extractBattlefieldNodes, generateBattlefield, tickBattlefieldMarch } from '../engine/battlefield.js';
-import { applyMeleeRoundResult, createMeleeState, getTacticalActionCost, refreshMeleeState, runMeleeRound } from '../engine/meleeRound.js';
+import { applyMeleeRoundResult, applyMeleeSettlement, createMeleeState, getTacticalActionCost, refreshMeleeState, runMeleeRound } from '../engine/meleeRound.js';
 import {
   appointGrandStrategist as gsAppoint,
   dismissGrandStrategist as gsDismiss,
@@ -1678,23 +1678,6 @@ export function meleeStart(
 /** 获取当前白刃战状态 */
 export function getMelee(): MeleeState | null {
   return getGame().activeMelee;
-}
-
-function applyMeleeSettlement(state: GameState, melee: MeleeState): GameState {
-  if (melee.settlementApplied || melee.phase === 'active') return state;
-  return {
-    ...state,
-    campaignArmies: state.campaignArmies.map((army) => {
-      if (army.id === melee.attackerArmyId) {
-        return { ...army, troops: melee.attackerTroops, morale: melee.attackerMorale };
-      }
-      if (army.id === melee.defenderArmyId) {
-        return { ...army, troops: melee.defenderTroops, morale: melee.defenderMorale };
-      }
-      return army;
-    }),
-    activeMelee: { ...melee, settlementApplied: true },
-  };
 }
 
 /** 从同一白刃战快照选择唯一结算模式；重复提交同一模式幂等，不得改选。 */

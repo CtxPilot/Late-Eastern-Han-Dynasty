@@ -55,7 +55,7 @@ export default function App() {
       <p className="text-stone-400 text-sm">{loading ? '正在创建游戏…' : error ?? '启动中'}</p>
       {error && <>
         <p className="text-stone-500 text-xs max-w-xl px-4 text-center">
-          在线静态页为构建产物预览；完整游玩需本地启动服务端（pnpm dev）后访问 http://localhost:5173。
+          {`引擎未能启动：可点击重试；本地完整联机请 pnpm dev 后访问 http://localhost:5173，离线模式可在地址栏追加 ?offline=1。`}
         </p>
         <button type="button" className="px-4 py-2 rounded bg-amber-900 border border-amber-600" onClick={() => void boot()}>重试</button>
       </>}
