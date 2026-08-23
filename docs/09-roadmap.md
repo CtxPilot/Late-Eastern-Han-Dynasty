@@ -13,6 +13,13 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 374 · 离线覆盖扩充 I（Tier I 战场 + 白刃战 11 接口）
+
+- Worker 镜像 Tier I 战场 ×4 与白刃战 ×7 指令 + `getKingRequirements`；离线接口缺口 33→21。
+- 修补：worker 启动补五处阵型目录/TacticalConfig v2 注入（此前离线战斗数值被静默清零）；`store.meleeStart` 停留战场屏修复三选弹窗不可达（在线同有的既有缺陷）；标准面板补「刷新战术点」接线既有 `meleeRefresh`。
+- **验证**：新增 `verify-s374-offline-melee` **44/44**（信封注入构造两军接战→进军往返→六角微操撤退回流→标准模式姿态/变阵/突击/TP 记账/刷新回补→自动结算→撤兵，XHR 钩子断言零 `/api/` 回退）；s372 复测 11/11、s373 生产构建复测 14/14；shared 422 + client 54、typecheck/validate-data/compliance 全绿。
+- 边界：郡域 battlefield-instance、总军师、技能树、势力总览/relations 等约 21 接口未覆盖；`battlefieldInit` 无 UI 入口仅镜像审查；0-B 继续暂缓。
+
 ### Session 373 · PWA 完全离线冷启动（Phase 4）
 
 - `leh-pwa-precache` 构建期生成 `sw.js`：预缓存全量产物（清单哈希命名缓存），导航网络优先回退缓存，`/api/*` 放行；`main.tsx` 仅生产注册。零新依赖。

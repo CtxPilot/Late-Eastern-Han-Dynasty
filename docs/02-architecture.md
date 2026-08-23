@@ -313,7 +313,7 @@ GameLayout
 | 存档介质 | SQLite 槽位（XDG 数据目录） | IndexedDB 槽位（`save-idb.ts`），槽位规则/2MB 上限共用 `shared/save-limits.ts` |
 | 分发 | `gateway.ts` 按 URL 参数/环境变量合并离线子集覆盖在线实现；未覆盖指令回退在线（断网时以错误提示呈现） | 同左 |
 
-边界：白刃战 melee、郡域战场实例、总军师、势力总览、技能树、关系查询等约 30 个接口离线未覆盖。**PWA 预缓存已实装（Session 373）**：构建期生成 `sw.js` 预缓存全量产物（清单哈希命名缓存），导航网络优先回退缓存首页，`/api/*` 放行——Pages 版首访后支持完全离线冷启动。
+边界：郡域战场实例、总军师、势力总览、技能树、关系查询等约 21 个接口离线未覆盖（Session 374 已收口 Tier I 战场 + 白刃战 11 接口与 `getKingRequirements`）。**PWA 预缓存已实装（Session 373）**：构建期生成 `sw.js` 预缓存全量产物（清单哈希命名缓存），导航网络优先回退缓存首页，`/api/*` 放行——Pages 版首访后支持完全离线冷启动。**Worker 启动注入（Session 374）**：镜像 `server/index.ts` 注入五处阵型目录/TacticalConfig v2，缺失时引擎会静默回退中性值清零战斗数值。
 
 ## 六、核心数据流
 

@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 373**（PWA 完全离线冷启动 · Phase 4 收口） |
+| 会话 | **Session 374**（离线覆盖扩充 I · Tier I 战场 + 白刃战 11 接口） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 373：`leh-pwa-precache` 构建期生成 sw.js 预缓存清单 + `main.tsx` 生产注册 SW（零新依赖）；断网冷启动端到端 **14/14**。Session 372 及之前全部保持有效 |`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
-| 文档最新 | `README`（在线试玩·离线可玩）、`09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | **完全离线冷启动达成**：Pages 首访后断网刷新仍可完整游玩；存档 IndexedDB 本地 |
-| 下一步 | 离线覆盖面扩充（白刃战/郡域/总军师等约 30 接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+| 代码最新 | Session 374：worker 镜像 Tier I×4 + melee×7 + `getKingRequirements` 共 12 指令、offline-api 同名导出；worker 启动补五处阵型目录/TacticalConfig v2 注入（修复离线战斗数值静默清零）；`store.meleeStart` 停留战场屏修复三选弹窗不可达 + StandardModePanel 补「刷新战术点」。Session 373 及之前全部保持有效：`leh-pwa-precache` SW 预缓存、`state-pipeline.ts` 双端管线、`save-idb` IndexedDB、`gateway` 在线/离线策略 |
+| 文档最新 | `README`（在线试玩·离线可玩）、`02/07/09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
+| 本交接用途 | **白刃战三模式（自动/标准/六角）与 Tier I 战场在 Pages 离线版全程可点可玩**；存档 IndexedDB 本地 |
+| 下一步 | 离线覆盖扩充 II（郡域 battlefield-instance ×8 / 总军师 ×4 / 技能树 ×5 / 势力总览与 relations 等读接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+
+### Session 374 交接要点
+
+- Worker 新增 12 handler 逐函数镜像 services/game.ts：Tier I 战场 `battlefieldInit/getBattlefield/battlefieldMarch/battlefieldExit`；白刃战 `meleeStart/getMelee/meleeSelectMode/meleeRound/meleeRefresh/meleeExit/meleeSetTactic`；顺带暴露既有 `kingRequirements`。`offline-api.ts` 同名导出（`getBattlefield/getMelee` 保持 api.ts 的 catch→null 语义）。离线接口缺口 33→21。
+- **重要修补（潜在缺陷）**：worker 启动段此前未注入阵型目录——`setFormationCatalog/setMeleeFormationCatalog/setAutoFormationCatalog/setHexFormationCatalog/setMeleeTacticalConfig(loadTacticalSystemV2())` 缺失时引擎静默回退中性值，意味着 Session 372 起离线战斗的阵型贡献/暴击链/协同矩阵数值实际被清零。现镜像 `server/index.ts` 启动注入，浏览器 shim `browser-loader.loadTacticalSystemV2()` 本就存在只是没人调。
+- **UI 修补（在线同样存在的既有缺陷）**：①`store.meleeStart` 原先直接 `screen:'melee'`，而三选弹窗 `MeleeEntryDialog` 挂在 BattlefieldMapView 内被立即卸载→交战模式永远无法选择（历史只做过 HTTP 级验收所以未发现）；现停留战场屏等弹窗，选完模式再由 `meleeSelectMode` 路由。②StandardModePanel 战术点区新增「刷新战术点」按钮接线既有 `meleeRefresh`（TP 只减不增，手动回补是引擎既定规则）。
+- 验收脚本技巧：`verify-s374-offline-melee` 经「UI 存槽 S1 → 页面上下文改写 IndexedDB 信封（注入 campaignArmies 两军 + activeBattlefield，复刻 extractBattlefieldNodes）→ UI 读槽 S2」构造战场态势（合法 adoptSaveEnvelope 校验链，同 S351/S369 注入先例）；XHR open 钩子统计 `/api/` 调用数断言零在线回退。
+- 验证：`verify-s374-offline-melee` **44/44**（进军往返/接战判定/六角微操撤退回流/标准模式姿态+变阵+突击+TP 记账+刷新回补/自动结算兵力写回/撤兵回世界屏）；s372 复测 **11/11**、s373 生产构建冷启动复测 **14/14**；typecheck 三端、shared **422** + client **54**、validate-data、compliance（717 files）、diff-check 全绿。
+- 边界：剩余约 21 接口未覆盖（郡域 battlefield-instance ×8、总军师 ×4、技能树 ×5、势力总览/relations/campaignNodes/searchBeauty）；`battlefieldInit` 无 UI 入口（历史上如此），其 handler 仅镜像审查+类型覆盖，未宣称真实点击验收；白刃战演出打磨仍后置。
 
 ### Session 373 交接要点
 

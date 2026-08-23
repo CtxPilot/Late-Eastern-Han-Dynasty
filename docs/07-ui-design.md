@@ -1769,6 +1769,10 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
   **Session 283 起补齐 Tier II 恢复**：`boot()` 在无更浅场景时检测
   `activeBattlefieldInstance`，恢复 `screen='battlefield'` 与郡域战场场景栈
   （含进行中的阵前单挑），与 Tier I `activeBattlefield` 同等深度恢复。
+- **Session 374 修补**：`store.meleeStart` 发起后停留在战场屏——三选弹窗挂在
+  BattlefieldMapView 内，原先直接切 melee 屏会把弹窗卸载致模式无法选择（在线同有的
+  既有缺陷）；标准模式战术点区新增「刷新战术点」按钮接线既有 `meleeRefresh`
+  （TP 只减不增、手动回补为引擎既定规则）。
 
 #### 12.2.16 R5 持续内政与预算
 
