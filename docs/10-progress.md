@@ -1,3 +1,11 @@
+## 2026-08-23 — Session 376 · 离线覆盖扩充 III（郡域实例写链收口，114 接口全离线）
+
+- Phase：**离线可玩版覆盖面收官切片**；不扩静态数据规模，0-B 继续暂缓。
+- 实装：worker 新增郡域 battlefield-instance 写链 ×7——`enterNanjunBattlefield`（模板目录 `getCommanderyTemplate` 为 shared 静态 import 无 fs；守方按郡治归属 R6 语义 + 守方 Army 纵深入场 + 战况 RNG 注入权威流）、`exitNanjunBattlefield`、`engageCounty`（runAutoBattle 攻县 + 守方 Army 合成参战/残兵按比例回填/溃退移驻 seat/deployments 同步）、阵前单挑四链 `startBattlefieldDuel/stepBattlefieldDuel/skipBattlefieldDuel/closeBattlefieldDuel`（createDuel/stepDuel/runDuelToCompletion + settleBattlefieldDuel 功绩/俘杀/继承者/驻军 −15% 全镜像）；helper `pickBattlefieldDuelOfficer/settleBattlefieldDuel`。`offline-api.ts` 补 7 导出——至此 **api.ts 全部 114 个接口离线全覆盖，网关不再有在线回退面**。
+- 验证：新增 `verify-s376-offline-commandery` **27/27**——真实 Chrome 全程 `?offline=1`：信封注入出征军→「南郡水网」进入沙盘（战况条渲染）→阵前挑战 DuelPanel→逐回合 ×2→跳过终局结算→关闭回战场（挑战按钮恢复可点=activeDuel 清空）→点击当阳县节点攻占（节点渲染「驻N」占领标记）→退出战场回世界屏；XHR 钩子断言零 `/api/` 回退。回归 s374 **44/44**、s375 **32/32**、s372 **11/11**、重建产物 s373 **14/14**；typecheck/lint 三端、shared **422** + client **54**、validate-data、compliance（719 files）、`git diff --check` 全绿。
+- 边界：单挑逐回合仅点 2 步后走跳过（完整回合数演出与在线共用同镜像）；江陵六角接战入口（engageJiangling/battlefield Tier I init）沿用既有覆盖；0-B 与多军团不变仍后置。
+- 文档同步：`02/09/10/12/35` 与 `HANDOFF.md`。
+
 ## 2026-08-23 — Session 375 · 离线覆盖扩充 II（读链与轻写链 14 接口收口）
 
 - Phase：**离线可玩版覆盖面扩充第二切片**；不扩静态数据规模，0-B 继续暂缓。

@@ -9,12 +9,23 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 375**（离线覆盖扩充 II · 读链与轻写链 14 接口收口） |
+| 会话 | **Session 376**（离线覆盖扩充 III · 郡域实例写链收口，114 接口全离线） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 375：worker 新增总军师 ×4 / 技能树 ×5 / 关系网 / 势力总览 / campaignNodes / getBattlefieldInstance / searchBeauty 共 14 handler；虚拟模块补 `skill-trees.json`（vite DATA_FILES kebab→camel、d.ts、browser-loader.loadSkillTrees）。Session 374 及之前保持有效：Tier I 战场+白刃战 12 指令、阵型目录注入修补、meleeStart 弹窗修复 |
+| 代码最新 | Session 376：worker 新增郡域 battlefield-instance 写链 ×7（enter/exit/engageCounty + 阵前单挑四链），`offline-api.ts` 全量对齐——**api.ts 114 个接口离线全覆盖，无在线回退面**。Session 375 及之前全部保持有效 |
 | 文档最新 | `README`（在线试玩·离线可玩）、`02/07/09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | **离线版除郡域实例外全部接口已覆盖（缺口 33→7）**：总军师/技能树/关系网/势力总览在 Pages 离线可点可玩 |
-| 下一步 | 离线覆盖扩充 III（郡域 battlefield-instance ×7：enter/exit/engageCounty + 阵前单挑四链，需实例生命周期+守方 AI+迷雾整体移植）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+| 本交接用途 | **Pages 离线版功能面与在线版对齐**：南郡沙盘进入/攻打/阵前单挑全程真实点击可玩 |
+| 下一步 | S10 地形可见范围与多军团仍后置；正式技艺研发数值待用户拍板；**0-B 继续暂缓** |
+
+### Session 376 交接要点
+
+- worker 郡域写链逐函数镜像 services/game.ts：enterNanjunBattlefield 的守方势力取「郡治大地图城市实际归属」（R6 郡国归属语义）；generateCommanderyBattlefield 经 `dynamic:{rng:runtimeRandom}` 把战况抽取（天气/侦察/伏击/遭遇序）并入权威 RNG 流，实例 id 后缀用 `年-月-rng.draws` 保持稳定。
+- engageCounty 三分支：县内守方 Army 合成副本迎战（野战无城墙惩罚）/ 无 Army 时打民兵驻军（cityId:0 占位）/ 残兵按比例回填并处理溃退移驻 seat 与 deployments 同步；攻方 Army 兵力士气直接写回。
+- 阵前单挑 settleBattlefieldDuel 完整规则镜像：君主败亡继承者、胜方功绩（君主豁免）、killed 清城/俘虏状态、士气回填、驻军 −15% 与战报叙事。
+- 验收技巧：当阳/枝江即南郡入口县（entryNodeIds），生成时 ruler=null 且必然被迷雾揭示 → UI 可点击攻打；SVG `<g>` 无原生 .click()，脚本用 `dispatchEvent(new MouseEvent('click',{bubbles:true}}))` 触发 React onClick。
+- 验证锚点：`pnpm verify-s376-offline-commandery` **27/27**（含 XHR 钩子零 `/api/` 回退断言）；回归矩阵 s374 44 / s375 32 / s372 11 / s373(重建产物) 14 全绿。
+- 边界：单挑演出完整回合数未逐步点击（skip 路径已验终局结算）；engageJiangling 六角接战属既有 Tier I 覆盖未重验。
+
+### Session 375 交接要点
 
 ### Session 375 交接要点
 

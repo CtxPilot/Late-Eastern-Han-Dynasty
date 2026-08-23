@@ -13,6 +13,18 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 376 · 离线覆盖扩充 III（郡域实例写链收口）
+
+- worker 镜像 enterNanjunBattlefield/exitNanjunBattlefield/engageCounty 与阵前单挑四链（含 settleBattlefieldDuel 功绩/俘杀/继承者规则）；至此 **114 个接口离线全覆盖，无在线回退面**。
+- **验证**：新增 `verify-s376-offline-commandery` **27/27**（南郡沙盘进入→战况条→阵前单挑 step×2/skip 终局/close→攻打当阳占领「驻N」→退出回世界屏，XHR 钩子零回退）；回归 s374 44 / s375 32 / s372 11 / s373(重建) 14 全绿。
+- 边界：0-B 继续暂缓。
+
+### Session 376 · 离线覆盖扩充 III（郡域实例写链收口）
+
+- worker 镜像 enterNanjunBattlefield/exitNanjunBattlefield/engageCounty 与阵前单挑四链（含 settleBattlefieldDuel 功绩/俘杀/继承者规则）；至此 **114 个接口离线全覆盖，无在线回退面**。
+- **验证**：新增 `verify-s376-offline-commandery` **27/27**（南郡沙盘进入→战况条→阵前单挑 step×2/skip 终局/close→攻打当阳占领「驻N」→退出回世界屏，XHR 钩子零回退）；回归 s374 44 / s375 32 / s372 11 / s373(重建) 14 全绿。
+- 边界：0-B 继续暂缓。
+
 ### Session 375 · 离线覆盖扩充 II（读链与轻写链 14 接口收口）
 
 - worker 镜像总军师 ×4 / 技能树 ×5 / getOfficerRelations / getFactionOverview / campaignNodes / getBattlefieldInstance / searchBeauty；虚拟模块补 `skill-trees.json`。
