@@ -16,8 +16,8 @@ The roadmap is evidence-based: “implemented” means code exists and has been 
 ## Next — harden and widen what ships
 
 - Clear remaining combat debts: terrain visibility rules and multi-army retreat coordination.
-- Widen offline endpoint coverage (melee, commandery battlefields, grand strategist, skill trees, relations queries) so offline parity matches online.
-- Add PWA precache so the hosted build cold-starts fully offline; keep CI verification-first (every slice lands with its own verify script).
+- ✅ PWA precache (Session 373): the hosted build cold-starts fully offline after first visit.
+- Widen offline endpoint coverage (melee, commandery battlefields, grand strategist, skill trees, relations queries) so offline parity matches online. Keep CI verification-first (every slice lands with its own verify script).
 - Browser click-through acceptance for battle views as environments allow; keep honest scope notes per session.
 - Improve accessibility, error recovery, and contributor onboarding.
 

@@ -11,3 +11,13 @@ createRoot(document.getElementById('root')!).render(
     <App />
   </StrictMode>,
 );
+
+// 离线冷启动（Session 373 Phase 4）：生产构建注册 Service Worker 预缓存。
+// dev 不注册（避免干扰 HMR）；注册失败静默降级为普通在线/离线网关行为。
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`)
+      .catch(() => {});
+  });
+}

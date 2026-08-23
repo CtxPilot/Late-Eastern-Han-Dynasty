@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 372**（离线可玩版最小闭环：Worker 权威引擎 + IndexedDB 存档） |
+| 会话 | **Session 373**（PWA 完全离线冷启动 · Phase 4 收口） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 372（495883e）：`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
+| 代码最新 | Session 373：`leh-pwa-precache` 构建期生成 sw.js 预缓存清单 + `main.tsx` 生产注册 SW（零新依赖）；断网冷启动端到端 **14/14**。Session 372 及之前全部保持有效 |`shared/runtime-rng`+`save-limits` 双端真源、`state-pipeline.ts` 编排下沉、`client/src/workers/game.worker.ts` 权威 Worker（~80 指令）、`save-idb` IndexedDB 介质、`gateway` 在线/离线策略、deploy 注入 `VITE_OFFLINE=1`；Session 369~371 全部保持有效 |
 | 文档最新 | `README`（在线试玩·离线可玩）、`09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | **离线可玩上线**：<https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/> 无需后端即可游玩（选剧本/回合/内政/六角战/IndexedDB 存读档） |
-| 下一步 | Phase 4：PWA 预缓存（完全离线冷启动）；离线覆盖面扩充（白刃战/郡域/总军师等约 30 接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+| 本交接用途 | **完全离线冷启动达成**：Pages 首访后断网刷新仍可完整游玩；存档 IndexedDB 本地 |
+| 下一步 | 离线覆盖面扩充（白刃战/郡域/总军师等约 30 接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+
+### Session 373 交接要点
+
+- 实现：`client/vite.config.ts` 新增 `leh-pwa-precache` 插件——`closeBundle` 扫描产物目录生成 `dist/sw.js`，预缓存清单含 index.html、全部 chunk/资产、字体 woff2 与 geo-basemap；缓存名 `leh-<djb2(清单)>` 随内容更迭自动清旧。策略：导航网络优先失败回退缓存首页；同源 GET 缓存优先并回填；`/api/*` 放行。
+- 注册：`main.tsx` 仅 `import.meta.env.PROD` 且浏览器支持时注册 `${BASE_URL}sw.js`，失败静默降级；dev 不注册。
+- 决策：未引入 workbox / vite-plugin-pwa（延续 Session 100 零新依赖原则），自研插件 ~60 行。
+- 验证：新增 `pnpm verify-s373-offline-coldstart` **14/14**（首访接管→预缓存 11 条→CDP 断网→冷启动渲染剧本屏→字体可用→开局→结束回合推进月份→IndexedDB 离线存读）；`verify-s372-offline-loop` 复测 11/11 无回归；typecheck/shared 422+client 54/compliance 全绿。
+- 注意：SW 仅生产构建注入；部署更新依赖导航网络优先拉新 index.html + 清单哈希换名失效旧缓存；无头验收需 Chrome profile 清理 SingletonLock。
 
 ### Session 372 交接要点
 

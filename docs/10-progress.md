@@ -1,3 +1,11 @@
+## 2026-08-23 — Session 373 · PWA 完全离线冷启动（Phase 4 收口）
+
+- Phase：**离线可玩版 Phase 4**；不扩静态数据规模，0-B 继续暂缓。
+- 实装：`client/vite.config.ts` 新增 `leh-pwa-precache` 插件——构建期 `closeBundle` 扫描产物目录生成 `sw.js` 预缓存清单（全部 chunk/资产/字体/底图 + index.html），缓存名随清单内容 djb2 哈希更迭自动失效旧缓存；导航请求网络优先、失败回退缓存 index.html，其余同源 GET 缓存优先并回填，`/api/` 放行。`main.tsx` 仅生产环境注册 SW（尊重 base 子路径，失败静默降级）；dev 不注册不干扰 HMR。零新依赖（未引 workbox/vite-plugin-pwa，符合零依赖决策记录）。
+- 验证：新增 `verify-s373-offline-coldstart` **14/14**——真实 Chrome 首访 SW 接管→预缓存 11 条落库→CDP 断网仿真→刷新冷启动渲染剧本屏→字体离线可用→选剧本/势力进世界屏→结束回合推进月份→IndexedDB 离线存档成功→无非网络控制台错误；`verify-s372-offline-loop` 在含 SW 的产物上复测 **11/11** 无回归；typecheck、shared **422** + client **54**、compliance（716 files）、`git diff --check` 全绿。
+- 边界：SW 仅生产构建注入；预缓存在每次部署后首访时更新（导航网络优先保证新版本可达）；联机模式的 `/api/*` 永不被 SW 拦截。
+- 文档同步：`README`、根 `ROADMAP.md`、`02`（§五-A 边界）、`09/10/35` 与 `HANDOFF.md`。
+
 # 开发进度跟踪
 
 ## 2026-08-22 — Session 372 · 离线可玩版最小闭环（Worker 权威引擎 + IndexedDB 存档）

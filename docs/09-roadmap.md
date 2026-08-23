@@ -13,6 +13,12 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 373 · PWA 完全离线冷启动（Phase 4）
+
+- `leh-pwa-precache` 构建期生成 `sw.js`：预缓存全量产物（清单哈希命名缓存），导航网络优先回退缓存，`/api/*` 放行；`main.tsx` 仅生产注册。零新依赖。
+- **验证**：`verify-s373-offline-coldstart` **14/14**——CDP 断网仿真下刷新冷启动：剧本屏/字体/世界屏/结束回合推进月份/IndexedDB 存读全部离线可用；s372 循环复测 11/11 无回归。
+- **Next**：离线接口覆盖扩充或 S10 后置债由用户拍板；0-B 继续暂缓。
+
 ### Session 372 · 离线可玩版最小闭环（Worker + IndexedDB）
 
 - Phase 0~3：权威 RNG 双端化（去 `Math.random` 默认参）→ `save-limits`/`save-idb` 存档双轨 →
