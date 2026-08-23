@@ -22,11 +22,15 @@ import {
   restoreRuntimeRng,
   runtimeRandom,
   type BattleState,
+  type BattlefieldMap,
   type DuelStance,
   type EventSourceClass,
   type FamilyTreatmentMode,
   type FormationType,
   type GameState,
+  type MeleeEntryMode,
+  type MeleeRoundResult,
+  type MeleeState,
   type PositionTrack,
   type StructureType,
 } from '@leh/shared';
@@ -79,8 +83,25 @@ import {
   startCampaign as campaignStartEngine,
   trySiegeSurrender as campaignTrySiegeSurrenderEngine,
   buildStructure as campaignBuildStructureEngine,
+  runAutoBattle,
+  setAutoFormationCatalog,
   type AdvisorAction,
 } from '../../../server/src/engine/campaign.js';
+import {
+  extractBattlefieldNodes,
+  generateBattlefield,
+  tickBattlefieldMarch,
+} from '../../../server/src/engine/battlefield.js';
+import {
+  applyMeleeRoundResult,
+  applyMeleeSettlement,
+  createMeleeState,
+  getTacticalActionCost,
+  refreshMeleeState,
+  runMeleeRound,
+  setMeleeFormationCatalog,
+  setMeleeTacticalConfig,
+} from '../../../server/src/engine/meleeRound.js';
 import {
   isMarchTargetReachable,
   pickDefaultFromCity,
@@ -114,7 +135,9 @@ import { appointOfficer } from '../../../server/src/engine/appoint.js';
 import { grantNobility } from '../../../server/src/engine/nobility.js';
 import { setStaticRelationsForTest } from '../../../server/src/engine/relations.js';
 import { resolveEventChoice } from '../../../server/src/engine/event.js';
-import { applyMeleeSettlement } from '../../../server/src/engine/meleeRound.js';
+import { setFormationCatalog } from '../../../server/src/battle/crit.js';
+import { setHexFormationCatalog } from '../../../server/src/battle/hex-formation.js';
+import { loadTacticalSystemV2 } from './browser-loader';
 
 // ====== 进程级权威状态（与 services/game.ts 镜像） ======
 let currentGame: GameState | null = null;
@@ -126,6 +149,15 @@ setStaticRelationsForTest(
     typeof setStaticRelationsForTest
   >[0],
 );
+
+// 离线：镜像 server/src/index.ts 启动注入——FM-P3 各战斗模式从 formations.json
+// tiers[0] 点值读取阵型贡献（单一内容源）；未注入时引擎静默回退中性值，
+// 会把离线战斗的阵型/暴击/协同数值悄悄清零（Session 374 修补）。
+setFormationCatalog(staticData.formations);
+setMeleeFormationCatalog(staticData.formations);
+setAutoFormationCatalog(staticData.formations);
+setHexFormationCatalog(staticData.formations);
+setMeleeTacticalConfig(loadTacticalSystemV2());
 
 function withLock<T>(fn: () => T): T {
   if (isProcessing) throw new Error('操作处理中，请稍候（避免并发冲突）');
@@ -852,6 +884,279 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       }
       commitActiveBattle(null, nextState);
       return getClientGame();
+    });
+  },
+
+  // ====== 战场地图（Tier I，镜像 services/game.ts §战场地图） ======
+
+  battlefieldInit(targetCityId: number, fromCityId: number): BattlefieldMap {
+    return withLock(() => {
+      const state = getGame();
+      const nodes = extractBattlefieldNodes(state, targetCityId, fromCityId);
+
+      const targetCity = state.cities[targetCityId];
+      const fromCity = state.cities[fromCityId];
+      if (!targetCity || !fromCity) throw new Error('城市不存在');
+      if (fromCity.ruler !== state.playerFactionId) throw new Error('出发城市不属于玩家势力');
+      if (targetCity.ruler == null) throw new Error('中立城市没有可进入白刃战的防守势力');
+      if (targetCity.ruler === state.playerFactionId) throw new Error('不能对己方城市初始化战场');
+
+      const bfId = `bf-${targetCityId}-${fromCityId}-${Date.now() % 100000}`;
+      const warId = `war-${targetCityId}-${Date.now() % 10000}`;
+
+      const battlefieldArmyIds = [...new Set(nodes.flatMap((node) => node.armyIds))];
+      const battlefield = generateBattlefield(
+        bfId, warId, nodes,
+        state.playerFactionId,
+        targetCity.ruler,
+        targetCityId,
+        battlefieldArmyIds,
+      );
+
+      currentGame = { ...state, activeBattlefield: battlefield, activeMelee: null };
+      return battlefield;
+    });
+  },
+
+  getBattlefield(): BattlefieldMap | null {
+    return getGame().activeBattlefield;
+  },
+
+  battlefieldMarch(armyId: string, targetNodeId: number): { game: GameState; battlefield: BattlefieldMap } {
+    return withLock(() => {
+      const state = getGame();
+      const battlefield = state.activeBattlefield;
+      if (!battlefield) throw new Error('没有活跃战场');
+
+      const army = state.campaignArmies.find((a) => a.id === armyId);
+      if (!army) throw new Error('Army 不存在');
+
+      const targetNode = battlefield.nodes.find((n) => n.id === targetNodeId);
+      if (!targetNode) throw new Error('目标节点不在战场范围内');
+      if (!targetNode.adjacentNodeIds.includes(army.currentNodeId)) {
+        throw new Error('目标节点不邻接当前节点');
+      }
+
+      const armiesWithPath = state.campaignArmies.map((a) =>
+        a.id === armyId
+          ? { ...a, path: [targetNodeId], targetNodeId, phase: 'marching' as const }
+          : a,
+      );
+      const stateWithPath = { ...state, campaignArmies: armiesWithPath };
+
+      const marchResult = tickBattlefieldMarch(stateWithPath, battlefield);
+      currentGame = { ...marchResult.state, activeBattlefield: marchResult.battlefield };
+
+      const updatedArmy = currentGame.campaignArmies.find((a) => a.id === armyId);
+      if (updatedArmy && updatedArmy.path.length === 0) {
+        const tCity = state.cities[targetNodeId];
+        if (tCity && tCity.ruler !== state.playerFactionId) {
+          currentGame = {
+            ...currentGame!,
+            actionLog: [{ year: state.currentYear, month: state.currentMonth, type: 'battlefield', message: `${army.name} 抵达 ${tCity?.name ?? '目标'}，进入围城` }, ...currentGame!.actionLog].slice(0, 80),
+          } as GameState;
+        }
+      }
+
+      return { game: getClientGame(), battlefield: currentGame.activeBattlefield! };
+    });
+  },
+
+  battlefieldExit(): GameState {
+    return withLock(() => {
+      currentGame = { ...getGame(), activeBattlefield: null, activeMelee: null };
+      return getClientGame();
+    });
+  },
+
+  // ====== 白刃战（Tier II，镜像 services/game.ts §白刃战） ======
+
+  meleeStart(attackerArmyId: string, defenderArmyId: string): { game: GameState; melee: MeleeState } {
+    return withLock(() => {
+      const state = getGame();
+      const atkArmy = state.campaignArmies.find((a) => a.id === attackerArmyId);
+      const defArmy = state.campaignArmies.find((a) => a.id === defenderArmyId);
+      if (!atkArmy || !defArmy) throw new Error('Army 不存在');
+      const battlefield = state.activeBattlefield;
+      if (!battlefield) throw new Error('没有活跃战场');
+      if (attackerArmyId === defenderArmyId) throw new Error('白刃战双方不能是同一支 Army');
+      if (atkArmy.factionId === defArmy.factionId) throw new Error('白刃战双方必须属于敌对势力');
+      if (atkArmy.currentNodeId !== defArmy.currentNodeId) throw new Error('白刃战双方必须位于同一节点');
+      if (!battlefield.armyIds.includes(attackerArmyId) || !battlefield.armyIds.includes(defenderArmyId)) {
+        throw new Error('白刃战双方必须属于当前战场');
+      }
+
+      const atkCommander = state.officers[atkArmy.commanderId];
+
+      const melee = createMeleeState(
+        battlefield.id,
+        attackerArmyId,
+        defenderArmyId,
+        atkArmy.factionId,
+        defArmy.factionId,
+        atkArmy.troops,
+        defArmy.troops,
+        atkArmy.formation,
+        defArmy.formation,
+        atkCommander?.stats.intelligence ?? 50,
+        // FM-P3a 点值迁移：快照各军组织度供阵型执行档消费（optional，旧档缺省 orderly ×1.0）
+        atkArmy.organization,
+        defArmy.organization,
+      );
+
+      currentGame = { ...state, activeMelee: melee };
+      return { game: getClientGame(), melee };
+    });
+  },
+
+  getMelee(): MeleeState | null {
+    return getGame().activeMelee;
+  },
+
+  /** 从同一白刃战快照选择唯一结算模式；重复提交同一模式幂等，不得改选。 */
+  meleeSelectMode(mode: MeleeEntryMode): { game: GameState; melee: MeleeState; battle?: BattleState } {
+    return withLock(() => {
+      const state = getGame();
+      const melee = state.activeMelee;
+      if (!melee) throw new Error('没有活跃白刃战');
+      if (melee.entryMode && melee.entryMode !== mode) throw new Error('本次交战已经选择其他结算模式');
+      if (melee.settlementApplied) return { game: getClientGame(), melee };
+      if (melee.entryMode === mode) {
+        const battle = melee.tacticalBattleId
+          ? state.activeBattles.find((item) => item.id === melee.tacticalBattleId)
+          : undefined;
+        return { game: getClientGame(), melee, ...(battle ? { battle } : {}) };
+      }
+
+      let selected: MeleeState = { ...melee, entryMode: mode };
+      if (mode === 'auto') {
+        // FM-P3：自动结算恢复调用既有 runAutoBattle（05 §20.3.5 / 计划 §2.2 §7.4），
+        // 结果桥接回 melee 状态后由 applyMeleeSettlement 一次回写。
+        const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
+        const defArmy = state.campaignArmies.find((a) => a.id === melee.defenderArmyId);
+        if (!atkArmy || !defArmy) throw new Error('自动结算缺少攻守 Army');
+        const autoResult = runAutoBattle(state, atkArmy, defArmy, null, runtimeRandom);
+        const phase: MeleeState['phase'] = autoResult.winner === 'attacker' ? 'attacker_victory' : 'defender_victory';
+        selected = {
+          ...selected,
+          attackerTroops: autoResult.attackerRemaining,
+          defenderTroops: autoResult.defenderRemaining,
+          attackerMorale: autoResult.attackerMoraleAfter,
+          defenderMorale: autoResult.defenderMoraleAfter,
+          phase,
+        };
+        currentGame = applyMeleeSettlement({ ...state, activeMelee: selected }, selected);
+        return { game: getClientGame(), melee: currentGame.activeMelee! };
+      }
+
+      if (mode === 'tactical') {
+        const battlefield = state.activeBattlefield;
+        if (!battlefield) throw new Error('六角微操必须归属于活跃战场');
+        const attackerArmy = state.campaignArmies.find((army) => army.id === melee.attackerArmyId);
+        const defenderArmy = state.campaignArmies.find((army) => army.id === melee.defenderArmyId);
+        const battle = createBattle(state, battlefield.targetCityId, {
+          attackTroops: melee.attackerTroops,
+          defendTroops: melee.defenderTroops,
+          attackMorale: melee.attackerMorale,
+          defendMorale: melee.defenderMorale,
+          attackerArmy,
+          defenderArmy,
+        });
+        selected = { ...selected, tacticalBattleId: battle.id };
+        currentGame = { ...state, activeMelee: selected, activeBattles: [...state.activeBattles, battle] };
+        return { game: getClientGame(), melee: selected, battle };
+      }
+
+      currentGame = { ...state, activeMelee: selected };
+      return { game: getClientGame(), melee: selected };
+    });
+  },
+
+  /** 执行一回合白刃战（FM-P3 §7.5 动作级幂等：commandId + expectedRound） */
+  meleeRound(
+    actionType: string,
+    targetFormation?: FormationType,
+    commandId?: string,
+    expectedRound?: number,
+  ): { game: GameState; result: MeleeRoundResult; melee: MeleeState } {
+    return withLock(() => {
+      const state = getGame();
+      const melee = state.activeMelee;
+      if (!melee) throw new Error('没有活跃白刃战');
+      if (melee.entryMode !== 'standard') throw new Error('只有标准模式可提交逐回合战术');
+      if (melee.phase !== 'active') throw new Error('白刃战已结束');
+
+      // 动作级幂等（FM-P3 §7.5）
+      const cache = melee.commandCache ?? {};
+      if (commandId != null) {
+        const cached = cache[commandId];
+        if (cached) {
+          if (cached.round !== expectedRound) throw new Error('expectedRound 过期，命令拒绝');
+          const cur = getGame().activeMelee!;
+          return { game: getClientGame(), result: cached.result, melee: cur };
+        }
+      }
+
+      const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
+      const atkCommander = atkArmy ? state.officers[atkArmy.commanderId] : undefined;
+
+      const typedAction = actionType as import('@leh/shared').TacticalActionType;
+      const cost = getTacticalActionCost(typedAction);
+      if (cost === null) throw new Error('未知的白刃战行动');
+      if (melee.tacticalPoints < cost) throw new Error('战术点不足');
+      const allowedFormations = [0, 1, 2, 3, 4, 6] as const;
+      if (typedAction === 'change_formation' && !allowedFormations.includes(targetFormation as (typeof allowedFormations)[number])) {
+        throw new Error('变阵必须指定 0-A 基础阵型');
+      }
+      const effectiveMelee = typedAction === 'change_formation' ? { ...melee, attackerFormation: targetFormation! } : melee;
+      const action = { type: typedAction, targetFormation };
+      const result = runMeleeRound(effectiveMelee, action, atkCommander?.stats.intelligence ?? 50);
+
+      // 写入幂等缓存（仅标准模式，命令成功）
+      const nextCache = commandId != null ? { ...cache, [commandId]: { round: melee.round, result } } : cache;
+      const nextMelee = applyMeleeRoundResult({ ...effectiveMelee, commandCache: nextCache }, result, cost);
+      currentGame = result.phase === 'active'
+        ? { ...state, activeMelee: nextMelee }
+        : applyMeleeSettlement({ ...state, activeMelee: nextMelee }, nextMelee);
+
+      return { game: getClientGame(), result, melee: currentGame.activeMelee! };
+    });
+  },
+
+  /** 刷新白刃战战术点 */
+  meleeRefresh(): MeleeState {
+    return withLock(() => {
+      const state = getGame();
+      const melee = state.activeMelee;
+      if (!melee) throw new Error('没有活跃白刃战');
+      const atkArmy = state.campaignArmies.find((a) => a.id === melee.attackerArmyId);
+      const int = atkArmy ? (state.officers[atkArmy.commanderId]?.stats.intelligence ?? 50) : 50;
+      const nextMelee = refreshMeleeState(melee, int);
+      currentGame = { ...state, activeMelee: nextMelee };
+      return nextMelee;
+    });
+  },
+
+  /** 退出白刃战 */
+  meleeExit(): { game: GameState } {
+    return withLock(() => {
+      currentGame = { ...getGame(), activeMelee: null };
+      return { game: getClientGame() };
+    });
+  },
+
+  /** 设定攻方玩家持久战术姿态（FM-P3）：null 清除为中性；不耗 TP、不推进回合。 */
+  meleeSetTactic(tactic: import('@leh/shared').TacticalTacticId | null): { game: GameState; melee: MeleeState } {
+    const allowed = ['assault', 'hold', 'ambush'];
+    if (tactic != null && !allowed.includes(tactic)) throw new Error('非法战术');
+    return withLock(() => {
+      const state = getGame();
+      const melee = state.activeMelee;
+      if (!melee) throw new Error('没有活跃白刃战');
+      if (melee.phase !== 'active') throw new Error('白刃战已结束');
+      const nextMelee = { ...melee, tactic };
+      currentGame = { ...state, activeMelee: nextMelee };
+      return { game: getClientGame(), melee: nextMelee };
     });
   },
 

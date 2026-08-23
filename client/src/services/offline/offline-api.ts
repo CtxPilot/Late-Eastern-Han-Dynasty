@@ -10,11 +10,15 @@
  */
 import type {
   BattleState,
+  BattlefieldMap,
   DuelStance,
   EventSourceClass,
   FamilyTreatmentMode,
   FormationType,
   GameState,
+  MeleeEntryMode,
+  MeleeRoundResult,
+  MeleeState,
   SaveEnvelopeV1,
 } from '@leh/shared';
 import type { RpcRequest, RpcResponse } from '../../workers/protocol';
@@ -225,6 +229,10 @@ export function proclaimKing(kingdomName: string): Promise<GameState> {
 export function falseDecreeWar(targetFactionId: number): Promise<GameState> {
   return call('falseDecreeWar', [targetFactionId]);
 }
+
+export function getKingRequirements(): ReturnType<typeof import('../api').getKingRequirements> {
+  return call('kingRequirements');
+}
 export function startBattle(cityId: number, fromCityId?: number): Promise<BattleState> {
   return call('startBattle', [cityId, fromCityId]);
 }
@@ -312,4 +320,60 @@ export function campaignRetreat(armyId: string): Promise<GameState> {
 }
 export function campaignAdvisorAction(armyId: string, action: 'inspire' | 'trap' | 'retreat' | 'scout'): Promise<GameState> {
   return call('campaignAdvisor', [armyId, action]);
+}
+
+// ====== 战场地图（Tier I，Session 374 离线覆盖） ======
+
+export function battlefieldInit(targetCityId: number, fromCityId: number): Promise<BattlefieldMap> {
+  return call('battlefieldInit', [targetCityId, fromCityId]);
+}
+
+export async function getBattlefield(): Promise<BattlefieldMap | null> {
+  try {
+    return await call<BattlefieldMap | null>('getBattlefield');
+  } catch {
+    return null;
+  }
+}
+
+export function battlefieldMarch(armyId: string, targetNodeId: number): Promise<{ game: GameState; battlefield: BattlefieldMap }> {
+  return call('battlefieldMarch', [armyId, targetNodeId]);
+}
+
+export function battlefieldExit(): Promise<GameState> {
+  return call('battlefieldExit');
+}
+
+// ====== 白刃战（Tier II，Session 374 离线覆盖） ======
+
+export function meleeStart(attackerArmyId: string, defenderArmyId: string): Promise<{ game: GameState; melee: MeleeState }> {
+  return call('meleeStart', [attackerArmyId, defenderArmyId]);
+}
+
+export async function getMelee(): Promise<MeleeState | null> {
+  try {
+    return await call<MeleeState | null>('getMelee');
+  } catch {
+    return null;
+  }
+}
+
+export function meleeSelectMode(mode: MeleeEntryMode): Promise<{ game: GameState; melee: MeleeState; battle?: BattleState }> {
+  return call('meleeSelectMode', [mode]);
+}
+
+export function meleeRound(actionType: string, targetFormation?: FormationType, commandId?: string, expectedRound?: number): Promise<{ game: GameState; result: MeleeRoundResult; melee: MeleeState }> {
+  return call('meleeRound', [actionType, targetFormation, commandId, expectedRound]);
+}
+
+export function meleeRefresh(): Promise<MeleeState> {
+  return call('meleeRefresh');
+}
+
+export function meleeExit(): Promise<{ game: GameState }> {
+  return call('meleeExit');
+}
+
+export function meleeSetTactic(tactic: import('@leh/shared').TacticalTacticId | null): Promise<{ game: GameState; melee: MeleeState }> {
+  return call('meleeSetTactic', [tactic]);
 }
