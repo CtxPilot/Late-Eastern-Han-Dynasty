@@ -1274,7 +1274,9 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null, meleeLastResult: null });
     try {
       const { game, melee } = await api.meleeStart(attackerArmyId, defenderArmyId);
-      set({ game, melee, screen: 'melee', loading: false });
+      // Session 374：发起后停留在战场屏——三选弹窗（MeleeEntryDialog）挂在
+      // BattlefieldMapView 内，提前切到 melee 屏会把弹窗卸载，模式永远无法选择。
+      set({ game, melee, loading: false });
     } catch (e) {
       set({ error: errMsg(e, '白刃战发起失败'), loading: false });
     }

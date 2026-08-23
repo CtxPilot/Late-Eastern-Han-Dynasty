@@ -66,6 +66,7 @@ export function StandardModePanel() {
   const meleeRound = useGameStore((s) => s.meleeRound);
   const meleeExit = useGameStore((s) => s.meleeExit);
   const meleeSetTactic = useGameStore((s) => s.meleeSetTactic);
+  const meleeRefresh = useGameStore((s) => s.meleeRefresh);
   const game = useGameStore((s) => s.game);
 
   const [selectedAction, setSelectedAction] = useState<string>('normal_attack');
@@ -183,9 +184,19 @@ export function StandardModePanel() {
       <div className="border border-amber-900/50 bg-black/25 p-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-stone-400">战术点</span>
-          <span className="text-lg font-bold text-amber-400">
-            {melee.tacticalPoints} / 10
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-bold text-amber-400">
+              {melee.tacticalPoints} / 10
+            </span>
+            <button
+              type="button"
+              disabled={loading}
+              className="px-2 py-1 text-xs border border-stone-700 bg-stone-900/70 text-stone-300 hover:border-amber-800 hover:text-amber-200 disabled:opacity-40"
+              onClick={() => void meleeRefresh()}
+            >
+              刷新战术点
+            </button>
+          </div>
         </div>
         <div className="text-xs text-stone-500 mt-1">
           回合 {melee.round}/{melee.maxRounds}
