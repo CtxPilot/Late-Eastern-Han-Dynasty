@@ -32,6 +32,7 @@ import {
   officers as officersJson,
   scenarios as scenariosJson,
   skills as skillsJson,
+  skillTrees as skillTreesJson,
   tacticalSystemV2 as tacticalV2Json,
   units as unitsJson,
 } from 'virtual:leh-data';
@@ -62,6 +63,11 @@ export function loadAllStatic() {
 
 export function loadTacticalSystemV2(): TacticalConfigV2 {
   return parseTacticalConfigV2(tacticalV2Json);
+}
+
+/** 技能树静态目录（S25）：与服务端 loader 同语义（raw.trees ?? raw）。 */
+export function loadSkillTrees() {
+  return ((skillTreesJson as { trees?: unknown }).trees ?? skillTreesJson) as import('@leh/shared').SkillTreeDef[];
 }
 
 const cached = loadAllStatic();

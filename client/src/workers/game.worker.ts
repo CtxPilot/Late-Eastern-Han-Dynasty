@@ -21,18 +21,38 @@ import {
   resetRuntimeRng,
   restoreRuntimeRng,
   runtimeRandom,
+  type BattlefieldInstance,
   type BattleState,
   type BattlefieldMap,
+  type CampaignNode,
   type DuelStance,
   type EventSourceClass,
   type FamilyTreatmentMode,
   type FormationType,
   type GameState,
+  type GrandStrategist,
   type MeleeEntryMode,
   type MeleeRoundResult,
   type MeleeState,
+  type OfficerRelation,
   type PositionTrack,
+  type StaticRelation,
+  type StrategyModifiers,
+  type StrategyType,
   type StructureType,
+  mergeSkillsWithTree,
+  relationState,
+  resolveAffinity,
+  skillPointsForMerit,
+  traitPointsForMerit,
+  computeMandate,
+  computePopularWill,
+  mandateLabel,
+  popularWillLabel,
+  mandateDiplomacyModifier,
+  popularWillDesertionModifier,
+  popularWillRecruitModifier,
+  fameLabel,
 } from '@leh/shared';
 import { staticData } from './browser-loader';
 import { relations as relationsJson } from 'virtual:leh-data';
@@ -85,8 +105,16 @@ import {
   buildStructure as campaignBuildStructureEngine,
   runAutoBattle,
   setAutoFormationCatalog,
+  getCampaignNodes,
   type AdvisorAction,
 } from '../../../server/src/engine/campaign.js';
+import {
+  appointGrandStrategist as gsAppoint,
+  dismissGrandStrategist as gsDismiss,
+  switchStrategy as gsSwitchStrategy,
+  getFactionStrategy,
+  calcStrategyModifiers,
+} from '../../../server/src/engine/grandStrategist.js';
 import {
   extractBattlefieldNodes,
   generateBattlefield,
@@ -137,7 +165,7 @@ import { setStaticRelationsForTest } from '../../../server/src/engine/relations.
 import { resolveEventChoice } from '../../../server/src/engine/event.js';
 import { setFormationCatalog } from '../../../server/src/battle/crit.js';
 import { setHexFormationCatalog } from '../../../server/src/battle/hex-formation.js';
-import { loadTacticalSystemV2 } from './browser-loader';
+import { loadSkillTrees, loadTacticalSystemV2 } from './browser-loader';
 
 // ====== 进程级权威状态（与 services/game.ts 镜像） ======
 let currentGame: GameState | null = null;
@@ -185,6 +213,39 @@ function commitActiveBattle(battle: BattleState | null, state: GameState = getGa
 
 function getClientGame(): GameState {
   return maskGameStateForPlayer(getGame());
+}
+
+function relationsList(): StaticRelation[] {
+  return ((relationsJson as { relations?: unknown }).relations ?? relationsJson) as StaticRelation[];
+}
+
+function baselineSkillsFor(officerId: number): import('@leh/shared').OfficerSkillStatic[] {
+  return staticData.officers.find((o) => o.id === officerId)?.skills ?? [];
+}
+
+function readOfficerSkillState(officerId: number) {
+  const state = getGame();
+  const officer = state.officers[officerId];
+  if (!officer) throw new Error('武将不存在');
+  const meritLv = officer.meritLevel ?? 1;
+  return {
+    skillTreeState: officer.skillTreeState ?? {},
+    skillPointsSpent: officer.skillPointsSpent ?? 0,
+    totalSkillPoints: skillPointsForMerit(meritLv),
+    traitLevels: officer.traitLevels ?? {},
+    traitPointsSpent: officer.traitPointsSpent ?? 0,
+    totalTraitPoints: traitPointsForMerit(meritLv),
+  };
+}
+
+function countOwnedCommanderies(factionId: number, state: GameState): number {
+  const owned = new Set<string>();
+  for (const city of Object.values(state.cities)) {
+    if (city.ruler === factionId) {
+      owned.add(city.adminName ?? city.province);
+    }
+  }
+  return owned.size;
 }
 
 // ====== 处理器表：逐函数镜像 services/game.ts ======
@@ -1158,6 +1219,219 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       currentGame = { ...state, activeMelee: nextMelee };
       return { game: getClientGame(), melee: nextMelee };
     });
+  },
+
+  // ====== 战役节点 / 郡域实例只读 / 总军师 / 关系网 / 技能树 / 势力总览（Session 375 离线覆盖） ======
+
+  campaignNodes(): CampaignNode[] {
+    return getCampaignNodes(getGame());
+  },
+
+  getBattlefieldInstance(): BattlefieldInstance | null {
+    return getGame().activeBattlefieldInstance ?? null;
+  },
+
+  grandStrategistAppoint(officerId: number): { game: GameState; strategist: GrandStrategist } {
+    return withLock(() => {
+      const state = getGame();
+      const result = gsAppoint(state, state.playerFactionId, officerId);
+      currentGame = result.state;
+      return { game: getClientGame(), strategist: result.strategist };
+    });
+  },
+
+  grandStrategistDismiss(): { game: GameState; log: string } {
+    return withLock(() => {
+      const state = getGame();
+      const result = gsDismiss(state, state.playerFactionId);
+      currentGame = result.state;
+      return { game: getClientGame(), log: result.log };
+    });
+  },
+
+  grandStrategistSwitch(strategy: string): { game: GameState; log: string } {
+    return withLock(() => {
+      const state = getGame();
+      const result = gsSwitchStrategy(state, state.playerFactionId, strategy as StrategyType);
+      currentGame = result.state;
+      return { game: getClientGame(), log: result.log };
+    });
+  },
+
+  grandStrategistStatus(): {
+    strategist: GrandStrategist | null;
+    modifiers: StrategyModifiers;
+    hasStrategist: boolean;
+  } {
+    const state = getGame();
+    const gs = state.grandStrategists.find((g) => g.factionId === state.playerFactionId) ?? null;
+    const { strategy, hasStrategist } = getFactionStrategy(state, state.playerFactionId);
+    const int = gs ? (state.officers[gs.officerId]?.stats.intelligence ?? 85) : 85;
+    const mods = calcStrategyModifiers(strategy, int);
+    return { strategist: gs, modifiers: mods, hasStrategist };
+  },
+
+  getOfficerRelations(officerId: number): OfficerRelation[] {
+    const state = getGame();
+    const officer = state.officers[officerId];
+    if (!officer) return [];
+    const result: OfficerRelation[] = [];
+    const seen = new Set<string>();
+    for (const rel of relationsList()) {
+      if (rel.fromId !== officerId && rel.toId !== officerId) continue;
+      const otherId = rel.fromId === officerId ? rel.toId : rel.fromId;
+      const key = `${Math.min(officerId, otherId)}:${Math.max(officerId, otherId)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const target = state.officers[otherId];
+      if (!target) continue;
+      const aff = resolveAffinity(officer, target, state.relationAffinities);
+      result.push({
+        targetId: otherId,
+        targetName: target.name,
+        type: rel.type,
+        source: rel.source,
+        state: relationState(aff),
+        affinity: Math.round(aff),
+      });
+    }
+    return result;
+  },
+
+  getSkillTrees(): import('@leh/shared').SkillTreeDef[] {
+    return loadSkillTrees();
+  },
+
+  getOfficerSkillState(officerId: number) {
+    return readOfficerSkillState(officerId);
+  },
+
+  upgradeSkillNode(officerId: number, nodeId: string) {
+    return withLock(() => {
+      const state = getGame();
+      const officer = state.officers[officerId];
+      if (!officer) throw new Error('武将不存在');
+      const trees = loadSkillTrees();
+      let node: import('@leh/shared').SkillTreeNodeDef | undefined;
+      for (const tree of trees) {
+        node = tree.nodes.find((n) => n.id === nodeId);
+        if (node) break;
+      }
+      if (!node) throw new Error('技能节点不存在');
+      const treeState = { ...(officer.skillTreeState ?? {}) };
+      const currentLevel = treeState[nodeId] ?? 0;
+      if (currentLevel >= node.maxLevel) throw new Error('已达最高等级');
+      const spent = officer.skillPointsSpent ?? 0;
+      const total = skillPointsForMerit(officer.meritLevel ?? 1);
+      if (spent + node.costPerLevel > total) throw new Error('技能点不足');
+      for (const prereq of node.prerequisites) {
+        if ((treeState[prereq] ?? 0) < 1) throw new Error(`前置技能 ${prereq} 未解锁`);
+      }
+      treeState[nodeId] = currentLevel + 1;
+      // S25：加点同步 officer.skills，供火计/暴击/单挑/内政消费（docs/30 §8.3）
+      const syncedSkills = mergeSkillsWithTree(
+        baselineSkillsFor(officerId),
+        officer.skills,
+        treeState,
+        trees,
+      );
+      currentGame = {
+        ...state,
+        officers: {
+          ...state.officers,
+          [officerId]: {
+            ...officer,
+            skillTreeState: treeState,
+            skillPointsSpent: spent + node.costPerLevel,
+            skills: syncedSkills,
+          },
+        },
+      };
+      return readOfficerSkillState(officerId);
+    });
+  },
+
+  upgradeTrait(officerId: number, traitId: string) {
+    return withLock(() => {
+      const state = getGame();
+      const officer = state.officers[officerId];
+      if (!officer) throw new Error('武将不存在');
+      const traitLevels = officer.traitLevels ?? {};
+      const currentLevel = traitLevels[traitId] ?? 0;
+      if (currentLevel >= 5) throw new Error('已达最高等级');
+      const spent = officer.traitPointsSpent ?? 0;
+      const total = traitPointsForMerit(officer.meritLevel ?? 1);
+      if (spent + 1 > total) throw new Error('特性点不足');
+      traitLevels[traitId] = currentLevel + 1;
+      currentGame = {
+        ...state,
+        officers: {
+          ...state.officers,
+          [officerId]: {
+            ...officer,
+            traitLevels,
+            traitPointsSpent: spent + 1,
+          },
+        },
+      };
+      return readOfficerSkillState(officerId);
+    });
+  },
+
+  resetSkillTree(officerId: number) {
+    return withLock(() => {
+      const state = getGame();
+      const officer = state.officers[officerId];
+      if (!officer) throw new Error('武将不存在');
+      const trees = loadSkillTrees();
+      // 清空树后按静态基线重合并，避免树加点抬高的 skills 残留
+      const restoredSkills = mergeSkillsWithTree(
+        baselineSkillsFor(officerId),
+        officer.skills,
+        {},
+        trees,
+      );
+      currentGame = {
+        ...state,
+        officers: {
+          ...state.officers,
+          [officerId]: {
+            ...officer,
+            skillTreeState: {},
+            skillPointsSpent: 0,
+            traitLevels: {},
+            traitPointsSpent: 0,
+            skills: restoredSkills,
+          },
+        },
+      };
+      return readOfficerSkillState(officerId);
+    });
+  },
+
+  getFactionOverview() {
+    const state = getGame();
+    const playerFaction = Object.values(state.factions).find((f) => f.id === state.playerFactionId);
+    if (!playerFaction) throw new Error('玩家势力不存在');
+    const mandate = computeMandate(playerFaction, state);
+    const popularWill = computePopularWill(playerFaction, state);
+    return {
+      factionId: playerFaction.id,
+      factionName: playerFaction.name,
+      mandate,
+      mandateLabel: mandateLabel(mandate),
+      mandateDiplomacyModifier: mandateDiplomacyModifier(mandate),
+      popularWill,
+      popularWillLabel: popularWillLabel(popularWill),
+      popularWillDesertionModifier: popularWillDesertionModifier(popularWill),
+      popularWillRecruitModifier: popularWillRecruitModifier(popularWill),
+      fame: playerFaction.fame ?? 0,
+      fameLabel: fameLabel(playerFaction.fame ?? 0),
+      arms: playerFaction.arms ?? 0,
+      cityCount: playerFaction.cityIds?.length ?? 0,
+      officerCount: playerFaction.officerIds?.length ?? 0,
+      commanderyCount: countOwnedCommanderies(playerFaction.id, state),
+    };
   },
 
   exportSave() {

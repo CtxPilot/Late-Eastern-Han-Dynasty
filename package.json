@@ -140,6 +140,7 @@
     "verify-s372-offline-loop": "node scripts/verify-s372-offline-loop.mjs",
     "verify-s373-offline-coldstart": "node scripts/verify-s373-offline-coldstart.mjs",
     "verify-s374-offline-melee": "node scripts/verify-s374-offline-melee.mjs",
+    "verify-s375-offline-reads-writes": "node scripts/verify-s375-offline-reads-writes.mjs",
     "verify-s266-ui": "node scripts/verify-s266-ui.mjs",
     "verify-session268-ui": "node scripts/verify-session268-ui.mjs",
     "verify-session269-ui": "node scripts/verify-session269-ui.mjs",

@@ -42,6 +42,7 @@ const BROWSER_LOADER = resolve(__dirname, 'src/workers/browser-loader.ts');
 const DATA_FILES = [
   'officers', 'cities', 'formations', 'units', 'items',
   'females', 'children', 'skills', 'scenarios', 'events', 'relations',
+  'skill-trees',
 ] as const;
 const VIRTUAL_LEH_DATA = '\0virtual:leh-data';
 const NODE_SHIM = '\0leh-node-shim';
@@ -86,8 +87,10 @@ function lehDataVirtual(): Plugin {
       if (id !== VIRTUAL_LEH_DATA) return null;
       const readJson = (file: string) =>
         JSON.parse(readFileSync(resolve(REPO_ROOT, file), 'utf-8')) as unknown;
+      // 文件名 kebab-case → 导出名 camelCase（如 skill-trees → skillTrees）
+      const camelize = (name: string) => name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
       const lines = DATA_FILES.map(
-        (name) => `export const ${name} = ${JSON.stringify(readJson(`server/src/data/${name}.json`))};`,
+        (name) => `export const ${camelize(name)} = ${JSON.stringify(readJson(`server/src/data/${name}.json`))};`,
       );
       lines.push(`export const tacticalSystemV2 = ${JSON.stringify(readJson('shared/data/tactical-system.v2.json'))};`);
       return lines.join('\n');

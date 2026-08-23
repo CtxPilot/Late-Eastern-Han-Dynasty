@@ -13,5 +13,6 @@ declare module 'virtual:leh-data' {
   export const scenarios: unknown;
   export const events: unknown;
   export const relations: unknown;
+  export const skillTrees: unknown;
   export const tacticalSystemV2: unknown;
 }

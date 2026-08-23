@@ -377,3 +377,66 @@ export function meleeExit(): Promise<{ game: GameState }> {
 export function meleeSetTactic(tactic: import('@leh/shared').TacticalTacticId | null): Promise<{ game: GameState; melee: MeleeState }> {
   return call('meleeSetTactic', [tactic]);
 }
+
+// ====== 战役节点 / 郡域实例只读 / 总军师 / 关系网 / 技能树 / 势力总览（Session 375 离线覆盖） ======
+
+export function campaignNodes(): ReturnType<typeof import('../api').campaignNodes> {
+  return call('campaignNodes');
+}
+
+export async function getBattlefieldInstance(): Promise<import('@leh/shared').BattlefieldInstance | null> {
+  try {
+    return await call<import('@leh/shared').BattlefieldInstance | null>('getBattlefieldInstance');
+  } catch {
+    return null;
+  }
+}
+
+export function grandStrategistAppoint(officerId: number): Promise<{ game: GameState; strategist: import('@leh/shared').GrandStrategist }> {
+  return call('grandStrategistAppoint', [officerId]);
+}
+
+export function grandStrategistDismiss(): Promise<{ game: GameState; log: string }> {
+  return call('grandStrategistDismiss');
+}
+
+export function grandStrategistSwitch(strategy: string): Promise<{ game: GameState; log: string }> {
+  return call('grandStrategistSwitch', [strategy]);
+}
+
+export function grandStrategistStatus(): ReturnType<typeof import('../api').grandStrategistStatus> {
+  return call('grandStrategistStatus');
+}
+
+export function getOfficerRelations(officerId: number): ReturnType<typeof import('../api').getOfficerRelations> {
+  return call('getOfficerRelations', [officerId]);
+}
+
+export function getSkillTrees(): ReturnType<typeof import('../api').getSkillTrees> {
+  return call('getSkillTrees');
+}
+
+export function getOfficerSkillState(officerId: number): ReturnType<typeof import('../api').getOfficerSkillState> {
+  return call('getOfficerSkillState', [officerId]);
+}
+
+export function upgradeSkillNode(officerId: number, nodeId: string): ReturnType<typeof import('../api').upgradeSkillNode> {
+  return call('upgradeSkillNode', [officerId, nodeId]);
+}
+
+export function upgradeTrait(officerId: number, traitId: string): ReturnType<typeof import('../api').upgradeTrait> {
+  return call('upgradeTrait', [officerId, traitId]);
+}
+
+export function resetSkillTree(officerId: number): ReturnType<typeof import('../api').resetSkillTree> {
+  return call('resetSkillTree', [officerId]);
+}
+
+export function getFactionOverview(): ReturnType<typeof import('../api').getFactionOverview> {
+  return call('getFactionOverview');
+}
+
+/** 与 seekBeauty 同一权威引擎（api.ts 的 searchBeauty 即 seekBeauty 别名）。 */
+export function searchBeauty(cityId: number): Promise<GameState> {
+  return call('seekBeauty', [cityId]);
+}
