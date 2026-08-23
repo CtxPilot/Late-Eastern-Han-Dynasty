@@ -1,44 +1,32 @@
 # Development Roadmap
 
-This is the public, contributor-facing roadmap for the **open-source historical strategy simulation framework**. Detailed task IDs and dependencies remain in `docs/09-roadmap.md`; system maturity is tracked in `docs/12-system-map.md`.
+This is the public, contributor-facing roadmap. Detailed session logs live in `docs/10-progress.md`, task history in `docs/09-roadmap.md`, the phased delivery plan in `docs/35-phased-implementation-roadmap.md`, and system maturity in `docs/12-system-map.md`.
 
 The roadmap is evidence-based: “implemented” means code exists and has been exercised; “designed” means documentation exists but runtime behavior may not.
 
-## Now — stabilize the 0-A framework slice
+## Now — shipped baseline (0-A playable prototype)
 
-- ✅ Complete consistency remediations R1 and R2: monthly cadence plus unified percentage-point personnel/diplomacy formulas.
-- Start R3 on 2026-07-24: add one pre-duel strategic stance choice and make Lü Bu the strongest rules-compliant duelist without mathematical invincibility.
-- ✅ Restore the campaign regression suite to a fully green baseline and add it to default CI (62 deterministic assertions).
-- ✅ Define versioned save envelopes, migration validation, and deterministic continuation boundaries before implementing persistence. All action-resolution randomness uses the authoritative serializable PRNG; S15 military action/target choices now use it as well.
-- ✅ Complete the BF-P0 historical-geography contract for the 190 CE Nanjun prototype, including strict schemas, sourced data, and the strategic-node/county boundary rule.
-- ✅ BF-P1 (Session 173): static Nanjun battlefield minimal loop打通 (world→战场→六角接战→回写 Headless 通过).
-- ✅ BF-P2 (Session 174~176): Q10 activeBattlefieldInstance 无损追加至 GameState (44/44); Q11 双层数据模型保持独立文档化; Q12 AI 攻县依赖声明归 R6; Q9 首批 3 县 (当阳/华容/枝江) 可攻打落地 (engageCounty + tickBattlefieldInstance 月度 tick).
-- Establish reproducible 30-city and synthetic 0-B performance baselines before choosing optimizations.
-- Expand automated coverage beyond the shared pure-function suite.
-- Add reproducible engine checks to the default CI workflow.
-- ✅ Connect strategic military AI to real CampaignArmy marching, siege, battle resolution, diplomacy filtering, and war reports.
-- Keep BF-P1 approved and queued behind the active consistency-remediation sequence.
-- Replace remaining instant or hard-coded campaign calculations with explicit turn-based rules.
-- Improve contributor onboarding, issue triage, and public maintenance workflows.
+- ✅ Deterministic core: one seeded xorshift32 PRNG for every action resolution; save envelopes with schema validation, migrations, and deterministic continuation (SQLite named slots on desktop, IndexedDB slots in-browser).
+- ✅ Two scenarios (Hero Assembly + the 190 CE four-faction slice) with layered event sourcing; turn pipeline covering economy, demographics, events, espionage, plots, families, children, AI factions.
+- ✅ Campaign layer: army composition (commander/deputies/adviser/five squads), road marching, siege, assault or surrender via auto-battle.
+- ✅ Combat: three entrances over one authoritative snapshot — auto resolution, standard melee rounds, tactical hex micro-control — plus duels, critical/counter/chain chains, cooperative surrounding, tactical retreat with pursuit/interception, siege defense & gate breakout, move-then-charge with unique-skill synergy, weather effects and cast skills, usage-based proficiency.
+- ✅ 27 interlocking systems incl. merit ranks, treasure equipment, relations web, skill trees, mandate/popular will, faction politics & fame, hegemony→king line, L1–L3 ploys/policies, farming colonies and hostage-family treatment.
+- ✅ Dual run modes: online (Express + SQLite authority) and fully offline in-browser (authoritative engines embedded in a Web Worker, Session 372), published to GitHub Pages on every push to `main`.
 
-Exit criteria: a new contributor can install, validate, run, and exercise the documented demo path from a clean checkout; core engine regressions run in CI.
+## Next — harden and widen what ships
 
-The evidence-based hardening gates and rejected premature optimizations are documented in `docs/20-architecture-hardening-audit.md`.
+- Clear remaining combat debts: terrain visibility rules and multi-army retreat coordination.
+- Widen offline endpoint coverage (melee, commandery battlefields, grand strategist, skill trees, relations queries) so offline parity matches online.
+- Add PWA precache so the hosted build cold-starts fully offline; keep CI verification-first (every slice lands with its own verify script).
+- Browser click-through acceptance for battle views as environments allow; keep honest scope notes per session.
+- Improve accessibility, error recovery, and contributor onboarding.
 
-## Next — persistence and distributable demo
+Exit criteria: a new contributor can install, validate, play online or offline from a clean checkout, and every gameplay slice carries a reproducible verification script.
 
-- Implement production save/load persistence and UI on top of the documented v1 envelope and validated in-memory restore contract.
-- Add import/export and migration rules for saved state.
-- Produce a reproducible hosted or packaged demo.
-- Publish the first tagged pre-release with release notes and known limitations.
-- Improve accessibility, error recovery, and cross-platform UI behavior.
+## Later — 0-B data and system expansion (paused, needs re-authorization)
 
-Exit criteria: users can try a stable demo, preserve a session, and report issues against a named version.
-
-## Later — 0-B data and system expansion
-
-- Clear the performance and state-management debt listed in `docs/12-system-map.md`.
-- Expand cities, officers, units, formations, skills, items, events, and scenarios only through validated schemas.
+- Clear the performance and state-management debt listed in `docs/12-system-map.md` (D-0B-1~13).
+- Expand cities, officers, units, formations, skills, items, events, and scenarios only through validated schemas (1000+ officers, 105 cities, 27 formations, 21 unit types, full scenario set).
 - Complete historical sourcing and provenance review for expanded datasets.
 - Deepen AI, diplomacy, siege, private-retinue, farming-colony, and tournament systems.
 
@@ -48,7 +36,7 @@ Exit criteria: full-scale data loads and advances turns within agreed performanc
 
 - Claiming a finished or historically exhaustive game.
 - Publishing unstable framework packages before module boundaries and APIs settle.
-- Bulk-generating data before the 0-A architecture and tests are ready.
+- Bulk-generating data before the architecture and tests are ready.
 - Using proprietary game art, commercial fonts, or unverified media assets.
 
 ## How to help

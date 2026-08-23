@@ -109,6 +109,11 @@ useEffect(() => {
 
 ### 2.2 XDG 规范存档（P5-07b）
 
+> **状态对齐（Session 340/372）**：本节为早期方案。实际落地为——服务端 SQLite 命名槽位
+> `$XDG_DATA_HOME/leh/saves.db`（`save-store.ts`，路由挂在 `/api/game/save/slots*`）；
+> 浏览器端另有 IndexedDB 槽位（离线模式，`client/src/services/save-idb.ts`）；
+> 导出/导入信封 JSON 已实现（TopBar 按钮）。下述 save.json / save.ts 路由细节以实装为准。
+
 **问题**：游戏存档仅写在浏览器 localStorage 里，Linux 玩家清理浏览器缓存或容器重启后通关存档灰飞烟灭。Linux 玩家重视数据主权，能肉眼看到 save.json 并用 vim 直接魔改武将数值是乐趣。
 
 **实装方案**（P5-07b，混合架构）：

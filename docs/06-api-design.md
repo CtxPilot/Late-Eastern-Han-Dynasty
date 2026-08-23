@@ -1,5 +1,10 @@
 # API 接口设计
 
+> **文档状态**：本文是分层 API 设计蓝图（`/api/v1`、统一 success/data/meta 包络等为规划态）。
+> **Demo 实装口径**以 `server/src/routes/game.ts` 为准：Base URL `/api/game/*`，错误统一 `{ error: string }`，
+> 成功直接返回业务数据。自 Session 372 起，同一组端点由 `client/src/services/gateway.ts`
+> 在离线模式下镜像到浏览器内 Worker 权威引擎（子集，见该文件），联机/离线共用契约与 Zod 校验链。
+
 ## 一、基础规范
 
 ```

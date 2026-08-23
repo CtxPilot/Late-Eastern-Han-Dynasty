@@ -1,7 +1,8 @@
 # 技术架构
 
-> 文档状态：核心架构对齐 Session 340（2026-08-16）
-> S16 已有 v1 信封、完整快照校验、迁移分派、受锁内存恢复、可序列化 PRNG、浏览器导入/导出与系统菜单槽位 UI；**Session 340** 起命名槽位介质为 `better-sqlite3`（`$XDG_DATA_HOME/leh/saves.db`）。多用户/云同步仍后置。
+> 文档状态：核心架构对齐 **Session 372（2026-08-22）**
+> 存档双轨：服务端 SQLite 命名槽位（Session 340，`$XDG_DATA_HOME/leh/saves.db`）+ 浏览器 IndexedDB 槽位（`client/src/services/save-idb.ts`），规则收敛 `shared/save-limits.ts`。
+> 双运行模式：联机（Express 权威，`pnpm dev` 默认）与离线（同一套权威引擎内嵌 Web Worker，本地 `?offline=1`、GitHub Pages 构建默认），经 `client/src/services/gateway.ts` 分发；详见 §五-A。多用户/云同步仍后置。
 
 ## 一、总体架构图
 
@@ -81,8 +82,8 @@
 │   │   │  scenarios/events  — 共 10 文件       │  │   │
 │  │  └──────────────────────────────────────┘  │   │
 │  │  ┌──────────────────────────────────────┐  │   │
-│  │  │ db/ (空) — 生产持久化仍未实现        │  │   │
-│  │  │ v1信封/迁移/内存恢复/PRNG 已在代码层 │  │   │
+│  │  │ save-store.ts (SQLite 槽位, S340)     │  │   │
+│  │  │ v1信封/迁移/内存恢复/PRNG 快照        │  │   │
 │  │  └──────────────────────────────────────┘  │   │
 │  └──────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────┘
@@ -155,7 +156,7 @@ Late-Eastern-Han-Dynasty/
 │       │   └── game.ts              # 全部 REST API 路由
 │       ├── services/
 │       │   └── game.ts              # 业务逻辑编排器
-│       ├── engine/                  # 20 个引擎模块 (核心)
+│       ├── engine/                  # 36 个引擎模块 (核心)
 │       │   ├── turn.ts              # 回合推进
 │       │   ├── civil.ts             # 内政 (开发/施米/征兵/训练)
 │       │   ├── economy.ts           # 势力金粮汇总同步
@@ -176,17 +177,25 @@ Late-Eastern-Han-Dynasty/
 │       │   ├── aiMilitary.ts        # AI 军事(占城/袭扰)
 │       │   ├── debate.ts            # 舌战系统 MVP
 │       │   └── intel.ts             # 城池情报辅助
+│       │   ├── state-pipeline.ts    # 双端共用编排(建局/回合管线/存档信封,S372)
+│       │   ├── campaign.ts          # 战役层(S98)：编成/行军/自动战/围城
+│       │   ├── factionPolitics.ts   # S27 城级派系(开垦/巡查/兵装/弹劾)
+│       │   ├── hostageFamilies.ts   # 质任家属处置(S351)
+│       │   ├── grandStrategist.ts   # 总军师(S37 简化)
+│       │   ├── hegemony.ts          # 霸府/称王(HC-P0~P2)
+│       │   ├── items.ts             # 宝物装备(S13)
+│       │   ├── meritGrant/militaryMerit/nobility/policy/relations/tournament…
 │       ├── battle/                  # 战斗子模块
 │       │   ├── hex.ts               # 六角网格坐标工具
 │       │   ├── damage.ts            # 伤害公式
 │       │   ├── terrain.ts           # 地形消耗/修正表
 │       │   ├── pathfinding.ts       # BFS 移动范围
 │       │   ├── crit.ts               # 暴击/反击/连击引擎
-│       │   ├── duel.ts               # 单挑引擎
+│       │   ├── duel.ts              # 单挑引擎
 │       │   └── simpleAi.ts          # 简易战斗 AI
 │       ├── data/
 │       │   ├── loader.ts            # JSON 数据加载 + Zod 校验
-│       │   ├── officers.json        # 30 武将 (0-A)
+│       │   ├── officers.json        # 223 武将 (0-A 现行)
 │       │   ├── cities.json          # 30 城 (0-A)
 │       │   ├── formations.json      # 7 阵型 (0-A, 含补录冲阵)
 │       │   ├── units.json           # 9 兵种 (0-A: 6陆+3水)
@@ -218,32 +227,24 @@ Late-Eastern-Han-Dynasty/
 │   │   └── geo-basemap.png          # Natural Earth 底图
 │   └── src/
 │       ├── main.tsx                 # DOM 挂载
-│       ├── App.tsx                  # 根组件 + 屏幕路由
+│       ├── App.tsx                  # 根组件 + 场景栈路由 + 字体屏障
 │       ├── stores/
-│       │   └── gameStore.ts         # Zustand 全局状态
+│       │   └── gameStore.ts         # Zustand 全局状态（经 gateway 发指令）
 │       ├── services/
-│       │   └── api.ts               # axios API 客户端
+│       │   ├── api.ts               # 在线 axios 客户端（114 导出）
+│       │   ├── gateway.ts           # 在线/离线策略分发（S372）
+│       │   ├── offline/offline-api.ts # 离线实现子集（Worker RPC）
+│       │   └── save-idb.ts          # IndexedDB 存档槽位介质（S372）
+│       ├── workers/
+│       │   ├── game.worker.ts       # 浏览器内权威引擎宿主（镜像 service 层）
+│       │   ├── browser-loader.ts    # 静态数据装载 shim（替代 node:fs 版 loader）
+│       │   └── protocol.ts          # 主线程 ↔ Worker 消息契约
 │       ├── components/
-│       │   ├── layout/
-│       │   │   ├── GameLayout.tsx   # 主布局 (三栏)
-│       │   │   ├── TopBar.tsx       # 顶部栏 (资源+回合)
-│       │   │   ├── LeftPanel.tsx    # 左侧政务菜单
-│       │   │   ├── RightPanel.tsx   # 右侧城详面板
-│       │   │   ├── AppointPanel.tsx # 任命面板
-│       │   │   ├── BeautyPanel.tsx  # 美女资源面板
-│       │   │   └── PersonnelPanel.tsx # 人事兼容组件
-│       │   ├── map/
-│       │   │   ├── WorldMap.tsx     # 地图容器
-│       │   │   ├── MapCanvas.tsx    # Canvas 渲染
-│       │   │   ├── mapLod.ts        # LOD 层级管理
-│       │   │   └── mapViewport.ts   # 视口/缩放/平移
-│       │   ├── battle/
-│       │   │   └── BattleView.tsx   # 战斗场景 (六角)
-│       │   ├── events/
-│       │   │   └── EventDialog.tsx  # 事件选项弹窗
-│       │   └── ui/
-│       │       └── AccSection.tsx   # 折叠式区块
-│       └── hooks/                   # (预留)
+│       │   ├── layout/              # GameLayout / TopBar / 弹窗门禁
+│       │   ├── command/             # 九域命令坞 + 各域抽屉（CMD-P0~P38 唯一入口）
+│       │   ├── battle|battlefield|events|family|map|officer|scenario|ui …
+│       │   └── （组件清单以仓库为准，此处不再逐一枚举）
+│       └── utils/                   # 字体屏障 / 派生工具
 │
 └── docs/                            # 设计文档 (15 文件)
     ├── 00-dev-constitution.md       # 开发宪法
@@ -258,7 +259,7 @@ Late-Eastern-Han-Dynasty/
     ├── 09-roadmap.md                # 路线图
     ├── 10-progress.md               # 开发进度
     ├── 11-context-management.md     # 上下文管理
-    ├── 12-system-map.md             # 23 大系统
+    ├── 12-system-map.md             # 27 大系统
     ├── 13-three-kingdoms-chronicle.md # 三国编年史
     └── 14-officer-stats-reference.md # 武将五维参考
 ```
@@ -266,27 +267,23 @@ Late-Eastern-Han-Dynasty/
 ## 四、前端分层
 
 ```
-UI 层 (React Components × 16)
-  └─→ 状态层 (Zustand Store — gameStore)
-        └─→ 服务层 (api.ts — axios + WS)
-              └─→ 类型层 (shared/types × 24)
-```
+UI 层 (React 组件 — 命令坞九域 + 抽屉 + 场景视图)
+  └─→ 状态层 (Zustand gameStore — sceneStack 驱动 screen)
+        └─→ 服务层 (services/gateway.ts — 在线/离线策略分发)
+              ├─[在线] api.ts (axios REST + WS)
+              └─[离线] offline-api.ts ──► workers/game.worker.ts（权威引擎）
+                                          └─ save-idb.ts（IndexedDB 槽位）
+                    └─→ 类型层 (shared/types)
 
-**组件树**（主屏幕 `GameLayout`）：
+**组件树**（主屏幕 `GameLayout`，CMD-P0~P38 后命令坞为全部玩家写链唯一入口）：
 ```
 GameLayout
-├── TopBar               # 年月/季节/金粮兵/结束回合/待决事件
-├── LeftPanel            # 政务菜单 (AccSection 折叠)
-│   ├── 人事 → PersonnelPanel / AppointPanel / BeautyPanel
-│   ├── 外交 → 势力列表 + 进贡/结盟/献美按钮
-│   ├── 计略 → CommandShell / StrategyOverviewDrawer（唯一入口）
-│   ├── 家族 → CommandShell / FamilyOverviewDrawer（四分面与唯一写入口）
-│   └── 己方城池列表
-├── CommandShell         # 底部九域命令坞；情报与家族均为唯一入口
-├── WorldMap             # 大地图 (Konva)
-│   └── MapCanvas        # 底图层 + 城市标记层
-└── RightPanel           # 城池详情
-    └── 人口/内政/军事/日志
+├── TopBar                 # 年月/季节/金粮兵/结束回合门禁/存档导出·导入·槽位
+├── MapCanvas              # 大地图 (Konva)：底图+城市层+LOD
+├── CommandShell           # 九域命令坞：内政/军事/人事/外交/计略/情报/屯田/家族/朝廷/势力
+│   └── *OverviewDrawer    # 各域分面抽屉（唯一提交入口，统一终审窗）
+├── EventDialog            # 待决事件弹窗
+└── FamilyTreatmentDialog  # 家属质任待决弹窗（S351）
 ```
 
 **战斗场景**是同一局游戏内的全屏场景。独立郡域战场批准后采用 Zustand 场景栈 `world → battlefield → melee/tactical → duel`，不为每层新增浏览器路由；服务端进行中状态仍是恢复与校验真源。
@@ -294,16 +291,28 @@ GameLayout
 ## 五、后端分层
 
 ```
-路由层 (routes/game.ts — 469 行 REST 端点)
-  └─→ 服务层 (services/game.ts — 769 行编排器)
-        └─→ 引擎层 (engine/ × 20 + battle/ × 7)
-              └─→ 数据层 (loader.ts → JSON + Zod)
+路由层 (routes/game.ts — ~1250 行，80+ REST 端点)
+  └─→ 服务层 (services/game.ts — ~2400 行编排器，withLock 串行)
+        ├─→ 引擎层 (engine/ × 36 + battle/ × 10，纯函数 state+rng→newState)
+        │     └─ state-pipeline.ts 双端共用管线（联机/离线同源结算，S372）
+        └─→ 数据层 (loader.ts → JSON + Zod)
 ```
 
 路由层 | REST API 端点，WebSocket 事件处理
 服务层 | 业务流程编排、权限校验（当前回合玩家）、状态变更
 引擎层 | 纯游戏逻辑（伤害计算/AI决策/事件触发），无副作用
 数据层 | 静态 JSON → loader.ts Zod 校验 → `staticData` 对象
+
+## 五-A、双运行模式（Session 372）
+
+| | 联机模式（`pnpm dev` 默认） | 离线模式（本地 `?offline=1`；GitHub Pages 构建 `VITE_OFFLINE=1` 默认） |
+|---|---|---|
+| 权威结算 | Express 服务端 `services/game.ts`（withLock + runtimeRandom） | 浏览器 Web Worker `workers/game.worker.ts`（模块级 currentGame+RNG 单例，逐函数镜像 service 层） |
+| 结算代码 | `server/src/engine/*` + `engine/state-pipeline.ts` | **同一份代码**（Vite 打包进 Worker；`leh-browser-loader` 插件把 loader 的 fs 实现重定向为虚拟数据注入） |
+| 存档介质 | SQLite 槽位（XDG 数据目录） | IndexedDB 槽位（`save-idb.ts`），槽位规则/2MB 上限共用 `shared/save-limits.ts` |
+| 分发 | `gateway.ts` 按 URL 参数/环境变量合并离线子集覆盖在线实现；未覆盖指令回退在线（断网时以错误提示呈现） | 同左 |
+
+边界：白刃战 melee、郡域战场实例、总军师、势力总览、技能树、关系查询等约 30 个接口离线未覆盖；PWA 预缓存（完全离线冷启动）后置。
 
 ## 六、核心数据流
 
@@ -401,7 +410,7 @@ GameLayout
 | **回合** | `engine/turn.ts` | ~200 | 年/月/季推进 · 内政/谍报/计谋/子女时序编排 |
 | **内政** | `engine/civil.ts` | ~150 | 即时版开发/施米 · 征兵/训练 · 人口结构联动 |
 | **经济** | `engine/economy.ts` | 23 | 城池金粮 → faction 缓存同步 |
-| **战斗** | `engine/battle.ts` | 806 | 六角战场 · 伤害 · 战法 · 火计 · 克制 · 状态效果 |
+| **战斗** | `engine/battle.ts` | ~1850 | 六角战场 · 移动/攻击/战法/火计/观天 · 协同包围 · 撤退追击 · 攻城修正 · 单挑编排 |
 | **战斗子模块** | `battle/hex.ts` | — | 六角坐标计算 (轴向坐标) |
 | | `battle/damage.ts` | — | 伤害公式 + 属性修正 |
 | | `battle/terrain.ts` | — | 7种地形移动/攻防修正 |
@@ -419,6 +428,20 @@ GameLayout
 | **美女** | `engine/beauty.ts` | — | 寻访 · 库存 · 赏赐 · 掠夺 · 点化女间谍 |
 | **人事** | `engine/personnel.ts` | — | 搜索在野 · 登用 · 赏赐 · 婚配 |
 | **任命** | `engine/appoint.ts` | — | 三轨(文/地/武) · 0-A精简枚举 · 门槛 |
+| **战役** | `engine/campaign.ts` | ~1763 | 编成/行军/自动战 runAutoBattle/围城劝降/设施（S98 最小切片） |
+| **白刃** | `engine/meleeRound.ts` | ~373+ | 标准模式回合 · 战术点 · applyMeleeSettlement 结算回写 |
+| **质任** | `engine/hostageFamilies.ts` | ~146 | 家属失陷 → 待决处置(善待/中立/镇压) + 季度余波 |
+| **城级派系** | `engine/factionPolitics.ts` | ~522 | 开垦/巡查/兵装/弹劾 + 月度派系 tick（S27） |
+| **总军师** | `engine/grandStrategist.ts` | ~493 | 任命/解职/态势切换/月度忠诚 tick |
+| **霸府** | `engine/hegemony.ts` | ~386 | 开府/称王门槛与原子称王/伪诏宣战（HC-P0~P2） |
+| **宝物** | `engine/items.ts` | ~325 | 装备/卸下/赏赐/初始宝配（S13） |
+| **功绩** | `engine/meritGrant.ts` + `militaryMerit.ts` | ~80 | 统一发放守卫 + 军事功绩口径 |
+| **爵位** | `engine/nobility.ts` | ~65 | 王命封爵七级（HC-P1-4） |
+| **国策** | `engine/policy.ts` | ~222 | L3 八国策：一策一时/下月生效/冷却6月 |
+| **关系网** | `engine/relations.ts` | ~172 | 季度同城/同征/被俘/联姻演变（S24） |
+| **大会** | `engine/tournament.ts` | ~213 | 年度正月16人单败大会（S19） |
+| **人心** | `engine/mandateEffects.ts` | ~94 | 月度叛逃检定等 S26 效果 |
+| **双端管线** | `engine/state-pipeline.ts` | ~230 | buildGameState/runEndTurnPipeline/buildSaveEnvelope/adoptSaveEnvelope（S372） |
 | **AI基础** | `engine/ai.ts` | — | 内政占位决策框架 |
 | **AI军事** | `engine/aiMilitary.ts` | — | 边境袭扰 · 兵力优势占城 |
 | **舌战** | `engine/debate.ts` | — | 4论牌卡牌对决 · MVP |
@@ -450,7 +473,7 @@ GameLayout
 | 脚本 | 命令 | 用途 |
 |------|------|------|
 | `pnpm validate-data` | `scripts/validate-data.ts` | 所有 JSON 文件 Zod 校验（expected units=9） |
-| `pnpm test` | Vitest | 单元测试：ceiling/demographics/city-roads + 全量 68 测试 |
+| `pnpm test` | Vitest | 单元测试：shared **422**（含各系统纯函数）+ client **54** |
 | `pnpm lint` | — | TypeScript 检查 (tsc --noEmit) |
 | `generate-0a-data.ts` | — | 0-A 小数据集重新生成（**勿盲跑**，会覆盖战法与水军） |
 | `verify-child-engine.ts` | — | 子女引擎 4 用例验证 |
@@ -466,8 +489,8 @@ server/src/data/loader.ts
   3. 构建 StaticData 对象 (map<string, T>)
   4. 后续通过 getStaticData() 访问
 
-数据文件版本: 0-A (小数据集)
-  officers=30 · cities=30 · formations=7 · units=9(6陆+3水)
+数据文件版本: 0-A 现行
+  officers=223 · cities=30 · formations=7(6基础+冲阵) · units=9(6陆+3水)
   items=20 · skills=30 · females=10 · children=5
   scenarios=2 · events=24
 ```
@@ -494,6 +517,8 @@ server/src/data/loader.ts
 | 2026-07-18 | screen 六态栈（Session 100） | 'boot'\|'world'\|'campaign'\|'tactical'\|'melee'\|'duel'，栈式回退 |
 | 2026-07-18 | appearance 字段落库（Session 100） | officers.json 新增 appearance（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm），同步 08 真源 |
 | 2026-07-18 | 计谋三级联动服务端驱动（Session 100） | BattleState.activeStrategem 字段，前端订阅渲染，非前端独立切换 |
+| 2026-08-22 | Session 372：离线双运行模式 | gateway 分发 + 权威引擎内嵌 Web Worker + IndexedDB 槽位；结算复用同一 engine/state-pipeline 保证在线/离线一致；引擎禁用 `Math.random` 默认参 |
+| 2026-08-22 | Session 370/372：GitHub Pages 发布 | 子路径 base 由环境变量注入、CSS 字体 URL 构建期重写；Pages 构建默认离线可玩 |
 
 ---
 
@@ -581,7 +606,7 @@ server/src/data/loader.ts
 
 ---
 
-*文档版本: v2.9 | 最后更新: 2026-08-01 | Session 267 系统清单口径更新为 23 大系统*
+*文档版本: v3.0 | 最后更新: 2026-08-22 | Session 372 双运行模式对齐（27 大系统口径）*
 ## Session 277：六角战旗纯核心分层
 
 S10 战旗新增三层纯核心：`tactical-grid` 只负责坐标/A*/障碍，`melee-engagement` 只负责

@@ -7,7 +7,7 @@ Thank you for helping build an open-source historical strategy simulation framew
 ## 开始之前
 
 - 先搜索现有 Issue；较大的功能或数据扩容请先开 Issue 讨论范围，并使用 [`docs/19-design-proposal-templates.md`](docs/19-design-proposal-templates.md) 区分“提案”与“已定设计”。
-- 一次 PR 聚焦一个大系统（`docs/12-system-map.md` 的 S01~S22）。
+- 一次 PR 聚焦一个大系统（`docs/12-system-map.md` 的 S01~S27）。
 - 不要把 `docs/` 中标记为“设计中”的能力描述为已实现。
 - 不提交商业字体、商业游戏素材、来源不明图片或模仿知名游戏构图的资产。
 - 参与项目即表示同意遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
@@ -28,9 +28,9 @@ pnpm --filter @leh/shared build && pnpm dev
 ## 项目结构
 
 ```
-shared/   类型、Zod、纯函数（人口/迷雾/官道/天花板）
-server/   Express API + 引擎（engine/*）+ 静态 JSON
-client/   Vite + React + Konva + Zustand
+shared/   类型、Zod、纯函数、运行时 RNG 与双端管线（人口/迷雾/阵型/存档限额…）
+server/   Express API + 权威引擎（engine/* ×36）+ 静态 JSON + SQLite 槽位
+client/   Vite + React + Konva + Zustand；gateway 在线/离线分发、game.worker 离线引擎、IndexedDB 存档
 docs/     设计真源（见 HANDOFF 文档地图）
 ```
 
@@ -39,8 +39,9 @@ docs/     设计真源（见 HANDOFF 文档地图）
 1. **引擎** `server/src/engine/<system>.ts` — 纯函数 `(state, args) => GameState`，抛 `Error` 表示业务失败  
 2. **服务** `server/src/services/game.ts` — 更新 `currentGame`，返回 `getClientGame()`（已脱敏）  
 3. **路由** `server/src/routes/game.ts` — `POST /api/game/...`  
-4. **客户端** `client/src/services/api.ts` + `stores/gameStore.ts` + 对应 Panel  
-5. **文档** `docs/06-api-design.md` Demo 段 + `docs/04` 相关节 + `HANDOFF` / `10-progress` 双写  
+4. **客户端** `client/src/services/api.ts` + `stores/gameStore.ts` + 对应抽屉
+5. **离线镜像** `client/src/workers/game.worker.ts` 处理器 + `services/offline/offline-api.ts` 同名函数（Session 372 起；未镜像的指令离线时回退在线并报网络错误）
+6. **文档** `docs/06-api-design.md` Demo 段 + `docs/04` 相关节 + `HANDOFF` / `10-progress` 双写
 
 ## 加一个新引擎模块
 
@@ -62,6 +63,7 @@ pnpm build
 pnpm typecheck
 pnpm lint
 pnpm test
+pnpm validate-data
 pnpm verify-campaign
 pnpm verify-save-entities
 pnpm verify-save-campaign
@@ -82,9 +84,13 @@ pnpm verify-grand-strategist-rng
 pnpm verify-ai-military-rng
 pnpm verify-march-fog
 pnpm verify-battle-commanders
-pnpm validate-data
+pnpm verify-tactical-ai
+pnpm verify-tactical-retreat
+pnpm verify-cavalry-charge
 pnpm verify-scenario-events
 ```
+
+涉及离线模式（gateway / game.worker / save-idb）时另跑：`pnpm dev` 后执行 `node scripts/verify-s372-offline-loop.mjs`（或 `SMOKE_URL=<产物地址>` 指向构建产物）。
 
 若修改单挑、暴击/反击/连击、子女或火计，请额外运行同目录对应的 `verify-*.ts`。涉及 UI 的 PR 必须说明实际点击路径、预期结果和测试环境；截图应来自本仓库实际运行界面。
 
@@ -115,7 +121,7 @@ Bug 报告请给出复现步骤、预期行为、实际行为、环境和必要�
 
 ## 一次只攻一个大系统
 
-见 `docs/12-system-map.md`（S01~S22）。禁止并行新开多个大系统。
+见 `docs/12-system-map.md`（S01~S27）。禁止并行新开多个大系统。
 
 ## 跨平台字体铁律（Linux / Windows / macOS 三平台防御）
 
