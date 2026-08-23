@@ -1,3 +1,11 @@
+## 2026-08-23 — Session 375 · 离线覆盖扩充 II（读链与轻写链 14 接口收口）
+
+- Phase：**离线可玩版覆盖面扩充第二切片**；不扩静态数据规模，0-B 继续暂缓。
+- 实装：worker 新增 14 handler——总军师 ×4（appoint/dismiss/switch/status，`engine/grandStrategist.ts`）、技能树 ×5（getSkillTrees/getOfficerSkillState/upgradeSkillNode/resetSkillTree/upgradeTrait，加点同步 `mergeSkillsWithTree` 链完整镜像）、关系网 `getOfficerRelations`（复用已注入的 relations 虚拟数据）、势力总览 `getFactionOverview`、读接口 `campaignNodes`/`getBattlefieldInstance`、别名导出 `searchBeauty`；`offline-api.ts` 同名导出。虚拟模块补 `skill-trees.json`（vite DATA_FILES kebab→camel 导出名、d.ts、browser-loader.loadSkillTrees）。
+- 验证：新增 `verify-s375-offline-reads-writes` **32/32**——真实 Chrome 全程 `?offline=1` 真实点击：势力总览天命/人心/声望渲染→左栏总军师任命曹操→当季切换态势被「冷却中」权威拒绝（引擎规则每季一次，在线同构）→解职回未任命态→名册打开曹操详情→关系 tab 渲染 14 行正史/演义关系→技能 tab 加点（已用 0→1）→重置归零；XHR 钩子断言零 `/api/` 回退。重建产物复测 s373 **14/14**（新虚拟模块入包验证）、s372 **11/11**；typecheck/lint 三端、shared **422** + client **54**、validate-data、compliance（718 files）、`git diff --check` 全绿。
+- 边界：郡域 battlefield-instance 写链 ×7 为最后缺口（切片 III，需实例生命周期+守方 AI+迷雾+单挑整体移植）；`campaignNodes`/`upgradeTrait` 无 UI 入口仅镜像审查；总军师成功切换路径与在线共用同镜像（本轮验收覆盖冷却拒绝路径）。
+- 文档同步：`02/09/10/12/35` 与 `HANDOFF.md`。
+
 ## 2026-08-23 — Session 374 · 离线覆盖扩充 I（Tier I 战场 + 白刃战 11 接口）
 
 - Phase：**离线可玩版覆盖面扩充第一切片**；不扩静态数据规模，0-B 继续暂缓。
@@ -14,8 +22,6 @@
 - 验证：新增 `verify-s373-offline-coldstart` **14/14**——真实 Chrome 首访 SW 接管→预缓存 11 条落库→CDP 断网仿真→刷新冷启动渲染剧本屏→字体离线可用→选剧本/势力进世界屏→结束回合推进月份→IndexedDB 离线存档成功→无非网络控制台错误；`verify-s372-offline-loop` 在含 SW 的产物上复测 **11/11** 无回归；typecheck、shared **422** + client **54**、compliance（716 files）、`git diff --check` 全绿。
 - 边界：SW 仅生产构建注入；预缓存在每次部署后首访时更新（导航网络优先保证新版本可达）；联机模式的 `/api/*` 永不被 SW 拦截。
 - 文档同步：`README`、根 `ROADMAP.md`、`02`（§五-A 边界）、`09/10/35` 与 `HANDOFF.md`。
-
-# 开发进度跟踪
 
 ## 2026-08-22 — Session 372 · 离线可玩版最小闭环（Worker 权威引擎 + IndexedDB 存档）
 

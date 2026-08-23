@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 374**（离线覆盖扩充 I · Tier I 战场 + 白刃战 11 接口） |
+| 会话 | **Session 375**（离线覆盖扩充 II · 读链与轻写链 14 接口收口） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 374：worker 镜像 Tier I×4 + melee×7 + `getKingRequirements` 共 12 指令、offline-api 同名导出；worker 启动补五处阵型目录/TacticalConfig v2 注入（修复离线战斗数值静默清零）；`store.meleeStart` 停留战场屏修复三选弹窗不可达 + StandardModePanel 补「刷新战术点」。Session 373 及之前全部保持有效：`leh-pwa-precache` SW 预缓存、`state-pipeline.ts` 双端管线、`save-idb` IndexedDB、`gateway` 在线/离线策略 |
+| 代码最新 | Session 375：worker 新增总军师 ×4 / 技能树 ×5 / 关系网 / 势力总览 / campaignNodes / getBattlefieldInstance / searchBeauty 共 14 handler；虚拟模块补 `skill-trees.json`（vite DATA_FILES kebab→camel、d.ts、browser-loader.loadSkillTrees）。Session 374 及之前保持有效：Tier I 战场+白刃战 12 指令、阵型目录注入修补、meleeStart 弹窗修复 |
 | 文档最新 | `README`（在线试玩·离线可玩）、`02/07/09/10/12/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | **白刃战三模式（自动/标准/六角）与 Tier I 战场在 Pages 离线版全程可点可玩**；存档 IndexedDB 本地 |
-| 下一步 | 离线覆盖扩充 II（郡域 battlefield-instance ×8 / 总军师 ×4 / 技能树 ×5 / 势力总览与 relations 等读接口）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+| 本交接用途 | **离线版除郡域实例外全部接口已覆盖（缺口 33→7）**：总军师/技能树/关系网/势力总览在 Pages 离线可点可玩 |
+| 下一步 | 离线覆盖扩充 III（郡域 battlefield-instance ×7：enter/exit/engageCounty + 阵前单挑四链，需实例生命周期+守方 AI+迷雾整体移植）；S10 地形可见范围与多军团仍后置；**0-B 继续暂缓** |
+
+### Session 375 交接要点
+
+- worker handler 全部逐函数镜像 services/game.ts：grandStrategist 四链（appoint 校验智力≥85/相性/参谋兼任；switch 冷却=每季一次 `getSeasonQuarter` 差值）、技能树五链（upgradeSkillNode 走 `skillPointsForMerit(meritLevel)` 门禁 + prerequisites + `mergeSkillsWithTree` 同步 officer.skills；reset 回静态基线）、getOfficerRelations 复用 worker 已注入的 relations 数据（无需新静态依赖）。
+- vite 虚拟模块扩展：DATA_FILES 增加 `skill-trees`，导出名 camelize（kebab→camel），`virtual-leh-data.d.ts` 与 `browser-loader.loadSkillTrees()` 同步；生产构建产物含技能树数据（s373 复测验证入包）。
+- 验收技巧：总军师「当季切换必冷却」是引擎权威规则——脚本断言 TopBar 出现「态势切换冷却中」错误文案作为 switch handler 往返证据；技能加点断言读面板「已用 N」数字变化。
+- 验证：`verify-s375-offline-reads-writes` **32/32**（真实点击全链 + XHR 钩子零 `/api/` 回退）；重建产物 s373 **14/14**、dev s372 **11/11**；typecheck/lint 三端、shared **422** + client **54**、validate-data、compliance（718 files）、diff-check 全绿。
+- 边界：郡域 battlefield-instance 写链 ×7 是离线覆盖最后缺口（enter/exit/engageCounty/getBattlefieldInstance 已读、duel start/step/skip/close）；`campaignNodes`/`upgradeTrait` 无 UI 入口仅镜像审查；总军师成功切换未单独点击验收（与在线共用同镜像代码，拒绝路径已验）。
 
 ### Session 374 交接要点
 

@@ -13,6 +13,12 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 375 · 离线覆盖扩充 II（读链与轻写链 14 接口收口）
+
+- worker 镜像总军师 ×4 / 技能树 ×5 / getOfficerRelations / getFactionOverview / campaignNodes / getBattlefieldInstance / searchBeauty；虚拟模块补 `skill-trees.json`。
+- **验证**：新增 `verify-s375-offline-reads-writes` **32/32**（势力总览渲染→总军师任命/冷却拒绝/解职→关系 14 行→技能加点与重置，XHR 钩子零 `/api/` 回退）；重建产物 s373 复测 14/14、s372 11/11；shared 422 + client 54、typecheck/compliance 全绿。
+- 边界：郡域 battlefield-instance ×7 为最后缺口（切片 III）；0-B 继续暂缓。
+
 ### Session 374 · 离线覆盖扩充 I（Tier I 战场 + 白刃战 11 接口）
 
 - Worker 镜像 Tier I 战场 ×4 与白刃战 ×7 指令 + `getKingRequirements`；离线接口缺口 33→21。
