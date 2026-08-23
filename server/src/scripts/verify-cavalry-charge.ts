@@ -62,6 +62,9 @@ assert(resolveChargeBonus({ unitType: UnitType.LIGHT_CAVALRY, terrain: TerrainTy
 assert(resolveChargeBonus({ unitType: UnitType.HEAVY_CAVALRY, terrain: TerrainType.PLAIN, formation: FormationType.SQUARE }).bonusPct === 70, '重骑平原 = 平原20 + 兵种50');
 assert(resolveChargeBonus({ unitType: UnitType.LIGHT_CAVALRY, terrain: TerrainType.PLAIN, formation: FormationType.CHARGE }).bonusPct === 100, '冲阵轻骑平原 = 平原20 + 阵型80');
 assert(resolveChargeBonus({ unitType: UnitType.HEAVY_CAVALRY, terrain: TerrainType.PLAIN, formation: FormationType.CHARGE }).bonusPct === 150, '冲阵重骑平原三源叠加 = 150');
+assert(resolveChargeBonus({ unitType: UnitType.LIGHT_CAVALRY, terrain: TerrainType.PLAIN, formation: FormationType.WEDGE }).bonusPct === 70, '锥形轻骑平原 = 平原20 + 突击50（Session 377）');
+assert(resolveChargeBonus({ unitType: UnitType.HEAVY_CAVALRY, terrain: TerrainType.PLAIN, formation: FormationType.WEDGE }).bonusPct === 120, '锥形重骑平原三源叠加 = 120');
+assert(resolveChargeBonus({ unitType: UnitType.LIGHT_CAVALRY, terrain: TerrainType.FOREST, formation: FormationType.WEDGE }).bonusPct === 50, '森林锥形骑兵仅阵型突击50（无平原来源仍触发）');
 
 assert(applyChargeToBaseDamage(100, 0) === 100, '未触发冲锋原伤害返回');
 assert(applyChargeToBaseDamage(100, 20) === 120, '冲锋乘区按百分比放大');

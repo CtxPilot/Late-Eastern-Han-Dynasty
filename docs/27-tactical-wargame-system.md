@@ -378,3 +378,9 @@ BattleView 复用既有 `isRetreated` 非活跃语义：撤退部队不再进入
 突围时照常承受相邻守军 0.6 系数追击。非攻城或非边缘受围仍按既有阻断；不新增字段/API/存档/RNG，数值真源见 `08` §二十八。
 
 *v1.7 | 2026-08-21 | Session 368 · 攻城守城与城门突围 0-A 切片*
+
+### Session 377 · 锥形阵骑兵突击接入冲锋乘区
+
+- `resolveChargeBonus` 新增锥形阵(2) 来源：骑兵+已移动普攻 +50%，与平原 +20%/重骑 +50%/冲阵(16) +80% 加法叠乘；玩家与敌军 AI 同源（simpleAi 复用同函数）。
+- 森林等非平原地形仅消去平原来源，阵型来源独立触发；骑神连击联动按 `chargePct>0` 自动覆盖锥形阵冲锋。
+- 数值真源：`docs/08-data-dictionary.md` §二十九 新增一行（formations.json effects 同值）。验证 `verify-cavalry-charge` **29/29**。

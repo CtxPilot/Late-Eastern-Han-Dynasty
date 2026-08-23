@@ -444,6 +444,7 @@ export function computeChainCoeff(ctx: ChainContext): number {
 export const CAVALRY_CHARGE_PLAIN_PCT = 20;       // 平原骑兵冲锋 +20%（05 §2 地形表）
 export const HEAVY_CAVALRY_CHARGE_PCT = 50;       // 重骑兵冲锋 +50%（05 §5 单位表）
 export const CHONGZHEN_CHARGE_PCT = 80;           // 冲阵阵型(16) 仅骑兵冲锋 +80%（05 §4 阵型表）
+export const WEDGE_CAVALRY_CHARGE_PCT = 50;       // 锥形阵(2) 仅骑兵突击伤害×1.5（08 §二十九；formations.json effects 同值）
 export const QISHEN_CHARGE_CHAIN_RATE = 20;       // 骑神冲锋连击率 +20%
 export const QISHEN_CHONGZHEN_CHAIN_COEFF = 0.72; // 骑神+冲阵连击伤害 ×1.2（0.6 → 0.72）
 
@@ -468,6 +469,7 @@ export function resolveChargeBonus(ctx: ChargeContext): ChargeResult {
   if (ctx.terrain === ('plain' as TerrainType)) pct += CAVALRY_CHARGE_PLAIN_PCT;
   if (ctx.unitType === 'heavyCavalry') pct += HEAVY_CAVALRY_CHARGE_PCT;
   if (ctx.formation === FormationType.CHARGE) pct += CHONGZHEN_CHARGE_PCT;
+  if (ctx.formation === FormationType.WEDGE) pct += WEDGE_CAVALRY_CHARGE_PCT;
   return { bonusPct: pct };
 }
 

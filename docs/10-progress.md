@@ -1,3 +1,12 @@
+## 2026-08-23 — Session 377 · S10 锥形阵骑兵突击收口
+
+- Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 实装：`resolveChargeBonus` 接入锥形阵(2) 的「骑兵突击伤害×1.5」——formations.json effects 早已定义 `charge=50, cavalry_only` 而引擎未消费的 Session 371 登记债。骑兵+锥形阵+本回合已移动普攻按 +50% 计入冲锋乘区，与平原 +20%/重骑 +50%/冲阵(16) +80% 加法叠乘；玩家 `attackUnit` 与敌军 AI `doAttack` 经同一函数同源生效；森林等非平原仅消去平原来源、阵型来源独立触发；骑神连击联动（`chargePct>0`）自动覆盖锥形阵冲锋。零额外 RNG、不新增字段/API/存档/UI。
+- 数值真源：`08-data-dictionary.md` §二十九 新增「锥形阵骑兵突击 +50%」一行；`05` §18.1 边界行与 §5.6.3 补充段同步。
+- 验证：`verify-cavalry-charge` **29/29**（新增锥形轻骑平原 70% / 锥形重骑平原三源 120% / 森林锥形仅阵型 50% 三断言）；回归 `verify-tactical-ai` **86/86**、`verify-save-battle` **62/62**、`verify-tactical-retreat` **18/18**、`verify-fm4-hex-formation` **14/14**；shared **422/422**、client **54/54**；workspace typecheck/lint、validate-data、compliance（719 files）、`git diff --check` 全绿。纯服务端引擎数值收口，无浏览器 UI 变更，未宣称 DOM 点击验收。
+- 边界：重骑兵「首击一次」仍为每次冲锋生效（0-B 状态化）；地形可见范围与多军团协同缺设计规格，待用户拍板后再立项；0-B 继续暂缓。
+- 文档同步：`05/08/09/10/12/27/35` 与 `HANDOFF.md`。
+
 ## 2026-08-23 — Session 376 · 离线覆盖扩充 III（郡域实例写链收口，114 接口全离线）
 
 - Phase：**离线可玩版覆盖面收官切片**；不扩静态数据规模，0-B 继续暂缓。

@@ -13,6 +13,13 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 377 · S10 锥形阵骑兵突击收口
+
+- `resolveChargeBonus` 接入锥形阵(2) `charge=50 cavalry_only`（formations.json 数据早已定义、引擎未消费的后置债）；玩家 attackUnit 与敌军 AI doAttack 同源生效，骑神连击联动自动覆盖。
+- 数值真源：08 §二十九 新增一行；05 §18.1 边界行移出后置清单。
+- **验证**：`verify-cavalry-charge` **29/29**（新增锥形轻骑 70% / 重骑 120% / 森林仅阵型 50% 三断言）；回归 tactical-ai 86 / save-battle 62 / tactical-retreat 18 / fm4 14 / shared 422 / client 54 全绿。
+- **Next**：S10 地形可见范围与多军团缺设计规格待拍板；0-B 继续暂缓。
+
 ### Session 376 · 离线覆盖扩充 III（郡域实例写链收口）
 
 - worker 镜像 enterNanjunBattlefield/exitNanjunBattlefield/engageCounty 与阵前单挑四链（含 settleBattlefieldDuel 功绩/俘杀/继承者规则）；至此 **114 个接口离线全覆盖，无在线回退面**。
