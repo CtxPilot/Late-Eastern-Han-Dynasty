@@ -440,3 +440,37 @@ export function getFactionOverview(): ReturnType<typeof import('../api').getFact
 export function searchBeauty(cityId: number): Promise<GameState> {
   return call('seekBeauty', [cityId]);
 }
+
+// ====== 郡域战场实例写链（Session 376 离线覆盖） ======
+
+export function enterNanjunBattlefield(commandery = 'nanjun'): Promise<GameState> {
+  return call('enterNanjunBattlefield', [commandery]);
+}
+
+export function exitNanjunBattlefield(): Promise<GameState> {
+  return call('exitNanjunBattlefield');
+}
+
+export function engageCounty(countyId: string): Promise<GameState> {
+  return call('engageCounty', [countyId]);
+}
+
+export function startBattlefieldDuel(
+  kind: 'formation_front' | 'city_front',
+  nodeId: string,
+  stance: DuelStance,
+): Promise<GameState> {
+  return call('startBattlefieldDuel', [kind, nodeId, stance]);
+}
+
+export function stepBattlefieldDuel(): Promise<GameState> {
+  return call('stepBattlefieldDuel');
+}
+
+export function skipBattlefieldDuel(): Promise<GameState> {
+  return call('skipBattlefieldDuel');
+}
+
+export function closeBattlefieldDuel(): Promise<GameState> {
+  return call('closeBattlefieldDuel');
+}
