@@ -13,6 +13,13 @@
 **敌军协同包围/受围突围走位最小切片**（Session 354~355）· **撤退态活跃单位语义收口**（Session 356）· **敌军主动撤退最小切片**（Session 357）· **相邻截击门禁**（Session 358）· **截击后相邻目标优先**（Session 360）· **BattleView 撤退态 UI 活跃边界**（Session 361）· **刚烈反击暴击一次性结算**（Session 366）· **追击伤害 0-A 切片**（Session 367）· **攻城守城与城门突围 0-A 切片**（Session 368）；多军团撤退后置。
 - Session 351：完成 S18 家属质任处置 C 切片；进入同一场战役/屯田交叉规则收口，不启动 0-B。
 
+### Session 378 · S10 战术视野（用户拍板方案）
+
+- 用户拍板：基线 4 格 / 山+1 / 林−1 / 雾−2 / 雪−3 / 下限 1；AI 全知仅玩家侧投影。
+- 实装：`shared/battle-sight.ts` 纯函数 + BattleView `filterVisibleTacticalUnits` 渲染/点击/红标记三处过滤；零存档字段、零 RNG、零 API 变化。
+- **验证**：shared battle-sight 单测 **12/12**、client battleViewState **56 全量**含 2 新投影用例；回归 tactical-ai 86 / save-battle 62；typecheck/lint 三端、validate-data、compliance 全绿。Konva canvas 无法 DOM 断言，以纯函数/投影单测为验收口径（诚实标注无浏览器点击验收）。
+- **Next**：S10 多军团协同缺设计规格待拍板；技艺研发待拍板；0-B 暂缓。
+
 ### Session 377 · S10 锥形阵骑兵突击收口
 
 - `resolveChargeBonus` 接入锥形阵(2) `charge=50 cavalry_only`（formations.json 数据早已定义、引擎未消费的后置债）；玩家 attackUnit 与敌军 AI doAttack 同源生效，骑神连击联动自动覆盖。

@@ -25,6 +25,7 @@ export * from './scenes.js';
 export * from './tactical-grid.js';
 export * from './tactical-system.js';
 export * from './melee-engagement.js';
+export * from './battle-sight.js';
 export * from './hegemony.js';
 export * from './nobility.js';
 export * from './battlefield-instance-schema.js';

@@ -7,7 +7,7 @@ import { FORMATION_LABEL, FormationType, TerrainType, Weather, canUseWeatherActi
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
 import { ExpressionPortrait } from '../officer/ExpressionPortrait';
-import { isActiveTacticalUnit, isBattleSideCardUnit } from './battleViewState';
+import { isBattleSideCardUnit, filterVisibleTacticalUnits, visibleEnemyIdsForPlayer } from './battleViewState';
 
 const HEX_SIZE = 28;
 const ORIGIN = { x: 50, y: 50 };
@@ -38,7 +38,10 @@ export function BattleView() {
   useEffect(() => { const el = containerRef.current; if (!el) return; const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight })); ro.observe(el); return () => ro.disconnect(); }, []);
   const corners = useMemo(() => hexCorners(HEX_SIZE - 1), []);
   if (!battle || !game) return null;
-  const playerTurn = battle.phase === 'player'; const activeUnits = battle.units.filter(isActiveTacticalUnit); const selected = activeUnits.find((u) => u.id === selectedUnitId); const attacker = activeUnits.find((u) => u.side === 'attacker'); const attackerCard = battle.units.find((u) => u.side === 'attacker' && isBattleSideCardUnit(u)); const defenderCard = battle.units.find((u) => u.side === 'defender' && isBattleSideCardUnit(u)); const selectedArmy = selected ? game.campaignArmies.find((army) => army.id === selected.armyId) : undefined; const mainAttacker = attacker ? activeUnits.find((unit) => unit.side === 'attacker' && unit.commanderId === (game.campaignArmies.find((army) => army.id === unit.armyId)?.commanderId ?? unit.commanderId)) ?? attacker : undefined; const lastBattleAction = battle.actionHistory?.at(-1); const canUndoMove = Boolean(playerTurn && lastBattleAction?.source === 'player' && lastBattleAction.reversible && lastBattleAction.kind === 'move' && tacticalTurnFromTimestamp(lastBattleAction.logicalTimestamp) === battle.turn); const canChangeFormation = Boolean(playerTurn && selected && mainAttacker?.id === selected.id && !selected.hasActed && (battle.tacticalPoints ?? 5) >= 1 && (battle.tacticalPointsUsed ?? 0) < 1);
+  const playerTurn = battle.phase === 'player';
+  // 战术视野（S10 §三十）：视野外守方单位不参与渲染与一切玩家交互（AI 全知不受影响）
+  const visibleEnemyIds = useMemo(() => visibleEnemyIdsForPlayer(battle), [battle]);
+  const activeUnits = filterVisibleTacticalUnits(battle.units, visibleEnemyIds); const selected = activeUnits.find((u) => u.id === selectedUnitId); const attacker = activeUnits.find((u) => u.side === 'attacker'); const attackerCard = battle.units.find((u) => u.side === 'attacker' && isBattleSideCardUnit(u)); const defenderCard = battle.units.find((u) => u.side === 'defender' && isBattleSideCardUnit(u)); const selectedArmy = selected ? game.campaignArmies.find((army) => army.id === selected.armyId) : undefined; const mainAttacker = attacker ? activeUnits.find((unit) => unit.side === 'attacker' && unit.commanderId === (game.campaignArmies.find((army) => army.id === unit.armyId)?.commanderId ?? unit.commanderId)) ?? attacker : undefined; const lastBattleAction = battle.actionHistory?.at(-1); const canUndoMove = Boolean(playerTurn && lastBattleAction?.source === 'player' && lastBattleAction.reversible && lastBattleAction.kind === 'move' && tacticalTurnFromTimestamp(lastBattleAction.logicalTimestamp) === battle.turn); const canChangeFormation = Boolean(playerTurn && selected && mainAttacker?.id === selected.id && !selected.hasActed && (battle.tacticalPoints ?? 5) >= 1 && (battle.tacticalPointsUsed ?? 0) < 1);
   const weatherCost = selected ? weatherActiveEnergyCost(selected.commanderId) : 40;
   const canCastWeather = Boolean(playerTurn && selected?.side === 'attacker' && !selected.hasActed && canUseWeatherActive(selected.commanderId) && (selected.energy ?? 0) >= weatherCost);
   // Keep the latest formation explanation pinned in the compact report. A formation

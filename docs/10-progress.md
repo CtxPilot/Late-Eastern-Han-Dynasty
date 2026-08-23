@@ -1,3 +1,13 @@
+## 2026-08-23 — Session 378 · S10 战术视野（用户拍板方案落地）
+
+- Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 拍板记录：用户选定「基线 4 格；山地+1/森林−1（观察者所在格）；雾−2/雪−3；下限夹 1」数值方案与「AI 全知、仅玩家侧投影」边界（05 §3.1 雪 −3 为既有真源）。
+- 实装：`shared/battle-sight.ts` 纯函数（`effectiveSightRange`/`computeVisibleEnemyUnitIds`/`hexDistance`）；BattleView 经 `battleViewState.filterVisibleTacticalUnits` 投影——视野外守方单位不渲染、点击视为空地、无红可攻标记。零存档字段、零 RNG、零 API 变化；顶部双方摘要卡保留敌军主将展示（非战场单位情报）。
+- 数值真源：`08-data-dictionary.md` 新增 §三十；`05` §3.1 补运行时消费行；`27` 补充段。
+- 验证：shared battle-sight 单测 **12/12**、client 全量 **56/56**（含 2 个投影新用例）；回归 `verify-tactical-ai` **86/86**、`verify-save-battle` **62/62**；typecheck/lint 三端、validate-data、compliance（721 files）、`git diff --check` 全绿。Konva canvas 无法以 DOM 断言渲染结果，本轮验收口径为纯函数单测 + 投影状态单测，未宣称浏览器点击验收。
+- 边界：敌军 AI 全知（用户拍板）；服务端权威态不改写、攻击门禁不加视野校验（单机自约束 UI，后续如需反作弊在 attackUnit 收口）；多军团协同仍缺规格待拍板。
+- 文档同步：`05/08/09/10/12/27/35` 与 `HANDOFF.md`。
+
 ## 2026-08-23 — Session 377 · S10 锥形阵骑兵突击收口
 
 - Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。

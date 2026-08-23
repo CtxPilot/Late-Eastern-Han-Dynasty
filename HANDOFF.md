@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 377**（S10 收口 · 锥形阵骑兵突击接入冲锋乘区） |
+| 会话 | **Session 378**（S10 收口 · 战术视野——用户拍板方案落地） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 377：`resolveChargeBonus` 新增锥形阵(2) 来源——消费 formations.json 早已定义而引擎未读的 `charge=50, cavalry_only`；玩家与敌军 AI 同源生效。Session 376 及之前全部保持有效：114 个 API 接口离线全覆盖（无在线回退面）、PWA 冷启动、白刃战三模式 |
+| 代码最新 | Session 378：`shared/battle-sight.ts`（基线4+山1/林−1+雾−2/雪−3，下限1）+ BattleView 视野投影过滤（视野外守军不渲染不可交互）。Session 377 及之前保持有效：锥形阵骑兵突击冲锋、114 接口全离线、PWA 冷启动 |
 | 文档最新 | `05/08/09/10/12/27/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | S10 后置债再清一项：锥形阵骑兵突击 ×1.5 生效（08 §二十九 为真源） |
-| 下一步 | S10 地形可见范围与多军团协同缺设计规格待用户拍板；正式技艺研发数值待拍板；**0-B 继续暂缓** |
+| 本交接用途 | S10「地形可见范围」后置债就此收口（08 §三十 真源）；雪天视野 4→1 的信息压力可感 |
+| 下一步 | S10 多军团协同缺设计规格待拍板；正式技艺研发数值待拍板；**0-B 继续暂缓** |
+
+### Session 378 交接要点
+
+- 用户拍板记录在案：数值=基线4/山+1/林−1/雾−2/雪−3/下限1；边界=AI 全知仅玩家侧投影。
+- 实现分层：核心计算在 `shared/battle-sight.ts`（未来服务端可复用），UI 投影在 `client/src/components/battle/battleViewState.ts`（`visibleEnemyIdsForPlayer` + `filterVisibleTacticalUnits`），BattleView 只换一处 `activeUnits` 数据源即同时收口渲染、点击、红标记三条路径。
+- 验证锚点：shared battle-sight **12/12**、client battleViewState 含投影用例共 **56/56**；回归 tactical-ai 86 / save-battle 62 全绿。canvas 渲染无法 DOM 断言，勿把本轮写成浏览器点击验收。
+- 边界：顶部双方摘要卡仍显示敌军主将（设计保留）；服务端不校验目标可见性（单机自约束）；多军团仍后置。
+
+### Session 377 交接要点
 
 ### Session 377 交接要点
 
