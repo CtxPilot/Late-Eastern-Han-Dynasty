@@ -118,16 +118,11 @@ World screen is a **hierarchical card strategic realm** (realm → province → 
 |:---:|:---:|
 | ![Personnel](docs/screenshots/leh-officer-dossier.png) | ![Officer dossier](docs/screenshots/session-188-monarch-detail-caocao.png) |
 
-| City operations · 城政详情 | Hegemony court · 霸府朝廷 |
-|:---:|:---:|
-| ![City detail](docs/screenshots/leh-city-detail.png) | ![Hegemony](docs/screenshots/session-188-hc-p0-3-establish-hegemony.png) |
-
 **What these show · 截图在说什么**
 
 - **Strategic cards** — browse thirteen provinces by control, population, grain and troops; drill into cities with road adjacency, without polygon borders.
 - **Command dock** — civil / military / personnel / diplomacy / ploys / farming / family / court in one bottom shell.
 - **Officers** — six attributes, formation mastery, unit aptitude, and original programmatic portraits (no commercial character art).
-- **Court & cities** — hegemony-stage politics and city demographics / food accounting on the same deterministic engine.
 
 Officer dossiers use the project's original programmatic SVG/Canvas portraits. Raster portraits without a complete provenance record are never accepted into the repository or screenshots. 武将简册使用项目原创的程序化 SVG/Canvas 头像；来源不明的位图一律不入库、不上截图。
 
