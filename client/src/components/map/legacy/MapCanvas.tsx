@@ -2,8 +2,11 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
+ * @deprecated Session 379 — 世界屏已改用 StrategicWorldView（层级卡片）。
+ * 本文件保留作历史地理底图参考与未来复用，勿再挂到 GameLayout。
+ * 见根目录 MAP_REMOVAL_ANALYSIS.md。
+ *
  * P1-01~03 MapCanvas — 地形底图 + 城点 + 交互（缩放/平移/点击）
- * 面板 UI 在 GameLayout 左/右侧，本组件只负责地图。
  */
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Stage, Layer, Circle, Text, Group, Rect, Line, Image as KonvaImage } from 'react-konva';
@@ -15,8 +18,8 @@ import {
   getCityVisibility,
   lonLatToPixel,
 } from '@leh/shared';
-import { MAP_TOKENS } from '../../theme/canvasTokens';
-import { useGameStore } from '../../stores/gameStore';
+import { MAP_TOKENS } from '../../../theme/canvasTokens';
+import { useGameStore } from '../../../stores/gameStore';
 import {
   MAP_LOD_META,
   getMapLod,

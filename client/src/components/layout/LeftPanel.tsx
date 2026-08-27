@@ -20,6 +20,7 @@ export function LeftPanel() {
   const selectCity = useGameStore((s) => s.selectCity);
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
   const clearError = useGameStore((s) => s.clearError);
+  // focusMapOnCity：切战略屏到该城所属州并选中（不再驱动 Konva 缩放）
   const [open, setOpen] = useState<AccordionKey>(null);
 
   const armyCount = useMemo(() => {

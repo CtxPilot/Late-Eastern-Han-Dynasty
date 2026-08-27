@@ -2,6 +2,8 @@
 // Copyright (c) 2026 CtxPilot
 
 /**
+ * @deprecated Session 379 — 仅 legacy MapCanvas 使用；世界屏已改卡片战略界面。
+ *
  * Map LOD by zoom, with screen-pixel sizing and label collision.
  *
  * Sizes are defined in **screen pixels**, converted to world via `/ scale`.

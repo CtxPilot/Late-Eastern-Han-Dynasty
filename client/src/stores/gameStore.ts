@@ -30,7 +30,16 @@ interface Store {
   game: GameState | null;
   battle: BattleState | null;
   selectedCityId: number | null;
-  /** MapCanvas consumes then clears — left panel request zoom-to-city */
+  /**
+   * 战略卡片层级（天下 / 某州）。世界屏不再使用连续大地图。
+   */
+  strategicView: { level: 'realm' } | { level: 'province'; province: string };
+  openStrategicRealm: () => void;
+  openStrategicProvince: (province: string) => void;
+  /**
+   * @deprecated Session 379 — 原 MapCanvas zoom-to-city；现由 StrategicWorldView
+   * 消费后 clear，并切换到该城所属州卡片层。
+   */
   mapFocusCityId: number | null;
   selectedUnitId: string | null;
   moveRange: string[];
@@ -57,6 +66,7 @@ interface Store {
   startGame: (scenarioId: number, factionId: number, eventLayers: EventSourceClass[]) => Promise<void>;
   openScenarioSelect: () => void;
   selectCity: (id: number | null) => void;
+  /** 选城并请求战略屏定位到该城所属州（兼容旧名 focusMapOnCity）。 */
   focusMapOnCity: (id: number) => void;
   clearMapFocus: () => void;
   endTurn: () => Promise<void>;
@@ -199,6 +209,7 @@ export const useGameStore = create<Store>((set, get) => ({
   game: null,
   battle: null,
   selectedCityId: null,
+  strategicView: { level: 'realm' },
   mapFocusCityId: null,
   selectedUnitId: null,
   moveRange: [],
@@ -443,7 +454,22 @@ export const useGameStore = create<Store>((set, get) => ({
 
   selectCity: (id) => set({ selectedCityId: id, lastActionOk: null, error: null }),
 
-  focusMapOnCity: (id) => set({ selectedCityId: id, mapFocusCityId: id, lastActionOk: null }),
+  openStrategicRealm: () => set({ strategicView: { level: 'realm' } }),
+
+  openStrategicProvince: (province) =>
+    set({ strategicView: { level: 'province', province } }),
+
+  focusMapOnCity: (id) => {
+    const city = get().game?.cities[id];
+    set({
+      selectedCityId: id,
+      mapFocusCityId: id,
+      strategicView: city
+        ? { level: 'province', province: city.province }
+        : get().strategicView,
+      lastActionOk: null,
+    });
+  },
 
   clearMapFocus: () => set({ mapFocusCityId: null }),
 

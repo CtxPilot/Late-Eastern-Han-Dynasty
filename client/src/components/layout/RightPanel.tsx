@@ -67,7 +67,7 @@ export function RightPanel() {
 
       {!selected ? (
         <div className="p-4 text-stone-500 text-xs leading-relaxed space-y-2">
-          <p>点城查看。他方城默认情报不明，需侦查或盟友共享。</p>
+          <p>点中央战略卡片选城，或从左侧己方城池进入。他方城默认情报不明，需侦查或盟友共享。</p>
           <p className="text-amber-700/80">
             底部命令坞“外交”可进贡/结盟；结盟后可见盟友城部分信息。
           </p>

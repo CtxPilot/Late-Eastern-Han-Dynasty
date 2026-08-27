@@ -3,6 +3,8 @@
 
 import { MAP_GEO } from '@leh/shared';
 
+/** @deprecated Session 379 — 仅 legacy MapCanvas 使用。 */
+
 const MAP_W = MAP_GEO.width;
 const MAP_H = MAP_GEO.height;
 

@@ -9,12 +9,19 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 378**（S10 收口 · 战术视野——用户拍板方案落地） |
+| 会话 | **Session 379**（S02 · 取消连续大地图 → 层级卡片战略屏） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 378：`shared/battle-sight.ts`（基线4+山1/林−1+雾−2/雪−3，下限1）+ BattleView 视野投影过滤（视野外守军不渲染不可交互）。Session 377 及之前保持有效：锥形阵骑兵突击冲锋、114 接口全离线、PWA 冷启动 |
-| 文档最新 | `05/08/09/10/12/27/35` 与本交接已同步；无 API 契约/存档 Schema 变化 |
-| 本交接用途 | S10「地形可见范围」后置债就此收口（08 §三十 真源）；雪天视野 4→1 的信息压力可感 |
-| 下一步 | S10 多军团协同缺设计规格待拍板；正式技艺研发数值待拍板；**0-B 继续暂缓** |
+| 代码最新 | Session 379：`StrategicWorldView`（天下→州→城）替换 `GameLayout` 中 MapCanvas；MapCanvas 迁 `map/legacy/`；地理数据/底图保留（`MAP_REMOVAL_ANALYSIS.md`）。Session 378 及之前保持有效 |
+| 文档最新 | `07/10/12/35`、根 `MAP_REMOVAL_ANALYSIS.md` 与本交接已同步 |
+| 本交接用途 | 世界屏 UI 真源从连续疆域大地图切到历史层级卡片；选城契约 `selectedCityId` 不变 |
+| 下一步 | WorldGraph Adapter（Phase 2）；荆州深挖；旧地图 PWA 预缓存摘除后置；**0-B 继续暂缓** |
+
+### Session 379 交接要点
+
+- 用户拍板：优先取消大地图，采用卡片方案；七郡全量/WorldGraph 形式化后置。
+- 实现：`buildProvinceCards` 按 `city.province` 聚合；`strategicView` 状态；`focusMapOnCity` 改为切州+选城；RightPanel/命令坞契约不变。
+- 验证：`pnpm verify-s379-strategic-cards` **19/19**（离线开局→州卡→荆州城卡→选城→左栏定位→结束回合）；client typecheck；strategic 单测 3/3。
+- 边界：不删 lon/lat/geo-basemap/historical-geography；郡域 SVG 与六角战保留；MapCanvas 仅 deprecated 未物理删除。
 
 ### Session 378 交接要点
 

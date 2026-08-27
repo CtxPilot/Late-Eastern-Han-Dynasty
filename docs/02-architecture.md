@@ -280,7 +280,8 @@ UI 层 (React 组件 — 命令坞九域 + 抽屉 + 场景视图)
 ```
 GameLayout
 ├── TopBar                 # 年月/季节/金粮兵/结束回合门禁/存档导出·导入·槽位
-├── MapCanvas              # 大地图 (Konva)：底图+城市层+LOD
+├── MapCanvas              # @deprecated legacy 大地图 (Konva)；世界屏已改 StrategicWorldView
+├── StrategicWorldView     # 天下→州→城层级卡片（Session 379 世界屏真源）
 ├── CommandShell           # 九域命令坞：内政/军事/人事/外交/计略/情报/屯田/家族/朝廷/势力
 │   └── *OverviewDrawer    # 各域分面抽屉（唯一提交入口，统一终审窗）
 ├── EventDialog            # 待决事件弹窗

@@ -53,7 +53,7 @@ System-by-system maturity lives in [docs/12-system-map.md](docs/12-system-map.md
 
 - **shared** — framework-neutral TypeScript contracts, Zod schemas, enums and deterministic utilities: the seeded xorshift PRNG that makes every replay reproducible, save-envelope validation/migration, formation math, fog masking, and (since Session 372) the runtime-RNG singleton plus turn/save orchestration pipelines used by both run modes.
 - **server** — Express + WebSocket host for the **authoritative** rule engines in online play: turns, economy, personnel, diplomacy, espionage, campaigns and combat all resolve on the server, with SQLite named save slots under the XDG data directory.
-- **client** — a React + Vite + Konva interface behind a strategy gateway. Online (default for `pnpm dev`) it renders state and sends commands with server-side fog-of-war masking; offline (`?offline=1` locally, default on GitHub Pages) the same authoritative engines execute inside a **Web Worker**, with save slots in IndexedDB.
+- **client** — a React + Vite interface (Konva for hex battle; DOM cards for the strategic world) behind a strategy gateway. Online (default for `pnpm dev`) it renders state and sends commands with server-side fog-of-war masking; offline (`?offline=1` locally, default on GitHub Pages) the same authoritative engines execute inside a **Web Worker**, with save slots in IndexedDB.
 
 Static JSON data is validated by Zod before it ever reaches the simulation, and `docs/08-data-dictionary.md` is the single source of truth for dataset scale. Because all randomness flows through one seeded PRNG — engine code never touches `Math.random` — the same save + same seed produces the same outcome in both modes. Current coverage: 422 shared tests + 54 client tests, plus dedicated engine and browser verification scripts (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
@@ -61,12 +61,12 @@ Static JSON data is validated by Zod before it ever reaches the simulation, and 
 
 - **shared**：中立 TypeScript 合约、Zod Schema、枚举与确定性工具——保证读档复玩可复现的种子 PRNG、存档信封校验与迁移、阵型数学、迷雾裁剪，以及自 Session 372 起双模式共用的运行时 RNG 单例与回合/存档编排管线。
 - **server**：Express + WebSocket 承载联机模式的**权威规则引擎**——回合、经济、人事、外交、谍报、战役与战斗均在服务端结算；XDG 数据目录下的 SQLite 命名存档槽位。
-- **client**：React + Vite + Konva 界面，经策略网关分发。联机模式（`pnpm dev` 默认）只渲染状态并发出指令、迷雾由服务端裁剪；离线模式（本地 `?offline=1`、GitHub Pages 默认）将同一套权威引擎内嵌 **Web Worker** 执行，存档槽位落在 IndexedDB。
+- **client**：React + Vite 界面（六角战用 Konva；世界屏为层级卡片），经策略网关分发。联机模式（`pnpm dev` 默认）只渲染状态并发出指令、迷雾由服务端裁剪；离线模式（本地 `?offline=1`、GitHub Pages 默认）将同一套权威引擎内嵌 **Web Worker** 执行，存档槽位落在 IndexedDB。
 
-静态 JSON 数据在进入模拟前先经 Zod 校验，数据集规模真源在 `docs/08-data-dictionary.md`。全部随机都经过单一种子 PRNG——引擎代码不触碰 `Math.random`——因此两种模式下读档复玩均可复现，调参与排查都是确定性的。当前覆盖：shared 422 项、client 54 项单测，另有引擎与浏览器验收脚本（见 [CONTRIBUTING.md](CONTRIBUTING.md)）。
+静态 JSON 数据在进入模拟前先经 Zod 校验，数据集规模真源在 `docs/08-data-dictionary.md`。全部随机都经过单一种子 PRNG——引擎代码不触碰 `Math.random`——因此两种模式下读档复玩均可复现，调参与排查都是确定性的。当前覆盖：shared 与 client 单测加引擎/浏览器验收脚本（见 [CONTRIBUTING.md](CONTRIBUTING.md)）；战略卡片世界屏可用 `pnpm play:strategic` / `pnpm verify-s379-strategic-cards` 自测。
 
 ```text
-在线： client (React + Konva) ── REST / WebSocket ──► server (Express 权威引擎) ──► shared (合约 + Zod + PRNG)
+在线： client (React · 战略卡片 + Konva 六角) ── REST / WebSocket ──► server (Express 权威引擎) ──► shared (合约 + Zod + PRNG)
 离线： client ── gateway ──► game.worker（同一套引擎 · Web Worker） ──► shared ＋ IndexedDB 存档槽位
 ```
 
@@ -104,19 +104,38 @@ Open `http://localhost:5173` (API on `http://localhost:3001`); on first launch, 
 
 Every push to `main` builds the client and publishes it to <https://ctxpilot.github.io/Late-Eastern-Han-Dynasty/> (workflow: `.github/workflows/deploy.yml`). Since Session 372 the Pages build **embeds the authoritative game engine in a Web Worker** (`VITE_OFFLINE=1`), so the online page is fully playable without any local backend — scenario selection, turn advancement, civil orders, hex battles and IndexedDB save slots all run in your browser. A service-worker precache (Session 373) makes the hosted build **cold-start fully offline**: after the first visit, refreshing with no network still boots fonts, engine and saves. Saves are stored per-browser (IndexedDB); use 导出存档 to move them between devices. 每次推送 `main` 即发布到 Pages；自 Session 372 起产物内嵌权威引擎（Web Worker + IndexedDB 存档），无需本地服务端即可完整游玩，且经 Service Worker 预缓存（Session 373）支持**断网冷启动**；存档保存在浏览器本地、可用「导出存档」跨设备迁移。
 
-Local `pnpm dev` keeps the classic online architecture (Express + SQLite authority). Append `?offline=1` to any local URL to exercise the same offline worker against the dev client. 本地开发仍为经典在线架构；在本地地址后追加 `?offline=1` 可切换同一套离线引擎调试。
+Local `pnpm dev` keeps the classic online architecture (Express + SQLite authority). Append `?offline=1` to any local URL to exercise the same offline worker against the dev client — or run `pnpm play:strategic` for a one-shot offline launch that opens the strategic card UI. 本地开发仍为经典在线架构；地址后追加 `?offline=1` 可切换离线引擎；也可用 `pnpm play:strategic` 一键打开战略卡片世界屏。
 
-| Map and territories · 大地图 | City operations · 城政 |
+### Screenshots · 游戏特色截图
+
+World screen is a **hierarchical card strategic realm** (realm → province → city), not a continuous territory map. Below: province overview, Jingzhou city nodes with road neighbors, personnel roster, and a deep officer dossier (programmatic seal-portrait art). 世界屏为**层级卡片战略界面**（天下→州→城），不再使用连续疆域大地图。下图依次：十三州形势、荆州城卡与官道邻接、人事名册、武将简册（程序化印信头像）。
+
+| Strategic realm · 天下形势 | Province cities · 州内城卡 |
 |:---:|:---:|
-| ![Map overview](docs/screenshots/leh-full-map.png) | ![City detail](docs/screenshots/leh-city-detail.png) |
+| ![Strategic realm](docs/screenshots/leh-strategic-realm.png) | ![Jingzhou cities](docs/screenshots/leh-strategic-province.png) |
+
+| Personnel roster · 人事名册 | Officer dossier · 武将简册 |
+|:---:|:---:|
+| ![Personnel](docs/screenshots/leh-officer-dossier.png) | ![Officer dossier](docs/screenshots/session-188-monarch-detail-caocao.png) |
+
+| City operations · 城政详情 | Hegemony court · 霸府朝廷 |
+|:---:|:---:|
+| ![City detail](docs/screenshots/leh-city-detail.png) | ![Hegemony](docs/screenshots/session-188-hc-p0-3-establish-hegemony.png) |
+
+**What these show · 截图在说什么**
+
+- **Strategic cards** — browse thirteen provinces by control, population, grain and troops; drill into cities with road adjacency, without polygon borders.
+- **Command dock** — civil / military / personnel / diplomacy / ploys / farming / family / court in one bottom shell.
+- **Officers** — six attributes, formation mastery, unit aptitude, and original programmatic portraits (no commercial character art).
+- **Court & cities** — hegemony-stage politics and city demographics / food accounting on the same deterministic engine.
 
 Officer dossiers use the project's original programmatic SVG/Canvas portraits. Raster portraits without a complete provenance record are never accepted into the repository or screenshots. 武将简册使用项目原创的程序化 SVG/Canvas 头像；来源不明的位图一律不入库、不上截图。
 
 ## Roadmap · 发展路线
 
-**EN** — Near-term work hardens what already ships: clear the remaining combat debts (terrain visibility, multi-army retreat coordination), widen offline endpoint coverage and add PWA precache so the Pages build cold-starts fully offline, and keep the verification-first loop where every slice lands with its own verification script. The 0-B dataset expansion — 1000+ officers, 105 cities, 27 formations, 21 unit types and the full scenario set — stays paused until it is re-authorized.
+**EN** — Near-term work hardens what already ships: remaining combat debts (multi-army coordination), WorldGraph formalization on top of the new card strategic UI, and the verification-first loop where every slice lands with its own script. The continuous territory map has been retired from the world screen (Session 379) in favor of hierarchical province/city cards; geo reference data is kept for history tooling. The 0-B dataset expansion stays paused until re-authorized.
 
-**中文** — 近期工作围绕现有交付收口：清偿剩余战斗债（地形可见范围、多军团撤退协同）、扩充离线接口覆盖并加入 PWA 预缓存（让 Pages 版可完全离线冷启动），坚持「每个切片自带验收脚本」的验证优先流程。0-B 全量扩容（1000+ 武将、105 城、27 阵、21 兵种与全剧本）继续暂缓，待再次授权后启动。
+**中文** — 近期工作围绕现有交付收口：清偿剩余战斗债（多军团协同）、在卡片战略屏之上形式化 WorldGraph，坚持「每个切片自带验收脚本」。连续疆域大地图已从世界屏退役（Session 379），改为天下→州→城层级卡片，地理参考数据仍保留。0-B 全量扩容继续暂缓，待再次授权后启动。
 
 See [ROADMAP.md](ROADMAP.md) and [docs/09-roadmap.md](docs/09-roadmap.md) for the detailed plan. 详见 [ROADMAP.md](ROADMAP.md) 与 [docs/09-roadmap.md](docs/09-roadmap.md)。
 

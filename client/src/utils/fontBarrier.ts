@@ -12,6 +12,8 @@
  * - 若字体未加载完就画第一帧，会用宿主默认字体绘制（Linux 极简发行版可能无 CJK → 豆腐块 □□□）
  * - Konva 无自动字体变更监听，画错第一帧后不会自动重绘
  * - 因此必须在游戏初始化阶段建立阻塞屏障，等字体写入内存后才放行渲染
+ * - Session 379 起世界屏为 DOM 卡片（StrategicWorldView），本屏障仍服务
+ *   BattleView 等 Konva 场景，避免战术层豆腐块
  *
  * 超时兜底（Session 102 修复）：
  * - document.fonts.load() 在 woff2 缺失时可能永不 resolve 也永不 reject

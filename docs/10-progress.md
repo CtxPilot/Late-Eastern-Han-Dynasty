@@ -1,3 +1,17 @@
+## 2026-08-27 — Session 379 · S02 取消连续大地图 · 层级卡片战略屏
+
+- Phase：**S02 地图 UI 真源切换**；继续 0-A，不扩静态数据规模，不启动 0-B。
+- 拍板：优先取消大地图，采用天下→州→城卡片；七郡全量与 WorldGraph 形式化后置。
+- 分析：根目录 `MAP_REMOVAL_ANALYSIS.md`（L0~L4 架构、A/B/C/D 分类、依赖与风险）。
+- 实装：
+  - `client/src/components/strategic/StrategicWorldView.tsx` + `buildProvinceCards.ts`（按 `province` 聚合势力/人口/粮兵/战事）
+  - `GameLayout` 主区挂载战略卡片，取代 MapCanvas
+  - `gameStore.strategicView` / `openStrategicRealm` / `openStrategicProvince`；`focusMapOnCity` 改为切州+选城
+  - MapCanvas / mapLod / mapViewport 迁入 `client/src/components/map/legacy/` 并 `@deprecated`；`geo-basemap` 与 historical-geography **保留**
+- 验证：`pnpm verify-s379-strategic-cards` **19/19**（离线开局→无 map-canvas→州卡→荆州城卡→RightPanel→左栏定位→命令坞→结束回合）；client typecheck；strategic 单测 **3/3**。
+- 文档：`07` §5.2、`10`/`12`/`35`、`HANDOFF.md`、`MAP_REMOVAL_ANALYSIS.md`。
+- 边界：不删坐标/Geo 脚本；郡域 SVG / 六角战不变；PWA 仍可预缓存底图（摘除后置）。
+
 ## 2026-08-23 — Session 378 · S10 战术视野（用户拍板方案落地）
 
 - Phase：**S10 战斗收口**；继续 0-A，不扩静态数据规模，不启动 0-B。
