@@ -10,7 +10,7 @@
 import {
   OfficerStatus,
   FAMILY_CAPTURE_MORALE_HIT,
-  canMarchAlongRoad,
+  canTravelMacroAdjacent,
   buildPendingFamilyTreatment,
   citiesShockedByFamilyCapture,
   playerCitiesAdjacentTo,
@@ -120,7 +120,7 @@ export function prepareMarch(
   if (from.ruler !== state.playerFactionId) throw new Error('出发城非己方');
   if (target.ruler === state.playerFactionId) throw new Error('目标已是己方城');
   if (target.ruler == null) throw new Error('Demo：暂不支持攻打无主城');
-  if (!canMarchAlongRoad(fromCityId, targetCityId)) {
+  if (!canTravelMacroAdjacent(fromCityId, targetCityId)) {
     throw new Error(
       `无官道直达：${from.name} 与 ${target.name} 不相邻（须沿史实/地图道路邻接出征）`,
     );

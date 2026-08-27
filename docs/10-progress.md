@@ -1,3 +1,10 @@
+## 2026-08-27 — Session 381 · 行军/人事/AI 改读 WorldGraph 表面
+
+- Phase：**S02∩S05**；人物可达与军队路径经 `planMacroCityPath` / `canTravelMacroAdjacent`，行为对齐原官道 BFS。
+- 触及：`campaign.ts`、`campaign-utils.ts`、`march.ts`、`personnel.ts`、`aiMilitary.ts`；边真源仍为 `CITY_ROAD_EDGES`。
+- 验证：world-graph **6/6**；`verify-campaign` **71/71**；`verify-ai-military-rng` **38/38**；server typecheck。
+- 边界：郡域 movementCost 仍未进 tick；多军团后置；0-B 暂缓。
+
 ## 2026-08-27 — Session 380 · WorldGraph + 州拓扑 UI + 荆州南郡叠加 + PWA 摘底图
 
 - Phase：**S02**；按用户顺序 1→3→2→4：WorldGraph Adapter → 战略 UI 打磨 → 荆州接入 → PWA 摘 geo-basemap 预缓存。

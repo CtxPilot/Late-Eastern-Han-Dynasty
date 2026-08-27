@@ -11,7 +11,7 @@ import {
   MaritalStatus,
   OfficerStatus,
   calculateRecruitChance,
-  canMarchAlongRoad,
+  canTravelMacroAdjacent,
   panelStatsDisplay,
   discoverSkillRateBonus,
   eloquenceRecruitModifier,
@@ -142,7 +142,7 @@ export function searchTalent(
   const localOrAdj = free.filter((o) => {
     if (o.location == null) return true;
     if (o.location === cityId) return true;
-    return canMarchAlongRoad(o.location, cityId);
+    return canTravelMacroAdjacent(o.location, cityId);
   });
 
   const roll = rng();

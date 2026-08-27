@@ -5,7 +5,7 @@
  * 战役层共享工具函数
  * 从 server/src/engine/campaign.ts 抽出，供战场地图/全局共用
  */
-import { roadNeighbors } from './city-roads.js';
+import { planMacroCityPath } from './world-graph.js';
 
 // ====== 常量 ======
 
@@ -16,23 +16,11 @@ export const FOOD_PER_100_PER_TURN = 3;
 
 /**
  * BFS 最短路径规划（纯函数）
- * 从 fromId 到 targetId 沿官道邻接搜索，返回路径节点 ID 序列（不含起点）
+ * Session 381：经 WorldGraph `planMacroCityPath` 表面，行为对齐原官道 BFS。
+ * 从 fromId 到 targetId，返回路径节点 ID 序列（不含起点）
  */
 export function planPath(_nodes: { id: number; adjacentNodeIds: number[] }[], fromId: number, targetId: number): number[] {
-  if (fromId === targetId) return [];
-  const visited = new Set<number>([fromId]);
-  const queue: Array<{ id: number; path: number[] }> = [{ id: fromId, path: [] }];
-  while (queue.length > 0) {
-    const cur = queue.shift()!;
-    for (const next of roadNeighbors(cur.id)) {
-      if (visited.has(next)) continue;
-      visited.add(next);
-      const newPath = [...cur.path, next];
-      if (next === targetId) return newPath;
-      queue.push({ id: next, path: newPath });
-    }
-  }
-  return [];
+  return planMacroCityPath(fromId, targetId);
 }
 
 /** 检查两节点间是否有官道可达 */

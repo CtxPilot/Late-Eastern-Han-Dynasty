@@ -69,3 +69,36 @@ describe('shortestPath / neighborsOf', () => {
     expect(n.sort()).toEqual([cityNodeId(13), cityNodeId(14)].sort());
   });
 });
+
+describe('planMacroCityPath equivalence', () => {
+  it('matches legacy roadNeighbors BFS for all pairs among stub cities', async () => {
+    const { roadNeighbors } = await import('./city-roads.js');
+    const { planMacroCityPath, macroAdjacentCityIds } = await import('./world-graph.js');
+    const ids = [13, 14, 15];
+    for (const id of ids) {
+      expect(macroAdjacentCityIds(id).sort()).toEqual(roadNeighbors(id).sort());
+    }
+    // legacy BFS
+    function legacyPlan(fromId: number, targetId: number): number[] {
+      if (fromId === targetId) return [];
+      const visited = new Set<number>([fromId]);
+      const queue: Array<{ id: number; path: number[] }> = [{ id: fromId, path: [] }];
+      while (queue.length > 0) {
+        const cur = queue.shift()!;
+        for (const next of roadNeighbors(cur.id)) {
+          if (visited.has(next)) continue;
+          visited.add(next);
+          const newPath = [...cur.path, next];
+          if (next === targetId) return newPath;
+          queue.push({ id: next, path: newPath });
+        }
+      }
+      return [];
+    }
+    for (const a of ids) {
+      for (const b of ids) {
+        expect(planMacroCityPath(a, b)).toEqual(legacyPlan(a, b));
+      }
+    }
+  });
+});

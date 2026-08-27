@@ -9,7 +9,7 @@
  * 供战略 UI / 路径查询 / 后续引擎迁移动用。
  */
 
-import { CITY_ROAD_EDGES, roadNeighbors } from './city-roads.js';
+import { CITY_ROAD_EDGES } from './city-roads.js';
 import type { HistoricalGeographyBundle } from './data/historical-geography/schema.js';
 import type { City } from './types/city.js';
 
@@ -258,12 +258,12 @@ export function shortestPath(
   if (!graph.nodes.has(fromId) || !graph.nodes.has(toId)) return null;
   if (fromId === toId) return { nodeIds: [fromId], totalDistance: 0 };
 
-  const adj = new Map<string, { to: string; dist: number }[]>();
+  const edgeDist = new Map<string, number>();
   for (const e of graph.edges) {
-    if (!adj.has(e.from)) adj.set(e.from, []);
-    if (!adj.has(e.to)) adj.set(e.to, []);
-    adj.get(e.from)!.push({ to: e.to, dist: e.distance });
-    adj.get(e.to)!.push({ to: e.from, dist: e.distance });
+    const k1 = `${e.from}|${e.to}`;
+    const k2 = `${e.to}|${e.from}`;
+    edgeDist.set(k1, e.distance);
+    edgeDist.set(k2, e.distance);
   }
 
   const prev = new Map<string, string | null>();
@@ -275,7 +275,8 @@ export function shortestPath(
   while (queue.length > 0) {
     const cur = queue.shift()!;
     if (cur === toId) break;
-    for (const { to, dist: d } of adj.get(cur) ?? []) {
+    for (const to of neighborsOf(graph, cur)) {
+      const d = edgeDist.get(`${cur}|${to}`) ?? 1;
       const nd = (dist.get(cur) ?? 0) + d;
       if (!dist.has(to) || nd < dist.get(to)!) {
         dist.set(to, nd);
@@ -296,16 +297,80 @@ export function shortestPath(
   return { nodeIds, totalDistance: dist.get(toId) ?? 0 };
 }
 
-/** 宏观兼容：node id → 邻接 worldCityId（委托 city-roads） */
-export function macroRoadNeighborCityIds(worldCityId: number): number[] {
-  return roadNeighbors(worldCityId);
+export function neighborsOf(graph: WorldGraph, nodeId: string): string[] {
+  // 按 edges 声明顺序收集，保证与 CITY_ROAD_EDGES 派生邻接序一致（最短路径并列时稳定）
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const e of graph.edges) {
+    let other: string | null = null;
+    if (e.from === nodeId) other = e.to;
+    else if (e.to === nodeId) other = e.from;
+    if (other != null && !seen.has(other)) {
+      seen.add(other);
+      out.push(other);
+    }
+  }
+  return out;
 }
 
-export function neighborsOf(graph: WorldGraph, nodeId: string): string[] {
-  const out = new Set<string>();
-  for (const e of graph.edges) {
-    if (e.from === nodeId) out.add(e.to);
-    if (e.to === nodeId) out.add(e.from);
+let _defaultMacro: WorldGraph | null = null;
+
+function getDefaultMacroGraph(): WorldGraph {
+  if (_defaultMacro) return _defaultMacro;
+  const ids = new Set<number>();
+  for (const [a, b] of CITY_ROAD_EDGES) {
+    ids.add(a);
+    ids.add(b);
   }
-  return [...out];
+  const cities = Object.fromEntries(
+    [...ids].map((id) => [
+      id,
+      {
+        id,
+        name: `city${id}`,
+        province: '',
+        x: id,
+        y: id,
+        isCapital: false,
+        isPass: false,
+      },
+    ]),
+  );
+  _defaultMacro = buildMacroWorldGraph(cities);
+  return _defaultMacro;
+}
+
+/** 宏观官道邻接（与 `roadNeighbors` 行为对齐，经 WorldGraph 表面） */
+export function macroAdjacentCityIds(worldCityId: number): number[] {
+  return neighborsOf(getDefaultMacroGraph(), cityNodeId(worldCityId))
+    .map(parseCityNodeId)
+    .filter((id): id is number => id != null);
+}
+
+export function areMacroCitiesAdjacent(a: number, b: number): boolean {
+  return macroAdjacentCityIds(a).includes(b);
+}
+
+/**
+ * 宏观最短路径（不含起点），与 campaign `planPath` / `campaign-utils.planPath` 语义一致。
+ * 不可达返回 []。
+ */
+export function planMacroCityPath(fromId: number, toId: number): number[] {
+  if (fromId === toId) return [];
+  const path = shortestPath(getDefaultMacroGraph(), cityNodeId(fromId), cityNodeId(toId));
+  if (!path) return [];
+  return path.nodeIds
+    .slice(1)
+    .map(parseCityNodeId)
+    .filter((id): id is number => id != null);
+}
+
+/** 人物/出征邻接门禁（对齐 `canMarchAlongRoad`） */
+export function canTravelMacroAdjacent(fromCityId: number, targetCityId: number): boolean {
+  return areMacroCitiesAdjacent(fromCityId, targetCityId);
+}
+
+/** @deprecated 使用 macroAdjacentCityIds */
+export function macroRoadNeighborCityIds(worldCityId: number): number[] {
+  return macroAdjacentCityIds(worldCityId);
 }

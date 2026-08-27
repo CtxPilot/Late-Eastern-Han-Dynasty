@@ -19,7 +19,7 @@
  */
 import {
   OfficerStatus,
-  areCitiesRoadAdjacent,
+  areMacroCitiesAdjacent,
   aristocracyDefenderMoralePenalty,
   applyOrganizationExecution,
   armsCombatMultiplier,
@@ -27,7 +27,8 @@ import {
   formationTroopCap,
   isFriendlyOrBetter,
   isHostileOrAtWar,
-  roadNeighbors,
+  macroAdjacentCityIds,
+  planMacroCityPath,
   meritEffects,
   meritLevelFor,
   meritStatBonus,
@@ -99,7 +100,7 @@ export const GARRISON_ORG_RECOVER = 5;
 export function buildCampaignNodes(state: GameState): CampaignNode[] {
   const cities = Object.values(state.cities);
   return cities.map((c) => {
-    const adjacent = roadNeighbors(c.id);
+    const adjacent = macroAdjacentCityIds(c.id);
     const wall = c.stats.wall ?? 0;
     return {
       id: c.id,
@@ -136,7 +137,7 @@ export function syncNodesFromCities(state: GameState): CampaignNode[] {
       x: c.x,
       y: c.y,
       ruler: c.ruler,
-      adjacentNodeIds: roadNeighbors(c.id),
+      adjacentNodeIds: macroAdjacentCityIds(c.id),
       garrison: c.troops,
       wallDurability: wall * 100,
       maxWallDurability: wall * 100,
@@ -258,7 +259,7 @@ export function validateFormationTarget(
   if (target.ruler === actingFactionId) throw new Error('目标已是己方');
   if (target.ruler == null) throw new Error('暂不支持攻打无主节点');
   const from = state.cities[opts.fromNodeId];
-  if (!areCitiesRoadAdjacent(opts.fromNodeId, opts.targetNodeId)) {
+  if (!areMacroCitiesAdjacent(opts.fromNodeId, opts.targetNodeId)) {
     throw new Error(`${from?.name ?? '出发城'} 与 ${target.name} 无官道直达（战役层首跳须邻接）`);
   }
 }
@@ -424,22 +425,9 @@ function targetName(state: GameState, id: number): string {
 
 // ====== 行军 ======
 
-/** 规划路径（0-A：道路邻接 BFS，取最短路径） */
+/** 规划路径（Session 381：WorldGraph planMacroCityPath，对齐原官道 BFS） */
 export function planPath(_state: GameState, fromId: number, targetId: number): number[] {
-  if (fromId === targetId) return [];
-  const visited = new Set<number>([fromId]);
-  const queue: Array<{ id: number; path: number[] }> = [{ id: fromId, path: [] }];
-  while (queue.length > 0) {
-    const cur = queue.shift()!;
-    for (const next of roadNeighbors(cur.id)) {
-      if (visited.has(next)) continue;
-      visited.add(next);
-      const newPath = [...cur.path, next];
-      if (next === targetId) return newPath;
-      queue.push({ id: next, path: newPath });
-    }
-  }
-  return [];
+  return planMacroCityPath(fromId, targetId);
 }
 
 /** 行军指令：设置新目标，重算路径 */

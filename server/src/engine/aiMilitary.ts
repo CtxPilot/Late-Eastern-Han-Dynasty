@@ -8,12 +8,12 @@ import {
   FormationType,
   OfficerStatus,
   UnitType,
-  canMarchAlongRoad,
+  canTravelMacroAdjacent,
   formationTroopCap,
   getCommanderyTemplateByTemplateId,
   isHostileOrAtWar,
   resolveArmyCountyNodeId,
-  roadNeighbors,
+  macroAdjacentCityIds,
   type GameState,
   type Officer,
 } from '@leh/shared';
@@ -108,7 +108,7 @@ function planWithdrawalPath(fromId: number, destinationId: number): number[] {
   const visited = new Set([fromId]);
   while (queue.length > 0) {
     const current = queue.shift()!;
-    for (const nextId of [...roadNeighbors(current.id)].sort((a, b) => a - b)) {
+    for (const nextId of [...macroAdjacentCityIds(current.id)].sort((a, b) => a - b)) {
       if (visited.has(nextId)) continue;
       const path = [...current.path, nextId];
       if (nextId === destinationId) return path;
@@ -149,7 +149,7 @@ function requiredReserve(state: GameState, factionId: number, cityId: number): n
       target.ruler != null &&
       target.ruler !== factionId &&
       canAiAttackFaction(state, factionId, target.ruler) &&
-      canMarchAlongRoad(cityId, target.id)
+      canTravelMacroAdjacent(cityId, target.id)
     )
     .reduce((largest, target) => Math.max(largest, target.troops), 0);
   return Math.max(
@@ -340,7 +340,7 @@ function aiMilitaryTurn(
       for (const target of Object.values(s.cities)) {
         if (target.ruler == null || target.ruler === factionId) continue;
         if (!canAiAttackFaction(s, factionId, target.ruler)) continue;
-        if (!canMarchAlongRoad(from.id, target.id)) continue;
+        if (!canTravelMacroAdjacent(from.id, target.id)) continue;
         const mod = getPlotAttackModifier(s, target.id, factionId) * getPolicyAttackModifier(s, target.id, factionId);
         const base = Math.max(100, 12000 - target.troops);
         const score = base * mod;
