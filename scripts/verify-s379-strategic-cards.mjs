@@ -118,6 +118,14 @@ assert(
   '荆州：城卡片网格',
 );
 assert(
+  await evaluate(`return !!document.querySelector('[data-testid="province-topology"]')`),
+  '荆州：官道拓扑图',
+);
+assert(
+  await evaluate(`return !!document.querySelector('[data-testid="commandery-topology-overlay"]')`),
+  '荆州：南郡县拓扑叠加',
+);
+assert(
   await evaluate(`return !!document.querySelector('[data-testid="strategic-back-realm"]')`),
   '返回天下按钮可见',
 );

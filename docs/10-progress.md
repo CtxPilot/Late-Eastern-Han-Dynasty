@@ -1,3 +1,11 @@
+## 2026-08-27 — Session 380 · WorldGraph + 州拓扑 UI + 荆州南郡叠加 + PWA 摘底图
+
+- Phase：**S02**；按用户顺序 1→3→2→4：WorldGraph Adapter → 战略 UI 打磨 → 荆州接入 → PWA 摘 geo-basemap 预缓存。
+- 实装：`shared/world-graph.ts`（LocationNode/RouteEdge、宏观/郡域/荆州试点图、shortestPath）；`ProvinceTopology`；州卡势力占比条；荆州叠南郡县拓扑；`vite` PWA 过滤 `geo-basemap.png`（文件仍保留）。
+- 验证：world-graph **5/5**；client typecheck；strategic 单测含 sharePct；浏览器冒烟增拓扑断言。
+- 文档：`07/10/12/35`、`HANDOFF`、`MAP_REMOVAL_ANALYSIS` 补充。
+- 边界：行军引擎未改读 Graph；多军团未动；0-B 暂缓。
+
 ## 2026-08-27 — Session 379 · S02 取消连续大地图 · 层级卡片战略屏
 
 - Phase：**S02 地图 UI 真源切换**；继续 0-A，不扩静态数据规模，不启动 0-B。

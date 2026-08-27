@@ -86,6 +86,7 @@ describe('buildProvinceCards', () => {
     expect(jing.cityCount).toBe(3);
     expect(jing.dominant?.name).toBe('袁');
     expect(jing.dominant?.cityCount).toBe(2);
+    expect(jing.dominant?.sharePct).toBe(67);
     expect(jing.troops).toBe(2200);
     expect(jing.food).toBe(600);
   });

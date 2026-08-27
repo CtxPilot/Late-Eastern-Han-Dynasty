@@ -120,3 +120,11 @@ PWA：`leh-pwa-precache` 仍会缓存 `geo-basemap.png`（本轮暂留资产，�
 ## 6. 结论
 
 项目早已是 **节点图驱动玩法**；连续大地图主要是 L0 展示层。退役 MapCanvas 并切到层级卡片，是把 UI 真源对齐到 Historical World Graph 方向的最小安全切片，且不破坏历史数据资产。
+
+
+---
+
+## 7. Session 380 进度
+
+- `shared/world-graph.ts` Adapter 已落地（宏观 / 郡域 / 荆州试点）。
+- PWA 预缓存已排除 `geo-basemap.png`；文件仍在 `client/public/` 供开发参考。

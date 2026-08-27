@@ -9,12 +9,19 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 379**（S02 · 取消连续大地图 → 层级卡片战略屏） |
+| 会话 | **Session 380**（S02 · WorldGraph Adapter + 战略拓扑 UI + 荆州南郡叠加 + PWA 摘底图预缓存） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 379：`StrategicWorldView`（天下→州→城）替换 `GameLayout` 中 MapCanvas；MapCanvas 迁 `map/legacy/`；地理数据/底图保留（`MAP_REMOVAL_ANALYSIS.md`）。Session 378 及之前保持有效 |
-| 文档最新 | `07/10/12/35`、根 `MAP_REMOVAL_ANALYSIS.md` 与本交接已同步 |
-| 本交接用途 | 世界屏 UI 真源从连续疆域大地图切到历史层级卡片；选城契约 `selectedCityId` 不变 |
-| 下一步 | WorldGraph Adapter（Phase 2）；荆州深挖；旧地图 PWA 预缓存摘除后置；**0-B 继续暂缓** |
+| 代码最新 | Session 380：`shared/world-graph.ts`；州卡势力占比条；`ProvinceTopology`；荆州叠南郡县图；PWA 不再预缓存 `geo-basemap.png`。Session 379 卡片世界屏保持 |
+| 文档最新 | `07/10/12/35`、`MAP_REMOVAL_ANALYSIS` 与本交接已同步 |
+| 本交接用途 | 统一只读 WorldGraph；战略屏拓扑与荆州试点；PWA 瘦身 |
+| 下一步 | 人物/军队引擎表面改读 Graph（行为对齐现有 BFS）；多军团仍缺规格；**0-B 继续暂缓** |
+
+### Session 380 交接要点
+
+- 顺序交付：WorldGraph Adapter → 战略 UI 拓扑/占比 → 荆州+南郡叠加 → PWA 摘底图预缓存。
+- `buildMacroWorldGraph` / `buildCommanderyWorldGraph` / `buildJingzhouPilotGraph` / `shortestPath`；玩法仍以 city-roads 为准。
+- 验证：shared world-graph **5/5**；client strategic 单测；`verify-s379-strategic-cards` 含拓扑断言；typecheck 通过。
+- 边界：不删 geo 资产文件；多军团未动。
 
 ### Session 379 交接要点
 

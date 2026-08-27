@@ -31,6 +31,8 @@ export interface FactionShare {
   name: string;
   color: string;
   cityCount: number;
+  /** 占该州城池比例 0~100 */
+  sharePct: number;
 }
 
 export interface ProvinceCardModel {
@@ -119,6 +121,7 @@ export function buildProvinceCards(game: GameState): ProvinceCardModel[] {
           name: f?.name ?? `势力${factionId}`,
           color: f?.color ?? '#78716c',
           cityCount,
+          sharePct: cities.length > 0 ? Math.round((cityCount / cities.length) * 100) : 0,
         };
       })
       .sort((a, b) => b.cityCount - a.cityCount);

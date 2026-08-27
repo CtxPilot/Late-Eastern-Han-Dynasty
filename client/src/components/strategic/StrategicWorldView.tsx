@@ -7,8 +7,10 @@
  */
 
 import { useEffect, useMemo } from 'react';
+import { buildCommanderyWorldGraph, nanjun190 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { buildCityCards, buildProvinceCards } from './buildProvinceCards';
+import { ProvinceTopology } from './ProvinceTopology';
 
 function formatCompact(n: number): string {
   if (n >= 10_000) return `${Math.round(n / 1000) / 10}万`;
@@ -43,6 +45,11 @@ export function StrategicWorldView() {
     if (!game || strategicView.level !== 'province' || !strategicView.province) return [];
     return buildCityCards(game, strategicView.province, selectedCityId);
   }, [game, strategicView, selectedCityId]);
+
+  const nanjunOverlay = useMemo(() => {
+    if (strategicView.level !== 'province' || strategicView.province !== '荆州') return null;
+    return buildCommanderyWorldGraph(nanjun190);
+  }, [strategicView]);
 
   if (!game) return null;
 
@@ -118,11 +125,25 @@ export function StrategicWorldView() {
                     />
                     <span className="text-xs text-stone-300">
                       主控 {p.dominant.name}
-                      <span className="text-stone-500"> · {p.dominant.cityCount}/{p.cityCount} 城</span>
+                      <span className="text-stone-500">
+                        {' '}
+                        · {p.dominant.sharePct}%（{p.dominant.cityCount}/{p.cityCount}）
+                      </span>
                     </span>
                   </div>
                 ) : (
                   <div className="text-xs text-stone-500 mb-2">无主控势力</div>
+                )}
+                {p.shares.length > 0 && (
+                  <div className="mb-2 h-1.5 w-full rounded-sm overflow-hidden flex bg-stone-800" aria-hidden>
+                    {p.shares.map((s) => (
+                      <span
+                        key={s.factionId}
+                        style={{ width: `${s.sharePct}%`, backgroundColor: s.color }}
+                        className="h-full"
+                      />
+                    ))}
+                  </div>
                 )}
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-stone-400">
                   <span>城 {p.cityCount}</span>
@@ -138,7 +159,7 @@ export function StrategicWorldView() {
                         className="text-[10px] px-1.5 py-0.5 rounded border border-stone-700 text-stone-400"
                         style={{ borderLeftColor: s.color, borderLeftWidth: 3 }}
                       >
-                        {s.name} {s.cityCount}
+                        {s.name} {s.sharePct}%
                       </span>
                     ))}
                   </div>
@@ -147,6 +168,17 @@ export function StrategicWorldView() {
             ))}
           </div>
         ) : (
+          <div className="space-y-4">
+            {provinceName && (
+              <ProvinceTopology
+                cities={game.cities}
+                province={provinceName}
+                selectedCityId={selectedCityId}
+                onSelectCity={selectCity}
+                overlay={nanjunOverlay}
+                title={`${provinceName} · 官道拓扑`}
+              />
+            )}
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
             data-testid="strategic-city-grid"
@@ -213,6 +245,7 @@ export function StrategicWorldView() {
                 )}
               </button>
             ))}
+          </div>
           </div>
         )}
       </div>

@@ -149,7 +149,13 @@ function lehPwaPrecache(): Plugin {
         });
       const files = walk(outDirAbs)
         .map((full) => full.slice(outDirAbs.length + 1).split(sep).join('/'))
-        .filter((rel) => rel !== 'sw.js' && !rel.endsWith('.map'))
+        .filter(
+          (rel) =>
+            rel !== 'sw.js' &&
+            !rel.endsWith('.map') &&
+            // Session 380：世界屏已退役连续底图，不再预缓存 geo-basemap（文件仍保留于 public/）
+            !/(^|\/)geo-basemap\.png$/i.test(rel),
+        )
         .map((rel) => `${base}${rel}`);
       const manifest = Array.from(new Set([`${base}index.html`, ...files])).sort();
       const version = shortHash(manifest.join('\n'));

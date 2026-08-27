@@ -10,6 +10,7 @@ export * from './data/historical-geography/index.js';
 export * from './demographics.js';
 export * from './ceiling.js';
 export * from './city-roads.js';
+export * from './world-graph.js';
 export * from './city-factions.js';
 export * from './intel.js';
 export * from './mask-state.js';

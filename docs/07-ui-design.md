@@ -162,6 +162,11 @@
 
 legacy（不再挂载）：
   MapCanvas + mapLod + mapViewport + geo-basemap 缩放平移
+
+Session 380 增补：
+  - 州卡势力占比条（sharePct）
+  - ProvinceTopology 官道抽象拓扑（点选即 selectCity）
+  - 荆州视图叠加南郡县 WorldGraph 只读示意
 ```
 
 #### 5.2.1（历史）MapCanvas — 地图渲染（已退役）

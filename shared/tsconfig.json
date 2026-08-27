@@ -14,6 +14,7 @@
     "family-policy.ts",
     "ceiling.ts",
     "city-roads.ts",
+    "world-graph.ts",
     "city-factions.ts",
     "intel.ts",
     "mask-state.ts",
