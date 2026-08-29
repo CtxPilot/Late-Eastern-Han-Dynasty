@@ -16,7 +16,7 @@ import {
   type Officer,
   PolicyType,
   type FamilyTreatmentMode,
-  type DelegationPolicyLike,
+  type DelegationPolicy,
 } from '@leh/shared';
 import { adoptSaveEnvelope, buildGameState, buildSaveEnvelope, runEndTurnPipeline } from '../engine/state-pipeline.js';
 import { staticData } from '../data/loader.js';
@@ -358,7 +358,7 @@ export function doCreateDelegationRegion(input: {
       name: input.name,
       cityIds: input.cityIds,
       governorId: input.governorId,
-      policy: input.policy as DelegationPolicyLike,
+      policy: input.policy as DelegationPolicy,
       autoRecruit: input.autoRecruit,
       autoReward: input.autoReward,
     });
@@ -377,7 +377,7 @@ export function doUpdateDelegationRegion(input: {
     currentGame = updateDelegationRegion(getGame(), {
       regionId: input.regionId,
       name: input.name,
-      policy: input.policy as DelegationPolicyLike | undefined,
+      policy: input.policy as DelegationPolicy | undefined,
       autoRecruit: input.autoRecruit,
       autoReward: input.autoReward,
     });

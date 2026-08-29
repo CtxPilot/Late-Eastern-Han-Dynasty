@@ -20,9 +20,7 @@ import {
   type Officer,
 } from '@leh/shared';
 
-type DelegationPolicyLike = DelegationPolicy;
-
-function assertPolicy(policy: DelegationPolicyLike): void {
+function assertPolicy(policy: DelegationPolicy): void {
   if (!DELEGATION_POLICIES.includes(policy)) throw new Error('无效的委任方针');
 }
 
@@ -103,7 +101,7 @@ export function createDelegationRegion(
     name?: string;
     cityIds: number[];
     governorId: number;
-    policy?: DelegationPolicyLike;
+    policy?: DelegationPolicy;
     autoRecruit?: boolean;
     autoReward?: boolean;
   },
@@ -157,7 +155,7 @@ export function createDelegationRegion(
 /** 修改委任区：改名/方针（每季一次、下季生效）/自动开关。 */
 export function updateDelegationRegion(
   state: GameState,
-  input: { regionId: number; name?: string; policy?: DelegationPolicyLike; autoRecruit?: boolean; autoReward?: boolean },
+  input: { regionId: number; name?: string; policy?: DelegationPolicy; autoRecruit?: boolean; autoReward?: boolean },
 ): GameState {
   const regions = regionsOf(state);
   const region = findRegion(regions, input.regionId);

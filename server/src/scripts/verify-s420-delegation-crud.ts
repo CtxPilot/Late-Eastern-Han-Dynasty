@@ -237,7 +237,6 @@ assert(
 );
 
 // ====== 划城 / 划空自动解散（D10） ======
-const capitalCity = created.cities[capitalId]!;
 expectThrow(
   () => assignDelegationCity(created, { regionId: region.id, cityId: capitalId }),
   '首都不可委任',
