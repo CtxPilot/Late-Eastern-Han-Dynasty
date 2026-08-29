@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import type { CommandDomain } from './commandShellState';
+import { SealBadge } from '../ui/SealBadge';
 
 export type CommandDomainAvailability = 'available' | 'legacy' | 'planned';
 
@@ -10,6 +12,21 @@ export type CommandDockItem = {
   label: string;
   availability: CommandDomainAvailability;
   reason: string;
+};
+
+/** 域→印信（批次② · ArtDirection §四：语义色固定，禁止按位置轮换）。 */
+const DOCK_SEAL: Record<CommandDomain, { char: string; color: Parameters<typeof SealBadge>[0]['color'] }> = {
+  civil: { char: '政', color: 'civil' },
+  military: { char: '军', color: 'military' },
+  personnel: { char: '人', color: 'personnel' },
+  diplomacy: { char: '交', color: 'ink' },
+  strategy: { char: '计', color: 'intel' },
+  intel: { char: '谍', color: 'intel' },
+  farming: { char: '田', color: 'civil' },
+  family: { char: '家', color: 'family' },
+  court: { char: '朝', color: 'gold' },
+  faction: { char: '势', color: 'ink' },
+  delegation: { char: '督', color: 'military' },
 };
 
 export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
@@ -23,6 +40,7 @@ export const COMMAND_DOCK_ITEMS: readonly CommandDockItem[] = [
   { domain: 'family', label: '家族', availability: 'available', reason: '家族总览与婚姻、子嗣操作唯一入口' },
   { domain: 'court', label: '朝廷', availability: 'available', reason: '朝廷功能唯一入口' },
   { domain: 'faction', label: '势力', availability: 'available', reason: '势力总览与天命人心双轨系统唯一入口' },
+  { domain: 'delegation', label: '军团', availability: 'available', reason: '委任区管理与军团上限唯一入口（docs/04 §39、docs/42）' },
 ] as const;
 
 export function CommandDock({
@@ -46,7 +64,7 @@ export function CommandDock({
         {COMMAND_DOCK_ITEMS.map((item) => {
           const active = item.domain === activeDomain;
           return (
-            <button
+            <InkButton
               key={item.domain}
               type="button"
               data-testid={`command-domain-${item.domain}`}
@@ -61,26 +79,29 @@ export function CommandDock({
                   : 'border-stone-800 bg-stone-900/75 text-stone-300 hover:border-stone-600'
               }`}
             >
-              <span className="block">{item.label}</span>
-              <span className="mt-0.5 block text-[9px] text-stone-500">
+              <span className="flex items-center justify-center gap-1">
+                <SealBadge char={DOCK_SEAL[item.domain].char} color={DOCK_SEAL[item.domain].color} size={15} />
+                <span>{item.label}</span>
+              </span>
+              <span className="mt-0.5 block text-xs text-stone-500">
                 {item.availability === 'available'
                   ? '可用'
                   : item.availability === 'planned'
                     ? '设计中'
                     : '原面板'}
               </span>
-            </button>
+            </InkButton>
           );
         })}
-        <button
+        <InkButton
           type="button"
           disabled
           title="本阶段继续使用顶部“结束回合”"
           className="min-w-0 border border-red-950 bg-red-950/25 px-3 py-1.5 text-xs text-stone-600"
         >
           进行
-          <span className="mt-0.5 block text-[9px]">仍在顶部</span>
-        </button>
+          <span className="mt-0.5 block text-xs">仍在顶部</span>
+        </InkButton>
       </div>
     </nav>
   );

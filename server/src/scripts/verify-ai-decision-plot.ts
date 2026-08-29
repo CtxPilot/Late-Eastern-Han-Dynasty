@@ -5,7 +5,7 @@
  * BF-P3 Session B · 整场 AI 计谋决策复现验证
  *
  * 推进 N=12 个月，前 6 月建立基线 + 保存 envelope，后 6 月记录每月计谋决策
- * 可观察指标（Plot 列表 + ai_placeholder actionLog）。读档恢复到第 6 月 + PRNG
+ * 可观察指标（Plot 列表 + ai_civil actionLog）。读档恢复到第 6 月 + PRNG
  * 状态，重新推进 6 月，断言决策序列完全一致 + PRNG draws 计数一致——证明
  * AI 计谋决策（是否行动/计谋类型/目标势力）在读档后完全可预测。
  */
@@ -47,7 +47,7 @@ function extractPlotMetrics(state: GameState): PlotMetrics {
       targetCityId: p.targetCityId,
     })),
     aiPlaceholderLogs: state.actionLog
-      .filter((l) => l.type === 'ai_placeholder')
+      .filter((l) => l.type === 'ai_civil')
       .map((l) => ({ type: l.type, message: l.message, year: l.year, month: l.month })),
   };
 }
@@ -87,7 +87,7 @@ const actualFinalRng = getRuntimeRngState();
 
 assert(
   JSON.stringify(actualSequence) === JSON.stringify(expectedSequence),
-  '读档重放后 6 个月 AI 计谋决策序列完全一致（Plot 列表/ai_placeholder 日志）',
+  '读档重放后 6 个月 AI 计谋决策序列完全一致（Plot 列表/ai_civil 日志）',
 );
 assert(
   JSON.stringify(actualFinalRng) === JSON.stringify(expectedFinalRng),
@@ -98,8 +98,8 @@ const totalPlots = expectedSequence.reduce((sum, s) => sum + s.plots.length, 0);
 const totalPlaceholderLogs = expectedSequence.reduce((sum, s) => sum + s.aiPlaceholderLogs.length, 0);
 assert(
   totalPlots > 0 || totalPlaceholderLogs > 0,
-  `6 个月推进中应至少有一次 AI 计谋/内政决策发生（总 Plot 数 ${totalPlots}，总 ai_placeholder 日志 ${totalPlaceholderLogs}）`,
+  `6 个月推进中应至少有一次 AI 计谋/内政决策发生（总 Plot 数 ${totalPlots}，总 ai_civil 日志 ${totalPlaceholderLogs}）`,
 );
 
 console.log(`AI decision plot verification passed: ${passed}/4`);
-console.log(`  6 月决策序列：总 Plot 数 ${totalPlots}，总 ai_placeholder 日志 ${totalPlaceholderLogs}`);
+console.log(`  6 月决策序列：总 Plot 数 ${totalPlots}，总 ai_civil 日志 ${totalPlaceholderLogs}`);

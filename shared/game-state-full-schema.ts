@@ -19,6 +19,7 @@ const ROOT_KEYS = [
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
+  'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',
   'pendingFamilyTreatment',
 ] as const satisfies readonly (keyof GameState)[];
 

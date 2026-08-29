@@ -10,6 +10,7 @@ import {
   calculateAllianceChance,
   findDiplomacy,
   hegemonyFavorMultiplier,
+  initialDiplomacyFavorBonus,
   type DiplomacyLink,
   type GameState,
 } from '@leh/shared';
@@ -65,16 +66,20 @@ function upsertLink(
   a: number,
   b: number,
   patch: Partial<DiplomacyLink>,
+  state?: GameState,
 ): DiplomacyLink[] {
   const existing = findDiplomacy(links, a, b);
   if (!existing) {
+    const initialFavor = state
+      ? initialDiplomacyFavorBonus(state, a, b)
+      : 0;
     return [
       ...links,
       {
         factionA: a,
         factionB: b,
         relation: DipRelation.NEUTRAL,
-        favorability: 0,
+        favorability: initialFavor,
         ...patch,
       },
     ];
@@ -94,7 +99,8 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
 
   const cities = payFromAnyPlayerCity(state, TRIBUTE_GOLD);
   const link = findDiplomacy(state.diplomacy, state.playerFactionId, targetFactionId);
-  const prevFav = link?.favorability ?? 0;
+  const prevFav = link?.favorability
+    ?? initialDiplomacyFavorBonus(state, state.playerFactionId, targetFactionId);
   const favorGain = Math.round(TRIBUTE_FAVOR * hegemonyFavorMultiplier(
     state.factions[state.playerFactionId]?.politicalStage,
   ));
@@ -114,6 +120,7 @@ export function tributeGold(state: GameState, targetFactionId: number): GameStat
       favorability: nextFav,
       relation: relation as DiplomacyLink['relation'],
     },
+    state,
   );
 
   const name = state.factions[targetFactionId].name;
@@ -158,7 +165,8 @@ export function transferCourtNetwork(
 
   const multiplier = hegemonyFavorMultiplier(self.politicalStage);
   const favorGain = Math.round(COURT_NETWORK_FAVOR_PER * n * multiplier);
-  const prevFav = link?.favorability ?? 0;
+  const prevFav = link?.favorability
+    ?? initialDiplomacyFavorBonus(state, fid, targetFactionId);
   const nextFav = Math.min(100, prevFav + favorGain);
   let relation = rel;
   if (nextFav >= 30 && relation !== DipRelation.ALLIED && relation !== 'allied') {
@@ -177,7 +185,7 @@ export function transferCourtNetwork(
   const diplomacy = upsertLink(state.diplomacy, fid, targetFactionId, {
     favorability: nextFav,
     relation: relation as DiplomacyLink['relation'],
-  });
+  }, state);
 
   const intel = state.intel ?? { cities: {}, agents: {}, cityDefense: {}, nextAgentSeq: 1, recentMissions: [], plantableBeauty: {} };
   const plantable = { ...(intel.plantableBeauty ?? {}) };
@@ -238,6 +246,7 @@ export function formAlliance(
       relation: DipRelation.ALLIED,
       favorability: Math.max(fav, ALLIANCE_MIN_FAVOR + 10),
     },
+    state,
   );
 
   const name = state.factions[targetFactionId].name;

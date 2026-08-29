@@ -10,6 +10,8 @@ import type { NationalPolicy } from './types/policy.js';
 export const POLICY_COOLDOWN_MONTHS = 6;
 export const POLICY_PREPARE_FIRST_ROUND_MUL = 1.1;
 export const POLICY_PREPARE_INCOMING_MUL = 0.9;
+/** 以逸待劳：六角战场己方单位移动力 −1（下限 1） */
+export const POLICY_PREPARE_HEX_MOVE_PENALTY = 1;
 export const POLICY_PLAY_FOOL_TROOP_MUL = 0.5;
 export const POLICY_PLAY_FOOL_AI_ATTACK_MUL = 1.8;
 export const POLICY_HIGH_WALLS_WALL_MUL = 1.3;
@@ -36,7 +38,7 @@ export const POLICY_LABELS: Record<PolicyType, string> = {
 };
 
 export const POLICY_SUMMARIES: Record<PolicyType, string> = {
-  [PolicyType.PREPARE_DEFENSE]: '自动战首回合己方攻防+10%（六角移动−1后置）',
+  [PolicyType.PREPARE_DEFENSE]: '自动战首回合己方攻防+10%；六角移动−1',
   [PolicyType.BEFRIEND_FAR]: '不相邻势力友好+3/月，接壤势力−3/月',
   [PolicyType.PLAY_FOOL]: '对敌显示兵力×0.5，敌更可能来攻',
   [PolicyType.GUEST_HOST]: '驻盟友城每季取其金粮5%，友好−2/月',
@@ -80,6 +82,15 @@ export function factionHasActivePolicy(
   type: PolicyType,
 ): boolean {
   return policiesOf(state, factionId).some((p) => p.active && p.type === type);
+}
+
+/** 以逸待劳生效时六角单位移动力：基值 −1，下限 1。 */
+export function prepareDefenseHexMobility(
+  baseMobility: number,
+  hasPrepareDefense: boolean,
+): number {
+  if (!hasPrepareDefense) return baseMobility;
+  return Math.max(1, baseMobility - POLICY_PREPARE_HEX_MOVE_PENALTY);
 }
 
 export function policySwitchCooldown(state: GameState, factionId: number): number {

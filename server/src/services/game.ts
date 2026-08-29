@@ -6,12 +6,17 @@ import {
   OfficerStatus,
   grantMerit,
   maskGameStateForPlayer,
+  setTournamentPreferredMode,
+  setTournamentPlayerEntries,
+  placeTournamentChampionBet,
+  clearTournamentChampionBet,
   type BattleState,
   type EventSourceClass,
   type GameState,
   type Officer,
   PolicyType,
   type FamilyTreatmentMode,
+  type DelegationPolicyLike,
 } from '@leh/shared';
 import { adoptSaveEnvelope, buildGameState, buildSaveEnvelope, runEndTurnPipeline } from '../engine/state-pipeline.js';
 import { staticData } from '../data/loader.js';
@@ -29,6 +34,12 @@ import {
 } from '../engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
 import { resolveFamilyTreatment } from '../engine/hostageFamilies.js';
+import {
+  assignDelegationCity,
+  createDelegationRegion,
+  disbandDelegationRegion,
+  updateDelegationRegion,
+} from '../engine/delegation.js';
 import {
   lootBeautyOnCapture,
   rewardBeautyStock,
@@ -52,6 +63,8 @@ import {
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
+  settleTacticalMeleeTroops,
+  collectAnnihilatedDefenderCommanders,
 } from '../engine/battle.js';
 import {
   advisorAction as campaignAdvisorAction,
@@ -330,11 +343,99 @@ export function doResolveFamilyTreatment(mode: FamilyTreatmentMode): GameState {
   });
 }
 
+// ====== 委任军团（docs/04 §39 + docs/42，S15；与 worker 镜像同源） ======
+
+export function doCreateDelegationRegion(input: {
+  name?: string;
+  cityIds: number[];
+  governorId: number;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): GameState {
+  return withLock(() => {
+    currentGame = createDelegationRegion(getGame(), {
+      name: input.name,
+      cityIds: input.cityIds,
+      governorId: input.governorId,
+      policy: input.policy as DelegationPolicyLike,
+      autoRecruit: input.autoRecruit,
+      autoReward: input.autoReward,
+    });
+    return getClientGame();
+  });
+}
+
+export function doUpdateDelegationRegion(input: {
+  regionId: number;
+  name?: string;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): GameState {
+  return withLock(() => {
+    currentGame = updateDelegationRegion(getGame(), {
+      regionId: input.regionId,
+      name: input.name,
+      policy: input.policy as DelegationPolicyLike | undefined,
+      autoRecruit: input.autoRecruit,
+      autoReward: input.autoReward,
+    });
+    return getClientGame();
+  });
+}
+
+export function doAssignDelegationCity(input: { regionId: number; cityId: number; remove?: boolean }): GameState {
+  return withLock(() => {
+    currentGame = assignDelegationCity(getGame(), input);
+    return getClientGame();
+  });
+}
+
+export function doDisbandDelegationRegion(regionId: number): GameState {
+  return withLock(() => {
+    currentGame = disbandDelegationRegion(getGame(), regionId);
+    return getClientGame();
+  });
+}
+
 export function doSetNationalPolicy(type: string, targetCityId?: number): GameState {
   return withLock(() => {
     currentGame = setNationalPolicy(getGame(), type as PolicyType, {
       targetCityId,
     });
+    return getClientGame();
+  });
+}
+
+export function doSetTournamentPreferredMode(mode: string): GameState {
+  return withLock(() => {
+    if (mode !== 'fair' && mode !== 'unrestricted') {
+      throw new Error('无效的大会模式');
+    }
+    currentGame = setTournamentPreferredMode(getGame(), mode);
+    return getClientGame();
+  });
+}
+
+export function doSetTournamentPlayerEntries(officerIds: number[]): GameState {
+  return withLock(() => {
+    const result = setTournamentPlayerEntries(getGame(), officerIds);
+    currentGame = result.state;
+    return getClientGame();
+  });
+}
+
+export function doPlaceTournamentChampionBet(officerId: number, amount: number): GameState {
+  return withLock(() => {
+    currentGame = placeTournamentChampionBet(getGame(), officerId, amount);
+    return getClientGame();
+  });
+}
+
+export function doClearTournamentChampionBet(): GameState {
+  return withLock(() => {
+    currentGame = clearTournamentChampionBet(getGame());
     return getClientGame();
   });
 }
@@ -919,18 +1020,15 @@ export function exitBattle(): GameState {
       : null;
   if (tacticalMelee) {
       if (battle.phase !== 'over') throw new Error('六角微操尚未结束，不能提前结算');
-      const voluntaryRetreat = battle.units.some((unit) => unit.side === 'attacker' && unit.isRetreated);
-      const attackerTroopsBeforeRetreat = battle.units
-        .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed)
-        .reduce((sum, unit) => sum + unit.troopCount, 0);
-      const attackerTroops = voluntaryRetreat
-        ? Math.floor(attackerTroopsBeforeRetreat * 0.5)
-        : battle.units
-          .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
-          .reduce((sum, unit) => sum + unit.troopCount, 0);
-      const defenderTroops = battle.units
-        .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && !unit.isRetreated)
-        .reduce((sum, unit) => sum + unit.troopCount, 0);
+      // P1-3（Session 411）：结算口径收口到 engine 纯函数（撤退 50% 等价；攻方胜伤兵归队 15%）
+      const tacticalSettlement = settleTacticalMeleeTroops(battle);
+      const attackerTroops = tacticalSettlement.attackerTroops;
+      const defenderTroops = tacticalSettlement.defenderTroops;
+      // P1-3（Session 418）：战场生擒——攻方胜利且守方单位被歼，其主将径直被俘（确定性无掷点）
+      // 战术撤退（voluntaryRetreat）不触发生擒；生擒语义=歼灭守方单位的战场后果
+      const capturedIds = battle.winner === 'attacker'
+        ? collectAnnihilatedDefenderCommanders(battle)
+        : [];
       const resolved: MeleeState = {
         ...tacticalMelee,
         attackerTroops,
@@ -939,13 +1037,35 @@ export function exitBattle(): GameState {
         defenderMorale: battle.units.find((unit) => unit.side === 'defender')?.morale ?? 0,
         attackerFormation: battle.units.find((unit) => unit.side === 'attacker')?.formation ?? tacticalMelee.attackerFormation,
         phase: battle.winner === 'attacker' ? 'attacker_victory' : 'defender_victory',
-        eventLog: [...tacticalMelee.eventLog, `六角微操结算：${voluntaryRetreat ? '战术撤退（50%回流）' : battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
+        eventLog: [...tacticalMelee.eventLog, `六角微操结算：${tacticalSettlement.note}`],
       };
-      const withoutBattle = {
+      let withoutBattle: GameState = {
         ...state,
         activeBattles: state.activeBattles.filter((item) => item.id !== battle.id),
         activeMelee: resolved,
       };
+      if (capturedIds.length > 0) {
+        const names: string[] = [];
+        withoutBattle = {
+          ...withoutBattle,
+          officers: Object.fromEntries(
+            Object.entries(withoutBattle.officers).map(([id, officer]) => {
+              if (!capturedIds.includes(officer.id)) return [id, officer];
+              names.push(officer.name);
+              return [id, { ...officer, status: OfficerStatus.PRISONER }];
+            }),
+          ),
+          actionLog: [
+            {
+              year: withoutBattle.currentYear,
+              month: withoutBattle.currentMonth,
+              type: 'battle_capture',
+              message: `【战报】战场生擒：${names.join('、')}`,
+            },
+            ...withoutBattle.actionLog,
+          ].slice(0, 80),
+        };
+      }
       currentGame = applyMeleeSettlement(withoutBattle, resolved);
       return getClientGame();
     }

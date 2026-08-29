@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import {
   SpyMissionType,
@@ -336,7 +337,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
     >
       <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="情报分面">
         {FACETS.map((item) => (
-          <button
+          <InkButton
             key={item.id}
             type="button"
             data-testid={`command-intel-facet-${item.id}`}
@@ -349,10 +350,10 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
             }`}
           >
             {item.label}
-          </button>
+          </InkButton>
         ))}
       </nav>
-      <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
+      <p className="mb-3 text-xs leading-relaxed text-stone-500">
         S07 人员建设、任务派遣、反间与俘虏处置均由此统一终审提交。
       </p>
 
@@ -378,7 +379,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
           </>
         ) : facet === 'personnel' ? (
           <>
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               人员建设城市
               <select
                 data-testid="command-intel-personnel-city"
@@ -392,7 +393,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
               </select>
             </label>
             <div className="grid grid-cols-2 gap-2">
-              <button
+              <InkButton
                 type="button"
                 data-testid="command-intel-recruit"
                 data-command-write="true"
@@ -402,8 +403,8 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                 className="border border-violet-800 bg-violet-950/35 px-2 py-2 text-violet-100 disabled:opacity-40"
               >
                 招募密探 · {recruitCount}名
-              </button>
-              <button
+              </InkButton>
+              <InkButton
                 type="button"
                 data-testid="command-intel-train-female"
                 data-command-write="true"
@@ -413,10 +414,10 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                 className="border border-pink-800 bg-pink-950/30 px-2 py-2 text-pink-100 disabled:opacity-40"
               >
                 训练女间谍
-              </button>
+              </InkButton>
             </div>
             <div className="border border-pink-950/80 bg-pink-950/15 px-3 py-2">
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 人脉掩护目标
                 <select
                   data-testid="command-intel-plant-target"
@@ -432,7 +433,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                   ))}
                 </select>
               </label>
-              <button
+              <InkButton
                 type="button"
                 data-testid="command-intel-plant-female"
                 data-command-write="true"
@@ -442,7 +443,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                 className="mt-2 w-full border border-pink-800 bg-pink-950/30 px-2 py-2 text-pink-100 disabled:opacity-40"
               >
                 点化女间谍 · 金80
-              </button>
+              </InkButton>
             </div>
             <InfoList
               title="己方密探"
@@ -454,12 +455,12 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
         ) : facet === 'tasks' ? (
           <>
             {shellState.activeCommand === 'recon' ? (
-              <p className="border border-violet-900/70 bg-violet-950/20 px-3 py-2 text-[10px] text-violet-200" data-testid="command-intel-recon-intent">
+              <p className="border border-violet-900/70 bg-violet-950/20 px-3 py-2 text-xs text-violet-200" data-testid="command-intel-recon-intent">
                 已从计略抵达“探秘”落点；可在此选择密探与目标城正式派遣。
               </p>
             ) : null}
             <div className="space-y-2 border border-amber-950/80 bg-amber-950/15 px-3 py-2">
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 空闲密探
                 <select data-testid="command-intel-mission-agent" value={agentId}
                   onChange={(event) => setAgentId(event.target.value)}
@@ -473,7 +474,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-[10px] text-stone-500">
+                <label className="text-xs text-stone-500">
                   任务
                   <select data-testid="command-intel-mission-type" value={missionType}
                     onChange={(event) => setMissionType(event.target.value as SpyMissionType)}
@@ -489,7 +490,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                     ) : null}
                   </select>
                 </label>
-                <label className="text-[10px] text-stone-500">
+                <label className="text-xs text-stone-500">
                   目标城
                   <select data-testid="command-intel-mission-target" value={targetCityId}
                     onChange={(event) => setTargetCityId(event.target.value ? Number(event.target.value) : '')}
@@ -499,14 +500,14 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                   </select>
                 </label>
               </div>
-              <button type="button" data-testid="command-intel-mission" data-command-write="true"
+              <InkButton type="button" data-testid="command-intel-mission" data-command-write="true"
                 disabled={loading || missionReason != null}
                 title={missionReason ?? undefined}
                 onClick={() => missionDraft && setOperation(missionDraft)}
                 className="w-full border border-amber-800 bg-amber-950/35 px-2 py-2 text-amber-100 disabled:opacity-40">
                 派出执行{MISSION_LABEL[missionType]} · 金{MISSION_GOLD[missionType] ?? '—'}
-              </button>
-              {missionReason ? <p className="text-[10px] text-stone-500">{missionReason}</p> : null}
+              </InkButton>
+              {missionReason ? <p className="text-xs text-stone-500">{missionReason}</p> : null}
             </div>
             <InfoList
               title="最近任务"
@@ -518,7 +519,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
         ) : (
           <>
             <div className="space-y-2 border border-sky-950/80 bg-sky-950/15 px-3 py-2">
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 己方城池
                 <select data-testid="command-intel-counter-city" value={effectiveCounterCityId}
                   onChange={(event) => setCounterCityId(Number(event.target.value))}
@@ -526,7 +527,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                   {ownCities.map((city) => <option key={city.id} value={city.id}>{city.name}</option>)}
                 </select>
               </label>
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 空闲密探
                 <select data-testid="command-intel-counter-agent" value={agentId}
                   onChange={(event) => setAgentId(event.target.value)}
@@ -536,15 +537,15 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" data-testid="command-intel-station" data-command-write="true"
+                <InkButton type="button" data-testid="command-intel-station" data-command-write="true"
                   disabled={loading || !agentId || effectiveCounterCityId === ''}
                   onClick={() => agentId && effectiveCounterCityId !== '' && setOperation({
                     type: 'station', agentId, cityId: Number(effectiveCounterCityId),
                   })}
                   className="border border-sky-800 px-2 py-2 text-sky-100 disabled:opacity-40">
                   驻守反间
-                </button>
-                <button type="button" data-testid="command-intel-unstation" data-command-write="true"
+                </InkButton>
+                <InkButton type="button" data-testid="command-intel-unstation" data-command-write="true"
                   disabled={loading || effectiveCounterCityId === '' || validateIntelOperationOrder(game, {
                     type: 'unstation', cityId: Number(effectiveCounterCityId),
                   }) != null}
@@ -553,7 +554,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
                   })}
                   className="border border-stone-700 px-2 py-2 text-stone-300 disabled:opacity-40">
                   撤回反间
-                </button>
+                </InkButton>
               </div>
             </div>
             <InfoList
@@ -571,12 +572,12 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
               <div key={captive.id} className="flex items-center justify-between border border-red-950/70 px-3 py-2">
                 <span className="text-xs text-stone-300">{captive.name} · {captive.faction}</span>
                 <span className="flex gap-1">
-                  <button type="button" data-testid="command-intel-captive-execute" data-command-write="true"
+                  <InkButton type="button" data-testid="command-intel-captive-execute" data-command-write="true"
                     onClick={() => setOperation({ type: 'captive', agentId: captive.id, action: 'execute' })}
-                    className="border border-red-900 px-2 py-1 text-[10px] text-red-200">处决</button>
-                  <button type="button" data-testid="command-intel-captive-release" data-command-write="true"
+                    className="border border-red-900 px-2 py-1 text-xs text-red-200">处决</InkButton>
+                  <InkButton type="button" data-testid="command-intel-captive-release" data-command-write="true"
                     onClick={() => setOperation({ type: 'captive', agentId: captive.id, action: 'release' })}
-                    className="border border-stone-700 px-2 py-1 text-[10px] text-stone-300">释放</button>
+                    className="border border-stone-700 px-2 py-1 text-xs text-stone-300">释放</InkButton>
                 </span>
               </div>
             ))}
@@ -680,7 +681,7 @@ export function IntelOverviewDrawer({ shellState }: { shellState: CommandShellSt
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="border border-stone-800 bg-stone-900/55 px-2 py-2 text-center">
-      <div className="text-[9px] text-stone-500">{label}</div>
+      <div className="text-xs text-stone-500">{label}</div>
       <strong className="mt-1 block text-sm text-violet-100">{value}</strong>
     </div>
   );
@@ -691,10 +692,10 @@ function InfoList({ title, items, empty }: { title: string; items: string[]; emp
     <div className="border border-stone-800 bg-stone-900/45 px-3 py-2">
       <h3 className="text-xs text-violet-200">{title}</h3>
       {items.length > 0 ? (
-        <ul className="mt-1 space-y-1 text-[10px] leading-relaxed text-stone-300">
+        <ul className="mt-1 space-y-1 text-xs leading-relaxed text-stone-300">
           {items.map((item, index) => <li key={`${item}-${index}`}>· {item}</li>)}
         </ul>
-      ) : <p className="mt-1 text-[10px] text-stone-600">{empty}</p>}
+      ) : <p className="mt-1 text-xs text-stone-600">{empty}</p>}
     </div>
   );
 }

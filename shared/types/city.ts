@@ -23,6 +23,12 @@ export interface CityRuntimeStats {
   morale: number;
   /** S03 0-A Session 362：文化持续投入值；旧存档缺省按 0 读取。 */
   culture?: number;
+  /** S03 0-A Session 397：工艺持续投入值；旧存档缺省按 0。Session 401 起征兵士气消费；器械速度仍后置。 */
+  craft?: number;
+  /** S03 0-A Session 398：交通持续投入值；旧存档缺省按 0。Session 402 起行军粮耗减免；行军速度仍后置。 */
+  transport?: number;
+  /** S03 0-A Session 399：卫生持续投入值；旧存档缺省按 0 读取。瘟疫抗性/人口增长率消费后置。 */
+  sanitation?: number;
 }
 
 /** Static JSON record (cities.json) */
@@ -66,7 +72,14 @@ export interface CityDemographics {
   elder: number;
 }
 
-export type DevelopmentProjectKind = 'farm' | 'commerce' | 'wall' | 'culture';
+export type DevelopmentProjectKind =
+  | 'farm'
+  | 'commerce'
+  | 'wall'
+  | 'culture'
+  | 'craft'
+  | 'transport'
+  | 'sanitation';
 
 export interface DevelopmentProject {
   kind: DevelopmentProjectKind;

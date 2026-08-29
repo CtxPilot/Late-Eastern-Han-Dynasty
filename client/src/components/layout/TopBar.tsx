@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { Season } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 // 离线可玩版（Session 372）：槽位/信封走网关，离线时落 IndexedDB 与 Worker。
 import { gameApi } from '../../services/gateway';
 import type { SaveSlotMeta } from '../../services/api';
+import { SealButton } from '../ui/buttons';
+import { SealIcon } from '../ui/SealBadge';
+import { cycleSfxVolume, getSfxVolume } from '../../utils/sfx';
 import { useEffect, useRef, useState } from 'react';
 
 const SEASON_LABEL: Record<number, string> = {
@@ -110,73 +114,91 @@ export function TopBar() {
         {game.currentMonth}月
       </span>
       <span className="text-stone-500">|</span>
-      <span className="text-amber-200/90" title="金">
-        金 {gold.toLocaleString()}
+      <span className="flex items-center gap-1 text-amber-200/90" title="金">
+        <SealIcon kind="gold" size={15} /> {gold.toLocaleString()}
       </span>
-      <span className="text-lime-200/80" title="粮">
-        粮 {food.toLocaleString()}
+      <span className="flex items-center gap-1 text-lime-200/80" title="粮">
+        <SealIcon kind="food" size={15} /> {food.toLocaleString()}
       </span>
-      <span className="text-sky-200/80" title="兵力">
-        兵 {troops.toLocaleString()}
+      <span className="flex items-center gap-1 text-sky-200/80" title="兵力">
+        <SealIcon kind="troops" size={15} /> {troops.toLocaleString()}
       </span>
-      <span className="text-rose-200/80" title="宫廷人脉（势力库存）">
-        人脉 {faction?.courtNetwork ?? 0}
+      <span className="flex items-center gap-1 text-rose-200/80" title="宫廷人脉（势力库存）">
+        <SealIcon kind="network" size={15} /> {faction?.courtNetwork ?? 0}
       </span>
-      <span className="text-stone-500" title="城池数">
-        城 {cityCount}
+      <span className="flex items-center gap-1 text-stone-500" title="城池数">
+        <SealIcon kind="city" size={15} /> {cityCount}
       </span>
       <span className="flex-1" />
+      <SfxToggle />
       {error && <span className="text-red-400 text-xs mr-2">{error}</span>}
-      <button
+      <InkButton
         type="button"
         className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
         onClick={openScenarioSelect}
       >
         更换剧本
-      </button>
-      <button
+      </InkButton>
+      <InkButton
         type="button"
         data-testid="btn-save-export"
         className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
         onClick={() => void handleExport()}
       >
         导出存档
-      </button>
-      <button
+      </InkButton>
+      <InkButton
         type="button"
         data-testid="btn-save-import"
         className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
         onClick={() => fileInput.current?.click()}
       >
         导入存档
-      </button>
-      <button
+      </InkButton>
+      <InkButton
         type="button"
         data-testid="btn-save-slots"
         className="px-2 py-1 rounded border border-amber-800 text-amber-200 hover:border-amber-500"
         onClick={() => setSlotsOpen((open) => !open)}
       >
         槽位存档
-      </button>
+      </InkButton>
       <input ref={fileInput} type="file" accept="application/json,.json" className="hidden" onChange={handleImport} />
       {slotsOpen && <div data-testid="save-slots-panel" className="absolute right-3 top-12 z-50 w-80 rounded border border-amber-800 bg-stone-950 p-3 shadow-xl">
-        <div className="flex items-center justify-between mb-2"><span className="text-amber-300 font-semibold">系统存档槽位</span><button type="button" className="text-stone-400" onClick={() => setSlotsOpen(false)}>×</button></div>
-        <div className="flex gap-2 mb-3"><input data-testid="save-slot-name" value={slotName} onChange={(e) => setSlotName(e.target.value)} maxLength={32} className="min-w-0 flex-1 rounded border border-stone-700 bg-stone-900 px-2 py-1 text-stone-200" /><button type="button" data-testid="btn-save-slot" onClick={() => void handleSlotSave()} className="rounded bg-amber-900 px-2 py-1 text-amber-100">保存</button></div>
-        {slotsLoading ? <p className="text-xs text-stone-500">读取槽位…</p> : slots.length === 0 ? <p className="text-xs text-stone-500">暂无服务端槽位存档</p> : <div className="space-y-1">{slots.map((slot) => <div key={slot.slot} className="flex items-center gap-2 rounded border border-stone-800 px-2 py-1"><span className="min-w-0 flex-1 truncate text-sm text-stone-200">{slot.slot}<span className="ml-1 text-xs text-stone-500">{new Date(slot.updatedAt).toLocaleString()}</span></span><button type="button" data-testid={`btn-load-slot-${slot.slot}`} onClick={() => void handleSlotLoad(slot.slot)} className="text-xs text-amber-300 hover:text-amber-100">读取</button></div>)}</div>}
-        <p className="mt-3 text-[11px] text-stone-600">服务端保存至 XDG 数据目录；覆盖与读取均需确认。</p>
+        <div className="flex items-center justify-between mb-2"><span className="text-amber-300 font-semibold">系统存档槽位</span><InkButton type="button" className="text-stone-400" onClick={() => setSlotsOpen(false)}>×</InkButton></div>
+        <div className="flex gap-2 mb-3"><input data-testid="save-slot-name" value={slotName} onChange={(e) => setSlotName(e.target.value)} maxLength={32} className="min-w-0 flex-1 rounded border border-stone-700 bg-stone-900 px-2 py-1 text-stone-200" /><InkButton type="button" data-testid="btn-save-slot" onClick={() => void handleSlotSave()} className="rounded bg-amber-900 px-2 py-1 text-amber-100">保存</InkButton></div>
+        {slotsLoading ? <p className="text-xs text-stone-500">读取槽位…</p> : slots.length === 0 ? <p className="text-xs text-stone-500">暂无服务端槽位存档</p> : <div className="space-y-1">{slots.map((slot) => <div key={slot.slot} className="flex items-center gap-2 rounded border border-stone-800 px-2 py-1"><span className="min-w-0 flex-1 truncate text-sm text-stone-200">{slot.slot}<span className="ml-1 text-xs text-stone-500">{new Date(slot.updatedAt).toLocaleString()}</span></span><InkButton type="button" data-testid={`btn-load-slot-${slot.slot}`} onClick={() => void handleSlotLoad(slot.slot)} className="text-xs text-amber-300 hover:text-amber-100">读取</InkButton></div>)}</div>}
+        <p className="mt-3 text-xs text-stone-600">服务端保存至 XDG 数据目录；覆盖与读取均需确认。</p>
       </div>}
       {screen === 'world' && (
-        <button
-          type="button"
+        <SealButton
           data-testid="btn-end-turn"
-          className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-amber-100 text-sm hover:bg-amber-800 disabled:opacity-50"
+          className="text-sm px-3 py-1.5"
           disabled={loading || hasBlockingDecision}
-          title={hasPendingEvent ? '请先处理待决事件' : hasPendingFamilyTreatment ? '请先处理家属处置' : undefined}
+          reason={hasPendingEvent ? '请先处理待决事件' : hasPendingFamilyTreatment ? '请先处理家属处置' : undefined}
           onClick={() => void endTurn()}
         >
           {hasPendingEvent ? '待决事件…' : hasPendingFamilyTreatment ? '待处置家属…' : '结束回合'}
-        </button>
+        </SealButton>
       )}
     </header>
+  );
+}
+
+
+/** 音效音量循环开关（批次⑤余项 · Session 418）：静音→25%→60%→100%。 */
+function SfxToggle() {
+  const [vol, setVol] = useState(getSfxVolume());
+  const label = vol === 0 ? '音效:静' : `音效:${Math.round(vol * 100)}%`;
+  return (
+    <button
+      type="button"
+      data-testid="btn-sfx-volume"
+      title="循环切换音效音量"
+      className="px-2 py-1 rounded border border-stone-700 text-stone-300 hover:border-amber-700"
+      onClick={() => setVol(cycleSfxVolume())}
+    >
+      {label}
+    </button>
   );
 }

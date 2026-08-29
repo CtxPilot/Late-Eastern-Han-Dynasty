@@ -405,7 +405,7 @@ export enum PlotStage {
 
 /** L3 国策态势（docs/04 §31.6）；一次一策，切换冷却 6 月 */
 export enum PolicyType {
-  /** 以逸待劳 — 首回合攻防+10% */
+  /** 以逸待劳 — 首回合攻防+10%；六角移动−1 */
   PREPARE_DEFENSE = 'prepareDefense',
   /** 远交近攻 — 远势力友好+3/月，邻接−3/月 */
   BEFRIEND_FAR = 'befriendFarFightNear',
@@ -447,4 +447,12 @@ export enum HegemonyPosition {
   KINGDOM_GENTLEMAN_STEWARD = 'kingdomGentlemanSteward',
   KINGDOM_AGRICULTURE_MINISTER = 'kingdomAgricultureMinister',
   KINGDOM_COACH_MINISTER = 'kingdomCoachMinister',
+}
+
+/** 委任方针（docs/04 §39.4，docs/42 D5）：都督自动管理的资源倾向。 */
+export enum DelegationPolicy {
+  DEVELOPMENT = 'development',
+  ARMAMENT = 'armament',
+  BALANCED = 'balanced',
+  OFFENSIVE = 'offensive',
 }

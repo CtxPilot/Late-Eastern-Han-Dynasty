@@ -23,11 +23,13 @@ import {
   aristocracyDefenderMoralePenalty,
   applyOrganizationExecution,
   armsCombatMultiplier,
+  countFieldArmies,
   defenderMilitia,
   formationTroopCap,
   isFriendlyOrBetter,
   isHostileOrAtWar,
   macroAdjacentCityIds,
+  maxFieldArmies,
   planMacroCityPath,
   meritEffects,
   meritLevelFor,
@@ -47,6 +49,8 @@ import {
   factionHasActivePolicy,
   isScorchedCity,
   weakestHostileCityId,
+  armyTransportForMarch,
+  transportMarchFoodMul,
   type AutoBattleResult,
   type CampaignArmy,
   type CampaignFormationOptions,
@@ -334,6 +338,16 @@ export function startCampaignForFaction(
   } else {
     validateFormation(state, opts, actingFactionId);
   }
+  // D1 军团上限（docs/42）：出征军数 = clamp(2+floor(城/5), 2, 6)，玩家与 AI 同规则；
+  // garrison（郡域增援）不占额也不受限。
+  if (flags.phase !== 'garrison') {
+    const ownCityCount = Object.values(state.cities).filter((city) => city.ruler === actingFactionId).length;
+    const cap = maxFieldArmies(ownCityCount);
+    const fieldArmies = countFieldArmies(state.campaignArmies, actingFactionId);
+    if (fieldArmies >= cap) {
+      throw new Error(`出征军数已达上限（${fieldArmies}/${cap}）`);
+    }
+  }
 
   const from = state.cities[opts.fromNodeId];
   const limit = subCommanderLimit(state, opts.commanderId);
@@ -516,9 +530,14 @@ export function tickCampaignMarch(state: GameState): GameState {
       targetCity.ruler !== a.factionId
         ? POLICY_SCORCHED_FOOD_COST_MUL
         : 1;
+    // S03 Session 402：出发城/势力最高交通 → 行军粮耗乘区（运输损耗；零额外 RNG）
+    const transportValue = armyTransportForMarch(cities, a.factionId, a.fromNodeId);
+    const transportMul = transportMarchFoodMul(transportValue);
     const foodCost = Math.max(
       1,
-      Math.floor((a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul * undermineMul * scorchedMul),
+      Math.floor(
+        (a.troops / 100) * FOOD_PER_100_PER_TURN * terrainMul * undermineMul * scorchedMul * transportMul,
+      ),
     );
     let food = a.food - foodCost;
     let morale = a.morale - MARCH_MORALE_DECAY;

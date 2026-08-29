@@ -50,6 +50,20 @@ export const DEFAULT_DUEL_CONFIG: DuelEngineConfig = {
   challengeEnergyCost: 20,
 };
 
+/** S19 公平模式大会单挑：无双被动关闭、三连保留 */
+export const FAIR_TOURNAMENT_DUEL_CONFIG: DuelEngineConfig = {
+  ...DEFAULT_DUEL_CONFIG,
+  fairWushuang: true,
+};
+
+/** 无双被动（必先手 / 被动化解 / 暴率+ / AI bump）是否生效 */
+export function isWushuangPassiveActive(
+  unique: string | null | undefined,
+  fairWushuang?: boolean,
+): boolean {
+  return unique === 'wushuang' && !fairWushuang;
+}
+
 /** Deterministic RNG interface (so tests can seed). */
 export type DuelRng = () => number;
 
@@ -389,6 +403,7 @@ function computeCritRate(
   weapon: WeaponProfile,
   cmd: DuelCommand,
   unique: UniqueId,
+  fairWushuang?: boolean,
 ): number {
   if (cmd === DuelCommand.FINISHER || cmd === DuelCommand.PARRY || cmd === DuelCommand.DODGE || cmd === DuelCommand.SNEAK_ATTACK) {
     return 0;
@@ -397,7 +412,7 @@ function computeCritRate(
   rate += skillLevel(officer, 'bravery') * 0.02;
   // 豪勇 特性 (0-A: approximate via bravery skill proxy) — kept generic
   if (unique === 'wusheng') rate += 0.30;
-  if (unique === 'wushuang') rate += 0.20;
+  if (isWushuangPassiveActive(unique, fairWushuang)) rate += 0.20;
   rate += officer.hidden.luck / 500;
   // 牵制 -5%
   if (cmd === DuelCommand.RESTRAIN) rate -= 0.05;
@@ -449,12 +464,13 @@ function aiCommand(
   unique: UniqueId,
   stance: DuelStance,
   rng: DuelRng,
+  fairWushuang?: boolean,
 ): DuelCommand {
   const p = officer.hidden.personality;
   let weights: [DuelCommand, number][] = baseWeights(p);
 
-  // 专属风格调整
-  weights = applyUniqueWeights(weights, unique);
+  // 专属风格调整（公平模式跳过无双 bump → 猛将型）
+  weights = applyUniqueWeights(weights, unique, fairWushuang);
   weights = applyStanceWeights(weights, stance);
 
   // 动态调整 (§8.13.2)
@@ -520,9 +536,14 @@ function baseWeights(p: Personality): [DuelCommand, number][] {
   }
 }
 
-function applyUniqueWeights(w: [DuelCommand, number][], u: UniqueId): [DuelCommand, number][] {
+function applyUniqueWeights(
+  w: [DuelCommand, number][],
+  u: UniqueId,
+  fairWushuang?: boolean,
+): [DuelCommand, number][] {
   switch (u) {
     case 'wushuang':
+      if (!isWushuangPassiveActive(u, fairWushuang)) return w;
       return bump(bump(bump(w, DuelCommand.FINISHER, 50), DuelCommand.FIERCE_ATTACK, 20), DuelCommand.SNEAK_ATTACK, 5);
     case 'wusheng':
       return bump(w, DuelCommand.FIERCE_ATTACK, 15);
@@ -760,9 +781,14 @@ export function createDuel(
   let firstId = challenger.id;
   if (defFirstScore > atkFirstScore) firstId = defender.id;
   else if (defFirstScore === atkFirstScore && rng() < 0.5) firstId = defender.id;
-  // 无双 / 天义 → 必先手
-  if (uniqueAtk === 'wushuang' || uniqueAtk === 'tianyi') firstId = challenger.id;
-  if (uniqueDef === 'wushuang' || uniqueDef === 'tianyi' && firstId === challenger.id) firstId = defender.id;
+  // 无双 / 天义 → 必先手（公平模式无双不强制）
+  if (isWushuangPassiveActive(uniqueAtk, cfg.fairWushuang) || uniqueAtk === 'tianyi') firstId = challenger.id;
+  if (
+    (isWushuangPassiveActive(uniqueDef, cfg.fairWushuang) || uniqueDef === 'tianyi')
+    && firstId === challenger.id
+  ) {
+    firstId = defender.id;
+  }
 
   return {
     battleId,
@@ -787,6 +813,36 @@ export function createDuel(
   };
 }
 
+/**
+ * Session 392：大会跨轮 HP 继承。
+ * 对已有 carry 的一侧，覆盖 createDuel 后的满血（及开幕射箭），下限 1。
+ * 无 carry 的一侧保持 createDuel 结果。
+ */
+export function applyDuelCarryoverHp(
+  duel: DuelState,
+  carryHpByOfficer: ReadonlyMap<number, number> | Readonly<Record<number, number>>,
+): DuelState {
+  const lookup = (id: number): number | undefined => {
+    if (carryHpByOfficer instanceof Map) return carryHpByOfficer.get(id);
+    const v = (carryHpByOfficer as Record<number, number>)[id];
+    return v;
+  };
+  let combatants = duel.combatants;
+  let changed = false;
+  for (const id of [duel.challengerId, duel.defenderId]) {
+    const carried = lookup(id);
+    if (carried == null || !Number.isFinite(carried)) continue;
+    const c = combatants[id];
+    if (!c) continue;
+    const hp = Math.max(1, Math.min(c.maxHp, Math.floor(carried)));
+    if (hp === c.hp) continue;
+    if (!changed) combatants = { ...combatants };
+    combatants[id] = { ...c, hp };
+    changed = true;
+  }
+  return changed ? { ...duel, combatants } : duel;
+}
+
 /** Run a single round and append it to history. Returns updated state. */
 export function stepDuel(
   state: DuelState,
@@ -809,11 +865,12 @@ export function stepDuel(
   const secondWeapon = resolveWeapon(secondOff);
 
   // 选指令
-  const firstCmd = aiCommand(firstOff, firstC, secondC, secondC.lastCommand, firstUnique, state.stances[firstId] ?? 'delegate', rng);
-  const secondCmd = aiCommand(secondOff, secondC, firstC, firstC.lastCommand, secondUnique, state.stances[secondId] ?? 'delegate', rng);
+  const fair = cfg.fairWushuang;
+  const firstCmd = aiCommand(firstOff, firstC, secondC, secondC.lastCommand, firstUnique, state.stances[firstId] ?? 'delegate', rng, fair);
+  const secondCmd = aiCommand(secondOff, secondC, firstC, firstC.lastCommand, secondUnique, state.stances[secondId] ?? 'delegate', rng, fair);
 
   // 解算: 先手方攻击后手方, 然后后手方攻击先手方 (若仍存活)
-  const round = resolveExchange(firstId, secondId, firstCmd, secondCmd, firstOff, secondOff, firstC, secondC, firstWeapon, secondWeapon, firstUnique, secondUnique, state.round + 1, rng, equipByOfficer?.[firstId], equipByOfficer?.[secondId]);
+  const round = resolveExchange(firstId, secondId, firstCmd, secondCmd, firstOff, secondOff, firstC, secondC, firstWeapon, secondWeapon, firstUnique, secondUnique, state.round + 1, rng, equipByOfficer?.[firstId], equipByOfficer?.[secondId], fair);
 
   // 更新 combatants
   const combatants: Record<number, DuelCombatantState> = {
@@ -856,6 +913,7 @@ function resolveExchange(
   rng: DuelRng,
   firstEquip?: DuelEquipBonus,
   secondEquip?: DuelEquipBonus,
+  fairWushuang?: boolean,
 ): DuelRound {
   const commands: [DuelCommand, DuelCommand] = [firstCmd, secondCmd];
   const hits: Record<number, boolean> = { [firstId]: false, [secondId]: false };
@@ -876,8 +934,12 @@ function resolveExchange(
   // 先手 → 后手
   {
     let clash = resolveClash(firstCmd, secondCmd);
-    // 吕布面对必杀有额外 20% 化解率；失败时不附送减伤。
-    if (firstCmd === DuelCommand.FINISHER && secondUnique === 'wushuang' && rng() < 0.2) {
+    // 吕布面对必杀有额外 20% 化解率；公平模式关闭；失败时不附送减伤。
+    if (
+      firstCmd === DuelCommand.FINISHER
+      && isWushuangPassiveActive(secondUnique, fairWushuang)
+      && rng() < 0.2
+    ) {
       clash = { ...clash, finisherResolved: true };
     }
     const { damage, hit } = computeDamage(firstOff, secondOff, firstC, firstCmd, firstWeapon, clash, rng, firstEquip);
@@ -886,7 +948,7 @@ function resolveExchange(
     let crit = false;
     let finalDmg = damage;
     if (hit && firstCmd !== DuelCommand.FINISHER && firstCmd !== DuelCommand.SNEAK_ATTACK && firstCmd !== DuelCommand.PARRY && firstCmd !== DuelCommand.DODGE) {
-      const critRate = computeCritRate(firstOff, firstWeapon, firstCmd, firstUnique);
+      const critRate = computeCritRate(firstOff, firstWeapon, firstCmd, firstUnique, fairWushuang);
       crit = rng() < critRate;
       if (crit) finalDmg = Math.round(finalDmg * critMultiplier(firstOff, firstUnique, firstWeapon));
     }
@@ -895,7 +957,7 @@ function resolveExchange(
     hpAfter[secondId] = Math.max(0, hpAfter[secondId] - finalDmg);
     atkName = firstOff.name; defName = secondOff.name; atkUnique = firstUnique; weaponType = firstWeapon.type;
 
-    // 连击 (专属)
+    // 连击 (专属)——公平模式仍保留无双三连；三连路径不另滚暴击
     if (hit && (firstUnique === 'wushuang' || firstUnique === 'tianyi' || firstUnique === 'longdan' || firstUnique === 'wusheng')) {
       const chains = computeChain(firstUnique, finalDmg, firstOff, firstWeapon, rng);
       const capped = capChainDamage(firstUnique, finalDmg, chains.hits, secondC.maxHp);
@@ -909,7 +971,7 @@ function resolveExchange(
       if (rng() < counterRate) {
         let counterDmg = Math.max(1, Math.round(finalDmg * 0.5));
         if (secondUnique === 'ganglie') counterDmg = finalDmg; // 伤害×1.0
-        const counterCrit = rng() < computeCritRate(secondOff, secondWeapon, DuelCommand.FIERCE_ATTACK, secondUnique);
+        const counterCrit = rng() < computeCritRate(secondOff, secondWeapon, DuelCommand.FIERCE_ATTACK, secondUnique, fairWushuang);
         if (counterCrit) counterDmg = Math.round(counterDmg * critMultiplier(secondOff, secondUnique, secondWeapon));
         counterDamages[secondId] = counterDmg;
         counterCriticals[secondId] = counterCrit;
@@ -933,7 +995,11 @@ function resolveExchange(
   // 后手 → 先手 (若后手存活且非纯防御被秒)
   if (!defeated && hpAfter[secondId] > 0 && secondCmd !== DuelCommand.PARRY && secondCmd !== DuelCommand.DODGE) {
     let clash2 = resolveClash(secondCmd, firstCmd);
-    if (secondCmd === DuelCommand.FINISHER && firstUnique === 'wushuang' && rng() < 0.2) {
+    if (
+      secondCmd === DuelCommand.FINISHER
+      && isWushuangPassiveActive(firstUnique, fairWushuang)
+      && rng() < 0.2
+    ) {
       clash2 = { ...clash2, finisherResolved: true };
     }
     const { damage, hit } = computeDamage(secondOff, firstOff, { ...secondC, hp: hpAfter[secondId] }, secondCmd, secondWeapon, clash2, rng, secondEquip);
@@ -941,7 +1007,7 @@ function resolveExchange(
     let crit = false;
     let finalDmg = damage;
     if (hit && secondCmd !== DuelCommand.FINISHER && secondCmd !== DuelCommand.SNEAK_ATTACK) {
-      const critRate = computeCritRate(secondOff, secondWeapon, secondCmd, secondUnique);
+      const critRate = computeCritRate(secondOff, secondWeapon, secondCmd, secondUnique, fairWushuang);
       crit = rng() < critRate;
       if (crit) finalDmg = Math.round(finalDmg * critMultiplier(secondOff, secondUnique, secondWeapon));
     }

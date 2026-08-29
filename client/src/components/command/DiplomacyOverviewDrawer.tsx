@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState } from 'react';
 import {
   calculateAllianceChance,
@@ -155,7 +156,7 @@ export function DiplomacyOverviewDrawer() {
       data-testid="command-diplomacy-drawer"
     >
       <nav className="mb-3 grid grid-cols-3 gap-1" aria-label="外交分面">
-        <button
+        <InkButton
           type="button"
           data-testid="command-diplomacy-facet-factions"
           aria-current={facet === 'factions' ? 'page' : undefined}
@@ -163,8 +164,8 @@ export function DiplomacyOverviewDrawer() {
           className={`border py-1.5 ${facet === 'factions' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}
         >
           势力
-        </button>
-        <button
+        </InkButton>
+        <InkButton
           type="button"
           data-testid="command-diplomacy-facet-negotiation"
           aria-current={facet === 'negotiation' ? 'page' : undefined}
@@ -172,8 +173,8 @@ export function DiplomacyOverviewDrawer() {
           className={`border py-1.5 ${facet === 'negotiation' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}
         >
           交涉
-        </button>
-        <button
+        </InkButton>
+        <InkButton
           type="button"
           data-testid="command-diplomacy-facet-treaty"
           aria-current={facet === 'treaty' ? 'page' : undefined}
@@ -181,10 +182,10 @@ export function DiplomacyOverviewDrawer() {
           className={`border py-1.5 ${facet === 'treaty' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}
         >
           盟约
-        </button>
+        </InkButton>
       </nav>
 
-      <p className="mb-2 text-[10px] leading-relaxed text-stone-500">
+      <p className="mb-2 text-xs leading-relaxed text-stone-500">
         {facet === 'factions'
           ? '选择势力查看当前权威关系摘要。'
           : facet === 'negotiation'
@@ -194,7 +195,7 @@ export function DiplomacyOverviewDrawer() {
 
       {selected ? (
         <>
-          <label className="mb-2 text-[10px] text-stone-500" htmlFor="command-diplomacy-target">
+          <label className="mb-2 text-xs text-stone-500" htmlFor="command-diplomacy-target">
             目标势力
           </label>
           <select
@@ -220,11 +221,11 @@ export function DiplomacyOverviewDrawer() {
                 <span className="h-3 w-3 rounded-full" style={{ background: selected.color }} />
                 <strong className="text-sm text-stone-100">{selected.name}</strong>
               </div>
-              <span className={`border px-2 py-0.5 text-[10px] ${RELATION_TONE[selected.relation] ?? RELATION_TONE.neutral}`}>
+              <span className={`border px-2 py-0.5 text-xs ${RELATION_TONE[selected.relation] ?? RELATION_TONE.neutral}`}>
                 {selected.relationLabel}
               </span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div className="border border-stone-800/80 bg-stone-950/40 px-2 py-1.5">
                 <span className="text-stone-500">友好</span>
                 <strong className="float-right text-amber-200">{selected.favorability}</strong>
@@ -242,7 +243,7 @@ export function DiplomacyOverviewDrawer() {
                 <strong className="float-right text-stone-200">{selected.cityCount} 城</strong>
               </div>
             </div>
-            <div className="mt-2 text-right text-[10px] text-stone-500">
+            <div className="mt-2 text-right text-xs text-stone-500">
               已知总兵力 {selected.troops.toLocaleString('zh-CN')}
             </div>
           </section> : facet === 'negotiation' ? (
@@ -250,9 +251,9 @@ export function DiplomacyOverviewDrawer() {
               <div className="border border-stone-800 bg-stone-900/60 px-3 py-2">
                 <div className="flex items-center justify-between">
                   <strong className="text-stone-100">{selected.name}</strong>
-                  <span className="text-[10px] text-stone-500">{selected.relationLabel} · 友好 {selected.favorability}</span>
+                  <span className="text-xs text-stone-500">{selected.relationLabel} · 友好 {selected.favorability}</span>
                 </div>
-                <p className="mt-1 text-[10px] text-stone-500">
+                <p className="mt-1 text-xs text-stone-500">
                   己方总金 {resources.gold} · 宫廷人脉 {self?.courtNetwork ?? 0}
                 </p>
               </div>
@@ -260,9 +261,9 @@ export function DiplomacyOverviewDrawer() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-amber-200">进贡</h3>
-                    <p className="mt-1 text-[10px] text-stone-500">消耗金200，友好 +{tributeGain}</p>
+                    <p className="mt-1 text-xs text-stone-500">消耗金200，友好 +{tributeGain}</p>
                   </div>
-                  <button
+                  <InkButton
                     type="button"
                     data-testid="command-diplomacy-tribute"
                     disabled={loading || tributeReason != null}
@@ -274,17 +275,17 @@ export function DiplomacyOverviewDrawer() {
                     className="border border-amber-800 bg-amber-950/40 px-3 py-1.5 text-amber-100 disabled:opacity-40"
                   >
                     进贡
-                  </button>
+                  </InkButton>
                 </div>
-                {tributeReason ? <p className="mt-1 text-[10px] text-red-300" data-testid="command-diplomacy-tribute-reason">{tributeReason}</p> : null}
+                {tributeReason ? <p className="mt-1 text-xs text-red-300" data-testid="command-diplomacy-tribute-reason">{tributeReason}</p> : null}
               </article>
-              <article className="border border-rose-900/50 bg-rose-950/15 px-3 py-2">
+              <article className="border border-paper-700/70 bg-paper-100/5 px-3 py-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-rose-200">宫廷牵线</h3>
-                    <p className="mt-1 text-[10px] text-stone-500">转移库存1，友好 +{giftGain}，积累点化额度1</p>
+                    <h3 className="text-paper-300">宫廷牵线</h3>
+                    <p className="mt-1 text-xs text-stone-500">转移库存1，友好 +{giftGain}，积累点化额度1</p>
                   </div>
-                  <button
+                  <InkButton
                     type="button"
                     data-testid="command-diplomacy-court-network"
                     disabled={loading || giftReason != null}
@@ -293,12 +294,12 @@ export function DiplomacyOverviewDrawer() {
                       clearError();
                       setConfirm('court-network');
                     }}
-                    className="border border-rose-800 bg-rose-950/40 px-3 py-1.5 text-rose-100 disabled:opacity-40"
+                    className="border border-paper-700 bg-paper-100/10 px-3 py-1.5 text-paper-100 disabled:opacity-40"
                   >
                     牵线
-                  </button>
+                  </InkButton>
                 </div>
-                {giftReason ? <p className="mt-1 text-[10px] text-red-300" data-testid="command-diplomacy-gift-reason">{giftReason}</p> : null}
+                {giftReason ? <p className="mt-1 text-xs text-red-300" data-testid="command-diplomacy-gift-reason">{giftReason}</p> : null}
               </article>
             </section>
           ) : (
@@ -306,20 +307,20 @@ export function DiplomacyOverviewDrawer() {
               <div className="border border-stone-800 bg-stone-900/60 px-3 py-2">
                 <div className="flex items-center justify-between">
                   <strong className="text-stone-100">{selected.name}</strong>
-                  <span className="text-[10px] text-stone-500">{selected.relationLabel} · 友好 {selected.favorability}</span>
+                  <span className="text-xs text-stone-500">{selected.relationLabel} · 友好 {selected.favorability}</span>
                 </div>
-                <p className="mt-1 text-[10px] text-stone-500">己方总金 {resources.gold}</p>
+                <p className="mt-1 text-xs text-stone-500">己方总金 {resources.gold}</p>
               </div>
-              <article className="border border-sky-900/50 bg-sky-950/15 px-3 py-3">
+              <article className="border border-paper-700/70 bg-paper-100/5 px-3 py-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-sky-200">缔结同盟</h3>
-                    <p className="mt-1 text-[10px] text-stone-500">
+                    <h3 className="text-paper-300">缔结同盟</h3>
+                    <p className="mt-1 text-xs text-stone-500">
                       消耗金500 · 友好需≥30
                       {allianceChance ? ` · 当前成功率 ${Math.round(allianceChance.chance)}%` : ''}
                     </p>
                     {allianceChance ? (
-                      <p className="mt-1 text-[10px] text-stone-600">
+                      <p className="mt-1 text-xs text-stone-600">
                         使者 {game.officers[allianceChance.envoyId]?.name ?? '未知'} · 魅力{' '}
                         {allianceChance.envoyCharisma}
                         {allianceChance.eloquenceModifier > 0
@@ -331,7 +332,7 @@ export function DiplomacyOverviewDrawer() {
                       </p>
                     ) : null}
                   </div>
-                  <button
+                  <InkButton
                     type="button"
                     data-testid="command-diplomacy-alliance"
                     disabled={loading || allianceReason != null}
@@ -343,15 +344,15 @@ export function DiplomacyOverviewDrawer() {
                     className="border border-sky-800 bg-sky-950/40 px-3 py-1.5 text-sky-100 disabled:opacity-40"
                   >
                     结盟
-                  </button>
+                  </InkButton>
                 </div>
                 {allianceReason ? (
-                  <p className="mt-2 text-[10px] text-red-300" data-testid="command-diplomacy-alliance-reason">
+                  <p className="mt-2 text-xs text-red-300" data-testid="command-diplomacy-alliance-reason">
                     {allianceReason}
                   </p>
                 ) : null}
               </article>
-              <p className="text-[10px] leading-relaxed text-stone-600">
+              <p className="text-xs leading-relaxed text-stone-600">
                 停战、互不侵犯、求援与借道尚未实装，本阶段不提供假入口。
               </p>
             </section>

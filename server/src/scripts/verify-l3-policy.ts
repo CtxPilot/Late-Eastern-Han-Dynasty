@@ -10,14 +10,18 @@ import {
   POLICY_COOLDOWN_MONTHS,
   POLICY_HIGH_WALLS_FOOD_MUL,
   POLICY_LABELS,
+  POLICY_PREPARE_HEX_MOVE_PENALTY,
   factionHasActivePolicy,
   getActivePolicyType,
   isScorchedCity,
   policySwitchCooldown,
+  prepareDefenseHexMobility,
 } from '@leh/shared';
 import { setNationalPolicy, tickNationalPolicies } from '../engine/policy.js';
+import { createBattle } from '../engine/battle.js';
 import { advanceTurn } from '../engine/turn.js';
 import { createGame, getGame } from '../services/game.js';
+import { getUnitByType } from '../data/loader.js';
 
 let pass = 0;
 let fail = 0;
@@ -94,6 +98,32 @@ if (scorchedOk) {
 } else {
   assert(true, '无接壤边境城时坚壁清野按规则拒绝（已记录）');
 }
+
+// —— 以逸待劳：六角移动 −1（Session 383）——
+createGame(1, 1);
+let prep = setNationalPolicy(getGame(), PolicyType.PREPARE_DEFENSE);
+prep = tickNationalPolicies(prep, false);
+assert(factionHasActivePolicy(prep, prep.playerFactionId, PolicyType.PREPARE_DEFENSE), '以逸待劳生效');
+assert(POLICY_PREPARE_HEX_MOVE_PENALTY === 1, '六角移动惩罚常量=1');
+const cityId = Object.values(prep.cities).find((c) => c.ruler !== prep.playerFactionId)?.id
+  ?? Object.values(prep.cities)[0]!.id;
+const battlePrep = createBattle(prep, cityId);
+const atk = battlePrep.units.find((u) => u.side === 'attacker')!;
+const cavMobility = getUnitByType().heavyCavalry.mobility;
+assert(
+  atk.maxMp === prepareDefenseHexMobility(cavMobility, true),
+  `攻方六角 maxMp=${atk.maxMp}（基线 ${cavMobility}−1）`,
+);
+assert(atk.mp === atk.maxMp, '开局 mp=maxMp');
+
+createGame(1, 1);
+const plain = getGame();
+const battlePlain = createBattle(plain, cityId);
+const atkPlain = battlePlain.units.find((u) => u.side === 'attacker')!;
+assert(
+  atkPlain.maxMp === cavMobility,
+  `无国策时攻方 maxMp 保持兵种基线 ${cavMobility}`,
+);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

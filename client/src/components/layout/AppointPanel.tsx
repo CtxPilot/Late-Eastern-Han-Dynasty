@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import {
   CivilPosition,
@@ -164,7 +165,7 @@ export function AppointPanel({
     : '—';
 
   return (
-    <div className="px-2 space-y-2 text-[11px]" data-testid="appoint-panel">
+    <div className="px-2 space-y-2 text-xs" data-testid="appoint-panel">
       <p className="text-stone-500 px-1 leading-snug">
         三轨官职可兼任。太守须在目标城；大将军/军师/丞相/都督势力唯一。
         {canHegemony && ' 霸府三职势力唯一；称王后追加六个王国官职，同一人物在本轨道只能保留一职。'}
@@ -191,7 +192,7 @@ export function AppointPanel({
       </label>
 
       {officer && (
-        <div className="text-[10px] text-stone-500 px-0.5">
+        <div className="text-xs text-stone-500 px-0.5">
           现职：文{CIVIL_LABELS[officer.civilPosition]} / 地
           {LOCAL_LABELS[officer.localPosition]} / 武
           {MILITARY_LABELS[officer.militaryPosition]}
@@ -219,11 +220,11 @@ export function AppointPanel({
               ['civil', '文官'],
             ] as const)
         ).map(([k, lab]) => (
-          <button
+          <InkButton
             key={k}
             type="button"
             data-testid={`appoint-track-${k}`}
-            className={`flex-1 px-1 py-1 rounded border text-[10px] ${
+            className={`flex-1 px-1 py-1 rounded border text-xs ${
               track === k
                 ? 'border-amber-600 bg-amber-950/50 text-amber-100'
                 : 'border-stone-700 bg-stone-900 text-stone-400'
@@ -242,7 +243,7 @@ export function AppointPanel({
             }}
           >
             {lab}
-          </button>
+          </InkButton>
         ))}
       </div>
 
@@ -270,7 +271,7 @@ export function AppointPanel({
       </label>
 
       {needsCity && (
-        <div className="text-[10px] text-stone-500 px-0.5">
+        <div className="text-xs text-stone-500 px-0.5">
           目标城：
           {cityId != null ? game.cities[cityId]?.name : '—'}
           （地图点选己方城）
@@ -280,7 +281,7 @@ export function AppointPanel({
         </div>
       )}
 
-      <button
+      <InkButton
         type="button"
         data-testid="btn-appoint"
         disabled={loading || officerId === '' || !canMeet || !atCity}
@@ -288,7 +289,7 @@ export function AppointPanel({
         onClick={() => setConfirmOpen(true)}
       >
         {position === 'none' ? '解职' : '任命'}
-      </button>
+      </InkButton>
       <CommandConfirmDialog
         open={confirmOpen}
         category="人事"

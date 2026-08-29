@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import {
   MaritalStatus,
@@ -262,7 +263,7 @@ export function FamilyOverviewDrawer() {
     >
       <nav className="mb-3 grid grid-cols-5 gap-1" aria-label="家族分面">
         {FACETS.map((item) => (
-          <button
+          <InkButton
             key={item.id}
             type="button"
             data-testid={`command-family-facet-${item.id}`}
@@ -275,11 +276,11 @@ export function FamilyOverviewDrawer() {
             }`}
           >
             {item.label}
-          </button>
+          </InkButton>
         ))}
       </nav>
 
-      <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
+      <p className="mb-3 text-xs leading-relaxed text-stone-500">
         S18 家族总署：族谱只读展示固定史实关系；婚配与手动跟随均在此配置，并经统一终审后提交。
       </p>
 
@@ -302,7 +303,7 @@ export function FamilyOverviewDrawer() {
                 <div key={female.id} className="border border-stone-800 px-3 py-2">
                   <strong className="text-stone-200">{female.name}</strong>
                   <span className="ml-1 text-stone-600">{female.clanName}氏</span>
-                  <p className="text-[10px] text-stone-500">{female.role} · {female.city}</p>
+                  <p className="text-xs text-stone-500">{female.role} · {female.city}</p>
                 </div>
               ))}
             </div>
@@ -316,12 +317,12 @@ export function FamilyOverviewDrawer() {
             >
               <div className="flex items-baseline justify-between gap-2">
                 <strong className="text-amber-200">{entry.childName}</strong>
-                <span className="text-[10px] text-stone-500">{entry.status}</span>
+                <span className="text-xs text-stone-500">{entry.status}</span>
               </div>
-              <p className="mt-1 text-[10px] text-stone-400">
+              <p className="mt-1 text-xs text-stone-400">
                 父：{entry.father?.name ?? '未录'}　母：{entry.mother?.name ?? '未录'}
               </p>
-              <p className="text-[10px] text-stone-600">
+              <p className="text-xs text-stone-600">
                 生年 {entry.birthYear} · 登场 {entry.appearYear} · {entry.source === 'history' ? '正史' : entry.source === 'romance' ? '演义' : '传说'}
               </p>
             </article>
@@ -334,16 +335,16 @@ export function FamilyOverviewDrawer() {
               data-testid={`command-family-branch-${branch.officerId}`}
             >
               <strong className="text-amber-200">{branch.officerName}</strong>
-              <span className="ml-2 text-[10px] text-stone-500">
+              <span className="ml-2 text-xs text-stone-500">
                 武{branch.war} 忠{branch.loyalty}
               </span>
               {branch.wives.map((wife) => (
-                <p key={wife.id} className="pl-2 text-[10px] text-stone-400">
+                <p key={wife.id} className="pl-2 text-xs text-stone-400">
                   └ 妻 {wife.name}{wife.canCommand ? '（可出战）' : ''}
                 </p>
               ))}
               {branch.children.map((child) => (
-                <p key={child.childId} className="pl-2 text-[10px] text-stone-500">
+                <p key={child.childId} className="pl-2 text-xs text-stone-500">
                   └ 子 {child.childName} · {child.appearYear}登场 · {child.status}
                 </p>
               ))}
@@ -359,13 +360,13 @@ export function FamilyOverviewDrawer() {
             <Fact label="无正妻武将" value={overview.marriageOfficers.length} />
             <div className="border border-stone-800 px-3 py-2">
               <strong className="text-stone-300">女角候选</strong>
-              <p className="mt-1 text-[10px] text-stone-500">
+              <p className="mt-1 text-xs text-stone-500">
                 {overview.marriageFemales.map((female) => female.name).join('、') || '无'}
               </p>
             </div>
             <div className="border border-stone-800 px-3 py-2">
               <strong className="text-stone-300">武将候选</strong>
-              <p className="mt-1 text-[10px] text-stone-500">
+              <p className="mt-1 text-xs text-stone-500">
                 {overview.marriageOfficers.map((officer) => officer.name).join('、') || '无'}
               </p>
             </div>
@@ -397,7 +398,7 @@ export function FamilyOverviewDrawer() {
                 <option key={officer.id} value={officer.id}>{officer.name}</option>
               ))}
             </select>
-            <button
+            <InkButton
               type="button"
               data-testid="command-family-marry"
               data-command-write="true"
@@ -407,7 +408,7 @@ export function FamilyOverviewDrawer() {
               onClick={() => setConfirm('marriage')}
             >
               赐婚 / 婚配 · 送交终审
-            </button>
+            </InkButton>
           </>
         ) : (
           <>
@@ -415,20 +416,20 @@ export function FamilyOverviewDrawer() {
             {overview.freeOfficers.length > 0 ? overview.freeOfficers.map((officer) => (
               <div key={officer.id} className="border border-stone-800 px-3 py-2">
                 <strong className="text-stone-200">{officer.name}</strong>
-                <span className="ml-2 text-[10px] text-stone-600">{officer.location}</span>
-                <p className="text-[10px] text-stone-500">
+                <span className="ml-2 text-xs text-stone-600">{officer.location}</span>
+                <p className="text-xs text-stone-500">
                   相性{officer.compatibility}
                   {officer.compatibilityDiff != null ? ` · 与君主差${officer.compatibilityDiff}` : ''}
                   {officer.sameBenevolence ? ' · 仁德理想一致' : ''}
                   {officer.kinInFaction ? ' · 血亲在势力' : ''}
                 </p>
-                <p className={`text-[10px] ${officer.hasTrigger ? 'text-emerald-500' : 'text-stone-600'}`}>
+                <p className={`text-xs ${officer.hasTrigger ? 'text-emerald-500' : 'text-stone-600'}`}>
                   {officer.hasTrigger ? '具备一项投奔触发条件；仍须满足邻接并由权威 RNG 判定' : '暂无已知投奔触发条件'}
                 </p>
               </div>
             )) : <Empty>当前没有在野武将。</Empty>}
             <Empty>月度检查仍自动发生；手动检查会消费权威 RNG，且可能无人投奔。</Empty>
-            <button
+            <InkButton
               type="button"
               data-testid="command-family-follow-check"
               data-command-write="true"
@@ -438,7 +439,7 @@ export function FamilyOverviewDrawer() {
               onClick={() => setConfirm('follow')}
             >
               手动跟随检查 · 送交终审
-            </button>
+            </InkButton>
           </>
         )}
       </section>

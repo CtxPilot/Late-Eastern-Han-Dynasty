@@ -87,7 +87,7 @@ export function RightPanel() {
                 </span>
               )}
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                className={`text-xs px-1.5 py-0.5 rounded border ${
                   vis?.kind === 'fog'
                     ? 'border-stone-700 text-stone-500'
                     : vis?.kind === 'ally'
@@ -101,7 +101,7 @@ export function RightPanel() {
                 {visBadge}
               </span>
             </h2>
-            <p className="text-[10px] text-stone-600 mt-0.5">
+            <p className="text-xs text-stone-600 mt-0.5">
               点下方大项展开 · 再点可收起
             </p>
           </div>
@@ -201,7 +201,7 @@ export function RightPanel() {
                   <Row label="可征男丁" value={String(canConscript)} />
                 </>
               ) : (
-                <p className="text-[10px] text-stone-600 py-1 leading-snug">
+                <p className="text-xs text-stone-600 py-1 leading-snug">
                   人口细目属机密。己方城可见；侦查/盟友不公开户籍。
                 </p>
               )}
@@ -225,7 +225,7 @@ export function RightPanel() {
                   <Row label="合计耗粮" value={String(br.total)} />
                 </>
               ) : (
-                <p className="text-stone-600 text-[10px] px-1">情报不足</p>
+                <p className="text-stone-600 text-xs px-1">情报不足</p>
               )}
             </div>
           </AccSection>
@@ -235,7 +235,7 @@ export function RightPanel() {
             open={open === 'log'}
             onToggle={() => toggle('log')}
           >
-            <div className="px-2 max-h-40 overflow-y-auto text-[11px] text-stone-500">
+            <div className="px-2 max-h-40 overflow-y-auto text-xs text-stone-500">
               {game.actionLog.slice(0, 12).map((a, i) => (
                 <div
                   key={i}

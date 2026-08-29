@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
+import { HegemonyPanel } from './HegemonyPanel';
 import { AccSection } from '../ui/AccSection';
 
 type AccordionKey =
+  | 'hegemony'
   | 'campaign'
   | 'strategist'
   | 'cities'
   | null;
 
-/** 左侧政务：战役、总军师与城池；已迁域不再重复挂载。 */
+/** 左侧政务：霸业、战役、总军师与城池；已迁域不再重复挂载。 */
 export function LeftPanel() {
   const game = useGameStore((s) => s.game);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
@@ -21,7 +24,8 @@ export function LeftPanel() {
   const focusMapOnCity = useGameStore((s) => s.focusMapOnCity);
   const clearError = useGameStore((s) => s.clearError);
   // focusMapOnCity：切战略屏到该城所属州并选中（不再驱动 Konva 缩放）
-  const [open, setOpen] = useState<AccordionKey>(null);
+  // 霸业面板默认展开（P0-1）：给玩家一个常驻的「为什么而战」读数。
+  const [open, setOpen] = useState<AccordionKey>('hegemony');
 
   const armyCount = useMemo(() => {
     if (!game) return 0;
@@ -49,7 +53,7 @@ export function LeftPanel() {
         政务
       </div>
 
-      <div className="px-2 py-1.5 text-[10px] text-stone-500 border-b border-stone-900 leading-snug">
+      <div className="px-2 py-1.5 text-xs text-stone-500 border-b border-stone-900 leading-snug">
         {isPlayerCity
           ? `当前城：${selected!.name}（命令请用底部命令坞）`
           : selected
@@ -58,6 +62,16 @@ export function LeftPanel() {
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">
+        <AccSection
+          title="霸业"
+          badge={playerCities.length}
+          accent="civil"
+          open={open === 'hegemony'}
+          onToggle={() => toggle('hegemony')}
+        >
+          <HegemonyPanel />
+        </AccSection>
+
         <AccSection
           title="战役"
           badge={armyCount}
@@ -88,10 +102,10 @@ export function LeftPanel() {
         >
           <div className="px-2 flex flex-col gap-0.5 max-h-56 overflow-y-auto">
             {playerCities.map((c) => (
-              <button
+              <InkButton
                 key={c.id}
                 type="button"
-                className={`text-left px-2 py-1.5 rounded border text-[11px] ${
+                className={`text-left px-2 py-1.5 rounded border text-xs ${
                   c.id === selectedCityId
                     ? 'border-amber-500 bg-amber-950 text-amber-100'
                     : 'border-stone-800 bg-stone-900/80 text-stone-300 hover:border-emerald-800'
@@ -105,7 +119,7 @@ export function LeftPanel() {
                 <span className="text-stone-500 ml-1">
                   农{c.stats.farm} 兵{c.troops}
                 </span>
-              </button>
+              </InkButton>
             ))}
           </div>
         </AccSection>

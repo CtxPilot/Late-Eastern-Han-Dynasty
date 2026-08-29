@@ -8,6 +8,7 @@ import {
   CityTier,
   CeilingAttribute,
   CivilPosition,
+  DelegationPolicy,
   FamilyTier,
   GrowthPotential,
   HegemonyPosition,
@@ -19,6 +20,7 @@ import {
   OfficerStatus,
   Personality,
   ResourceType,
+  Season,
   TerrainType,
   UnitProficiency,
   UnitType,
@@ -163,6 +165,9 @@ export const CityRuntimeSchema: z.ZodType<City> = z
         wall: z.number().nonnegative(),
         morale: z.number().min(0).max(100),
         culture: z.number().nonnegative().optional(),
+        craft: z.number().nonnegative().optional(),
+        transport: z.number().nonnegative().optional(),
+        sanitation: z.number().nonnegative().optional(),
       })
       .strict(),
     gold: z.number().nonnegative(),
@@ -183,7 +188,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
       .strict(),
     activeDevelopment: z
       .object({
-        kind: z.enum(['farm', 'commerce', 'wall', 'culture']),
+        kind: z.enum(['farm', 'commerce', 'wall', 'culture', 'craft', 'transport', 'sanitation']),
         assignedOfficerId: PositiveIdSchema,
         totalMonths: z.number().int().positive(),
         remainingMonths: z.number().int().nonnegative(),
@@ -229,6 +234,50 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     }
   });
 
+export const DelegationReportSchema = z
+  .object({
+    season: z.nativeEnum(Season),
+    year: z.number().int(),
+    actionSummary: z.array(z.string().min(1)).max(12),
+    troopDelta: z.number().int(),
+    goldDelta: z.number().int(),
+    foodDelta: z.number().int(),
+    battlesWon: z.number().int().nonnegative(),
+    battlesLost: z.number().int().nonnegative(),
+    citiesCaptured: z.number().int().nonnegative(),
+    warnings: z.array(z.string().min(1)).max(12),
+  })
+  .strict();
+
+export const DelegationSeasonAccumulatorSchema = z
+  .object({
+    actions: z.array(z.string().min(1)).max(24),
+    battlesWon: z.number().int().nonnegative(),
+    battlesLost: z.number().int().nonnegative(),
+    citiesCaptured: z.number().int().nonnegative(),
+    baselineTroops: z.number().int().nonnegative(),
+    baselineGold: z.number().int().nonnegative(),
+    baselineFood: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const DelegationRegionSchema = z
+  .object({
+    id: z.number().int().positive(),
+    name: z.string().min(1),
+    cityIds: z.array(PositiveIdSchema).min(1),
+    governorId: PositiveIdSchema,
+    policy: z.nativeEnum(DelegationPolicy),
+    pendingPolicy: z.nativeEnum(DelegationPolicy).optional(),
+    policyChangedSeasonKey: z.string().min(1).optional(),
+    autoRecruit: z.boolean(),
+    autoReward: z.boolean(),
+    createdYear: z.number().int(),
+    seasonAccumulator: DelegationSeasonAccumulatorSchema.optional(),
+    lastReport: DelegationReportSchema.optional(),
+  })
+  .strict();
+
 export const FactionRuntimeSchema: z.ZodType<Faction> = z
   .object({
     id: PositiveIdSchema,
@@ -257,6 +306,7 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     mandate: z.number().int().min(0).max(100).optional(),
     popularWill: z.number().int().min(0).max(100).optional(),
     arms: z.number().int().nonnegative().optional(),
+    delegationRegions: z.array(DelegationRegionSchema).optional(),
   })
   .strict();
 

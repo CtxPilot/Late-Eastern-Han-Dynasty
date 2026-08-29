@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import type { CampaignArmy, CampaignPhase, GameState, StructureType } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -93,12 +94,12 @@ export function MilitaryOrdersPanel() {
 
   return (
     <section className="min-h-0 space-y-3 overflow-y-auto" data-testid="command-military-orders">
-      <p className="text-[10px] text-stone-500">军令在终审确认后才提交；左栏战役仅保留只读军情与战报。</p>
+      <p className="text-xs text-stone-500">军令在终审确认后才提交；左栏战役仅保留只读军情与战报。</p>
       {armies.length === 0 ? (
         <p className="border border-stone-800 bg-stone-900/50 px-3 py-3 text-stone-500">无可下令的战役军队。</p>
       ) : (
         <>
-          <label className="block text-[10px] text-stone-500">
+          <label className="block text-xs text-stone-500">
             选择军队
             <select
               data-testid="command-military-orders-army"
@@ -125,7 +126,7 @@ export function MilitaryOrdersPanel() {
               </div>
               {advisor ? (
                 <div>
-                  <h4 className="mb-1 text-[10px] text-stone-500">参谋行动 · {advisor.name}（体力 {advisor.stamina}）</h4>
+                  <h4 className="mb-1 text-xs text-stone-500">参谋行动 · {advisor.name}（体力 {advisor.stamina}）</h4>
                   <div className="grid grid-cols-2 gap-1">
                     {ADVISOR_ACTIONS.map((action) => (
                       <OrderButton key={action.value} testId={`military-order-advisor-${action.value}`} label={action.label} onClick={() => setDraft({ kind: 'advisor', armyId: selectedArmy.id, action: action.value })} />
@@ -135,7 +136,7 @@ export function MilitaryOrdersPanel() {
               ) : null}
               {['marching', 'sieging', 'garrison'].includes(selectedArmy.phase) ? (
                 <div>
-                  <h4 className="mb-1 text-[10px] text-stone-500">营建设施 · 势力金 {game.factions[game.playerFactionId]?.gold ?? 0}</h4>
+                  <h4 className="mb-1 text-xs text-stone-500">营建设施 · 势力金 {game.factions[game.playerFactionId]?.gold ?? 0}</h4>
                   <div className="grid grid-cols-2 gap-1">
                     {STRUCTURES.map((structure) => (
                       <OrderButton key={structure.value} testId={`military-order-build-${structure.value}`} label={`${structure.label} ${structure.cost}金/${structure.turns}回合`} onClick={() => setDraft({ kind: 'build', armyId: selectedArmy.id, structureType: structure.value })} />
@@ -179,14 +180,14 @@ function ArmyStatus({ game, army }: { game: GameState; army: CampaignArmy }) {
   return (
     <article className="border border-stone-800 bg-stone-900/60 px-3 py-2">
       <div className="flex justify-between"><strong className="text-stone-100">{army.name}</strong><span className="text-red-200">{campaignArmyPhaseLabel(game, army, PHASE_LABEL)}</span></div>
-      <p className="mt-1 text-[10px] text-stone-500">{game.cities[army.currentNodeId]?.name ?? `节点${army.currentNodeId}`} · 兵 {army.troops} · 粮 {army.food} · 士气 {army.morale}</p>
-      <p className="text-[10px] text-stone-600">组织 {army.organization} · 疲劳 {army.fatigue}</p>
+      <p className="mt-1 text-xs text-stone-500">{game.cities[army.currentNodeId]?.name ?? `节点${army.currentNodeId}`} · 兵 {army.troops} · 粮 {army.food} · 士气 {army.morale}</p>
+      <p className="text-xs text-stone-600">组织 {army.organization} · 疲劳 {army.fatigue}</p>
     </article>
   );
 }
 
 function OrderButton({ testId, label, danger = false, onClick }: { testId: string; label: string; danger?: boolean; onClick: () => void }) {
-  return <button type="button" data-testid={testId} onClick={onClick} className={`border px-2 py-1.5 text-[10px] ${danger ? 'border-red-800 bg-red-950/30 text-red-100' : 'border-amber-900/60 bg-stone-900 text-amber-100'}`}>{label}</button>;
+  return <InkButton type="button" data-testid={testId} onClick={onClick} className={`border px-2 py-1.5 text-xs ${danger ? 'border-red-800 bg-red-950/30 text-red-100' : 'border-amber-900/60 bg-stone-900 text-amber-100'}`}>{label}</InkButton>;
 }
 
 function orderTitle(draft: OrderDraft): string {

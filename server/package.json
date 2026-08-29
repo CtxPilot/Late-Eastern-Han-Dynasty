@@ -10,6 +10,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "validate-data": "tsx src/scripts/validate-data.ts",
     "verify-scenario-events": "tsx src/scripts/verify-scenario-events.ts",
     "verify-campaign": "tsx src/scripts/verify-campaign.ts",
@@ -78,14 +80,24 @@
     "verify-l2-remaining": "tsx src/scripts/verify-l2-remaining.ts",
     "verify-civilian-farming": "tsx src/scripts/verify-civilian-farming.ts",
     "verify-culture-development": "tsx src/scripts/verify-culture-development.ts",
+    "verify-craft-development": "tsx src/scripts/verify-craft-development.ts",
+    "verify-transport-development": "tsx src/scripts/verify-transport-development.ts",
+    "verify-sanitation-development": "tsx src/scripts/verify-sanitation-development.ts",
+    "verify-culture-recruit": "tsx src/scripts/verify-culture-recruit.ts",
+    "verify-craft-conscript": "tsx src/scripts/verify-craft-conscript.ts",
+    "verify-transport-march": "tsx src/scripts/verify-transport-march.ts",
     "verify-military-farming": "tsx src/scripts/verify-military-farming.ts",
     "verify-l3-policy": "tsx src/scripts/verify-l3-policy.ts",
     "verify-hostage-families": "tsx src/scripts/verify-hostage-families.ts",
     "verify-family-treatment": "tsx src/scripts/verify-family-treatment.ts",
+    "verify-s420-delegation-crud": "tsx src/scripts/verify-s420-delegation-crud.ts",
     "verify-weather-skill": "tsx src/scripts/verify-weather-skill.ts",
     "verify-special-proficiency": "tsx src/scripts/verify-special-proficiency.ts",
     "verify-tactical-retreat": "tsx src/scripts/verify-tactical-retreat.ts",
-    "verify-save-slots": "tsx src/scripts/verify-save-slots.ts"
+    "verify-save-slots": "tsx src/scripts/verify-save-slots.ts",
+    "verify-s411-manual-victory-bonus": "tsx src/scripts/verify-s411-manual-victory-bonus.ts",
+    "verify-s413-state-cow": "tsx src/scripts/verify-s413-state-cow.ts",
+    "verify-s414-save-slim": "tsx src/scripts/verify-s414-save-slim.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",
@@ -102,6 +114,7 @@
     "@types/node": "^22.10.5",
     "@types/ws": "^8.5.13",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.1.10"
   }
 }

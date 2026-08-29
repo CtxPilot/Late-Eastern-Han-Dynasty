@@ -14,6 +14,11 @@ export const SAVE_SLOT_PATTERN_SOURCE = '^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$';
 
 const SAVE_SLOT_PATTERN = new RegExp(SAVE_SLOT_PATTERN_SOURCE);
 
+/**
+ * P2-2（Session 414）后 2MB 预算实测：officers 静态回声剥离后，单武将挥发态约 300~400B；
+ * 1000 武将 + 105 城 + 战场实例的投影信封 ≈ 680KB（verify-s414-save-slim 断言），预算充足。
+ * 若未来字段回涨，先查 officers 是否重新序列化静态回声。
+ */
 export const MAX_SAVE_BYTES = 2 * 1024 * 1024;
 
 export function isValidSaveSlotName(slot: string): boolean {

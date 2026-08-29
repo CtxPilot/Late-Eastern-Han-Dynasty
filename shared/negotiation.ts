@@ -5,7 +5,8 @@ import { DipRelation, OfficerStatus } from './enums/index.js';
 import type { PoliticalStage } from './types/faction.js';
 import type { GameState } from './types/game.js';
 import type { Officer } from './types/officer.js';
-import { eloquenceAllianceModifier } from './skill-consume.js';
+import { eloquenceAllianceModifier, eloquenceRecruitModifier } from './skill-consume.js';
+import { cultureRecruitModifier } from './culture.js';
 import { computeMandate, mandateDiplomacyModifier } from './mandate-popular.js';
 
 /** R2 概率统一下限/上限；所有输入与输出均为百分点。 */
@@ -69,6 +70,22 @@ export function calculateRecruitChance(
       target.hidden.righteousness * 2 -
       target.hidden.ambition * 3 +
       situationalModifier,
+  );
+}
+
+/**
+ * Session 400：登用成功率完整合成（辩才 + 文化人才吸引），UI 与引擎同源。
+ * `cultureValue` 缺省 0；文化修正见 `cultureRecruitModifier`。
+ */
+export function resolveRecruitChance(
+  recruiter: Officer,
+  target: Officer,
+  cultureValue = 0,
+): number {
+  return calculateRecruitChance(
+    recruiter,
+    target,
+    eloquenceRecruitModifier(recruiter) + cultureRecruitModifier(cultureValue),
   );
 }
 

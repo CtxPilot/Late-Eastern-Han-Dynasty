@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from '././buttons'; // 批次② 三级按钮基座
 import { useEffect, useId, useRef, useState } from 'react';
 
 export interface CommandConfirmItem {
@@ -151,7 +152,7 @@ export function CommandConfirmDialog({
         data-testid="command-confirm-dialog"
       >
         <div className="border-b border-amber-900/50 bg-gradient-to-r from-stone-900 via-amber-950/30 to-stone-900 px-5 py-4">
-          <div className="text-[10px] tracking-[0.28em] text-amber-600">{category} · 终审</div>
+          <div className="text-xs tracking-[0.28em] text-amber-600">{category} · 终审</div>
           <h2 id={titleId} className="mt-1 text-lg font-bold tracking-widest text-amber-100">
             {command}
           </h2>
@@ -178,7 +179,7 @@ export function CommandConfirmDialog({
         )}
 
         <div className="flex gap-2 border-t border-stone-800 px-5 py-4">
-          <button
+          <InkButton
             ref={cancelRef}
             type="button"
             data-testid="command-confirm-cancel"
@@ -187,8 +188,8 @@ export function CommandConfirmDialog({
             onClick={onCancel}
           >
             返回修改
-          </button>
-          <button
+          </InkButton>
+          <InkButton
             type="button"
             data-testid="command-confirm-submit"
             className={`flex-1 rounded border px-3 py-2 font-semibold tracking-wider disabled:opacity-50 ${
@@ -200,7 +201,7 @@ export function CommandConfirmDialog({
             onClick={submit}
           >
             {loading ? '传令中…' : '确认下令'}
-          </button>
+          </InkButton>
         </div>
       </section>
     </div>

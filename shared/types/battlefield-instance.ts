@@ -59,6 +59,11 @@ export interface BattlefieldRouteState {
   fromNodeId: string;
   toNodeId: string;
   type: string;
+  /**
+   * 行军代价（Session 382）。生成时自 historical-geography `Route.movementCost` 写入；
+   * 旧存档可缺省，路径算法按 1 处理（与跳数 BFS 等价）。
+   */
+  movementCost?: number;
 }
 
 export interface EncounterState {

@@ -3,7 +3,7 @@
 
 import type { Officer } from '@leh/shared';
 import { resolveExpression, type BackgroundTone, type BattleSideContext, type ExpressionId } from '@leh/shared';
-import { BEARD_PATHS, FACE_PATHS, getOfficerProfile, renderCrownPaths } from './OfficerPortrait';
+import { BEARD_PATHS, FACE_PATHS, getOfficerProfile, officeSealText, renderCrownPaths, renderRubbingTexture, resolveRubbingStyle, useIsRuler, useOfficerGene } from './OfficerPortrait';
 
 /**
  * S23 人物状态表情系统 — 分层合成渲染组件（`docs/24-...md` §5）。
@@ -69,8 +69,12 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
     morale: armyMorale,
     battle: battle ?? null,
   });
-  const p = getOfficerProfile(officer);
+  const gene = useOfficerGene(officer);
+  const isRuler = useIsRuler(officer);
+  const p = getOfficerProfile(officer, gene);
   const ex = EXPRESSION_PATHS[state.expression];
+  const ribbon = gene.ribbonColor ?? 'black';
+  const RIBBON: Record<string, string> = { purple: '#6B3FA0', cyan: '#2E5E4E', yellow: '#C9A227', black: '#3f3a32' };
 
   return (
     <div
@@ -90,6 +94,8 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
           </filter>
         </defs>
         <path className="portrait-halo" d="M22 130 Q16 80 33 39 Q60 8 87 39 Q104 80 98 130Z" />
+        {/* A′ 拓影层（批次③） */}
+        {renderRubbingTexture(officer.id, resolveRubbingStyle(officer, gene.baseRubbing, isRuler))}
         <g filter={`url(#rough-ex-${officer.id})`}>
           <path className="portrait-robe" d="M20 150 Q25 105 48 91 L72 91 Q95 105 100 150Z" />
           <path className="portrait-face" d={FACE_PATHS[p.face]} />
@@ -102,6 +108,27 @@ export function ExpressionPortrait({ officer, battle, armyMorale, compact = fals
           <path className="portrait-faint" d="M43 112 L60 132 77 112 M60 132 V150" />
         </g>
       </svg>
+      {/* B 层 · 姓名印 + 印绶色条（批次③；氏族题签在详情页与左侧文字区重复，仅列表态挂载） */}
+      <div
+        className="absolute right-1.5 bottom-2.5 grid place-items-center"
+        style={{
+          width: 26,
+          height: 26,
+          padding: 1,
+          border: isRuler ? '3px double #FDE68A' : '2px double #d7aa62',
+          color: '#ead4a6',
+          background: 'var(--portrait-seal)',
+          fontFamily: "'HanDynastySeal', serif",
+          writingMode: 'vertical-rl',
+          fontSize: 10,
+          lineHeight: 1,
+          boxShadow: '0 2px 4px rgba(0,0,0,.35)',
+        }}
+        aria-hidden
+      >
+        {(gene.sealText ?? officeSealText(officer)).slice(0, 3)}
+      </div>
+      <div className="absolute left-0 right-0 bottom-0 h-[3px]" style={{ background: RIBBON[ribbon], opacity: 0.9 }} />
     </div>
   );
 }

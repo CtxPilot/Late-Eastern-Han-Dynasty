@@ -16,7 +16,11 @@ import type { IntelState } from './intel.js';
 import type { Plot } from './plot.js';
 import type { NationalPolicy } from './policy.js';
 import type { EventSourceClass } from './event.js';
-import type { TournamentState } from './tournament.js';
+import type {
+  TournamentChampionBet,
+  TournamentMode,
+  TournamentState,
+} from './tournament.js';
 import type { PendingFamilyTreatment } from '../hostage-families.js';
 
 export interface GameAction {
@@ -94,9 +98,30 @@ export interface GameState {
 
   /**
    * S19 单挑大会（Session 338 最小闭环）。
-   * 每年正月自动举办并瞬时结算；押注/观战 UI 后置。旧档缺省兼容。
+   * 每年正月自动举办并瞬时结算；旧档缺省兼容。
    */
   tournament?: TournamentState;
+
+  /**
+   * S19 下届大会模式偏好（Session 388）。
+   * `fair`＝公平竞技（吕布无双降级）；`unrestricted`＝无特殊保护。
+   * 缺省视为 fair；与本届已落幕 `tournament.mode` 独立，选定后影响下一届正月结算。
+   */
+  tournamentPreferredMode?: TournamentMode;
+
+  /**
+   * S19 玩家势力下届报名指派（Session 389）。
+   * 己方武将 id 列表，长度 ≤ 势力名额；缺省则正月按武力自动补满。
+   * 指派时忠诚<80 或与君主相性差过大者拒绝并扣忠诚 −15。
+   */
+  tournamentPlayerEntryIds?: number[];
+
+  /**
+   * S19 赛前押武魁（Session 391）。
+   * 正月前扣势力金挂单；`runAnnualTournament` 对照 championId 兑付后清空。
+   * 轮间逐场押注仍后置。旧档缺省兼容。
+   */
+  tournamentChampionBet?: TournamentChampionBet | null;
 
   /** 玩家攻城后待选择的家属处置；旧存档缺省表示没有待决项。 */
   pendingFamilyTreatment?: PendingFamilyTreatment | null;

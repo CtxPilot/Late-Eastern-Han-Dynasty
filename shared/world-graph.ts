@@ -6,7 +6,8 @@
  *
  * 不替代现有玩法真源：宏观移动仍以 `city-roads` / CampaignArmy 为准；
  * 郡域仍以 historical-geography bundle 为准。本模块把两者投影为统一只读图，
- * 供战略 UI / 路径查询 / 后续引擎迁移动用。
+ * 供战略 UI / 路径查询 / 引擎迁移共用。
+ * Session 382：郡域 tick 已直接消费实例 `routeStates.movementCost`（与本图 `distance` 同源）。
  */
 
 import { CITY_ROAD_EDGES } from './city-roads.js';

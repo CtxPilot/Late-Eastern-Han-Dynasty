@@ -24,10 +24,19 @@ import type {
 import type { RpcRequest, RpcResponse } from '../../workers/protocol';
 import { listIdbSaveSlots, readIdbSaveSlot, writeIdbSaveSlot } from '../save-idb';
 import type { SaveSlotMeta } from '../api';
+import { applyGamePatch, type GamePatch } from '../../utils/game-patch';
+
+function isGameStateLikeData(data: unknown): boolean {
+  return typeof data === 'object' && data !== null
+    && 'officers' in data && 'cities' in data && 'factions' in data && 'currentYear' in data;
+}
 
 let seq = 0;
 let worker: Worker | null = null;
 const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
+// P2-4（Session 418）：客户端上一帧镜像——与 worker 的 prevClient 保持同步，
+// patchOnly 响应经 applyGamePatch 合并后对 store 仍呈完整 GameState（D-0B-1 收口）。
+let lastClientGame: unknown = null;
 
 function ensureWorker(): Worker {
   if (!worker) {
@@ -37,8 +46,16 @@ function ensureWorker(): Worker {
       const entry = pending.get(message.id);
       if (!entry) return;
       pending.delete(message.id);
-      if (message.ok) entry.resolve(message.data);
-      else entry.reject(new Error(message.error));
+      if (message.ok) {
+        if ('patchOnly' in message) {
+          const merged = applyGamePatch(lastClientGame, message.patch as GamePatch);
+          lastClientGame = merged;
+          entry.resolve(merged);
+        } else {
+          if (isGameStateLikeData(message.data)) lastClientGame = message.data;
+          entry.resolve(message.data);
+        }
+      } else entry.reject(new Error(message.error));
     });
     worker = w;
   }
@@ -80,6 +97,7 @@ export async function loadFromSlot(slot: string): Promise<GameState> {
   return call('importSave', [envelope]);
 }
 export function endTurn(): Promise<GameState> {
+  // P2-4（Session 418）：patchOnly 响应在 onmessage 处统一合并为完整 GameState，此处透明。
   return call('endTurn');
 }
 export function chooseEvent(eventId: number, choiceIndex: number): Promise<GameState> {
@@ -118,8 +136,49 @@ export function relocateGarrisonFamilies(fromCityId: number, toCityId: number): 
 export function resolveFamilyTreatment(mode: FamilyTreatmentMode): Promise<GameState> {
   return call('resolveFamilyTreatment', [mode]);
 }
+export function createDelegationRegion(input: {
+  name?: string;
+  cityIds: number[];
+  governorId: number;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): Promise<GameState> {
+  return call('createDelegationRegion', [input]);
+}
+export function updateDelegationRegion(input: {
+  regionId: number;
+  name?: string;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): Promise<GameState> {
+  return call('updateDelegationRegion', [input]);
+}
+export function assignDelegationCity(input: {
+  regionId: number;
+  cityId: number;
+  remove?: boolean;
+}): Promise<GameState> {
+  return call('assignDelegationCity', [input]);
+}
+export function disbandDelegationRegion(regionId: number): Promise<GameState> {
+  return call('disbandDelegationRegion', [regionId]);
+}
 export function setNationalPolicy(type: string, targetCityId?: number): Promise<GameState> {
   return call('setNationalPolicy', [type, targetCityId]);
+}
+export function setTournamentPreferredMode(mode: 'fair' | 'unrestricted'): Promise<GameState> {
+  return call('setTournamentPreferredMode', [mode]);
+}
+export function setTournamentPlayerEntries(officerIds: number[]): Promise<GameState> {
+  return call('setTournamentPlayerEntries', [officerIds]);
+}
+export function placeTournamentChampionBet(officerId: number, amount: number): Promise<GameState> {
+  return call('placeTournamentChampionBet', [officerId, amount]);
+}
+export function clearTournamentChampionBet(): Promise<GameState> {
+  return call('clearTournamentChampionBet', []);
 }
 export function patrolCity(cityId: number, officerId: number): Promise<GameState> {
   return call('patrolCity', [cityId, officerId]);

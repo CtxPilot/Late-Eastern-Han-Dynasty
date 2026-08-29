@@ -81,7 +81,8 @@ assert(targetResult.units.find((u) => u.id === 'healthy')!.troopCount === 1000, 
 assert(targetResult.units.find((u) => u.id === 'enemy')!.hasActed, '敌军普攻后标记已行动');
 assert(targetResult.units.find((u) => u.id === 'enemy')!.mp === 0, '敌军普攻后移动力归零');
 const movingEnemyResult = runSimpleEnemyAi(
-  [unit('moving-enemy', 'defender', 0, 2, 1000, 2), unit('distant-target', 'attacker', 5, 2, 1000, 1)],
+  // P1-4 半知化：目标须在守方视野内（平地 4 格）且在移动步幅外，走位意图才成立
+  [{ ...unit('moving-enemy', 'defender', 0, 2, 1000, 2), mp: 2, maxMp: 2 }, unit('distant-target', 'attacker', 4, 2, 1000, 1)],
   terrain, templates,
   { 1: { war: 70, leadership: 70, name: '远方目标' }, 2: { war: 80, leadership: 80, name: '行军敌将' } },
   6, 5, 'defender', 'attacker', () => { throw new Error('仅走位不应消费攻击 RNG'); },

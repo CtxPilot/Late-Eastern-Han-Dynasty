@@ -120,7 +120,7 @@ POST   /api/game/end-turn            → GameState
 POST   /api/game/event/choose        { eventId, choiceIndex } → GameState
   // S14：只允许处理 pendingEvents[0]；应用效果并写 completedEvents/eventChoices
 
-POST   /api/game/civil/develop       { cityId, kind: 'farm'|'commerce'|'wall'|'culture', officerId }
+POST   /api/game/civil/develop       { cityId, kind: 'farm'|'commerce'|'wall'|'culture'|'craft'|'transport'|'sanitation', officerId }
 POST   /api/game/civil/develop-farm  { cityId }   // 兼容
 POST   /api/game/civil/conscript     { cityId }   // 扣 adultMale，见 04§28
 POST   /api/game/civil/relief        { cityId }   // 施米
@@ -151,6 +151,7 @@ POST   /api/game/personnel/recruit         { officerId, recruiterId? } // S11 �
   // CMD-P10：命令坞“人事”已成为名册/招贤/任官/赏罚唯一入口；
   // 搜索、登用仍复用上述端点和同一 store action。UI 只保存城市/候选草稿，
   // 确认前重校验，未新增 API 或业务缓存；旧人事手风琴已物理删除。
+  // Session 400：成功率合成含文化人才吸引（门槛每级+2，顶+10）；契约与请求体不变。
 POST   /api/game/personnel/appoint         { officerId, track: civil|local|military, position, cityId? }
                                       // S11/S12 任命；position=none 解职；太守等 needsCity
 POST   /api/game/court/grant-nobility      { officerId, targetRank }
@@ -230,10 +231,28 @@ POST   /api/game/civil/family-treatment { mode: kindness|neutral|repression }
                                      // Session 351：处理当前玩家攻城产生的 pendingFamilyTreatment；
                                      // 选择前不可结束回合；成功后返回完整 GameState
 
+POST   /api/game/delegation/create   { name?, cityIds, governorId, policy?, autoRecruit?, autoReward? }
+                                     // Session 420：建立委任区（docs/04 §39 + docs/42）。
+                                     // 校验：城归玩家/非首都/不重区、都督官职(≥太守或将军)忠诚≥80未随军未兼职、
+                                     // 区帽=爵位基准+floor(城/5)、都督帽（prefect 1/governor·general 4/grandGeneral 6/chancellor 8）
+POST   /api/game/delegation/update   { regionId, name?, policy?, autoRecruit?, autoReward? }
+                                     // 方针每季一改（同季二次 400）、pendingPolicy 下季生效
+POST   /api/game/delegation/assign-city { regionId, cityId, remove? }
+                                     // 划入/划出；划空自动解散
+POST   /api/game/delegation/disband  { regionId }
+                                     // 解散委任区（deleg_disband 日志）
+
 POST   /api/game/policy/set           { type: prepareDefense|befriendFarFightNear|playFool|guestHost|highWallsGrain|strikeWeak|scorchedEarth|hideStrength, targetCityId? }
                                      // Session 348：L3 国策切换；当前策立即结束；新策下月生效；冷却 6 月
                                      // scorchedEarth 须 targetCityId=己方边境城
 GET    /api/game/policy/current       → { activePolicies: NationalPolicy[], pending: NationalPolicy|null, cooldown: number }
+
+POST   /api/game/tournament/preferred-mode { mode: fair|unrestricted }
+                                     // Session 388：下届武魁大会模式偏好；缺省 fair；不影响本届已落幕赛果
+POST   /api/game/tournament/entries   { officerIds: number[] }
+                                     // Session 389：玩家势力下届报名指派；长度≤名额；拒绝者忠诚−15 并剔除
+POST   /api/game/tournament/champion-bet { officerId, amount } | { clear: true }
+                                     // Session 391：赛前押武魁；限额势力金×20%；正月兑付；clear 撤销退款
 
 POST   /api/game/diplomacy/tribute     { targetFactionId }  // 进贡 200金，友好+15
 POST   /api/game/diplomacy/court-network { targetFactionId, amount? }  // 宫廷人脉−n/对方+n，友好+12×n（1~5）
@@ -1042,6 +1061,21 @@ Session 246 将 `POST /api/game/civil/develop` 请求改为
 Session 362 将 `kind` 扩展为 `culture`：沿用同一持续项目响应与错误契约；文化项目启动扣
 120金、持续6个月，完成写入 `stats.culture +60`。该端点不消费 RNG，也不提前把技术研发/人才
 吸引效果复制到人事接口。
+
+Session 397 将 `kind` 再扩 `craft`：同构文化（首付120/6月/`stats.craft +60`）；Session 401 起征兵士气消费；
+器械建造速度仍后置。
+
+Session 398 将 `kind` 再扩 `transport`：同构文化（首付120/6月/`stats.transport +60`）；Session 402 起行军粮耗减免；
+行军速度仍后置。
+
+Session 399 将 `kind` 再扩 `sanitation`：同构文化（首付120/6月/`stats.sanitation +60`）；瘟疫抗性与
+人口增长率消费后置。
+
+Session 401：`conscript` 按本城 `stats.craft` 门槛级数确定性提升 `troopsMorale`（每级+2，顶+10）；
+无新路由/无额外 RNG。
+
+Session 402：`tickCampaignMarch` 按出发城/势力最高 `stats.transport` 门槛减免行军粮耗（每级−2%，顶−10%）；
+无新路由/无额外 RNG。
 
 新增只读 `GET /api/game/civil/budget`，返回当前玩家势力12月预算：
 `cityCount / goldIncome / foodProduced / civilianAndMilitaryFood / projectGold /

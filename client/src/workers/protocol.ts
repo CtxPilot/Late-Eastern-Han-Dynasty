@@ -9,5 +9,6 @@ export interface RpcRequest {
 }
 
 export type RpcResponse =
-  | { id: number; ok: true; data: unknown }
+  | { id: number; ok: true; data: unknown; patch?: unknown }
+  | { id: number; ok: true; patchOnly: true; patch: unknown }
   | { id: number; ok: false; error: string };

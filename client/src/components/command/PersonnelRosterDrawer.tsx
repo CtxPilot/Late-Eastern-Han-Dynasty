@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons';
+import { VirtualList } from '../ui/VirtualList'; // 批次② 三级按钮基座
 import { useMemo, useRef, useState } from 'react';
 import type { GameState, Officer } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -106,10 +108,10 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
   return (
     <div className="flex h-[min(36rem,calc(100vh-12rem))] min-h-0 flex-1 flex-col" data-testid="command-personnel-drawer">
       <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="人事分面">
-        <button type="button" data-testid="command-personnel-facet-roster" aria-current={facet === 'roster' ? 'page' : undefined} onClick={() => setFacet('roster')} className={`border py-1.5 ${facet === 'roster' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>名册</button>
-        <button type="button" data-testid="command-personnel-facet-recruitment" aria-current={facet === 'recruitment' ? 'page' : undefined} onClick={() => setFacet('recruitment')} className={`border py-1.5 ${facet === 'recruitment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>招贤</button>
-        <button type="button" data-testid="command-personnel-facet-appointment" aria-current={facet === 'appointment' ? 'page' : undefined} onClick={() => setFacet('appointment')} className={`border py-1.5 ${facet === 'appointment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>任官</button>
-        <button type="button" data-testid="command-personnel-facet-reward" aria-current={facet === 'reward' ? 'page' : undefined} onClick={() => setFacet('reward')} className={`border py-1.5 ${facet === 'reward' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>赏罚</button>
+        <InkButton type="button" data-testid="command-personnel-facet-roster" aria-current={facet === 'roster' ? 'page' : undefined} onClick={() => setFacet('roster')} className={`border py-1.5 ${facet === 'roster' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>名册</InkButton>
+        <InkButton type="button" data-testid="command-personnel-facet-recruitment" aria-current={facet === 'recruitment' ? 'page' : undefined} onClick={() => setFacet('recruitment')} className={`border py-1.5 ${facet === 'recruitment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>招贤</InkButton>
+        <InkButton type="button" data-testid="command-personnel-facet-appointment" aria-current={facet === 'appointment' ? 'page' : undefined} onClick={() => setFacet('appointment')} className={`border py-1.5 ${facet === 'appointment' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>任官</InkButton>
+        <InkButton type="button" data-testid="command-personnel-facet-reward" aria-current={facet === 'reward' ? 'page' : undefined} onClick={() => setFacet('reward')} className={`border py-1.5 ${facet === 'reward' ? 'border-amber-700 bg-amber-950/50 text-amber-100' : 'border-stone-800 text-stone-400'}`}>赏罚</InkButton>
       </nav>
 
       {facet === 'recruitment' ? <PersonnelRecruitDrawer /> : facet === 'appointment' ? (
@@ -130,7 +132,7 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
       ) : facet === 'reward' ? (
         <div className="min-h-0 flex-1 overflow-y-auto" data-testid="command-personnel-reward">
           <BeautyPanel />
-          <p className="px-2 pt-3 text-[10px] text-stone-600">
+          <p className="px-2 pt-3 text-xs text-stone-600">
             没收、俘虏录用尚在设计中，本阶段不提供操作入口。
           </p>
         </div>
@@ -157,25 +159,31 @@ export function PersonnelRosterDrawer({ shellState }: { shellState: CommandShell
         <option value="leadership">统帅排序</option><option value="war">武力排序</option><option value="intelligence">智力排序</option><option value="loyalty">忠诚排序</option><option value="name">姓名排序</option>
       </select>
 
-      <div className="mb-1 flex justify-between text-[10px] text-stone-600"><span>当前 {officers.length} 人</span><span>点击查看人物简册</span></div>
-      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1" data-testid="personnel-roster-scroll">
-        {officers.map((officer) => {
+      <div className="mb-1 flex justify-between text-xs text-stone-600"><span>当前 {officers.length} 人</span><span>点击查看人物简册</span></div>
+      {/* P2-3（Session 415）：0-B 223~1000+ 武将名册窗口化——只挂载视口 ± overscan 行 */}
+      <VirtualList
+        items={officers}
+        itemHeight={58}
+        getKey={(officer) => officer.id}
+        testId="personnel-roster-scroll"
+        className="pr-1"
+        empty={<p className="py-8 text-center text-stone-600" data-testid="personnel-roster-no-results">没有符合条件的人物</p>}
+        renderItem={(officer) => {
           const ruler = officer.faction != null && game.factions[officer.faction]?.rulerId === officer.id;
           return (
-            <button key={officer.id} type="button" data-testid={`command-personnel-officer-${officer.id}`} onClick={(event) => {
+            <InkButton type="button" data-testid={`command-personnel-officer-${officer.id}`} onClick={(event) => {
               selectedTrigger.current = event.currentTarget;
               setSelectedOfficerId(officer.id);
-            }} className="flex w-full items-center gap-2 border border-stone-800 bg-stone-900/60 px-2 py-1.5 text-left hover:border-amber-800 hover:bg-amber-950/20">
+            }} className="h-full w-full items-center gap-2 border border-stone-800 bg-stone-900/60 px-2 py-1 text-left hover:border-amber-800 hover:bg-amber-950/20">
               <OfficerPortrait officer={officer} compact />
               <div className="min-w-0 flex-1">
                 <div className="flex justify-between"><strong className="truncate text-stone-100">{officer.name}</strong><span className="text-stone-500">{ruler ? '君主' : STATUS_LABEL[String(officer.status)] ?? String(officer.status)}</span></div>
-                <div className="mt-1 flex justify-between text-[10px] text-stone-500"><span>统{officer.stats.leadership} · 武{officer.stats.war} · 智{officer.stats.intelligence}</span><span>{officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城'}</span></div>
+                <div className="flex justify-between text-xs text-stone-500"><span>统{officer.stats.leadership} · 武{officer.stats.war} · 智{officer.stats.intelligence}</span><span>{officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未驻城'}</span></div>
               </div>
-            </button>
+            </InkButton>
           );
-        })}
-        {officers.length === 0 ? <p className="py-8 text-center text-stone-600" data-testid="personnel-roster-no-results">没有符合条件的人物</p> : null}
-      </div>
+        }}
+      />
 
       <OfficerDetail game={game} officer={selectedOfficerId != null ? game.officers[selectedOfficerId] ?? null : null} onClose={() => {
         setSelectedOfficerId(null);

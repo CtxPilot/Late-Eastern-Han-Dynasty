@@ -5,6 +5,7 @@
  * 战场地图节点视图（Tier I）
  * 显示战场节点子集、Army 位置、操作按钮
  */
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useGameStore } from '../../stores/gameStore';
 import { MeleeEntryDialog } from './MeleeEntryDialog';
 
@@ -105,20 +106,20 @@ export function BattlefieldMapView() {
                         const adjNode = battlefield.nodes.find((n) => n.id === adjId);
                         if (!adjNode) return null;
                         return (
-                          <button
+                          <InkButton
                             key={adjId}
                             type="button"
                             className="text-xs px-2 py-1 rounded bg-stone-700 hover:bg-stone-600 text-stone-300"
                             onClick={() => battlefieldMarch(a.id, adjId)}
                           >
                             进军{adjNode.name}
-                          </button>
+                          </InkButton>
                         );
                       })}
                     </div>
                   ))}
                 {hasEnemy && (
-                  <button
+                  <InkButton
                     type="button"
                     className="text-xs px-2 py-1 rounded bg-red-800 hover:bg-red-700 text-red-200"
                     onClick={() => {
@@ -128,7 +129,7 @@ export function BattlefieldMapView() {
                     }}
                   >
                     交战
-                  </button>
+                  </InkButton>
                 )}
               </div>
             </div>

@@ -28,6 +28,8 @@ export const BattlefieldRouteStateSchema: z.ZodType<BattlefieldRouteState> = z.o
   fromNodeId: StableIdSchema,
   toNodeId: StableIdSchema,
   type: z.string().min(1),
+  /** Session 382：旧档可缺省，缺省按 1 */
+  movementCost: z.number().positive().optional(),
 }).strict();
 
 export const EncounterStateSchema: z.ZodType<EncounterState> = z.object({

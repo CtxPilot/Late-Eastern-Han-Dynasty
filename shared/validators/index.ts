@@ -104,6 +104,19 @@ export const OfficerStaticSchema = z.object({
   uniqueSkill: z.string().optional(),
   tags: z.array(z.string()),
   biography: z.string().optional(),
+  /** 批次③（Session 409）P5-10：头像基因手工覆盖（S 级策展）；未填者由 getAvatarGene 哈希派生。 */
+  avatarGene: z
+    .object({
+      faceType: z.number().int().min(0).max(5).optional(),
+      hairType: z.number().int().min(0).max(9).optional(),
+      beardType: z.number().int().min(0).max(7).optional(),
+      eyeType: z.number().int().min(0).max(6).optional(),
+      baseRubbing: z.enum(['warrior', 'scholar']).optional(),
+      sealText: z.string().optional(),
+      clanTitle: z.string().optional(),
+      ribbonColor: z.enum(['purple', 'cyan', 'black', 'yellow']).optional(),
+    })
+    .optional(),
 });
 
 export const OfficersFileSchema = z.array(OfficerStaticSchema);

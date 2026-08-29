@@ -30,6 +30,7 @@ import {
   quarterKey,
   DEVELOPMENT_PROJECT_CONFIG,
   developmentInitialGoldCost,
+  craftConscriptMoraleBonus,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
@@ -78,7 +79,7 @@ function pushLog(
   };
 }
 
-/** 启动农业 / 商业 / 城防持续项目；首付总成本 1/3。 */
+/** 启动农业 / 商业 / 城防 / 文化 / 工艺持续项目；首付总成本 1/3。 */
 export function developCity(
   state: GameState,
   cityId: number,
@@ -206,7 +207,13 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
       meritLevelFor(assignee.merit ?? 0),
       assignee.meritPath ?? 'neutral',
     ).developBonus;
-    const skillBonus = project.kind === 'culture' ? 0 : developSkillBonus(assignee, project.kind);
+    const skillBonus =
+      project.kind === 'culture' ||
+      project.kind === 'craft' ||
+      project.kind === 'transport' ||
+      project.kind === 'sanitation'
+        ? 0
+        : developSkillBonus(assignee, project.kind);
     const totalBonus = developBonus + skillBonus;
     if (totalBonus > 0) gain = Math.floor(conf.gain * (1 + totalBonus));
   }
@@ -283,12 +290,18 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const nextDemo = { ...d, adultMale: d.adultMale - total };
   // S27 兵装消耗：每征 100 兵消耗 1 件（docs/08 §十七）；流民满意度 −3
   const armsCost = Math.floor(total / 100) * ARMS_CONSCRIPT_PER_HUNDRED;
+  // S03 Session 401：工艺门槛 → 征兵部队士气（0-A 征兵质量代理；零额外 RNG）
+  const craftMorale = craftConscriptMoraleBonus(city.stats.craft ?? 0);
+  const prevTroopsMorale = city.troopsMorale ?? 70;
+  const nextTroopsMorale =
+    craftMorale > 0 ? Math.min(100, prevTroopsMorale + craftMorale) : prevTroopsMorale;
   const faction = state.factions[state.playerFactionId];
   const base: City = {
     ...city,
     gold: city.gold - goldCost,
     food: city.food - foodCost,
     troops: city.troops + total,
+    troopsMorale: nextTroopsMorale,
     demographics: nextDemo,
     population: city.population,
     garrisonFamilies: (city.garrisonFamilies ?? 0) + familiesGainedOnConscript(total, city),
@@ -304,10 +317,14 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   };
   const nextCity = withSyncedPopulation(base, nextDemo);
 
+  const craftNote =
+    craftMorale > 0
+      ? `，工艺精装士气+${craftMorale}（${prevTroopsMorale}→${nextTroopsMorale}）`
+      : '';
   let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_CONSCRIPT),
     'conscript',
-    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮${armsCost > 0 ? `，兵装−${armsCost}` : ''}）`,
+    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮${armsCost > 0 ? `，兵装−${armsCost}` : ''}${craftNote}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
   if (faction && armsCost > 0) {

@@ -139,7 +139,14 @@ gameRouter.post('/civil/develop-farm', (req, res) => {
 gameRouter.post('/civil/develop', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);
-    const kind = String(req.body.kind ?? 'farm') as 'farm' | 'commerce' | 'wall' | 'culture';
+    const kind = String(req.body.kind ?? 'farm') as
+      | 'farm'
+      | 'commerce'
+      | 'wall'
+      | 'culture'
+      | 'craft'
+      | 'transport'
+      | 'sanitation';
     const officerId = Number(req.body.officerId);
     if (!Number.isInteger(officerId)) throw new Error('必须指派本城武将');
     res.json(gameService.doDevelop(cityId, kind, officerId));
@@ -231,6 +238,58 @@ gameRouter.post('/civil/family-treatment', (req, res) => {
   }
 });
 
+// ====== 委任军团（docs/04 §39 + docs/42） ======
+
+gameRouter.post('/delegation/create', (req, res) => {
+  try {
+    const cityIds = Array.isArray(req.body.cityIds) ? req.body.cityIds.map(Number) : [];
+    res.json(gameService.doCreateDelegationRegion({
+      name: req.body.name != null ? String(req.body.name) : undefined,
+      cityIds,
+      governorId: Number(req.body.governorId),
+      policy: req.body.policy != null ? String(req.body.policy) : undefined,
+      autoRecruit: req.body.autoRecruit != null ? Boolean(req.body.autoRecruit) : undefined,
+      autoReward: req.body.autoReward != null ? Boolean(req.body.autoReward) : undefined,
+    }));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'delegation create failed' });
+  }
+});
+
+gameRouter.post('/delegation/update', (req, res) => {
+  try {
+    res.json(gameService.doUpdateDelegationRegion({
+      regionId: Number(req.body.regionId),
+      name: req.body.name != null ? String(req.body.name) : undefined,
+      policy: req.body.policy != null ? String(req.body.policy) : undefined,
+      autoRecruit: req.body.autoRecruit != null ? Boolean(req.body.autoRecruit) : undefined,
+      autoReward: req.body.autoReward != null ? Boolean(req.body.autoReward) : undefined,
+    }));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'delegation update failed' });
+  }
+});
+
+gameRouter.post('/delegation/assign-city', (req, res) => {
+  try {
+    res.json(gameService.doAssignDelegationCity({
+      regionId: Number(req.body.regionId),
+      cityId: Number(req.body.cityId),
+      remove: req.body.remove != null ? Boolean(req.body.remove) : undefined,
+    }));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'delegation assign failed' });
+  }
+});
+
+gameRouter.post('/delegation/disband', (req, res) => {
+  try {
+    res.json(gameService.doDisbandDelegationRegion(Number(req.body.regionId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'delegation disband failed' });
+  }
+});
+
 gameRouter.post('/policy/set', (req, res) => {
   try {
     const type = String(req.body.type ?? '');
@@ -238,6 +297,40 @@ gameRouter.post('/policy/set', (req, res) => {
     res.json(gameService.doSetNationalPolicy(type, targetCityId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'policy set failed' });
+  }
+});
+
+gameRouter.post('/tournament/preferred-mode', (req, res) => {
+  try {
+    const mode = String(req.body.mode ?? '');
+    res.json(gameService.doSetTournamentPreferredMode(mode));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'tournament mode failed' });
+  }
+});
+
+gameRouter.post('/tournament/entries', (req, res) => {
+  try {
+    const raw = req.body.officerIds;
+    if (!Array.isArray(raw)) throw new Error('officerIds 须为数组');
+    const officerIds = raw.map((id: unknown) => Number(id));
+    res.json(gameService.doSetTournamentPlayerEntries(officerIds));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'tournament entries failed' });
+  }
+});
+
+gameRouter.post('/tournament/champion-bet', (req, res) => {
+  try {
+    if (req.body?.clear === true) {
+      res.json(gameService.doClearTournamentChampionBet());
+      return;
+    }
+    const officerId = Number(req.body.officerId);
+    const amount = Number(req.body.amount);
+    res.json(gameService.doPlaceTournamentChampionBet(officerId, amount));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'tournament bet failed' });
   }
 });
 

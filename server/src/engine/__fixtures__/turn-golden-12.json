@@ -1,0 +1,101 @@
+{
+  "months": [
+    {
+      "y": 190,
+      "m": 2,
+      "gold": 11534,
+      "food": 17040,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 3,
+      "gold": 11678,
+      "food": 17605,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 4,
+      "gold": 11839,
+      "food": 17460,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 5,
+      "gold": 12000,
+      "food": 17303,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 6,
+      "gold": 12161,
+      "food": 17132,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 7,
+      "gold": 12304,
+      "food": 18343,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 8,
+      "gold": 12447,
+      "food": 19541,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 9,
+      "gold": 12588,
+      "food": 20728,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 10,
+      "gold": 12749,
+      "food": 18422,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 11,
+      "gold": 12910,
+      "food": 16110,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 190,
+      "m": 12,
+      "gold": 13071,
+      "food": 13822,
+      "officers": 30,
+      "alive": 4
+    },
+    {
+      "y": 191,
+      "m": 1,
+      "gold": 13090,
+      "food": 14304,
+      "officers": 30,
+      "alive": 4
+    }
+  ],
+  "finalDigest": "3781cc26(82794)"
+}

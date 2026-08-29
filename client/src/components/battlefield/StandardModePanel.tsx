@@ -10,6 +10,8 @@
  * - 战术点分配
  * - 回合执行与结果展示
  */
+import { BATTLE_TOKENS as BTS } from '../../theme/canvasTokens';
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useState } from 'react';
 import { FORMATION_LABEL, FormationType } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -75,13 +77,13 @@ export function StandardModePanel() {
     return (
       <div className="text-stone-400 text-center py-8">
         没有活跃的白刃战
-        <button
+        <InkButton
           type="button"
           className="block mx-auto mt-4 px-4 py-2 rounded bg-amber-900 hover:bg-amber-800 text-amber-200"
           onClick={() => meleeExit()}
         >
           返回战场地图
-        </button>
+        </InkButton>
       </div>
     );
   }
@@ -98,13 +100,13 @@ export function StandardModePanel() {
         <p className="text-sm text-stone-400">
           共进行 {melee.round} 回合
         </p>
-        <button
+        <InkButton
           type="button"
           className="px-4 py-2 rounded bg-amber-900 hover:bg-amber-800 text-amber-200"
           onClick={() => meleeExit()}
         >
           返回战场地图
-        </button>
+        </InkButton>
       </div>
     );
   }
@@ -116,7 +118,7 @@ export function StandardModePanel() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-      <div className="relative h-44 overflow-hidden border border-amber-950 bg-[#292116] shadow-[inset_0_0_60px_rgba(0,0,0,.8)]">
+      <div className="relative h-44 overflow-hidden border border-amber-950 shadow-[inset_0_0_60px_rgba(0,0,0,.8)]" style={{ background: BTS.meleeMapPanel }}>
         <div className="absolute inset-0 opacity-70 [background:linear-gradient(176deg,transparent_0_38%,rgba(33,41,25,.9)_39%_55%,rgba(18,17,13,.95)_56%),radial-gradient(ellipse_at_50%_10%,rgba(208,174,100,.25),transparent_48%)]" />
         <div className="absolute left-[8%] bottom-5 flex gap-2 opacity-80">
           {[0, 1, 2, 3, 4].map((n) => <span key={n} className="block h-16 w-2 bg-stone-950 shadow-[12px_9px_0_#17120e]" />)}
@@ -188,14 +190,14 @@ export function StandardModePanel() {
             <span className="text-lg font-bold text-amber-400">
               {melee.tacticalPoints} / 10
             </span>
-            <button
+            <InkButton
               type="button"
               disabled={loading}
               className="px-2 py-1 text-xs border border-stone-700 bg-stone-900/70 text-stone-300 hover:border-amber-800 hover:text-amber-200 disabled:opacity-40"
               onClick={() => void meleeRefresh()}
             >
               刷新战术点
-            </button>
+            </InkButton>
           </div>
         </div>
         <div className="text-xs text-stone-500 mt-1">
@@ -205,18 +207,18 @@ export function StandardModePanel() {
 
       {/* 战术姿态（FM-P3：持久协同矩阵，不耗战术点） */}
       <div>
-        <h4 className="text-sm font-medium text-stone-400 mb-2">战术姿态 <span className="text-[10px] text-amber-600">不耗战术点 · 克制敌方阵型时 ×1.1</span></h4>
+        <h4 className="text-sm font-medium text-stone-400 mb-2">战术姿态 <span className="text-xs text-amber-600">不耗战术点 · 克制敌方阵型时 ×1.1</span></h4>
         <div className="grid grid-cols-4 gap-2">
-          <button
+          <InkButton
             type="button"
             disabled={loading || !melee.tactic}
             className={`border px-2 py-1.5 text-center text-xs ${!melee.tactic ? 'border-amber-500 bg-amber-950 text-amber-200' : 'border-stone-700 bg-stone-900/70 text-stone-400 hover:border-amber-800'}`}
             onClick={() => void meleeSetTactic(null)}
           >
             无
-          </button>
+          </InkButton>
           {TACTICS.map((t) => (
-            <button
+            <InkButton
               key={t.id}
               type="button"
               disabled={loading || melee.tactic === t.id}
@@ -224,18 +226,18 @@ export function StandardModePanel() {
               onClick={() => void meleeSetTactic(t.id)}
             >
               <span className="block font-medium">{t.name}</span>
-              <span className="mt-0.5 block text-[9px] text-stone-500">{t.desc}</span>
-            </button>
+              <span className="mt-0.5 block text-xs text-stone-500">{t.desc}</span>
+            </InkButton>
           ))}
         </div>
       </div>
 
       {/* 战术动作选择 */}
       <div>
-        <h4 className="text-sm font-medium text-stone-400 mb-2">阵型切换 <span className="text-[10px] text-amber-600">消耗 1 战术点并执行本回合</span></h4>
+        <h4 className="text-sm font-medium text-stone-400 mb-2">阵型切换 <span className="text-xs text-amber-600">消耗 1 战术点并执行本回合</span></h4>
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
           {BASIC_FORMATIONS.map((formation) => (
-            <button
+            <InkButton
               key={formation}
               type="button"
               disabled={loading || melee.tacticalPoints < 1 || melee.attackerFormation === formation}
@@ -243,8 +245,8 @@ export function StandardModePanel() {
               onClick={() => void meleeRound('change_formation', formation)}
             >
               <span className="block font-medium">{FORMATION_LABEL[formation]}</span>
-              <span className="mt-1 block text-[9px] text-stone-500">{FORMATION_NOTES[formation]}</span>
-            </button>
+              <span className="mt-1 block text-xs text-stone-500">{FORMATION_NOTES[formation]}</span>
+            </InkButton>
           ))}
         </div>
       </div>
@@ -254,7 +256,7 @@ export function StandardModePanel() {
         <h4 className="text-sm font-medium text-stone-400 mb-2">战术动作</h4>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {AVAILABLE_ACTIONS.map((action) => (
-            <button
+            <InkButton
               key={action}
               type="button"
               className={`group px-3 py-3 border text-sm text-left transition-colors ${
@@ -266,16 +268,16 @@ export function StandardModePanel() {
             >
               <span className="flex items-center justify-between">
                 <span><b className="mr-2 font-[HanDynastySeal] text-red-500">{ACTION_DETAILS[action].seal}</b>{ACTION_NAMES[action] ?? action}</span>
-                <span className="text-[10px] text-amber-500">{ACTION_DETAILS[action].cost} 点</span>
+                <span className="text-xs text-amber-500">{ACTION_DETAILS[action].cost} 点</span>
               </span>
-              <span className="mt-1 block text-[10px] text-stone-500">{ACTION_DETAILS[action].note}</span>
-            </button>
+              <span className="mt-1 block text-xs text-stone-500">{ACTION_DETAILS[action].note}</span>
+            </InkButton>
           ))}
         </div>
       </div>
 
       {/* 执行按钮 */}
-      <button
+      <InkButton
         type="button"
         disabled={loading || !canAfford}
         className="w-full px-4 py-3 border border-amber-600 font-bold tracking-[.2em] text-base bg-gradient-to-b from-amber-800 to-amber-950 hover:from-amber-700 disabled:border-stone-700 disabled:from-stone-800 disabled:to-stone-900 disabled:text-stone-500 text-amber-100"
@@ -284,7 +286,7 @@ export function StandardModePanel() {
         }}
       >
         {loading ? '军令传递中…' : canAfford ? `传令 · ${ACTION_NAMES[selectedAction] ?? selectedAction}（${selectedDetail.cost} 点）` : '战术点不足'}
-      </button>
+      </InkButton>
 
       {/* 回合结果展示 */}
       {meleeLastResult && (

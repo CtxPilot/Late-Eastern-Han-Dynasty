@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
@@ -168,10 +169,10 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
       <section role="dialog" aria-modal="true" aria-labelledby="officer-detail-title" className="officer-scroll max-h-[92vh] w-full max-w-4xl overflow-y-auto border border-amber-800/60 shadow-2xl" data-testid="officer-detail">
         <header className="officer-detail-hero sticky top-0 z-10 flex items-start justify-between border-b border-amber-900/50 px-5 py-4">
           <div className="flex items-end gap-3">
-            <div><div className="text-[10px] tracking-[0.35em] text-amber-700">汉末人物志 · {profile.role}</div><h2 id="officer-detail-title" className="mt-1 text-3xl font-bold tracking-[0.22em] text-amber-100">{officer.name}<small className="ml-3 text-sm font-normal tracking-widest text-stone-400">{profile.courtesy ? `字 ${profile.courtesy}` : ''}</small></h2>
+            <div><div className="text-xs tracking-[0.35em] text-amber-700">汉末人物志 · {profile.role}</div><h2 id="officer-detail-title" className="mt-1 text-3xl font-bold tracking-[0.22em] text-amber-100">{officer.name}<small className="ml-3 text-sm font-normal tracking-widest text-stone-400">{profile.courtesy ? `字 ${profile.courtesy}` : ''}</small></h2>
             <p className="mt-1 text-xs tracking-wider text-stone-500">{profile.title} · {age != null ? `${age}岁 · ` : ''}{location}{politicalTitle ? ` · ${politicalTitle}` : ''}</p></div>
           </div>
-          <button type="button" className="rounded border border-stone-700 px-2 py-1 text-stone-400 hover:text-stone-100" onClick={onClose} aria-label="关闭">×</button>
+          <InkButton type="button" className="rounded border border-stone-700 px-2 py-1 text-stone-400 hover:text-stone-100" onClick={onClose} aria-label="关闭">×</InkButton>
         </header>
 
         <div className="grid gap-6 p-5 md:grid-cols-[220px_1fr]">
@@ -195,24 +196,24 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
               <Info label="行动" value={`${officer.actionsPerMonth ?? 1}/月`} />
               <Info label="人物成长" value={`经验 ${officer.experience}`} />
             </div>
-            <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-[10px] tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
+            <div className="rounded border border-amber-900/40 bg-black/20 p-3"><div className="text-xs tracking-widest text-amber-700">最胜所长</div><div className="mt-1 flex items-baseline justify-between"><strong className="text-lg text-amber-100">{signatureStat[0]}</strong><span className="text-3xl font-bold text-amber-400">{officer.stats[signatureStat[1]]}</span></div></div>
           </aside>
           <div>
             <div className="flex gap-1 mb-3 px-0.5" role="tablist" aria-label="武将详情页签">
               {TABS.map(([k, label]) => (
-                <button
+                <InkButton
                   key={k}
                   type="button"
                   role="tab"
                   aria-selected={tab === k}
                   data-testid={`officer-tab-${k}`}
-                  className={`flex-1 py-1.5 rounded border text-[11px] tracking-widest ${tab === k ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400 hover:text-stone-200'}`}
+                  className={`flex-1 py-1.5 rounded border text-xs tracking-widest ${tab === k ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400 hover:text-stone-200'}`}
                   onClick={() => setTab(k)}
                 >
                   {k === 'equipment'
                     ? `${label} ${Object.keys(officer.equipment ?? {}).length}/${EQUIP_SLOT_ORDER.length}`
                     : label}
-                </button>
+                </InkButton>
               ))}
             </div>
 
@@ -257,7 +258,7 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                     </div>
                     {!isRuler && (
                       <div className="mb-2">
-                        <div className="flex items-baseline justify-between text-[10px] text-stone-500">
+                        <div className="flex items-baseline justify-between text-xs text-stone-500">
                           <span>功绩 Lv{meritLevel} {meritTitleText}{meritTroop > 0 ? ` · 带兵+${meritTroop}` : ''}</span>
                           <span>{meritNext ? `距 Lv${meritNext.level}` : '已至巅峰'}</span>
                         </div>
@@ -266,17 +267,17 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                         </div>
                       </div>
                     )}
-                    <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
+                    <div className="flex flex-wrap gap-1.5 text-xs max-h-32 overflow-y-auto">
                       {officer.uniqueSkill && <Chip text={`${SKILL_NAME[officer.uniqueSkill] ?? officer.uniqueSkill} · 专属`} accent />}
                       {officer.skills.map((skill) => <Chip key={skill.skillId} text={`${SKILL_NAME[skill.skillId] ?? skill.skillId} Lv${skill.level} · 用${skill.useCount}`} />)}
                       {officer.skills.length === 0 && !officer.uniqueSkill && <span className="text-stone-600">暂无技能</span>}
                     </div>
-                    <p className="mt-1.5 text-[10px] text-stone-600">经验、功绩与技能使用次数统一在此解释；属性/技能自动升级规则待实装。</p>
+                    <p className="mt-1.5 text-xs text-stone-600">经验、功绩与技能使用次数统一在此解释；属性/技能自动升级规则待实装。</p>
                   </section>
 
                   <section>
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">性格与理想</h3>
-                    <div className="flex flex-wrap gap-1.5 text-[11px]">
+                    <div className="flex flex-wrap gap-1.5 text-xs">
                       <Chip text={`性 · ${PERSONALITY_LABEL[officer.hidden.personality] ?? officer.hidden.personality}`} />
                       <Chip text={`理 · ${IDEAL_LABEL[officer.hidden.ideal] ?? officer.hidden.ideal}`} accent />
                     </div>
@@ -286,22 +287,22 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                 <div className="space-y-4">
                   <section>
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">兵种适性</h3>
-                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="grid grid-cols-2 gap-1.5 text-xs">
                       {Object.entries(officer.unitProficiency).map(([unit, grade]) => <div key={unit} className="flex justify-between rounded border border-stone-800 bg-stone-900/50 px-2 py-1"><span className="text-stone-500">{UNIT_NAME[unit] ?? unit}</span><strong className="text-amber-200">{PROFICIENCY_LABEL[String(grade)] ?? String(grade)}</strong></div>)}
                     </div>
                   </section>
                   <section>
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">出身标签</h3>
-                    <div className="flex flex-wrap gap-1.5 text-[11px]">{officer.tags.map((tag) => <Chip key={tag} text={tag} />)}{officer.tags.length === 0 && <span className="text-stone-600">暂无标签</span>}</div>
-                    <p className="mt-1.5 text-[10px] text-stone-600">出身分类（社会·地域·职业·政治·特殊），非家族关系数据</p>
+                    <div className="flex flex-wrap gap-1.5 text-xs">{officer.tags.map((tag) => <Chip key={tag} text={tag} />)}{officer.tags.length === 0 && <span className="text-stone-600">暂无标签</span>}</div>
+                    <p className="mt-1.5 text-xs text-stone-600">出身分类（社会·地域·职业·政治·特殊），非家族关系数据</p>
                   </section>
                   <section>
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">阵型精通</h3>
-                    <div className="flex flex-wrap gap-1.5 text-[11px] max-h-32 overflow-y-auto">
+                    <div className="flex flex-wrap gap-1.5 text-xs max-h-32 overflow-y-auto">
                       {officer.formationMastery.map((fid) => <Chip key={fid} text={FORMATION_LABEL[fid] ?? `未知·${fid}`} />)}
                       {officer.formationMastery.length === 0 && <span className="text-stone-600">暂无阵型</span>}
                     </div>
-                    <p className="mt-1.5 text-[10px] text-stone-600">阵型精通成长系统待实装，当前仅展示已掌握阵型</p>
+                    <p className="mt-1.5 text-xs text-stone-600">阵型精通成长系统待实装，当前仅展示已掌握阵型</p>
                   </section>
                   <section>
                     <h3 className="mb-2 text-xs tracking-widest text-amber-500">状态</h3>
@@ -367,11 +368,11 @@ function EquipmentTab({
   return (
     <div className="space-y-4">
       {itemsCatalog.length === 0 && (
-        <p className="text-[10px] text-amber-700" data-testid="equipment-catalog-status">
+        <p className="text-xs text-amber-700" data-testid="equipment-catalog-status">
           宝物目录加载中；装备槽与已绑定的宝物编号仍可查看。
         </p>
       )}
-      <p className="text-[10px] text-stone-600">
+      <p className="text-xs text-stone-600">
         S13 宝物系统（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书）。装备/卸下对武将自由操作；赏赐需宝物在势力库存。
       </p>
 
@@ -383,29 +384,29 @@ function EquipmentTab({
           const slotLabel = EQUIP_SLOT_LABELS[slotKey];
           return (
             <div key={slotKey} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2" data-testid={`equip-slot-${slotKey}`}>
-              <div className="text-[10px] text-stone-500">{slotLabel}</div>
+              <div className="text-xs text-stone-500">{slotLabel}</div>
               {item ? (
                 <div className="mt-1">
                   <div className="text-xs text-amber-200">{item.name}</div>
-                  <div className="text-[10px] text-stone-500">{QUALITY_LABEL[item.quality]} · {item.description}</div>
+                  <div className="text-xs text-stone-500">{QUALITY_LABEL[item.quality]} · {item.description}</div>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {Object.entries(item.baseStats).map(([k, v]) => (
-                      <span key={k} className="rounded bg-stone-800 px-1 text-[10px] text-emerald-300">{STAT_LABEL[k]} +{v}</span>
+                      <span key={k} className="rounded bg-stone-800 px-1 text-xs text-emerald-300">{STAT_LABEL[k]} +{v}</span>
                     ))}
                     {item.baseEffect.map((e, i) => (
-                      <span key={i} className="rounded bg-stone-800 px-1 text-[10px] text-amber-300">{e.description ?? `${EFFECT_LABEL[e.type] ?? e.type} +${e.value}`}</span>
+                      <span key={i} className="rounded bg-stone-800 px-1 text-xs text-amber-300">{e.description ?? `${EFFECT_LABEL[e.type] ?? e.type} +${e.value}`}</span>
                     ))}
                   </div>
                   {!isRuler && (
-                    <button
+                    <InkButton
                       type="button"
                       data-testid={`btn-unequip-${itemId}`}
                       disabled={loading}
                       onClick={() => unequipItem(officer.id, itemId!)}
-                      className="mt-1.5 px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-[10px] disabled:opacity-40"
+                      className="mt-1.5 px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
                     >
                       卸下
-                    </button>
+                    </InkButton>
                   )}
                 </div>
               ) : itemId != null ? (
@@ -424,7 +425,7 @@ function EquipmentTab({
           <div className="flex items-center gap-2">
             <select
               data-testid="item-inventory-select"
-              className="flex-1 rounded border border-stone-700 bg-stone-900 text-stone-200 text-[10px] px-1 py-0.5"
+              className="flex-1 rounded border border-stone-700 bg-stone-900 text-stone-200 text-xs px-1 py-0.5"
               value={selectedItemId ?? ''}
               onChange={(e) => setSelectedItemId(e.target.value ? Number(e.target.value) : null)}
             >
@@ -439,7 +440,7 @@ function EquipmentTab({
                 );
               })}
             </select>
-            <button
+            <InkButton
               type="button"
               data-testid="btn-grant-item"
               disabled={loading || selectedItemId == null}
@@ -447,10 +448,10 @@ function EquipmentTab({
               className="px-2 py-0.5 rounded border border-amber-800 text-amber-100 disabled:opacity-40"
             >
               赏赐并装备
-            </button>
+            </InkButton>
           </div>
           {inventoryEntries.length === 0 && (
-            <p className="text-[10px] text-stone-600">势力库存暂无宝物（搜索寻访或开局宝配获取）。</p>
+            <p className="text-xs text-stone-600">势力库存暂无宝物（搜索寻访或开局宝配获取）。</p>
           )}
         </>
       )}
@@ -461,13 +462,13 @@ function EquipmentTab({
           const it = itemById(Number(id));
           if (!it) return null;
           return (
-            <span key={id} className="rounded border border-stone-800 bg-stone-900/60 px-2 py-1 text-[10px] text-stone-300">
+            <span key={id} className="rounded border border-stone-800 bg-stone-900/60 px-2 py-1 text-xs text-stone-300">
               {it.name} ×{count}
             </span>
           );
         })}
         {Object.keys(inventory).length === 0 && (
-          <span className="text-[10px] text-stone-600">空</span>
+          <span className="text-xs text-stone-600">空</span>
         )}
       </div>
     </div>
@@ -550,7 +551,7 @@ function RelationshipsTab({
               return (
                 <div key={i} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1 text-xs">
                   <span className="text-stone-200">{female?.name ?? `#${c.id}`}</span>
-                  <span className="ml-2 text-[10px] text-stone-500">{c.rank === 'concubine' ? '妾' : '姬'}</span>
+                  <span className="ml-2 text-xs text-stone-500">{c.rank === 'concubine' ? '妾' : '姬'}</span>
                 </div>
               );
             })}
@@ -569,13 +570,13 @@ function RelationshipsTab({
               return (
                 <div key={c.childId} className="rounded border border-stone-800 bg-stone-900/50 px-2 py-1.5 text-xs">
                   <div className="text-stone-200">{c.childName}</div>
-                  <div className="text-stone-500 text-[10px] mt-0.5">{c.birthYear}生 · {c.appearYear}登场 · {c.source}</div>
+                  <div className="text-stone-500 text-xs mt-0.5">{c.birthYear}生 · {c.appearYear}登场 · {c.source}</div>
                   {live ? (
-                    <div className="text-emerald-600/90 text-[10px] mt-0.5">
+                    <div className="text-emerald-600/90 text-xs mt-0.5">
                       已登场{live.faction === officer.faction ? '·本势力' : live.faction == null ? '·在野' : '·他势力'}
                     </div>
                   ) : (
-                    <div className="text-stone-600 text-[10px] mt-0.5">待登场</div>
+                    <div className="text-stone-600 text-xs mt-0.5">待登场</div>
                   )}
                 </div>
               );
@@ -589,7 +590,7 @@ function RelationshipsTab({
         <Info label="当前状态" value={STATUS_LABEL[officer.status] ?? String(officer.status)} />
         {factionName && <Info label="所属势力" value={factionName} />}
         {officer.faction == null && officer.status === 'free' && (
-          <p className="mt-1.5 text-[10px] text-stone-600">在野武将，满足相性/理想/血亲条件可投奔势力</p>
+          <p className="mt-1.5 text-xs text-stone-600">在野武将，满足相性/理想/血亲条件可投奔势力</p>
         )}
       </section>
 
@@ -616,10 +617,10 @@ function RelationsTab({ officer, game }: { officer: Officer; game: GameState }) 
             <div key={i} className="flex items-center justify-between rounded border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="text-stone-200">{r.targetName}</span>
-                <span className="rounded bg-stone-800 px-1.5 py-0.5 text-[10px] text-stone-400">{RELATION_TYPE_LABEL[r.type] ?? r.type}</span>
-                <span className={`text-[10px] ${r.source === 'official' ? 'text-emerald-500' : 'text-amber-500'}`}>{r.source === 'official' ? '正史' : '演义'}</span>
+                <span className="rounded bg-stone-800 px-1.5 py-0.5 text-xs text-stone-400">{RELATION_TYPE_LABEL[r.type] ?? r.type}</span>
+                <span className={`text-xs ${r.source === 'official' ? 'text-emerald-500' : 'text-amber-500'}`}>{r.source === 'official' ? '正史' : '演义'}</span>
               </div>
-              <span className={`text-[10px] ${RELATION_STATE_COLOR[r.state] ?? 'text-stone-400'}`}>{RELATION_STATE_LABEL[r.state] ?? r.state}（{r.affinity}）</span>
+              <span className={`text-xs ${RELATION_STATE_COLOR[r.state] ?? 'text-stone-400'}`}>{RELATION_STATE_LABEL[r.state] ?? r.state}（{r.affinity}）</span>
             </div>
           ))}
         </div>
@@ -638,7 +639,7 @@ function RelationGraph({ officerId, relations, game }: { officerId: number; rela
   const cy = size / 2;
   const r = 80;
   const self = game.officers[officerId];
-  if (!self || relations.length === 0) return <p className="text-stone-600 text-[10px]">无关系数据</p>;
+  if (!self || relations.length === 0) return <p className="text-stone-600 text-xs">无关系数据</p>;
   const typeColors: Record<string, string> = {
     sworn: '#f59e0b', master_disciple: '#10b981', parent_child: '#3b82f6',
     siblings: '#6366f1', spouse: '#ec4899', best_friend: '#14b8a6',
@@ -714,16 +715,16 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
         <div className="flex items-center gap-3 text-xs">
           <span className="text-stone-300">剩余 <strong className="text-amber-300">{remaining}</strong> / {totalPoints}</span>
           <span className="text-stone-500">已用 {usedPoints}</span>
-          <button type="button" onClick={handleReset} className="px-2 py-0.5 rounded border border-stone-700 text-stone-400 text-[10px] hover:text-stone-200">重置</button>
+          <InkButton type="button" onClick={handleReset} className="px-2 py-0.5 rounded border border-stone-700 text-stone-400 text-xs hover:text-stone-200">重置</InkButton>
         </div>
       </section>
       <section>
         <h3 className="mb-2 text-xs tracking-widest text-amber-500">技能树</h3>
         <div className="flex gap-1 mb-2">
           {trees.map((t) => (
-            <button key={t.id} type="button" onClick={() => setSelectedTree(t.id)}
-              className={`px-2 py-1 rounded text-[10px] border ${selectedTree === t.id ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400'}`}
-            >{t.name}</button>
+            <InkButton key={t.id} type="button" onClick={() => setSelectedTree(t.id)}
+              className={`px-2 py-1 rounded text-xs border ${selectedTree === t.id ? 'border-amber-600 bg-amber-950/40 text-amber-100' : 'border-stone-800 text-stone-400'}`}
+            >{t.name}</InkButton>
           ))}
         </div>
         {currentTree && (
@@ -737,14 +738,14 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
                 <div key={node.id} className={`flex items-center justify-between rounded border px-3 py-1.5 text-xs ${lv > 0 ? 'border-amber-800/60 bg-amber-950/20' : unlocked ? 'border-stone-800 bg-stone-900/50' : 'border-stone-900 bg-stone-950/50 opacity-50'}`}>
                   <div>
                     <span className="text-stone-200">{node.name}</span>
-                    <span className="ml-2 text-[10px] text-stone-500">{node.domains.map((d) => ({ battlefield: '战场', melee: '白刃', duel: '单挑', campaign: '战役', civil: '内政' })[d] ?? d).join('/')}</span>
+                    <span className="ml-2 text-xs text-stone-500">{node.domains.map((d) => ({ battlefield: '战场', melee: '白刃', duel: '单挑', campaign: '战役', civil: '内政' })[d] ?? d).join('/')}</span>
                     {lv > 0 && <span className="ml-2 text-amber-400">Lv{lv}/{node.maxLevel}</span>}
                   </div>
                   {canUp && (
-                    <button type="button" onClick={() => handleUpgrade(node.id)} className="px-2 py-0.5 rounded border border-amber-800 text-amber-200 text-[10px]">+{node.costPerLevel}</button>
+                    <InkButton type="button" onClick={() => handleUpgrade(node.id)} className="px-2 py-0.5 rounded border border-amber-800 text-amber-200 text-xs">+{node.costPerLevel}</InkButton>
                   )}
-                  {maxed && <span className="text-emerald-500 text-[10px]">已满</span>}
-                  {!unlocked && !maxed && <span className="text-stone-600 text-[10px]">锁定</span>}
+                  {maxed && <span className="text-emerald-500 text-xs">已满</span>}
+                  {!unlocked && !maxed && <span className="text-stone-600 text-xs">锁定</span>}
                 </div>
               );
             })}
@@ -757,7 +758,7 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
           <span className="text-stone-300">剩余 <strong className="text-amber-300">{traitRemaining}</strong> / {traitTotal}</span>
           <span className="text-stone-500">已用 {traitUsed}</span>
         </div>
-        <p className="text-[10px] text-stone-600 mt-1">特性（被动天赋）点数化：每 5 级 merit 获得 1 特性点，用于购买特性等级。特性全量 42 项待 0-B 实装。</p>
+        <p className="text-xs text-stone-600 mt-1">特性（被动天赋）点数化：每 5 级 merit 获得 1 特性点，用于购买特性等级。特性全量 42 项待 0-B 实装。</p>
       </section>
     </div>
   );

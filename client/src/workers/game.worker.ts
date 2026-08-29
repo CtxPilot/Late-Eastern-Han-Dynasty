@@ -64,6 +64,7 @@ import {
   fameLabel,
 } from '@leh/shared';
 import { staticData } from './browser-loader';
+import { computeGamePatch } from '../utils/game-patch';
 import { relations as relationsJson } from 'virtual:leh-data';
 import {
   adoptSaveEnvelope,
@@ -84,6 +85,12 @@ import {
 } from '../../../server/src/engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../../../server/src/engine/factionPolitics.js';
 import { resolveFamilyTreatment } from '../../../server/src/engine/hostageFamilies.js';
+import {
+  assignDelegationCity,
+  createDelegationRegion,
+  disbandDelegationRegion,
+  updateDelegationRegion,
+} from '../../../server/src/engine/delegation.js';
 import { seekBeauty, rewardBeautyStock } from '../../../server/src/engine/beauty.js';
 import {
   attackUnit,
@@ -103,6 +110,7 @@ import {
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
+  settleTacticalMeleeTroops,
 } from '../../../server/src/engine/battle.js';
 import {
   advisorAction as campaignAdvisorActionEngine,
@@ -156,6 +164,7 @@ import {
 } from '../../../server/src/engine/hegemony.js';
 import { launchPlot, cancelPlot } from '../../../server/src/engine/plot.js';
 import { setNationalPolicy } from '../../../server/src/engine/policy.js';
+import { setTournamentPreferredMode as applyTournamentPreferredMode, setTournamentPlayerEntries as applyTournamentPlayerEntries, placeTournamentChampionBet as applyPlaceTournamentChampionBet, clearTournamentChampionBet as applyClearTournamentChampionBet } from '@leh/shared';
 import { joinFaction, releaseOfficer, tickFollowCheck } from '../../../server/src/engine/family.js';
 import {
   dispatchMission,
@@ -345,6 +354,15 @@ function settleBattlefieldDuel(state: GameState, context: BattlefieldDuelContext
 
 // ====== 处理器表：逐函数镜像 services/game.ts ======
 
+// P2-4（Session 418）：通用差分补丁——RPC 分发单点对「GameState 形响应」做 COW 身份差分，
+// 全部端点自动获得增量通道；`prevClient` 与客户端 lastClientGame 保持镜像。
+let prevClient: unknown = null;
+
+function isGameStateLike(data: unknown): boolean {
+  return typeof data === 'object' && data !== null
+    && 'officers' in data && 'cities' in data && 'factions' in data && 'currentYear' in data;
+}
+
 const handlers: Record<string, (...args: never[]) => unknown> = {
   /** S16 静态目录（镜像 listStatic） */
   listStatic() {
@@ -501,9 +519,81 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
     });
   },
 
+  createDelegationRegion(input: {
+    name?: string;
+    cityIds: number[];
+    governorId: number;
+    policy?: string;
+    autoRecruit?: boolean;
+    autoReward?: boolean;
+  }): GameState {
+    return withLock(() => {
+      currentGame = createDelegationRegion(getGame(), { ...input, policy: input.policy as import('@leh/shared').DelegationPolicy | undefined });
+      return getClientGame();
+    });
+  },
+
+  updateDelegationRegion(input: {
+    regionId: number;
+    name?: string;
+    policy?: string;
+    autoRecruit?: boolean;
+    autoReward?: boolean;
+  }): GameState {
+    return withLock(() => {
+      currentGame = updateDelegationRegion(getGame(), { ...input, policy: input.policy as import('@leh/shared').DelegationPolicy | undefined });
+      return getClientGame();
+    });
+  },
+
+  assignDelegationCity(input: { regionId: number; cityId: number; remove?: boolean }): GameState {
+    return withLock(() => {
+      currentGame = assignDelegationCity(getGame(), input);
+      return getClientGame();
+    });
+  },
+
+  disbandDelegationRegion(regionId: number): GameState {
+    return withLock(() => {
+      currentGame = disbandDelegationRegion(getGame(), regionId);
+      return getClientGame();
+    });
+  },
+
   setNationalPolicy(type: string, targetCityId?: number): GameState {
     return withLock(() => {
       currentGame = setNationalPolicy(getGame(), type as PolicyType, { targetCityId });
+      return getClientGame();
+    });
+  },
+
+  setTournamentPreferredMode(mode: string): GameState {
+    return withLock(() => {
+      if (mode !== 'fair' && mode !== 'unrestricted') {
+        throw new Error('无效的大会模式');
+      }
+      currentGame = applyTournamentPreferredMode(getGame(), mode);
+      return getClientGame();
+    });
+  },
+
+  setTournamentPlayerEntries(officerIds: number[]): GameState {
+    return withLock(() => {
+      currentGame = applyTournamentPlayerEntries(getGame(), officerIds).state;
+      return getClientGame();
+    });
+  },
+
+  placeTournamentChampionBet(officerId: number, amount: number): GameState {
+    return withLock(() => {
+      currentGame = applyPlaceTournamentChampionBet(getGame(), officerId, amount);
+      return getClientGame();
+    });
+  },
+
+  clearTournamentChampionBet(): GameState {
+    return withLock(() => {
+      currentGame = applyClearTournamentChampionBet(getGame());
       return getClientGame();
     });
   },
@@ -989,18 +1079,10 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
         : null;
       if (tacticalMelee) {
         if (battle.phase !== 'over') throw new Error('六角微操尚未结束，不能提前结算');
-        const voluntaryRetreat = battle.units.some((unit) => unit.side === 'attacker' && unit.isRetreated);
-        const attackerTroopsBeforeRetreat = battle.units
-          .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed)
-          .reduce((sum, unit) => sum + unit.troopCount, 0);
-        const attackerTroops = voluntaryRetreat
-          ? Math.floor(attackerTroopsBeforeRetreat * 0.5)
-          : battle.units
-            .filter((unit) => unit.side === 'attacker' && !unit.isDestroyed && !unit.isRetreated)
-            .reduce((sum, unit) => sum + unit.troopCount, 0);
-        const defenderTroops = battle.units
-          .filter((unit) => unit.side === 'defender' && !unit.isDestroyed && !unit.isRetreated)
-          .reduce((sum, unit) => sum + unit.troopCount, 0);
+        // P1-3（Session 411）：结算口径收口到 engine 纯函数（撤退 50% 等价；攻方胜伤兵归队 15%）
+        const tacticalSettlement = settleTacticalMeleeTroops(battle);
+        const attackerTroops = tacticalSettlement.attackerTroops;
+        const defenderTroops = tacticalSettlement.defenderTroops;
         const resolved = {
           ...tacticalMelee,
           attackerTroops,
@@ -1009,7 +1091,7 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
           defenderMorale: battle.units.find((unit) => unit.side === 'defender')?.morale ?? 0,
           attackerFormation: battle.units.find((unit) => unit.side === 'attacker')?.formation ?? tacticalMelee.attackerFormation,
           phase: battle.winner === 'attacker' ? ('attacker_victory' as const) : ('defender_victory' as const),
-          eventLog: [...tacticalMelee.eventLog, `六角微操结算：${voluntaryRetreat ? '战术撤退（50%回流）' : battle.winner === 'attacker' ? '攻方胜' : '守方胜'}`],
+          eventLog: [...tacticalMelee.eventLog, `六角微操结算：${tacticalSettlement.note}`],
         };
         const withoutBattle = {
           ...state,
@@ -1925,7 +2007,15 @@ self.addEventListener('message', (event: MessageEvent<{ id: number; method: stri
     const handler = handlers[method] as ((...a: unknown[]) => unknown) | undefined;
     if (!handler) throw new Error(`离线版暂未实装指令：${method}`);
     const data = handler(...args);
-    void (self as unknown as { postMessage: (msg: unknown) => void }).postMessage({ id, ok: true, data });
+    let patch: ReturnType<typeof computeGamePatch> | null = null;
+    if (isGameStateLike(data)) {
+      if (prevClient !== null) patch = computeGamePatch(prevClient, data);
+      prevClient = data;
+    }
+    // 协议 v2：有差分且客户端持有上一帧时仅传补丁（patchOnly）；否则整态。
+    void (self as unknown as { postMessage: (msg: unknown) => void }).postMessage(
+      patch ? { id, ok: true, patchOnly: true, patch } : { id, ok: true, data },
+    );
   } catch (e) {
     void (self as unknown as { postMessage: (msg: unknown) => void }).postMessage({
       id,

@@ -10,6 +10,8 @@
  */
 import {
   parseCurrentSaveEnvelope,
+  rejoinSaveStaticEchoes,
+  STATIC_ECHO_OFFICER_KEYS,
   type SerializableRngState,
   CivilPosition,
   LocalPosition,
@@ -238,22 +240,34 @@ export function runEndTurnPipeline(before: GameState, rng: () => number): GameSt
   return { ...next, campaignNodes: getCampaignNodes(next) };
 }
 
-/** 存档信封组装（rng 快照由调用方按所在域注入）。 */
-export function buildSaveEnvelope(snapshot: GameState, rng: SerializableRngState) {
+/** 存档信封组装（rng 快照由调用方按所在域注入）。
+ * P2-2（Session 414）：officers 静态回声键在保存侧剥离（biography/hidden/unitProficiency/
+ * formationMastery/tags/avatarGene/appearance），加载时 adoptSaveEnvelope 经
+ * rejoinSaveStaticEchoes 从静态名录回注——0-B 1000+ 武将下 officers 段体积约降 60%+。
+ * 返回类型按语义标注为完整 GameState 信封（剥离仅是序列化体积优化，语义由回注保证）。 */
+export function buildSaveEnvelope(snapshot: GameState, rng: SerializableRngState): import('@leh/shared').SaveEnvelopeV1<GameState> {
   const now = new Date().toISOString();
+  const slimOfficers = Object.fromEntries(
+    Object.entries(snapshot.officers).map(([id, officer]) => {
+      const next: Record<string, unknown> = { ...officer };
+      for (const key of STATIC_ECHO_OFFICER_KEYS) delete next[key];
+      return [id, next];
+    }),
+  );
   return {
     schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
     createdAt: now,
     updatedAt: now,
     scenarioId: snapshot.scenarioId,
     rng,
-    snapshot,
-  } as const;
+    snapshot: { ...snapshot, officers: slimOfficers },
+  } as unknown as import('@leh/shared').SaveEnvelopeV1<GameState>;
 }
 
 /** 读档校验链：迁移 + 完整 Schema + 剧本存在性与史料层兼容；返回快照与 rng 状态。 */
 export function adoptSaveEnvelope(input: unknown): { snapshot: GameState; rng: SerializableRngState } {
-  const envelope = parseCurrentSaveEnvelope(input);
+  // P2-2：剥离态 officers 先从静态名录回注，再走完整 Schema 校验（旧档键已在，幂等）。
+  const envelope = parseCurrentSaveEnvelope(rejoinSaveStaticEchoes(input, staticData.officers));
   const scenario = staticData.scenarios.find((item) => item.id === envelope.scenarioId);
   if (!scenario) throw new Error('存档引用的剧本不存在');
   const availableLayers = new Set(scenario.availableEventLayers);

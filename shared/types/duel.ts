@@ -130,4 +130,10 @@ export interface DuelEngineConfig {
   baseHp: number;
   /** Challenge energy cost (§8.3.1). */
   challengeEnergyCost: number;
+  /**
+   * S19 公平竞技：吕布「天下无双」降级为猛将型（05 §8.17.2）。
+   * 关闭：必先手、面对必杀 20% 被动化解、无双暴击+20%、AI 无双权重 bump；
+   * 保留：三连击（且三连路径本身不滚暴击）。战场单挑缺省 false。
+   */
+  fairWushuang?: boolean;
 }

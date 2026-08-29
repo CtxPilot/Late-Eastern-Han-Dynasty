@@ -58,7 +58,10 @@ for (const path of tracked.filter((item) => binaryExtensions.has(extname(item).t
   if (!allowed) fail(`asset lacks manifest rule: ${path}`);
 }
 const screenshotCount = tracked.filter((path) => path.startsWith('docs/screenshots/') && path.endsWith('.png')).length;
-if (screenshotCount !== 125) fail(`screenshot inventory changed without manifest update: ${screenshotCount}`);
+// Session 407 校正：常数 125 为 Session 300 基线；Session 379/380 战略卡片 README 截图
+// 入库时漏改此常数（HEAD 实际已 128 张），非本轮新增。此后截图增删必须同步此数与 README。
+const SCREENSHOT_BASELINE = 128;
+if (screenshotCount !== SCREENSHOT_BASELINE) fail(`screenshot inventory changed without manifest update: ${screenshotCount}`);
 
 const sourceExtensions = new Set(['.ts', '.tsx', '.js', '.mjs', '.css', '.html', '.py']);
 for (const path of tracked.filter((item) => sourceExtensions.has(extname(item)))) {

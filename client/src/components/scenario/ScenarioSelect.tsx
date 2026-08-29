@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useState } from 'react';
 import type { EventSourceClass } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -37,7 +38,21 @@ export function ScenarioSelect() {
       <div className="mx-auto max-w-5xl">
         <header className="mb-7 border-b border-amber-900/50 pb-5">
           <p className="text-xs tracking-[0.3em] text-amber-600">汉末纪事 · 开卷</p>
-          <h1 className="mt-2 text-3xl text-amber-300">选择剧本与行军旗号</h1>
+          <h1 className="mt-2 flex items-center gap-3 text-4xl text-amber-300 font-seal tracking-[0.18em]">
+            晚东汉末
+            <span
+              className="grid place-items-center align-middle"
+              style={{
+                width: 40, height: 40, border: '2px double #d7aa62', borderRadius: 3,
+                background: '#A61919', color: '#FDE68A',
+                fontFamily: "'HanDynastySeal', serif", fontSize: 20, lineHeight: 1,
+              }}
+              aria-hidden
+            >
+              汉
+            </span>
+          </h1>
+          <p className="mt-1 text-sm text-stone-400">选择剧本与行军旗号</p>
           <p className="mt-2 text-sm text-stone-500">历史、裴注异闻、文学演义分层标注；重大事件由条件而非年份单独决定。</p>
           <p className="mt-3 border-l-2 border-stone-700 pl-3 text-xs leading-5 text-stone-500" data-testid="scenario-content-notice">
             内容提示：游戏包含战争、死亡、俘虏、疾病、间谍与历史婚姻记载。时代称谓仅在有来源的叙事中保留并标注语境，系统分类采用现代中性表述；玩家婚配仅允许双方均满18岁。
@@ -46,7 +61,7 @@ export function ScenarioSelect() {
 
         <section className="grid gap-3 md:grid-cols-2">
           {scenarios.map((item) => (
-            <button
+            <InkButton
               key={item.id}
               type="button"
               className={`border p-4 text-left transition ${item.id === scenario.id ? 'border-amber-500 bg-amber-950/30' : 'border-stone-800 bg-stone-900/50 hover:border-stone-600'}`}
@@ -55,7 +70,7 @@ export function ScenarioSelect() {
               <span className="text-xs text-stone-500">{item.startYear}年{item.startMonth}月 · {item.type === 'historical' ? '历史' : '假想'}</span>
               <h2 className="mt-1 text-lg text-amber-200">{item.name}</h2>
               <p className="mt-2 text-xs leading-5 text-stone-400">{item.description}</p>
-            </button>
+            </InkButton>
           ))}
         </section>
 
@@ -64,7 +79,7 @@ export function ScenarioSelect() {
           {scenario.scopeNote && <p className="mt-2 border-l-2 border-amber-800 pl-3 text-xs leading-5 text-stone-400">{scenario.scopeNote}</p>}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {scenario.factionSetups.filter((faction) => scenario.playableFactions.includes(faction.id)).map((faction) => (
-              <button
+              <InkButton
                 key={faction.id}
                 type="button"
                 className={`border px-3 py-3 text-left ${faction.id === factionId ? 'border-amber-500 bg-stone-800' : 'border-stone-700 hover:border-stone-500'}`}
@@ -72,8 +87,8 @@ export function ScenarioSelect() {
               >
                 <strong style={{ color: faction.color }}>{faction.name}</strong>
                 <span className="mt-1 block text-xs text-stone-500">{faction.headquartersLabel}</span>
-                {faction.historicalNote && <span className="mt-2 block text-[11px] leading-4 text-stone-400">{faction.historicalNote}</span>}
-              </button>
+                {faction.historicalNote && <span className="mt-2 block text-xs leading-4 text-stone-400">{faction.historicalNote}</span>}
+              </InkButton>
             ))}
           </div>
 
@@ -88,14 +103,14 @@ export function ScenarioSelect() {
           )}
 
           {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
-          <button
+          <InkButton
             type="button"
             disabled={loading || factionId === 0}
             className="mt-5 w-full border border-amber-600 bg-amber-900/70 px-4 py-3 text-amber-100 hover:bg-amber-800 disabled:opacity-50"
             onClick={() => void startGame(scenario.id, factionId, eventLayers)}
           >
             {loading ? '正在展卷…' : '进入剧本'}
-          </button>
+          </InkButton>
         </section>
       </div>
     </main>

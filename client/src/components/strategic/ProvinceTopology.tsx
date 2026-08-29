@@ -138,7 +138,7 @@ export function ProvinceTopology({
             );
           })}
         </svg>
-        <p className="text-[10px] text-stone-600 mt-1">抽象拓扑 · 非地理疆界 · 虚线为官道</p>
+        <p className="text-xs text-stone-600 mt-1">抽象拓扑 · 非地理疆界 · 虚线为官道</p>
       </div>
 
       {overlayDraw && overlayDraw.nodes.length > 0 && (
@@ -190,7 +190,7 @@ export function ProvinceTopology({
               </g>
             ))}
           </svg>
-          <p className="text-[10px] text-stone-600 mt-1">蓝/实线偏水路 · 褐虚线偏陆路 · 只读示意</p>
+          <p className="text-xs text-stone-600 mt-1">蓝/实线偏水路 · 褐虚线偏陆路 · 只读示意</p>
         </div>
       )}
     </div>

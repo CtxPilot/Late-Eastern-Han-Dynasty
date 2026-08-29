@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 
@@ -44,14 +45,14 @@ export function EventDialog() {
       aria-labelledby="event-dialog-title"
     >
       <div
-        className="w-full max-w-md rounded-lg border border-amber-800/70 bg-stone-900 shadow-xl"
+        className="w-full max-w-md rounded border border-amber-800/70 bg-stone-900 shadow-xl"
         data-testid="event-dialog"
       >
         <header className="border-b border-amber-900/50 px-4 py-3">
           <h2 id="event-dialog-title" className="text-amber-300 font-semibold tracking-wide">
             事件：{evt.name}
           </h2>
-          <p className="mt-1 text-[11px] text-amber-200/70">
+          <p className="mt-1 text-xs text-amber-200/70">
             〔{SOURCE_LABEL[evt.sourceClass] ?? evt.sourceClass}〕{evt.sources.join(' · ')}
           </p>
           {evt.description && (
@@ -73,17 +74,17 @@ export function EventDialog() {
 
         <footer className="flex flex-col gap-2 border-t border-amber-900/40 px-4 py-3">
           {!showChoices ? (
-            <button
+            <InkButton
               type="button"
               data-testid="event-continue"
               className="px-3 py-2 rounded bg-amber-900/80 border border-amber-600 text-amber-100 text-sm hover:bg-amber-800"
               onClick={() => setDialogueIdx((i) => i + 1)}
             >
               继续
-            </button>
+            </InkButton>
           ) : (
             evt.choices.map((c, i) => (
-              <button
+              <InkButton
                 key={`${evt.id}-${i}`}
                 type="button"
                 data-testid={`event-choice-${i}`}
@@ -92,11 +93,11 @@ export function EventDialog() {
                 onClick={() => void chooseEvent(evt.id, i)}
               >
                 {c.label}
-              </button>
+              </InkButton>
             ))
           )}
           {(game?.pendingEvents?.length ?? 0) > 1 && (
-            <p className="text-[10px] text-stone-500 text-center">
+            <p className="text-xs text-stone-500 text-center">
               尚有 {(game?.pendingEvents?.length ?? 1) - 1} 件待决
             </p>
           )}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import type { CampaignPhase, GameState } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -123,7 +124,7 @@ export function MilitaryOverviewDrawer() {
     >
       <nav className="mb-3 grid grid-cols-4 gap-1" aria-label="军事分面">
         {FACETS.map((item) => (
-          <button
+          <InkButton
             key={item.id}
             type="button"
             data-testid={`command-military-facet-${item.id}`}
@@ -136,11 +137,11 @@ export function MilitaryOverviewDrawer() {
             }`}
           >
             {item.label}
-          </button>
+          </InkButton>
         ))}
       </nav>
 
-      <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
+      <p className="mb-3 text-xs leading-relaxed text-stone-500">
         军团战备汇总驻军与资源；编成出征与军团军令均以本抽屉为唯一写入口。
       </p>
 
@@ -163,7 +164,7 @@ export function MilitaryOverviewDrawer() {
           {lastBattleResult ? (
             <article className="border border-red-900/60 bg-red-950/20 px-3 py-2">
               <strong className="text-red-100">{lastBattleResult.battlefield}</strong>
-              <p className="mt-1 text-[10px] text-stone-400">
+              <p className="mt-1 text-xs text-stone-400">
                 {lastBattleResult.winner === 'attacker' ? '攻方胜' : '守方胜'}
                 {' · '}攻损 {lastBattleResult.attackerCasualties}
                 {' · '}守损 {lastBattleResult.defenderCasualties}
@@ -175,7 +176,7 @@ export function MilitaryOverviewDrawer() {
             </p>
           )}
           {militaryLogs.map((entry, index) => (
-            <div key={`${entry.year}-${entry.month}-${index}`} className="border-b border-stone-900 py-1 text-[10px]">
+            <div key={`${entry.year}-${entry.month}-${index}`} className="border-b border-stone-900 py-1 text-xs">
               <span className="mr-2 text-stone-600">{entry.year}年{entry.month}月</span>
               <span className="text-stone-400">{entry.message}</span>
             </div>
@@ -195,13 +196,13 @@ function ArmyCard({ army }: { army: MilitaryArmySummary }) {
     >
       <div className="flex items-center justify-between">
         <strong className="text-stone-100">{army.name}</strong>
-        <span className="text-[10px] text-red-200">{army.phaseLabel}</span>
+        <span className="text-xs text-red-200">{army.phaseLabel}</span>
       </div>
-      <p className="mt-1 text-[10px] text-stone-500">
+      <p className="mt-1 text-xs text-stone-500">
         主将 {army.commanderName} · {army.currentNodeName}
         {army.targetNodeName ? ` → ${army.targetNodeName}` : ''}
       </p>
-      <p className="text-[10px] text-stone-400">
+      <p className="text-xs text-stone-400">
         兵 {army.troops} · 粮 {army.food} · 士气 {army.morale} · 组织 {army.organization} · 疲劳 {army.fatigue}
       </p>
     </article>

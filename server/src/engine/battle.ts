@@ -4,10 +4,13 @@
 import {
   FormationType,
   OfficerStatus,
+  PolicyType,
   Season,
   aristocracyDefenderMoralePenalty,
   armsCombatMultiplier,
   defenderMilitia,
+  factionHasActivePolicy,
+  prepareDefenseHexMobility,
   syncMerit,
   TerrainType,
   UnitProficiency,
@@ -44,6 +47,11 @@ import {
   recordUnitAbilityUse,
   resolveProficiencyPower,
   isUnitSurrounded,
+  isCurrentWukui,
+  isCurrentPojun,
+  isLvBuOfficerId,
+  WUKUI_DUEL_OPPONENT_MORALE_DELTA,
+  POJUN_DUEL_VS_LVBU_MORALE_DELTA,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
@@ -214,6 +222,10 @@ function unitsFromArmy(
     const position = squad.role === 'main' ? 'center' : squad.position;
     const projection = projected[position] ?? { position: anchor, facing: side === 'attacker' ? 0 as const : 3 as const };
     const troops = troopAllocation[index];
+    const mobility = prepareDefenseHexMobility(
+      template.mobility,
+      factionHasActivePolicy(state, army.factionId, PolicyType.PREPARE_DEFENSE),
+    );
     return {
       id: `${side}-${army.id}-${squad.officerId}`,
       armyId: army.id,
@@ -229,8 +241,8 @@ function unitsFromArmy(
       food: Math.max(0, army.food),
       position: projection.position,
       facing: projection.facing,
-      mp: template.mobility,
-      maxMp: template.mobility,
+      mp: mobility,
+      maxMp: mobility,
       energy: 100,
       maxEnergy: 100,
       hasActed: false,
@@ -313,6 +325,14 @@ export function createBattle(
   const unitMap = getUnitByType();
   const pUnit = unitMap[pType];
   const eUnit = unitMap[eType];
+  const atkMobility = prepareDefenseHexMobility(
+    pUnit.mobility,
+    factionHasActivePolicy(state, playerFaction, PolicyType.PREPARE_DEFENSE),
+  );
+  const defMobility = prepareDefenseHexMobility(
+    eUnit.mobility,
+    factionHasActivePolicy(state, defenderFaction, PolicyType.PREPARE_DEFENSE),
+  );
 
   const atkTroops = Math.max(1, opts.attackTroops ?? attackerArmy?.troops ?? 5000);
   // S27 守方民兵：民心 ≥60 时 floor(人口 × 0.02 × 民心/100)（docs/08 §十七）
@@ -342,8 +362,8 @@ export function createBattle(
       food: 1000,
       position: { q: 2, r: 3 },
       facing: 0,
-      mp: pUnit.mobility,
-      maxMp: pUnit.mobility,
+      mp: atkMobility,
+      maxMp: atkMobility,
       energy: 100,
       maxEnergy: 100,
       hasActed: false,
@@ -366,8 +386,8 @@ export function createBattle(
       food: 1000,
       position: { q: 16, r: 11 },
       facing: 3,
-      mp: eUnit.mobility,
-      maxMp: eUnit.mobility,
+      mp: defMobility,
+      maxMp: defMobility,
       energy: 100,
       maxEnergy: 100,
       hasActed: false,
@@ -819,6 +839,61 @@ export function finishPlayerAction(battle: BattleState): BattleState {
     units,
     message: '敌军回合…',
   });
+}
+
+/**
+ * P1-3（Session 411，`docs/40-game-evaluation.md`）六角微操结算兵力口径（纯函数、零 RNG）：
+ * - 战术撤退：存活攻军（含已撤退）合计 × 50% 回流（既有规则，逐字节等价）；
+ * - 攻方胜利：**亲统督战 · 伤兵归队**——存活兵额外回补重伤差值的 15%（封顶满编），
+ *   与自动战（runAutoBattle 公式伤亡）形成「这仗要不要手打」的真实收益差；
+ * - 守方胜利/平：无回补。
+ */
+export const MANUAL_VICTORY_RECOVERY_RATIO = 0.15;
+
+/** P1-3（Session 418）：手动六角胜利且守方单位被歼 → 该主将战场生擒（确定性，无掷点）。 */
+export function collectAnnihilatedDefenderCommanders(
+  battle: Pick<BattleState, 'units' | 'winner'>,
+): number[] {
+  if (battle.winner !== 'attacker') return [];
+  const ids: number[] = [];
+  for (const unit of battle.units) {
+    if (unit.side !== 'defender' || !unit.isDestroyed) continue;
+    if (ids.includes(unit.commanderId)) continue;
+    ids.push(unit.commanderId);
+  }
+  return ids.sort((a, b) => a - b);
+}
+
+export function settleTacticalMeleeTroops(battle: Pick<BattleState, 'units' | 'winner'>): {
+  attackerTroops: number;
+  defenderTroops: number;
+  veteranRecovery: number;
+  note: string;
+} {
+  const aliveAttacker = battle.units.filter((unit) => unit.side === 'attacker' && !unit.isDestroyed);
+  const aliveDefender = battle.units.filter((unit) => unit.side === 'defender' && !unit.isDestroyed);
+  const voluntaryRetreat = aliveAttacker.some((unit) => unit.isRetreated);
+  const survivors = aliveAttacker
+    .filter((unit) => !unit.isRetreated)
+    .reduce((sum, unit) => sum + unit.troopCount, 0);
+  const maxTroops = aliveAttacker.reduce((sum, unit) => sum + unit.maxTroops, 0);
+  const defenderTroops = aliveDefender
+    .filter((unit) => !unit.isRetreated)
+    .reduce((sum, unit) => sum + unit.troopCount, 0);
+  if (voluntaryRetreat) {
+    const total = aliveAttacker.reduce((sum, unit) => sum + unit.troopCount, 0);
+    return { attackerTroops: Math.floor(total * 0.5), defenderTroops, veteranRecovery: 0, note: '战术撤退（50%回流）' };
+  }
+  const wounded = Math.max(0, maxTroops - survivors);
+  const veteranRecovery =
+    battle.winner === 'attacker' ? Math.floor(wounded * MANUAL_VICTORY_RECOVERY_RATIO) : 0;
+  const note =
+    battle.winner === 'attacker'
+      ? veteranRecovery > 0
+        ? `攻方胜 · 亲统督战：伤兵归队+${veteranRecovery}`
+        : '攻方胜'
+      : '守方胜';
+  return { attackerTroops: Math.min(maxTroops, survivors + veteranRecovery), defenderTroops, veteranRecovery, note };
 }
 
 /**
@@ -1683,18 +1758,61 @@ export function challengeDuel(
     };
   }
 
-  // 接受: 扣发起方气力, 创建单挑
-  const spentUnits = battle.units.map((u) =>
-    u.id === atkUnit.id ? { ...u, energy: energy - DUEL_CHALLENGE_COST } : u,
-  );
+  // 接受: 扣发起方气力, 创建单挑；武魁威压 / 破军遇吕布士气
+  const wukuiAtk = isCurrentWukui(state, challenger.id);
+  const wukuiDef = isCurrentWukui(state, defender.id);
+  const pojunVsLvBuAtk = isCurrentPojun(state, challenger.id) && isLvBuOfficerId(defender.id);
+  const pojunVsLvBuDef = isCurrentPojun(state, defender.id) && isLvBuOfficerId(challenger.id);
+  const spentUnits = battle.units.map((u) => {
+    let next = u;
+    if (u.id === atkUnit.id) {
+      next = { ...next, energy: energy - DUEL_CHALLENGE_COST };
+      if (wukuiDef) {
+        next = {
+          ...next,
+          morale: Math.max(0, next.morale + WUKUI_DUEL_OPPONENT_MORALE_DELTA),
+        };
+      }
+      if (pojunVsLvBuAtk) {
+        next = {
+          ...next,
+          morale: Math.min(120, next.morale + POJUN_DUEL_VS_LVBU_MORALE_DELTA),
+        };
+      }
+    } else if (u.id === defUnit.id) {
+      if (wukuiAtk) {
+        next = {
+          ...next,
+          morale: Math.max(0, next.morale + WUKUI_DUEL_OPPONENT_MORALE_DELTA),
+        };
+      }
+      if (pojunVsLvBuDef) {
+        next = {
+          ...next,
+          morale: Math.min(120, next.morale + POJUN_DUEL_VS_LVBU_MORALE_DELTA),
+        };
+      }
+    }
+    return next;
+  });
   const duel = createDuel(battle.id, challenger, defender, DEFAULT_DUEL_CONFIG, rng, stance);
+  const tags: string[] = [];
+  if (wukuiAtk || wukuiDef) tags.push('武魁威压：对方士气−5');
+  if (pojunVsLvBuAtk || pojunVsLvBuDef) tags.push('破军：遇吕布士气+5');
+  const aweMsg = tags.length ? `（${tags.join('；')}）` : '';
   return {
     battle: {
       ...battle,
       units: spentUnits,
       duel,
-      message: `${challenger.name} 向 ${defender.name} 发起单挑！`,
-      log: [...battle.log, { turn: battle.turn, message: `单挑: ${challenger.name} vs ${defender.name}` }],
+      message: `${challenger.name} 向 ${defender.name} 发起单挑！${aweMsg}`,
+      log: [
+        ...battle.log,
+        {
+          turn: battle.turn,
+          message: `单挑: ${challenger.name} vs ${defender.name}${aweMsg}`,
+        },
+      ],
     },
     accepted: true,
   };

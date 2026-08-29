@@ -33,6 +33,12 @@ export const AI_MILITARY_CONFIG = Object.freeze({
   baitedRaidBonus: 0.25,
   maxActiveFronts: 2,
   threatenedReserveRatio: 0.25,
+  // P1-2 目标评估（Session 410，docs/40-game-evaluation.md）：威胁响应与评分权重
+  threatRatio: 0.6,          // 邻敌兵力 ≥ 我方 60% 视为肘腋之患（打它加分）
+  threatenedRatio: 1.2,      // 邻敌兵力 ≥ 我方 120% 视为危城（本月按兵不动，除非离间强攻）
+  threatBonus: 1.5,          // 先解除肘腋之患的评分乘数
+  threatAllyBonus: 1.15,     // 目标威胁我方其他城时的评分乘数
+  wallPenaltyDivisor: 2,     // 城防减分：score × 100/(100+wall×2)
   retreatTroopRatio: 0.55,
   retreatFoodMonths: 2,
   // 郡域增援（R6 后续 · S15 深化，Session 260）
@@ -313,6 +319,41 @@ export function maybeReinforceCommandery(
   );
 }
 
+/** 邻接敌城是否构成对 from 城的肘腋之患（P1-2）：敌兵 ≥ 我方 threatRatio。 */
+function isThreateningCity(state: GameState, factionId: number, fromId: number, targetId: number): boolean {
+  const from = state.cities[fromId];
+  const target = state.cities[targetId];
+  if (!from || !target || target.ruler == null || target.ruler === factionId) return false;
+  if (!canAiAttackFaction(state, factionId, target.ruler)) return false;
+  if (!canTravelMacroAdjacent(fromId, targetId)) return false;
+  return target.troops >= from.troops * AI_MILITARY_CONFIG.threatRatio;
+}
+
+/** 城池是否处于危城状态（P1-2）：任一邻接敌城兵力 ≥ 我方 threatenedRatio → 本月按兵不动。 */
+function isThreatenedSource(state: GameState, factionId: number, cityId: number): boolean {
+  const from = state.cities[cityId];
+  if (!from) return false;
+  return Object.values(state.cities).some((target) =>
+    target.ruler != null &&
+    target.ruler !== factionId &&
+    canAiAttackFaction(state, factionId, target.ruler) &&
+    canTravelMacroAdjacent(cityId, target.id) &&
+    target.troops >= from.troops * AI_MILITARY_CONFIG.threatenedRatio
+  );
+}
+
+/** 目标是否威胁我方其他城池（非 from 本城）——讨伐威胁源的小幅加分。 */
+function threatensOtherCityOf(state: GameState, factionId: number, targetId: number, excludeCityId: number): boolean {
+  const target = state.cities[targetId];
+  if (!target || target.ruler == null) return false;
+  return Object.values(state.cities).some((mine) =>
+    mine.id !== excludeCityId &&
+    mine.ruler === factionId &&
+    canTravelMacroAdjacent(mine.id, targetId) &&
+    target.troops >= mine.troops * AI_MILITARY_CONFIG.threatRatio
+  );
+}
+
 function aiMilitaryTurn(
   state: GameState,
   factionId: number,
@@ -343,7 +384,12 @@ function aiMilitaryTurn(
         if (!canTravelMacroAdjacent(from.id, target.id)) continue;
         const mod = getPlotAttackModifier(s, target.id, factionId) * getPolicyAttackModifier(s, target.id, factionId);
         const base = Math.max(100, 12000 - target.troops);
-        const score = base * mod;
+        // P1-2 目标评估（Session 410）：孱弱之外再权衡 富庶（金粮）× 城防（墙高难啃）× 威胁响应
+        const wealth = Math.min(1.25, 1 + (target.gold + Math.floor(target.food / 8)) / 40000);
+        const wallFactor = 100 / (100 + target.stats.wall * AI_MILITARY_CONFIG.wallPenaltyDivisor);
+        let score = base * mod * wealth * wallFactor;
+        if (isThreateningCity(s, factionId, from.id, target.id)) score *= AI_MILITARY_CONFIG.threatBonus;
+        else if (threatensOtherCityOf(s, factionId, target.id, from.id)) score *= AI_MILITARY_CONFIG.threatAllyBonus;
         cands.push({ fromId: from.id, targetId: target.id, score, mod });
       }
     }
@@ -356,6 +402,12 @@ function aiMilitaryTurn(
     if (!from || !target) break;
     usedSources.add(from.id);
 
+    // P1-2 威胁响应：危城本月按兵不动（离间强攻除外）；排除该源城避免死循环
+    if (isThreatenedSource(s, factionId, best.fromId) && !isInstigateForcedAttack(s, factionId, best.targetId)) {
+      const factionName = s.factions[factionId]?.name ?? '某军';
+      s = pushLog(s, 'ai_military', `${factionName}见${from.name}周边强敌环伺，本月按兵不动`);
+      continue;
+    }
     const forced = isInstigateForcedAttack(s, factionId, best.targetId);
     const factionName = s.factions[factionId]?.name ?? '某军';
     const targetName = target.name;

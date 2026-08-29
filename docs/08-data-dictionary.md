@@ -62,6 +62,9 @@
 | `familyRelocateQuarter` | number? | 迁家属季度锁 |
 | `familyTreatment` | object? | Session 351：攻城后善待/中立/镇压处置状态 |
 | `stats.culture` | number? | **Session 362 · S03 0-A**：文化持续投入值；旧存档缺省按 0 读取，当前只提供累计与 UI 展示 |
+| `stats.craft` | number? | **Session 397 · S03 0-A**：工艺持续投入值；旧存档缺省按 0；Session 401 起征兵士气消费；器械建造速度仍后置 |
+| `stats.transport` | number? | **Session 398 · S03 0-A**：交通持续投入值；旧存档缺省按 0；Session 402 起行军粮耗减免；行军速度仍后置 |
+| `stats.sanitation` | number? | **Session 399 · S03 0-A**：卫生持续投入值；旧存档缺省按 0；瘟疫抗性/人口增长率消费后置 |
 
 ### S03 0-A 文化持续投入数值（Session 362）
 
@@ -69,17 +72,85 @@
 |----|----:|------|
 | 总成本 | 360金 | 启动时首付总成本的 1/3，即 120金；余款按既有月费链扣除 |
 | 工期 | 6个月 | 复用 `activeDevelopment` 的逐月推进、人员不可用暂停与超过 3 月进度损失 |
-| 完成收益 | 文化 +60 | 上限 999；当前切片只落库/展示，技术研发与人才吸引的消费后置 |
+| 完成收益 | 文化 +60 | 上限 999；Session 400 起人才登用成功率按门槛级数消费；技艺研发仍后置 |
 | 随机性 | 0 次 RNG | 启动、月结、完成均为确定性资源/时间结算 |
 
-本表是本切片的数字真源；`01/04/07/09/10/12/35` 仅作摘要引用。工艺、交通、卫生仍未进入
-运行时项目枚举，0-B 数据扩容不因本切片启动。
+本表是文化切片的数字真源；`01/04/07/09/10/12/35` 仅作摘要引用。
+
+### S03 0-A 工艺持续投入数值（Session 397）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 总成本 | 360金 | 与文化同构：首付 120金，余款月费链 |
+| 工期 | 6个月 | 复用 `activeDevelopment` 单项目链 |
+| 完成收益 | 工艺 +60 | 上限 999；Session 401 起征兵质量按门槛级数消费部队士气；器械建造速度仍后置 |
+| 随机性 | 0 次 RNG | 启动、月结、完成确定性 |
+
+本表是工艺切片的数字真源。
+
+### S03 0-A 交通持续投入数值（Session 398）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 总成本 | 360金 | 与文化同构：首付 120金，余款月费链 |
+| 工期 | 6个月 | 复用 `activeDevelopment` 单项目链 |
+| 完成收益 | 交通 +60 | 上限 999；Session 402 起运输损耗按门槛级数减免行军粮耗；行军速度仍后置 |
+| 随机性 | 0 次 RNG | 启动、月结、完成确定性 |
+
+本表是交通切片的数字真源。
+
+### S03 0-A 卫生持续投入数值（Session 399）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 总成本 | 360金 | 与文化同构：首付 120金，余款月费链 |
+| 工期 | 6个月 | 复用 `activeDevelopment` 单项目链 |
+| 完成收益 | 卫生 +60 | 上限 999；只落库/展示，瘟疫抗性与人口增长率消费后置 |
+| 随机性 | 0 次 RNG | 启动、月结、完成确定性 |
+
+本表是卫生切片的数字真源。文化/工艺/交通/卫生四项 0-A 落库链已齐；卫生效果消费与 0-B 不因本切片启动。
 
 ### S03 文化门槛只读预览（Session 363）
 
-文化值在本轮只用于展示距离既有技艺门槛的进度，不提前解锁技艺、增加研发速度或改变人才公式。
-门槛数组为 `[100, 250, 500, 700, 900]`，分别对应技艺 Lv1～Lv5；达到的级数取不超过当前文化值的门槛数，
+文化值按门槛数组 `[100, 250, 500, 700, 900]` 投影技艺 Lv1～Lv5；达到的级数取不超过当前文化值的门槛数，
 下一门槛显示为第一个尚未达到的值，满 Lv5 后不再显示下一门槛。文化值仍沿用 Session 362 的 0～999 运行时上限。
+
+### S03 文化→登用成功率消费（Session 400）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 每级百分点 | +2 | `cultureRecruitModifier` = `reachedLevels × 2` |
+| 上限 | +10 | Lv5 满档；仍受登用总成功率 clamp [5, 90] |
+| 读城规则 | 目标所在己方城优先，否则己方城最高文化 | `playerCultureForRecruit` |
+| 合成入口 | `resolveRecruitChance` | 辩才 + 文化，UI 与 `recruitOfficer` 同源 |
+| 随机性 | 0 次额外 RNG | 仅改变成功率百分点，不改变判定次数 |
+
+本表是文化人才吸引消费的数字真源。技艺研发解锁仍后置。
+
+### S03 工艺→征兵士气消费（Session 401）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 质量门槛 | 同文化 `[100,250,500,700,900]` | `craftQualityThresholdProgress` 与文化技艺门槛同构 |
+| 每级士气 | +2 | `craftConscriptMoraleBonus` = `reachedLevels × 2` |
+| 上限 | +10 | Lv5 满档；写入 `City.troopsMorale` 后仍 clamp [0, 100] |
+| 消费入口 | `conscript` | 征兵成功后确定性加士气；零额外 RNG |
+| 代理说明 | 0-A | 以部队士气代理正式「兵质」等级（P5-14 后置）；器械建造速度仍后置 |
+
+本表是工艺征兵质量消费的数字真源。
+
+### S03 交通→行军粮耗减免（Session 402）
+
+| 项 | 数值 | 说明 |
+|----|----:|------|
+| 路网门槛 | 同文化 `[100,250,500,700,900]` | `transportRouteThresholdProgress` 与文化技艺门槛同构 |
+| 每级减免 | 2 百分点 | `transportFoodLossReductionPct` = `reachedLevels × 2` |
+| 上限 | −10% | Lv5 满档；乘区 `transportMarchFoodMul` = `1 − pct/100` |
+| 读城规则 | 出发城属本势力优先，否则本势力城最高交通 | `armyTransportForMarch` |
+| 消费入口 | `tickCampaignMarch` | 与釜底抽薪/坚壁清野乘区叠乘；零额外 RNG |
+| 代理说明 | 0-A | 仅消费「运输损耗」；行军速度（多跳/疲劳）仍后置 |
+
+本表是交通运输损耗消费的数字真源。
 
 ### 示例 (2条)
 
@@ -432,7 +503,7 @@
 | uniqueSkill? | SkillType | 专属技 |
 | tags | string[] | 出身标签（社会·地域·职业·政治·特殊） |
 | appearance? | SpecialAppearance | **Session 100 技术储备新增**：武将特殊造型（scale/auraColor/weaponLength/shadingMode/pheasantPlume/mount/ghostForm）。0-A 30 武将手工填写，0-B 全量填写记技术债 D-0B-7 |
-| avatarGene? | AvatarGene | **Session 101 技术储备新增**：武将头像底图基因（scheme/baseRubbing/faceType/hairType/beardType/eyeType/sealText/clanTitle/officeSeal/ribbonColor/royalSeal）。与 `appearance` 战斗造型字段并存，职责分离。0-A 30 武将手工填差异化 / 0-B 1000+ 武将脚本派生 + 重点人工校对。详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一 |
+| avatarGene? | AvatarGeneOverride | **批次③ Session 409 已实装**：武将头像基因（baseRubbing/faceType 0~5/hairType 0~9/beardType 0~7/eyeType 0~6/sealText/clanTitle/ribbonColor）。与 `appearance` 战斗造型字段并存，职责分离。4 原型手工策展入库，其余 `shared/avatar-gene.ts` 哈希派生 + 名册消解表两两可辨（清 D-0B-7）。详见本文件 §avatarGene 字段、`docs/design/ArtDirection.md` §五 |
 
 #### appearance 字段（Session 100 技术储备，未实装）
 
@@ -450,24 +521,22 @@
 
 **0-A 30 武将填写规则**：猛将（吕布/关羽/张飞/典韦/赵云/马超）手工填写差异化 appearance；文官（荀彧等）填默认值（scale=1.0/auraColor=空/weaponLength=5/normal）。详见 `docs/07-ui-design.md` §11.3 典型武将映射表。
 
-#### avatarGene 字段（Session 101 技术储备，未实装）
+#### avatarGene 字段（批次③ Session 409 已实装；P5-10 / 清 D-0B-7）
 
-> 本字段为 Session 101 技术储备，实装时需同步 `shared/types/officer.ts` + `shared/validators/index.ts` Zod 校验 + 本真源。详见 `docs/07-ui-design.md` §11.6、`docs/00-dev-constitution.md` §十一美术铁律。
-> 与 `appearance` 字段职责分离：`appearance` 服务战斗演出几何造型（MeleeStage/DuelStage），`avatarGene` 服务头像底图渲染（OfficerRosterPanel/OfficerDetail/派系面板）。
+> **Session 409 实装**：`shared/avatar-gene.ts`（getAvatarGene 哈希派生 + deriveAvatarGeneTable 名册级碰撞消解）+ `shared/validators/index.ts` Zod + `shared/types/officer.ts` 类型已同步；渲染端 `OfficerPortrait`/`ExpressionPortrait` 消费。与 `appearance` 字段职责分离：`appearance` 服务战斗演出几何造型（MeleeStage/DuelStage），`avatarGene` 服务头像底图渲染（OfficerRosterPanel/OfficerDetail/派系面板）。碰撞消解：手工策展优先 → id 序哈希 → (须→冠→脸) 确定性探测（空间 6×10×8=480，零 RNG）。
 
 | 子字段 | 类型 | 说明 |
 |------|------|------|
-| scheme | 'rubbing' \| 'seal' \| 'procedural' | 头像方案（A 拓片 / B 印信 / C 拼图，组合方案下默认 'procedural' 含三层） |
-| baseRubbing? | 'warrior' \| 'scholar' \| 'servant' \| 'royal' | 方案 A 拓片底图类型（按武将文/武/龙套/皇室切换） |
-| faceType? | number | 方案 C 脸型（0~4：甲/由/申/国/风字脸） |
-| hairType? | number | 方案 C 冠冕/发髻（0~9：平天冠/进贤冠/武冠/帻巾/帢帽/...） |
-| beardType? | number | 方案 C 胡须（0~9：虬髯/美髯/八字胡/山羊胡/...） |
-| eyeType? | number | 方案 C 眼神/眉毛（0~9：丹凤眼/细眼/环眼/卧蚕眉/...） |
-| sealText? | string | 方案 A/B 姓名印章文字（2~4 字，朱砂红 + 隶书，2 字断行） |
-| royalSeal? | boolean | 是否皇室金边（刘备/曹操/孙权等主公 true） |
-| clanTitle? | string | 方案 B 籍贯氏族（"琅琊诸葛氏"、"河东关氏"、"五原郡吕氏"，静态按出身） |
-| officeSeal? | string | 方案 B 当前官职篆印（"荡寇将军"、"荆州刺史"，动态随 `Officer.position` 变化） |
-| ribbonColor? | 'purple' \| 'cyan' \| 'black' \| 'yellow' | 方案 B 印绶颜色（按汉制官品，动态随 `NobilityRank` 变化：紫绶/青绶/墨绶/黄绶） |
+| baseRubbing? | 'warrior' \| 'scholar' | A′ 拓影分型（Session 409 实装两型；servant/royal 后置）。缺省由五维派生：武+统 ≥ 智+政 → warrior |
+| faceType? | number | 方案 C 脸型 0~5（round/long/square/sharp/oval/broad，ArtDirection §五 6 脸型） |
+| hairType? | number | 方案 C 冠冕/发髻 0~9（royal/warrior/scholar/guan/tied/helm/cap/plume/hood/jade） |
+| beardType? | number | 方案 C 胡须 0~7（short/long/goatee/wild/stubble/forked/bushy/thin） |
+| eyeType? | number | 方案 C 眉眼 0~6（平眉凤眼/剑眉环眼/卧蚕眉细眼/浓眉怒目/淡眉垂目/英眉朗目/八字眉眯眼） |
+| sealText? | string | 姓名印印文（缺省按姓名，姓上名下竖排篆书；动态官职印 officeSeal 后置） |
+| clanTitle? | string | 方案 B 籍贯氏族题签（缺省按姓「X氏」） |
+| ribbonColor? | 'purple' \| 'cyan' \| 'black' \| 'yellow' | 印绶颜色（缺省按 `NobilityRank`：帝/王/公→紫、乡/县侯→青、关/亭侯→黄、无→黑；shared/avatar-gene.ts ribbonColorForRank） |
+
+> 未实装子字段（后置）：`scheme`（组合方案固定三层）、`royalSeal`（皇室金边）、`officeSeal` 动态官职印。0-A 223 名：4 原型（曹操/诸葛亮/吕布/关羽）手工策展 avatarGene 已入库，其余哈希派生 + 名册消解表两两可辨；0-B 1000+ 全量脚本派生 + 重点人工校对（D-0B-7 已清）。
 
 **0-A 30 武将填写规则**：
 - 猛将/主公（吕布/关羽/张飞/典韦/赵云/刘备/曹操/孙权等 27 名史实武将）→ 手工填差异化 `avatarGene`
@@ -1407,4 +1476,4 @@ Session 371 在不新增字段/API/RNG 的前提下落地骑兵冲锋最小切�
 | 雪天修正 | −3 格 | 05 §3.1「地势可见范围−3」的运行时消费 |
 | 下限夹紧 | 1 格 | `max(1, 基线+地形+天气)`，任何情况下自身邻域可见 |
 | 可见性判定 | 距离 ≤ 观察者有效视野 | 敌军活跃单位与任一存活我方单位满足即整队可见；已溃/重创敌军不进入可见集 |
-| 消费边界 | 仅玩家侧 UI 投影 | BattleView 视野外守方单位不渲染/不可选中/无红标记；敌军 AI 全知不受影响；服务端权威态不改写、攻击门禁不加校验（单机自约束） |
+| 消费边界 | 双侧消费 | BattleView 视野外守方单位不渲染/不可选中/无红标记；**P1-4（Session 412）起敌军 AI 目标选择同样按本投影半知化**（视野内无目标则待机）；服务端权威态不改写、攻击门禁不加校验（单机自约束） |

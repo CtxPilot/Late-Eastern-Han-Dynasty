@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
-import { FormationType, UnitType, type CampaignArmy } from '@leh/shared';
+import { FormationType, UnitType, countFieldArmies, maxFieldArmies, type CampaignArmy } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 
 const PHASE_LABEL: Record<string, string> = {
@@ -69,6 +70,15 @@ export function CampaignPanel() {
   const myArmies = useMemo<CampaignArmy[]>(() => {
     if (!game) return [];
     return game.campaignArmies.filter((a) => a.factionId === game.playerFactionId);
+  }, [game]);
+
+  // D1 军团上限（docs/42）：出征军 x/y；garrison/retreating 不占额
+  const armyCapInfo = useMemo(() => {
+    if (!game) return { field: 0, cap: 2, atCap: false };
+    const ownCityCount = Object.values(game.cities).filter((c) => c.ruler === game.playerFactionId).length;
+    const cap = maxFieldArmies(ownCityCount);
+    const field = countFieldArmies(game.campaignArmies, game.playerFactionId);
+    return { field, cap, atCap: field >= cap };
   }, [game]);
 
   const enemyCities = useMemo(() => {
@@ -169,14 +179,23 @@ export function CampaignPanel() {
     : null;
 
   return (
-    <div className="text-[11px] text-stone-300 leading-snug">
-      <p className="px-3 py-1 text-[10px] text-stone-500 border-b border-stone-900">
+    <div className="text-xs text-stone-300 leading-snug">
+      <p className="px-3 py-1 text-xs text-stone-500 border-b border-stone-900">
         战役层：编成 → 行军 → 自动战斗结算。先选己方城，再选主将/副将/参谋。
       </p>
 
       {/* 编成表单 */}
       <div className="px-3 py-2 border-b border-stone-800 space-y-1.5">
-        <div className="text-amber-400/80 font-medium">出征编成</div>
+        <div className="flex items-center justify-between">
+          <span className="text-amber-400/80 font-medium">出征编成</span>
+          <span
+            data-testid="campaign-army-cap"
+            className={`text-xs ${armyCapInfo.atCap ? 'text-red-400' : 'text-stone-500'}`}
+            title="出征军数上限 = 2+floor(城/5)，上限6；驻守/撤退军不占额"
+          >
+            出征军 {armyCapInfo.field}/{armyCapInfo.cap}
+          </span>
+        </div>
         {selectedCityId == null ? (
           <p className="text-stone-600">请先在地图或下方选择己方城</p>
         ) : (
@@ -205,18 +224,18 @@ export function CampaignPanel() {
             <Field label="副将">
               <div className="flex flex-wrap gap-1">
                 {availableSubs.slice(0, 4).map((o) => (
-                  <button
+                  <InkButton
                     key={o.id}
                     type="button"
                     onClick={() => toggleSub(o.id)}
-                    className={`px-1.5 py-0.5 rounded border text-[10px] ${
+                    className={`px-1.5 py-0.5 rounded border text-xs ${
                       subIds.includes(o.id)
                         ? 'border-amber-500 bg-amber-950 text-amber-100'
                         : 'border-stone-700 bg-stone-900 text-stone-400'
                     }`}
                   >
                     {o.name}
-                  </button>
+                  </InkButton>
                 ))}
                 {availableSubs.length === 0 && (
                   <span className="text-stone-600">无可用副将</span>
@@ -295,14 +314,15 @@ export function CampaignPanel() {
                 />
               </Field>
             </div>
-            <button
+            <InkButton
               type="button"
-              disabled={loading || !commanderId || !targetNodeId}
+              disabled={loading || !commanderId || !targetNodeId || armyCapInfo.atCap}
+              title={armyCapInfo.atCap ? `出征军数已达上限（${armyCapInfo.field}/${armyCapInfo.cap}）` : undefined}
               onClick={() => void handleStart()}
               className="w-full px-2 py-1 rounded border border-amber-700 text-amber-100 bg-amber-950/40 hover:bg-amber-900/40 disabled:opacity-40"
             >
               出征
-            </button>
+            </InkButton>
           </>
         )}
       </div>
@@ -320,11 +340,11 @@ export function CampaignPanel() {
               const cmd = game.officers[a.commanderId];
               const node = game.cities[a.currentNodeId];
               return (
-                <button
+                <InkButton
                   key={a.id}
                   type="button"
                   onClick={() => setSelectedArmyId(a.id)}
-                  className={`w-full text-left px-2 py-1 rounded border text-[10px] ${
+                  className={`w-full text-left px-2 py-1 rounded border text-xs ${
                     a.id === selectedArmyId
                       ? 'border-amber-500 bg-amber-950 text-amber-100'
                       : 'border-stone-800 bg-stone-900/80 text-stone-300 hover:border-stone-600'
@@ -338,7 +358,7 @@ export function CampaignPanel() {
                     {node?.name ?? a.currentNodeId} · 兵{a.troops}/{a.maxTroops} · 粮{a.food} · 士{a.morale}
                     {cmd ? ` · ${cmd.name}` : ''}
                   </div>
-                </button>
+                </InkButton>
               );
             })}
           </div>
@@ -381,7 +401,7 @@ export function CampaignPanel() {
             {selectedArmy.structures.length > 0 && (
               <div className="mt-0.5 space-y-0.5">
                 {selectedArmy.structures.map((s, i) => (
-                  <div key={i} className="text-stone-400 text-[10px]">
+                  <div key={i} className="text-stone-400 text-xs">
                     {structLabel(s.type)}
                     {s.buildProgress < 1 ? (
                       <span className="text-amber-400/80 ml-1">
@@ -434,16 +454,16 @@ export function CampaignPanel() {
                   const isBuilding = selectedArmy.structures.some((st) => st.buildProgress < 1);
                   const disabled = loading || isBuilding;
                   return (
-                    <button
+                    <InkButton
                       key={s.value}
                       type="button"
                       disabled={disabled}
                       title={`${s.label}：金${s.cost}，${s.turns}回合`}
                       onClick={() => void campaignBuild(selectedArmy.id, s.value)}
-                      className="px-1.5 py-0.5 rounded border border-stone-700 bg-stone-900 text-stone-300 text-[10px] hover:bg-stone-800 disabled:opacity-40"
+                      className="px-1.5 py-0.5 rounded border border-stone-700 bg-stone-900 text-stone-300 text-xs hover:bg-stone-800 disabled:opacity-40"
                     >
                       {s.label} ({s.cost}金/{s.turns}t)
-                    </button>
+                    </InkButton>
                   );
                 })}
               </div>
@@ -495,13 +515,13 @@ export function CampaignPanel() {
                 </div>
               )}
             </div>
-            <button
+            <InkButton
               type="button"
               onClick={() => setShowBattleReport(false)}
               className="mt-3 w-full px-3 py-1.5 rounded border border-amber-700 text-amber-100 bg-amber-950/40 hover:bg-amber-900/40"
             >
               确认
-            </button>
+            </InkButton>
           </div>
         </div>
       )}
@@ -512,7 +532,7 @@ export function CampaignPanel() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-stone-500 text-[10px]">{label}</label>
+      <label className="text-stone-500 text-xs">{label}</label>
       {children}
     </div>
   );
@@ -520,15 +540,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function OpBtn({ label, hint, onClick, disabled }: { label: string; hint?: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <button
+    <InkButton
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="px-1.5 py-1 rounded border border-amber-900/60 text-amber-100 bg-stone-900 hover:bg-amber-950/40 disabled:opacity-40 text-[10px]"
+      className="px-1.5 py-1 rounded border border-amber-900/60 text-amber-100 bg-stone-900 hover:bg-amber-950/40 disabled:opacity-40 text-xs"
       title={hint}
     >
       {label}
-    </button>
+    </InkButton>
   );
 }
 

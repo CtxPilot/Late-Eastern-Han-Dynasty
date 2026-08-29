@@ -4,6 +4,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+// 工程字体唯一声明处（批次①去重：index.css 内联块已删除）。
+// 用 JS import 而非 CSS @import：@import 必须置顶，在 @tailwind 之后会被忽略。
+import './styles/fonts.css';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(

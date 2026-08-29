@@ -6,6 +6,7 @@
  * 两军同节点时弹出：自动结算 / 标准模式 / 六角微操。
  * 三者从同一权威交战快照选一，选定后不可切换。
  */
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useGameStore } from '../../stores/gameStore';
 
 export function MeleeEntryDialog() {
@@ -22,14 +23,14 @@ export function MeleeEntryDialog() {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-stone-800 rounded-lg border border-stone-600 p-6 max-w-md w-full mx-4 shadow-xl">
+      <div className="bg-stone-800 rounded border border-stone-600 p-6 max-w-md w-full mx-4 shadow-xl">
         <h3 className="text-lg font-bold text-amber-400 mb-2">白刃战</h3>
         <p className="text-sm text-stone-300 mb-4">
           {atkName} vs {defName}
         </p>
 
         <div className="space-y-3">
-          <button
+          <InkButton
             type="button"
             className="w-full px-4 py-3 rounded bg-stone-700 hover:bg-stone-600 text-stone-200 text-left"
             data-testid="melee-mode-auto"
@@ -37,9 +38,9 @@ export function MeleeEntryDialog() {
           >
             <div className="font-medium">⚡ 自动结算</div>
             <div className="text-xs text-stone-400">系统自动推演至分出胜负</div>
-          </button>
+          </InkButton>
 
-          <button
+          <InkButton
             type="button"
             className="w-full px-4 py-3 rounded bg-amber-900 hover:bg-amber-800 text-amber-200 text-left"
             data-testid="melee-mode-standard"
@@ -47,9 +48,9 @@ export function MeleeEntryDialog() {
           >
             <div className="font-medium">⚔️ 标准模式</div>
             <div className="text-xs text-stone-400">选阵型 + 战术点决策，每回合手动操作</div>
-          </button>
+          </InkButton>
 
-          <button
+          <InkButton
             type="button"
             className="w-full px-4 py-3 rounded bg-stone-700 hover:bg-stone-600 text-stone-200 text-left"
             data-testid="melee-mode-tactical"
@@ -57,16 +58,16 @@ export function MeleeEntryDialog() {
           >
             <div className="font-medium">🎮 六角微操</div>
             <div className="text-xs text-stone-400">进入六角网格，移动、攻击、用计与单挑</div>
-          </button>
+          </InkButton>
         </div>
 
-        <button
+        <InkButton
           type="button"
           className="mt-4 w-full px-3 py-2 text-sm rounded bg-stone-700 hover:bg-stone-600 text-stone-400"
           onClick={() => useGameStore.getState().meleeExit()}
         >
           暂不交战
-        </button>
+        </InkButton>
       </div>
     </div>
   );

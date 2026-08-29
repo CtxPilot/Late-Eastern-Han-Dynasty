@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import {
   PlotStage,
@@ -686,7 +687,7 @@ export function StrategyOverviewDrawer({
     >
       <nav className="mb-3 grid grid-cols-3 gap-1" aria-label="计略分面">
         {FACETS.map((item) => (
-          <button
+          <InkButton
             key={item.id}
             type="button"
             data-testid={`command-strategy-facet-${item.id}`}
@@ -699,11 +700,11 @@ export function StrategyOverviewDrawer({
             }`}
           >
             {item.label}
-          </button>
+          </InkButton>
         ))}
       </nav>
 
-      <p className="mb-3 text-[10px] leading-relaxed text-stone-500">
+      <p className="mb-3 text-xs leading-relaxed text-stone-500">
         S17 四计由此唯一发起；探秘与女间谍仍归 S07 情报域。
       </p>
 
@@ -743,13 +744,13 @@ export function StrategyOverviewDrawer({
             items={overview.watchFirePairs}
             empty="暂无两家其他势力友好≥40。"
           />
-          <p className="border border-stone-800 bg-stone-900/50 px-3 py-2 text-[10px] text-stone-500">
+          <p className="border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs text-stone-500">
             总军师任免归朝廷；未来战略态势与献策才进入计略。
           </p>
         </section>
       ) : facet === 'launch' ? (
         <section className="min-h-0 space-y-2 overflow-y-auto" data-testid="command-strategy-launch">
-          <label className="block text-[10px] text-stone-500">
+          <label className="block text-xs text-stone-500">
             计略
             <select
               data-testid="command-strategy-plot-type"
@@ -784,7 +785,7 @@ export function StrategyOverviewDrawer({
           </label>
 
           {draft.type === PlotType.SOW_DISCORD || isStrikeWhileHot || isEdict ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               目标势力
               <select
                 data-testid="command-strategy-target-faction"
@@ -805,7 +806,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : isWatchFire ? (
             <>
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 势力甲
                 <select
                   data-testid="command-strategy-target-faction"
@@ -825,7 +826,7 @@ export function StrategyOverviewDrawer({
                     ))}
                 </select>
               </label>
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 势力乙
                 <select
                   data-testid="command-strategy-secondary-faction"
@@ -853,7 +854,7 @@ export function StrategyOverviewDrawer({
               </label>
             </>
           ) : isKillChicken ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               儆猴目标（可选）
               <select
                 data-testid="command-strategy-target-officer"
@@ -872,7 +873,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : isSecretCrossing ? (
             <>
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 明修城（牵制）
                 <select
                   data-testid="command-strategy-feint-city"
@@ -889,7 +890,7 @@ export function StrategyOverviewDrawer({
                   ))}
                 </select>
               </label>
-              <label className="block text-[10px] text-stone-500">
+              <label className="block text-xs text-stone-500">
                 暗渡城（出击）
                 <select
                   data-testid="command-strategy-target-city"
@@ -908,7 +909,7 @@ export function StrategyOverviewDrawer({
               </label>
             </>
           ) : (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               {isEmpty || isBlossom ? '己方城' : '目标敌城'}
               <select
                 data-testid="command-strategy-target-city"
@@ -933,7 +934,7 @@ export function StrategyOverviewDrawer({
           )}
 
           {isHoney || isLureTiger || isInstigate ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               {isLureTiger || isInstigate ? '女间谍（必派）' : '女间谍（可选）'}
               <select
                 data-testid="command-strategy-agent"
@@ -950,7 +951,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : null}
           {isLureTiger ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               诱离守将（可选，默认武力最高）
               <select
                 data-testid="command-strategy-target-officer"
@@ -969,7 +970,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : null}
           {isInstigate ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               第三方源城
               <select
                 data-testid="command-strategy-feint-city"
@@ -988,7 +989,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : null}
           {isPoach ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               挖角武将
               <select
                 data-testid="command-strategy-target-officer"
@@ -1007,7 +1008,7 @@ export function StrategyOverviewDrawer({
             </label>
           ) : null}
           {isSwapPillar ? (
-            <label className="block text-[10px] text-stone-500">
+            <label className="block text-xs text-stone-500">
               反间密探（必派）
               <select
                 data-testid="command-strategy-agent"
@@ -1026,13 +1027,13 @@ export function StrategyOverviewDrawer({
             </label>
           ) : null}
 
-          <div className="border border-stone-800 bg-stone-900/50 px-3 py-2 text-[10px] text-stone-500">
+          <div className="border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs text-stone-500">
             <p>立即消耗：<span className="text-stone-300">{PLOT_COST[draft.type]}</span></p>
             <p>当前进行中：{overview.activeCount}/{overview.maxActive}</p>
           </div>
-          {launchReason ? <p data-testid="command-strategy-launch-reason" className="text-[10px] text-amber-500">{launchReason}</p> : null}
+          {launchReason ? <p data-testid="command-strategy-launch-reason" className="text-xs text-amber-500">{launchReason}</p> : null}
           {!isEmpty && !isBlossom && !isKillChicken && !isStrikeWhileHot && !isWatchFire && !isEdict && draft.type !== PlotType.SOW_DISCORD ? (
-            <button
+            <InkButton
               type="button"
               data-testid="command-strategy-go-intel"
               className="w-full rounded border border-sky-800 bg-sky-950/30 px-3 py-2 text-sky-100"
@@ -1043,9 +1044,9 @@ export function StrategyOverviewDrawer({
               })}
             >
               前往情报 · {isSecretCrossing ? '侦查/探秘' : '探秘'}
-            </button>
+            </InkButton>
           ) : null}
-          <button
+          <InkButton
             type="button"
             data-testid="command-strategy-launch-submit"
             data-command-write="true"
@@ -1054,8 +1055,8 @@ export function StrategyOverviewDrawer({
             onClick={() => setConfirmOpen(true)}
           >
             送交终审 · {PLOT_LABEL[draft.type]}
-          </button>
-          <p className="text-[10px] leading-relaxed text-stone-600">
+          </InkButton>
+          <p className="text-xs leading-relaxed text-stone-600">
             探秘和女间谍仍属于情报域；跨域导航不复制情报写链。
           </p>
         </section>
@@ -1073,29 +1074,29 @@ export function StrategyOverviewDrawer({
             >
               <div className="flex items-center justify-between">
                 <strong className="text-stone-100">{plot.label} · {plot.target}</strong>
-                <span className="text-[10px] text-violet-200">{plot.stageLabel}</span>
+                <span className="text-xs text-violet-200">{plot.stageLabel}</span>
               </div>
-              <p className="mt-1 text-[10px] text-stone-500">
+              <p className="mt-1 text-xs text-stone-500">
                 {plot.stage === PlotStage.RESOLVED ? '已完成' : `剩余 ${plot.monthsLeft} 月`}
                 {plot.progress != null ? ` · 进度 ${plot.progress}%` : ''}
                 {plot.detected ? ' · 已暴露' : ''}
               </p>
-              {plot.message ? <p className="text-[10px] text-stone-400">{plot.message}</p> : null}
+              {plot.message ? <p className="text-xs text-stone-400">{plot.message}</p> : null}
               {plot.cancellable ? (
-                <button
+                <InkButton
                   type="button"
                   data-testid={`command-strategy-cancel-${plot.id}`}
                   data-command-write="true"
                   disabled={loading}
-                  className="mt-2 w-full rounded border border-amber-900 bg-amber-950/40 px-2 py-1 text-[10px] text-amber-100 disabled:opacity-40"
+                  className="mt-2 w-full rounded border border-amber-900 bg-amber-950/40 px-2 py-1 text-xs text-amber-100 disabled:opacity-40"
                   onClick={() => void cancelPlot(plot.id)}
                 >
                   提前终止（沉没成本不返还）
-                </button>
+                </InkButton>
               ) : null}
             </article>
           ))}
-          <p className="text-[10px] text-stone-600">L2 战略计谋可提前终止；L1 战术计谋不可取消。</p>
+          <p className="text-xs text-stone-600">L2 战略计谋可提前终止；L1 战术计谋不可取消。</p>
         </section>
       )}
       <CommandConfirmDialog
@@ -1153,7 +1154,7 @@ function Metric({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="border border-stone-800 bg-stone-900/60 px-2 py-2 text-center">
       <strong className="block text-stone-100">{value}</strong>
-      <span className="text-[9px] text-stone-500">{label}</span>
+      <span className="text-xs text-stone-500">{label}</span>
     </div>
   );
 }
@@ -1162,7 +1163,7 @@ function InfoList({ title, items, empty }: { title: string; items: string[]; emp
   return (
     <div className="border border-stone-800 bg-stone-900/40 px-3 py-2">
       <h3 className="text-stone-300">{title}（{items.length}）</h3>
-      <p className="mt-1 text-[10px] text-stone-500">{items.length > 0 ? items.join('、') : empty}</p>
+      <p className="mt-1 text-xs text-stone-500">{items.length > 0 ? items.join('、') : empty}</p>
     </div>
   );
 }

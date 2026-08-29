@@ -26,9 +26,12 @@ import {
 } from '@leh/shared';
 import {
   DEFAULT_DUEL_CONFIG,
+  FAIR_TOURNAMENT_DUEL_CONFIG,
   aiAcceptChallenge,
+  applyDuelCarryoverHp,
   canChallenge,
   createDuel,
+  isWushuangPassiveActive,
   makeSeededRng,
   runDuelToCompletion,
   stepDuel,
@@ -197,6 +200,33 @@ function main(): void {
   const lvDuel = createDuel('test', lvBu, guanYu, DEFAULT_DUEL_CONFIG, makeSeededRng(1));
   assert(lvDuel.turnOrder[0] === lvBu.id, '吕布(无双) 必为先手');
 
+  // Session 387：公平模式无双降级
+  label('公平模式无双降级（S19）');
+  assert(isWushuangPassiveActive('wushuang', false), '无限制模式无双被动生效');
+  assert(!isWushuangPassiveActive('wushuang', true), '公平模式无双被动关闭');
+  assert(!isWushuangPassiveActive('wusheng', true), '非无双专属不受公平开关影响');
+  // 高爆发对手在公平模式下可凭先手分抢先（无双不强制）
+  const swift = stubOfficer(201, '疾风将', {
+    war: 90, burst: 130, agility: 120, personality: Personality.BRAVE,
+  });
+  const fairDuel = createDuel('fair', lvBu, swift, FAIR_TOURNAMENT_DUEL_CONFIG, makeSeededRng(2));
+  assert(fairDuel.turnOrder[0] === swift.id, '公平模式：爆发更高的对手可为先手');
+  const unrestrictedVsSwift = createDuel('unres', lvBu, swift, DEFAULT_DUEL_CONFIG, makeSeededRng(2));
+  assert(unrestrictedVsSwift.turnOrder[0] === lvBu.id, '无限制：无双仍必先手');
+  // 公平模式仍保留三连路径（吕布先手普攻命中时可能写 chainHits）
+  let fairChain = false;
+  for (let i = 0; i < 200; i++) {
+    const d = runDuelToCompletion(
+      createDuel('fair-chain', lvBu, genericA, FAIR_TOURNAMENT_DUEL_CONFIG, makeSeededRng(i * 3 + 1)),
+      lvBu, genericA, FAIR_TOURNAMENT_DUEL_CONFIG, makeSeededRng(i * 3 + 2),
+    );
+    if (d.roundHistory.some((r) => (r.chainHits[lvBu.id]?.length ?? 0) > 0)) {
+      fairChain = true;
+      break;
+    }
+  }
+  assert(fairChain, '公平模式仍保留无双三连击');
+
   // 受伤记录
   label('受伤系统');
   const injRng = makeSeededRng(313);
@@ -258,6 +288,18 @@ function main(): void {
   label('关羽武器映射 (id=6 → blade)');
   // 武器解析为内部函数; 通过暴击倍率间接验证 — 此处仅断言 createDuel 不抛错
   assert(createDuel('t', guanYu, dianWei, DEFAULT_DUEL_CONFIG, makeSeededRng(233)).challengerId === 6, '关羽作为挑战方创建成功');
+
+  label('大会跨轮 HP 继承 (applyDuelCarryoverHp)');
+  {
+    const base = createDuel('carry', guanYu, dianWei, DEFAULT_DUEL_CONFIG, makeSeededRng(11));
+    const full = base.combatants[guanYu.id]!.hp;
+    const carried = applyDuelCarryoverHp(base, new Map([[guanYu.id, 42]]));
+    assert(carried.combatants[guanYu.id]!.hp === 42, '携带侧 HP 覆盖为 42');
+    assert(carried.combatants[dianWei.id]!.hp === base.combatants[dianWei.id]!.hp, '无携带侧保持原 HP');
+    const floor = applyDuelCarryoverHp(base, { [guanYu.id]: 0 });
+    assert(floor.combatants[guanYu.id]!.hp === 1, '携带 0 时下限为 1');
+    assert(full > 42, '对照：未携带时高于 42');
+  }
 
   console.log('\n=== 测试结束 ===');
   if (process.exitCode) {

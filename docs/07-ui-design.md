@@ -1168,6 +1168,9 @@ Konva.Group（武将头像容器 120×150，border #3e2723）
 
 #### §11.6.7 实装路线（Phase 5，分 3 子 Session）
 
+> **执行口径以视觉真源 `ArtDirection.md` §五/§九为准**（A 层已修订为程序化拓影 A′，放弃扫描 PNG；
+> 头像执行批次③，程序化总路线见 `ArtDirection.md` §九执行手册）。
+
 | 子 Session | 任务 | 依赖 |
 |:--:|---|---|
 | P5-10a | A 拓片底图层（素材采集 20~30 张 + `renderAvatarBase` + 宣纸 PCG 纹理） | D-0B-4 viewport culling |
@@ -1258,7 +1261,7 @@ type CommandShellState = {
 | **情报** | 势力/城市/Army/武将情报；招募密探、侦察、破坏、刺杀、枕边风；驻防反间、搜捕、欺敌；被俘密探处置 | 一级名称用“情报”，内部以“谍报/反间”分栏；情报不足时成功率显示估算区间而非精确值 |
 | **屯田** | **民屯（Session 339）**：编户分配、季限一次、月结产粮与劳力权衡；**军屯（Session 345）**：开关季限一次、月结产粮、季扣士气、训练减半；**质任迁家属（Session 348）**：金500、每城每季一次；**家属处置（Session 351）**：攻城后全局待决弹窗 | 独立一级分类。农业开发不得标成屯田；军户家属归屯田；处置选择必须先处理再结束回合 |
 | **家族** | **族谱（Session 359：0-A 直系只读）**、亲属、婚姻/纳妾/赐婚、子女出生与教育、继承、成年；历史女性影响与随迁 | 军户/兵家属归屯田，不归普通家族面板 |
-| **朝廷** | 君主、威望、正统、政治资本、继承；爵位与封赏、诏令、奉迎天子、国号/称公称王称帝/迁都；**L3 国策改行（Session 348）**；技艺与制度研发、势力文化政策、全国文教概况；总军师任免与国库/官职总览 | 势力级长期国策集中于朝廷。总军师的任免在朝廷，具体态势与献策进入计略 |
+| **朝廷** | 君主、威望、正统、政治资本、继承；爵位与封赏、诏令、奉迎天子、国号/称公称王称帝/迁都；**L3 国策改行（Session 348）**；**武魁大会（Session 384~396：赛果/模式/报名/观战/押注/赛末HP/奖赏/功绩/轮间药）**；技艺与制度研发、势力文化政策、全国文教概况；总军师任免与国库/官职总览 | 势力级长期国策集中于朝廷。总军师的任免在朝廷，具体态势与献策进入计略；S19 轮间逐场押注仍后置 |
 
 #### CMD-P39 家属处置待决窗（Session 351）
 
@@ -1273,6 +1276,14 @@ type CommandShellState = {
 - 数据源是当前剧本启用的 `/static` `children` 目录与当前 `GameState` 的武将/女角实体；只显示至少一条父或母关系连接到玩家势力的记录，避免泄露敌方未关联家族。
 - 每条记录显示子女的 `待登场/已登场` 状态、父、母、生年、登场年与 `正史/演义/传说` 来源；缺失实体显示“未录”。
 - 本切片不把 `hidden.bloodline` 当作父子边，不新增 API、存档字段或随机出生；多代祖先、武将父母字段和父兄跟随仍后置。
+
+#### CMD-P41 军团域·委任区（Session 420）
+
+- 命令坞新增第 11 域「军团」（`delegation`，督字印），`DelegationOverviewDrawer` 为委任区唯一入口（docs/04 §39 + docs/42 S1）。
+- 区列表卡：区名/都督印/方针与 `pendingPolicy`（「下季生效」提示）/辖城清单；区政区：划城（点击划出）、方针四按钮（同季冷却锁定并给 title 说明）、解散（danger 终审）。
+- 建区向导：直辖可划城点选（首都与非己方城不出现）→ 都督下拉（官职/忠诚/未随军/未兼职客户端预过滤，引擎终审）→ 方针选择 → `CommandConfirmDialog` 终审；`autoRecruit/autoReward` 置灰注明 0-B 启用。
+- `CampaignPanel`（战役手风琴）头部新增 `campaign-army-cap`「出征军 x/y」：`maxFieldArmies(城数)=clamp(2+floor(城/5),2,6)`，到帽时出征按钮禁用并给原因 title（garrison/retreating 不占额）。
+- 验收：`verify-s420-delegation-ui` 21/21（headless Chrome 真实点击：开域→建区终审→方针冷却→划空自动解散→console 0 error）。
 
 #### 12.2.1 CMD-P2 朝廷首批运行时切片
 
@@ -1796,7 +1807,17 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
 - **Session 363 · 文化门槛只读预览**：产业分面在“文化积累”下显示“技艺门槛预览 LvN/5”与
   下一门槛差值；`command-civil-culture-level` / `command-civil-culture-threshold` 为稳定测试标识。
   Session 364 补充 `command-civil-culture-progress` 原生进度条，显示共享上限内的“当前文化/999”。
-  文案明确这是只读预览，不产生解锁或加成；满 Lv5 后不再显示下一门槛。
+  **Session 400**：门槛等级开始消费为登用成功率（每级+2百分点）；产业分面文案改为提示登用加成，技艺研发仍后置。
+- **Session 397 · 工艺持续投入**：产业分面新增“工艺积累”与“发展工艺”；数值同构文化（120/360/6月/+60）；
+  `command-civil-value-craft` / `command-civil-craft-progress`；**Session 401** 起质量门槛消费为征兵士气，器械速度仍后置。
+- **Session 398 · 交通持续投入**：产业分面新增“交通积累”与“发展交通”；数值同构文化（120/360/6月/+60）；
+  `command-civil-value-transport` / `command-civil-transport-progress`；**Session 402** 起路网门槛消费为行军粮耗减免，行军速度仍后置。
+- **Session 399 · 卫生持续投入**：产业分面新增“卫生积累”与“发展卫生”；数值同构文化（120/360/6月/+60）；
+  `command-civil-value-sanitation` / `command-civil-sanitation-progress`；瘟疫抗性/人口增长率消费后置。
+  至此文化/工艺/交通/卫生四项持续投入 UI 落库链已齐。
+- **Session 400 · 招贤成功率**：`PersonnelRecruitDrawer` 经 `resolveRecruitChance` 展示含辩才与文化加成的成功率；列表可附「文化+N」。
+- **Session 401 · 工艺征兵质量**：产业分面「工艺质量门槛」；军备征兵终审展示「工艺精装」士气加成；`command-civil-craft-level` / `command-civil-craft-threshold` / `military-readiness-craft-bonus`。
+- **Session 402 · 交通运输损耗**：产业分面「交通路网门槛」；`command-civil-transport-level` / `command-civil-transport-threshold`。
 
 ### 六角战报解释（FM-P4 · Session 302）
 

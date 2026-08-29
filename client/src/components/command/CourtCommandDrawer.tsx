@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState, type Dispatch } from 'react';
 import {
   controlsEmperor,
@@ -26,6 +27,7 @@ import { gameApi } from '../../services/gateway';
 import type { KingRequirementsDto } from '../../services/api';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction, CommandShellState } from './commandShellState';
+import { TournamentOverviewSection } from './TournamentOverview';
 
 const STAGE_LABEL = {
   vassal: '诸侯',
@@ -213,7 +215,7 @@ export function CourtCommandDrawer({
     <>
       <div className="space-y-4" data-testid="court-command-content">
         <section>
-          <h3 className="text-[11px] tracking-widest text-amber-300">君主与政统</h3>
+          <h3 className="text-xs tracking-widest text-amber-300">君主与政统</h3>
           <dl className="mt-2 grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-1">
             <dt className="text-stone-600">君主</dt>
             <dd className="text-stone-200">{model.ruler?.name ?? '—'}</dd>
@@ -239,14 +241,14 @@ export function CourtCommandDrawer({
             </dd>
           </dl>
           <div className="mt-3 border border-stone-800 bg-stone-950/40 p-2" data-testid="command-court-stage-progress">
-            <div className="flex justify-between text-[10px]">
+            <div className="flex justify-between text-xs">
               <span className="text-stone-500">政治进程</span>
               <span className="text-amber-300">
                 {STAGE_LABEL[model.stage]} → {model.stage === 'vassal' ? '霸府' : model.stage === 'hegemon' ? '王' : model.stage === 'king' ? '帝' : '天下一统'}
               </span>
             </div>
             {model.stage === 'hegemon' && kingRequirements ? (
-              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px]">
+              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
                 {[
                   ['城池', kingRequirements.cityCount],
                   ['霸府沉淀', kingRequirements.politicalStageAgeMonths],
@@ -262,16 +264,18 @@ export function CourtCommandDrawer({
                 })}
               </div>
             ) : null}
-            {requirementsError ? <p className="mt-1 text-[10px] text-rose-300">{requirementsError}</p> : null}
+            {requirementsError ? <p className="mt-1 text-xs text-rose-300">{requirementsError}</p> : null}
           </div>
         </section>
 
+        <TournamentOverviewSection />
+
         <section className="border-t border-stone-800 pt-3" data-testid="command-court-policy">
-          <h3 className="text-[11px] tracking-widest text-amber-300">国策态势</h3>
-          <p className="mt-1 text-[10px] leading-relaxed text-stone-600">
+          <h3 className="text-xs tracking-widest text-amber-300">国策态势</h3>
+          <p className="mt-1 text-xs leading-relaxed text-stone-600">
             一次只能启用一策；切换立即结束旧策，新策下月生效，冷却 6 月。
           </p>
-          <p className="mt-2 text-[11px] text-stone-300">
+          <p className="mt-2 text-xs text-stone-300">
             当前：
             {model.policy.record && !model.policy.record.active
               ? `待生效「${POLICY_LABELS[model.policy.record.type]}」`
@@ -325,11 +329,11 @@ export function CourtCommandDrawer({
             </select>
           ) : null}
           {typeof draft?.parameters.policyType === 'string' && draft.parameters.policyType in POLICY_SUMMARIES ? (
-            <p className="mt-1 text-[10px] text-stone-500">
+            <p className="mt-1 text-xs text-stone-500">
               {POLICY_SUMMARIES[draft.parameters.policyType as PolicyType]}
             </p>
           ) : null}
-          <button
+          <InkButton
             type="button"
             data-testid="command-court-policy-submit"
             data-command-write="true"
@@ -347,12 +351,12 @@ export function CourtCommandDrawer({
             className="mt-2 w-full border border-amber-800 bg-amber-950/30 px-3 py-2 text-left text-amber-100 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
           >
             送交终审 · 改行国策
-          </button>
+          </InkButton>
         </section>
 
         <section className="border-t border-stone-800 pt-3">
-          <h3 className="text-[11px] tracking-widest text-rose-300">王命 · 封爵</h3>
-          <p className="mt-1 text-[10px] leading-relaxed text-stone-600">
+          <h3 className="text-xs tracking-widest text-rose-300">王命 · 封爵</h3>
+          <p className="mt-1 text-xs leading-relaxed text-stone-600">
             仅限同势力在职臣属；逐级晋升，最高至公，爵位终身不可撤销。
           </p>
           <select
@@ -379,7 +383,7 @@ export function CourtCommandDrawer({
               </option>
             ))}
           </select>
-          <button
+          <InkButton
             type="button"
             data-testid="command-court-nobility-review"
             disabled={loading || !selectedNobility || selectedNobility.disabledReason != null}
@@ -390,17 +394,17 @@ export function CourtCommandDrawer({
             className="mt-2 w-full border border-red-900 bg-red-950/20 px-3 py-2 text-left text-red-200 hover:bg-red-950/50 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
           >
             送交重大终审
-            <span className="ml-2 text-[10px] text-stone-500">
+            <span className="ml-2 text-xs text-stone-500">
               {selectedNobility?.disabledReason ??
                 (selectedNobility ? `皇权 ${selectedNobility.cost} · 不可撤销` : '尚未选择受封者')}
             </span>
-          </button>
+          </InkButton>
         </section>
 
         <section className="border-t border-stone-800 pt-3">
-          <h3 className="text-[11px] tracking-widest text-amber-300">大事</h3>
+          <h3 className="text-xs tracking-widest text-amber-300">大事</h3>
           {model.stage === 'vassal' ? (
-            <button
+            <InkButton
               type="button"
               data-testid="command-court-establish-hegemony"
               disabled={loading || !model.controlsHan}
@@ -413,10 +417,10 @@ export function CourtCommandDrawer({
               className="mt-2 w-full border border-amber-800 px-3 py-2 text-left text-amber-100 hover:bg-amber-950/50 disabled:border-stone-800 disabled:text-stone-600"
             >
               开霸府
-              <span className="ml-2 text-[10px] text-stone-500">
+              <span className="ml-2 text-xs text-stone-500">
                 {model.controlsHan ? '迎奉天子 · 自领丞相' : '未控制汉献帝'}
               </span>
-            </button>
+            </InkButton>
           ) : model.stage === 'hegemon' ? (
             <div className="mt-2">
               <select
@@ -441,7 +445,7 @@ export function CourtCommandDrawer({
                   </option>
                 ))}
               </select>
-              <button
+              <InkButton
                 type="button"
                 data-testid="command-court-proclaim-king-review"
                 disabled={
@@ -463,10 +467,10 @@ export function CourtCommandDrawer({
                 className="mt-2 w-full border border-red-900 bg-red-950/20 px-3 py-2 text-left text-red-200 hover:bg-red-950/50 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
               >
                 称王 · 送交重大终审
-                <span className="ml-2 text-[10px] text-stone-500">
+                <span className="ml-2 text-xs text-stone-500">
                   {kingRequirements?.allPassed ? '皇权80 · 不可撤销' : '门槛未满足'}
                 </span>
-              </button>
+              </InkButton>
             </div>
           ) : (
             <p className="mt-2 text-stone-600">已进入{STAGE_LABEL[model.stage]}阶段，开府不可重复。</p>
@@ -474,7 +478,7 @@ export function CourtCommandDrawer({
         </section>
 
         <section className="border-t border-stone-800 pt-3">
-          <h3 className="text-[11px] tracking-widest text-amber-300">诏令 · 伪诏宣战</h3>
+          <h3 className="text-xs tracking-widest text-amber-300">诏令 · 伪诏宣战</h3>
           <select
             data-testid="command-court-false-decree-target"
             value={targetFactionId ?? ''}
@@ -489,7 +493,7 @@ export function CourtCommandDrawer({
               </option>
             ))}
           </select>
-          <button
+          <InkButton
             type="button"
             data-testid="command-court-false-decree-review"
             disabled={loading || !selectedTarget || selectedTarget.disabledReason != null}
@@ -504,14 +508,14 @@ export function CourtCommandDrawer({
             className="mt-2 w-full border border-red-900 px-3 py-2 text-left text-red-200 hover:bg-red-950/50 disabled:border-stone-800 disabled:text-stone-600"
           >
             送交终审
-            <span className="ml-2 text-[10px] text-stone-500">
+            <span className="ml-2 text-xs text-stone-500">
               {selectedTarget?.disabledReason ?? (selectedTarget ? '皇权40 · 冷却8季' : '尚未选择目标')}
             </span>
-          </button>
+          </InkButton>
         </section>
 
         <section className="border-t border-stone-800 pt-3">
-          <h3 className="text-[11px] tracking-widest text-amber-300">霸府官制 · 只读总览</h3>
+          <h3 className="text-xs tracking-widest text-amber-300">霸府官制 · 只读总览</h3>
           <div className="mt-2 space-y-1">
             {model.offices
               .filter((office) =>
@@ -528,7 +532,7 @@ export function CourtCommandDrawer({
               </div>
             ))}
           </div>
-          <button
+          <InkButton
             type="button"
             data-testid="command-court-open-personnel"
             onClick={() => {
@@ -542,7 +546,7 @@ export function CourtCommandDrawer({
             className="mt-2 w-full border border-stone-700 px-3 py-2 text-left text-stone-300 hover:border-amber-800"
           >
             前往人事 · 任命
-          </button>
+          </InkButton>
         </section>
       </div>
 

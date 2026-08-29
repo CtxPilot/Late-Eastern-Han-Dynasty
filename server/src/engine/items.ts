@@ -134,9 +134,40 @@ export function loyaltyGainForQuality(quality: ItemStatic['quality']): number {
 /** 势力库存加一件（不存在则建）。 */
 function addToInventory(s: GameState, fid: number, itemId: number, count = 1): GameState {
   const faction = s.factions[fid];
+  if (!faction) return s;
   const inv = { ...(faction.inventory ?? {}) };
   inv[itemId] = (inv[itemId] ?? 0) + count;
   return { ...s, factions: { ...s.factions, [fid]: { ...faction, inventory: inv } } };
+}
+
+/**
+ * 大会/事件等奖品直接入势力库存（不自动装备、不改忠诚）。
+ * Session 394：武魁大会冠亚奖励。
+ */
+export function grantItemToFactionInventory(
+  state: GameState,
+  factionId: number,
+  itemId: number,
+  logMessage: string,
+): GameState {
+  const item = itemById(itemId);
+  if (!item || !state.factions[factionId]) return state;
+  const s = addToInventory(state, factionId, itemId);
+  return pushLog(s, 'item_tournament', logMessage);
+}
+
+/**
+ * 尝试从势力库存扣 1 件；不足或势力不存在返回 null（不抛错）。
+ * Session 396：大会轮间用药。
+ */
+export function tryConsumeFactionInventoryItem(
+  state: GameState,
+  factionId: number,
+  itemId: number,
+): GameState | null {
+  if (!state.factions[factionId]) return null;
+  if ((state.factions[factionId].inventory?.[itemId] ?? 0) < 1) return null;
+  return removeFromInventory(state, factionId, itemId, 1);
 }
 
 /** 势力库存扣一件；不足抛错。 */

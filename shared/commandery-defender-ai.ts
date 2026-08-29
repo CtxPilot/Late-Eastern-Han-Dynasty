@@ -15,9 +15,9 @@
  * 规则优先级（每支守方 Army 独立决策，决策消费权威 PRNG）：
  *   ① 所在县被攻方占领 → 兵力优势（troops ≥ garrison×1.2）且经 RNG 判定
  *      （60%~100% 概率）→ recapture；否则 retreat（撤出郡域回大地图）。
- *   ② 补给线被切断 → 士气 <60 → retreat；否则向 seat 移动一格（最短路径首步；
+ *   ② 补给线被切断 → 士气 <60 → retreat；否则向 seat 移动一格（加权最短路径自 Army 侧上一跳；
  *      该步被攻方占领则不移动，避免走进敌占县）。
- *   ③ 存在攻方占领县 → 向最近攻方占领县移动一格（BFS 最短路径首步；
+ *   ③ 存在攻方占领县 → 向最近攻方占领县移动一格（movementCost 最小路径首步；
  *      允许走进攻方县，下月由规则 ① 触发收复，形成"移动→收复"两步走）。
  *   ④ 否则 stay（原地驻守）。
  *
@@ -87,14 +87,15 @@ export function decideDefenderArmyAction(
   // 规则 ②：补给线被切断 → 士气低则撤退；否则向 seat 移动一格
   const supplyPath = shortestCountyPath(inst, ctx.seatNodeId, countyNodeId);
   const supplyCut = supplyPath
-    ? isCountyPathBlockedBy(inst, supplyPath, ctx.attackerFactionId)
+    ? isCountyPathBlockedBy(inst, supplyPath.nodeIds, ctx.attackerFactionId)
     : false;
   if (supplyCut) {
     if (army.morale < RETREAT_MORALE_THRESHOLD) {
       return { type: 'retreat', nodeId: countyNodeId };
     }
-    // 向 seat 回撤一格（最短路径首步）；该步被攻方占领 → 原地（避免走进敌占县）
-    const step = supplyPath![1];
+    // 向 seat 回撤一格（加权最短路径上自 Army 侧的上一跳）；该步被攻方占领 → 原地
+    const nodes = supplyPath!.nodeIds;
+    const step = nodes.length >= 2 ? nodes[nodes.length - 2] : undefined;
     if (step && step !== countyNodeId) {
       const stepNode = inst.nodeStates.find((n) => n.nodeId === step);
       if (stepNode && stepNode.rulerFactionId !== ctx.attackerFactionId) {
@@ -104,17 +105,24 @@ export function decideDefenderArmyAction(
     return { type: 'stay' };
   }
 
-  // 规则 ③：存在攻方占领县 → 向最近者移动一格（允许走进攻方县，下月触发规则 ①）
+  // 规则 ③：存在攻方占领县 → 向 totalCost 最近者移动一格（允许走进攻方县，下月触发规则 ①）
   const attackerHeld = inst.nodeStates.filter((n) => n.rulerFactionId === ctx.attackerFactionId);
   if (attackerHeld.length > 0) {
-    let bestPath: string[] | null = null;
+    let best: { nodeIds: string[]; totalCost: number } | null = null;
     for (const target of attackerHeld) {
       if (target.nodeId === countyNodeId) continue;
       const path = shortestCountyPath(inst, countyNodeId, target.nodeId);
-      if (path && (!bestPath || path.length < bestPath.length)) bestPath = path;
+      if (!path) continue;
+      if (
+        !best
+        || path.totalCost < best.totalCost
+        || (path.totalCost === best.totalCost && path.nodeIds.length < best.nodeIds.length)
+      ) {
+        best = path;
+      }
     }
-    if (bestPath && bestPath.length >= 2) {
-      const step = bestPath[1];
+    if (best && best.nodeIds.length >= 2) {
+      const step = best.nodeIds[1];
       if (step && step !== countyNodeId) {
         return { type: 'move', fromNodeId: countyNodeId, toNodeId: step };
       }

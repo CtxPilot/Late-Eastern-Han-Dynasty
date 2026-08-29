@@ -7,6 +7,7 @@ import {
   OfficerStatus,
   SerializableRng,
   canMarchAlongRoad,
+  playerCultureForRecruit,
   type GameState,
   type SaveEnvelopeV1,
 } from '@leh/shared';
@@ -143,7 +144,13 @@ assert(food.consumed === 3, '搜索粮草路径应固定消费三次随机数');
 
 const recruiter = prepared.officers[prepared.factions[prepared.playerFactionId].rulerId];
 if (!recruiter) throw new Error('人事确定性验证缺少君主说客');
-const recruitChance = calcRecruitChance(recruiter, prepared.officers[target.id]);
+const recruitTarget = prepared.officers[target.id];
+const recruitCulture = playerCultureForRecruit(
+  prepared.cities,
+  prepared.playerFactionId,
+  recruitTarget.location,
+);
+const recruitChance = calcRecruitChance(recruiter, recruitTarget, recruitCulture);
 
 resetRuntimeRng(findSeed(([roll]) => roll * 100 < recruitChance, 1));
 const recruited = verifyRoundTrip(

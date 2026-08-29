@@ -3,6 +3,7 @@
 
 import type { FactionId } from '../enums/index.js';
 import type { ItemInventory } from './item.js';
+import type { DelegationRegion } from './delegation.js';
 
 /**
  * 政治阶段状态机（docs/26 霸府/称王/称帝主线，Q5 已批准）。
@@ -67,4 +68,9 @@ export interface Faction {
    * 采购 10 金/件；旧存档缺失按 0 处理。
    */
   arms?: number;
+  /**
+   * 委任区列表（docs/04 §39 + docs/42，Session 420 S1）。仅玩家势力使用；
+   * optional 追加，旧存档缺失按无委任处理。
+   */
+  delegationRegions?: DelegationRegion[];
 }

@@ -17,6 +17,7 @@
     "world-graph.ts",
     "city-factions.ts",
     "intel.ts",
+    "avatar-gene.ts",
     "mask-state.ts",
     "positions.ts",
     "labels.ts",
@@ -40,6 +41,7 @@
     "commandery-fog.ts",
     "commandery-defender-ai.ts",
     "save.ts",
+    "delegation.ts",
     "save-limits.ts",
     "rng.ts",
     "runtime-rng.ts",
@@ -68,6 +70,8 @@
     "hex-positioning.ts",
     "battle-sight.ts",
     "civil-development.ts",
-    "culture.ts"
+    "culture.ts",
+    "craft.ts",
+    "transport.ts"
   ]
 }

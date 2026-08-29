@@ -648,6 +648,9 @@ export interface CityStats {
   wall: number;        // 城墙 0~1000
   morale: number;      // 民心 0~100
   culture?: number;    // 文化 0~999；Session 362 旧档兼容可缺省，按0读取
+  craft?: number;      // 工艺 0~999；Session 397 旧档兼容可缺省，按0读取
+  transport?: number;  // 交通 0~999；Session 398 旧档兼容可缺省，按0读取
+  sanitation?: number; // 卫生 0~999；Session 399 旧档兼容可缺省，按0读取
 }
 
 /**
@@ -1506,6 +1509,21 @@ export interface GameState {
   // 霸府/称王/称帝主线（docs/26，Session 188 Q1 已批准方案A，HC-P0-1 已实装）
   emperorLocation?: number | null;  // 汉献帝所在城池 id；null=未迎奉；随事件/占领迁移
 
+  /** S19 单挑大会赛果；旧档缺省兼容 */
+  tournament?: TournamentState;
+  /** Session 388：下届大会模式偏好；缺省 fair；与本届 tournament.mode 独立 */
+  tournamentPreferredMode?: 'fair' | 'unrestricted';
+  /** Session 389：玩家势力下届报名指派；缺省则正月按武力自动补满 */
+  tournamentPlayerEntryIds?: number[];
+  /** Session 391：赛前押武魁挂单；正月兑付后清空；旧档缺省 */
+  tournamentChampionBet?: {
+    officerId: number;
+    amount: number;
+    odds: number;
+    officerWar: number;
+    fieldTopWar: number;
+  } | null;
+
   actionLog: GameAction[];
 }
 
@@ -2342,7 +2360,7 @@ interface BattlefieldInstance {
   targetCommanderyId: string;
   entryNodeIds: string[];
   nodeStates: BattlefieldNodeState[];
-  routeStates: BattlefieldRouteState[];
+  routeStates: BattlefieldRouteState[]; // Session 382：含 optional movementCost（旧档缺省=1）
   armyIds: string[];
   encounters: Encounter[];
   turn: number;
@@ -2429,6 +2447,37 @@ pausedMonths / progressLostMonths / status`。旧存档缺失该 optional 字段
 人员不可用和超过 3 个月的进度损失与原三类项目相同；启动/推进/完成不消费 RNG。
 旧存档的 `culture` 与文化项目均可缺省；技术研发/人才吸引的文化消费不在本切片内，避免把
 S03 新字段直接耦合到 S11 人事公式。
+
+### Session 397 · S03 工艺持续投入
+
+`DevelopmentProject.kind` 再扩 `craft`；`City.stats.craft?` 旧档缺省 0。数值同构文化：
+首付 120 / 总计 360 / 6 月 / 完成 +60（封顶 999，真源 `08`）。Session 401 起征兵士气消费；器械建造速度仍后置。
+
+### Session 398 · S03 交通持续投入
+
+`DevelopmentProject.kind` 再扩 `transport`；`City.stats.transport?` 旧档缺省 0。数值同构文化：
+首付 120 / 总计 360 / 6 月 / 完成 +60（封顶 999，真源 `08`）。Session 402 起行军粮耗减免；行军速度仍后置。
+
+### Session 399 · S03 卫生持续投入
+
+`DevelopmentProject.kind` 再扩 `sanitation`；`City.stats.sanitation?` 旧档缺省 0。数值同构文化：
+首付 120 / 总计 360 / 6 月 / 完成 +60（封顶 999，真源 `08`）。瘟疫抗性与人口增长率消费后置。
+
+### Session 401 · S03 工艺→征兵士气
+
+`craftConscriptMoraleBonus`：质量门槛同文化，每级征兵后 `troopsMorale` +2（顶 +10）；
+`conscript` 确定性写入；0-A 以部队士气代理正式兵质（P5-14 后置）。不新增存档字段/API/RNG。
+
+### Session 402 · S03 交通→行军粮耗
+
+`transportMarchFoodMul` / `armyTransportForMarch`：路网门槛同文化，每级行军粮耗 −2%（顶 −10%）；
+`tickCampaignMarch` 乘区叠乘；行军速度仍后置。不新增存档字段/API/RNG。
+文化/工艺/交通/卫生四项 0-A 落库链已齐。
+
+### Session 400 · S03∩S11 文化→登用成功率
+
+`cultureRecruitModifier` / `playerCultureForRecruit` / `resolveRecruitChance`：已达技艺门槛每级 +2 百分点（顶 +10）
+并入登用成功率；不新增存档字段。技艺研发解锁仍后置。
 
 ### Session 363 · S03 文化门槛只读投影
 

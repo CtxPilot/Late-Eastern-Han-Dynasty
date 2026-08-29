@@ -46,6 +46,18 @@ describe('civil read-only overview model', () => {
         cultureLevel: 0,
         cultureNextThreshold: 100,
         cultureRemaining: 100,
+        craft: 0,
+        craftMax: 999,
+        craftLevel: 0,
+        craftNextThreshold: 100,
+        craftRemaining: 100,
+        transport: 0,
+        transportMax: 999,
+        transportLevel: 0,
+        transportNextThreshold: 100,
+        transportRemaining: 100,
+        sanitation: 0,
+        sanitationMax: 999,
         morale: 70,
         adultMale: 300,
       }),
@@ -75,6 +87,9 @@ describe('civil read-only overview model', () => {
     expect(validateCivilOrder(game, 1, 'commerce')).toBeNull();
     expect(validateCivilOrder(game, 1, 'wall')).toBeNull();
     expect(validateCivilOrder(game, 1, 'culture')).toBeNull();
+    expect(validateCivilOrder(game, 1, 'craft')).toBeNull();
+    expect(validateCivilOrder(game, 1, 'transport')).toBeNull();
+    expect(validateCivilOrder(game, 1, 'sanitation')).toBeNull();
     expect(validateCivilOrder(game, 1, 'relief')).toBeNull();
     expect(validateCivilOrder({
       ...game,

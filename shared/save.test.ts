@@ -66,6 +66,8 @@ describe('current save migration dispatch', () => {
   });
 
   it('maps the legacy five-rank nobility strings before strict snapshot validation', () => {
+    // Session 414 修复：迁移表只含旧五级专属键（marquis/prince）——新七级的
+    // `king`（称王，S26/HC）不得被旧映射错误升格为 emperor。
     const envelope = {
       ...validEnvelope(),
       snapshot: {
@@ -80,7 +82,7 @@ describe('current save migration dispatch', () => {
     };
     const migrated = migrateSaveEnvelopeToCurrent(envelope) as typeof envelope;
     expect(Object.values(migrated.snapshot.officers).map((officer) => officer.nobilityRank))
-      .toEqual(['none', 'xianMarquis', 'duke', 'king', 'emperor']);
+      .toEqual(['none', 'xianMarquis', 'duke', 'king', 'king']);
   });
 
   it('rejects missing, legacy, future, and non-numeric versions', () => {

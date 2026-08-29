@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
-import { OfficerStatus, calculateRecruitChance, type GameState, type Officer } from '@leh/shared';
+import { OfficerStatus, resolveRecruitChance, playerCultureForRecruit, cultureRecruitModifier, type GameState, type Officer } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
@@ -96,12 +97,12 @@ export function PersonnelRecruitDrawer() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="command-personnel-recruitment">
-      <p className="mb-3 border border-stone-800 bg-stone-900/40 px-2 py-2 text-[10px] leading-4 text-stone-500">
-        人才搜索耗金80；登用在野男将耗金200。规则、概率与结算继续由原人事 API 权威处理。
+      <p className="mb-3 border border-stone-800 bg-stone-900/40 px-2 py-2 text-xs leading-4 text-stone-500">
+        人才搜索耗金80；登用在野男将耗金200。成功率含辩才与己方文化人才吸引（技艺门槛每级+2百分点，顶+10）。
       </p>
 
       <section className="space-y-2 border-b border-stone-800 pb-3">
-        <div className="flex items-center justify-between"><h3 className="text-rose-300">搜索人才</h3><span className="text-[10px] text-stone-600">立即结算</span></div>
+        <div className="flex items-center justify-between"><h3 className="text-rose-300">搜索人才</h3><span className="text-xs text-stone-600">立即结算</span></div>
         <select
           data-testid="command-recruit-search-city"
           value={searchCityId ?? ''}
@@ -111,8 +112,8 @@ export function PersonnelRecruitDrawer() {
           {availability.playerCities.length === 0 ? <option value="">无己方城池</option> : null}
           {availability.playerCities.map((city) => <option key={city.id} value={city.id}>{city.name} · 金{city.gold}</option>)}
         </select>
-        {searchReason ? <p data-testid="command-recruit-search-disabled-reason" className="text-[10px] text-red-300">{searchReason}</p> : null}
-        <button
+        {searchReason ? <p data-testid="command-recruit-search-disabled-reason" className="text-xs text-red-300">{searchReason}</p> : null}
+        <InkButton
           type="button"
           data-testid="command-recruit-search"
           disabled={loading || searchReason != null}
@@ -124,27 +125,34 @@ export function PersonnelRecruitDrawer() {
           className="w-full border border-rose-900/70 bg-rose-950/30 px-2 py-1.5 text-rose-100 disabled:opacity-40"
         >
           搜索人才（80金）
-        </button>
+        </InkButton>
       </section>
 
       <section className="flex min-h-0 flex-1 flex-col pt-3">
         <div className="mb-2 flex items-center justify-between"><h3 className="text-amber-300">在野可登用</h3><span data-testid="command-recruit-free-count" className="text-stone-500">{availability.freeOfficers.length} 人</span></div>
-        {recruitReason ? <p data-testid="command-recruit-disabled-reason" className="mb-2 text-[10px] text-red-300">{recruitReason}</p> : null}
+        {recruitReason ? <p data-testid="command-recruit-disabled-reason" className="mb-2 text-xs text-red-300">{recruitReason}</p> : null}
         <div className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1" data-testid="command-recruit-candidates">
           {availability.freeOfficers.map((officer) => {
-            const chance = availability.ruler == null ? null : calculateRecruitChance(availability.ruler, officer);
+            const cultureValue = playerCultureForRecruit(game.cities, game.playerFactionId, officer.location);
+            const chance = availability.ruler == null
+              ? null
+              : resolveRecruitChance(availability.ruler, officer, cultureValue);
+            const cultureBonus = cultureRecruitModifier(cultureValue);
             return (
               <article key={officer.id} className="border border-stone-800 bg-stone-900/50 px-2 py-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <strong className="text-stone-100">{officer.name}</strong>
-                    <p className="text-[10px] text-stone-500">
+                    <p className="text-xs text-stone-500">
                       {officer.location != null ? game.cities[officer.location]?.name ?? '未知' : '未知'}
                       {' · '}统{officer.stats.leadership}/武{officer.stats.war}/智{officer.stats.intelligence}
                     </p>
-                    <p className="text-[10px] text-amber-500">君主说客 · 成功率{chance == null ? '—' : `${Math.round(chance)}%`}</p>
+                    <p className="text-xs text-amber-500" data-testid={`command-recruit-chance-${officer.id}`}>
+                      君主说客 · 成功率{chance == null ? '—' : `${Math.round(chance)}%`}
+                      {cultureBonus > 0 ? `（文化+${cultureBonus}）` : ''}
+                    </p>
                   </div>
-                  <button
+                  <InkButton
                     type="button"
                     data-testid={`command-recruit-officer-${officer.id}`}
                     disabled={loading || recruitReason != null}
@@ -155,7 +163,7 @@ export function PersonnelRecruitDrawer() {
                     className="shrink-0 border border-amber-800 bg-amber-950/40 px-2 py-1 text-amber-100 disabled:opacity-40"
                   >
                     登用
-                  </button>
+                  </InkButton>
                 </div>
               </article>
             );
@@ -206,7 +214,17 @@ export function PersonnelRecruitDrawer() {
           { label: '目标', value: `${confirmOfficer.name}（${game.cities[confirmOfficer.location ?? -1]?.name ?? '未知'}）` },
           { label: '立即消耗', value: '金 200' },
           { label: '耗时', value: '立即结算' },
-          { label: '成功率', value: availability.ruler == null ? '—' : `${Math.round(calculateRecruitChance(availability.ruler, confirmOfficer))}%`, tone: 'warning' },
+          {
+            label: '成功率',
+            value: availability.ruler == null
+              ? '—'
+              : `${Math.round(resolveRecruitChance(
+                availability.ruler,
+                confirmOfficer,
+                playerCultureForRecruit(game.cities, game.playerFactionId, confirmOfficer.location),
+              ))}%`,
+            tone: 'warning',
+          },
         ] : []}
         loading={loading}
         error={error}

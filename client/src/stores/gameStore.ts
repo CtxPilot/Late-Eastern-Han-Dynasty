@@ -49,6 +49,14 @@ interface Store {
   loading: boolean;
   /** short UI feedback for last successful action */
   lastActionOk: string | null;
+  /** 月结进行中（P0-3 · Session 407）：结束回合期间为真，驱动 TurnProgressOverlay。 */
+  monthSettling: boolean;
+  /** 本月纪要（P0-3）：本次结束回合新增的 actionLog 条目；关闭后置空。瞬态，不入存档。 */
+  monthReport: { year: number; month: number; entries: { type: string; message: string }[] } | null;
+  clearMonthReport: () => void;
+  /** 战斗伤害浮字（美术批次④余项 · Session 418）：最近一次攻击/火计/战法目标格与伤害。瞬态。 */
+  battleFeedback: { q: number; r: number; text: string; at: number } | null;
+  clearBattleFeedback: () => void;
   /** 子女史实表（家族面板） */
   childrenCatalog: ChildCatalogEntry[];
   /** 事件目录（对话/选项标签，无 effects） */
@@ -124,7 +132,15 @@ interface Store {
   setMilitaryFarming: (cityId: number, enabled: boolean) => Promise<void>;
   relocateGarrisonFamilies: (fromCityId: number, toCityId: number) => Promise<void>;
   resolveFamilyTreatment: (mode: FamilyTreatmentMode) => Promise<void>;
+  createDelegationRegion: (input: { name?: string; cityIds: number[]; governorId: number; policy?: string; autoRecruit?: boolean; autoReward?: boolean }) => Promise<void>;
+  updateDelegationRegion: (input: { regionId: number; name?: string; policy?: string; autoRecruit?: boolean; autoReward?: boolean }) => Promise<void>;
+  assignDelegationCity: (input: { regionId: number; cityId: number; remove?: boolean }) => Promise<void>;
+  disbandDelegationRegion: (regionId: number) => Promise<void>;
   setNationalPolicy: (type: string, targetCityId?: number) => Promise<void>;
+  setTournamentPreferredMode: (mode: 'fair' | 'unrestricted') => Promise<void>;
+  setTournamentPlayerEntries: (officerIds: number[]) => Promise<void>;
+  placeTournamentChampionBet: (officerId: number, amount: number) => Promise<void>;
+  clearTournamentChampionBet: () => Promise<void>;
   followCheck: () => Promise<void>;
   tribute: (targetFactionId: number) => Promise<void>;
   establishHegemony: () => Promise<void>;
@@ -202,6 +218,22 @@ interface Store {
 /** meleeRound 幂等 commandId 的回退单调计数（crypto.randomUUID 不可用时）。 */
 let commandIdSeq = 0;
 
+/** 美术批次④余项（Session 418）：目标单位兵力差 → 伤害浮字反馈（确定性，客户端演出）。 */
+function emitBattleFeedback(
+  prevBattle: BattleState | null | undefined,
+  next: BattleState,
+  unitId: string,
+): void {
+  const before = prevBattle?.units.find((u) => u.id === unitId);
+  const after = next?.units.find((u) => u.id === unitId);
+  if (!after) return;
+  const dmg = (before?.troopCount ?? 0) - (after?.troopCount ?? 0);
+  if (dmg <= 0) return;
+  useGameStore.setState({
+    battleFeedback: { q: after.position.q, r: after.position.r, text: `-${dmg}`, at: Date.now() },
+  });
+}
+
 export const useGameStore = create<Store>((set, get) => ({
   screen: 'boot',
   sceneStack: [],
@@ -217,6 +249,9 @@ export const useGameStore = create<Store>((set, get) => ({
   error: null,
   loading: false,
   lastActionOk: null,
+  monthSettling: false,
+  monthReport: null,
+  battleFeedback: null,
   childrenCatalog: [],
   eventsCatalog: [],
   scenariosCatalog: [],
@@ -229,6 +264,8 @@ export const useGameStore = create<Store>((set, get) => ({
   grandStrategistModifiers: null,
   grandStrategistLoading: false,
   clearError: () => set({ error: null }),
+  clearMonthReport: () => set({ monthReport: null }),
+  clearBattleFeedback: () => set({ battleFeedback: null }),
 
   importSave: async (envelope) => {
     set({ loading: true, error: null, lastActionOk: null });
@@ -483,13 +520,27 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ error: '请先处理家属处置' });
       return;
     }
-    set({ loading: true, error: null });
+    // P0-3（Session 407）：记录月结前的日志水位，结算后把新增条目聚合为「本月纪要」。
+    const preLogLength = get().game?.actionLog.length ?? 0;
+    set({ loading: true, error: null, monthSettling: true });
     try {
-      const game = await api.endTurn();
+      // P2-4（Session 418）：离线 endTurn 走差分补丁通道（offline-api 内合并），
+      // store 侧仍消费完整 GameState；在线路径整态不变。
+      const game: GameState = await api.endTurn();
       const msg = game.actionLog[0]?.message ?? '回合结束';
-      set({ game, loading: false, lastActionOk: msg });
+      const monthEntries = game.actionLog
+        .slice(0, Math.max(0, game.actionLog.length - preLogLength))
+        .map((a) => ({ type: a.type, message: a.message }));
+      set({
+        game,
+        loading: false,
+        lastActionOk: msg,
+        monthSettling: false,
+        monthReport: { year: game.currentYear, month: game.currentMonth, entries: monthEntries },
+      });
+      void import('../utils/sfx').then((m) => m.playDrum()).catch(() => {}); // 批次⑤ 战鼓
     } catch (e) {
-      set({ error: errMsg(e, '结束回合失败'), loading: false });
+      set({ error: errMsg(e, '结束回合失败'), loading: false, monthSettling: false });
     }
   },
 
@@ -632,6 +683,50 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  createDelegationRegion: async (input) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.createDelegationRegion(input);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '委任区已建立' });
+    } catch (e) {
+      set({ error: errMsg(e, '委任区建立失败'), loading: false });
+      throw e;
+    }
+  },
+
+  updateDelegationRegion: async (input) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.updateDelegationRegion(input);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '委任区已更新' });
+    } catch (e) {
+      set({ error: errMsg(e, '委任区更新失败'), loading: false });
+      throw e;
+    }
+  },
+
+  assignDelegationCity: async (input) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.assignDelegationCity(input);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '城池划转完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '城池划转失败'), loading: false });
+      throw e;
+    }
+  },
+
+  disbandDelegationRegion: async (regionId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.disbandDelegationRegion(regionId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '委任区已解散' });
+    } catch (e) {
+      set({ error: errMsg(e, '委任区解散失败'), loading: false });
+      throw e;
+    }
+  },
+
   setNationalPolicy: async (type, targetCityId) => {
     set({ loading: true, error: null });
     try {
@@ -639,6 +734,49 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '国策已改' });
     } catch (e) {
       set({ error: errMsg(e, '国策切换失败'), loading: false });
+    }
+  },
+
+  setTournamentPreferredMode: async (mode) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.setTournamentPreferredMode(mode);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '下届大会模式已定' });
+    } catch (e) {
+      set({ error: errMsg(e, '大会模式切换失败'), loading: false });
+    }
+  },
+
+  setTournamentPlayerEntries: async (officerIds) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.setTournamentPlayerEntries(officerIds);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '下届报名已更新' });
+    } catch (e) {
+      set({ error: errMsg(e, '大会报名失败'), loading: false });
+      throw e;
+    }
+  },
+
+  placeTournamentChampionBet: async (officerId, amount) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.placeTournamentChampionBet(officerId, amount);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '武魁押注已下' });
+    } catch (e) {
+      set({ error: errMsg(e, '武魁押注失败'), loading: false });
+      throw e;
+    }
+  },
+
+  clearTournamentChampionBet: async () => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.clearTournamentChampionBet();
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '押注已撤销' });
+    } catch (e) {
+      set({ error: errMsg(e, '撤销押注失败'), loading: false });
+      throw e;
     }
   },
 
@@ -1023,9 +1161,11 @@ export const useGameStore = create<Store>((set, get) => ({
   attack: async (defenderId) => {
     const attackerId = get().selectedUnitId;
     if (!attackerId) return;
+    const prevBattle = get().battle;
     try {
       let battle = await api.battleAttack(attackerId, defenderId);
       set({ battle, selectedUnitId: null, moveRange: [] });
+      emitBattleFeedback(prevBattle, battle, defenderId);
       if (battle.phase === 'enemy') {
         await new Promise((r) => setTimeout(r, 500));
         battle = await api.battleEnemyPhase();
@@ -1039,9 +1179,11 @@ export const useGameStore = create<Store>((set, get) => ({
   castFire: async (targetId) => {
     const attackerId = get().selectedUnitId;
     if (!attackerId) return;
+    const prevBattle = get().battle;
     try {
       let battle = await api.battleFire(attackerId, targetId);
       set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      emitBattleFeedback(prevBattle, battle, targetId);
       if (battle.phase === 'enemy') {
         await new Promise((r) => setTimeout(r, 500));
         battle = await api.battleEnemyPhase();
@@ -1080,9 +1222,11 @@ export const useGameStore = create<Store>((set, get) => ({
   castAbility: async (targetId, abilityId) => {
     const attackerId = get().selectedUnitId;
     if (!attackerId) return;
+    const prevBattle = get().battle;
     try {
       let battle = await api.battleAbility(attackerId, targetId, abilityId);
       set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      emitBattleFeedback(prevBattle, battle, targetId);
       if (battle.phase === 'enemy') {
         await new Promise((r) => setTimeout(r, 500));
         battle = await api.battleEnemyPhase();

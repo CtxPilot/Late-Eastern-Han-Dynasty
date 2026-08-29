@@ -10,9 +10,8 @@
  * - 天气修正：雾 −2（与射程修正同源）/ 雪 −3（05 §3.1「地势可见范围−3」）
  * - 下限夹紧 1 格
  *
- * 0-A 边界：本模块是纯投影函数——玩家侧 BattleView 用它隐藏视野外敌军；
- * 敌军 AI 保持全知不受影响；服务端权威态不改写、攻击门禁不加视野校验
- * （单机自约束 UI，后续如需反作弊可在 attackUnit 收口）。
+ * P1-4（Session 412）起敌军 AI 目标选择同样消费本投影（半知化，`server/src/battle/simpleAi.ts`）——
+ * 双方对称；服务端权威态不改写、攻击门禁不加视野校验（单机自约束）。
  */
 import { TerrainType, Weather, type BattleState, type BattleUnit } from './index.js';
 

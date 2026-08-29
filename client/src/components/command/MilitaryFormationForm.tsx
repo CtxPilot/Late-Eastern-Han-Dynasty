@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { FORMATION_LABEL, FormationType, UnitType, type GameState } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -230,20 +231,20 @@ export function MilitaryFormationForm() {
       <Field label="副将（当前切片至多显示4名候选）">
         <div className="flex flex-wrap gap-1">
           {availableSubs.slice(0, 4).map((officer) => (
-            <button
+            <InkButton
               key={officer.id}
               type="button"
               data-testid={`command-military-sub-${officer.id}`}
               aria-pressed={draft.subCommanderIds.includes(officer.id)}
               onClick={() => toggleSub(officer.id)}
-              className={`border px-2 py-1 text-[10px] ${
+              className={`border px-2 py-1 text-xs ${
                 draft.subCommanderIds.includes(officer.id)
                   ? 'border-red-700 bg-red-950/50 text-red-100'
                   : 'border-stone-700 bg-stone-900 text-stone-400'
               }`}
             >
               {officer.name}
-            </button>
+            </InkButton>
           ))}
           {availableSubs.length === 0 ? <span className="text-stone-600">无可用副将</span> : null}
         </div>
@@ -309,7 +310,7 @@ export function MilitaryFormationForm() {
           />
         </Field>
       </div>
-      <button
+      <InkButton
         type="button"
         data-testid="command-military-start"
         disabled={loading || draftError != null}
@@ -318,8 +319,8 @@ export function MilitaryFormationForm() {
         className="w-full border border-red-800 bg-red-950/40 px-3 py-2 text-red-100 disabled:opacity-40"
       >
         编成出征
-      </button>
-      <p className="text-[10px] text-stone-600">
+      </InkButton>
+      <p className="text-xs text-stone-600">
         {draftError ?? '确认后兵力、粮草与参战武将将从出发城转入 Campaign Army。'}
       </p>
       <CommandConfirmDialog
@@ -373,7 +374,7 @@ export function MilitaryFormationForm() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <label className="block text-[10px] text-stone-500">
+    <label className="block text-xs text-stone-500">
       <span className="mb-0.5 block">{label}</span>
       {children}
     </label>

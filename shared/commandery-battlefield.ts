@@ -148,6 +148,7 @@ export function generateCommanderyBattlefield(opts: GenerateCommanderyBattlefiel
       fromNodeId: route.fromNodeId,
       toNodeId: route.toNodeId,
       type: route.kind,
+      movementCost: route.movementCost,
     })),
     armyIds: [...opts.armyIds, ...(opts.defenderArmyIds ?? [])].sort(),
     encounters: [],

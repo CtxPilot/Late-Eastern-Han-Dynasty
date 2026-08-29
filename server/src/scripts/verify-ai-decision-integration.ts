@@ -53,7 +53,7 @@ function extractIntegrationMetrics(state: GameState): IntegrationMetrics {
     plots: (state.plots ?? []).length,
     agents: Object.values(state.intel?.agents ?? {}).length,
     warReports: state.actionLog.filter((l) => l.type === 'ai_war_report' || l.type === 'ai_battle_report').length,
-    aiPlaceholderLogs: state.actionLog.filter((l) => l.type === 'ai_placeholder').length,
+    aiPlaceholderLogs: state.actionLog.filter((l) => l.type === 'ai_civil').length,
     cityRulers: Object.values(state.cities).map((c) => ({ id: c.id, ruler: c.ruler })),
   };
 }

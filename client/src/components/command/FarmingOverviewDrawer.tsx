@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useState } from 'react';
 import {
   Season,
@@ -101,7 +102,7 @@ export function FarmingOverviewDrawer() {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3" data-testid="command-farming-drawer">
-      <p className="text-[10px] leading-relaxed text-stone-500">
+      <p className="text-xs leading-relaxed text-stone-500">
         民屯田与农业开发并行：分配多余人口耕作，月结直接产粮，不花金；占用户口不再计入征兵与农商劳力。
         军屯田：驻军非战时开垦自给，月结产粮；每季士气−3、训练收益减半。均每城每季可调一次。
         质任迁家属：金{FAMILY_RELOCATE_GOLD}，每城每季一次；后方城失陷则前线士气大跌。
@@ -112,10 +113,10 @@ export function FarmingOverviewDrawer() {
         <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto" data-testid="command-farming-list">
           {rows.map((row) => (
             <li key={row.cityId}>
-              <button
+              <InkButton
                 type="button"
                 data-testid={`command-farming-city-${row.cityId}`}
-                className={`w-full border px-3 py-2 text-left text-[11px] ${
+                className={`w-full border px-3 py-2 text-left text-xs ${
                   effectiveCityId === row.cityId
                     ? 'border-amber-600 bg-amber-950/40 text-amber-50'
                     : 'border-stone-800 bg-stone-900/60 text-stone-300'
@@ -127,23 +128,23 @@ export function FarmingOverviewDrawer() {
               >
                 <div className="flex items-center justify-between">
                   <strong>{row.name}</strong>
-                  <span className="text-[10px] text-stone-500">{row.province}</span>
+                  <span className="text-xs text-stone-500">{row.province}</span>
                 </div>
-                <p className="mt-1 text-[10px] text-stone-500">
+                <p className="mt-1 text-xs text-stone-500">
                   民屯 {row.households}/{row.maxHouseholds} 户 · 估产 {row.projectedFood}/月
                   {row.assignLocked ? ' · 本季已调' : ''}
                 </p>
-                <p className="mt-1 text-[10px] text-stone-500">
+                <p className="mt-1 text-xs text-stone-500">
                   军屯 {row.militaryFarming ? '开（估产 ' + row.militaryFood + '/月）' : '关'}
                   {row.militaryLocked ? ' · 本季已调' : ''}
                 </p>
-                <p className="mt-1 text-[10px] text-stone-500">
+                <p className="mt-1 text-xs text-stone-500">
                   家属 {row.garrisonFamilies} 口
                   {row.familyBackupCityId != null ? ` · 质任于城${row.familyBackupCityId}` : ''}
                   {row.familyLocked ? ' · 本季已迁' : ''}
                   {row.familyTreatment != null ? ` · ${row.familyTreatment === 'kindness' ? '善待' : row.familyTreatment === 'repression' ? '镇压' : '中立'}` : ''}
                 </p>
-              </button>
+              </InkButton>
             </li>
           ))}
         </ul>
@@ -151,7 +152,7 @@ export function FarmingOverviewDrawer() {
 
       {selected ? (
         <div className="space-y-2 border-t border-stone-800 pt-2" data-testid="command-farming-assign">
-          <label className="block text-[10px] text-stone-500">
+          <label className="block text-xs text-stone-500">
             分配户数（0～{max}）
             <input
               data-testid="command-farming-households"
@@ -165,10 +166,10 @@ export function FarmingOverviewDrawer() {
             />
           </label>
           {locked ? (
-            <p className="text-[10px] text-amber-500">本季已调整过该城民屯，下季初再议。</p>
+            <p className="text-xs text-amber-500">本季已调整过该城民屯，下季初再议。</p>
           ) : null}
-          {error ? <p className="text-[10px] text-red-400">{error}</p> : null}
-          <button
+          {error ? <p className="text-xs text-red-400">{error}</p> : null}
+          <InkButton
             type="button"
             data-testid="command-farming-submit"
             data-command-write="true"
@@ -177,17 +178,17 @@ export function FarmingOverviewDrawer() {
             onClick={() => setConfirmOpen(true)}
           >
             送交终审 · 民屯分配
-          </button>
+          </InkButton>
         </div>
       ) : null}
 
       {selected ? (
         <div className="space-y-2 border-t border-stone-800 pt-2" data-testid="command-farming-military">
-          <p className="text-[10px] text-stone-500">
+          <p className="text-xs text-stone-500">
             军屯田：驻军开垦自给，估产 {selected.militaryFood}/月 · 每季士气−3 · 训练收益减半
             {selected.militaryLocked ? '（本季已调）' : ''}
           </p>
-          <button
+          <InkButton
             type="button"
             data-testid="command-military-farming-toggle"
             data-command-write="true"
@@ -200,13 +201,13 @@ export function FarmingOverviewDrawer() {
             onClick={() => setMilitaryConfirmOpen(true)}
           >
             {selected.militaryFarming ? '送交终审 · 停办军屯' : '送交终审 · 开启军屯'}
-          </button>
+          </InkButton>
         </div>
       ) : null}
 
       {selected ? (
         <div className="space-y-2 border-t border-stone-800 pt-2" data-testid="command-farming-families">
-          <p className="text-[10px] text-stone-500">
+          <p className="text-xs text-stone-500">
             质任迁家属：将该城驻军家属迁往后方（通常为治所）。耗金 {FAMILY_RELOCATE_GOLD}，每季一次。
           </p>
           <select
@@ -221,7 +222,7 @@ export function FarmingOverviewDrawer() {
               <option key={row.cityId} value={row.cityId}>{row.name}</option>
             ))}
           </select>
-          <button
+          <InkButton
             type="button"
             data-testid="command-farming-family-submit"
             data-command-write="true"
@@ -235,7 +236,7 @@ export function FarmingOverviewDrawer() {
             onClick={() => setFamilyConfirmOpen(true)}
           >
             送交终审 · 迁家属
-          </button>
+          </InkButton>
         </div>
       ) : null}
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
@@ -31,7 +32,7 @@ export function BeautyPanel() {
 
   return (
     <div className="px-2 space-y-1.5" data-testid="beauty-panel">
-      <div className="px-1 py-1 rounded border border-rose-900/40 bg-rose-950/20 text-[10px]">
+      <div className="px-1 py-1 rounded border border-rose-900/40 bg-rose-950/20 text-xs">
         <span className="text-rose-300">宫廷人脉 {stock}</span>
         <span className="text-stone-500 ml-1">（交涉机会；非历史女角）</span>
         <p className="text-stone-600 mt-0.5 leading-snug">
@@ -39,7 +40,7 @@ export function BeautyPanel() {
         </p>
         <div className="mt-1 flex gap-1 items-center">
           <select
-            className="flex-1 rounded border border-stone-700 bg-stone-900 text-stone-200 text-[10px] px-1 py-0.5"
+            className="flex-1 rounded border border-stone-700 bg-stone-900 text-stone-200 text-xs px-1 py-0.5"
             value={officerId ?? ''}
             onChange={(e) =>
               setOfficerId(e.target.value ? Number(e.target.value) : null)
@@ -53,7 +54,7 @@ export function BeautyPanel() {
               </option>
             ))}
           </select>
-          <button
+          <InkButton
             type="button"
             data-testid="btn-reward-beauty-stock"
             disabled={loading || stock < 1 || officerId == null}
@@ -62,7 +63,7 @@ export function BeautyPanel() {
             onClick={() => setConfirmOpen(true)}
           >
             笼络×1
-          </button>
+          </InkButton>
         </div>
       </div>
       <CommandConfirmDialog

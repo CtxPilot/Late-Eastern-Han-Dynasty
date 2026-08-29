@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
-import { ensureDemographics, maxConscriptable, type GameState } from '@leh/shared';
+import { craftConscriptMoraleBonus, ensureDemographics, maxConscriptable, type GameState } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { MilitaryOverview } from './MilitaryOverviewDrawer';
@@ -46,12 +47,16 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
     () => city ? maxConscriptable(ensureDemographics(city)) : 0,
     [city],
   );
+  const craftMoraleBonus = useMemo(
+    () => (city ? craftConscriptMoraleBonus(city.stats.craft ?? 0) : 0),
+    [city],
+  );
   if (!game) return null;
 
   return (
     <section className="flex min-h-0 flex-1 flex-col" data-testid="command-military-readiness">
       <h3 className="mb-2 text-xs tracking-widest text-red-200">军团战备</h3>
-      <div className="mb-2 grid grid-cols-3 gap-2 text-[10px]">
+      <div className="mb-2 grid grid-cols-3 gap-2 text-xs">
         <Metric label="总兵力" value={overview.totalTroops.toLocaleString('zh-CN')} />
         <Metric label="总粮草" value={overview.totalFood.toLocaleString('zh-CN')} />
         <Metric label="驻军均士气" value={String(overview.averageMorale)} />
@@ -60,7 +65,7 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
         <p className="border border-stone-800 px-3 py-3 text-stone-500">当前没有可整备的己方城市。</p>
       ) : (
         <>
-          <label className="mb-2 block text-[10px] text-stone-500">
+          <label className="mb-2 block text-xs text-stone-500">
             整备城市
             <select
               data-testid="command-military-readiness-city"
@@ -74,26 +79,31 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
             </select>
           </label>
           {city ? (
-            <article className="mb-2 border border-stone-800 bg-stone-900/60 px-3 py-2 text-[10px]">
+            <article className="mb-2 border border-stone-800 bg-stone-900/60 px-3 py-2 text-xs">
               <div className="flex justify-between"><strong className="text-stone-100">{city.name}</strong><span className="text-stone-500">可征男丁 {availableMen}</span></div>
               <p className="mt-1 text-stone-400">兵 {city.troops} · 士气 {city.troopsMorale} · 粮 {city.food} · 金 {city.gold}</p>
+              {craftMoraleBonus > 0 ? (
+                <p className="mt-1 text-amber-700/90" data-testid="military-readiness-craft-bonus">
+                  工艺精装：征兵部队士气 +{craftMoraleBonus}
+                </p>
+              ) : null}
             </article>
           ) : null}
           <div className="mb-3 grid grid-cols-2 gap-2">
-            <button type="button" data-testid="military-readiness-conscript" onClick={() => setDraft('conscript')} className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100">
+            <InkButton type="button" data-testid="military-readiness-conscript" onClick={() => setDraft('conscript')} className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100">
               征兵
-              <span className="mt-0.5 block text-[10px] text-stone-500">80金 + 120粮</span>
-            </button>
-            <button type="button" data-testid="military-readiness-train" onClick={() => setDraft('train')} className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100">
+              <span className="mt-0.5 block text-xs text-stone-500">80金 + 120粮</span>
+            </InkButton>
+            <InkButton type="button" data-testid="military-readiness-train" onClick={() => setDraft('train')} className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100">
               训练
-              <span className="mt-0.5 block text-[10px] text-stone-500">60粮 · 士气+5～10</span>
-            </button>
+              <span className="mt-0.5 block text-xs text-stone-500">60粮 · 士气+5～10</span>
+            </InkButton>
           </div>
           <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
             {overview.cities.map((item) => (
               <article key={item.cityId} data-testid={`command-military-city-${item.cityId}`} className="border border-stone-800 bg-stone-900/60 px-3 py-2">
-                <div className="flex items-center justify-between"><strong className="text-stone-100">{item.name}</strong><span className="text-[10px] text-stone-500">将 {item.officerCount}</span></div>
-                <div className="mt-1 grid grid-cols-4 gap-1 text-[10px] text-stone-400"><span>兵 {item.troops}</span><span>气 {item.morale}</span><span>粮 {item.food}</span><span>金 {item.gold}</span></div>
+                <div className="flex items-center justify-between"><strong className="text-stone-100">{item.name}</strong><span className="text-xs text-stone-500">将 {item.officerCount}</span></div>
+                <div className="mt-1 grid grid-cols-4 gap-1 text-xs text-stone-400"><span>兵 {item.troops}</span><span>气 {item.morale}</span><span>粮 {item.food}</span><span>金 {item.gold}</span></div>
               </article>
             ))}
           </div>
@@ -103,10 +113,18 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
         open={draft != null}
         category="军事"
         command={draft === 'conscript' ? `确认在${city?.name ?? '所选城市'}征兵` : `确认训练${city?.name ?? '所选城市'}驻军`}
-        summary={draft === 'conscript' ? '兵力增量由权威随机流决定，并同步扣减成年男丁与民心。' : '训练将消耗粮食，并由权威随机流提升驻军士气。'}
+        summary={
+          draft === 'conscript'
+            ? `兵力增量由权威随机流决定，并同步扣减成年男丁与民心。${craftMoraleBonus > 0 ? `本城工艺使征兵部队士气 +${craftMoraleBonus}。` : ''}`
+            : '训练将消耗粮食，并由权威随机流提升驻军士气。'
+        }
         items={[
           { label: '城市', value: city?.name ?? '—' },
           { label: '当前军备', value: city ? `兵${city.troops} / 士气${city.troopsMorale}` : '—' },
+          {
+            label: '工艺精装',
+            value: draft === 'conscript' && craftMoraleBonus > 0 ? `部队士气 +${craftMoraleBonus}` : '—',
+          },
           { label: '资源消耗', value: draft === 'conscript' ? '80金 / 120粮 / 成年男丁' : '60粮', tone: 'warning' },
         ]}
         loading={loading}

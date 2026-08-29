@@ -218,6 +218,65 @@ export async function setNationalPolicy(type: string, targetCityId?: number): Pr
   return data;
 }
 
+/** 委任军团（docs/04 §39 + docs/42）：四写端点，随 GameState 全量/补丁返回。 */
+export async function createDelegationRegion(input: {
+  name?: string;
+  cityIds: number[];
+  governorId: number;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): Promise<GameState> {
+  const { data } = await http.post<GameState>('/delegation/create', input);
+  return data;
+}
+
+export async function updateDelegationRegion(input: {
+  regionId: number;
+  name?: string;
+  policy?: string;
+  autoRecruit?: boolean;
+  autoReward?: boolean;
+}): Promise<GameState> {
+  const { data } = await http.post<GameState>('/delegation/update', input);
+  return data;
+}
+
+export async function assignDelegationCity(input: {
+  regionId: number;
+  cityId: number;
+  remove?: boolean;
+}): Promise<GameState> {
+  const { data } = await http.post<GameState>('/delegation/assign-city', input);
+  return data;
+}
+
+export async function disbandDelegationRegion(regionId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/delegation/disband', { regionId });
+  return data;
+}
+
+
+export async function setTournamentPreferredMode(mode: 'fair' | 'unrestricted'): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tournament/preferred-mode', { mode });
+  return data;
+}
+
+export async function setTournamentPlayerEntries(officerIds: number[]): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tournament/entries', { officerIds });
+  return data;
+}
+
+export async function placeTournamentChampionBet(officerId: number, amount: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tournament/champion-bet', { officerId, amount });
+  return data;
+}
+
+export async function clearTournamentChampionBet(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tournament/champion-bet', { clear: true });
+  return data;
+}
+
 /** S27 巡查：乡政派系命令（30金；武≥60 武将） */
 export async function patrolCity(cityId: number, officerId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/civil/patrol', { cityId, officerId });

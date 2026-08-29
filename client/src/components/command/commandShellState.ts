@@ -12,6 +12,7 @@ export const COMMAND_DOMAINS = [
   'family',
   'court',
   'faction',
+  'delegation',
 ] as const;
 
 export type CommandDomain = (typeof COMMAND_DOMAINS)[number];

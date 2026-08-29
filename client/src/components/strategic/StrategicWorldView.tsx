@@ -6,6 +6,7 @@
  * 选城仍写入 selectedCityId，供 RightPanel / 命令坞复用。
  */
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo } from 'react';
 import { buildCommanderyWorldGraph, nanjun190 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
@@ -73,25 +74,25 @@ export function StrategicWorldView() {
       <div className="relative z-10 p-4 md:p-6 max-w-5xl mx-auto space-y-4">
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-amber-900/50 pb-3">
           <div>
-            <p className="text-[10px] tracking-[0.35em] text-amber-700/90 uppercase">Strategic Realm</p>
-            <h1 className="text-2xl md:text-3xl text-amber-400 font-semibold tracking-widest">
+            <p className="text-xs tracking-[0.35em] text-amber-700/90">天下大势</p>
+            <h1 className="text-2xl md:text-3xl text-amber-400 font-semibold tracking-widest font-seal">
               {isRealm ? '天下形势' : `${provinceName}`}
             </h1>
             <p className="text-xs text-stone-500 mt-1">
               {isRealm
-                ? '按州览势 · 点州入城 · 不再使用连续疆域大地图'
+                ? '层级卡片览天下 · 点州入城'
                 : '点城查看详情与下令；道路邻接见各卡底部'}
             </p>
           </div>
           {!isRealm && (
-            <button
+            <InkButton
               type="button"
               data-testid="strategic-back-realm"
               className="px-3 py-1.5 text-xs border border-amber-800/70 text-amber-300/90 rounded hover:bg-amber-950/60"
               onClick={() => openStrategicRealm()}
             >
               ← 返回天下
-            </button>
+            </InkButton>
           )}
         </header>
 
@@ -101,7 +102,7 @@ export function StrategicWorldView() {
             data-testid="strategic-province-grid"
           >
             {provinceCards.map((p) => (
-              <button
+              <InkButton
                 key={p.province}
                 type="button"
                 data-testid={`strategic-province-${p.province}`}
@@ -111,7 +112,7 @@ export function StrategicWorldView() {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h2 className="text-lg text-amber-300 tracking-wider">{p.province}</h2>
                   {p.atWar && (
-                    <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-900">
+                    <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-900">
                       战事
                     </span>
                   )}
@@ -145,7 +146,7 @@ export function StrategicWorldView() {
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-stone-400">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400">
                   <span>城 {p.cityCount}</span>
                   <span>兵 {formatCompact(p.troops)}</span>
                   <span>口 {formatCompact(p.population)}</span>
@@ -156,7 +157,7 @@ export function StrategicWorldView() {
                     {p.shares.slice(0, 4).map((s) => (
                       <span
                         key={s.factionId}
-                        className="text-[10px] px-1.5 py-0.5 rounded border border-stone-700 text-stone-400"
+                        className="text-xs px-1.5 py-0.5 rounded border border-stone-700 text-stone-400"
                         style={{ borderLeftColor: s.color, borderLeftWidth: 3 }}
                       >
                         {s.name} {s.sharePct}%
@@ -164,7 +165,7 @@ export function StrategicWorldView() {
                     ))}
                   </div>
                 )}
-              </button>
+              </InkButton>
             ))}
           </div>
         ) : (
@@ -184,7 +185,7 @@ export function StrategicWorldView() {
             data-testid="strategic-city-grid"
           >
             {cityCards.map((c) => (
-              <button
+              <InkButton
                 key={c.id}
                 type="button"
                 data-testid={`strategic-city-${c.id}`}
@@ -206,17 +207,17 @@ export function StrategicWorldView() {
                   </h2>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {c.isCapital && (
-                      <span className="text-[10px] px-1 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-900">
+                      <span className="text-xs px-1 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-900">
                         治所
                       </span>
                     )}
                     {c.isPass && (
-                      <span className="text-[10px] px-1 py-0.5 rounded bg-stone-800 text-stone-300 border border-stone-600">
+                      <span className="text-xs px-1 py-0.5 rounded bg-stone-800 text-stone-300 border border-stone-600">
                         关隘
                       </span>
                     )}
                     {c.isPlayer && (
-                      <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-900">
+                      <span className="text-xs px-1 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-900">
                         己方
                       </span>
                     )}
@@ -232,18 +233,18 @@ export function StrategicWorldView() {
                   )}
                   <span>{c.rulerName ?? '无主'}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-stone-400">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400">
                   <span>兵 {formatCompact(c.troops)}</span>
                   <span>口 {formatCompact(c.population)}</span>
                   <span>粮 {formatCompact(c.food)}</span>
                   <span>金 {formatCompact(c.gold)}</span>
                 </div>
                 {c.neighborNames.length > 0 && (
-                  <p className="mt-2 text-[10px] text-stone-500 leading-snug">
+                  <p className="mt-2 text-xs text-stone-500 leading-snug">
                     官道邻：{c.neighborNames.join('、')}
                   </p>
                 )}
-              </button>
+              </InkButton>
             ))}
           </div>
           </div>

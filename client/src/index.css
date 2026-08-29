@@ -9,9 +9,9 @@
   --ink-scroll: #17130f;
   --ink-hero-from: rgba(35,24,16,.98);
   --ink-hero-to: rgba(12,11,10,.98);
-  /* 语义 accent 色（ArtDirection.md §1.2：军=朱/政=金/人=宣/谍=青）
-   * Tailwind v3.4 在 ESM config 下不合并 theme.extend.colors 自定义色，
-   * 故语义 accent 走 CSS 变量 + inline style，不依赖 Tailwind 类生成。 */
+/* 语义 accent 色（ArtDirection.md §1.2：军=朱/政=金/人=宣/谍=青）
+ * 批次①（Session 407）修好 tailwind.config.js 的 colors 嵌套后，具名色类名已可生成；
+ * 此组 CSS 变量仍保留（AccSection 等继续引用，双通道等值）。 */
   --accent-military: #F87171;
   --accent-civil: #FBBF24;
   --accent-personnel: #C7AE7A;
@@ -19,29 +19,8 @@
 }
 
 /* 工程字体资产闭环（跨平台字体防御铁律）
- * 详见 client/src/styles/fonts.css、docs/00-dev-constitution.md §11.3+§11.7
- * 不用 @import（CSS 规范要求 @import 必须置顶，在 @tailwind 之后会被忽略），直接内联 */
-@font-face {
-  font-family: 'HanDynastySerif';
-  src: url('/fonts/NotoSerifCJKsc-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
-}
-@font-face {
-  font-family: 'HanDynastySerif';
-  src: url('/fonts/NotoSerifCJKsc-Bold.woff2') format('woff2');
-  font-weight: bold;
-  font-style: normal;
-  font-display: block;
-}
-@font-face {
-  font-family: 'HanDynastySeal';
-  src: url('/fonts/MaShanZheng-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: block;
-}
+ * 唯一声明处：client/src/styles/fonts.css（由 main.tsx 以 JS import 引入，
+ * 避免 CSS @import 必须置顶的限制）。批次①已删除本文件内重复的三块 @font-face。 */
 
 html,
 body,
@@ -60,14 +39,28 @@ body,
 }
 
 @keyframes command-drawer-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scaleY(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scaleY(1); }
 }
+
+/* 卡片式 UI 补充动效（Session 403） */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes feedback-card-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.card-animate-in   { animation: card-in          160ms ease-out; }
+.feedback-card-in  { animation: feedback-card-in 200ms ease-out; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-testid='command-drawer'] {
     animation: none !important;
   }
+  .card-animate-in,
+  .feedback-card-in { animation: none !important; }
 }
 .officer-detail-hero { background: linear-gradient(90deg, var(--ink-hero-from), var(--ink-hero-to)); }
 .officer-portrait { --portrait-ink:#3f3a32; --portrait-seal:#81332d; position:relative; width:100%; aspect-ratio:4/5; overflow:hidden; border:1px solid #6b4e2c; background:linear-gradient(135deg,#c7ae7a,#e4d2a4 48%,#bca06d); box-shadow:inset 0 0 35px rgba(48,29,13,.42),0 8px 24px rgba(0,0,0,.3); }
@@ -82,9 +75,11 @@ body,
 .portrait-beard { fill:var(--portrait-ink); opacity:.88; }
 .portrait-mouth { fill:none; stroke:var(--portrait-ink); stroke-width:2; stroke-linecap:round; }
 .expression-tone { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; z-index:1; }
-.portrait-clan { position:absolute; top:8px; left:8px; padding:3px 5px; color:#3d2d1d; background:rgba(228,210,165,.72); border-left:2px solid var(--portrait-seal); font-size:10px; letter-spacing:.12em; writing-mode:vertical-rl; }
-.portrait-seal { position:absolute; right:9px; bottom:13px; display:grid; place-items:center; width:38px; height:38px; padding:3px; border:2px double #d7aa62; color:#ead4a6; background:var(--portrait-seal); font-family:'HanDynastySeal',serif; font-size:15px; line-height:1; writing-mode:vertical-rl; box-shadow:0 2px 4px rgba(0,0,0,.35); }
-.portrait-ribbon { position:absolute; left:0; right:0; bottom:0; height:5px; background:var(--portrait-ink); opacity:.88; }
+/* A′ 拓影层（批次③ · ArtDirection §五）：程序化剪影纹，multiply ≤0.18 */
+.portrait-rubbing { fill:none; stroke:var(--portrait-ink); stroke-width:1.1; opacity:.16; mix-blend-mode:multiply; }
+/* 批次①（Session 407）：.portrait-clan/.portrait-seal/.portrait-ribbon 三类为 B 层摘除后的
+ * 死样式，已删除；氏族简册/官职印/印绶条由批次③按 ArtDirection.md §五 重建。
+ * 注意 --portrait-seal / --portrait-ink 是组件 inline style 使用的 CSS 变量，仍保留。 */
 .officer-portrait--compact { flex:0 0 34px; width:34px; height:42px; aspect-ratio:auto; border-color:#57452e; box-shadow:none; }
 /* SPDX-License-Identifier: MIT */
 /* Copyright (c) 2026 CtxPilot */

@@ -1,17 +1,23 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Stage, Layer, Circle, Text, Group, Line, RegularPolygon } from 'react-konva';
+import { Stage, Layer, Text, Group, Line, RegularPolygon, Rect } from 'react-konva';
 import { FORMATION_LABEL, FormationType, TerrainType, Weather, canUseWeatherActive, weatherActiveEnergyCost, tacticalTurnFromTimestamp, resolveHexSurround, type Officer, type BattleSideContext, type BattleLogExplanation, type DuelStance } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
 import { ExpressionPortrait } from '../officer/ExpressionPortrait';
 import { isBattleSideCardUnit, filterVisibleTacticalUnits, visibleEnemyIdsForPlayer } from './battleViewState';
+import { BATTLE_TOKENS as BT } from '../../theme/canvasTokens';
+import Konva from 'konva';
+import { playHorn } from '../../utils/sfx';
 
 const HEX_SIZE = 28;
 const ORIGIN = { x: 50, y: 50 };
-const TERRAIN_COLOR: Record<string, string> = { [TerrainType.PLAIN]: '#c8d9a0', [TerrainType.FOREST]: '#4a7c4e', [TerrainType.WATER]: '#5b9bd5', [TerrainType.MOUNTAIN]: '#8a7a5a', [TerrainType.SWAMP]: '#6b7a4a', [TerrainType.WALL]: '#666', [TerrainType.CITY]: '#a08060' };
+const TERRAIN_COLOR: Record<string, string> = { [TerrainType.PLAIN]: BT.terrainPlain, [TerrainType.FOREST]: BT.terrainForest, [TerrainType.WATER]: BT.terrainWater, [TerrainType.MOUNTAIN]: BT.terrainMountain, [TerrainType.SWAMP]: BT.terrainSwamp, [TerrainType.WALL]: BT.terrainWall, [TerrainType.CITY]: BT.terrainCity };
+/** §四 兵种篆字符（0-A 9 兵种单字；0-B 特殊兵种扩容时同步） */
+const UNIT_CHAR: Record<string, string> = { lightInfantry: '步', heavyInfantry: '甲', spearman: '枪', archer: '弓', crossbowman: '弩', lightCavalry: '轻', heavyCavalry: '重', horseArcher: '射', lightNavy: '走', mediumNavy: '蒙', towerShip: '楼' };
 const HEX_FORMATIONS: readonly FormationType[] = [FormationType.SQUARE, FormationType.CIRCLE, FormationType.WEDGE, FormationType.GOOSE, FormationType.CRANE_WING, FormationType.ARROWHEAD];
 const WEATHER_OPTIONS: readonly Weather[] = [Weather.CLEAR, Weather.CLOUDY, Weather.RAIN, Weather.STORM, Weather.FOG, Weather.SNOW];
 const WEATHER_LABEL: Record<Weather, string> = { [Weather.CLEAR]: '晴', [Weather.CLOUDY]: '阴', [Weather.RAIN]: '雨', [Weather.STORM]: '暴雨', [Weather.FOG]: '雾', [Weather.SNOW]: '雪' };
@@ -37,6 +43,57 @@ export function BattleView() {
   const battle = useGameStore((s) => s.battle); const game = useGameStore((s) => s.game); const error = useGameStore((s) => s.error); const selectedUnitId = useGameStore((s) => s.selectedUnitId); const moveRange = useGameStore((s) => s.moveRange); const movePath = useGameStore((s) => s.movePath); const selectUnit = useGameStore((s) => s.selectUnit); const previewMoveTo = useGameStore((s) => s.previewMoveTo); const moveTo = useGameStore((s) => s.moveTo); const undoBattleAction = useGameStore((s) => s.undoBattleAction); const attack = useGameStore((s) => s.attack); const castFire = useGameStore((s) => s.castFire); const castWeather = useGameStore((s) => s.castWeather); const castAbility = useGameStore((s) => s.castAbility); const finishPlayer = useGameStore((s) => s.finishPlayer); const retreatBattle = useGameStore((s) => s.retreatBattle); const changeBattleFormation = useGameStore((s) => s.changeBattleFormation); const exitBattle = useGameStore((s) => s.exitBattle); const usableAbilities = useGameStore((s) => s.usableAbilities); const duelChallenge = useGameStore((s) => s.duelChallenge);
   useEffect(() => { const el = containerRef.current; if (!el) return; const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight })); ro.observe(el); return () => ro.disconnect(); }, []);
   const corners = useMemo(() => hexCorners(HEX_SIZE - 1), []);
+  // P2-3（Session 415，D-0B-2）：静态地形缓存层——地形格子烘焙为位图，拖拽/重绘只做位图搬运；
+  // 移动高亮与单位在动态层叠加。地形随战斗创建后不变，仅在 hexGrid 变化时重烘焙。
+  const terrainLayerRef = useRef<Konva.Layer>(null);
+  const terrainSig = battle?.hexGrid.terrain;
+  useEffect(() => {
+    const layer = terrainLayerRef.current;
+    if (!layer || !terrainSig) return;
+    layer.cache({ pixelRatio: 2 });
+    return () => { try { layer.clearCache(); } catch { /* 未缓存时清理失败可忽略 */ } };
+  }, [terrainSig]);
+
+  // 美术批次④余项（Session 418）：灼烧焰色脉动 + 伤害浮字（客户端演出，Konva.Animation）
+  const battleFeedback = useGameStore((s) => s.battleFeedback);
+  const clearBattleFeedback = useGameStore((s) => s.clearBattleFeedback);
+  const floatRef = useRef<Konva.Text>(null);
+  const burnGroupRef = useRef<Konva.Group>(null);
+  const burnCount = battle?.units.filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'burn')).length ?? 0;
+  useEffect(() => {
+    const node = floatRef.current;
+    if (!battleFeedback || !node) return;
+    const { x, y } = hexToPixel(battleFeedback.q, battleFeedback.r, HEX_SIZE);
+    node.setAttrs({ x: x + 6, y: y - 34, text: battleFeedback.text, opacity: 1, visible: true });
+    const layer = node.getLayer();
+    if (!layer) return;
+    const baseY = y - 34;
+    const anim = new Konva.Animation((frame) => {
+      const t = Math.min(1, (frame?.time ?? 0) / 1300);
+      node.y(baseY - 26 * t);
+      node.opacity(1 - t);
+      if (t >= 1) {
+        anim.stop();
+        node.visible(false);
+        clearBattleFeedback();
+      }
+    }, layer);
+    anim.start();
+    return () => { anim.stop(); node.visible(false); };
+  }, [battleFeedback, clearBattleFeedback]);
+  useEffect(() => {
+    const group = burnGroupRef.current;
+    if (!group || burnCount === 0) return;
+    const layer = group.getLayer();
+    if (!layer) return;
+    const anim = new Konva.Animation((frame) => {
+      const t = frame?.time ?? 0;
+      group.opacity(0.55 + 0.4 * Math.abs(Math.sin(t / 260)));
+    }, layer);
+    anim.start();
+    return () => { anim.stop(); group.opacity(1); };
+  }, [burnCount]);
+  useEffect(() => { try { playHorn(); } catch { /* 音效失败静默 */ } }, []); // 批次⑤ 进战号角
   if (!battle || !game) return null;
   const playerTurn = battle.phase === 'player';
   // 战术视野（S10 §三十）：视野外守方单位不参与渲染与一切玩家交互（AI 全知不受影响）
@@ -60,26 +117,31 @@ export function BattleView() {
   ])).sort((a, b) => b - a);
   const reportEntries = reportIndices.map((index) => battle.log[index]);
   const onHex = (q: number, r: number) => { if (!playerTurn) return; const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r); if (occ?.side === 'attacker') { setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void selectUnit(occ.id); return; } if (occ?.side === 'defender' && selected?.side === 'attacker') { if (fireMode) { setFireMode(false); void castFire(occ.id); return; } if (abilitySel) { const id = abilitySel; setAbilitySel(null); void castAbility(occ.id, id); return; } if (duelMode) { setDuelMode(false); void duelChallenge(selected.id, occ.id, duelStance); return; } void attack(occ.id); return; } if (moveRange.includes(`${q},${r}`)) { setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void moveTo(q, r); return; } setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void selectUnit(null); };
-  return <div ref={containerRef} className="w-full h-full relative bg-[#1a2218]"><Stage width={size.w} height={size.h} draggable><Layer x={ORIGIN.x} y={ORIGIN.y}>{battle.hexGrid.terrain.map((row, r) => row.map((tid, q) => { const { x, y } = hexToPixel(q, r, HEX_SIZE); const key = `${q},${r}`; const inMove = playerTurn && moveRange.includes(key); const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r); return <Group key={key} x={x} y={y} onMouseEnter={() => { if (inMove) void previewMoveTo(q, r); }} onClick={() => onHex(q, r)}><Line points={corners} closed fill={inMove ? '#7ec8e3' : TERRAIN_COLOR[tid] ?? '#888'} stroke={inMove ? '#2a8fcf' : '#2a3020'} strokeWidth={inMove ? 2 : 1} opacity={0.92} />{occ && <><Circle radius={HEX_SIZE * .55} fill={occ.side === 'attacker' ? '#3d7a4a' : '#8b3a3a'} stroke={occ.id === selectedUnitId ? '#ffd700' : '#111'} strokeWidth={occ.id === selectedUnitId ? 3 : 1.5} /><Text text={occ.commanderName.slice(0, 1)} fontFamily="HanDynastySerif" fontSize={14} fill="#fff" fontStyle="bold" offsetX={7} offsetY={7} /></>}</Group>; }))}{playerTurn && selected && activeUnits.filter((u) => u.side === 'defender' && hexDist(selected.position, u.position) <= 1).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <RegularPolygon key={`atk-${u.id}`} x={p.x} y={p.y} sides={6} radius={HEX_SIZE} stroke="#ff4444" strokeWidth={2} dash={[4, 3]} listening={false} />; })}</Layer></Stage>
-    <div className="absolute top-3 left-3 right-3 flex justify-between pointer-events-none"><div className="pointer-events-auto max-w-lg rounded-lg border border-amber-900/50 bg-stone-950/90 p-3 text-sm"><div className={battle.phase === 'enemy' ? 'text-red-400 mb-1' : battle.phase === 'over' ? 'text-amber-400 mb-1' : 'text-emerald-400 mb-1'}>{battle.phase === 'enemy' ? '【敌军行动中】' : battle.phase === 'over' ? '【战斗结束】' : '【我方回合】'}</div><div data-testid="battle-weather" className="mb-1 border-b border-stone-700 pb-1 text-amber-300">天气：{WEATHER_LABEL[battle.weather]} · {weatherEffectLabel(battle.weather)}{battle.weatherChangeTimer != null && <span> · {battle.weatherChangeTimer}回合后变化</span>}</div><div data-testid="battle-surround-status" className={`mb-1 border-b border-stone-700 pb-1 ${anyAttackerSurrounded ? 'text-red-300' : 'text-stone-400'}`}>{anyAttackerSurrounded ? `协同包围：${surroundedAttackerCount} 支我军受围，变阵仅可用方阵，战术撤退受阻` : '协同包围：未形成'}</div>{battle.message}{battle.phase === 'over' && <div className="mt-1 text-amber-300">{battle.winner === 'attacker' ? battle.fromCityId != null ? '胜利！返回大地图将占领此城' : '胜利！（演示战，不改归属）' : '败北… 残部将退回出发城'}</div>}</div><div className="flex gap-2 pointer-events-auto">{attackerCard && <SideCard title={`我军 · ${attackerCard.commanderName}`} troops={attackerCard.troopCount} morale={attackerCard.morale} energy={attackerCard.energy ?? 100} portrait={game.officers[attackerCard.commanderId]} battleSide={{ side: attackerCard.side, winner: battle.winner, morale: attackerCard.morale, isDestroyed: attackerCard.isDestroyed, isRetreated: attackerCard.isRetreated }} />}{defenderCard && <SideCard title={`敌军 · ${defenderCard.commanderName}`} troops={defenderCard.troopCount} morale={defenderCard.morale} energy={defenderCard.energy ?? 100} portrait={game.officers[defenderCard.commanderId]} battleSide={{ side: defenderCard.side, winner: battle.winner, morale: defenderCard.morale, isDestroyed: defenderCard.isDestroyed, isRetreated: defenderCard.isRetreated }} />}</div></div>
+  return <div ref={containerRef} className="w-full h-full relative" style={{ background: BT.battleBackground }}><Stage width={size.w} height={size.h} draggable><Layer x={ORIGIN.x} y={ORIGIN.y} ref={terrainLayerRef} listening={false}>{battle.hexGrid.terrain.map((row, r) => row.map((tid, q) => { const { x, y } = hexToPixel(q, r, HEX_SIZE); return <Group key={`t-${q},${r}`} x={x} y={y}><Line points={corners} closed fill={TERRAIN_COLOR[tid] ?? BT.terrainUnknown} stroke={BT.hexStroke} strokeWidth={1} opacity={0.92} /></Group>; }))}</Layer><Layer x={ORIGIN.x} y={ORIGIN.y}>{battle.hexGrid.terrain.map((row, r) => row.map((_tid, q) => { const { x, y } = hexToPixel(q, r, HEX_SIZE); const key = `${q},${r}`; const inMove = playerTurn && moveRange.includes(key); const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r); return <Group key={key} x={x} y={y} onMouseEnter={() => { if (inMove) void previewMoveTo(q, r); }} onClick={() => onHex(q, r)}><Line points={corners} closed fill={inMove ? BT.moveFill : 'rgba(0,0,0,0)'} stroke={inMove ? BT.moveStroke : 'rgba(0,0,0,0)'} strokeWidth={inMove ? 2 : 0} />{occ && <Group><Rect x={-9} y={-13} width={18} height={24} cornerRadius={2} fill={occ.side === 'attacker' ? BT.unitAttacker : BT.unitDefender} stroke={occ.id === selectedUnitId ? BT.unitSelected : occ.side === 'attacker' ? BT.flagEdgeA : BT.flagEdgeD} strokeWidth={occ.id === selectedUnitId ? 2.5 : 1.2} /><Text text={occ.commanderName.slice(0, 1)} x={-9} width={18} y={-12} align="center" fontFamily="HanDynastySerif" fontSize={13} fontStyle="bold" fill={BT.flagText} /><Text text={UNIT_CHAR[occ.unitType] ?? '军'} x={-9} width={18} y={1} align="center" fontFamily="HanDynastySeal" fontSize={9} fill={BT.flagSeal} /><Rect x={-9} y={11} width={18} height={3} fill={BT.hpBack} opacity={0.7} /><Rect x={-9} y={11} width={Math.max(2, 18 * (occ.troopCount / Math.max(1, occ.maxTroops)))} height={3} fill={BT.hpFill} /></Group>}</Group>; }))}{playerTurn && selected && activeUnits.filter((u) => u.side === 'defender' && hexDist(selected.position, u.position) <= 1).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <RegularPolygon key={`atk-${u.id}`} x={p.x} y={p.y} sides={6} radius={HEX_SIZE} stroke={BT.attackRing} strokeWidth={2} dash={[4, 3]} listening={false} />; })}
+        <Group ref={burnGroupRef} listening={false}>
+          {(battle.units ?? []).filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'burn')).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <Text key={`burn-${u.id}`} x={p.x + 7} y={p.y - 32} text="焰" fontFamily="HanDynastySeal" fontSize={14} fill={BT.attackRing} listening={false} />; })}
+        </Group>
+        <Text ref={floatRef} visible={false} listening={false} fontSize={15} fontStyle="bold" fontFamily="HanDynastySerif" fill={BT.attackRing} />
+      </Layer></Stage>
+    <div className="absolute top-3 left-3 right-3 flex justify-between pointer-events-none"><div className="pointer-events-auto max-w-lg rounded border border-amber-900/50 bg-stone-950/90 p-3 text-sm"><div className={battle.phase === 'enemy' ? 'text-red-400 mb-1' : battle.phase === 'over' ? 'text-amber-400 mb-1' : 'text-emerald-400 mb-1'}>{battle.phase === 'enemy' ? '【敌军行动中】' : battle.phase === 'over' ? '【战斗结束】' : '【我方回合】'}</div><div data-testid="battle-weather" className="mb-1 border-b border-stone-700 pb-1 text-amber-300">天气：{WEATHER_LABEL[battle.weather]} · {weatherEffectLabel(battle.weather)}{battle.weatherChangeTimer != null && <span> · {battle.weatherChangeTimer}回合后变化</span>}</div><div data-testid="battle-surround-status" className={`mb-1 border-b border-stone-700 pb-1 ${anyAttackerSurrounded ? 'text-red-300' : 'text-stone-400'}`}>{anyAttackerSurrounded ? `协同包围：${surroundedAttackerCount} 支我军受围，变阵仅可用方阵，战术撤退受阻` : '协同包围：未形成'}</div>{battle.message}{battle.phase === 'over' && <div className="mt-1 text-amber-300">{battle.winner === 'attacker' ? battle.fromCityId != null ? '胜利！返回大地图将占领此城' : '胜利！（演示战，不改归属）' : '败北… 残部将退回出发城'}</div>}</div><div className="flex gap-2 pointer-events-auto">{attackerCard && <SideCard title={`我军 · ${attackerCard.commanderName}`} troops={attackerCard.troopCount} morale={attackerCard.morale} energy={attackerCard.energy ?? 100} portrait={game.officers[attackerCard.commanderId]} battleSide={{ side: attackerCard.side, winner: battle.winner, morale: attackerCard.morale, isDestroyed: attackerCard.isDestroyed, isRetreated: attackerCard.isRetreated }} />}{defenderCard && <SideCard title={`敌军 · ${defenderCard.commanderName}`} troops={defenderCard.troopCount} morale={defenderCard.morale} energy={defenderCard.energy ?? 100} portrait={game.officers[defenderCard.commanderId]} battleSide={{ side: defenderCard.side, winner: battle.winner, morale: defenderCard.morale, isDestroyed: defenderCard.isDestroyed, isRetreated: defenderCard.isRetreated }} />}</div></div>
     <BattleReport entries={reportEntries} error={error} />
     {movePath?.found && <div data-testid="move-path-summary" className="absolute bottom-20 left-1/2 -translate-x-1/2 rounded border border-sky-700 bg-stone-950/95 px-3 py-1 text-xs text-sky-200">路径 {movePath.path.length - 1} 格 · 消耗 {movePath.totalCost} · 剩余 {movePath.path.at(-1)?.remaining ?? 0} 移动力</div>}
     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 flex-wrap justify-center max-w-[90%]">
       {playerTurn && <>
-        <button data-testid="btn-finish-player" className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm" onClick={() => void finishPlayer()}>结束行动（敌军自动出手）</button>
-        {attacker && <button data-testid="btn-select-attacker" className="px-3 py-1.5 rounded bg-emerald-900 border border-emerald-600 text-sm" onClick={() => { setFireMode(false); void selectUnit(attacker.id); }}>选择我军</button>}
-        {canChangeFormation && <button data-testid="btn-battle-formation" className="px-3 py-1.5 rounded border text-sm bg-indigo-950 border-indigo-700 text-indigo-200" onClick={() => { setFormationMode((value) => !value); setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); }}>{formationMode ? '收起变阵' : `变阵（${battle.tacticalPoints ?? 5} TP）`}</button>}
-        {formationMode && canChangeFormation && <div data-testid="battle-formation-picker" className="flex gap-1 flex-wrap rounded border border-indigo-800 bg-stone-950/95 p-1">{HEX_FORMATIONS.map((formation) => <button key={formation} data-testid={`battle-formation-${formation}`} disabled={selectedArmy?.formation === formation || selected?.formation === formation} className="rounded border border-stone-700 px-2 py-1 text-xs text-stone-200 disabled:opacity-40" onClick={() => { setFormationMode(false); void changeBattleFormation(formation); }}>{FORMATION_LABEL[formation]}</button>)}</div>}
-        {attacker && selected?.id === attacker.id && !attacker.hasActed && <button data-testid="btn-fire-tactic" className="px-3 py-1.5 rounded border text-sm bg-orange-950 border-orange-700 text-orange-200" disabled={(attacker.energy ?? 0) < 30} onClick={() => { setFireMode((v) => !v); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); }}>{fireMode ? '火计·点敌军' : `火计（气${attacker.energy ?? 100}）`}</button>}
-        {canCastWeather && <button data-testid="btn-weather-skill" className="px-3 py-1.5 rounded border text-sm bg-cyan-950 border-cyan-700 text-cyan-200" onClick={() => { setWeatherMode((v) => !v); setFireMode(false); setAbilitySel(null); setDuelMode(false); setFormationMode(false); }}>{weatherMode ? '收起观天' : `观天（气${weatherCost}）`}</button>}
-        {weatherMode && canCastWeather && <div data-testid="battle-weather-picker" className="flex gap-1 flex-wrap rounded border border-cyan-800 bg-stone-950/95 p-1">{WEATHER_OPTIONS.filter((w) => w !== battle.weather).map((w) => <button key={w} data-testid={`battle-weather-${w}`} className="rounded border border-stone-700 px-2 py-1 text-xs text-stone-200" onClick={() => { setWeatherMode(false); void castWeather(w); }}>{WEATHER_LABEL[w]}</button>)}</div>}
-        {attacker && selected?.id === attacker.id && !attacker.hasActed && (attacker.energy ?? 0) >= 20 && <button data-testid="btn-duel" className="px-3 py-1.5 rounded border text-sm bg-yellow-950 border-yellow-700 text-yellow-200" onClick={() => { setDuelMode((v) => !v); setFireMode(false); setWeatherMode(false); setAbilitySel(null); }}>单挑</button>}
-        {duelMode && <div data-testid="duel-stance-picker" className="flex gap-1">{(['assault', 'steady', 'bait', 'delegate'] as const).map((v) => <button key={v} className="rounded border px-2 py-1 text-xs" onClick={() => setDuelStance(v)}>{v === 'assault' ? '强攻' : v === 'steady' ? '持重' : v === 'bait' ? '诱敌' : '委任'}</button>)}</div>}
-        {attacker && selected?.id === attacker.id && !attacker.hasActed && usableAbilities.length > 0 && <div className="flex gap-1 flex-wrap">{usableAbilities.map((ab) => <button key={ab.id} data-testid={`btn-ability-${ab.id}`} className="px-2 py-1 rounded border text-xs" disabled={(attacker.energy ?? 0) < ab.energyCost} onClick={() => { setAbilitySel(abilitySel === ab.id ? null : ab.id); setFireMode(false); setWeatherMode(false); }}>{ab.leveling === 'proficiency' ? `${ab.name}·熟${ab.abilityUses ?? 0}` : ab.name}</button>)}</div>}
+        <InkButton data-testid="btn-finish-player" className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm" onClick={() => void finishPlayer()}>结束行动（敌军自动出手）</InkButton>
+        {attacker && <InkButton data-testid="btn-select-attacker" className="px-3 py-1.5 rounded bg-emerald-900 border border-emerald-600 text-sm" onClick={() => { setFireMode(false); void selectUnit(attacker.id); }}>选择我军</InkButton>}
+        {canChangeFormation && <InkButton data-testid="btn-battle-formation" className="px-3 py-1.5 rounded border text-sm bg-indigo-950 border-indigo-700 text-indigo-200" onClick={() => { setFormationMode((value) => !value); setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); }}>{formationMode ? '收起变阵' : `变阵（${battle.tacticalPoints ?? 5} TP）`}</InkButton>}
+        {formationMode && canChangeFormation && <div data-testid="battle-formation-picker" className="flex gap-1 flex-wrap rounded border border-indigo-800 bg-stone-950/95 p-1">{HEX_FORMATIONS.map((formation) => <InkButton key={formation} data-testid={`battle-formation-${formation}`} disabled={selectedArmy?.formation === formation || selected?.formation === formation} className="rounded border border-stone-700 px-2 py-1 text-xs text-stone-200 disabled:opacity-40" onClick={() => { setFormationMode(false); void changeBattleFormation(formation); }}>{FORMATION_LABEL[formation]}</InkButton>)}</div>}
+        {attacker && selected?.id === attacker.id && !attacker.hasActed && <InkButton data-testid="btn-fire-tactic" className="px-3 py-1.5 rounded border text-sm bg-orange-950 border-orange-700 text-orange-200" disabled={(attacker.energy ?? 0) < 30} onClick={() => { setFireMode((v) => !v); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); }}>{fireMode ? '火计·点敌军' : `火计（气${attacker.energy ?? 100}）`}</InkButton>}
+        {canCastWeather && <InkButton data-testid="btn-weather-skill" className="px-3 py-1.5 rounded border text-sm bg-cyan-950 border-cyan-700 text-cyan-200" onClick={() => { setWeatherMode((v) => !v); setFireMode(false); setAbilitySel(null); setDuelMode(false); setFormationMode(false); }}>{weatherMode ? '收起观天' : `观天（气${weatherCost}）`}</InkButton>}
+        {weatherMode && canCastWeather && <div data-testid="battle-weather-picker" className="flex gap-1 flex-wrap rounded border border-cyan-800 bg-stone-950/95 p-1">{WEATHER_OPTIONS.filter((w) => w !== battle.weather).map((w) => <InkButton key={w} data-testid={`battle-weather-${w}`} className="rounded border border-stone-700 px-2 py-1 text-xs text-stone-200" onClick={() => { setWeatherMode(false); void castWeather(w); }}>{WEATHER_LABEL[w]}</InkButton>)}</div>}
+        {attacker && selected?.id === attacker.id && !attacker.hasActed && (attacker.energy ?? 0) >= 20 && <InkButton data-testid="btn-duel" className="px-3 py-1.5 rounded border text-sm bg-yellow-950 border-yellow-700 text-yellow-200" onClick={() => { setDuelMode((v) => !v); setFireMode(false); setWeatherMode(false); setAbilitySel(null); }}>单挑</InkButton>}
+        {duelMode && <div data-testid="duel-stance-picker" className="flex gap-1">{(['assault', 'steady', 'bait', 'delegate'] as const).map((v) => <InkButton key={v} className="rounded border px-2 py-1 text-xs" onClick={() => setDuelStance(v)}>{v === 'assault' ? '强攻' : v === 'steady' ? '持重' : v === 'bait' ? '诱敌' : '委任'}</InkButton>)}</div>}
+        {attacker && selected?.id === attacker.id && !attacker.hasActed && usableAbilities.length > 0 && <div className="flex gap-1 flex-wrap">{usableAbilities.map((ab) => <InkButton key={ab.id} data-testid={`btn-ability-${ab.id}`} className="px-2 py-1 rounded border text-xs" disabled={(attacker.energy ?? 0) < ab.energyCost} onClick={() => { setAbilitySel(abilitySel === ab.id ? null : ab.id); setFireMode(false); setWeatherMode(false); }}>{ab.leveling === 'proficiency' ? `${ab.name}·熟${ab.abilityUses ?? 0}` : ab.name}</InkButton>)}</div>}
       </>}
-      {canUndoMove && <button data-testid="btn-battle-undo" title="仅可撤销本回合尚未攻击、施法、结束行动或消耗 RNG 的最后一次移动" className="px-3 py-1.5 rounded bg-sky-950 border border-sky-700 text-sm text-sky-200" onClick={() => void undoBattleAction()}>撤销移动</button>}
-      {battle.phase === 'player' && <button data-testid="btn-battle-retreat" className="px-3 py-1.5 rounded bg-red-950 border border-red-700 text-sm text-red-200" title={anyAttackerSurrounded ? '有部队被协同包围，暂不能有序撤退' : '标记有序撤退并返回出发城'} onClick={() => void retreatBattle()}>战术撤退</button>}
-      {battle.phase === 'over' && <button data-testid="btn-exit-battle" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-sm" onClick={() => void exitBattle()}>{battle.winner === 'attacker' ? '返回并占城' : '返回大地图'}</button>}
+      {canUndoMove && <InkButton data-testid="btn-battle-undo" title="仅可撤销本回合尚未攻击、施法、结束行动或消耗 RNG 的最后一次移动" className="px-3 py-1.5 rounded bg-sky-950 border border-sky-700 text-sm text-sky-200" onClick={() => void undoBattleAction()}>撤销移动</InkButton>}
+      {battle.phase === 'player' && <InkButton data-testid="btn-battle-retreat" className="px-3 py-1.5 rounded bg-red-950 border border-red-700 text-sm text-red-200" title={anyAttackerSurrounded ? '有部队被协同包围，暂不能有序撤退' : '标记有序撤退并返回出发城'} onClick={() => void retreatBattle()}>战术撤退</InkButton>}
+      {battle.phase === 'over' && <InkButton data-testid="btn-exit-battle" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-sm" onClick={() => void exitBattle()}>{battle.winner === 'attacker' ? '返回并占城' : '返回大地图'}</InkButton>}
     </div>
     {battle.duel && <DuelPanel duel={battle.duel} />}
   </div>;
@@ -99,7 +161,7 @@ function battleErrorText(value: string) {
 }
 function signed(value?: number) { return value == null ? '0' : `${value >= 0 ? '+' : ''}${value.toFixed(1)}`; }
 function BattleReport({ entries, error }: { entries: Array<{ turn: number; message: string; explanation?: BattleLogExplanation }>; error: string | null }) {
-  return <div data-testid="battle-report" className="absolute right-3 top-[150px] w-[270px] max-h-[38%] overflow-auto rounded-lg border border-stone-700 bg-stone-950/90 p-2 text-xs text-stone-200 pointer-events-auto">
+  return <div data-testid="battle-report" className="absolute right-3 top-[150px] w-[270px] max-h-[38%] overflow-auto rounded border border-stone-700 bg-stone-950/90 p-2 text-xs text-stone-200 pointer-events-auto">
     <div className="mb-1 border-b border-stone-700 pb-1 text-amber-300">战报·阵型解释</div>
     {error && <div data-testid="battle-report-error" className="mb-1 rounded border border-red-800/70 bg-red-950/40 p-1 text-red-300">阻断：{battleErrorText(error)}</div>}
     {entries.map((entry, index) => <div key={`${entry.turn}-${index}`} className="mb-1 border-b border-stone-800 pb-1 last:border-0">
@@ -110,4 +172,4 @@ function BattleReport({ entries, error }: { entries: Array<{ turn: number; messa
   </div>;
 }
 
-function SideCard({ title, troops, morale, energy, portrait, battleSide }: { title: string; troops: number; morale: number; energy: number; portrait?: Officer | null; battleSide?: BattleSideContext }) { return <div className="rounded-lg border border-amber-900/50 bg-stone-950/90 p-2 text-xs min-w-[140px]"><div className="text-amber-400 mb-1 flex items-center gap-1.5">{portrait && battleSide && <ExpressionPortrait officer={portrait} battle={battleSide} compact />}<span>{title}</span></div><div>兵力 {troops}</div><div>士气 {morale}</div><div>气力 {energy}</div></div>; }
+function SideCard({ title, troops, morale, energy, portrait, battleSide }: { title: string; troops: number; morale: number; energy: number; portrait?: Officer | null; battleSide?: BattleSideContext }) { return <div className="rounded border border-amber-900/50 bg-stone-950/90 p-2 text-xs min-w-[140px]"><div className="text-amber-400 mb-1 flex items-center gap-1.5">{portrait && battleSide && <ExpressionPortrait officer={portrait} battle={battleSide} compact />}<span>{title}</span></div><div>兵力 {troops}</div><div>士气 {morale}</div><div>气力 {energy}</div></div>; }

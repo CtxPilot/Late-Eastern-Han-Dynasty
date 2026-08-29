@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import type { CommandDomainAvailability } from './CommandDock';
@@ -56,11 +57,11 @@ export function CommandDrawer({
           >
             {title}
           </h2>
-          <span className="text-[10px] text-stone-500">
+          <span className="text-xs text-stone-500">
             {availability === 'available' ? '可用' : availability === 'legacy' ? '仍在原面板' : '设计中'}
           </span>
         </div>
-        <button
+        <InkButton
           type="button"
           data-testid="command-drawer-close"
           aria-label={`关闭${title}抽屉`}
@@ -68,7 +69,7 @@ export function CommandDrawer({
           className="border border-stone-700 px-2 py-1 text-xs text-stone-400 hover:border-stone-500 hover:text-stone-200"
         >
           收起
-        </button>
+        </InkButton>
       </header>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 text-xs leading-5 text-stone-400">
         {children}

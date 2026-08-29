@@ -11,6 +11,7 @@
  * - 查看态势加成效果
  * - 查看战绩
  */
+import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 
@@ -97,7 +98,7 @@ export function GrandStrategistPanel() {
             {/* 态势切换按钮 */}
             <div className="grid grid-cols-2 gap-1">
               {(['offense', 'defense', 'development', 'endurance'] as const).map((s) => (
-                <button
+                <InkButton
                   key={s}
                   type="button"
                   disabled={loading || s === grandStrategist.strategy}
@@ -109,7 +110,7 @@ export function GrandStrategistPanel() {
                   onClick={() => grandStrategistSwitch(s)}
                 >
                   {STRATEGY_NAMES[s]}
-                </button>
+                </InkButton>
               ))}
             </div>
           </div>
@@ -140,14 +141,14 @@ export function GrandStrategistPanel() {
           )}
 
           {/* 解职 */}
-          <button
+          <InkButton
             type="button"
             disabled={loading}
             className="w-full px-3 py-1.5 text-xs rounded bg-red-900 hover:bg-red-800 text-red-200 disabled:opacity-50"
             onClick={() => { if (window.confirm(`解职 ${gsOfficer.name}？`)) grandStrategistDismiss(); }}
           >
             解职总军师
-          </button>
+          </InkButton>
         </div>
       ) : (
         <div className="space-y-2">
@@ -156,20 +157,20 @@ export function GrandStrategistPanel() {
           </div>
 
           {/* 候选人列表 */}
-          <button
+          <InkButton
             type="button"
             className="w-full px-3 py-1.5 text-xs rounded bg-amber-900 hover:bg-amber-800 text-amber-200"
             onClick={() => setShowAppoint(!showAppoint)}
           >
             {showAppoint ? '收起候选人' : '任命总军师'}
-          </button>
+          </InkButton>
 
           {showAppoint && (
             <div className="max-h-48 overflow-y-auto space-y-1">
               {candidates.length === 0 ? (
                 <div className="text-xs text-stone-500 py-2">无合适人选（需智力≥85）</div>
               ) : candidates.map((o) => (
-                <button
+                <InkButton
                   key={o.id}
                   type="button"
                   disabled={loading}
@@ -178,7 +179,7 @@ export function GrandStrategistPanel() {
                 >
                   <span>{o.name}</span>
                   <span className="text-stone-500">智 {o.stats.intelligence}</span>
-                </button>
+                </InkButton>
               ))}
             </div>
           )}

@@ -364,11 +364,14 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
             },
       ]),
     ),
+    // P2-1（Session 413）：月度军官重置改 copy-on-write——仅 actionsPerMonth/体力实际变化者克隆，
+    // 其余保留原引用（0-B 1000+ 武将下把每月 O(N) 全量克隆降为 O(变更数)；语义逐字段等价）。
     officers: Object.fromEntries(
       Object.entries(nextState.officers).map(([id, o]) => {
-        let next: typeof o = { ...o, actionsPerMonth: 1 };
         // 等级表 Lv20 体力恢复+5/月（docs/04 §十 6.2，Session 265；封顶体力上限）
         // S25：医术技能每月 +Lv 体力（Session 337；不启用全量自然恢复公式，避免平衡漂移）
+        let next: typeof o = o;
+        if (o.actionsPerMonth !== 1) next = { ...next, actionsPerMonth: 1 };
         if (o.status !== 'dead') {
           const effects = meritEffects(meritLevelFor(o.merit ?? 0), o.meritPath ?? 'neutral');
           const med = medicineSkillLevel(o);
@@ -376,7 +379,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
           if (recover > 0) {
             const level = o.meritLevel ?? meritLevelFor(o.merit ?? 0);
             const max = calcStaminaMax(o, level, currentYear - o.birthYear);
-            next = { ...next, stamina: Math.min(max, (o.stamina ?? max) + recover) };
+            const stamina = Math.min(max, (o.stamina ?? max) + recover);
+            if (stamina !== o.stamina) next = { ...next, stamina };
           }
         }
         return [id, next] as const;
@@ -430,7 +434,7 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
       ...ai.decisions.map((d) => ({
         year: currentYear,
         month: currentMonth,
-        type: 'ai_placeholder',
+        type: 'ai_civil', // P1-1（Session 408）：占位升级为三规则启发式，日志类型随之更名
         message: d.message,
       })),
       ...nextState.actionLog,
@@ -485,7 +489,7 @@ export function tickBattlefieldInstance(state: GameState, rng: () => number): Ga
       const countyNodeId = resolveArmyCountyNodeId(inst, army.id);
       if (!countyNodeId) return army;
       const supplyPath = shortestCountyPath(inst, inst.targetSeatNodeId, countyNodeId);
-      if (!supplyPath || !isCountyPathBlockedBy(inst, supplyPath, attackerFactionId)) return army;
+      if (!supplyPath || !isCountyPathBlockedBy(inst, supplyPath.nodeIds, attackerFactionId)) return army;
       campaignArmiesChanged = true;
       const foodPenalty = monthlyArmyFoodCost(army.troops) * 2;
       supplyCutMessages.push(`${army.name}（${countyNodeId}）补给线被切断`);

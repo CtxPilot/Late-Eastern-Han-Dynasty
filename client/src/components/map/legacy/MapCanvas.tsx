@@ -434,7 +434,7 @@ export function MapCanvas() {
         </div>
         <button
           type="button"
-          className="mt-1.5 text-[10px] text-stone-400 hover:text-amber-300 underline"
+          className="mt-1.5 text-xs text-stone-400 hover:text-amber-300 underline"
           onClick={() => fitFullMap()}
         >
           重置全图

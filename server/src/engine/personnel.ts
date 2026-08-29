@@ -10,11 +10,11 @@ import {
   isAdultForMarriage,
   MaritalStatus,
   OfficerStatus,
-  calculateRecruitChance,
+  resolveRecruitChance,
+  playerCultureForRecruit,
   canTravelMacroAdjacent,
   panelStatsDisplay,
   discoverSkillRateBonus,
-  eloquenceRecruitModifier,
   type FemaleCharacter,
   type GameState,
   type Officer,
@@ -220,14 +220,15 @@ export function searchTalent(
 }
 
 /**
- * 登用率：40% + 魅差×0.3 + (1-|相性差|/150)×40% − 野心×3% + 义理×2% + 辩才技能
+ * 登用率：基础公式 + 辩才 + 文化人才吸引（Session 400）
  * 返回 0~100 百分数
  */
 export function calcRecruitChance(
   recruiter: Officer,
   target: Officer,
+  cultureValue = 0,
 ): number {
-  return calculateRecruitChance(recruiter, target, eloquenceRecruitModifier(recruiter));
+  return resolveRecruitChance(recruiter, target, cultureValue);
 }
 
 /**
@@ -293,7 +294,8 @@ export function recruitOfficer(
     },
   };
 
-  const chance = calcRecruitChance(recruiter, target);
+  const cultureValue = playerCultureForRecruit(state.cities, fid, target.location);
+  const chance = calcRecruitChance(recruiter, target, cultureValue);
 
   if (rng() * 100 >= chance) {
     return pushLog(

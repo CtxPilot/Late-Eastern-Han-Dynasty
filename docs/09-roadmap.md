@@ -33,12 +33,6 @@
 - **验证**：新增 `verify-s376-offline-commandery` **27/27**（南郡沙盘进入→战况条→阵前单挑 step×2/skip 终局/close→攻打当阳占领「驻N」→退出回世界屏，XHR 钩子零回退）；回归 s374 44 / s375 32 / s372 11 / s373(重建) 14 全绿。
 - 边界：0-B 继续暂缓。
 
-### Session 376 · 离线覆盖扩充 III（郡域实例写链收口）
-
-- worker 镜像 enterNanjunBattlefield/exitNanjunBattlefield/engageCounty 与阵前单挑四链（含 settleBattlefieldDuel 功绩/俘杀/继承者规则）；至此 **114 个接口离线全覆盖，无在线回退面**。
-- **验证**：新增 `verify-s376-offline-commandery` **27/27**（南郡沙盘进入→战况条→阵前单挑 step×2/skip 终局/close→攻打当阳占领「驻N」→退出回世界屏，XHR 钩子零回退）；回归 s374 44 / s375 32 / s372 11 / s373(重建) 14 全绿。
-- 边界：0-B 继续暂缓。
-
 ### Session 375 · 离线覆盖扩充 II（读链与轻写链 14 接口收口）
 
 - worker 镜像总军师 ×4 / 技能树 ×5 / getOfficerRelations / getFactionOverview / campaignNodes / getBattlefieldInstance / searchBeauty；虚拟模块补 `skill-trees.json`。
@@ -135,6 +129,45 @@
 - 服务端复用既有持续开发的人员门禁、月费、暂停/进度损失与完整 GameState Schema；客户端产业分面新增文化数值与统一终审入口。
 - 启动、月结、完成均不消费 RNG；技术研发/人才吸引消费、工艺/交通/卫生与 0-B 数据扩容仍后置。
 - 验证：`verify-culture-development` **10/10**、共享文化配置单测 **1/1**、R5 预算 **17/17**、即时内政 RNG **9/9**；浏览器运行时仍无连接，未宣称真实 DOM 点击验收。
+
+### Session 397 · S03 工艺持续投入 0-A
+
+- `DevelopmentProject.kind` 新增 `craft`，数值真源对齐文化：360金/首付120/6月/工艺+60（封顶999，见 `08`）。
+- `City.stats.craft?` 旧档缺省；API `POST /civil/develop` 接受 `kind:'craft'`；产业分面展示与终审。
+- 征兵质量与器械建造速度消费、交通/卫生、正式技艺研发仍后置；零 RNG。
+- 验证：`verify-craft-development` **10/10**、shared civil-development **2/2**、CivilOverviewDrawer **3/3**。
+
+### Session 398 · S03 交通持续投入 0-A
+
+- `DevelopmentProject.kind` 新增 `transport`，数值真源对齐文化：360金/首付120/6月/交通+60（封顶999，见 `08`）。
+- `City.stats.transport?` 旧档缺省；API `POST /civil/develop` 接受 `kind:'transport'`；产业分面展示与终审。
+- 行军速度与运输损耗消费、卫生、正式技艺研发仍后置；零 RNG。
+- 验证：`verify-transport-development` **10/10**、shared civil-development **3/3**、CivilOverviewDrawer **3/3**。
+
+### Session 399 · S03 卫生持续投入 0-A
+
+- `DevelopmentProject.kind` 新增 `sanitation`，数值真源对齐文化：360金/首付120/6月/卫生+60（封顶999，见 `08`）。
+- `City.stats.sanitation?` 旧档缺省；API `POST /civil/develop` 接受 `kind:'sanitation'`；产业分面展示与终审。
+- 瘟疫抗性与人口增长率消费、正式技艺研发仍后置；零 RNG。四项持续投入落库链已齐。
+- 验证：`verify-sanitation-development` **10/10**、shared civil-development **4/4**、CivilOverviewDrawer **3/3**。
+
+### Session 400 · S03∩S11 文化→登用成功率
+
+- `cultureRecruitModifier`：技艺门槛每级 +2 百分点（顶 +10）；`playerCultureForRecruit` 读城；`resolveRecruitChance` 合成辩才+文化。
+- `recruitOfficer` / 招贤 UI 同源；不新增存档字段/API/RNG；技艺研发仍后置。
+- 验证：`verify-culture-recruit`；shared culture 单测；`verify-personnel-rng` / `verify-negotiation-r2` 回归。
+
+### Session 401 · S03 工艺→征兵士气
+
+- `craftConscriptMoraleBonus`：质量门槛同文化，每级征兵后 `troopsMorale` +2（顶 +10）；`conscript` 确定性写入。
+- 0-A 以部队士气代理正式兵质；器械建造速度仍后置；不新增存档字段/API/RNG。
+- 验证：`verify-craft-conscript`；shared craft 单测；CivilOverviewDrawer / 军备终审文案。
+
+### Session 402 · S03 交通→行军粮耗
+
+- `transportMarchFoodMul` / `armyTransportForMarch`：路网门槛同文化，每级行军粮耗 −2%（顶 −10%）；`tickCampaignMarch` 乘区。
+- 行军速度仍后置；不新增存档字段/API/RNG。
+- 验证：`verify-transport-march`；shared transport 单测；CivilOverviewDrawer；`verify-campaign` 回归。
 
 ### Session 354 · S10 敌军协同包围走位最小切片
 
@@ -234,7 +267,7 @@
 | P0A-14 | scenarios.json（小） | 2个：英雄集结 what-if Demo + 190《关东义兵》四势力技术切片；ScenarioSelect 已可用 |
 | P0A-15 | events.json（小） | 24个190事件；5条叙事线+玩家抉择，支持场景/史料层隔离 |
 
-**0-A 验收标准**：Zod 校验全部通过；能渲染地图、能推进至少1回合、能完成1次内政操作、能打通1场最简战斗。
+**0-A 验收标准**：Zod 校验全部通过；**世界屏层级卡片可渲染**（Session 379 起世界屏改层级战略卡片，原「能渲染地图」口径随大地图退役更新，Session 406 校正）、能推进至少1回合、能完成1次内政操作、能打通1场最简战斗。
 
 ### Phase 0-B — 数据扩容至全量
 
@@ -469,11 +502,11 @@
 | P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） | P5-07 |
 | P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves.db` + 前端一键导入导出 Blob） | **完成：Session 311/312 槽位 API/UI；Session 340 介质改为 SQLite；多用户留后续** | P5-05 |
 | P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
-| P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄） | P5-07 |
-| P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核） | P5-07 |
-| P5-08 | Canvas 动画(行军/着火/水流/落石) | P1-03, P3-01 |
-| P5-09 | 音效系统 | P5-07 |
-| P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**；Session 124 已有四名代表人物 C+B 简化切片，待补 A 拓片层、`avatarGene` 落库与 30 人精校；详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘） | P0-06 |
+| P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄）**→ 执行批次②，见 `ArtDirection.md` §九** | P5-07 |
+| P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核）**→ 引擎1（批次①/②顺带）** | P5-07 |
+| P5-08 | Canvas 动画(行军/着火/水流/落石) **→ 执行批次④（程序化几何特效）** | P1-03, P3-01 |
+| P5-09 | 音效系统 **→ 批次⑤ Session 409 首切片完成**（战鼓/铜磬/号角 Web Audio 合成；音色打磨后置） | P5-07 |
+| P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**；Session 124 已有四名代表人物 C+B 简化切片，待补 A 拓片层、`avatarGene` 落库与 30 人精校；详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘）**→ 批次③ Session 409 完成**：avatarGene 落库（4 原型策展+哈希派生+消解表）+ A′拓影/C 6×10×8×7/B 印信层（清 D-0B-7；officeSeal 动态官职印后置） | P0-06 |
 | P5-11 | 平衡性测试 | P5-01~P5-06 |
 | P5-12 | 性能优化(Canvas缓存/数据懒加载) | P5-09 |
 | P5-13 | 打包构建(生产模式) | P0-05 |

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
+import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, computeVisibleEnemyUnitIds, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
@@ -134,13 +134,19 @@ export function runSimpleEnemyAi(
       }
     }
 
+    // P1-4（Session 412）：半知化——以本方全体存活单位的有效视野投影过滤可锁定目标
+    //（shared/battle-sight 同源；确定性纯投影，不消费 RNG）。视野内无目标则待机。
+    const visibleIds = computeVisibleEnemyUnitIds(
+      { units: next, hexGrid: { terrain: terrainMap } as never, weather },
+      enemySide,
+    );
     // 被截击的撤退尝试必须先处理相邻截击者；否则全局目标评分可能让低士气部队
     // 越过贴身敌军去攻击另一支更“划算”的目标，既不符合截击语义，也会让战报中的
     // “被截击”只成为旁观标签。候选仍使用同一确定性评分，不消费额外 RNG。
     const target = intercepted
       ? selectInterceptionTarget(live, next, playerSide, unitTemplates, strongAgainst)
-        ?? selectTarget(live, next, playerSide, unitTemplates, strongAgainst)
-      : selectTarget(live, next, playerSide, unitTemplates, strongAgainst);
+        ?? selectTarget(live, next, playerSide, unitTemplates, strongAgainst, visibleIds)
+      : selectTarget(live, next, playerSide, unitTemplates, strongAgainst, visibleIds);
     if (!target) {
       next = markEnemyWaiting(next, live.id);
       messages.push(`${officerStats[live.commanderId]?.name ?? '敌军'} 无目标，待机`);
@@ -169,7 +175,7 @@ export function runSimpleEnemyAi(
           }
         : unit);
       acting = next.find((unit) => unit.id === live.id)!;
-      actingTarget = selectTarget(acting, next, playerSide, unitTemplates, strongAgainst)
+      actingTarget = selectTarget(acting, next, playerSide, unitTemplates, strongAgainst, visibleIds)
         ?? next.find((unit) => unit.id === target.id && isActiveBattleUnit(unit))
         ?? target;
       if (actingTarget.id !== target.id) {
@@ -268,7 +274,7 @@ export function runSimpleEnemyAi(
       const name = officerStats[live.commanderId]?.name ?? '敌军';
       messages.push(cooperativePosition ? `${name} 迂回包抄` : `${name} 向我军移动`);
       let moved = next.find((u) => u.id === live.id)!;
-      const movedTarget = selectTarget(moved, next, playerSide, unitTemplates, strongAgainst);
+      const movedTarget = selectTarget(moved, next, playerSide, unitTemplates, strongAgainst, visibleIds);
       if (movedTarget && hexDistance(moved.position, movedTarget.position) <= effectiveUnitRange(ut.range, weather) && !(weather === Weather.FOG && ut.range > 1)) {
         // 目标评分可能因接敌距离变化而改选目标；若本回合继续攻击，朝向应
         // 以真正出手的目标为准，保证后续包围态势与行动演出一致。
@@ -627,10 +633,13 @@ function selectTarget(
   side: 'attacker' | 'defender',
   unitTemplates: Record<string, UnitTemplate>,
   strongAgainst: Record<string, UnitType[]>,
+  visibleIds?: Set<string>,
 ): BattleUnit | null {
   let best: BattleUnit | null = null;
   let bestScore = Infinity;
   for (const p of units.filter((u) => u.side === side && isActiveBattleUnit(u))) {
+    // P1-4（Session 412）：半知化——只锁定任一己方单位视野内的目标；无名册可见集时保持全知（兼容旧调用）。
+    if (visibleIds && !visibleIds.has(p.id)) continue;
     const d = hexDistance(unit.position, p.position);
     const matchup = getUnitMatchup(unit.unitType, p.unitType, strongAgainst);
     const hpRatio = p.troopCount / Math.max(1, p.maxTroops);

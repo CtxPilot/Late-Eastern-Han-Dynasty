@@ -42,12 +42,15 @@ function readSaveSchemaVersion(input: unknown): unknown {
     : undefined;
 }
 
+/**
+ * 旧五级 → 新七级映射（仅旧枚举专属键）。Session 414 修复：原表含 king:'emperor'，
+ * 会把新七级的合法值 `king`（称王，S26/HC）在读档时错误升格为 emperor——
+ * 新枚举已含 duke/king，等值映射在下方 `mapped === nobilityRank` 判断下本就安全跳过，
+ * 故本表只保留新枚举中不存在的旧键。
+ */
 const LEGACY_NOBILITY_RANK_MAP = {
-  none: 'none',
   marquis: 'xianMarquis',
-  duke: 'duke',
   prince: 'king',
-  king: 'emperor',
 } as const;
 
 /**
@@ -235,6 +238,54 @@ export function parseSaveEnvelopeV1<TSnapshot>(
  * 当前版本的加载前持久化边界：版本分派后，严格校验 v1 信封和完整 GameState。
  * 本函数不读取磁盘、不恢复连接/动画等瞬态上下文，也不代表生产读档已实现。
  */
+/**
+ * P2-2（Session 414）存档瘦身： officers 静态回声键（officers.json 已有、运行时不变的
+ * 重量字段）在保存时剥离、加载时自此函数从静态名录回注，使 0-B（1000+ 武将）信封
+ * 体积回到 2MB 预算内。旧档（键仍在）幂等保留原值；不在名录的 id 原样跳过。
+ */
+export const STATIC_ECHO_OFFICER_KEYS = [
+  'biography',
+  'hidden',
+  'unitProficiency',
+  'formationMastery',
+  'tags',
+  'avatarGene',
+  'appearance',
+] as const;
+
+export function rejoinSaveStaticEchoes(
+  input: unknown,
+  staticOfficers: ReadonlyArray<object & { id: number }>,
+): unknown {
+  if (typeof input !== 'object' || input === null) return input;
+  const envelope = input as { snapshot?: unknown };
+  if (typeof envelope.snapshot !== 'object' || envelope.snapshot === null) return input;
+  const snapshot = envelope.snapshot as { officers?: unknown };
+  if (typeof snapshot.officers !== 'object' || snapshot.officers === null) return input;
+  const catalog = new Map(staticOfficers.map((o) => [o.id, o]));
+  let changed = false;
+  const officers = Object.fromEntries(
+    Object.entries(snapshot.officers).map(([id, value]) => {
+      if (typeof value !== 'object' || value === null) return [id, value];
+      const saved = value as Record<string, unknown>;
+      const staticOfficer = catalog.get(Number(id)) as Record<string, unknown> | undefined;
+      if (!staticOfficer) return [id, value];
+      let next: Record<string, unknown> | null = null;
+      for (const key of STATIC_ECHO_OFFICER_KEYS) {
+        if (key in saved) continue;
+        if (!(key in staticOfficer)) continue;
+        next = next ?? { ...saved };
+        next[key] = staticOfficer[key];
+      }
+      if (!next) return [id, value];
+      changed = true;
+      return [id, next];
+    }),
+  );
+  if (!changed) return input;
+  return { ...envelope, snapshot: { ...snapshot, officers } };
+}
+
 export function parseCurrentSaveEnvelope(
   input: unknown,
 ): SaveEnvelopeV1<PersistedGameState> {

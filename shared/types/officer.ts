@@ -80,9 +80,11 @@ export interface OfficerStatic {
   formationMastery: number[];
   skills: OfficerSkillStatic[];
   uniqueSkill?: SkillType;
-  tags: string[];           // 出身标签（社会·地域·职业·政治·特殊）
+  tags: string[]           // 出身标签（社会·地域·职业·政治·特殊）
   /** 武将列传（由 docs/biographies/officer_{id}.md 合并，见 scripts/merge-biographies.ts） */
   biography?: string;
+  /** 批次③（Session 409）P5-10：头像基因手工覆盖；未填者由 getAvatarGene 哈希派生（shared/avatar-gene.ts）。 */
+  avatarGene?: import('../avatar-gene').AvatarGeneOverride;
 }
 
 /** Runtime officer entity */

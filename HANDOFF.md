@@ -9,12 +9,306 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 381**（S02/S05 · 行军与人事改读 WorldGraph 表面） |
+| 会话 | **Session 420**（委任军团 S1 实装：军上限 D1+CRUD+军团域 UI） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 381：`planMacroCityPath` / `canTravelMacroAdjacent` / `macroAdjacentCityIds` 接入 campaign、campaign-utils、march、personnel、aiMilitary；行为对齐原 BFS。Session 380 保持 |
-| 文档最新 | `10/12/35` 与本交接已同步 |
-| 本交接用途 | 人物可达性与军队行军经 Graph 表面；CITY_ROAD_EDGES 仍为边真源 |
-| 下一步 | 多军团规格待拍板；郡域 movementCost 接入 tick；**0-B 继续暂缓** |
+| 代码最新 | Session 420：`shared/delegation.ts`+Zod+`Faction.delegationRegions?`；`engine/delegation.ts` CRUD；D1 军上限接入 startCampaignForFaction（玩家/AI 同规则，garrison 豁免）；4 端点×5 镜像；命令坞第 11 域「军团」抽屉 + CampaignPanel「出征军 x/y」 |
+| 文档最新 | `docs/42` v1.1（S1 完成态）；06 四端点注记、07 CMD-P41、12 S15、40、35 ㊐ |
+| 本交接用途 | docs/42 §八 S1 ✅；**S2（委任内政 AI）/S3（委任军事 AI+季度报告）待后续会话** |
+| 下一步 | ① S2：`runDelegationCivilTurns` 紧随 runAllAiTurns（decideCityRule+方针 fallback+效率折损，零 RNG，`deleg_civil` 日志）；② S3：`runDelegationMilitary` 紧随 runAiMilitary（评分复用+方针乘数，decisionRng/resolutionRng 沿权威流→届时复核 turn-golden）+季度报告（D9 累计器已入 Schema）；③ 0-B 闸门实测（`41` §三，须真人游玩） |
+
+### Session 420 交接要点
+
+- **批准口径**：Session 419 落盘 docs/42 后用户回复「继续」，视为对 D1~D12 推荐值的批准，按 §八进入 S1；如需改判任何决策，直接改本文件与 docs/42。
+- **D1 实装口径**：`startCampaignForFaction` 在校验链后追加军上限——`maxFieldArmies(城数)=clamp(2+floor(城/5),2,6)`，统计口径 `countFieldArmies`（`phase!=='garrison' && phase!=='retreating'`）；garrison（郡域增援）既不占额也不受限（`flags.phase==='garrison'` 跳过检查）。**对 AI 零行为影响**（AI 自限 2 前线恒≤帽下限 2，verify-ai-military-rng 38/38 与 campaign 71/71 佐证）。
+- **D5 实装口径**：方针切换写 `pendingPolicy` + `policyChangedSeasonKey`（`y{year}q{0..3}`，同构总军师季度键）；**下季生效**的晋升 tick 留给 S2/S3 的季度 tick 一并接入（S1 只落库+UI 提示+同季二次 400）——季度晋升目前**无消费点**，S2 接入时必须补。
+- **部署景坑**：s420 脚本两处踩坑已修——①officer 改 location 必须同步 city.officers 清单（GameStateSchema「城市武将清单与武将所在地不一致」拦截）；②剧本1 曹操军 17 城，regionCityIds 取前两城避免都督帽 4 误触。
+- **浏览器验收**：`verify-s420-delegation-ui` 21/21（建区终审→方针下季生效提示→季锁按钮禁用→划空自动解散→console 0 error）；CampaignPanel `campaign-army-cap` 目检 0/5。方针季锁按钮态是首轮 UI 验收发现的缺口（引擎抛错对用户不可见），已补禁用+title。
+- 验证全绿：s420-crud 36/36、s420-ui 21/21、parity 5/5（+4 别名）、campaign 71、ai-military-rng 38、ai-decision 4+4、save 62+10+10+101、shared 470、client 71（域数 10→11）、server 3、s372 11、s407 22、s374 44、validate-data、compliance 776、diff-check、client build。
+- 边界：委任区本切片无月度行为（纯治理层）；autoRecruit/autoReward 落库不消费（0-B）；turn-golden 未动（月结零改动）。
+
+### Session 419 交接要点
+
+- **为什么是规格轮**：评估 P3 三项中，0-B 等乐趣实测（`41` §二要求真人游玩记录主观感受，agent 不可代跑不可伪造）、七郡录入属 0-B——唯一可推进项即「多军团/委任设计规格」（评估报告原文「先出多军团/委任设计规格再实装」）。
+- **实勘结论（纠正直觉）**：引擎**已支持**多军并线——`startCampaignForFaction` append 无势力级军数上限，约束仅在「一将一军」（campaign.ts:218-220）与带兵帽；缺的是规则（D1）与 UI 明示。AI 侧 `maxActiveFronts:2` 硬编码（aiMilitary.ts:34），garrison/retreating 不占额。委任 §39 设计完成但全库 0 引用。
+- **docs/42 核心决策**（推荐值，待拍板）：D1 军上限 `clamp(2+floor(城/5),2,6)` 玩家/AI 同规则；D2 都督官职映射现有枚举不新增官职；D3 区帽=爵位基准+floor(城/5)；D6 委任 AI=复用 `decideCityRule`/`aiMilitaryTurn`+方针权重（不做新 AI，§39.8 路线）；D7 月结只紧邻插入（civil 后/military 后），不重排 tick；D8 RNG 精算——内政零消费、军事沿权威流固定位→**turn-golden 金样需删重举**；D9 `Faction.delegationRegions?` optional 旧档兼容+全量 Zod；D11 四端点走五处镜像（s416 parity 自动盯）。
+- **刻意不做**：六角战场多军协同（S10 另行切片）、AI 势力委任化、autoRecruit/autoReward 消费（0-B）、月结 tick 重排、双位置真源重构（只成文 R1~R4 不变量）。
+- 验证：纯文档轮零代码；引用行号逐一实勘（campaign.ts/aiMilitary.ts/ai.ts/turn.ts/enums/CampaignPanel.tsx）；无测试面变化。
+
+### Session 418 交接要点
+
+- P2-4 完成体：worker RPC 分发单点对 GameState 形响应通用 COW 身份差分（isGameStateLike 探测）+ **patchOnly 协议 v2**（对局动作仅传补丁，不再整态传线）；offline-api 持 lastClientGame 镜像、applyGamePatch 合并后对 store 仍呈完整 GameState（store 零改动）。修复过渡期 bug：patchOnly 合并结果被 callWithMeta 二次解包致 undefined（s407 复现→修→绿）。
+- parity 5/5：+离线 RPC 面（offline-api `call*` 字面量 111 个）→ handler 全覆盖（修正泛型可选正则）。
+- 美术余项：灼烧「焰」字脉动（Konva.Animation）；attack/fire/ability 后 -N 伤害浮字（store battleFeedback 瞬态=前后兵力差）；officeSeal 单字官职印（尉/校/将/帅/吏/令/守/牧/相）；royalSeal 君主金三重框（useIsRuler）；A′ 拓影 royal/servant 渲染层细分；音量四档循环（TopBar+localStorage+masterGain）；鼓双击/磬失谐打磨。
+- P1-3 俘获：`collectAnnihilatedDefenderCommanders` 纯函数（engine/battle.ts）+ services exitBattle 单点接线——攻方胜利且守方被歼→主将 PRISONER（确定性无掷点，绕开新 RNG 约束；撤退不触发）；battle_capture 日志；s411 15/15。
+- 性能勘误：tickSameCityRelations 实为静态关系表线性遍历（非 O(N²)）；applyMeritDecayQuarter 已 COW——据实更正，无需改动。
+- 验证：parity 5/5、patch 单测 5/5、s411 15/15、s414 7/7、s372 11/11、s407 22/22、s374 44/44、client 71/71+typecheck、server typecheck+3/3、compliance 769、`git diff --check` 全绿。
+- 0-B 闸门：`docs/41-playtest-protocol.md` §三。**两计划全部批次与登记余项已收官。**
+
+### Session 417 交接要点
+
+- server 单测起步：`server/vitest.config.ts` + `test`/`test:watch`（vitest ^4.1.10 devDep）+ 根 `pnpm test` 三包链；`engine/turn-golden.test.ts`（金样自举/双局确定性/结构不变量 **3/3**，金样 `__fixtures__/turn-golden-12.json` 入库；引擎有意变更时删金样重举再提交）。
+- 顺带修正 shared `save.test.ts` 对 414 修复前 king→emperor 缺陷的错误预期（shared 回归 **470/470**）。
+- 验证：根 `pnpm test` 全绿（shared 470 + server 3 + client 71）；compliance（769 files）；`git diff --check`。
+- 0-B 闸门：`docs/41-playtest-protocol.md` §三。
+
+### Session 416 交接要点
+
+- 奇偶校验：`scripts/verify-s416-worker-parity.mjs`（services 122 导出 ↔ worker 115 handler；`ALIAS_MAP` 77 条改名契约 + SERVER_ONLY_ALLOWLIST；漂移即红，注册 `pnpm verify-s416-worker-parity`，Session 418 扩至 5/5）。
+- 差分补丁首支柱：endTurn COW 身份差分随响应 meta 下发（Session 418 泛化为全端点 + patchOnly v2）。
+- 验证：client typecheck + 71/71（+game-patch 单测 5/5）、s372 11/11、s407 22/22、s374 44/44。
+- 边界：AST 自动生成与全端点扩展当时留置（418 已完成扩展）。
+
+### Session 415 交接要点
+
+- P2-3：`ui/VirtualList` 零依赖窗口化（固定行高+spacer+回调 ref 校准视口）接人事名册（Chrome 实测恒 10 行挂载）；BattleView 拆静态地形缓存层（listening=false + cache pixelRatio 2，hexGrid 变化重烘焙）与动态层（透明命中六角+移动高亮叠加+旗帜单位+攻击环），视觉等价。
+- 验证：client typecheck+**66/66**、s379 **21/21**、s407 **22/22**、s374 **44/44**、compliance、`git diff --check`、名册截屏目检。
+- 边界：招贤/关系等次列表未虚拟化；Konva 缓存仅地形层；0-B 暂缓不变。
+
+### Session 414 交接要点
+
+- P2-2：`buildSaveEnvelope` 剥离 officers 七个静态回声键（biography/hidden/unitProficiency/formationMastery/tags/avatarGene/appearance）；`rejoinSaveStaticEchoes`（shared）在 `adoptSaveEnvelope` 读档回注（旧档幂等、不在名录跳过），完整 Schema 校验链不变；services/worker 单点同享。
+- 实测：officers 段 37327→17380B（**-53%**）；1000 武将投影信封 **678KB<2MB**（save-limits 已附注释）。
+- **存量缺陷修复**：v1 爵位迁移 `king:'emperor'` 会把称王档读成帝（刘备/孙权实测命中），迁移表收敛为 marquis/prince 两个旧专属键。
+- 验证：`verify-s414-save-slim` **7/7**、save-slots **10/10**、save-battle **62/62**、save-game-state **10/10**、save-battlefield-instance **101/101**、s372 **11/11**、s374 **44/44**。
+- 边界：cities/females 静态回声未剥离；分片存档保留为 0-B 备选；P2-3/4/5 另行立项。
+
+### Session 413 交接要点
+
+- P2-1（服务端）：`turn.ts` 月度军官重置 copy-on-write——仅 actionsPerMonth/体力实际变化者克隆；`verify-s413-state-cow` 5/5（12 个月身份翻转 18/360=5%，旧基线 100%；终态两局逐字节一致；语义不变量保持）。
+- 回归：turn-cadence **28/28**、campaign **71/71**、ai-military-rng **38/38**、ai-decision-plot **4/4**、ai-decision-integration **4/4**、save-battle **62/62**、s372 **11/11**。
+- 划界：客户端 gameStore 全量 set 根治 = worker→client 差分补丁通道，随 P2-4 实施（D-0B-1 客户端部分移入）；tickSameCityRelations O(N²) 等次热点后置。
+
+### Session 412 交接要点
+
+- P1-4：`runSimpleEnemyAi` 每支行动敌军按本方存活单位跑 `computeVisibleEnemyUnitIds`（基线 4+地形±+雾/雪，下限 1），`selectTarget` 三处调用（主选/突围重选/移动后重选）传入可见集过滤；视野内无目标→待机（零 RNG）。截击/追击/单挑为邻接语义不过滤。
+- 测试适配：verify-tactical-ai「走位推进」布阵改视野内 4 格 + mp/maxMp=2（移动后距离>射程，不消费攻击 RNG）——断言意图不变。
+- 验证：`verify-tactical-ai` **86/86**、`verify-save-battle` **62/62**、`verify-battle-rng` **5/5**、`verify-s374-offline-melee` **44/44**、shared **470**、client typecheck+**66/66**。
+- 边界：无 last-known-position 记忆（视野外失联）；AI 无前瞻；P2-1~5 另行立项。
+
+### Session 411 交接要点
+
+- P1-3：六角微操结算收口为 engine 纯函数 `settleTacticalMeleeTroops`（撤退 50% 回流逐字节等价；攻方胜利伤兵归队 15%=floor(满编−存活)×0.15 封顶满编；守方胜无激励）；services 与 worker 镜像同源调用（五处镜像减一处数学分叉）；零 RNG、零存档字段。
+- 验证：`verify-s411-manual-victory-bonus` **12/12**（新增）、`verify-save-battle` **62/62**、`verify-tactical-ai` **86/86**、`verify-s374-offline-melee` **44/44**；server/client typecheck。
+- 边界：仅覆盖三选-战术微操路径；俘获率加成未做（需新 RNG 消费点）；P1-4、P2-1~5 另行立项。
+
+### Session 410 交接要点
+
+- P1-2：`aiMilitary.ts` 目标评分=孱弱×计谋/国策×富庶（金+粮/8 封顶 1.25）×城防（100/(100+墙×2)）×威胁响应（肘腋之患 ×1.5 / 威胁他城 ×1.15）；危城（邻敌≥120%）守土按兵不动（离间强攻除外，源城入已用集防死循环）；**零新增 RNG**。
+- 验证：`verify-ai-military-rng` **38/38**、`verify-campaign` **71/71**、`verify-ai-decision-integration` **4/4**、`verify-ai-decision-plot` **4/4**；server typecheck。
+- 边界：威胁为兵力阈值快照（无袭扰史）；无兵种相性/地形权重；P1-3/4、P2-1~5 另行立项。
+
+### Session 409 交接要点
+
+- **批次③（P5-10，清 D-0B-7）**：`shared/avatar-gene.ts`（getAvatarGene 哈希 + deriveAvatarGeneTable 策展优先→须/冠/脸探测消解，零 RNG）+ Zod/类型/officers.json（4 原型策展）+ OfficerPortrait/ExpressionPortrait（C 层 6 脸/10 冠/8 须/7 眉眼 + A′ 拓影 multiply 0.16 + B 层氏族题签/姓名印/印绶条）；08 真源已更新为实装。
+- **批次④（§七）**：BATTLE_TOKENS 值换水墨浊色；单位改旗帜形（姓氏+兵种篆字符+兵力条）；选中金印/移动墨青/攻击朱砂。s374 44/44 无回归。
+- **批次⑤（P5-09 首切片）**：`utils/sfx.ts` 战鼓（endTurn）/号角（进战）/铜磬备用；零音频文件、失败静默。
+- **批次⑥**：剧本选择页篆书标题+朱砂「汉」印。
+- 验证：shared **52 文件 470**（avatar-gene 7/7 含消解碰撞）、client typecheck+**66/66**、validate-data、s379 **21/21**、s407 **22/22**、s374 **44/44**、compliance（759 files）、`git diff --check`、截屏目检（曹操基因头像+朱砂印上屏）。
+- 边界：火计焰色脉动/伤害浮字、officeSeal 动态官职印、royalSeal/scheme/servant/royal 分型后置；音色打磨后置；P1-2/3/4、P2 按计划另行立项；0-B 暂缓不变。
+
+### Session 408 交接要点
+
+- 四组件入 `ui/`：StonePanel（§3.1 配方+朱砂左缘标题）、SealBadge（篆书方/圆印+哈希磨损虚线，色板含 family 桃系）、SealIcon（13 语义印）、SlipPanel（竖排简册）。
+- 印信上屏：TopBar 资源五印（金粮兵礼城）+ 命令坞十域章（语义色固定）。
+- `InkButton`=结构基座（flex/圆角/禁用行为/原因 title；颜色留调用点）；codemod 全量 149 处/40 文件转换，components 层真实 `<button>` 仅剩 ui/buttons 内部；`forwardRef` + `{...rest}` 先展开（保 data-testid 顺序，零测试改动）。
+- 长尾清零：`text-[10px]/[9px]/[11px]` 全仓→`text-xs`；非 legacy `bg-[#…]`→canvasTokens 新 shell token。
+- **P1-1**：`decideCityRule` 三规则（缺粮屯田 food<troops×4 / 低金经商 gold<600 / 低民心巡安 morale<55）+ 条件征兵；决策日志真实规则叙事；`ai_placeholder`→`ai_civil`（turn.ts + verify-ai-decision-integration/plot 同步更名）；零 RNG 零 Schema。
+- 验证：client typecheck+**66/66**、s379 **21/21**、s407 **22/22**、compliance（756 files）、`git diff --check`、构建类名验证、截屏目检；P1-1：`verify-ai-decision-plot` **4/4**、`verify-ai-decision-integration` **4/4**、`verify-ai-military-rng` **38/38**、`verify-campaign` **71/71**。
+- 工程注记：**tailwind config 变更后必须重启 vite**（PostCSS 不热载 config），否则新类名不生成（本次 SealButton 白底事故根因）。
+- 边界：兵种篆字符/阵型简笔（§四余项）按需扩；AI 正式权重/人格化仍属 Phase 5；批次③~⑥、P1-2~4、P2 按计划另行立项；0-B 暂缓不变。
+
+### Session 407 交接要点
+
+- **美术批次①**：tailwind 色组移入 `extend.colors`（根因嵌套笔误，推翻 ESM 误诊；`wen` 文字色组新增）；战斗层裸 hex 全部收进 `canvasTokens.ts` BATTLE_TOKENS；S09 域色 rose→宣色；圆角≤4px、印章字体上世界屏大标题、死 CSS/@font-face 去重、英文残留中性化；三级按钮骨架 `ui/buttons.tsx`。余项（裸按钮全量/字号长尾/bg-[#…]）登记归批次②。
+- **P0-1**：左栏「霸业」面板（占城/天命人心/声望/政治阶段/势力排行）+ 覆亡终局屏；全客户端只读派生，零存档字段/API/RNG。
+- **P0-2**：`FirstTurnGuide` 三步清单（开局自动选都故第一步预完成；指令/推月实时打勾；localStorage 关闭态）。
+- **P0-3**：`TurnProgressOverlay` + `MonthReportCard`（月结新增 actionLog 聚合）；store 仅加瞬态 `monthSettling/monthReport/clearMonthReport`。
+- **P0-4**：启动文案去命令行语法；调试跳关入口构建守卫（dev 或 `?debug=1`）。
+- **P0-6**：`docs/41-playtest-protocol.md` 乐趣实测制度（0-B 授权前必须过一轮实测闸门）。
+- 验证：`pnpm verify-s407-playability-art` **22/22**（新增，Chrome 真实点击）；回归 s379 **21/21**、client typecheck+**66/66**、构建类名验证、compliance 通过（顺修存量缺陷：截图计数 125→128 为 379/380 漏改、tailwind.config.js 补 SPDX）；`git diff --check` 全绿。
+- 边界：战斗换肤值未动（批次④只改 canvasTokens）；P1/P2 按评估计划另行立项。
+
+### Session 406 交接要点
+
+- 产出 `docs/40-game-evaluation.md`：可玩性四大症结（无战役目标/AI 无对手感/反馈断层/上手陡峭）、工程负债 top5（五处一改同步、worker 跨包镜像、Strict Schema、月结顺序硬编码、双位置真源）、0-B 硬前置清单、修改意见 P0~P3 批次。
+- 拍板：**先好玩再做大**——P0+P1 落地并经 P0-6「乐趣实测」后再授权 0-B；多军团/委任先出设计规格。
+- 文档体检：12 系统数 28/25→27 两处、09 0-A 验收口径更新 + 重复 Session 376 段删除、12 D-0B-12 复核仍有效、12 S15 补 AI 引注、HANDOFF §6.6 清出旧版残留并补债务行 4/5/6。
+- 验证：`git diff --check` 通过；评估证据全部实勘复核。纯文档轮，零代码。
+
+### Session 405 交接要点
+
+- 拍板：美术全面程序化（排版/CSS纹理/印信几何图标/程序化头像/几何特效+Web Audio 合成），**当前阶段禁用 AI 生成图片素材**；「金石水墨·拓片简册·印信官职」铁律不变。
+- 真源落点：`ArtDirection.md` §九执行手册（漂移清单 9 项=批次①验收基准、五大引擎、六批次路线图）；`09` P5-07d/e、P5-08/09/10 与 `07` §11.6.7 已挂批次指针。
+- 验证：漂移证据实勘复核；`git diff --check` 通过；纯文档轮无代码/测试面。
+- 边界：不写代码；批次①~⑥ 逐批另行立项；AI 解禁须先修 `00` §11.1.1 + ASSET_MANIFEST 全登记；0-B 暂缓不变。
+
+### Session 403 交接要点
+
+- 纯验收轮：对 `07` §5.2 / `MAP_REMOVAL_ANALYSIS.md` P0 逐项审计，天下→州→城卡片、州卡派生字段与占比条、城卡字段、`ProvinceTopology`、南郡叠加、`selectedCityId` 契约、`focusMapOnCity` 切州选城、MapCanvas 迁 legacy 全部在案落地。
+- 验证：`pnpm verify-s379-strategic-cards` **21/21**（headless Chrome 真实点击全链，console error=0）；client typecheck 通过；client 全量 **66/66**（strategic 单测 3/3）。
+- 边界：不新增规则/字段/API/RNG/静态数据；设计文档无变化；「七郡全量县级录入」属 0-B 规模需拍板，legacy 物理删除按 379 拍板保留。
+
+### Session 402 交接要点
+
+- `transportFoodLossReductionPct` / `transportMarchFoodMul`：路网门槛同文化，每级行军粮耗 −2%（顶 −10%，真源 `08`）。
+- `armyTransportForMarch`：出发城属本势力优先，否则本势力最高交通。
+- `tickCampaignMarch` 乘区叠乘釜底抽薪/坚壁清野；零额外 RNG。
+- 产业分面「交通路网门槛」。
+- 验证：`verify-transport-march`；shared transport 单测；CivilOverviewDrawer；`verify-campaign` 回归。
+- 边界：不新增存档字段/API；行军速度仍后置；卫生效果仍后置。
+
+### Session 401 交接要点
+
+- `craftConscriptMoraleBonus`：质量门槛同文化，每级征兵后 `troopsMorale` +2（顶 +10，真源 `08`）。
+- `conscript` 确定性写入；0-A 以部队士气代理正式兵质（P5-14 后置）。
+- 产业分面「工艺质量门槛」；军备征兵终审「工艺精装」。
+- 验证：`verify-craft-conscript`；shared craft 单测；CivilOverviewDrawer；`verify-civil-rng` 回归。
+- 边界：不新增存档字段/API；器械建造速度仍后置；卫生效果仍后置。
+
+### Session 400 交接要点
+
+- `cultureRecruitModifier`：已达技艺门槛每级 +2 百分点（顶 +10，真源 `08`）。
+- `playerCultureForRecruit`：目标所在己方城优先，否则己方最高文化。
+- `resolveRecruitChance`：辩才+文化；`recruitOfficer` 与招贤 UI 同源。
+- 验证：`verify-culture-recruit`；shared culture 单测；personnel-rng / negotiation-r2 回归。
+- 边界：不新增存档字段；技艺研发解锁仍后置。
+
+### Session 399 交接要点
+
+- `DevelopmentProjectKind` + `sanitation`；`City.stats.sanitation?`；配置 360/120/6/+60（对齐文化，真源 `08`）。
+- 引擎复用 `developCity`/`tickDevelopmentProject`；技能加成对 sanitation=0。
+- API `kind:'sanitation'`；产业分面数值/进度条/「发展卫生」；`verify-sanitation-development` 10/10。
+- 边界：瘟疫抗性/人口增长率不消费；文化/工艺/交通/卫生落库链已齐。
+
+### Session 398 交接要点
+
+- `DevelopmentProjectKind` + `transport`；`City.stats.transport?`；配置 360/120/6/+60（对齐文化，真源 `08`）。
+- 引擎复用 `developCity`/`tickDevelopmentProject`；技能加成对 transport=0（同 culture/craft）。
+- API `kind:'transport'`；产业分面数值/进度条/「发展交通」；`verify-transport-development` 10/10。
+- 边界：行军速度/运输损耗不消费；卫生后置。
+
+### Session 397 交接要点
+
+- `DevelopmentProjectKind` + `craft`；`City.stats.craft?`；配置 360/120/6/+60（对齐文化，真源 `08`）。
+- 引擎复用 `developCity`/`tickDevelopmentProject`；技能加成对 craft=0（同 culture）。
+- API `kind:'craft'`；产业分面数值/进度条/「发展工艺」；`verify-craft-development` 10/10。
+- 边界：征兵质量/器械速度不消费；交通/卫生后置。
+
+### Session 396 交接要点
+
+- 常量：`TOURNAMENT_HEAL_ITEM_ID=17`、`TOURNAMENT_HEAL_HP=30`；`applyTournamentBetweenRoundHeal`。
+- 每轮结束后、下一轮前：晋级者 HP&lt;max 且库存有金疮药 → `tryConsumeFactionInventoryItem` + carryHp+30。
+- 赛果 `betweenRoundHealCount`；武魁叙事附「轮间用药 N 次」；朝廷「轮间药」行。
+- 验证：shared **14/14**；`verify-tournament` **48/48**；Overview **7/7**。
+- 边界：不选手动选药；不改 officer.stamina；轮间逐场押注仍后置。
+
+### Session 395 交接要点
+
+- 常量：`TOURNAMENT_MERIT_CHAMPION/RUNNER_UP/SEMIFINAL` = 30/20/10。
+- `runAnnualTournament` 对冠军/亚军/半决赛败者调用 `grantMeritTo`（君主不发）。
+- 朝廷「功绩」行只读提示；无新 API/存档字段。
+- 验证：shared tournament **13/13**；`verify-tournament` **45/45**；Overview **7/7**。
+- 边界：八强无功绩；轮间押注/体力丸仍后置。
+
+### Session 394 交接要点
+
+- 池：冠军 `TOURNAMENT_CHAMPION_PRIZE_POOL=[1,2,4]`；亚军 `[19,20,17]`（0-A 无青釭）。
+- `grantItemToFactionInventory` 入库；赛果写 id+name；朝廷「奖赏」行。
+- 验证：shared **12/12**；`verify-tournament` **36/36**；Overview **7/7**。
+- 边界：不自动装备；轮间押注/体力丸仍后置。
+
+### Session 393 交接要点
+
+- 常量：`TOURNAMENT_FAME_*`、`TOURNAMENT_CHAMPION_FACTION_MORALE`。
+- `tournamentPlacementLosers`：半决赛败者→四强+15；八进四败者→八强+5。
+- `boostFactionArmyMorale`：冠军势力 Army/CampaignArmy 士气+10（上限100）。
+- 验证：shared **11/11**；`verify-tournament` **30/30**。
+- 边界：神兵/普通宝物随机掉落仍后置。
+
+### Session 392 交接要点
+
+- `applyDuelCarryoverHp`：覆盖 createDuel 满血；下限 1。
+- `runAnnualTournament` 维护 `carryHp` Map；晋级者残血入下一场；`TournamentFighter.currentHp/maxHp`。
+- 朝廷武魁行展示「赛末 HP」；连战叙事可附「连战余勇」。
+- 验证：`verify-tournament` **26/26**；verify-duel carry 断言；TournamentOverview **7/7**。
+- 边界：体力丸回血、轮间押注、世界地图 stamina 扣减仍后置。
+
+### Session 391 交接要点
+
+- `GameState.tournamentChampionBet`；`TournamentState.championBetResult`；限额金×20%；赔率顶武/被押；爆冷×3。
+- `placeTournamentChampionBet` / `clearTournamentChampionBet` / `settleTournamentChampionBet`；正月 `runAnnualTournament` 兑付。
+- `POST /api/game/tournament/champion-bet`（`clear:true` 撤销）；离线 worker/store；朝廷选人+100/500/1000。
+- 验证：shared tournament **9/9**；`verify-tournament` **20/20**；client TournamentOverview **7/7**；shared build + server/client typecheck。
+- 边界：轮间逐场押注仍后置；未宣称浏览器 DOM 点击验收。
+
+### Session 390 交接要点
+
+- 纯函数 `buildTournamentPlaybackSteps`：轮次×场次展平为观战步骤。
+- UI：`playbackActive` / `revealedCount`；开始观战 / 下一场 / 跳过余下 / 重看；观战中过滤「已揭示对阵」。
+- 只读回放：不改引擎、不改存档字段、不改 RNG；换届（year/status）重置进度。
+- 验证：client TournamentOverview **6/6**；client typecheck。
+- 边界：押注仍后置；未宣称浏览器 DOM 点击验收。
+
+### Session 389 交接要点
+
+- `GameState.tournamentPlayerEntryIds?`；`setTournamentPlayerEntries` / `mayRefuseTournamentEntry` / `playerTournamentQuota`。
+- 拒绝：忠诚&lt;80 或与君主相性差&gt;50 → 忠诚−15 并剔除；未指派正月按武力补满。
+- `POST /api/game/tournament/entries`；离线 worker 镜像；朝廷勾选列表。
+- 验证：`verify-tournament` **15/15**；shared tournament **8/8**；client TournamentOverview **4/4**；typecheck。
+- 边界：押注/逐步观战仍后置；未宣称浏览器 DOM 点击验收。
+
+### Session 388 交接要点
+
+- `GameState.tournamentPreferredMode?`（缺省 fair）；`resolveTournamentPreferredMode` / `setTournamentPreferredMode`。
+- `POST /api/game/tournament/preferred-mode`；离线 worker/offline-api/store 镜像；朝廷「公平竞技 / 无特殊保护」双按钮。
+- `runAnnualTournament` 改读偏好（不再继承上届 `tournament.mode`）；本届赛果 `mode` 仍记录实际举办赛制。
+- 验证：`verify-tournament` **14/14**；shared tournament **7/7**；client TournamentOverview **3/3**；server/client typecheck。
+- 边界：押注/逐步观战/报名仍后置；未宣称浏览器 DOM 点击验收。
+
+### Session 387 交接要点
+
+- `DuelEngineConfig.fairWushuang?`；`isWushuangPassiveActive`；大会 `mode==='fair'` 走 `FAIR_TOURNAMENT_DUEL_CONFIG`。
+- 关闭：必先手、面对必杀 20% 被动化解、无双暴率+20%、AI 无双权重 bump；**保留**三连击。
+- 0-A 默认 fair；战场单挑不受影响。
+- 验证：`verify-tournament` **12/12**；`verify-duel` 公平断言全绿；server typecheck。
+- 边界：押注/逐步观战/报名/模式选手动切换仍后置。
+
+### Session 386 交接要点
+
+- `findPojunOfficerId`；`TournamentState.pojunOfficerId?`（旧档缺省）；本届新破军 fame+30。
+- 对吕布势力新建外交初始+5；`challengeDuel` 破军遇吕布己方士气+5；朝廷赛果展示破军。
+- 验证：`verify-tournament` **9/9**；shared tournament **6/6**；shared **445**；server/client typecheck。
+- 边界：公平吕布数值降级未做（仅称号路径）；押注/逐步观战/报名后置。
+
+### Session 385 交接要点
+
+- `seedTournamentFighters(..., previousChampionId)`；`currentWukuiOfficerId` / `initialDiplomacyFavorForWukui`。
+- 进贡/牵线新建链路以武魁势力初始友好 10 为基；`challengeDuel` 对方部队士气−5。
+- 举办城∪冠军所属城民心 +3（同城一次）。
+- 验证：`verify-tournament` **8/8**；shared tournament **5/5**；shared 全量 **444**。
+- 边界：破军、押注、逐步观战、报名仍后置；郡域阵前单挑未接士气威压。
+
+### Session 384 交接要点
+
+- 只读：读 `GameState.tournament`；无 API/存档/RNG 变化。
+- 空态提示「推进至正月」；`phase=finished` 展示冠军/亚军/四轮纪要/历届。
+- 验证：client `TournamentOverview.test` **2/2**；client typecheck。
+- 边界：押注、逐步观战、报名、公平吕布降级仍后置；未宣称浏览器点击验收。
+
+### Session 383 交接要点
+
+- `POLICY_PREPARE_HEX_MOVE_PENALTY=1`；`prepareDefenseHexMobility(base, hasPolicy)` 下限 1。
+- 开局写入单位 `maxMp/mp`；敌军阶段与新回合刷新仍走 `effectiveMovement(maxMp, weather)`，无需另改。
+- 验证：`verify-l3-policy` **20/20**；shared national-policy + 全量 **442**；server typecheck。
+- 边界：不改存档字段；进行中战斗不回溯；多军团未动；0-B 暂缓。
+
+### Session 382 交接要点
+
+- `BattlefieldRouteState.movementCost?` 自 geography 写入；Zod optional 旧档兼容。
+- `shortestCountyPath` → `{ nodeIds, totalCost }`；无 route 的邻接边回退 1。
+- 守方回撤步取路径 `nodeIds[length-2]`；「最近攻占县」比 `totalCost`。
+- 验证：army-county-mapping 含代价分歧夹具；`verify-save-battlefield-instance` **101/101**；shared **441**。
+- 边界：多军团未动；宏观官道仍单位权。
 
 ### Session 381 交接要点
 
@@ -296,7 +590,7 @@
 - 0-A 效果：以逸待劳自动战首回合攻防+10%（六角移动−1后置）；远交近攻月改友好；假痴不癫显示兵力×0.5 且 AI 攻权×1.8；反客为主驻盟友城每季取 5% 金粮、友好−2/月；高筑墙城防完成+30%、粮产+15%、征兵−20%、士气−1/月；避实击虚最弱敌城伤害+15%/其余−10%；坚壁清野边境城清粮+一年停产+过境耗粮×1.5；深藏不露对敌模糊+己方视野−1。
 - 家属质任：征兵绑定 `garrisonFamilies`；`POST /civil/relocate-families` 金500/每季一次；家属所在城失陷则相关城士气−40（治所质任=全国）。**Session 351 已补善待/中立/镇压待决处置**。
 - 验证：`verify-l3-policy` **15/15**、`verify-hostage-families` **9/9**；save-game-state 10；shared 新增单测 + client 朝廷 4；三端 typecheck。
-- 边界：0-B、六角移动−1、六角战斗处置倍率及流言/四面楚歌/将忠联动未做。（天气主动/熟练度/家属处置 UI 已分别由 Session 349/350/351 收口）
+- 边界：0-B、六角战斗处置倍率及流言/四面楚歌/将忠联动未做。（天气主动/熟练度/家属处置 UI / **以逸待劳六角−1** 已分别由 Session 349/350/351/**383** 收口）
 
 ### Session 347 交接要点
 
@@ -975,7 +1269,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S16 | 剧本/存档 | **M+** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；浏览器 JSON 导入/导出 + **Session 340 SQLite 命名槽位**（`$XDG_DATA_HOME/leh/saves.db`，遗留 JSON 一次性迁入）；系统菜单槽位 UI 已接通。多用户/云同步仍后置 |
 | S17 | 计谋 | **S/M+** | L1 美人计/离间/假情报/空城 ✅ 且创建/结算接权威 PRNG（S07/S17 合并验证 30+/30）；**L2 十一计 Session 339–347 已齐**（含借刀/挖角/观火/换柱/还魂）；L3 仍设计；AI 发起决策仍属 S15 |
 | S18 | 家族 | **M+** | 正妻/随侍随迁与默认忠诚接权威 PRNG，确定续玩 36/36；婚配与固定子女登场零随机；Session 359 直系族谱只读分面 ✅；多代父辈与武将父母字段后置 |
-| S19 | **单挑大会** | **S/M** | **Session 338 最小闭环**：每年正月 16 人单败瞬时结算；押注/观战 UI 后置 |
+| S19 | **单挑大会** | **S/M** | **Session 338/384~389**：瞬时结算 + 赛果/模式/报名 UI + 武魁/破军 + 公平无双降级；押注/逐步观战后置 |
 | S20 | **前端体验** | **M+** | CMD-P0～P38 完成；**Session 347：计略抽屉 L2 十一计入口齐**（借刀/挖角/观火/换柱/还魂）。详见 `07-ui-design.md` §11.1.4/§12 |
 | S21 | **战争四层串联** | **M** | 四层命名统一；自动/标准/六角微操已接唯一模式选择、幂等结算和 Army 回写；**Session 338** `verify-s21-layers` 20/20 |
 | S22 | **美术基调·金石水墨免版权** | **S/D** | Session 101 美术版权铁律入最高准则（零代码）+ Session 102 跨平台字体防御实装（首批代码）。基调「金石水墨·拓片简册·印信官职」三件套，公有领域唯一。**武将头像组合方案 A+C+B**（P5-10a/b/c）：A 拓片印章（底图层·20~30 张公有领域拓片+宣纸+朱砂姓名印）+ C 程序化拼图（五官层·5×10×10×10 哈希派生+重点手工指定）+ B 官职印信简册（文字层·氏族/官职篆印+汉制印绶紫青墨黄）。`officers.json` 新增 `avatarGene` 字段（与 Session 100 `appearance` 战斗造型字段并存职责分离）。**Session 102 已实装**：跨平台字体防御三件套——资产闭环 `@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体 Ma Shan Zheng，woff2 不入 git）+ Canvas 屏障 `fontBarrier.ts` + `App.tsx` `isEngineReady` + Konva `<Text>` 全部补 `fontFamily` + `.editorconfig`/`.gitattributes`/CI 编码门禁 + `CONTRIBUTING.md` 字体铁律条款。**留 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 文言战报 / 金石黑框组件库 / 字重扩展。详见 `00-dev-constitution.md` §11.3+§11.7、`07-ui-design.md` §11.6、`15-linux-ui-spec.md`、`AGENTS.md` 核心规则 9 |
@@ -1171,60 +1465,10 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 | **1** | **若继续190：无城军团/移动总部/寄驻/从属军判别模型**；完成前不得把节点代理当正式史实领地 |
 | 2 | 190约30势力逐项审定与全量开局（属于0-B，需再次明确授权） |
 | 3 | 原队列：总军师系统实装 → 设施建造回合化 → 势力特点数据 → **委任军团引擎实装（§39 设计完成）** → AI Army 接入 |
-| `docs/12-system-map.md` | **23 系统**（v11.6：HC-P1 与 CMD-P0～36 完成；下一步家族写链迁移） |
-| `docs/02-architecture.md` | **v2.0** 架构总图 + 20引擎 + 5战斗子模块 + 数据流 + shared工具链（Session 75 全面重写） |
-| `docs/05-combat-system.md` | §5.4 战法+三级水军 · §5.5 **主副将与参谋编成**+爵位加成 · §七 计策 · §6 暴击反击连击(战场) · §8 单挑经典化设计(§8.1~8.16 核心三角+叙事+**宿命对决详表**) |
-| `docs/00-dev-constitution.md` | 开发总则（**v1.6 §十一 美术与版权铁律**） |
-| `docs/08-data-dictionary.md` | **规模真源**（0-A units=9；officers `appearance` + `avatarGene` 字段） |
-| `docs/11-context-management.md` | 适性 S~NONE 系数 |
-*Session 126 交接 | 2026-07-21 | 引擎缺陷修复：单挑嵌套锁（Bug 1）、战场行军指令实效（Bug 2）、meleeRefresh 缺锁（Bug 3）；全部验证通过 | 三层战斗架构 + 总军师系统 + 设施建造回合化已实装*
-  上限、受必杀 +20% 化解与败而重伤撤退完成，并修复挑战方胜时 loserId 归属错误。
-- **R5 已实装并验收**：农/商/城按9/6/12月持续推进，总成本300/400/500金；首付1/3、
-  余款按月扣，人员或资源不足暂停，第三月起损失进度；预算覆盖12月金粮、项目、行政费，
-  俸禄/战争损失未实装项明确列0。专项验证17/17。
-- **R6 已实装并验收**：每势力至多双线，源城按邻敌动态留守；停战、两月粮不足或兵力
-  低于守军55%时撤回。武将五维不变，固定 seed 双线计划复现，专项38/38。
-- **R7 已实装并验收**：新状态只用 `courtNetwork/courtNetworkOpportunities`，删除成年女性
-  换算与成功率加成；旧 v1 字段无损迁移，历史女角来源不变。浏览器实点地方结交通过。
-- **R8 已实装并验收**：四入口为人物成长/军团战备/阵型精通/战役态势；固定
-  3城/10将/2战真实推进24个月，每月均有至少两项可行选择并记录机会成本，专项54/54。
-  属性/技能自动升级、功绩等级和阵型双轴成长仍后置。
-- 当前 Next：一致性修复 R1～R8 已收口；按 `12-system-map.md` 选择一个已登记系统。
+| 4 | 无战役级胜负条件/霸业目标与月度反馈聚合（可玩性最大缺口，改造路线见 `docs/40-game-evaluation.md` P0-1/P0-3） |
+| 5 | AI 内政占位（`engine/ai.ts` P1-09、`turn.ts ai_placeholder`）、军事阈值化、六角 AI 全知无前瞻（见 `40-game-evaluation.md` P1-1~P1-4） |
+| 6 | 五处一改同步/worker 跨包镜像/存档 2MB 全量快照/月结 O(N) 拷贝（0-B 前置基建，见 `40-game-evaluation.md` P2-1~P2-5） |
 
-### Session 252 · BF-P4 总验收
-
-- 阵前/城下挑战均复用既有 S10 duel 引擎、权威 RNG 与 `DuelPanel`；郡域实例保存完整
-  上下文，重复结算有幂等保护。
-- 结果写回功绩、败方状态、挑战方 Army 士气，挑战方胜时守军-15%；无 Army 的开发入口
-  不伪造军团，只使用玩家势力在职武将。
-- 专项20/20；shared 198/198、client 36/36、静态检查与构建全绿；1440×900 两种挑战、
-  两郡往返和 console error=0。BF-P4 已完成，Next 为 BF-P5 工具与位置映射。
-
-*Session 239 交接 | 2026-07-30 | CMD-P34 情报原子切换完成；下一步 P35 家族迁移前审计*
-
-### Session 246 · R5 补充
-
-- 农/商/城项目为9/6/12月、300/400/500金；一城一项，首付1/3、余款逐月扣。
-- 人员或资源不足暂停；第3个暂停月起损失进度。预算覆盖12月金粮、民军粮耗、项目余款、
-  递增行政费；俸禄和基线战争损失显式列0。
-- 专项17/17及全仓回归绿色。Next 固定 R6 S15，不并行启动 R7。
-
-### Session 247 · R6 补充
-
-- AI 主动攻击 Army 由一支扩为最多两支；实际受不同前线城、可用主将、兵粮、3500最低
-  出征兵和动态守备约束，同一源城同月不重复出军。
-- 源城保留至少500兵，受威胁时保留相邻最大敌军25%；围城/接战军在停战、粮不足两月
-  或兵力低于目标守军55%时主动撤回并写军情。
-- 不修改武将五维、不增隐藏兵力或战斗倍率；军事决策继续走权威 RNG，专项38/38。
-  Campaign 71/71、战役存档9/9、回合节拍28/28、shared 198/198、client 36/36及
-  typecheck/lint/data/build/diff-check 全绿。县级主动 AI、Army—县位置映射、真实路径
-  补给和郡域迷雾仍后置。Next 固定 R7 S09。
-
-### Session 248 · R7 补充
-
-- 新局、Schema、运行时、迷雾、API 响应与新存档只写 `courtNetwork` 和
-  `courtNetworkOpportunities`；旧 v1 `beauty*` 由加载迁移器无损改名并删除旧键。
-- 开局机会由商业/民心/首都地位派生，结交固定65%基础成功率，不读取或扣除成年女性；
-  历史女角仍只走剧本、事件、亲属跟随和联姻。
-- S09 25/25、存档23/23、计谋谍报34/34、外交40/40、AI谍报4/4、Campaign71/71；
-  Headless 实点地方结交通过，旧字段0、人口不变、console error=0。Next 固定 R8。
+> Session 406 文档体检：本节原混入的旧版文档状态行（「23 系统 v11.6」等 6 行）与
+> Session 126/239/246~248 孤段残留已清出，历史会话记录统一见 `docs/10-progress.md`；
+> 全项目系统性评估与修改批次见 `docs/40-game-evaluation.md`。

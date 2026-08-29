@@ -6,11 +6,13 @@ import { PolicyType } from './enums/index.js';
 import {
   POLICY_COOLDOWN_MONTHS,
   POLICY_LABELS,
+  POLICY_SUMMARIES,
   factionHasActivePolicy,
   getActivePolicyType,
   monthStamp,
   playFoolTroopMul,
   policySwitchCooldown,
+  prepareDefenseHexMobility,
 } from './national-policy.js';
 import type { GameState } from './types/game.js';
 import type { NationalPolicy } from './types/policy.js';
@@ -64,5 +66,12 @@ describe('national policy helpers', () => {
   it('monthStamp is year*12+month', () => {
     expect(monthStamp(190, 1)).toBe(2281);
     expect(monthStamp(190, 12)).toBe(2292);
+  });
+
+  it('prepareDefenseHexMobility subtracts 1 with floor 1', () => {
+    expect(prepareDefenseHexMobility(7, false)).toBe(7);
+    expect(prepareDefenseHexMobility(7, true)).toBe(6);
+    expect(prepareDefenseHexMobility(1, true)).toBe(1);
+    expect(POLICY_SUMMARIES[PolicyType.PREPARE_DEFENSE]).toContain('六角移动−1');
   });
 });
