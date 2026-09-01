@@ -390,7 +390,7 @@
           {
             "level": 5,
             "energyCost": 36,
-            "power": 2.0,
+            "power": 2,
             "hitRateBonus": 20,
             "requiredProficiency": "S"
           }
@@ -594,7 +594,7 @@
           {
             "level": 1,
             "energyCost": 30,
-            "power": 1.0,
+            "power": 1,
             "hitRateBonus": 0,
             "requiredProficiency": "C"
           },
@@ -1275,7 +1275,7 @@
           {
             "level": 5,
             "energyCost": 36,
-            "power": 2.0,
+            "power": 2,
             "hitRateBonus": 20,
             "requiredProficiency": "S"
           }
@@ -1323,7 +1323,7 @@
           {
             "level": 5,
             "energyCost": 40,
-            "power": 2.0,
+            "power": 2,
             "hitRateBonus": 20,
             "requiredProficiency": "S"
           }
@@ -1564,6 +1564,1443 @@
         "minRange": 1,
         "maxRange": 2,
         "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "crossbowman",
+    "name": "弩兵",
+    "isSpecial": false,
+    "attack": 6,
+    "defense": 3,
+    "mobility": 3,
+    "range": 3,
+    "traits": [
+      {
+        "name": "齐射",
+        "description": "一轮三弩，破甲透骑",
+        "modifier": {
+          "type": "volley",
+          "value": 1
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightCavalry",
+      "heavyCavalry"
+    ],
+    "weakAgainst": [
+      "lightInfantry",
+      "horseArcher"
+    ],
+    "recruitRequirement": null,
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 100,
+      "food": 40,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "xbow_volley",
+        "name": "连弩",
+        "description": "三弩连发，透甲及骑",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 20,
+            "power": 1.2,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 22,
+            "power": 1.4,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 25,
+            "power": 1.6,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 28,
+            "power": 1.8,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 31,
+            "power": 2,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "pierce",
+        "minRange": 2,
+        "maxRange": 3,
+        "coopAllowed": true,
+        "effectValue": 1
+      },
+      {
+        "id": "xbow_wall",
+        "name": "拒马",
+        "description": "立弩为壁，稳守待敌",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 15,
+            "power": 1,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 17,
+            "power": 1.15,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 20,
+            "power": 1.3,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 23,
+            "power": 1.45,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 26,
+            "power": 1.6,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "none",
+        "minRange": 0,
+        "maxRange": 0,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "horseArcher",
+    "name": "骑射",
+    "isSpecial": false,
+    "attack": 7,
+    "defense": 4,
+    "mobility": 6,
+    "range": 2,
+    "traits": [
+      {
+        "name": "机动射击",
+        "description": "走位中放箭，来去如风",
+        "modifier": {
+          "type": "shoot_move",
+          "value": 1
+        }
+      }
+    ],
+    "strongAgainst": [
+      "archer",
+      "crossbowman"
+    ],
+    "weakAgainst": [
+      "spearman"
+    ],
+    "recruitRequirement": null,
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 150,
+      "food": 70,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "harch_parth",
+        "name": "回马箭",
+        "description": "佯退回射，扰乱敌阵",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 18,
+            "power": 1.15,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 20,
+            "power": 1.34,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 23,
+            "power": 1.53,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 26,
+            "power": 1.71,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 29,
+            "power": 1.9,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "morale",
+        "minRange": 2,
+        "maxRange": 2,
+        "coopAllowed": true,
+        "effectValue": 5
+      }
+    ]
+  },
+  {
+    "type": "siege",
+    "name": "攻城器械",
+    "isSpecial": false,
+    "attack": 12,
+    "defense": 2,
+    "mobility": 1,
+    "range": 2,
+    "traits": [
+      {
+        "name": "破城",
+        "description": "巨木冲撞，城防耐久伤害翻倍",
+        "modifier": {
+          "type": "wall_bonus",
+          "value": 100
+        }
+      },
+      {
+        "name": "笨重",
+        "description": "骑兵近身即危",
+        "modifier": {
+          "type": "cav_vuln",
+          "value": 50
+        }
+      }
+    ],
+    "strongAgainst": [],
+    "weakAgainst": [
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "recruitRequirement": null,
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -2,
+      "mountain": -2,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 300,
+      "food": 100,
+      "population": 2
+    },
+    "abilities": [
+      {
+        "id": "siege_ram",
+        "name": "冲撞",
+        "description": "巨木撞城，摧堞碎堅",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 25,
+            "power": 1.5,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 27,
+            "power": 1.73,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 30,
+            "power": 1.95,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 33,
+            "power": 2.17,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 36,
+            "power": 2.4,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "knockback",
+        "minRange": 1,
+        "maxRange": 2,
+        "coopAllowed": false,
+        "effectValue": 1
+      }
+    ]
+  },
+  {
+    "type": "tigerLeopard",
+    "name": "虎豹骑",
+    "isSpecial": true,
+    "attack": 12,
+    "defense": 9,
+    "mobility": 6,
+    "range": 1,
+    "traits": [
+      {
+        "name": "虎豹之锋",
+        "description": "重骑强化，冲锋+80%",
+        "modifier": {
+          "type": "charge",
+          "value": 80
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry",
+      "archer"
+    ],
+    "weakAgainst": [
+      "spearman"
+    ],
+    "recruitRequirement": {
+      "factionTag": "wei"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -1,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 320,
+      "food": 160,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "tlp_pounce",
+        "name": "虎扑",
+        "description": "虎豹骑突，一击破阵",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 28,
+            "power": 1.5,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 30,
+            "power": 1.73,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 33,
+            "power": 1.95,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 36,
+            "power": 2.17,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 39,
+            "power": 2.4,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "confusion",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 1
+      }
+    ]
+  },
+  {
+    "type": "qingzhouTroops",
+    "name": "青州兵",
+    "isSpecial": true,
+    "attack": 7,
+    "defense": 6,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "降卒廉价",
+        "description": "曹操专属，低价大量招募",
+        "modifier": {
+          "type": "recruit_gold_mul",
+          "value": 50
+        }
+      },
+      {
+        "name": "纪律涣散",
+        "description": "士气易降",
+        "modifier": {
+          "type": "morale_decay",
+          "value": 2
+        }
+      }
+    ],
+    "strongAgainst": [],
+    "weakAgainst": [
+      "heavyCavalry"
+    ],
+    "recruitRequirement": {
+      "factionTag": "wei"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 45,
+      "food": 30,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "qzh_swarm",
+        "name": "蚁附",
+        "description": "众而不精，以量胜质",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 14,
+            "power": 1.1,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 16,
+            "power": 1.25,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 19,
+            "power": 1.4,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 22,
+            "power": 1.55,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 25,
+            "power": 1.7,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "none",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      }
+    ]
+  },
+  {
+    "type": "trappedCamp",
+    "name": "陷阵营",
+    "isSpecial": true,
+    "attack": 10,
+    "defense": 10,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "陷阵之志",
+        "description": "士气不降",
+        "modifier": {
+          "type": "morale_floor",
+          "value": 1
+        }
+      },
+      {
+        "name": "攻城利刃",
+        "description": "攻城+30%",
+        "modifier": {
+          "type": "siege_bonus",
+          "value": 30
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry",
+      "heavyInfantry"
+    ],
+    "weakAgainst": [
+      "horseArcher"
+    ],
+    "recruitRequirement": {
+      "factionTag": "lvbu"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -1,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 280,
+      "food": 140,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "trc_assault",
+        "name": "陷阵",
+        "description": "每所攻击无不破者",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 24,
+            "power": 1.4,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 26,
+            "power": 1.6,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 29,
+            "power": 1.8,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 32,
+            "power": 2,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 35,
+            "power": 2.2,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "charge",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 20
+      }
+    ]
+  },
+  {
+    "type": "whiteHorse",
+    "name": "白马义从",
+    "isSpecial": true,
+    "attack": 8,
+    "defense": 5,
+    "mobility": 8,
+    "range": 2,
+    "traits": [
+      {
+        "name": "白马之义",
+        "description": "弓骑强化，远程+30%",
+        "modifier": {
+          "type": "ranged_bonus",
+          "value": 30
+        }
+      }
+    ],
+    "strongAgainst": [
+      "archer",
+      "crossbowman"
+    ],
+    "weakAgainst": [
+      "heavyInfantry"
+    ],
+    "recruitRequirement": {
+      "factionTag": "gongsun"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 240,
+      "food": 110,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "whm_volley",
+        "name": "白马齐射",
+        "description": "义从驰射，箭如飞蝗",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 20,
+            "power": 1.25,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 22,
+            "power": 1.44,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 25,
+            "power": 1.63,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 28,
+            "power": 1.81,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 31,
+            "power": 2,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "pierce",
+        "minRange": 2,
+        "maxRange": 2,
+        "coopAllowed": true,
+        "effectValue": 1
+      }
+    ]
+  },
+  {
+    "type": "xiliangIron",
+    "name": "西凉铁骑",
+    "isSpecial": true,
+    "attack": 13,
+    "defense": 8,
+    "mobility": 6,
+    "range": 1,
+    "traits": [
+      {
+        "name": "凉州铁蹄",
+        "description": "平原+25%",
+        "modifier": {
+          "type": "terrain_bonus",
+          "value": 25,
+          "condition": "plain"
+        }
+      },
+      {
+        "name": "悍勇",
+        "description": "暴率+10%",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 10
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry",
+      "heavyInfantry",
+      "archer"
+    ],
+    "weakAgainst": [
+      "spearman"
+    ],
+    "recruitRequirement": {
+      "factionTag": "mateng"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -1,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 300,
+      "food": 150,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "xli_charge",
+        "name": "铁蹄",
+        "description": "西凉铁骑，践阵而过",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 26,
+            "power": 1.5,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 28,
+            "power": 1.71,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 31,
+            "power": 1.93,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 34,
+            "power": 2.14,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 37,
+            "power": 2.35,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "knockback",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 1
+      }
+    ]
+  },
+  {
+    "type": "danyangTroops",
+    "name": "丹阳兵",
+    "isSpecial": true,
+    "attack": 8,
+    "defense": 7,
+    "mobility": 5,
+    "range": 1,
+    "traits": [
+      {
+        "name": "丹阳劲卒",
+        "description": "山地不减",
+        "modifier": {
+          "type": "terrain_ignore",
+          "value": 1
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry"
+    ],
+    "weakAgainst": [
+      "heavyCavalry"
+    ],
+    "recruitRequirement": {
+      "factionTag": "wu"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 180,
+      "food": 90,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "dny_terrain",
+        "name": "依山",
+        "description": "据险而斗，一当十",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 18,
+            "power": 1.2,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 20,
+            "power": 1.39,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 23,
+            "power": 1.58,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 26,
+            "power": 1.76,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 29,
+            "power": 1.95,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "none",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true
+      }
+    ]
+  },
+  {
+    "type": "jiefanTroops",
+    "name": "解烦兵",
+    "isSpecial": true,
+    "attack": 7,
+    "defense": 8,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "解烦护主",
+        "description": "护主+40%防",
+        "modifier": {
+          "type": "guard_def",
+          "value": 40
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightCavalry"
+    ],
+    "weakAgainst": [
+      "archer"
+    ],
+    "recruitRequirement": {
+      "factionTag": "wu"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 190,
+      "food": 95,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "jfn_guard",
+        "name": "结阵",
+        "description": "环护主帅，岿然不动",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 16,
+            "power": 1,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 18,
+            "power": 1.15,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 21,
+            "power": 1.3,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 24,
+            "power": 1.45,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 27,
+            "power": 1.6,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "none",
+        "minRange": 0,
+        "maxRange": 0,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "whiteEar",
+    "name": "白耳兵",
+    "isSpecial": true,
+    "attack": 9,
+    "defense": 8,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "白耳精锐",
+        "description": "护主+30%防",
+        "modifier": {
+          "type": "guard_def",
+          "value": 30
+        }
+      },
+      {
+        "name": "长枪强化",
+        "description": "枪阵伤害+20%",
+        "modifier": {
+          "type": "spear_bonus",
+          "value": 20
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightCavalry",
+      "heavyCavalry"
+    ],
+    "weakAgainst": [
+      "archer"
+    ],
+    "recruitRequirement": {
+      "factionTag": "shu"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -1,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 220,
+      "food": 110,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "wer_phalanx",
+        "name": "枪阵",
+        "description": "白耳挺枪，骑不敢近",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 20,
+            "power": 1.3,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 22,
+            "power": 1.49,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 25,
+            "power": 1.67,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 28,
+            "power": 1.86,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 31,
+            "power": 2.05,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "knockback",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 1
+      }
+    ]
+  },
+  {
+    "type": "wudangFlying",
+    "name": "无当飞军",
+    "isSpecial": true,
+    "attack": 9,
+    "defense": 5,
+    "mobility": 6,
+    "range": 1,
+    "traits": [
+      {
+        "name": "飞军越险",
+        "description": "山地/丛林不减",
+        "modifier": {
+          "type": "terrain_ignore",
+          "value": 1
+        }
+      }
+    ],
+    "strongAgainst": [
+      "archer",
+      "crossbowman"
+    ],
+    "weakAgainst": [
+      "heavyCavalry"
+    ],
+    "recruitRequirement": {
+      "factionTag": "shu"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 200,
+      "food": 100,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "wdt_raid",
+        "name": "飞袭",
+        "description": "越涧攀岭，出其不意",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 20,
+            "power": 1.3,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 22,
+            "power": 1.5,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 25,
+            "power": 1.7,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 28,
+            "power": 1.9,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 31,
+            "power": 2.1,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "morale",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 8
+      }
+    ]
+  },
+  {
+    "type": "rattanArmor",
+    "name": "藤甲兵",
+    "isSpecial": true,
+    "attack": 6,
+    "defense": 12,
+    "mobility": 3,
+    "range": 1,
+    "traits": [
+      {
+        "name": "藤甲护身",
+        "description": "物理伤害减免50%",
+        "modifier": {
+          "type": "phys_reduce",
+          "value": 50
+        }
+      },
+      {
+        "name": "惧火如命",
+        "description": "火伤×4",
+        "modifier": {
+          "type": "fire_vuln",
+          "value": 4
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry",
+      "archer"
+    ],
+    "weakAgainst": [],
+    "recruitRequirement": {
+      "factionTag": "nanzhong"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 160,
+      "food": 80,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "rtt_hold",
+        "name": "藤障",
+        "description": "刀箭不入，稳如磐石",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 14,
+            "power": 0.95,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 16,
+            "power": 1.09,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 19,
+            "power": 1.23,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 22,
+            "power": 1.36,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 25,
+            "power": 1.5,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "none",
+        "minRange": 0,
+        "maxRange": 0,
+        "coopAllowed": false
+      }
+    ]
+  },
+  {
+    "type": "elephant",
+    "name": "象兵",
+    "isSpecial": true,
+    "attack": 15,
+    "defense": 14,
+    "mobility": 3,
+    "range": 1,
+    "traits": [
+      {
+        "name": "巨象践踏",
+        "description": "践踏+60%",
+        "modifier": {
+          "type": "trample",
+          "value": 60
+        }
+      }
+    ],
+    "strongAgainst": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman"
+    ],
+    "weakAgainst": [],
+    "recruitRequirement": {
+      "factionTag": "nanzhong"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -1,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 360,
+      "food": 180,
+      "population": 2
+    },
+    "abilities": [
+      {
+        "id": "elp_trample",
+        "name": "象踏",
+        "description": "巨象冲阵，当者披靡",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 30,
+            "power": 1.6,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 32,
+            "power": 1.83,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 35,
+            "power": 2.05,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 38,
+            "power": 2.28,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 41,
+            "power": 2.5,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "knockback",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": false,
+        "effectValue": 2
+      }
+    ]
+  },
+  {
+    "type": "yellowTurban",
+    "name": "黄巾军",
+    "isSpecial": true,
+    "attack": 5,
+    "defense": 3,
+    "mobility": 4,
+    "range": 1,
+    "traits": [
+      {
+        "name": "信众如云",
+        "description": "招募×2速度",
+        "modifier": {
+          "type": "recruit_speed",
+          "value": 100
+        }
+      },
+      {
+        "name": "乌合之众",
+        "description": "士气易降",
+        "modifier": {
+          "type": "morale_decay",
+          "value": 3
+        }
+      }
+    ],
+    "strongAgainst": [],
+    "weakAgainst": [
+      "heavyCavalry",
+      "crossbowman"
+    ],
+    "recruitRequirement": {
+      "factionTag": "yellowturban"
+    },
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": 0,
+      "mountain": 0,
+      "water": -3
+    },
+    "recruitCost": {
+      "gold": 25,
+      "food": 20,
+      "population": 1
+    },
+    "abilities": [
+      {
+        "id": "ytb_fervor",
+        "name": "狂信",
+        "description": "符水咒说，赴死不疑",
+        "leveling": "leveled",
+        "perLevel": [
+          {
+            "level": 1,
+            "energyCost": 12,
+            "power": 1.1,
+            "hitRateBonus": 0,
+            "requiredProficiency": "C"
+          },
+          {
+            "level": 2,
+            "energyCost": 14,
+            "power": 1.28,
+            "hitRateBonus": 5,
+            "requiredProficiency": "B"
+          },
+          {
+            "level": 3,
+            "energyCost": 17,
+            "power": 1.45,
+            "hitRateBonus": 10,
+            "requiredProficiency": "A"
+          },
+          {
+            "level": 4,
+            "energyCost": 20,
+            "power": 1.63,
+            "hitRateBonus": 15,
+            "requiredProficiency": "S"
+          },
+          {
+            "level": 5,
+            "energyCost": 23,
+            "power": 1.8,
+            "hitRateBonus": 20,
+            "requiredProficiency": "S"
+          }
+        ],
+        "specialEffect": "morale",
+        "minRange": 1,
+        "maxRange": 1,
+        "coopAllowed": true,
+        "effectValue": 5
       }
     ]
   }

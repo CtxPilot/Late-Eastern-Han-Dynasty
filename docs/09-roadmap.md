@@ -276,7 +276,7 @@
 | P0B-06 | officers.json（全量） | 1000+武将 | P0A-06 |
 | P0B-07 | cities.json（全量） | 105城(坐标+初始值) | P0A-07 |
 | P0B-08 | formations.json（全量） | 27阵型（18陆+9水） | P0A-08 |
-| P0B-09 | units.json（全量） | 21兵种 | P0A-09 |
+| P0B-09 | units.json（全量） | 24兵种（8陆+攻城+3水+12特殊，Session 424 修订口径） | P0A-09 |
 | P0B-10 | items.json（全量） | 165宝物 | P0A-10 |
 | P0B-11 | females.json（全量） | 90+女性 | P0A-11 |
 | P0B-12 | children.json（全量） | 50+子女事件 | P0A-12 |

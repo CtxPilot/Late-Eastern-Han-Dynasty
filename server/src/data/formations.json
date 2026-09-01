@@ -561,6 +561,129 @@
     }
   },
   {
+    "id": 5,
+    "name": "鱼鳞阵",
+    "description": "层层叠压、中央厚集之阵，防骑特化。",
+    "historicalSource": "孙膑兵法·十阵（衍）",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 2,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "骑兵伤害-50%，全方向防御+30%，免疫冲锋",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "反击",
+        "description": "反击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "counter_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "bestUnits": [
+      "heavyInfantry"
+    ],
+    "restrictedUnits": [
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "prerequisites": [
+      {
+        "formationId": 1,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 7,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": -1,
+        "defense": 3,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 0,
+        "defense": 4,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 0,
+        "defense": 5,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 1,
+        "defense": 6,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 1,
+        "defense": 7,
+        "mobility": 1,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
     "id": 6,
     "name": "锋矢阵",
     "description": "如箭矢直贯敌阵。",
@@ -661,6 +784,1096 @@
         "right": {
           "q": 1,
           "r": 1
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 7,
+    "name": "偃月阵",
+    "description": "新月环护、侧翼厚实之阵。",
+    "historicalSource": "孙膑兵法·十阵（衍）；李卫公问对·月阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 2,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "反击率+15%，反击必暴击",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "反击",
+        "description": "反击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "counter_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer"
+    ],
+    "bestUnits": [
+      "heavyInfantry",
+      "spearman"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 4,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 0,
+        "defense": 2,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 1,
+        "defense": 3,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 1,
+        "defense": 4,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 2,
+        "defense": 5,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 2,
+        "defense": 6,
+        "mobility": 1,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 8,
+    "name": "长蛇阵",
+    "description": "纵长行进、往来轻捷之阵。",
+    "historicalSource": "孙膑兵法·十阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 0,
+      "mobilityBonus": 2,
+      "rangeBonus": 0,
+      "effect": "穿越敌方ZOC不额外耗行动力，全队机动+2",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "连击",
+        "description": "连击率+3%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 3
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "spearman",
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher",
+      "archer"
+    ],
+    "bestUnits": [
+      "lightCavalry",
+      "lightInfantry"
+    ],
+    "restrictedUnits": [],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": -2,
+        "defense": -2,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": -1,
+        "defense": -1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": -1,
+        "defense": -1,
+        "mobility": 4,
+        "range": 1
+      },
+      {
+        "level": 4,
+        "attack": 0,
+        "defense": 0,
+        "mobility": 5,
+        "range": 1
+      },
+      {
+        "level": 5,
+        "attack": 0,
+        "defense": 0,
+        "mobility": 6,
+        "range": 1
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 9,
+    "name": "衡轭阵",
+    "description": "两翼并行、中军稳固之阵。",
+    "historicalSource": "孙膑兵法·十阵（衍）",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 2,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "并行时攻防+50%，且免疫混乱",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "反击",
+        "description": "反击率+3%（05 §4.7）",
+        "modifier": {
+          "type": "counter_rate",
+          "value": 3
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "lightCavalry",
+      "heavyCavalry"
+    ],
+    "bestUnits": [
+      "spearman",
+      "heavyCavalry"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 0,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 10,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 1,
+        "defense": 1,
+        "mobility": -2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 2,
+        "defense": 2,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 3,
+        "defense": 3,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 3,
+        "defense": 3,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 4,
+        "defense": 4,
+        "mobility": 0,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 10,
+    "name": "疏阵",
+    "description": "疏朗开阔、避其锋锐之阵。",
+    "historicalSource": "孙膑兵法·十阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 1,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "范围攻击回避率60%，敌计策成功率-15%",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "archer",
+      "crossbowman",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "lightInfantry",
+      "archer"
+    ],
+    "restrictedUnits": [],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": -2,
+        "defense": -2,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": -1,
+        "defense": -1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": -1,
+        "defense": -1,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 0,
+        "defense": 0,
+        "mobility": 5,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 0,
+        "defense": 0,
+        "mobility": 6,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 11,
+    "name": "数阵",
+    "description": "密集严整、一往无前之阵。",
+    "historicalSource": "孙膑兵法·十阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 0,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "突击后目标士气-15，且击退一格",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "暴击",
+        "description": "暴击率+3%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 3
+        }
+      },
+      {
+        "name": "连击",
+        "description": "连击率+3%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 3
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman"
+    ],
+    "bestUnits": [
+      "heavyInfantry",
+      "spearman"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 1,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 9,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 2,
+        "defense": 2,
+        "mobility": -2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 3,
+        "defense": 3,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 4,
+        "defense": 4,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 4,
+        "defense": 4,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 5,
+        "defense": 5,
+        "mobility": 0,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 12,
+    "name": "钩形阵",
+    "description": "曲钩包抄、攻其侧后之阵。",
+    "historicalSource": "孙膑兵法·十阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 1,
+      "defenseBonus": 0,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "包围时每额外一个己方单位+15%伤害（上限+60%）",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "侧击暴击",
+        "description": "侧击暴击率+15%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 15
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "spearman",
+      "lightCavalry",
+      "heavyCavalry",
+      "archer"
+    ],
+    "bestUnits": [
+      "lightCavalry",
+      "lightInfantry"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 8,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 0,
+        "defense": -1,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 1,
+        "defense": 0,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 1,
+        "defense": 0,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 2,
+        "defense": 1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 2,
+        "defense": 1,
+        "mobility": 3,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 13,
+    "name": "玄襄阵",
+    "description": "虚张旗帜、惑敌心神之阵。",
+    "historicalSource": "孙膑兵法·十阵",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 1,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "每回合降敌士气5，敌军混乱概率+15%",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman",
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "lightInfantry"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 10,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 3,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": -1,
+        "defense": 0,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 0,
+        "defense": 1,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 0,
+        "defense": 1,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 1,
+        "defense": 2,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 1,
+        "defense": 2,
+        "mobility": 3,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 14,
+    "name": "车悬阵",
+    "description": "铁骑环驰、回旋突贯之阵。",
+    "historicalSource": "孙膑兵法·十阵（衍）；李卫公问对·六花变体",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 0,
+      "mobilityBonus": 2,
+      "rangeBonus": 0,
+      "effect": "损伤+60%，冲过路径上的敌军溃散概率+30%",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "暴击",
+        "description": "暴击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 5
+        }
+      },
+      {
+        "name": "连击",
+        "description": "连击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "heavyCavalry",
+      "lightCavalry"
+    ],
+    "restrictedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman"
+    ],
+    "prerequisites": [
+      {
+        "formationId": 6,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 2,
+        "requiredLevel": 5
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 2,
+        "defense": -2,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 3,
+        "defense": -1,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 4,
+        "defense": -1,
+        "mobility": 5,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 5,
+        "defense": 0,
+        "mobility": 6,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 6,
+        "defense": 0,
+        "mobility": 7,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 15,
+    "name": "八卦阵",
+    "description": "奇正相生、变化无穷之阵。",
+    "historicalSource": "八阵图传统（三国志·诸葛亮传）",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 2,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "全兵种+25%，诸葛亮使用时额外+2全属性+敌军计策免疫",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "暴击",
+        "description": "暴击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 5
+        }
+      },
+      {
+        "name": "反击",
+        "description": "反击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "counter_rate",
+          "value": 5
+        }
+      },
+      {
+        "name": "连击",
+        "description": "连击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman",
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "lightInfantry",
+      "heavyInfantry",
+      "spearman",
+      "archer",
+      "crossbowman",
+      "lightCavalry",
+      "heavyCavalry",
+      "horseArcher"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 5,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 11,
+        "requiredLevel": 5
+      }
+    ],
+    "specialUnlock": {
+      "minIntelligence": 95
+    },
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 2,
+        "defense": 2,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 3,
+        "defense": 3,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 4,
+        "defense": 4,
+        "mobility": 2,
+        "range": 1
+      },
+      {
+        "level": 4,
+        "attack": 5,
+        "defense": 5,
+        "mobility": 3,
+        "range": 1
+      },
+      {
+        "level": 5,
+        "attack": 6,
+        "defense": 6,
+        "mobility": 3,
+        "range": 1
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
         },
         "rearguard": {
           "q": 0,
@@ -792,6 +2005,1140 @@
         "right": {
           "q": 1,
           "r": 1
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 17,
+    "name": "云阵",
+    "description": "行云流布、骑射游斗之阵。",
+    "historicalSource": "孙膑兵法·十阵（衍）",
+    "family": "land",
+    "ultimate": {
+      "attackBonus": 1,
+      "defenseBonus": 0,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "可移动后射击两次，射击不减命中",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightInfantry",
+      "archer",
+      "crossbowman",
+      "horseArcher"
+    ],
+    "bestUnits": [
+      "archer",
+      "horseArcher"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 3,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 1,
+        "defense": 0,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 2,
+        "defense": 1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 2,
+        "defense": 1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 3,
+        "defense": 2,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 3,
+        "defense": 2,
+        "mobility": 4,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": 0,
+      "forest": -1,
+      "mountain": -2,
+      "water": -3
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 18,
+    "name": "横阵",
+    "description": "楼船横列、迎面搏杀之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 2,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "全方向无死角，每回合自动回复士气+3",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "restrictedUnits": [],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 1,
+        "defense": 1,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 2,
+        "defense": 2,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 3,
+        "defense": 3,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 4,
+        "defense": 4,
+        "mobility": 0,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 5,
+        "defense": 5,
+        "mobility": 0,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 19,
+    "name": "纵阵",
+    "description": "艨艟纵进、直插敌阵之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 0,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "贯穿攻击（穿过目标打到后排）",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "连击",
+        "description": "连击率+3%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 3
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "heavyNavy",
+      "lightNavy"
+    ],
+    "restrictedUnits": [],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 2,
+        "defense": -1,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 3,
+        "defense": -1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 4,
+        "defense": 0,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 5,
+        "defense": 0,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 6,
+        "defense": 0,
+        "mobility": 5,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 20,
+    "name": "雁回阵",
+    "description": "两翼回环、齐射压制之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 1,
+      "defenseBonus": 0,
+      "mobilityBonus": 0,
+      "rangeBonus": 2,
+      "effect": "三面齐射（前+左右翼同时射击）",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "侧击暴击",
+        "description": "侧击暴击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "mediumNavy",
+      "lightNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 18,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 1,
+        "defense": 0,
+        "mobility": 0,
+        "range": 2
+      },
+      {
+        "level": 2,
+        "attack": 2,
+        "defense": 0,
+        "mobility": 0,
+        "range": 3
+      },
+      {
+        "level": 3,
+        "attack": 3,
+        "defense": 0,
+        "mobility": 1,
+        "range": 3
+      },
+      {
+        "level": 4,
+        "attack": 4,
+        "defense": 0,
+        "mobility": 1,
+        "range": 4
+      },
+      {
+        "level": 5,
+        "attack": 5,
+        "defense": 0,
+        "mobility": 1,
+        "range": 4
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 21,
+    "name": "包围阵",
+    "description": "多桨围逼、困敌死斗之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 1,
+      "defenseBonus": 1,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "上限+80%，被包围者无法换阵",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 19,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 1,
+        "defense": 1,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 2,
+        "defense": 2,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 3,
+        "defense": 2,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 3,
+        "defense": 3,
+        "mobility": 1,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 4,
+        "defense": 3,
+        "mobility": 1,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 22,
+    "name": "火攻阵",
+    "description": "火船并进、顺风纵焰之阵。",
+    "historicalSource": "三国志·周瑜传（赤壁火攻）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 0,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "火计无视雨天，赤焰蔓延两格，被烧者混乱",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "mediumNavy",
+      "lightNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 20,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 18,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 3,
+        "defense": -2,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 4,
+        "defense": -1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 6,
+        "defense": -1,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 7,
+        "defense": 0,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 8,
+        "defense": 0,
+        "mobility": 4,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 23,
+    "name": "撞角阵",
+    "description": "铁首冲角、撞沉敌船之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 3,
+      "defenseBonus": 0,
+      "mobilityBonus": 1,
+      "rangeBonus": 0,
+      "effect": "冲锋必暴击，撞沉概率35%，冲后可接登船战",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "暴击",
+        "description": "暴击率+10%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 10
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "heavyNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 19,
+        "requiredLevel": 3
+      },
+      {
+        "formationId": 21,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 4,
+        "defense": -1,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 6,
+        "defense": -1,
+        "mobility": 2,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 7,
+        "defense": 0,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 9,
+        "defense": 0,
+        "mobility": 3,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 10,
+        "defense": 0,
+        "mobility": 3,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 24,
+    "name": "连环阵",
+    "description": "铁索连舟、方若平地之阵。",
+    "historicalSource": "三国志·周瑜传（赤壁连环船）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 0,
+      "defenseBonus": 3,
+      "mobilityBonus": 0,
+      "rangeBonus": 0,
+      "effect": "分摊80%，但火计伤害x2（双刃剑）",
+      "proficiencyRequired": 500
+    },
+    "effects": [],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "heavyNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 18,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 21,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 0,
+        "defense": 4,
+        "mobility": -2,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 0,
+        "defense": 6,
+        "mobility": -2,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 0,
+        "defense": 7,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 0,
+        "defense": 9,
+        "mobility": -1,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 0,
+        "defense": 10,
+        "mobility": -1,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 25,
+    "name": "突袭阵",
+    "description": "轻舟疾进、迂回绕后之阵。",
+    "historicalSource": "通典·兵典（水战设计）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 1,
+      "defenseBonus": 0,
+      "mobilityBonus": 2,
+      "rangeBonus": 0,
+      "effect": "若未杀敌则撤退不耗行动力，敌不可反击",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "连击",
+        "description": "连击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "lightNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 19,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 23,
+        "requiredLevel": 3
+      }
+    ],
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 2,
+        "defense": -2,
+        "mobility": 4,
+        "range": 0
+      },
+      {
+        "level": 2,
+        "attack": 3,
+        "defense": -1,
+        "mobility": 5,
+        "range": 0
+      },
+      {
+        "level": 3,
+        "attack": 4,
+        "defense": -1,
+        "mobility": 6,
+        "range": 0
+      },
+      {
+        "level": 4,
+        "attack": 5,
+        "defense": 0,
+        "mobility": 6,
+        "range": 0
+      },
+      {
+        "level": 5,
+        "attack": 6,
+        "defense": 0,
+        "mobility": 7,
+        "range": 0
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
+        },
+        "rearguard": {
+          "q": 0,
+          "r": -1
+        }
+      },
+      "fallbackOrder": [
+        "rearguard",
+        "vanguard",
+        "left",
+        "right"
+      ],
+      "symmetry": "symmetric"
+    }
+  },
+  {
+    "id": 26,
+    "name": "水龙阵",
+    "description": "传说级水战总阵，水域无敌。",
+    "historicalSource": "传说级设计（无史源，演义演绎）",
+    "family": "water",
+    "ultimate": {
+      "attackBonus": 2,
+      "defenseBonus": 2,
+      "mobilityBonus": 1,
+      "rangeBonus": 1,
+      "effect": "水域无敌——免疫火计/混乱/士气降，友军全加成，每回合一次「龙吟」（敌方士气-10全域）",
+      "proficiencyRequired": 500
+    },
+    "effects": [
+      {
+        "name": "暴击",
+        "description": "暴击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "crit_rate",
+          "value": 5
+        }
+      },
+      {
+        "name": "反击",
+        "description": "反击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "counter_rate",
+          "value": 5
+        }
+      },
+      {
+        "name": "连击",
+        "description": "连击率+5%（05 §4.7）",
+        "modifier": {
+          "type": "chain_rate",
+          "value": 5
+        }
+      }
+    ],
+    "allowedUnits": [
+      "lightNavy",
+      "mediumNavy",
+      "heavyNavy"
+    ],
+    "bestUnits": [
+      "heavyNavy"
+    ],
+    "restrictedUnits": [],
+    "prerequisites": [
+      {
+        "formationId": 22,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 23,
+        "requiredLevel": 5
+      },
+      {
+        "formationId": 24,
+        "requiredLevel": 3
+      }
+    ],
+    "specialUnlock": {
+      "minNavalProficiency": "A",
+      "minIntelligence": 85
+    },
+    "tiers": [
+      {
+        "level": 1,
+        "attack": 4,
+        "defense": 4,
+        "mobility": 3,
+        "range": 2
+      },
+      {
+        "level": 2,
+        "attack": 5,
+        "defense": 5,
+        "mobility": 4,
+        "range": 3
+      },
+      {
+        "level": 3,
+        "attack": 6,
+        "defense": 6,
+        "mobility": 4,
+        "range": 3
+      },
+      {
+        "level": 4,
+        "attack": 7,
+        "defense": 7,
+        "mobility": 5,
+        "range": 4
+      },
+      {
+        "level": 5,
+        "attack": 8,
+        "defense": 8,
+        "mobility": 5,
+        "range": 4
+      }
+    ],
+    "terrainModifiers": {
+      "plain": -1,
+      "forest": -2,
+      "mountain": -3,
+      "water": 1
+    },
+    "deployment": {
+      "slots": {
+        "center": {
+          "q": 0,
+          "r": 0
+        },
+        "vanguard": {
+          "q": 0,
+          "r": 1
+        },
+        "left": {
+          "q": -1,
+          "r": 0
+        },
+        "right": {
+          "q": 1,
+          "r": 0
         },
         "rearguard": {
           "q": 0,
