@@ -9,12 +9,22 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 422**（委任军团 S3：委任军事 AI + 季度报告，玩法闭环） |
+| 会话 | **Session 423**（多军协同战斗设计规格：围城合流 S1 + 六角多军 S2，纯设计轮） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 422：`runDelegationMilitary`（复用 aiMilitary 评分链 + 方针乘数/门槛，1 decision + 0~2 resolution 沿权威流固定位紧随 runAiMilitary）+ `tickDelegationReports`/`pruneDelegationRegions`（双剪枝、季度首月 lastReport 覆盖、actionSummary≤8、delta=期末−基线）接入 turn.ts 双插点；AI `maxFieldArmies` 动态化；`DelegationOverviewDrawer` 季报折叠卡；turn-golden 删重举 |
-| 文档最新 | `docs/42` **v1.3**（S3 完成态，§八三片全绿）；10/HANDOFF 双写 |
-| 本交接用途 | docs/42 §八 S1+S2+S3 ✅（玩法闭环）；**下步 0-B 闸门实测**（`41` §三，真人游玩） |
-| 下一步 | 0-B 闸门实测（`41` §三，须真人游玩记录主观感受，不可由 agent 代跑）；0-B 人事/七郡扩容与六角战场多军协同另行切片 |
+| 代码最新 | Session 422（`runDelegationMilitary` + `tickDelegationReports`/`pruneDelegationRegions` 双插点 + AI `maxFieldArmies` 动态化 + 季报卡；Session 421/422 改动已复核全绿并提交 `5fd58c9`） |
+| 文档最新 | **`docs/43` 多军协同战斗规格 v1.0（Session 423 落盘，D1~D12 推荐值待批准）**；docs/42 v1.3；10/HANDOFF 双写 |
+| 本交接用途 | docs/43 待用户批准（或改判 D1~D12）→ 批准后按 §七进入 S1 实装；0-B 闸门实测（`41` §三）仍待真人游玩 |
+| 下一步 | ①docs/43 D1~D12 批准 → S1 围城合流自动战实装（`verify-s423-siege-merge`；若金样场景含同城多军围城需删重举）；②0-B 闸门实测（须真人游玩记录主观感受，不可由 agent 代跑） |
+
+### Session 423 交接要点
+
+- **为什么是规格轮**：委任三片（420~422）收官后，HANDOFF「下一步」中唯一可由 agent 推进的开发项即「六角战场多军协同另行切片」（docs/42 §九既定边界、S10「多军团仍后置」长债）；0-B 闸门实测须真人游玩不可代跑。
+- **实勘结论（纠正直觉）**：围城**无合流**——多军围同城各持独立 `siegeState`（campaign.ts:500/589-601）、各打一场自动战（`assaultForFaction` 逐军，aiMilitary.ts:183-205），守方口径「第一支敌军 Army 或城驻军二者取一」；玩家围城军无六角入口（仅 assault/劝降/撤退）；六角 `unitsFromArmy` 单军多队已支持但 `createBattle` 单军（battle.ts:200/256）；郡域已有「合成副本迎战+按比例回填」成熟先例（engageCounty，services/game.ts:1625-1664）。**附带发现**：campaign.ts:500 到达分支不初始化 siegeState（潜在缺口，S1 的 D5 规则顺带修复）。
+- **docs/43 核心决策**（推荐值，待拍板）：D1 S1 战役层合流自动战 → S2 六角多军+`siege-storm` 端点；D2 仅围城合流（野战/白刃战 1v1 不动）；D3 同城同目标自动合流；D4 合成军=Σ兵力粮+加权士气+主军阵型主将+squads 拼接（保 squadFlankBonus 语义）；D5 siegeState 归主军、join 不重置、主军退则转移；D6 零协同加成（0-B 平衡轮再议）；D7 损耗按军比例分摊尾差归主军；D8 每侧单位帽 8、满帽整军「屯于城下策应」；D9 部署 r 轴 ±4 偏移+字典序回退；D10 胜利 Σ存活入城各军解散/败退各军回流 from 城；D11 新端点走五处镜像；D12 UI 合流标注+军旗按 armyId 区分。
+- **R1~R4 不变量**：军册真源不迁移（合成军仅结算期临时对象）、比例守恒、围城进度唯一、单军路径逐字节不变+`runAutoBattle` RNG 顺序不变。**金样预警**：S1 若金样 12 月存在同城多军围城，合成后 runAutoBattle 调用次数减少将前移权威 RNG 流——删金样重举（同 422 流程）。
+- 文档同步：docs/05 §10.2 挂设计状态、docs/12 S10 行补引注、docs/42 §一表 3 行挂 docs/43 指针、docs/35 主线链追加 ㊓。
+- 验证：纯文档轮零代码；引用行号逐一实勘复核；Session 421/422 未提交改动已复核（s421 15/15、s422 13/13、turn-golden 3/3）并提交 `5fd58c9`。
+- 边界：engaged 野战合流、白刃战多军、回合中途增援、协同数值加成、AI 势力委任化均不做（docs/43 §八）。
 
 ### Session 422 交接要点
 

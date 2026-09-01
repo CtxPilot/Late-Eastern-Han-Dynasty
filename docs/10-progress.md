@@ -1,3 +1,17 @@
+## 2026-09-01 — Session 423 · 多军协同战斗设计规格（围城合流 + 六角多军，纯设计轮）
+
+- Phase：**S10 多军团长债·规格轮**；Session 422 委任三片收官后，HANDOFF「下一步」唯一可由 agent 推进项即「六角战场多军协同另行切片」（docs/42 §九既定边界）。沿 Session 419 先例：先规格、D1~D12 待批准、批准前不写实装代码。
+- **规格落盘 `docs/43-multi-army-battle-design.md`**：
+  - **两片拆分**：S1 战役层围城合流自动战（合成军 + siegeState 主军共享 + 按军比例回流，AI/玩家同规则）／S2 战术层六角多军入场 + 新端点「亲统攻城」（`POST /api/game/campaign/siege-storm`，单位帽 8、部署偏移、军旗区分）；回合中途增援入场明确不做（另行立项）。
+  - **现状实勘（证据行号）**：围城无合流——`tickCampaignMarch` 各军独立 siegeState（campaign.ts:500/589-601，附带发现 500 行到达分支不初始化 siegeState 的潜在缺口）；自动战逐军独立（assaultForFaction campaign.ts:1210-1252、AI 月结 aiMilitary.ts:183-205）；守方口径「第一支敌军 Army 或城驻军二者取一」；玩家围城军仅 assault/劝降/撤退三途无六角入口；六角 `unitsFromArmy` 单军多队已支持但 `createBattle` 单军（battle.ts:200/256）；郡域「合成副本+按比例回填」成熟先例（engageCounty services/game.ts:1625-1664）；D1 军上限（2~6）实装后多军并存成常态，断层放大。
+  - **12 拍板点（推荐值）**：D1 S1/S2 切片；D2 仅围城合流（野战/白刃战 1v1 不动）；D3 同城同目标自动合流无需编组；D4 合成军口径（Σ兵力粮、加权士气、主军阵型主将、squads 拼接保 squadFlankBonus 语义）；D5 siegeState 归主军、join 不重置、主军退则转移；D6 零协同数值加成（0-B 平衡轮再议）；D7 损耗按军比例分摊尾差归主军；D8 每侧单位帽 8、满帽整军不入战「屯于城下策应」；D9 部署沿 r 轴 ±4 偏移+字典序回退；D10 胜利 Σ存活入城各军解散/败退各军回流 from 城；D11 siege-storm 五处镜像端点；D12 UI 合流标注+军旗按 armyId 区分。
+  - **R1~R4 不变量**：军册真源不迁移（合成军仅结算期临时对象）、比例守恒、围城进度唯一、单军路径逐字节不变+RNG 顺序不变。
+  - **验收方案**：verify-s423-siege-merge / verify-s424-hex-multi-army；**预警**：S1 若金样 12 月存在同城多军围城，runAutoBattle 调用次数减少会前移权威 RNG 流——届时删金样重举（同 422 流程）。
+- 文档同步：docs/05 §10.2 挂设计状态指针、docs/12 S10 行补 Session 423 引注、docs/42 §一表 3 行挂 docs/43 指针、docs/35 主线链追加 ㊓；10/HANDOFF 双写。
+- 验证：纯文档轮零代码——引用行号逐一实勘（campaign.ts/battle.ts/aiMilitary.ts/services/routes），无测试面变化，无回归需求。
+- 边界/待拍板：docs/43 D1~D12 均为推荐值待用户批准（或改判）后生效；0-B 闸门实测（`41` §三）仍待真人游玩；engaged 野战合流、白刃战多军、中途增援、协同加成均不做。
+
+
 ## 2026-09-01 — Session 422 · 委任军团 S3 实装（委任军事 AI + 季度报告，docs/42 D6 军事半 + D9）
 
 - Phase：**S15/S16 委任军团·S3 切片**；docs/42 §八 最后一片，S1/S2 后收口玩法闭环与离线一致性。
