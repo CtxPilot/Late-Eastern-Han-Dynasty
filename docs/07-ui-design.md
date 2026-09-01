@@ -1277,13 +1277,14 @@ type CommandShellState = {
 - 每条记录显示子女的 `待登场/已登场` 状态、父、母、生年、登场年与 `正史/演义/传说` 来源；缺失实体显示“未录”。
 - 本切片不把 `hidden.bloodline` 当作父子边，不新增 API、存档字段或随机出生；多代祖先、武将父母字段和父兄跟随仍后置。
 
-#### CMD-P41 军团域·委任区（Session 420）
+#### CMD-P41 军团域·委任区（Session 420 S1 + 421 S2 + 422 S3，三片收口）
 
-- 命令坞新增第 11 域「军团」（`delegation`，督字印），`DelegationOverviewDrawer` 为委任区唯一入口（docs/04 §39 + docs/42 S1）。
-- 区列表卡：区名/都督印/方针与 `pendingPolicy`（「下季生效」提示）/辖城清单；区政区：划城（点击划出）、方针四按钮（同季冷却锁定并给 title 说明）、解散（danger 终审）。
+- 命令坞第 11 域「军团」（`delegation`，督字印），`DelegationOverviewDrawer` 为委任区唯一入口（docs/04 §39 + docs/42 v1.3）。
+- 区列表卡：区名/都督印/方针与 `pendingPolicy`（「下季生效」提示）/辖城清单；区政区：划城（点击划出）、方针四按钮（同季冷却锁定并给 title 说明）、解散（danger 终审）；**Session 422 起增加季报折叠卡**（`command-delegation-report`/`report-empty`：年/季·兵金粮 delta·摘要≤8·警示·胜负/夺城，无报告时显示「本季已记 N 条」）。
 - 建区向导：直辖可划城点选（首都与非己方城不出现）→ 都督下拉（官职/忠诚/未随军/未兼职客户端预过滤，引擎终审）→ 方针选择 → `CommandConfirmDialog` 终审；`autoRecruit/autoReward` 置灰注明 0-B 启用。
-- `CampaignPanel`（战役手风琴）头部新增 `campaign-army-cap`「出征军 x/y」：`maxFieldArmies(城数)=clamp(2+floor(城/5),2,6)`，到帽时出征按钮禁用并给原因 title（garrison/retreating 不占额）。
-- 验收：`verify-s420-delegation-ui` 21/21（headless Chrome 真实点击：开域→建区终审→方针冷却→划空自动解散→console 0 error）。
+- `CampaignPanel`（战役手风琴）头部 `campaign-army-cap`「出征军 x/y」：`maxFieldArmies(城数)=clamp(2+floor(城/5),2,6)`，到帽时出征按钮禁用并给原因 title（garrison/retreating 不占额）。
+- 引擎：S2 `runDelegationCivilTurns`+`applyPendingPolicies`（零 RNG，紧随 `runAllAiTurns`）；S3 `runDelegationMilitary`（复用 aiMilitary 评分链+方针乘数/门槛，危城/空城/陈仓门禁保留，受 `maxFieldArmies`/`formationTroopCap` 约束，1 decision+0~2 resolution 沿权威流固定位）+ `tickDelegationReports`/`pruneDelegationRegions` 双剪枝（`isQuarterStart` 分支与 `tickImperialAuthorityQuarter` 同级）。
+- 验收：`verify-s420-delegation-ui` 21/21（headless Chrome 真实点击：开域→建区终审→方针冷却→划空自动解散→console 0 error）；`verify-s421 15/15`；`verify-s422 13/13` + `turn-golden 3/3`（删重举）。
 
 #### 12.2.1 CMD-P2 朝廷首批运行时切片
 

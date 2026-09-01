@@ -37,6 +37,7 @@ import {
 } from '@leh/shared';
 import { runAllAiTurns } from './ai.js';
 import { runAiMilitary } from './aiMilitary.js';
+import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, runDelegationMilitary, tickDelegationReports } from './delegation.js';
 import { runAllAiIntel } from './spyAi.js';
 import { tickSpyMonth } from './spy.js';
 import { tickPlotsMonth } from './plot.js';
@@ -301,6 +302,11 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     currentMonth,
     season,
   };
+  // 委任军团（docs/42 D5/D6/D10，Session 421 S2 + S3）：D10 剪枝（空区/都督失效）→ D5 方针季度晋升 → 玩家委任区内政。
+  // 剪枝置于 applyPendingPolicies 之前，保证失效区不参与当月军政；紧邻 AI 内政之后（同一顺序区），零 RNG；无委任区时原样返回，月结指纹不受影响。
+  afterAi = pruneDelegationRegions(afterAi);
+  afterAi = applyPendingPolicies(afterAi);
+  afterAi = runDelegationCivilTurns(afterAi);
   afterAi = syncFactionResources(afterAi);
 
   const ecoMsg =
@@ -320,6 +326,10 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickNationalPolicies(nextState, isQuarterStart);
   // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
   nextState = runAiMilitary(nextState, rng, rng);
+  // 委任军事（docs/42 D6 军事半，S3）：每区一次决策、region id 升序，沿用同一权威流固定位（紧邻 AI 军事之后，双流语义分流但同源）
+  nextState = runDelegationMilitary(nextState, rng, rng);
+  // D10 月末剪枝：AI/委任军事可能导致城失或都督失效，当月即移出/解散，避免季度报告统计失真城；下月 civil 前亦有一次剪枝兜底。
+  nextState = pruneDelegationRegions(nextState);
   // S18 质任家属：善待余波在季度首月扣旧主驻军士气，状态到期自动清除。
   if (isQuarterStart) {
     nextState = tickFamilyTreatment(nextState);
@@ -341,8 +351,12 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）
+  // 委任季度报告（docs/42 D9，S3）：与上述同级，季度首月汇总 civil/military 累计覆盖 lastReport 并重置 accumulator；
+  // currentYear/currentMonth 已是“下一月”（advanceCalendar 产物）故用其判定 isQuarterStart，正好累计完整季度动作；非季度首月 tickDelegationReports 零操作。
   let meritDecayNotes: { message: string }[] = [];
   if (isQuarterStart) {
+    // 注：军事阶段已累计本月动作，季首月此处生成报告即把“上一整季”动作一次性总结；若按“下一月为准”则报告恰好落在季初当月属预期。
+    nextState = tickDelegationReports(nextState, true);
     nextState = tickImperialAuthorityQuarter(nextState);
     const decay = applyMeritDecayQuarter(nextState, currentYear);
     nextState = { ...nextState, officers: decay.officers };

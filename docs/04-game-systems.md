@@ -4220,7 +4220,7 @@ interface Faction {
 
 ## 三十九、委任军团系统
 
-> **设计状态**：本轮设计完成；**实装规格已落盘 `docs/42-multi-corps-delegation-design.md`（Session 419，待批准后切片实装）**——官职映射/上限公式/月结插入点/RNG 纪律/数据结构定稿/API/UI 以 docs/42 为准，玩法条款仍以本节为真源。
+> **设计状态**：玩法条款见本节；**实装规格 `docs/42-multi-corps-delegation-design.md` v1.3（Session 419 规格落盘；Session 420 S1 CRUD+军上限+D1/四端点五镜像+军团域 UI；Session 421 S2 内政 AI；Session 422 S3 军事 AI+季度报告——三片收口玩法闭环）已全量落地**——官职映射/上限公式/月结双插点/RNG 纪律/数据结构/API/UI 均以 docs/42 为准。
 > **核心定位**：后期势力城池众多时，玩家可将城池划区委任给 AI 都督自动管理，聚焦战略决策而非逐城内政操作。
 > **职责边界**：委任都督管内政+军事（自动出征），外交权统一归君主。
 

@@ -227,6 +227,42 @@ export function DelegationOverviewDrawer() {
               );
             })}
           </div>
+          {activeRegion.lastReport ? (
+            <div
+              className="space-y-1 border border-stone-700 bg-stone-900/50 px-2 py-2 text-xs leading-relaxed"
+              data-testid="command-delegation-report"
+            >
+              <div className="flex items-center justify-between text-stone-300">
+                <span className="text-amber-300/80">
+                  季报 {activeRegion.lastReport.year}年
+                  {(['春', '夏', '秋', '冬'][activeRegion.lastReport.season] ?? '')}季
+                </span>
+                <span className="text-stone-500">
+                  兵 {activeRegion.lastReport.troopDelta >= 0 ? '+' : ''}
+                  {activeRegion.lastReport.troopDelta} · 金{' '}
+                  {activeRegion.lastReport.goldDelta >= 0 ? '+' : ''}
+                  {activeRegion.lastReport.goldDelta} · 粮{' '}
+                  {activeRegion.lastReport.foodDelta >= 0 ? '+' : ''}
+                  {activeRegion.lastReport.foodDelta}
+                </span>
+              </div>
+              <div className="text-stone-400">
+                摘要：{activeRegion.lastReport.actionSummary.length > 0 ? activeRegion.lastReport.actionSummary.join('；') : '无'}
+              </div>
+              {activeRegion.lastReport.warnings.length > 0 ? (
+                <div className="text-amber-400/70">警示：{activeRegion.lastReport.warnings.join('；')}</div>
+              ) : null}
+              <div className="text-stone-500">
+                战绩 {activeRegion.lastReport.battlesWon}胜{activeRegion.lastReport.battlesLost}负 · 夺城{' '}
+                {activeRegion.lastReport.citiesCaptured} 座
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-stone-600" data-testid="command-delegation-report-empty">
+              本季报告将于季度首月生成；本季已记 {activeRegion.seasonAccumulator?.actions.length ?? 0} 条
+              {activeRegion.seasonAccumulator?.actions.length ? `（${activeRegion.seasonAccumulator.actions.slice(0, 2).join('；')}…）` : ''}
+            </div>
+          )}
           <InkButton
             type="button"
             data-testid="command-delegation-disband"

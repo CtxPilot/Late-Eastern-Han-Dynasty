@@ -9,9 +9,11 @@ import {
   OfficerStatus,
   UnitType,
   canTravelMacroAdjacent,
+  countFieldArmies,
   formationTroopCap,
   getCommanderyTemplateByTemplateId,
   isHostileOrAtWar,
+  maxFieldArmies,
   resolveArmyCountyNodeId,
   macroAdjacentCityIds,
   type GameState,
@@ -364,10 +366,9 @@ function aiMilitaryTurn(
   if (myCities.length === 0) return state;
 
   type Cand = { fromId: number; targetId: number; score: number; mod: number };
-  const activeFronts = state.campaignArmies.filter((army) =>
-    army.factionId === factionId && army.phase !== 'garrison' && army.phase !== 'retreating'
-  ).length;
-  let frontSlots = Math.max(0, AI_MILITARY_CONFIG.maxActiveFronts - activeFronts);
+  const maxField = maxFieldArmies(myCities.length);
+  const activeFronts = countFieldArmies(state.campaignArmies, factionId);
+  let frontSlots = Math.max(0, maxField - activeFronts);
   if (frontSlots === 0) return state;
   let s = state;
   const usedSources = new Set<number>();

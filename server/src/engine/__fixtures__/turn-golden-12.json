@@ -84,18 +84,18 @@
       "y": 190,
       "m": 12,
       "gold": 13071,
-      "food": 13822,
+      "food": 13795,
       "officers": 30,
       "alive": 4
     },
     {
       "y": 191,
       "m": 1,
-      "gold": 13090,
-      "food": 14304,
+      "gold": 13212,
+      "food": 14256,
       "officers": 30,
       "alive": 4
     }
   ],
-  "finalDigest": "3781cc26(82794)"
+  "finalDigest": "bf0ab129(81172)"
 }

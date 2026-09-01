@@ -1,3 +1,30 @@
+## 2026-09-01 — Session 422 · 委任军团 S3 实装（委任军事 AI + 季度报告，docs/42 D6 军事半 + D9）
+
+- Phase：**S15/S16 委任军团·S3 切片**；docs/42 §八 最后一片，S1/S2 后收口玩法闭环与离线一致性。
+- **引擎（delegation.ts 1035 行；turn.ts 双插点；aiMilitary 动态化；存档/金样/离线一并收口）**：
+  - `runDelegationMilitary(state, decisionRng, resolutionRng)`：每区 1 次决策（region id 升序，score 降序择优）、沿权威流固定位紧随 `runAiMilitary` 之后；复用 `aiMilitary` 评分链（富庶/城防/威胁响应）+ 方针权重——出征概率 `decisionRng()<captureChance*policyMul` 且兵力比≥阈值：`offensive` 1.0/×1.4、`development` 1.6/×0.5、`armament` 1.3/×0.8、`balanced` 1.3/×1.0；危城/空城疑兵/暗渡陈仓等全部门禁保留；受 D1 `maxFieldArmies` 与 `formationTroopCap` 约束；日志 `deleg_military`（1~2 行 decision + 0~2 行 resolution）。
+  - AI 军额同步动态化（`aiMilitary.ts`）：`maxActiveFronts:2` 硬编码改为 `maxFieldArmies(myCities.length)=clamp(2+floor(城/5),2,6)` + `countFieldArmies` 管控，D1 对 AI 与玩家同规则。
+  - `tickDelegationReports` + `pruneDelegationRegions`：月度 `seasonAccumulator` 累计（≤24，转季≤12，上限 24；动作摘要来自月结内政/军事日志），季度首月 `isQuarterStart` 时生成 `lastReport` 覆盖旧值（`actionSummary≤8`、`troop/gold/food delta=期末−基线`、`warnings`、`battlesWon/Lost、citiesCaptured`）并清零重置基线=期末和；城失/都督失效区即时 `prune`（`ruler/capital/governor ACTIVE` 三校验，动作 `deleg_disband`），月结双剪枝（civil 前 + military 后），避免报告统计失真。
+  - `applyPendingPolicies` 已在 S2 接入，S3 军事链前保证方针跨季晋升语义完整。
+  - RNG：内政零消费；军事每区 1 次 decision + 至多 2 次 resolution，均走入参 `rng`（worker/server 同源 `state-pipeline runEndTurnPipeline`），内政双局 24 月逐字节一致、军事同种子同行为由 `verify-s422` 双局 24 月背书；`turn-golden-12.json` 因新增确定性 RNG 消费点删重举后 **3/3**。
+- **离线一致性**：`game.worker.ts` 4 端点镜像（`create/update/assign-city/disband`，policy 边界 cast）走 `state-pipeline` 同源管线；`offline-api`→`store` 持 `lastClientGame` 镜像，`applyGamePatch`+`computeGamePatch(patchOnly v2)` 全端点透传，S3 `Faction.delegationRegions?` optional 旧档兼容且 `DelegationReport/Accumulator` 全量 Zod Strict；`verify-s416-worker-parity` **5/5**（+4 别名）、`verify-s414-save-slim`/`save-game-state`/`save-migration` 存档往返全绿、PWA 预缓存与差分通道覆盖。
+- **UI**：`DelegationOverviewDrawer` 增季报折叠卡（`command-delegation-report` / `report-empty`）：有报告时「季报 年/季 · 兵金粮 delta · 摘要≤8 · 警示 · 战绩胜负/夺城」，无报告时「本季报告将于季度首月生成；本季已记 N 条（前 2 条…）」；原区卡/方针季锁/`campaign-army-cap` 保持。
+- **验证**：`verify-s422-delegation-military`（新增，engine 级）**13/13**（攻略型出征命中+日志+Schema、军上限派生、非季度不报告/季度首月报告≤8/清零、双局 24 月逐字节）；回归：turn-golden **3/3**（金样重举）、campaign **71/71**、ai-military-rng **38/38**、ai-decision 4 套、save-battle 62/62 + save-game-state 10/10 + save-slots 10/10 + save-battlefield-instance 101/101 + s414 7/7 + s413 5/5 + migration 23/23、shared **470/470**、client typecheck、server typecheck、worker parity **5/5**、`git diff --check` 全绿。
+- 文档：docs/42 **v1.3**（S3 完成态，§八三片全绿）；10/HANDOFF 双写。
+- 边界：autoRecruit/autoReward 仍落库不消费（0-B）；多军团协同（六角战场多军）与 AI 势力委任化不在本规格；0-B 闸门仍待真人游玩实测（`41` §三）。
+
+## 2026-08-28 — Session 421 · 委任军团 S2 实装（委任区内政 AI，docs/42 D6 内政半）
+
+- Phase：**S15/S16 委任军团·S2 切片**；S1（420）后继续推进 docs/42 §八 S2。
+- **引擎（纯服务端，无新 API/handler，worker 零改动）**：
+  - `applyPendingPolicies`：D5 季度晋升——`pendingPolicy` 跨季（当前季度键≠变更键）晋升为 `policy` 并清空；无委任区/无 pending 时原样返回（turn-golden 不受影响）。
+  - `runDelegationCivilTurns`：区内每城（id 升序）——`decideCityRule` 三规则病症驱动（缺粮屯田/低金经商/低民心巡安，与方针无关）→ 命中时不做方针 fallback；balanced 时按方针：development 垦田+6 / armament 仅征兵 / offensive 征兵优先+余粮不足民心+2 / balanced 农商+2；`recruit = floor(min(40, maxConscriptable)×eff)`（farm/patrol 不征兵，同 P1-1 门禁）；增量 `floor(基准×eff)`，eff=`delegationEfficiency(统,政,方针)`；城失/划出后跳过（D10）；都督从军期间内政照常（D4）。
+  - turn.ts 插入点：`applyPendingPolicies` → `runDelegationCivilTurns` 紧随 `runAllAiTurns` 之后、`syncFactionResources` 之前（docs/42 D7 紧邻插入）；`deleg_civil` 聚合日志（≤4 区）。
+  - 全部确定性零 RNG：双局 24 月逐字节一致。
+- **验证**：`verify-s421-delegation-civil`（新增）**15/15**——效率公式两档、布景过 Schema、缺粮城屯田+不征兵、发展方针精确增量（动态期望：+floor(6×eff)，都督真实统政）、未委任城零影响、同季不晋升/跨季晋升、双局 24 月逐字节一致、deleg_civil 与 end_turn 日志共存；回归：turn-golden **3/3**（无委任区月结指纹零变化）、campaign 71/71、ai-military-rng 38/38、ai-decision-plot 4/4+integration 4/4、save-battle 62/62、s420-crud 36/36、shared 470/470、client 71/71、`git diff --check` 全绿。
+- 文档：docs/42 v1.2（S2 完成态）；10/HANDOFF 双写。
+- 边界：S3（委任军事 AI：评分复用+方针乘数，decisionRng/resolutionRng 沿权威流→届时复核 turn-golden 金样）与季度报告（D9 累计器）未动；autoRecruit/autoReward 仍落库不消费。
+
 ## 2026-08-28 — Session 420 · 委任军团 S1 实装（docs/42 D1 军上限 + CRUD 五镜像 + 军团域 UI）
 
 - Phase：**S15/S16 委任军团·S1 切片**；Session 419 规格（docs/42）落盘后，用户「继续」视为批准，按 §八 进入实装。

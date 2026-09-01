@@ -1,6 +1,6 @@
 # 多军团与委任军团 · 实装设计规格（S15/S16 · Session 419）
 
-> **状态**：v1.1——Session 419 规格落盘；Session 420 用户「继续」视为批准，**S1 切片已实装并全绿**（CRUD+军上限+UI，见 §八）；S2/S3 待后续会话。
+> **状态**：v1.3——Session 419 规格落盘；Session 420 S1（CRUD+军上限+UI）✅；Session 421 S2（委任内政 AI）✅；**Session 422 S3（委任军事 AI+季度报告）✅**——三片收口，玩法闭环。
 > **来源**：`docs/40-game-evaluation.md` P3「军团层：先出多军团/委任设计规格再实装」；
 > 委任玩法设计真源为 `docs/04-game-systems.md` §三十九（已批准的设计，本文件只做实装规格化，
 > 不推翻 §39 的玩法条款，只做口径对齐与落地决策）。
@@ -269,8 +269,8 @@ interface Faction { /* 现有字段 */ delegationRegions?: DelegationRegion[]; }
 | 切片 | 内容 | 验证 |
 |:----:|------|------|
 | S1 | ✅ **Session 420 完成**：`shared/delegation.ts`+`types/delegation.ts`+`DelegationPolicy` 枚举+Zod+`Faction.delegationRegions?`；`engine/delegation.ts` CRUD + `startCampaignForFaction` D1 军上限（garrison 豁免）；4 端点×5 镜像；`DelegationOverviewDrawer`（命令坞第 11 域）+ CampaignPanel `campaign-army-cap`。验证：`verify-s420-delegation-crud` **36/36**、`verify-s420-delegation-ui` **21/21**、parity **5/5**（+4 别名契约）、回归矩阵全绿（campaign 71 / ai-military-rng 38 / ai-decision 4+4 / save 10+62+10+101 / shared 470 / client 71 / server 3 / s372 11 / s407 22 / s374 44 / validate-data / compliance 776 / diff-check） | （原计划）s420-crud + parity + 回归矩阵 |
-| S2 | 委任内政 AI（D6 内政半）+ 月结插入 `runDelegationCivilTurns` + `deleg_civil` 日志 | s421-civil（零 RNG 双局） |
-| S3 | 委任军事 AI + 季度报告 + `deleg_military` + 金样重举 | s422-military + report + turn-golden |
+| S2 | ✅ **Session 421 完成**：`engine/delegation.ts` `runDelegationCivilTurns`（decideCityRule 三规则病症驱动 + 方针 fallback + 效率折损 floor(基准×eff)，零 RNG）+ `applyPendingPolicies`（D5 季度晋升 pendingPolicy→policy）；turn.ts 紧邻 `runAllAiTurns` 后接入（`syncFactionResources` 之前）；`deleg_civil` 日志。验证：`verify-s421-delegation-civil` **15/15**（效率公式/三规则/方针 fallback 精确增量/未委任城零影响/同季不晋升跨季晋升/双局 24 月逐字节一致/日志存在）；回归全绿 | （原计划）s421-civil（零 RNG 双局） |
+| S3 | ✅ **Session 422 完成**：`runDelegationMilitary`（复用 aiMilitary 评分链 + 方针乘数/门槛，危城/空城/陈仓门禁保留，受 D1 `maxFieldArmies`/`formationTroopCap` 约束，1 次 decision + 0~2 次 resolution 沿权威流固定位）+ `tickDelegationReports`/`pruneDelegationRegions`（Accumulator≤24/转季≤12，季度首月生成 `lastReport` actionSummary≤8 delta=期末−基线并清零，月结双剪枝）+ AI `maxFieldArmies` 动态化 + `DelegationOverviewDrawer` 季报卡 + 金样删重举。验证：`verify-s422-delegation-military` **13/13**、turn-golden **3/3**、回归矩阵全绿（campaign/ai-military-rng/ai-decision/save/shared/client/parity） | s422-military + report + turn-golden |
 
 ---
 
@@ -285,4 +285,4 @@ interface Faction { /* 现有字段 */ delegationRegions?: DelegationRegion[]; }
 
 ---
 
-*文档版本: v1.1 | 2026-08-28 Session 419 规格落盘；Session 420 S1 实装完成（D1/D2/D3/D5/D9/D10/D11/D12 已生效为规则真源；S2 内政 AI / S3 军事 AI+报告 待后续会话）。*
+*文档版本: v1.3 | 2026-08-28 Session 419 规格落盘；Session 420 S1（D1~D12 治理层）✅；Session 421 S2 内政 AI ✅；Session 422 S3 军事 AI+报告 ✅（三片收口）。*

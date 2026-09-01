@@ -9,12 +9,31 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 420**（委任军团 S1 实装：军上限 D1+CRUD+军团域 UI） |
+| 会话 | **Session 422**（委任军团 S3：委任军事 AI + 季度报告，玩法闭环） |
 | 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 420：`shared/delegation.ts`+Zod+`Faction.delegationRegions?`；`engine/delegation.ts` CRUD；D1 军上限接入 startCampaignForFaction（玩家/AI 同规则，garrison 豁免）；4 端点×5 镜像；命令坞第 11 域「军团」抽屉 + CampaignPanel「出征军 x/y」 |
-| 文档最新 | `docs/42` v1.1（S1 完成态）；06 四端点注记、07 CMD-P41、12 S15、40、35 ㊐ |
-| 本交接用途 | docs/42 §八 S1 ✅；**S2（委任内政 AI）/S3（委任军事 AI+季度报告）待后续会话** |
-| 下一步 | ① S2：`runDelegationCivilTurns` 紧随 runAllAiTurns（decideCityRule+方针 fallback+效率折损，零 RNG，`deleg_civil` 日志）；② S3：`runDelegationMilitary` 紧随 runAiMilitary（评分复用+方针乘数，decisionRng/resolutionRng 沿权威流→届时复核 turn-golden）+季度报告（D9 累计器已入 Schema）；③ 0-B 闸门实测（`41` §三，须真人游玩） |
+| 代码最新 | Session 422：`runDelegationMilitary`（复用 aiMilitary 评分链 + 方针乘数/门槛，1 decision + 0~2 resolution 沿权威流固定位紧随 runAiMilitary）+ `tickDelegationReports`/`pruneDelegationRegions`（双剪枝、季度首月 lastReport 覆盖、actionSummary≤8、delta=期末−基线）接入 turn.ts 双插点；AI `maxFieldArmies` 动态化；`DelegationOverviewDrawer` 季报折叠卡；turn-golden 删重举 |
+| 文档最新 | `docs/42` **v1.3**（S3 完成态，§八三片全绿）；10/HANDOFF 双写 |
+| 本交接用途 | docs/42 §八 S1+S2+S3 ✅（玩法闭环）；**下步 0-B 闸门实测**（`41` §三，真人游玩） |
+| 下一步 | 0-B 闸门实测（`41` §三，须真人游玩记录主观感受，不可由 agent 代跑）；0-B 人事/七郡扩容与六角战场多军协同另行切片 |
+
+### Session 422 交接要点
+
+- **S3 口径（docs/42 D6 军事半 + D9）**：`runDelegationMilitary` 每区 1 次 decision（`decisionRng()<captureChance*policyMul` 且兵力比≥阈值；off1.0/×1.4 dev1.6/×0.5 arm1.3/×0.8 bal1.3/×1.0）+ 0~2 次 resolution，仅沿权威流固定位紧随 `runAiMilitary` 消费同源 `rng`；评分复用富庶/城防/威胁响应+危城/空城/陈仓门禁全保留，受 D1 `maxFieldArmies`/`formationTroopCap` 约束，日志 `deleg_military`。
+- **AI 动态化**：`aiMilitary.ts` `maxActiveFronts:2` → `maxFieldArmies(myCities.length)=clamp(2+floor(城/5),2,6)` + `countFieldArmies` 单点派生，D1 玩家/AI 同规则落地。
+- **报告与剪枝**：`tickDelegationReports` 每区 Accumulator 累计（≤24，转季≤12，上限 24），季度首月生成 `lastReport` 覆盖旧值（`actionSummary≤8`、`delta=期末−基线`、`warnings/battlesWon·Lost/citiesCaptured`）并清零重置基线=期末和；`pruneDelegationRegions` 双插点（civil 前 + military 后）校验 `ruler/capital/governor ACTIVE`，失效区即时 `deleg_disband`/划空解散，避免报告失真。
+- **RNG 与金样**：内政仍零消费，双局 24 月逐字节一致；军事同种子同行为由 `verify-s422` 双局 24 月背书；新增确定性 RNG 消费点后 `turn-golden-12.json` 已删重举，**3/3**。
+- **离线与存档**：`game.worker.ts` 4 端点镜像 + `state-pipeline runEndTurnPipeline` 同源管线；`offline-api`/store 持 `lastClientGame` 镜像，`patchOnly v2` 全端点透传；`Faction.delegationRegions?` optional 旧档兼容 + 全量 Zod Strict；`verify-s416-worker-parity` **5/5**（+4 别名）、存档往返与 slim/migration 全绿。
+- **UI**：`DelegationOverviewDrawer` 季报折叠卡（`command-delegation-report`/`report-empty`，兵金粮 delta/摘要/警示/战绩）。
+- **验证**：`verify-s422-delegation-military` **13/13**、turn-golden 3/3、campaign 71、ai-military-rng 38、ai-decision 4 套、save 62+10+10+101+s414 7+s413 5+23、shared 470、client 71、parity 5/5、`git diff --check` 全绿。
+- 边界：autoRecruit/autoReward 仍落库不消费（0-B）；六角多军协同/AI 委任化不在本规格。
+
+### Session 421 交接要点
+
+- **S2 口径（docs/42 D6 内政半）**：内政零 RNG 由双局 24 月逐字节一致背书；`deleg_civil` 聚合日志（≤4 区）。`decideCityRule` 从 `./ai.js` 导入（P1-1 三规则同源），不迁 shared。
+- **方针晋升**：`applyPendingPolicies` 在月结 runAllAiTurns 后即时消费季度键；S1 只落 `pendingPolicy`，S2 起跨季生效。**验证口径教训**：断言期望增量必须用都督真实统政动态算 `delegationEfficiency`，不可硬编码（脚本曾假定 95/95 但从未设置 stats，B 城实际 +4 而非 +5）。
+- **turn-golden 保持 3/3**：无委任区时 `applyPendingPolicies`/`runDelegationCivilTurns` 均原样返回，月结指纹零变化——S3 引入军事 RNG 消费点后才需复核金样。
+- **验证**：s421-civil 15/15、turn-golden 3/3、campaign 71、ai-military-rng 38、ai-decision 4+4、save-battle 62、s420-crud 36/36、shared 470、client 71、diff-check 全绿。
+- 边界：S3 军事 AI（评分+方针乘数）与季度报告未动；autoRecruit/autoReward 仍落库不消费。
 
 ### Session 420 交接要点
 

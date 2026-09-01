@@ -98,7 +98,7 @@ AI 三层都是「规则执行器」而非「对手」：经济 AI 空转意味�
 | 存档瘦身 | 全量 JSON 快照 + 2MB 上限（`save-limits.ts:22`）；1000 将必爆 | 字段裁剪/引用化/分片，双端介质同步 |
 | UI 增量化 | OfficerDetail/名册无虚拟化；Konva 无缓存层 | 列表虚拟化 + Konva Layer 缓存（D-0B-2/4） |
 | AI 月扫剪枝 | `tickSameCityRelations` 同城配对潜在 O(N²) | 分批/剪枝 |
-| 军团层 | 无委任军团系统（全库仅单挑倾向同名 `delegate`）；`aiMilitary.ts:28-36` 写死 maxActiveFronts:2 | ✅ Session 419 规格落盘 `docs/42`；**Session 420 S1 实装**（D1 军上限公式替代硬编码 + 委任区 CRUD×4 端点五镜像 + 军团域 UI）；委任内政/军事 AI（S2/S3）待实装 |
+| 军团层 | 无委任军团系统（全库仅单挑倾向同名 `delegate`）；`aiMilitary.ts:28-36` 写死 maxActiveFronts:2 | ✅ Session 419 规格落盘 `docs/42`；Session 420 S1（D1 军上限公式替代硬编码 + 委任区 CRUD×4 端点五镜像 + 军团域 UI）✅；Session 421 S2（委任内政 AI，零 RNG）✅；Session 422 S3（委任军事 AI+季度报告，玩法闭环，`docs/42` v1.3）✅ |
 
 郡域数据侧（seed builder/年代覆写/迷雾机制）已就绪，瓶颈是 ~105 郡史料录入量而非代码。
 
@@ -145,9 +145,7 @@ AI 三层都是「规则执行器」而非「对手」：经济 AI 空转意味�
 
 - 0-B 继续暂缓：P0+P1 落地并经一轮 P0-6 乐趣实测确认好玩后，再授权 0-B
   （届时按 P2 基建 → 数据录入顺序推进）；
-- 多军团/委任军团 ✅ Session 419 规格落盘 `docs/42`；Session 420（「继续」视为批准）**S1 实装完成**
-  （军上限 D1+委任区 CRUD+UI，验收 s420-crud 36/36 + s420-ui 21/21 + parity 5/5 + 回归矩阵全绿）；
-  S2 委任内政 AI / S3 委任军事 AI+季度报告 待后续会话；美术批次①~⑥ ✅（`ArtDirection.md` §九）；
+- 多军团/委任军团 ✅ Session 419 规格落盘 `docs/42`；Session 420 S1（军上限 D1+委任区 CRUD+UI）✅；Session 421 S2（委任内政 AI，零 RNG，`verify-s421 15/15`）✅；Session 422 S3（委任军事 AI+季度报告+双剪枝+AI动态化+季报卡，`verify-s422 13/13` + `turn-golden 3/3`）✅——三片收口玩法闭环（`docs/42` v1.3）；美术批次①~⑥ ✅（`ArtDirection.md` §九）；
 - S02「荆州七郡全量县级录入」属 0-B 规模，随 0-B 一并拍板。
 
 ---

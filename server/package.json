@@ -91,6 +91,8 @@
     "verify-hostage-families": "tsx src/scripts/verify-hostage-families.ts",
     "verify-family-treatment": "tsx src/scripts/verify-family-treatment.ts",
     "verify-s420-delegation-crud": "tsx src/scripts/verify-s420-delegation-crud.ts",
+    "verify-s421-delegation-civil": "tsx src/scripts/verify-s421-delegation-civil.ts",
+    "verify-s422-delegation-military": "tsx src/scripts/verify-s422-delegation-military.ts",
     "verify-weather-skill": "tsx src/scripts/verify-weather-skill.ts",
     "verify-special-proficiency": "tsx src/scripts/verify-special-proficiency.ts",
     "verify-tactical-retreat": "tsx src/scripts/verify-tactical-retreat.ts",
