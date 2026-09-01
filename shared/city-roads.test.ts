@@ -17,14 +17,45 @@ describe('CITY_ROAD_EDGES', () => {
     expect(CITY_ROAD_EDGES.length).toBeGreaterThanOrEqual(30);
   });
 
-  it('all edges are valid city IDs (1-30)', () => {
+  it('all edges are valid city IDs (1-106, 0-B 106 城)', () => {
     for (const [a, b] of CITY_ROAD_EDGES) {
       expect(a).toBeGreaterThanOrEqual(1);
-      expect(a).toBeLessThanOrEqual(30);
+      expect(a).toBeLessThanOrEqual(106);
       expect(b).toBeGreaterThanOrEqual(1);
-      expect(b).toBeLessThanOrEqual(30);
+      expect(b).toBeLessThanOrEqual(106);
       expect(a).not.toBe(b);
     }
+  });
+
+  it('covers every city 1..106 with at least one road (0-B 扩容)', () => {
+    const seen = new Set<number>();
+    for (const [a, b] of CITY_ROAD_EDGES) {
+      seen.add(a);
+      seen.add(b);
+    }
+    for (let id = 1; id <= 106; id++) expect(seen.has(id)).toBe(true);
+  });
+
+  it('the road network is fully connected (single component)', () => {
+    const adj = new Map<number, Set<number>>();
+    for (const [a, b] of CITY_ROAD_EDGES) {
+      if (!adj.has(a)) adj.set(a, new Set());
+      if (!adj.has(b)) adj.set(b, new Set());
+      adj.get(a)!.add(b);
+      adj.get(b)!.add(a);
+    }
+    const visited = new Set<number>([1]);
+    const queue = [1];
+    while (queue.length > 0) {
+      const cur = queue.pop()!;
+      for (const next of adj.get(cur) ?? []) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          queue.push(next);
+        }
+      }
+    }
+    expect(visited.size).toBe(106);
   });
 
   it('has no duplicate edges', () => {

@@ -11,7 +11,7 @@ const dataDir = join(__dirname, '../data');
 
 const files: { key: validators.DataFileKey; file: string; expected: number }[] = [
   { key: 'officers', file: 'officers.json', expected: 223 },
-  { key: 'cities', file: 'cities.json', expected: 30 },
+  { key: 'cities', file: 'cities.json', expected: 106 },
   { key: 'formations', file: 'formations.json', expected: 7 },
   { key: 'units', file: 'units.json', expected: 9 },
   { key: 'items', file: 'items.json', expected: 20 },

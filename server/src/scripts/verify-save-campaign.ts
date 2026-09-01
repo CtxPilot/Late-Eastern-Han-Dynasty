@@ -41,7 +41,7 @@ console.log('\n=== S16 战役快照 Schema 验证 ===');
 createGame(1, 2);
 const initialHeroState = getGame();
 const initialHeroSlice = parseCampaignSlice(initialHeroState);
-check('英雄集结初始战役切片通过严格解析', initialHeroSlice.campaignNodes.length === 30);
+check('英雄集结初始战役切片通过严格解析', initialHeroSlice.campaignNodes.length === 106);
 check('英雄集结节点数量与权威状态一致', initialHeroSlice.campaignNodes.length === initialHeroState.campaignNodes.length);
 
 const fromCity = Object.values(initialHeroState.cities).find((city) =>
@@ -113,7 +113,7 @@ check('每势力总军师唯一且任命对象正确', strategistSlice.grandStra
 createGame(2, 1);
 const coalitionState = getGame();
 const coalitionSlice = parseCampaignSlice(coalitionState);
-check('关东义兵初始战役切片通过严格解析', coalitionSlice.campaignNodes.length === 30);
+check('关东义兵初始战役切片通过严格解析', coalitionSlice.campaignNodes.length === 106);
 check('关东义兵节点数量与权威状态一致', coalitionSlice.campaignNodes.length === coalitionState.campaignNodes.length);
 
 console.log(`\n=== 结果: ${passed} passed, ${failed} failed ===`);
