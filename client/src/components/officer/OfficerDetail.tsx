@@ -2,6 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
+import { SKILL_NAME } from '../../generated/skill-names';
 import { useEffect, useMemo, useState } from 'react';
 import {
   CIVIL_LABELS,
@@ -60,18 +61,6 @@ const NOBILITY_LABEL: Record<string, string> = {
   duke: '公',
   king: '王',
   emperor: '皇帝',
-};
-
-const SKILL_NAME: Record<string, string> = {
-  fire: '火计', water: '水计', rockfall: '落石', ambush: '伏兵',
-  taunt: '挑拨', discord: '离间', calm: '沉着', inspire: '激励',
-  sorcery: '妖术', illusion: '幻术', gallop: '疾驰',
-  forcedMarch: '强行军', rapidAttack: '急攻', hold: '固守',
-  longRange: '远射', formationChange: '布阵', reorganize: '重整',
-  raid: '奇袭', farming: '农政', commerce: '商政', fortify: '筑城',
-  recruit: '征兵', train: '训练', discover: '寻访', eloquence: '辩才',
-  medicine: '医术', insight: '洞察', bravery: '勇武', riding: '骑术',
-  archery: '弓术',
 };
 
 const UNIT_NAME: Record<string, string> = {

@@ -726,7 +726,7 @@ Phase 4 — 特殊人物审核
 
 ## 八、skills.json — 技能定义
 
-**69条通用 + 80条专属 = 149条**。
+**全量 149 条已落地（Session 428 P0B-13）：69 通用×5 级（0-A 30 条 L1 逐字节保留后补全 5 级表 + 新增 39 条，其中 diplomacy/civilization/wile/religious/navigation/toughness/throw/intimidate/charm 9 条修复 officers.json 悬空引用）+ 80 专属（史书/演义人物绰号与事迹，docs/00 §六；引擎已实装的 wusheng/wushuang/ganglie/paoxiao/longdan/shenjiang/huchi/elai/qishen/tianyi 十个 id 必收录并已收录）**。脚本 `scripts/gen-0b-skills.mjs`（幂等；重 id/重名/category/maxLevel/层级结构/悬空引用/L1 不变八重自检）。专属 category=unique、maxLevel=1、不树化（docs/30）；P0B-06 时经 `officer.uniqueSkill` 绑定。附带产出 `client/src/generated/skill-names.ts` 显示映射（单一真源生成，勿手改）。
 
 ### 字段说明
 

@@ -1,3 +1,16 @@
+## 2026-09-03 — Session 428 · 0-B 数据扩容 P0B-13（skills.json 30→149：69通用×5级 + 80专属）
+
+- Phase：**Phase 0-B 数据扩容**；Session 427 收官双批后按 HANDOFF「下一步」进入 P0B-13。
+- **P0B-13 skills.json 30→149**：脚本 `scripts/gen-0b-skills.mjs`（幂等；重 id/重名/category/maxLevel/层级结构/悬空引用/L1 不变八重自检）。
+  - **69 通用×5 级**：0-A 30 条 L1 逐字节保留（脚本断言 before/after JSON 相等），补全 L2~L5 等级表（初/通/精/极/神，效果 type=id 线性取值 1~5，养成门槛 minStats 按类 tactics→智/command→武/civil→政/personal→武 55/60/65/72/80 + useCount 3/8/20/50 阶梯，对齐 08 §八火计示例）；新增 39 条通用（火矢/毒烟/反计/虚兵/云梯/冲车、水淹/夜袭/劫粮/驰援/断后/合围/追击/拒马、屯田/水利/招抚/劝学/工匠/盐铁/赈济、枪戟刀剑术/水性/相马/兵法/天文/地理等）。
+  - **悬空引用修复（顺带缺陷清零）**：officers.json 223 将中有 9 个 skillId 在 skills.json 无目录条目（diplomacy/civilization/wile/religious/navigation/toughness/throw/intimidate/charm），本批全部落目录，脚本断言 officers/females/skill-trees 三处引用零悬空。
+  - **80 专属**：category=unique、maxLevel=1、不树化（docs/30）；全部为史书/演义人物绰号与事迹并括注出处层（卧龙/凤雏/鬼才/王佐/谋主/毒士/鹰狼/止啼/长驱/巧变/毅重/先登/天人/盲侯/虎步/神射/反骨/小霸王/锦帆/苦肉/短兵/疑城/抬榇/陈仓/陷阵/白马/断头/国士/长者/让马/黄须/何郎/千里驹/割席/怀橘/闭月/胡笳/机巧/飞刀/神医/焦尾/国色/洛神/弓腰姬/黄天/霹雳/九品/八斗/堕泪/武库/楼船/连环/西陵/阴平/胆斗/捷才/大儒/威震/走马等）；引擎已实装的十个专属 id（crit.ts uniqueOf：wusheng/wushuang/ganglie/paoxiao/longdan/shenjiang/huchi/elai/qishen/tianyi）必收录并已收录。
+  - **client 显示层单一真源化**：脚本附带生成 `client/src/generated/skill-names.ts`（149 条 id→名），`OfficerDetail` 的手写 30 条 SKILL_NAME 字面量改为 import 生成映射（新增技能上屏不再裸显 id）。
+- **运行时零扰动**：引擎只读 officer.skills 的等级数字（shared/skill-consume skillLevelOf、crit/duel），skills.json levels 表为设计目录零消费；client 仅显示层；金样未重举 **3/3** 保持。校验链唯一改动点 validate-data skills expected 30→149。
+- **验证（全绿）**：validate-data（149 = 69+80）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、compliance（784 files）、`git diff --check` 通过。
+- 文档：docs/08（§八 149 落地口径，真源先行）、docs/09（P0B-13 行）、docs/11（skills ~30KB→~160KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容 + 显示层映射生成，零引擎/RNG/API 改动；专属效果多数未接引擎（十引擎专属之外为目录+设计层），officer.uniqueSkill 绑定与通用 5 级效果消费属 P0B-06/后续玩法切片；skill-trees 不树化专属（docs/30 既定）。0-B 剩余：P0B-06 officers 1000+、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-03 — Session 427 · 0-B 数据扩容双批（P0B-11 females 10→90 + P0B-12 children 5→50）
 
 - Phase：**Phase 0-B 数据扩容**；Session 426 收官 P0B-10 后按 HANDOFF「下一步」进入 P0B-11。
@@ -1429,7 +1442,7 @@
 | P0B-10 | items.json（全量 165宝物） | [x] | Session 426：0-A 20 + 新增 145（id 21~165），validate-data expected 165 |
 | P0B-11 | females.json（全量 90+女性） | [x] | Session 427：0-A 10 + 新增 80（id 211~290），validate-data expected 90 |
 | P0B-12 | children.json（全量 50+子女） | [x] | Session 427：0-A 5 + 新增 45（id 955~999），validate-data expected 50 |
-| P0B-13 | skills.json（全量 149技能） | [ ] | 69通用+80专属 |
+| P0B-13 | skills.json（全量 149技能） | [x] | Session 428：69通用×5级（0-A 30 条 L1 不变补全）+80专属；修复 officers 9 个悬空 skillId；生成 client skill-names 映射 |
 | P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [ ] | 以08数字真源为准；约30势力190全量开局仍属0-B |
 | P0B-15 | events.json（全量） | [ ] | — |
 

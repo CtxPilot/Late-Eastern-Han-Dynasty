@@ -17,6 +17,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "火计·通",
+        "effects": [
+          {
+            "type": "fire",
+            "value": 2,
+            "description": "火计等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "火计·精",
+        "effects": [
+          {
+            "type": "fire",
+            "value": 3,
+            "description": "火计等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "火计·极",
+        "effects": [
+          {
+            "type": "fire",
+            "value": 4,
+            "description": "火计等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "火计·神",
+        "effects": [
+          {
+            "type": "fire",
+            "value": 5,
+            "description": "火计等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -38,6 +106,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "水计·通",
+        "effects": [
+          {
+            "type": "water",
+            "value": 2,
+            "description": "水计等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "水计·精",
+        "effects": [
+          {
+            "type": "water",
+            "value": 3,
+            "description": "水计等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "水计·极",
+        "effects": [
+          {
+            "type": "water",
+            "value": 4,
+            "description": "水计等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "水计·神",
+        "effects": [
+          {
+            "type": "water",
+            "value": 5,
+            "description": "水计等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -59,6 +195,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "落石·通",
+        "effects": [
+          {
+            "type": "rockfall",
+            "value": 2,
+            "description": "落石等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "落石·精",
+        "effects": [
+          {
+            "type": "rockfall",
+            "value": 3,
+            "description": "落石等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "落石·极",
+        "effects": [
+          {
+            "type": "rockfall",
+            "value": 4,
+            "description": "落石等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "落石·神",
+        "effects": [
+          {
+            "type": "rockfall",
+            "value": 5,
+            "description": "落石等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -80,6 +284,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "伏兵·通",
+        "effects": [
+          {
+            "type": "ambush",
+            "value": 2,
+            "description": "伏兵等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "伏兵·精",
+        "effects": [
+          {
+            "type": "ambush",
+            "value": 3,
+            "description": "伏兵等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "伏兵·极",
+        "effects": [
+          {
+            "type": "ambush",
+            "value": 4,
+            "description": "伏兵等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "伏兵·神",
+        "effects": [
+          {
+            "type": "ambush",
+            "value": 5,
+            "description": "伏兵等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -101,6 +373,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "挑拨·通",
+        "effects": [
+          {
+            "type": "taunt",
+            "value": 2,
+            "description": "挑拨等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "挑拨·精",
+        "effects": [
+          {
+            "type": "taunt",
+            "value": 3,
+            "description": "挑拨等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "挑拨·极",
+        "effects": [
+          {
+            "type": "taunt",
+            "value": 4,
+            "description": "挑拨等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "挑拨·神",
+        "effects": [
+          {
+            "type": "taunt",
+            "value": 5,
+            "description": "挑拨等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -122,6 +462,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "离间·通",
+        "effects": [
+          {
+            "type": "discord",
+            "value": 2,
+            "description": "离间等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "离间·精",
+        "effects": [
+          {
+            "type": "discord",
+            "value": 3,
+            "description": "离间等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "离间·极",
+        "effects": [
+          {
+            "type": "discord",
+            "value": 4,
+            "description": "离间等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "离间·神",
+        "effects": [
+          {
+            "type": "discord",
+            "value": 5,
+            "description": "离间等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -143,6 +551,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "沉着·通",
+        "effects": [
+          {
+            "type": "calm",
+            "value": 2,
+            "description": "沉着等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "沉着·精",
+        "effects": [
+          {
+            "type": "calm",
+            "value": 3,
+            "description": "沉着等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "沉着·极",
+        "effects": [
+          {
+            "type": "calm",
+            "value": 4,
+            "description": "沉着等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "沉着·神",
+        "effects": [
+          {
+            "type": "calm",
+            "value": 5,
+            "description": "沉着等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -164,6 +640,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "激励·通",
+        "effects": [
+          {
+            "type": "inspire",
+            "value": 2,
+            "description": "激励等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "激励·精",
+        "effects": [
+          {
+            "type": "inspire",
+            "value": 3,
+            "description": "激励等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "激励·极",
+        "effects": [
+          {
+            "type": "inspire",
+            "value": 4,
+            "description": "激励等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "激励·神",
+        "effects": [
+          {
+            "type": "inspire",
+            "value": 5,
+            "description": "激励等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -185,6 +729,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "妖术·通",
+        "effects": [
+          {
+            "type": "sorcery",
+            "value": 2,
+            "description": "妖术等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "妖术·精",
+        "effects": [
+          {
+            "type": "sorcery",
+            "value": 3,
+            "description": "妖术等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "妖术·极",
+        "effects": [
+          {
+            "type": "sorcery",
+            "value": 4,
+            "description": "妖术等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "妖术·神",
+        "effects": [
+          {
+            "type": "sorcery",
+            "value": 5,
+            "description": "妖术等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -206,6 +818,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "幻术·通",
+        "effects": [
+          {
+            "type": "illusion",
+            "value": 2,
+            "description": "幻术等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "幻术·精",
+        "effects": [
+          {
+            "type": "illusion",
+            "value": 3,
+            "description": "幻术等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "幻术·极",
+        "effects": [
+          {
+            "type": "illusion",
+            "value": 4,
+            "description": "幻术等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "幻术·神",
+        "effects": [
+          {
+            "type": "illusion",
+            "value": 5,
+            "description": "幻术等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -227,6 +907,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "疾驰·通",
+        "effects": [
+          {
+            "type": "gallop",
+            "value": 2,
+            "description": "疾驰等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "疾驰·精",
+        "effects": [
+          {
+            "type": "gallop",
+            "value": 3,
+            "description": "疾驰等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "疾驰·极",
+        "effects": [
+          {
+            "type": "gallop",
+            "value": 4,
+            "description": "疾驰等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "疾驰·神",
+        "effects": [
+          {
+            "type": "gallop",
+            "value": 5,
+            "description": "疾驰等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -248,6 +996,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "强行军·通",
+        "effects": [
+          {
+            "type": "forcedMarch",
+            "value": 2,
+            "description": "强行军等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "强行军·精",
+        "effects": [
+          {
+            "type": "forcedMarch",
+            "value": 3,
+            "description": "强行军等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "强行军·极",
+        "effects": [
+          {
+            "type": "forcedMarch",
+            "value": 4,
+            "description": "强行军等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "强行军·神",
+        "effects": [
+          {
+            "type": "forcedMarch",
+            "value": 5,
+            "description": "强行军等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -269,6 +1085,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "急攻·通",
+        "effects": [
+          {
+            "type": "rapidAttack",
+            "value": 2,
+            "description": "急攻等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "急攻·精",
+        "effects": [
+          {
+            "type": "rapidAttack",
+            "value": 3,
+            "description": "急攻等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "急攻·极",
+        "effects": [
+          {
+            "type": "rapidAttack",
+            "value": 4,
+            "description": "急攻等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "急攻·神",
+        "effects": [
+          {
+            "type": "rapidAttack",
+            "value": 5,
+            "description": "急攻等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -290,6 +1174,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "固守·通",
+        "effects": [
+          {
+            "type": "hold",
+            "value": 2,
+            "description": "固守等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "固守·精",
+        "effects": [
+          {
+            "type": "hold",
+            "value": 3,
+            "description": "固守等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "固守·极",
+        "effects": [
+          {
+            "type": "hold",
+            "value": 4,
+            "description": "固守等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "固守·神",
+        "effects": [
+          {
+            "type": "hold",
+            "value": 5,
+            "description": "固守等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -311,6 +1263,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "远射·通",
+        "effects": [
+          {
+            "type": "longRange",
+            "value": 2,
+            "description": "远射等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "远射·精",
+        "effects": [
+          {
+            "type": "longRange",
+            "value": 3,
+            "description": "远射等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "远射·极",
+        "effects": [
+          {
+            "type": "longRange",
+            "value": 4,
+            "description": "远射等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "远射·神",
+        "effects": [
+          {
+            "type": "longRange",
+            "value": 5,
+            "description": "远射等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -332,6 +1352,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "布阵·通",
+        "effects": [
+          {
+            "type": "formationChange",
+            "value": 2,
+            "description": "布阵等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "布阵·精",
+        "effects": [
+          {
+            "type": "formationChange",
+            "value": 3,
+            "description": "布阵等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "布阵·极",
+        "effects": [
+          {
+            "type": "formationChange",
+            "value": 4,
+            "description": "布阵等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "布阵·神",
+        "effects": [
+          {
+            "type": "formationChange",
+            "value": 5,
+            "description": "布阵等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -353,6 +1441,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "重整·通",
+        "effects": [
+          {
+            "type": "reorganize",
+            "value": 2,
+            "description": "重整等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "重整·精",
+        "effects": [
+          {
+            "type": "reorganize",
+            "value": 3,
+            "description": "重整等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "重整·极",
+        "effects": [
+          {
+            "type": "reorganize",
+            "value": 4,
+            "description": "重整等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "重整·神",
+        "effects": [
+          {
+            "type": "reorganize",
+            "value": 5,
+            "description": "重整等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -374,6 +1530,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "奇袭·通",
+        "effects": [
+          {
+            "type": "raid",
+            "value": 2,
+            "description": "奇袭等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "奇袭·精",
+        "effects": [
+          {
+            "type": "raid",
+            "value": 3,
+            "description": "奇袭等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "奇袭·极",
+        "effects": [
+          {
+            "type": "raid",
+            "value": 4,
+            "description": "奇袭等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "奇袭·神",
+        "effects": [
+          {
+            "type": "raid",
+            "value": 5,
+            "description": "奇袭等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -395,6 +1619,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "农政·通",
+        "effects": [
+          {
+            "type": "farming",
+            "value": 2,
+            "description": "农政等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "农政·精",
+        "effects": [
+          {
+            "type": "farming",
+            "value": 3,
+            "description": "农政等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "农政·极",
+        "effects": [
+          {
+            "type": "farming",
+            "value": 4,
+            "description": "农政等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "农政·神",
+        "effects": [
+          {
+            "type": "farming",
+            "value": 5,
+            "description": "农政等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -416,6 +1708,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "商政·通",
+        "effects": [
+          {
+            "type": "commerce",
+            "value": 2,
+            "description": "商政等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "商政·精",
+        "effects": [
+          {
+            "type": "commerce",
+            "value": 3,
+            "description": "商政等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "商政·极",
+        "effects": [
+          {
+            "type": "commerce",
+            "value": 4,
+            "description": "商政等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "商政·神",
+        "effects": [
+          {
+            "type": "commerce",
+            "value": 5,
+            "description": "商政等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -437,6 +1797,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "筑城·通",
+        "effects": [
+          {
+            "type": "fortify",
+            "value": 2,
+            "description": "筑城等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "筑城·精",
+        "effects": [
+          {
+            "type": "fortify",
+            "value": 3,
+            "description": "筑城等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "筑城·极",
+        "effects": [
+          {
+            "type": "fortify",
+            "value": 4,
+            "description": "筑城等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "筑城·神",
+        "effects": [
+          {
+            "type": "fortify",
+            "value": 5,
+            "description": "筑城等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -458,6 +1886,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "征兵·通",
+        "effects": [
+          {
+            "type": "recruit",
+            "value": 2,
+            "description": "征兵等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "征兵·精",
+        "effects": [
+          {
+            "type": "recruit",
+            "value": 3,
+            "description": "征兵等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "征兵·极",
+        "effects": [
+          {
+            "type": "recruit",
+            "value": 4,
+            "description": "征兵等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "征兵·神",
+        "effects": [
+          {
+            "type": "recruit",
+            "value": 5,
+            "description": "征兵等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -479,6 +1975,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "训练·通",
+        "effects": [
+          {
+            "type": "train",
+            "value": 2,
+            "description": "训练等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "训练·精",
+        "effects": [
+          {
+            "type": "train",
+            "value": 3,
+            "description": "训练等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "训练·极",
+        "effects": [
+          {
+            "type": "train",
+            "value": 4,
+            "description": "训练等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "训练·神",
+        "effects": [
+          {
+            "type": "train",
+            "value": 5,
+            "description": "训练等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -500,6 +2064,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "寻访·通",
+        "effects": [
+          {
+            "type": "discover",
+            "value": 2,
+            "description": "寻访等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "寻访·精",
+        "effects": [
+          {
+            "type": "discover",
+            "value": 3,
+            "description": "寻访等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "寻访·极",
+        "effects": [
+          {
+            "type": "discover",
+            "value": 4,
+            "description": "寻访等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "寻访·神",
+        "effects": [
+          {
+            "type": "discover",
+            "value": 5,
+            "description": "寻访等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -521,6 +2153,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "辩才·通",
+        "effects": [
+          {
+            "type": "eloquence",
+            "value": 2,
+            "description": "辩才等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "辩才·精",
+        "effects": [
+          {
+            "type": "eloquence",
+            "value": 3,
+            "description": "辩才等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "辩才·极",
+        "effects": [
+          {
+            "type": "eloquence",
+            "value": 4,
+            "description": "辩才等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "辩才·神",
+        "effects": [
+          {
+            "type": "eloquence",
+            "value": 5,
+            "description": "辩才等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -542,6 +2242,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "医术·通",
+        "effects": [
+          {
+            "type": "medicine",
+            "value": 2,
+            "description": "医术等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "医术·精",
+        "effects": [
+          {
+            "type": "medicine",
+            "value": 3,
+            "description": "医术等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "医术·极",
+        "effects": [
+          {
+            "type": "medicine",
+            "value": 4,
+            "description": "医术等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "医术·神",
+        "effects": [
+          {
+            "type": "medicine",
+            "value": 5,
+            "description": "医术等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -563,6 +2331,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "洞察·通",
+        "effects": [
+          {
+            "type": "insight",
+            "value": 2,
+            "description": "洞察等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "洞察·精",
+        "effects": [
+          {
+            "type": "insight",
+            "value": 3,
+            "description": "洞察等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "洞察·极",
+        "effects": [
+          {
+            "type": "insight",
+            "value": 4,
+            "description": "洞察等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "洞察·神",
+        "effects": [
+          {
+            "type": "insight",
+            "value": 5,
+            "description": "洞察等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -584,6 +2420,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "勇武·通",
+        "effects": [
+          {
+            "type": "bravery",
+            "value": 2,
+            "description": "勇武等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "勇武·精",
+        "effects": [
+          {
+            "type": "bravery",
+            "value": 3,
+            "description": "勇武等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "勇武·极",
+        "effects": [
+          {
+            "type": "bravery",
+            "value": 4,
+            "description": "勇武等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "勇武·神",
+        "effects": [
+          {
+            "type": "bravery",
+            "value": 5,
+            "description": "勇武等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -605,6 +2509,74 @@
           }
         ],
         "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "骑术·通",
+        "effects": [
+          {
+            "type": "riding",
+            "value": 2,
+            "description": "骑术等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "骑术·精",
+        "effects": [
+          {
+            "type": "riding",
+            "value": 3,
+            "description": "骑术等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "骑术·极",
+        "effects": [
+          {
+            "type": "riding",
+            "value": 4,
+            "description": "骑术等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "骑术·神",
+        "effects": [
+          {
+            "type": "riding",
+            "value": 5,
+            "description": "骑术等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
       }
     ]
   },
@@ -623,6 +2595,5381 @@
             "type": "archery",
             "value": 1,
             "description": "弓术等级1"
+          }
+        ],
+        "requirement": {}
+      },
+      {
+        "level": 2,
+        "name": "弓术·通",
+        "effects": [
+          {
+            "type": "archery",
+            "value": 2,
+            "description": "弓术等级2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "弓术·精",
+        "effects": [
+          {
+            "type": "archery",
+            "value": 3,
+            "description": "弓术等级3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "弓术·极",
+        "effects": [
+          {
+            "type": "archery",
+            "value": 4,
+            "description": "弓术等级4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "弓术·神",
+        "effects": [
+          {
+            "type": "archery",
+            "value": 5,
+            "description": "弓术等级5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "wile",
+    "name": "诡诈",
+    "category": "tactics",
+    "description": "兵者诡道，佯动惑敌，受伏击与奇袭伤害降低。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "诡诈·初",
+        "effects": [
+          {
+            "type": "wile",
+            "value": 5,
+            "description": "受伏击/奇袭伤害-5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "诡诈·通",
+        "effects": [
+          {
+            "type": "wile",
+            "value": 8,
+            "description": "受伏击/奇袭伤害-8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "诡诈·精",
+        "effects": [
+          {
+            "type": "wile",
+            "value": 10,
+            "description": "受伏击/奇袭伤害-10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "诡诈·极",
+        "effects": [
+          {
+            "type": "wile",
+            "value": 14,
+            "description": "受伏击/奇袭伤害-14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "诡诈·神",
+        "effects": [
+          {
+            "type": "wile",
+            "value": 18,
+            "description": "受伏击/奇袭伤害-18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "fireArrow",
+    "name": "火矢",
+    "category": "tactics",
+    "description": "火箭齐射，射杀并引燃营栅。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "火矢·初",
+        "effects": [
+          {
+            "type": "fireArrow",
+            "value": 1,
+            "description": "火箭伤害=智×1.0，高阶可引燃"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "火矢·通",
+        "effects": [
+          {
+            "type": "fireArrow",
+            "value": 1.2,
+            "description": "火箭伤害=智×1.2，高阶可引燃"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "火矢·精",
+        "effects": [
+          {
+            "type": "fireArrow",
+            "value": 1.4,
+            "description": "火箭伤害=智×1.4，高阶可引燃"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "火矢·极",
+        "effects": [
+          {
+            "type": "fireArrow",
+            "value": 1.7,
+            "description": "火箭伤害=智×1.7，高阶可引燃"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "火矢·神",
+        "effects": [
+          {
+            "type": "fireArrow",
+            "value": 2,
+            "description": "火箭伤害=智×2.0，高阶可引燃"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "poisonSmoke",
+    "name": "毒烟",
+    "category": "tactics",
+    "description": "施放毒烟，削弱敌军战力。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "毒烟·初",
+        "effects": [
+          {
+            "type": "poisonSmoke",
+            "value": 1,
+            "description": "毒烟滞留1回合，敌战力下降"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "毒烟·通",
+        "effects": [
+          {
+            "type": "poisonSmoke",
+            "value": 2,
+            "description": "毒烟滞留2回合，敌战力下降"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "毒烟·精",
+        "effects": [
+          {
+            "type": "poisonSmoke",
+            "value": 3,
+            "description": "毒烟滞留3回合，敌战力下降"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "毒烟·极",
+        "effects": [
+          {
+            "type": "poisonSmoke",
+            "value": 4,
+            "description": "毒烟滞留4回合，敌战力下降"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "毒烟·神",
+        "effects": [
+          {
+            "type": "poisonSmoke",
+            "value": 5,
+            "description": "毒烟滞留5回合，敌战力下降"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "fanji",
+    "name": "反计",
+    "category": "tactics",
+    "description": "识破敌方计略并反制。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "反计·初",
+        "effects": [
+          {
+            "type": "fanji",
+            "value": 10,
+            "description": "识破敌计概率+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "反计·通",
+        "effects": [
+          {
+            "type": "fanji",
+            "value": 15,
+            "description": "识破敌计概率+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "反计·精",
+        "effects": [
+          {
+            "type": "fanji",
+            "value": 20,
+            "description": "识破敌计概率+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "反计·极",
+        "effects": [
+          {
+            "type": "fanji",
+            "value": 25,
+            "description": "识破敌计概率+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "反计·神",
+        "effects": [
+          {
+            "type": "fanji",
+            "value": 30,
+            "description": "识破敌计概率+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "xubing",
+    "name": "虚兵",
+    "category": "tactics",
+    "description": "虚张声势，令敌误判兵力。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "虚兵·初",
+        "effects": [
+          {
+            "type": "xubing",
+            "value": 10,
+            "description": "敌情侦判兵力虚增10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "虚兵·通",
+        "effects": [
+          {
+            "type": "xubing",
+            "value": 15,
+            "description": "敌情侦判兵力虚增15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "虚兵·精",
+        "effects": [
+          {
+            "type": "xubing",
+            "value": 20,
+            "description": "敌情侦判兵力虚增20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "虚兵·极",
+        "effects": [
+          {
+            "type": "xubing",
+            "value": 25,
+            "description": "敌情侦判兵力虚增25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "虚兵·神",
+        "effects": [
+          {
+            "type": "xubing",
+            "value": 30,
+            "description": "敌情侦判兵力虚增30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "yunti",
+    "name": "云梯",
+    "category": "tactics",
+    "description": "架梯登城，攻城利器。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "云梯·初",
+        "effects": [
+          {
+            "type": "yunti",
+            "value": 10,
+            "description": "攻城伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "云梯·通",
+        "effects": [
+          {
+            "type": "yunti",
+            "value": 15,
+            "description": "攻城伤害+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "云梯·精",
+        "effects": [
+          {
+            "type": "yunti",
+            "value": 20,
+            "description": "攻城伤害+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "云梯·极",
+        "effects": [
+          {
+            "type": "yunti",
+            "value": 25,
+            "description": "攻城伤害+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "云梯·神",
+        "effects": [
+          {
+            "type": "yunti",
+            "value": 30,
+            "description": "攻城伤害+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "chongche",
+    "name": "冲车",
+    "category": "tactics",
+    "description": "冲车撞城，破門摧堞。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "冲车·初",
+        "effects": [
+          {
+            "type": "chongche",
+            "value": 15,
+            "description": "城防破坏+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "冲车·通",
+        "effects": [
+          {
+            "type": "chongche",
+            "value": 20,
+            "description": "城防破坏+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "冲车·精",
+        "effects": [
+          {
+            "type": "chongche",
+            "value": 25,
+            "description": "城防破坏+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "冲车·极",
+        "effects": [
+          {
+            "type": "chongche",
+            "value": 30,
+            "description": "城防破坏+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "冲车·神",
+        "effects": [
+          {
+            "type": "chongche",
+            "value": 40,
+            "description": "城防破坏+40%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "religious",
+    "name": "巫祝",
+    "category": "tactics",
+    "description": "巫祝祈禳，鼓舞部众，符水咒说以疗病。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "巫祝·初",
+        "effects": [
+          {
+            "type": "religious",
+            "value": 5,
+            "description": "所部士气+5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "巫祝·通",
+        "effects": [
+          {
+            "type": "religious",
+            "value": 8,
+            "description": "所部士气+8"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "巫祝·精",
+        "effects": [
+          {
+            "type": "religious",
+            "value": 10,
+            "description": "所部士气+10"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "巫祝·极",
+        "effects": [
+          {
+            "type": "religious",
+            "value": 14,
+            "description": "所部士气+14"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "巫祝·神",
+        "effects": [
+          {
+            "type": "religious",
+            "value": 18,
+            "description": "所部士气+18"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "navigation",
+    "name": "航海",
+    "category": "command",
+    "description": "熟习水道，水军接舷占优。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "航海·初",
+        "effects": [
+          {
+            "type": "navigation",
+            "value": 5,
+            "description": "水战伤害+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "航海·通",
+        "effects": [
+          {
+            "type": "navigation",
+            "value": 8,
+            "description": "水战伤害+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "航海·精",
+        "effects": [
+          {
+            "type": "navigation",
+            "value": 10,
+            "description": "水战伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "航海·极",
+        "effects": [
+          {
+            "type": "navigation",
+            "value": 14,
+            "description": "水战伤害+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "航海·神",
+        "effects": [
+          {
+            "type": "navigation",
+            "value": 18,
+            "description": "水战伤害+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "shuiyan",
+    "name": "水淹",
+    "category": "command",
+    "description": "决堤灌城，水攻之力。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "水淹·初",
+        "effects": [
+          {
+            "type": "shuiyan",
+            "value": 1,
+            "description": "水攻伤害=智×1.0"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "水淹·通",
+        "effects": [
+          {
+            "type": "shuiyan",
+            "value": 1.3,
+            "description": "水攻伤害=智×1.3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "水淹·精",
+        "effects": [
+          {
+            "type": "shuiyan",
+            "value": 1.6,
+            "description": "水攻伤害=智×1.6"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "水淹·极",
+        "effects": [
+          {
+            "type": "shuiyan",
+            "value": 2,
+            "description": "水攻伤害=智×2.0"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "水淹·神",
+        "effects": [
+          {
+            "type": "shuiyan",
+            "value": 2.5,
+            "description": "水攻伤害=智×2.5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "yexi",
+    "name": "夜袭",
+    "category": "command",
+    "description": "衔枚夜进，掩袭敌营。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "夜袭·初",
+        "effects": [
+          {
+            "type": "yexi",
+            "value": 10,
+            "description": "夜间伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "夜袭·通",
+        "effects": [
+          {
+            "type": "yexi",
+            "value": 15,
+            "description": "夜间伤害+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "夜袭·精",
+        "effects": [
+          {
+            "type": "yexi",
+            "value": 20,
+            "description": "夜间伤害+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "夜袭·极",
+        "effects": [
+          {
+            "type": "yexi",
+            "value": 25,
+            "description": "夜间伤害+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "夜袭·神",
+        "effects": [
+          {
+            "type": "yexi",
+            "value": 30,
+            "description": "夜间伤害+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "duanliang",
+    "name": "劫粮",
+    "category": "command",
+    "description": "断敌粮道，困敌于野。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "劫粮·初",
+        "effects": [
+          {
+            "type": "duanliang",
+            "value": 10,
+            "description": "焚敌粮+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "劫粮·通",
+        "effects": [
+          {
+            "type": "duanliang",
+            "value": 15,
+            "description": "焚敌粮+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "劫粮·精",
+        "effects": [
+          {
+            "type": "duanliang",
+            "value": 20,
+            "description": "焚敌粮+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "劫粮·极",
+        "effects": [
+          {
+            "type": "duanliang",
+            "value": 25,
+            "description": "焚敌粮+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "劫粮·神",
+        "effects": [
+          {
+            "type": "duanliang",
+            "value": 30,
+            "description": "焚敌粮+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "chiyuan",
+    "name": "驰援",
+    "category": "command",
+    "description": "移军如风，赴援急难。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "驰援·初",
+        "effects": [
+          {
+            "type": "chiyuan",
+            "value": 5,
+            "description": "行军/驰援效率+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "驰援·通",
+        "effects": [
+          {
+            "type": "chiyuan",
+            "value": 8,
+            "description": "行军/驰援效率+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "驰援·精",
+        "effects": [
+          {
+            "type": "chiyuan",
+            "value": 10,
+            "description": "行军/驰援效率+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "驰援·极",
+        "effects": [
+          {
+            "type": "chiyuan",
+            "value": 14,
+            "description": "行军/驰援效率+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "驰援·神",
+        "effects": [
+          {
+            "type": "chiyuan",
+            "value": 18,
+            "description": "行军/驰援效率+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "duanhou",
+    "name": "断后",
+    "category": "command",
+    "description": "全军为殿，撤退减损。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "断后·初",
+        "effects": [
+          {
+            "type": "duanhou",
+            "value": 10,
+            "description": "撤退兵力损耗-10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "断后·通",
+        "effects": [
+          {
+            "type": "duanhou",
+            "value": 15,
+            "description": "撤退兵力损耗-15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "断后·精",
+        "effects": [
+          {
+            "type": "duanhou",
+            "value": 20,
+            "description": "撤退兵力损耗-20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "断后·极",
+        "effects": [
+          {
+            "type": "duanhou",
+            "value": 25,
+            "description": "撤退兵力损耗-25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "断后·神",
+        "effects": [
+          {
+            "type": "duanhou",
+            "value": 30,
+            "description": "撤退兵力损耗-30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "hewei",
+    "name": "合围",
+    "category": "command",
+    "description": "分进合击，围而后胜。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "合围·初",
+        "effects": [
+          {
+            "type": "hewei",
+            "value": 5,
+            "description": "合围加成+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "合围·通",
+        "effects": [
+          {
+            "type": "hewei",
+            "value": 8,
+            "description": "合围加成+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "合围·精",
+        "effects": [
+          {
+            "type": "hewei",
+            "value": 10,
+            "description": "合围加成+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "合围·极",
+        "effects": [
+          {
+            "type": "hewei",
+            "value": 14,
+            "description": "合围加成+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "合围·神",
+        "effects": [
+          {
+            "type": "hewei",
+            "value": 18,
+            "description": "合围加成+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "leadership": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "zhuiji",
+    "name": "追击",
+    "category": "command",
+    "description": "掩杀溃兵，穷寇必追。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "追击·初",
+        "effects": [
+          {
+            "type": "zhuiji",
+            "value": 10,
+            "description": "对溃兵伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "追击·通",
+        "effects": [
+          {
+            "type": "zhuiji",
+            "value": 15,
+            "description": "对溃兵伤害+15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "追击·精",
+        "effects": [
+          {
+            "type": "zhuiji",
+            "value": 20,
+            "description": "对溃兵伤害+20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "追击·极",
+        "effects": [
+          {
+            "type": "zhuiji",
+            "value": 25,
+            "description": "对溃兵伤害+25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "追击·神",
+        "effects": [
+          {
+            "type": "zhuiji",
+            "value": 30,
+            "description": "对溃兵伤害+30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "juma",
+    "name": "拒马",
+    "category": "command",
+    "description": "拒马鹿角，克制骑突。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "拒马·初",
+        "effects": [
+          {
+            "type": "juma",
+            "value": 10,
+            "description": "受骑兵伤害-10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "拒马·通",
+        "effects": [
+          {
+            "type": "juma",
+            "value": 15,
+            "description": "受骑兵伤害-15%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "拒马·精",
+        "effects": [
+          {
+            "type": "juma",
+            "value": 20,
+            "description": "受骑兵伤害-20%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "拒马·极",
+        "effects": [
+          {
+            "type": "juma",
+            "value": 25,
+            "description": "受骑兵伤害-25%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "拒马·神",
+        "effects": [
+          {
+            "type": "juma",
+            "value": 30,
+            "description": "受骑兵伤害-30%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "diplomacy",
+    "name": "外交",
+    "category": "civil",
+    "description": "折冲樽俎，聘问四方。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "外交·初",
+        "effects": [
+          {
+            "type": "diplomacy",
+            "value": 2,
+            "description": "外交成功率+2百分点"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "外交·通",
+        "effects": [
+          {
+            "type": "diplomacy",
+            "value": 3,
+            "description": "外交成功率+3百分点"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "外交·精",
+        "effects": [
+          {
+            "type": "diplomacy",
+            "value": 4,
+            "description": "外交成功率+4百分点"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "外交·极",
+        "effects": [
+          {
+            "type": "diplomacy",
+            "value": 5,
+            "description": "外交成功率+5百分点"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "外交·神",
+        "effects": [
+          {
+            "type": "diplomacy",
+            "value": 7,
+            "description": "外交成功率+7百分点"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "civilization",
+    "name": "教化",
+    "category": "civil",
+    "description": "设庠序之教，移风易俗。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "教化·初",
+        "effects": [
+          {
+            "type": "civilization",
+            "value": 2,
+            "description": "民心得2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "教化·通",
+        "effects": [
+          {
+            "type": "civilization",
+            "value": 3,
+            "description": "民心得3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "教化·精",
+        "effects": [
+          {
+            "type": "civilization",
+            "value": 4,
+            "description": "民心得4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "教化·极",
+        "effects": [
+          {
+            "type": "civilization",
+            "value": 5,
+            "description": "民心得5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "教化·神",
+        "effects": [
+          {
+            "type": "civilization",
+            "value": 7,
+            "description": "民心得7"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "tuntian",
+    "name": "屯田",
+    "category": "civil",
+    "description": "且耕且守，积谷固本。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "屯田·初",
+        "effects": [
+          {
+            "type": "tuntian",
+            "value": 5,
+            "description": "粮产+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "屯田·通",
+        "effects": [
+          {
+            "type": "tuntian",
+            "value": 8,
+            "description": "粮产+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "屯田·精",
+        "effects": [
+          {
+            "type": "tuntian",
+            "value": 10,
+            "description": "粮产+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "屯田·极",
+        "effects": [
+          {
+            "type": "tuntian",
+            "value": 14,
+            "description": "粮产+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "屯田·神",
+        "effects": [
+          {
+            "type": "tuntian",
+            "value": 18,
+            "description": "粮产+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "shuili",
+    "name": "水利",
+    "category": "civil",
+    "description": "陂塘沟渠，旱涝有备。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "水利·初",
+        "effects": [
+          {
+            "type": "shuili",
+            "value": 3,
+            "description": "粮产/防灾+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "水利·通",
+        "effects": [
+          {
+            "type": "shuili",
+            "value": 5,
+            "description": "粮产/防灾+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "水利·精",
+        "effects": [
+          {
+            "type": "shuili",
+            "value": 6,
+            "description": "粮产/防灾+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "水利·极",
+        "effects": [
+          {
+            "type": "shuili",
+            "value": 8,
+            "description": "粮产/防灾+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "水利·神",
+        "effects": [
+          {
+            "type": "shuili",
+            "value": 10,
+            "description": "粮产/防灾+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "zhaofu",
+    "name": "招抚",
+    "category": "civil",
+    "description": "招抚流亡，附籍劝垦。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "招抚·初",
+        "effects": [
+          {
+            "type": "zhaofu",
+            "value": 3,
+            "description": "人口增长+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "招抚·通",
+        "effects": [
+          {
+            "type": "zhaofu",
+            "value": 5,
+            "description": "人口增长+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "招抚·精",
+        "effects": [
+          {
+            "type": "zhaofu",
+            "value": 6,
+            "description": "人口增长+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "招抚·极",
+        "effects": [
+          {
+            "type": "zhaofu",
+            "value": 8,
+            "description": "人口增长+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "招抚·神",
+        "effects": [
+          {
+            "type": "zhaofu",
+            "value": 10,
+            "description": "人口增长+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "quanxue",
+    "name": "劝学",
+    "category": "civil",
+    "description": "兴学劝士，文化日隆。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "劝学·初",
+        "effects": [
+          {
+            "type": "quanxue",
+            "value": 2,
+            "description": "文化+2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "劝学·通",
+        "effects": [
+          {
+            "type": "quanxue",
+            "value": 3,
+            "description": "文化+3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "劝学·精",
+        "effects": [
+          {
+            "type": "quanxue",
+            "value": 4,
+            "description": "文化+4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "劝学·极",
+        "effects": [
+          {
+            "type": "quanxue",
+            "value": 5,
+            "description": "文化+5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "劝学·神",
+        "effects": [
+          {
+            "type": "quanxue",
+            "value": 7,
+            "description": "文化+7"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "gongjiang",
+    "name": "工匠",
+    "category": "civil",
+    "description": "督造百工，坚城利械。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "工匠·初",
+        "effects": [
+          {
+            "type": "gongjiang",
+            "value": 5,
+            "description": "城防/工程效率+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "工匠·通",
+        "effects": [
+          {
+            "type": "gongjiang",
+            "value": 8,
+            "description": "城防/工程效率+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "工匠·精",
+        "effects": [
+          {
+            "type": "gongjiang",
+            "value": 10,
+            "description": "城防/工程效率+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "工匠·极",
+        "effects": [
+          {
+            "type": "gongjiang",
+            "value": 14,
+            "description": "城防/工程效率+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "工匠·神",
+        "effects": [
+          {
+            "type": "gongjiang",
+            "value": 18,
+            "description": "城防/工程效率+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "yantie",
+    "name": "盐铁",
+    "category": "civil",
+    "description": "盐铁专营，国用饶给。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "盐铁·初",
+        "effects": [
+          {
+            "type": "yantie",
+            "value": 5,
+            "description": "金收+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "盐铁·通",
+        "effects": [
+          {
+            "type": "yantie",
+            "value": 8,
+            "description": "金收+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "盐铁·精",
+        "effects": [
+          {
+            "type": "yantie",
+            "value": 10,
+            "description": "金收+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "盐铁·极",
+        "effects": [
+          {
+            "type": "yantie",
+            "value": 14,
+            "description": "金收+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "盐铁·神",
+        "effects": [
+          {
+            "type": "yantie",
+            "value": 18,
+            "description": "金收+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "politics": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "zhenji",
+    "name": "赈济",
+    "category": "civil",
+    "description": "开仓赈贷，民心归附。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "赈济·初",
+        "effects": [
+          {
+            "type": "zhenji",
+            "value": 3,
+            "description": "民心得3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "赈济·通",
+        "effects": [
+          {
+            "type": "zhenji",
+            "value": 5,
+            "description": "民心得5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "赈济·精",
+        "effects": [
+          {
+            "type": "zhenji",
+            "value": 6,
+            "description": "民心得6"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "赈济·极",
+        "effects": [
+          {
+            "type": "zhenji",
+            "value": 8,
+            "description": "民心得8"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "赈济·神",
+        "effects": [
+          {
+            "type": "zhenji",
+            "value": 10,
+            "description": "民心得10"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "toughness",
+    "name": "坚韧",
+    "category": "personal",
+    "description": "疮痍遍体而战意不堕。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "坚韧·初",
+        "effects": [
+          {
+            "type": "toughness",
+            "value": 5,
+            "description": "所受伤害-5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "坚韧·通",
+        "effects": [
+          {
+            "type": "toughness",
+            "value": 8,
+            "description": "所受伤害-8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "坚韧·精",
+        "effects": [
+          {
+            "type": "toughness",
+            "value": 10,
+            "description": "所受伤害-10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "坚韧·极",
+        "effects": [
+          {
+            "type": "toughness",
+            "value": 14,
+            "description": "所受伤害-14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "坚韧·神",
+        "effects": [
+          {
+            "type": "toughness",
+            "value": 18,
+            "description": "所受伤害-18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "throw",
+    "name": "投掷",
+    "category": "personal",
+    "description": "飞掷短械，例无虚发。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "投掷·初",
+        "effects": [
+          {
+            "type": "throw",
+            "value": 1,
+            "description": "投掷伤害=武×1.0"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "投掷·通",
+        "effects": [
+          {
+            "type": "throw",
+            "value": 1.2,
+            "description": "投掷伤害=武×1.2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "投掷·精",
+        "effects": [
+          {
+            "type": "throw",
+            "value": 1.4,
+            "description": "投掷伤害=武×1.4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "投掷·极",
+        "effects": [
+          {
+            "type": "throw",
+            "value": 1.7,
+            "description": "投掷伤害=武×1.7"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "投掷·神",
+        "effects": [
+          {
+            "type": "throw",
+            "value": 2,
+            "description": "投掷伤害=武×2.0"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "intimidate",
+    "name": "威吓",
+    "category": "personal",
+    "description": "声若巨雷，慑敌心胆。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "威吓·初",
+        "effects": [
+          {
+            "type": "intimidate",
+            "value": 5,
+            "description": "敌军士气-5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "威吓·通",
+        "effects": [
+          {
+            "type": "intimidate",
+            "value": 8,
+            "description": "敌军士气-8"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "威吓·精",
+        "effects": [
+          {
+            "type": "intimidate",
+            "value": 10,
+            "description": "敌军士气-10"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "威吓·极",
+        "effects": [
+          {
+            "type": "intimidate",
+            "value": 14,
+            "description": "敌军士气-14"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "威吓·神",
+        "effects": [
+          {
+            "type": "intimidate",
+            "value": 18,
+            "description": "敌军士气-18"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "charm",
+    "name": "魅力",
+    "category": "personal",
+    "description": "仪容风度，众望所归。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "魅力·初",
+        "effects": [
+          {
+            "type": "charm",
+            "value": 2,
+            "description": "登用/忠诚+2"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "魅力·通",
+        "effects": [
+          {
+            "type": "charm",
+            "value": 3,
+            "description": "登用/忠诚+3"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "魅力·精",
+        "effects": [
+          {
+            "type": "charm",
+            "value": 4,
+            "description": "登用/忠诚+4"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "魅力·极",
+        "effects": [
+          {
+            "type": "charm",
+            "value": 5,
+            "description": "登用/忠诚+5"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "魅力·神",
+        "effects": [
+          {
+            "type": "charm",
+            "value": 7,
+            "description": "登用/忠诚+7"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "charisma": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "qiangshu",
+    "name": "枪术",
+    "category": "personal",
+    "description": "长枪独出，单挑占先。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "枪术·初",
+        "effects": [
+          {
+            "type": "qiangshu",
+            "value": 3,
+            "description": "单挑伤害+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "枪术·通",
+        "effects": [
+          {
+            "type": "qiangshu",
+            "value": 5,
+            "description": "单挑伤害+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "枪术·精",
+        "effects": [
+          {
+            "type": "qiangshu",
+            "value": 6,
+            "description": "单挑伤害+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "枪术·极",
+        "effects": [
+          {
+            "type": "qiangshu",
+            "value": 8,
+            "description": "单挑伤害+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "枪术·神",
+        "effects": [
+          {
+            "type": "qiangshu",
+            "value": 10,
+            "description": "单挑伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "jishu",
+    "name": "戟术",
+    "category": "personal",
+    "description": "持戟纵横，钩啄兼施。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "戟术·初",
+        "effects": [
+          {
+            "type": "jishu",
+            "value": 3,
+            "description": "单挑伤害+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "戟术·通",
+        "effects": [
+          {
+            "type": "jishu",
+            "value": 5,
+            "description": "单挑伤害+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "戟术·精",
+        "effects": [
+          {
+            "type": "jishu",
+            "value": 6,
+            "description": "单挑伤害+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "戟术·极",
+        "effects": [
+          {
+            "type": "jishu",
+            "value": 8,
+            "description": "单挑伤害+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "戟术·神",
+        "effects": [
+          {
+            "type": "jishu",
+            "value": 10,
+            "description": "单挑伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "daoshu",
+    "name": "刀术",
+    "category": "personal",
+    "description": "刀势沉猛，劈斩开路。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "刀术·初",
+        "effects": [
+          {
+            "type": "daoshu",
+            "value": 3,
+            "description": "单挑伤害+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "刀术·通",
+        "effects": [
+          {
+            "type": "daoshu",
+            "value": 5,
+            "description": "单挑伤害+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "刀术·精",
+        "effects": [
+          {
+            "type": "daoshu",
+            "value": 6,
+            "description": "单挑伤害+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "刀术·极",
+        "effects": [
+          {
+            "type": "daoshu",
+            "value": 8,
+            "description": "单挑伤害+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "刀术·神",
+        "effects": [
+          {
+            "type": "daoshu",
+            "value": 10,
+            "description": "单挑伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "jianshu",
+    "name": "剑术",
+    "category": "personal",
+    "description": "剑走轻灵，短兵相接。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "剑术·初",
+        "effects": [
+          {
+            "type": "jianshu",
+            "value": 3,
+            "description": "单挑伤害+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "剑术·通",
+        "effects": [
+          {
+            "type": "jianshu",
+            "value": 5,
+            "description": "单挑伤害+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "剑术·精",
+        "effects": [
+          {
+            "type": "jianshu",
+            "value": 6,
+            "description": "单挑伤害+6%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "剑术·极",
+        "effects": [
+          {
+            "type": "jianshu",
+            "value": 8,
+            "description": "单挑伤害+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "剑术·神",
+        "effects": [
+          {
+            "type": "jianshu",
+            "value": 10,
+            "description": "单挑伤害+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "shuixing",
+    "name": "水性",
+    "category": "personal",
+    "description": "泅渡如履平地，舟战不惧。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "水性·初",
+        "effects": [
+          {
+            "type": "shuixing",
+            "value": 5,
+            "description": "水战适性加成+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "水性·通",
+        "effects": [
+          {
+            "type": "shuixing",
+            "value": 8,
+            "description": "水战适性加成+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "水性·精",
+        "effects": [
+          {
+            "type": "shuixing",
+            "value": 10,
+            "description": "水战适性加成+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "水性·极",
+        "effects": [
+          {
+            "type": "shuixing",
+            "value": 14,
+            "description": "水战适性加成+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "水性·神",
+        "effects": [
+          {
+            "type": "shuixing",
+            "value": 18,
+            "description": "水战适性加成+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "war": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "xiangma",
+    "name": "相马",
+    "category": "personal",
+    "description": "伯乐之术，识马于未显。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "相马·初",
+        "effects": [
+          {
+            "type": "xiangma",
+            "value": 5,
+            "description": "马匹品质加成+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "相马·通",
+        "effects": [
+          {
+            "type": "xiangma",
+            "value": 8,
+            "description": "马匹品质加成+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "相马·精",
+        "effects": [
+          {
+            "type": "xiangma",
+            "value": 10,
+            "description": "马匹品质加成+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "相马·极",
+        "effects": [
+          {
+            "type": "xiangma",
+            "value": 14,
+            "description": "马匹品质加成+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "相马·神",
+        "effects": [
+          {
+            "type": "xiangma",
+            "value": 18,
+            "description": "马匹品质加成+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "bingfa",
+    "name": "兵法",
+    "category": "personal",
+    "description": "熟读韬略，战法威力增益。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "兵法·初",
+        "effects": [
+          {
+            "type": "bingfa",
+            "value": 2,
+            "description": "战法威力+2%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "兵法·通",
+        "effects": [
+          {
+            "type": "bingfa",
+            "value": 3,
+            "description": "战法威力+3%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "兵法·精",
+        "effects": [
+          {
+            "type": "bingfa",
+            "value": 4,
+            "description": "战法威力+4%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "兵法·极",
+        "effects": [
+          {
+            "type": "bingfa",
+            "value": 5,
+            "description": "战法威力+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "兵法·神",
+        "effects": [
+          {
+            "type": "bingfa",
+            "value": 7,
+            "description": "战法威力+7%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "tianwen",
+    "name": "天文",
+    "category": "personal",
+    "description": "仰观天象，知风雨之候。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "天文·初",
+        "effects": [
+          {
+            "type": "tianwen",
+            "value": 5,
+            "description": "观天/气象判定+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "天文·通",
+        "effects": [
+          {
+            "type": "tianwen",
+            "value": 8,
+            "description": "观天/气象判定+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "天文·精",
+        "effects": [
+          {
+            "type": "tianwen",
+            "value": 10,
+            "description": "观天/气象判定+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "天文·极",
+        "effects": [
+          {
+            "type": "tianwen",
+            "value": 14,
+            "description": "观天/气象判定+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "天文·神",
+        "effects": [
+          {
+            "type": "tianwen",
+            "value": 18,
+            "description": "观天/气象判定+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "dili",
+    "name": "地理",
+    "category": "personal",
+    "description": "深谙山川险易，行军占便。",
+    "maxLevel": 5,
+    "levels": [
+      {
+        "level": 1,
+        "name": "地理·初",
+        "effects": [
+          {
+            "type": "dili",
+            "value": 5,
+            "description": "地形加成+5%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 55
+          }
+        }
+      },
+      {
+        "level": 2,
+        "name": "地理·通",
+        "effects": [
+          {
+            "type": "dili",
+            "value": 8,
+            "description": "地形加成+8%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 60
+          },
+          "useCount": 3
+        }
+      },
+      {
+        "level": 3,
+        "name": "地理·精",
+        "effects": [
+          {
+            "type": "dili",
+            "value": 10,
+            "description": "地形加成+10%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 65
+          },
+          "useCount": 8
+        }
+      },
+      {
+        "level": 4,
+        "name": "地理·极",
+        "effects": [
+          {
+            "type": "dili",
+            "value": 14,
+            "description": "地形加成+14%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 72
+          },
+          "useCount": 20
+        }
+      },
+      {
+        "level": 5,
+        "name": "地理·神",
+        "effects": [
+          {
+            "type": "dili",
+            "value": 18,
+            "description": "地形加成+18%"
+          }
+        ],
+        "requirement": {
+          "minStats": {
+            "intelligence": 80
+          },
+          "useCount": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "wusheng",
+    "name": "武圣",
+    "category": "unique",
+    "description": "关羽专属。暴击率+15%、倍率×2.5，击败敌将后下回合必连击（《三国志》威震华夏；效果已实装 05 §6.2.3/6.4.3）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "武圣",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "关羽专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "wushuang",
+    "name": "无双",
+    "category": "unique",
+    "description": "吕布专属。暴击率+20%无视防御，连击不衰减、反击后+5气力（演义「人中吕布」；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "无双",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "吕布专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "ganglie",
+    "name": "刚烈",
+    "category": "unique",
+    "description": "张飞专属。暴伤+30%，被攻击必反击且反击必暴、系数×1.0（史评「暴而无恩」之反面，雄壮威猛（《三国志》）；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "刚烈",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "张飞专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "paoxiao",
+    "name": "咆哮",
+    "category": "unique",
+    "description": "张飞专属。首回合连击率+50%，敌混乱时+30%（演义长坂据水断桥喝退曹军；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "咆哮",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "张飞专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "longdan",
+    "name": "龙胆",
+    "category": "unique",
+    "description": "赵云专属。单骑连击率+20%逐回合累加，被围反击率翻倍（一身是胆（《三国志》裴注）；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "龙胆",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "赵云专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "shenjiang",
+    "name": "神将",
+    "category": "unique",
+    "description": "赵云专属。单骑暴击率+15%，体力过半主动攻击后仍可反击（演义常胜将军形象；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "神将",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "赵云专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "huchi",
+    "name": "虎痴",
+    "category": "unique",
+    "description": "许褚专属。体力<20%时暴击/连击率+30%，反击必暴（史 裴注「虎痴」之称（《三国志》）；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "虎痴",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "许褚专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "elai",
+    "name": "恶来",
+    "category": "unique",
+    "description": "典韦专属。反击率+30%、系数×1.2，每回合可反击2次（曹操比之古之恶来（《三国志》）；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "恶来",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "典韦专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "qishen",
+    "name": "骑神",
+    "category": "unique",
+    "description": "马超专属。骑兵暴击率+15%，冲锋连击率+20%（演义神威天将军；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "骑神",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "马超专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "tianyi",
+    "name": "天义",
+    "category": "unique",
+    "description": "太史慈专属。攻击必二连击、连击独立暴击判定（演义天义之名与神亭酣斗；效果已实装）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "天义",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "太史慈专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "wolong",
+    "name": "卧龙",
+    "category": "unique",
+    "description": "诸葛亮专属。隆中对定三分，卧龙之名（《三国志》自比管乐，时人未许）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "卧龙",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "诸葛亮专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "fengchu",
+    "name": "凤雏",
+    "category": "unique",
+    "description": "庞统专属。与卧龙齐名的凤雏（《三国志》庞统传，司马徽语「凤雏」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "凤雏",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "庞统专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "guicai",
+    "name": "鬼才",
+    "category": "unique",
+    "description": "郭嘉专属。十胜十败论、遗计定辽东（《三国志》裴注，民间称「鬼才」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "鬼才",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "郭嘉专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "wangzuo",
+    "name": "王佐",
+    "category": "unique",
+    "description": "荀彧专属。何颙评「王佐才也」，居中持重二十载（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "王佐",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "荀彧专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "mouzhu",
+    "name": "谋主",
+    "category": "unique",
+    "description": "荀攸专属。曹操军师之长，前后画奇策十二（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "谋主",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "荀攸专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "dushi",
+    "name": "毒士",
+    "category": "unique",
+    "description": "贾诩专属。算无遗策，一言乱天下（《三国志》，民间称「毒士」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "毒士",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "贾诩专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "tashang",
+    "name": "榻上策",
+    "category": "unique",
+    "description": "鲁肃专属。榻上策对，先定江东再图天下（《三国志·鲁肃传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "榻上策",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "鲁肃专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "guamu",
+    "name": "刮目",
+    "category": "unique",
+    "description": "吕蒙专属。士别三日刮目相待，白衣渡江（《三国志》裴注引《江表传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "刮目",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "吕蒙专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "lianying",
+    "name": "连营",
+    "category": "unique",
+    "description": "陆逊专属。火烧连营，彝陵破刘备（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "连营",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "陆逊专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "yinglang",
+    "name": "鹰狼",
+    "category": "unique",
+    "description": "司马懿专属。鹰视狼顾，内忌而外宽（《晋书》，史称「狼顾之相」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "鹰狼",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "司马懿专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "sishi",
+    "name": "死士",
+    "category": "unique",
+    "description": "司马师专属。阴养死士三千，密谋定于朝夕（《晋书·景帝纪》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "死士",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "司马师专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "qihua",
+    "name": "奇画",
+    "category": "unique",
+    "description": "法正专属。奇画策算，助刘备定蜀（《三国志》评「奇画策算」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "奇画",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "法正专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jianxiong",
+    "name": "奸雄",
+    "category": "unique",
+    "description": "曹操专属。许劭评「治世之能臣，乱世之奸雄」（史（《后汉书》/《三国志》裴注））",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "奸雄",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹操专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "xiaoxiong",
+    "name": "枭雄",
+    "category": "unique",
+    "description": "刘备专属。折而不挠，天下枭雄（《三国志》评「高祖之风，英雄之器」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "枭雄",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "刘备专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "sangong",
+    "name": "三公",
+    "category": "unique",
+    "description": "袁绍专属。四世三公，门生故吏遍天下（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "三公",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "袁绍专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "menghu",
+    "name": "猛虎",
+    "category": "unique",
+    "description": "孙坚专属。江东猛虎，破虏将军（《三国演义》绰号；史官至破虏将军）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "猛虎",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "孙坚专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "ziran",
+    "name": "紫髯",
+    "category": "unique",
+    "description": "孙权专属。碧眼紫髯，紫髯将军（《三国演义》形象；汉使称其「相貌奇伟」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "紫髯",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "孙权专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "zhiti",
+    "name": "止啼",
+    "category": "unique",
+    "description": "张辽专属。逍遥津之战后，江东小儿闻辽名不敢夜啼（《三国志》裴注引《魏略》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "止啼",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "张辽专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "changqu",
+    "name": "长驱",
+    "category": "unique",
+    "description": "徐晃专属。樊城之围长驱径入，曹操称有「周亚夫之风」（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "长驱",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "徐晃专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "qiaobian",
+    "name": "巧变",
+    "category": "unique",
+    "description": "张郃专属。识变数，善处营陈，料战势地形（《三国志》评「郃识变数」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "巧变",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "张郃专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "yizhong",
+    "name": "毅重",
+    "category": "unique",
+    "description": "于禁专属。持军严整，最号毅重（《三国志》评）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "毅重",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "于禁专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "xiandeng",
+    "name": "先登",
+    "category": "unique",
+    "description": "乐进专属。每战先登，从击吕布张绣（《三国志》评「每战先登」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "先登",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "乐进专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "tianren",
+    "name": "天人",
+    "category": "unique",
+    "description": "曹仁专属。守樊城偃城，长史陈矫叹「将军真天人也」（《三国志》裴注）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "天人",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹仁专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "manghou",
+    "name": "盲侯",
+    "category": "unique",
+    "description": "夏侯惇专属。拔矢啖睛，军中称「盲夏侯」（裴注引《魏略》，演义浓墨）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "盲侯",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "夏侯惇专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "hubu",
+    "name": "虎步",
+    "category": "unique",
+    "description": "夏侯渊专属。虎步关右，所向无前，三日五百六日一千（曹操语，《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "虎步",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "夏侯渊专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "shenshe",
+    "name": "神射",
+    "category": "unique",
+    "description": "黄忠专属。百步穿杨，定军山斩夏侯渊（演义「神射」；斩渊事见《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "神射",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "黄忠专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "fangu",
+    "name": "反骨",
+    "category": "unique",
+    "description": "魏延专属。脑后反骨，子午谷奇谋（演义「反骨」说；《三国志》评「延既善养士卒，勇猛过人，又性矜高」）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "反骨",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "魏延专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "xiaobawang",
+    "name": "小霸王",
+    "category": "unique",
+    "description": "孙策专属。勇猛冠世如项籍，人称小霸王（《三国志》裴注引《吴历》，演义绰号）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "小霸王",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "孙策专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jinfan",
+    "name": "锦帆",
+    "category": "unique",
+    "description": "甘宁专属。锦帆贼出身的江表虎臣，百骑劫魏营（《三国志》及裴注引《吴书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "锦帆",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "甘宁专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "kuru",
+    "name": "苦肉",
+    "category": "unique",
+    "description": "黄盖专属。苦肉计诈降，赤壁火攻首功（演义名场面；火攻谏策见《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "苦肉",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "黄盖专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "buqu",
+    "name": "不屈",
+    "category": "unique",
+    "description": "周泰专属。遍体创痍，肤如刻画，救孙权于乱军（《三国志》裴注引《江表传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "不屈",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "周泰专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "duanbing",
+    "name": "短兵",
+    "category": "unique",
+    "description": "丁奉专属。雪中奋短兵，破魏军于东兴（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "短兵",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "丁奉专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "yicheng",
+    "name": "疑城",
+    "category": "unique",
+    "description": "徐盛专属。立疑城假楼，一夜退曹丕（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "疑城",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "徐盛专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "taichen",
+    "name": "抬榇",
+    "category": "unique",
+    "description": "庞德专属。抬榇决死战关羽，射羽中额，终不降而死（《三国志》，演义浓墨）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "抬榇",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "庞德专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "chencang",
+    "name": "陈仓",
+    "category": "unique",
+    "description": "郝昭专属。千人守陈仓，拒诸葛亮数万之众二十余日（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "陈仓",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "郝昭专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "xianzhen",
+    "name": "陷阵",
+    "category": "unique",
+    "description": "高顺专属。陷阵营七百兵，攻无不克（裴注引《英雄记》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "陷阵",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "高顺专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "baima",
+    "name": "白马",
+    "category": "unique",
+    "description": "公孙瓒专属。白马将军，率白马义从镇守北疆（《后汉书》/《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "白马",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "公孙瓒专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "duantou",
+    "name": "断头",
+    "category": "unique",
+    "description": "严颜专属。「我州但有断头将军，无有降将军」（（《三国志·张飞传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "断头",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "严颜专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "guoshi",
+    "name": "国士",
+    "category": "unique",
+    "description": "凌统专属。轻财重义，有国士之风（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "国士",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "凌统专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "zhangzhe",
+    "name": "长者",
+    "category": "unique",
+    "description": "李典专属。不与诸将争功，敬贤士大夫，有长者之风（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "长者",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "李典专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "rangma",
+    "name": "让马",
+    "category": "unique",
+    "description": "曹昂专属。宛城之变以马授父，孝烈殒身（裴注引《世语》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "让马",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹昂专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "huangxu",
+    "name": "黄须",
+    "category": "unique",
+    "description": "曹彰专属。须黄而勇，曹操称「黄须儿」，北征代郡乌丸（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "黄须",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹彰专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "fulang",
+    "name": "何郎",
+    "category": "unique",
+    "description": "何晏专属。美姿仪面至白，行步顾影，人称「傅粉何郎」（裴注引《魏略》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "何郎",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "何晏专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "qianliju",
+    "name": "千里驹",
+    "category": "unique",
+    "description": "曹休专属。曹操称「此吾家千里驹也」，使与曹真共领虎豹骑（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "千里驹",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹休专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "gexi",
+    "name": "割席",
+    "category": "unique",
+    "description": "华歆专属。管宁割席，子鱼优游（世说新语·德行）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "割席",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "华歆专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "huaiju",
+    "name": "怀橘",
+    "category": "unique",
+    "description": "陆绩专属。六岁怀橘遗母，孝行传世（裴注引《吴录》，后入二十四孝）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "怀橘",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "陆绩专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "biyue",
+    "name": "闭月",
+    "category": "unique",
+    "description": "貂蝉专属。连环计中的闭月之姿（民间「四大美女」传说层，《三国演义》浓墨）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "闭月",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "貂蝉专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "hujia",
+    "name": "胡笳",
+    "category": "unique",
+    "description": "蔡琰专属。博学才辩，感伤乱作《胡笳十八拍》（《后汉书·列女传》，文学层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "胡笳",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "蔡琰专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jiguan",
+    "name": "机巧",
+    "category": "unique",
+    "description": "黄月英专属。善机巧，传说木牛流马之术相授（裴注引《襄阳记》及民间传说层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "机巧",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "黄月英专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "feidao",
+    "name": "飞刀",
+    "category": "unique",
+    "description": "祝融专属。飞刀百发百中，擒将如探囊（演义南蛮女王设定层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "飞刀",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "祝融专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "shenyi",
+    "name": "神医",
+    "category": "unique",
+    "description": "华佗专属。刮骨疗毒，麻沸散之祖（《三国志·方技传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "神医",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "华佗专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jiaowei",
+    "name": "焦尾",
+    "category": "unique",
+    "description": "蔡邕专属。闻火烈之声识良桐，制焦尾琴（《后汉书·蔡邕传》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "焦尾",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "蔡邕专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "guose",
+    "name": "国色",
+    "category": "unique",
+    "description": "大乔专属。二乔国色，桥公之女嫁孙策（《三国志·周瑜传》，演义浓墨）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "国色",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "大乔专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "luoshen",
+    "name": "洛神",
+    "category": "unique",
+    "description": "甄宓专属。翩若惊鸿婉若游龙，洛神之拟（曹植《洛神赋》传说层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "洛神",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "甄宓专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "gongyaoji",
+    "name": "弓腰姬",
+    "category": "unique",
+    "description": "孙尚香专属。才捷刚猛，侍婢百人皆执刀侍立，人称弓腰姬（演义及民间绰号层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "弓腰姬",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "孙尚香专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "huangtian",
+    "name": "黄天",
+    "category": "unique",
+    "description": "张角专属。「苍天已死，黄天当立」，太平道举事（《后汉书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "黄天",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "张角专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "pili",
+    "name": "霹雳",
+    "category": "unique",
+    "description": "刘晔专属。献发石车号「霹雳车」，破袁绍橹楼（演义官渡名场面层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "霹雳",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "刘晔专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jiupin",
+    "name": "九品",
+    "category": "unique",
+    "description": "陈群专属。立九品官人法，定一代选制（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "九品",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "陈群专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "badou",
+    "name": "八斗",
+    "category": "unique",
+    "description": "曹植专属。才高八斗，骨气奇高词采华茂（谢灵运语，后世文学层）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "八斗",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "曹植专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "duolei",
+    "name": "堕泪",
+    "category": "unique",
+    "description": "羊祜专属。镇襄阳绥怀有方，百姓立碑堕泪（《晋书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "堕泪",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "羊祜专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "wuku",
+    "name": "武库",
+    "category": "unique",
+    "description": "杜预专属。博学多通，时人谓之「杜武库」（《晋书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "武库",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "杜预专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "louchuan",
+    "name": "楼船",
+    "category": "unique",
+    "description": "王濬专属。治舟七年，楼船顺流直取建业（《晋书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "楼船",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "王濬专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "lianhuan",
+    "name": "连环",
+    "category": "unique",
+    "description": "王允专属。巧设连环计，除董卓于宫阙（演义名场面层，除卓事见《后汉书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "连环",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "王允专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "xiling",
+    "name": "西陵",
+    "category": "unique",
+    "description": "陆抗专属。西陵破步阐，吴国最后的名将之壁（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "西陵",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "陆抗专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "yinping",
+    "name": "阴平",
+    "category": "unique",
+    "description": "邓艾专属。偷渡阴平七百里无人之地，一战灭蜀（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "阴平",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "邓艾专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "dandou",
+    "name": "胆斗",
+    "category": "unique",
+    "description": "姜维专属。维死时见剖，胆如斗大（裴注引《世语》，演义浓墨）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "胆斗",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "姜维专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "jiecai",
+    "name": "捷才",
+    "category": "unique",
+    "description": "诸葛恪专属。少有才名，辩捷无对（《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "捷才",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "诸葛恪专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "daru",
+    "name": "大儒",
+    "category": "unique",
+    "description": "卢植专属。海内大儒，涿郡名门之师（《后汉书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "大儒",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "卢植专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "weizhen",
+    "name": "威震",
+    "category": "unique",
+    "description": "皇甫嵩专属。平黄巾首功，威震天下（《后汉书》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "威震",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "皇甫嵩专属"
+          }
+        ],
+        "requirement": {}
+      }
+    ]
+  },
+  {
+    "id": "zouma",
+    "name": "走马",
+    "category": "unique",
+    "description": "徐庶专属。走马荐诸葛，身在曹营不献一策（演义层；辞先主事见《三国志》）",
+    "maxLevel": 1,
+    "levels": [
+      {
+        "level": 1,
+        "name": "走马",
+        "effects": [
+          {
+            "type": "unique",
+            "value": 1,
+            "description": "徐庶专属"
           }
         ],
         "requirement": {}

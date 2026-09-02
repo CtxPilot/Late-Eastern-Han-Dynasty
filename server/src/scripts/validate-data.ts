@@ -17,7 +17,7 @@ const files: { key: validators.DataFileKey; file: string; expected: number }[] =
   { key: 'items', file: 'items.json', expected: 165 },
   { key: 'females', file: 'females.json', expected: 90 },
   { key: 'children', file: 'children.json', expected: 50 },
-  { key: 'skills', file: 'skills.json', expected: 30 },
+  { key: 'skills', file: 'skills.json', expected: 149 },
   { key: 'scenarios', file: 'scenarios.json', expected: 2 },
   { key: 'events', file: 'events.json', expected: 24 },
 ];
