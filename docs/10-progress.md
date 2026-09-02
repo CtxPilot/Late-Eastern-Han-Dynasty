@@ -1,3 +1,15 @@
+## 2026-09-03 — Session 429 · 0-B 数据扩容 P0B-14（scenarios.json 2→9：首批 7 历史剧本）
+
+- Phase：**Phase 0-B 数据扩容**；Session 428 收官 P0B-13 后按 HANDOFF「下一步」进入 P0B-14。
+- **切分决策**：新增 7 个历史剧本（id 3~9：184 黄巾之乱 / 190 群雄讨董 / 194 群雄逐鹿 / 200 官渡对峙 / 208 赤壁前夜 / 219 汉中与襄樊（开局月=九月）/ 234 五丈原对峙），沿关东义兵「技术切片」范式——紧凑势力集 + 显式据点城，未声明城 ruler=null（无主）、未布点武将 FREE（在野）为 state-pipeline 既定语义；新增剧本 `eventIds=[]`（叙事事件挂接留待 P0B-15 双向链接）；**约 30 势力 190 全量开局仍属 0-B，与 P0B-06 officers 1000+ 协调后置**（09 行既定口径）；剧本 1/2 逐字节保留（脚本断言 JSON 相等，金样与既有验收锚点零扰动）。
+- **数据要点**：①时代存活硬断言——每位登场者 deathYear≥startYear 且 startYear−birthYear≥14（甄宓 194 年仅 11 岁、钟会 234 年仅 9 岁被脚本拦截剔除；夏侯渊 219 正月殁、张郃/曹真 231 殁、太史慈 206 殁等全部滤除）；②重名武将（刘表 167/285、袁术 181/284、陈宫 165/290 等）按显式 id 表引用；③`initialDiplomacy` 显式覆盖全部 active 势力对（战争/同盟按史实，缺省 neutral 0）；④孙策 200 年剧本以统治者登场、四月遇刺由引擎寿元机制自然呈现；⑤刘备 200 依袁绍、208 屯夏口（西陵代理、mode=hosted）、官渡曹操治所以阳翟代理许都——均沿关东义兵「代理席位+scopeNote」先例。
+- **生成脚本**：`scripts/gen-0b-scenarios.mjs`（幂等：剥掉 id≥3 生成段重排；九重自检：存在性/重势力城/都城归属/时代存活/女性年齿/子女存在/外交全对/基线不变/剧本总数）。
+- **引擎级实测**：tsx probe 真实构建 S9/S7/S3 GameState——S9 19 将 106 城 3 势力（蜀汉 ruler 刘禅、诸葛亮 active@汉中20）、S7 39 将 6 势力 15 外交对、S3 张角/韩遂势力正确，全部通过。
+- **校验链**：validate-data scenarios expected 2→9（唯一改动点），全文件 Zod + scenario/event 交叉引用全绿。
+- **验证（全绿）**：validate-data（9 剧本）、turn-golden **3/3**（剧本 1/2 逐字节未动）、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-scenario-events **32**、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、compliance（785 files）、`git diff --check` 通过。
+- 文档：docs/08（§九 9 剧本落地口径，真源先行）、docs/09（P0B-14 行）、docs/11（scenarios ~10KB→~90KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API/UI 改动；新剧本 eventIds=[] 待 P0B-15 挂接叙事线；新剧本未做浏览器点击验收（ScenarioSelect 列表随目录自动出现，属既有路径）；约 30 势力 190 全量开局待 P0B-06。0-B 剩余：P0B-06 officers 1000+、P0B-15 events 全量；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-03 — Session 428 · 0-B 数据扩容 P0B-13（skills.json 30→149：69通用×5级 + 80专属）
 
 - Phase：**Phase 0-B 数据扩容**；Session 427 收官双批后按 HANDOFF「下一步」进入 P0B-13。
@@ -1443,7 +1455,7 @@
 | P0B-11 | females.json（全量 90+女性） | [x] | Session 427：0-A 10 + 新增 80（id 211~290），validate-data expected 90 |
 | P0B-12 | children.json（全量 50+子女） | [x] | Session 427：0-A 5 + 新增 45（id 955~999），validate-data expected 50 |
 | P0B-13 | skills.json（全量 149技能） | [x] | Session 428：69通用×5级（0-A 30 条 L1 不变补全）+80专属；修复 officers 9 个悬空 skillId；生成 client skill-names 映射 |
-| P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [ ] | 以08数字真源为准；约30势力190全量开局仍属0-B |
+| P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [x] | Session 429：新增 id 3~9 七历史切片（引擎 probe 实测构建），validate-data expected 2→9；事件挂接留待 P0B-15 |
 | P0B-15 | events.json（全量） | [ ] | — |
 
 ---

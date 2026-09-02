@@ -13,9 +13,9 @@
         "color": "#4a6fa5",
         "rulerId": 1,
         "capitalCityId": 1,
-      "mode": "territorial",
-      "headquartersLabel": "洛阳",
-      "preferredKingdomName": "魏"
+        "mode": "territorial",
+        "headquartersLabel": "洛阳",
+        "preferredKingdomName": "魏"
       },
       {
         "id": 2,
@@ -23,9 +23,9 @@
         "color": "#3d8b5a",
         "rulerId": 2,
         "capitalCityId": 19,
-      "mode": "territorial",
-      "headquartersLabel": "成都",
-      "preferredKingdomName": "汉中"
+        "mode": "territorial",
+        "headquartersLabel": "成都",
+        "preferredKingdomName": "汉中"
       },
       {
         "id": 3,
@@ -33,9 +33,9 @@
         "color": "#c44b4b",
         "rulerId": 3,
         "capitalCityId": 17,
-      "mode": "territorial",
-      "headquartersLabel": "建业",
-      "preferredKingdomName": "吴"
+        "mode": "territorial",
+        "headquartersLabel": "建业",
+        "preferredKingdomName": "吴"
       },
       {
         "id": 4,
@@ -43,17 +43,73 @@
         "color": "#8b5a9e",
         "rulerId": 5,
         "capitalCityId": 9,
-      "mode": "territorial",
-      "headquartersLabel": "下邳",
-      "preferredKingdomName": "温"
+        "mode": "territorial",
+        "headquartersLabel": "下邳",
+        "preferredKingdomName": "温"
       }
     ],
     "eventIds": [],
-    "availableOfficerIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114],
-    "availableFemaleIds": [201, 202, 203, 204, 205, 206, 207, 208, 209, 210],
-    "childEventIds": [950, 951, 952, 953, 954],
-    "availableEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
-    "defaultEventLayers": ["gameplay"],
+    "availableOfficerIds": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114
+    ],
+    "availableFemaleIds": [
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210
+    ],
+    "childEventIds": [
+      950,
+      951,
+      952,
+      953,
+      954
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "gameplay"
+    ],
     "startYear": 190,
     "endYear": 220,
     "playableFactions": [
@@ -435,9 +491,9 @@
         "color": "#496b88",
         "rulerId": 1,
         "capitalCityId": 7,
-      "mode": "expeditionary",
-      "headquartersLabel": "陈留募兵处",
-      "preferredKingdomName": "魏",
+        "mode": "expeditionary",
+        "headquartersLabel": "陈留募兵处",
+        "preferredKingdomName": "魏",
         "historicalNote": "曹操在陈留散家财、合义兵；据点是补给席位，不等同陈留郡归曹操所有。"
       },
       {
@@ -466,24 +522,88 @@
         "color": "#6f445e",
         "rulerId": 112,
         "capitalCityId": 1,
-      "mode": "territorial",
-      "headquartersLabel": "洛阳",
-      "preferredKingdomName": "凉"
+        "mode": "territorial",
+        "headquartersLabel": "洛阳",
+        "preferredKingdomName": "凉"
       }
     ],
-    "eventIds": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123],
-    "availableOfficerIds": [1, 5, 9, 101, 102, 103, 104, 105, 112, 113, 114],
+    "eventIds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123
+    ],
+    "availableOfficerIds": [
+      1,
+      5,
+      9,
+      101,
+      102,
+      103,
+      104,
+      105,
+      112,
+      113,
+      114
+    ],
     "availableFemaleIds": [],
     "childEventIds": [],
-    "availableEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
-    "defaultEventLayers": ["official_history", "annotated_history", "literature", "legend", "gameplay"],
-    "playableFactions": [1, 2, 3, 4],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4
+    ],
     "recommendedFaction": 1,
     "startState": {
       "year": 190,
       "month": 1,
-      "factions": [1, 2, 3, 4],
-      "activeFactionIds": [1, 2, 3, 4],
+      "factions": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4
+      ],
       "cityOwnership": {
         "1": 4,
         "2": 4,
@@ -494,26 +614,3360 @@
         "25": 2
       },
       "officerPositions": [
-        { "officerId": 1, "cityId": 7, "factionId": 1, "militaryPosition": "grandGeneral", "loyalty": 100 },
-        { "officerId": 9, "cityId": 7, "factionId": 1, "militaryPosition": "general", "loyalty": 100 },
-        { "officerId": 101, "cityId": 7, "factionId": 1, "militaryPosition": "general", "loyalty": 100 },
-        { "officerId": 102, "cityId": 7, "factionId": 1, "militaryPosition": "captain", "loyalty": 95 },
-        { "officerId": 103, "cityId": 7, "factionId": 1, "militaryPosition": "captain", "loyalty": 95 },
-        { "officerId": 113, "cityId": 25, "factionId": 2, "militaryPosition": "grandGeneral", "loyalty": 100 },
-        { "officerId": 114, "cityId": 13, "factionId": 3, "militaryPosition": "grandGeneral", "loyalty": 100 },
-        { "officerId": 105, "cityId": 13, "factionId": 3, "militaryPosition": "captain", "loyalty": 100 },
-        { "officerId": 112, "cityId": 1, "factionId": 4, "civilPosition": "chancellor", "loyalty": 100 },
-        { "officerId": 5, "cityId": 1, "factionId": 4, "militaryPosition": "grandGeneral", "loyalty": 90 },
-        { "officerId": 104, "cityId": 1, "factionId": 4, "militaryPosition": "general", "loyalty": 90 }
+        {
+          "officerId": 1,
+          "cityId": 7,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 9,
+          "cityId": 7,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 101,
+          "cityId": 7,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 102,
+          "cityId": 7,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 95
+        },
+        {
+          "officerId": 103,
+          "cityId": 7,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 95
+        },
+        {
+          "officerId": 113,
+          "cityId": 25,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 114,
+          "cityId": 13,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 105,
+          "cityId": 13,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 100
+        },
+        {
+          "officerId": 112,
+          "cityId": 1,
+          "factionId": 4,
+          "civilPosition": "chancellor",
+          "loyalty": 100
+        },
+        {
+          "officerId": 5,
+          "cityId": 1,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 90
+        },
+        {
+          "officerId": 104,
+          "cityId": 1,
+          "factionId": 4,
+          "militaryPosition": "general",
+          "loyalty": 90
+        }
       ],
       "femalePositions": [],
       "initialDiplomacy": [
-        { "factionA": 1, "factionB": 2, "relation": "allied", "favorability": 45 },
-        { "factionA": 1, "factionB": 3, "relation": "allied", "favorability": 35 },
-        { "factionA": 1, "factionB": 4, "relation": "war", "favorability": -80 },
-        { "factionA": 2, "factionB": 3, "relation": "allied", "favorability": 30 },
-        { "factionA": 2, "factionB": 4, "relation": "war", "favorability": -80 },
-        { "factionA": 3, "factionB": 4, "relation": "war", "favorability": -80 }
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "allied",
+          "favorability": 45
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "allied",
+          "favorability": 35
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "allied",
+          "favorability": 30
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "war",
+          "favorability": -80
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 3,
+    "name": "黄巾之乱（184·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "中平元年二月，张角以「苍天已死，黄天当立」举事，八州并起。汉室以皇甫嵩、卢植、朱儁分路进讨，凉州边章、韩遂趁乱叛乱。玩家可平定黄巾，或以黄巾倾覆汉室。",
+    "scopeNote": "技术切片：仅汉军、黄巾、凉州叛军三个指挥集团；南阳黄巾（张曼成）与冀州诸部未单独建模，宛城仍归汉军；关中、中原大部以汉军据点抽象。事件挂接留待 P0B-15。",
+    "startYear": 184,
+    "endYear": 186,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "汉军",
+        "color": "#8a6d3b",
+        "rulerId": 280,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "洛阳行台",
+        "historicalNote": "皇甫嵩持节节度诸军，卢植、董卓分路进讨。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 2,
+        "name": "黄巾军",
+        "color": "#c9a227",
+        "rulerId": 183,
+        "capitalCityId": 40,
+        "mode": "territorial",
+        "headquartersLabel": "广宗大营",
+        "historicalNote": "张角称天公将军，冀州为腹心；张宝、张梁未单独建模。",
+        "preferredKingdomName": "黄天"
+      },
+      {
+        "id": 3,
+        "name": "凉州叛军",
+        "color": "#7a5c9e",
+        "rulerId": 174,
+        "capitalCityId": 23,
+        "mode": "territorial",
+        "headquartersLabel": "金城叛军",
+        "historicalNote": "北宫伯玉、边章叛乱，劫韩遂（韩约）主兵事。",
+        "preferredKingdomName": "凉"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      280,
+      281,
+      112,
+      1,
+      2,
+      6,
+      7,
+      114,
+      183,
+      174
+    ],
+    "availableFemaleIds": [],
+    "childEventIds": [],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3
+    ],
+    "recommendedFaction": 1,
+    "startState": {
+      "year": 184,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "7": 1,
+        "8": 1,
+        "23": 3,
+        "31": 1,
+        "32": 1,
+        "33": 1,
+        "35": 1,
+        "36": 1,
+        "37": 1,
+        "38": 1,
+        "40": 2,
+        "41": 2,
+        "44": 2,
+        "79": 3
+      },
+      "officerPositions": [
+        {
+          "officerId": 280,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 281,
+          "cityId": 31,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 112,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 1,
+          "cityId": 3,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 2,
+          "cityId": 26,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 6,
+          "cityId": 26,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 7,
+          "cityId": 26,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 114,
+          "cityId": 13,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 183,
+          "cityId": 40,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 174,
+          "cityId": 23,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        }
+      ],
+      "femalePositions": [],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 4,
+    "name": "群雄讨董（190·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "初平元年正月，关东州郡共推袁绍为盟主讨董卓，董卓挟天子迁都长安，焚烧洛阳。曹操追击荥阳败绩，孙坚自长沙北上，兵锋直指洛阳。",
+    "scopeNote": "技术切片：董卓、袁绍、曹操、孙坚、袁术、公孙瓒、陶谦、刘表八个指挥集团；河内、鲁阳仍以邻近节点作补给席位（沿关东义兵口径）；韩馥之冀州、孔伷之豫州未建模。与既有「关东义兵」切片并存，本剧本为多势力割据版。事件挂接留待 P0B-15。",
+    "startYear": 190,
+    "endYear": 193,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "董卓政权",
+        "color": "#5a5a6e",
+        "rulerId": 112,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "相府",
+        "historicalNote": "废立天子，挟迁都之威；吕布、李傕、郭汜、张济、张辽在其麾下。",
+        "preferredKingdomName": "凉"
+      },
+      {
+        "id": 2,
+        "name": "勃海袁绍",
+        "color": "#496b88",
+        "rulerId": 113,
+        "capitalCityId": 46,
+        "mode": "expeditionary",
+        "headquartersLabel": "勃海起兵",
+        "historicalNote": "关东盟主，车骑将军自领；冀州牧韩馥未建模，勃海为其起兵据点。",
+        "preferredKingdomName": "冀"
+      },
+      {
+        "id": 3,
+        "name": "陈留曹操",
+        "color": "#2e6e4e",
+        "rulerId": 1,
+        "capitalCityId": 7,
+        "mode": "expeditionary",
+        "headquartersLabel": "陈留募兵处",
+        "historicalNote": "散家财合义兵，孤军追董卓败于荥阳。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 4,
+        "name": "长沙孙坚",
+        "color": "#b0483c",
+        "rulerId": 114,
+        "capitalCityId": 64,
+        "mode": "territorial",
+        "headquartersLabel": "长沙郡署",
+        "historicalNote": "长沙太守北上讨卓，先登入洛、得传国玺（演义）。",
+        "preferredKingdomName": "吴"
+      },
+      {
+        "id": 5,
+        "name": "南阳袁术",
+        "color": "#9e6b2f",
+        "rulerId": 181,
+        "capitalCityId": 13,
+        "mode": "territorial",
+        "headquartersLabel": "南阳治所",
+        "historicalNote": "后将军据南阳，资粮给盟军而观望。",
+        "preferredKingdomName": "成"
+      },
+      {
+        "id": 6,
+        "name": "幽州公孙瓒",
+        "color": "#4e7a9e",
+        "rulerId": 106,
+        "capitalCityId": 27,
+        "mode": "territorial",
+        "headquartersLabel": "蓟城驻所",
+        "historicalNote": "奋武将军镇幽州；赵云此时在常山郡未仕，以在野登场。",
+        "preferredKingdomName": "燕"
+      },
+      {
+        "id": 7,
+        "name": "徐州陶谦",
+        "color": "#6e8a3d",
+        "rulerId": 250,
+        "capitalCityId": 9,
+        "mode": "territorial",
+        "headquartersLabel": "下邳治所",
+        "historicalNote": "徐州牧保境安民。",
+        "preferredKingdomName": "徐"
+      },
+      {
+        "id": 8,
+        "name": "荆州刘表",
+        "color": "#8a3d6e",
+        "rulerId": 167,
+        "capitalCityId": 15,
+        "mode": "territorial",
+        "headquartersLabel": "襄阳州治",
+        "historicalNote": "初平元年单马入宜城，抚定荆州。",
+        "preferredKingdomName": "楚"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      112,
+      5,
+      177,
+      178,
+      179,
+      115,
+      113,
+      159,
+      160,
+      156,
+      157,
+      1,
+      9,
+      120,
+      101,
+      121,
+      114,
+      143,
+      144,
+      145,
+      181,
+      106,
+      250,
+      167
+    ],
+    "availableFemaleIds": [
+      202
+    ],
+    "childEventIds": [],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 190,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "7": 3,
+        "9": 7,
+        "13": 5,
+        "15": 8,
+        "23": 1,
+        "27": 6,
+        "33": 1,
+        "46": 2,
+        "53": 7,
+        "64": 4,
+        "77": 1,
+        "79": 1
+      },
+      "officerPositions": [
+        {
+          "officerId": 112,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 5,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 177,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 178,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 179,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 115,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 113,
+          "cityId": 46,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 159,
+          "cityId": 46,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 160,
+          "cityId": 46,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 156,
+          "cityId": 46,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 157,
+          "cityId": 46,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 1,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 9,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 120,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 101,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 121,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 114,
+          "cityId": 64,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 143,
+          "cityId": 64,
+          "factionId": 4,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 144,
+          "cityId": 64,
+          "factionId": 4,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 145,
+          "cityId": 64,
+          "factionId": 4,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 181,
+          "cityId": 13,
+          "factionId": 5,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 106,
+          "cityId": 27,
+          "factionId": 6,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 250,
+          "cityId": 9,
+          "factionId": 7,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 167,
+          "cityId": 15,
+          "factionId": 8,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 202,
+          "cityId": 1,
+          "status": "single"
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 5,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 1,
+          "factionB": 6,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 1,
+          "factionB": 7,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 1,
+          "factionB": 8,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "allied",
+          "favorability": 45
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 5,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 2,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "allied",
+          "favorability": 30
+        },
+        {
+          "factionA": 3,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 5,
+    "name": "群雄逐鹿（194·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "兴平元年，曹操东征徐州为父报仇，陈宫、张邈迎吕布袭兖州，曹操仅余鄄城等数城。李傕、郭汜专权关中，袁绍定冀州，袁术据淮南，刘备援陶谦屯小沛。",
+    "scopeNote": "技术切片：吕布、曹操、李傕、袁绍、袁术、徐州陶谦、刘表七个指挥集团；曹操兖州据点以昌邑代理鄄城；公孙瓒、马腾等未建模。事件挂接留待 P0B-15。",
+    "startYear": 194,
+    "endYear": 197,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "兖州吕布",
+        "color": "#8a3d3d",
+        "rulerId": 5,
+        "capitalCityId": 8,
+        "mode": "territorial",
+        "headquartersLabel": "濮阳大营",
+        "historicalNote": "陈宫、张邈迎布袭兖州，与曹操相持百余日。",
+        "preferredKingdomName": "吕"
+      },
+      {
+        "id": 2,
+        "name": "兖州曹操",
+        "color": "#2e6e4e",
+        "rulerId": 1,
+        "capitalCityId": 51,
+        "mode": "territorial",
+        "headquartersLabel": "昌邑行辕（鄄城代理）",
+        "historicalNote": "鄄城不在节点，以山阳昌邑代理其兖州残存据点。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 3,
+        "name": "关中李傕",
+        "color": "#6e5a3d",
+        "rulerId": 177,
+        "capitalCityId": 2,
+        "mode": "territorial",
+        "headquartersLabel": "长安擅政",
+        "historicalNote": "与郭汜共擅朝政，献帝在长安为质。",
+        "preferredKingdomName": "雍"
+      },
+      {
+        "id": 4,
+        "name": "冀州袁绍",
+        "color": "#496b88",
+        "rulerId": 113,
+        "capitalCityId": 5,
+        "mode": "territorial",
+        "headquartersLabel": "邺城幕府",
+        "historicalNote": "界桥破公孙瓒，尽有冀州。",
+        "preferredKingdomName": "冀"
+      },
+      {
+        "id": 5,
+        "name": "淮南袁术",
+        "color": "#9e6b2f",
+        "rulerId": 181,
+        "capitalCityId": 18,
+        "mode": "territorial",
+        "headquartersLabel": "寿春宫署",
+        "historicalNote": "据淮南兼沛国，孙策在其麾下。",
+        "preferredKingdomName": "成"
+      },
+      {
+        "id": 6,
+        "name": "徐州陶谦",
+        "color": "#6e8a3d",
+        "rulerId": 250,
+        "capitalCityId": 9,
+        "mode": "territorial",
+        "headquartersLabel": "下邳州治",
+        "historicalNote": "曹操以父仇再征徐州；刘备、关羽、张飞援之。",
+        "preferredKingdomName": "徐"
+      },
+      {
+        "id": 7,
+        "name": "荆州刘表",
+        "color": "#8a3d6e",
+        "rulerId": 167,
+        "capitalCityId": 15,
+        "mode": "territorial",
+        "headquartersLabel": "襄阳州治",
+        "historicalNote": "跨蹈汉南，地方数千里带甲十余万。",
+        "preferredKingdomName": "楚"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      5,
+      104,
+      115,
+      165,
+      1,
+      8,
+      126,
+      9,
+      120,
+      118,
+      13,
+      100,
+      177,
+      178,
+      180,
+      179,
+      113,
+      159,
+      160,
+      157,
+      156,
+      117,
+      181,
+      105,
+      250,
+      2,
+      6,
+      7,
+      167
+    ],
+    "availableFemaleIds": [],
+    "childEventIds": [
+      960
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 194,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "cityOwnership": {
+        "2": 3,
+        "5": 4,
+        "8": 1,
+        "9": 6,
+        "10": 6,
+        "14": 7,
+        "15": 7,
+        "18": 5,
+        "33": 3,
+        "37": 5,
+        "40": 4,
+        "41": 4,
+        "42": 4,
+        "43": 4,
+        "44": 4,
+        "45": 4,
+        "46": 4,
+        "51": 2,
+        "52": 1,
+        "53": 6
+      },
+      "officerPositions": [
+        {
+          "officerId": 5,
+          "cityId": 8,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 104,
+          "cityId": 8,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 115,
+          "cityId": 8,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 165,
+          "cityId": 8,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 1,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 8,
+          "cityId": 51,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 126,
+          "cityId": 51,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 9,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 120,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 118,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 13,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 100,
+          "cityId": 51,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 177,
+          "cityId": 2,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 178,
+          "cityId": 2,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 180,
+          "cityId": 2,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 179,
+          "cityId": 2,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 113,
+          "cityId": 5,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 159,
+          "cityId": 5,
+          "factionId": 4,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 160,
+          "cityId": 5,
+          "factionId": 4,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 157,
+          "cityId": 5,
+          "factionId": 4,
+          "loyalty": 85
+        },
+        {
+          "officerId": 156,
+          "cityId": 5,
+          "factionId": 4,
+          "loyalty": 85
+        },
+        {
+          "officerId": 117,
+          "cityId": 5,
+          "factionId": 4,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 181,
+          "cityId": 18,
+          "factionId": 5,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 105,
+          "cityId": 18,
+          "factionId": 5,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 250,
+          "cityId": 9,
+          "factionId": 6,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 2,
+          "cityId": 9,
+          "factionId": 6,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 6,
+          "cityId": 9,
+          "factionId": 6,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 7,
+          "cityId": 9,
+          "factionId": 6,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 167,
+          "cityId": 15,
+          "factionId": 7,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        }
+      ],
+      "femalePositions": [],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 6,
+          "relation": "friendly",
+          "favorability": 20
+        },
+        {
+          "factionA": 1,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "friendly",
+          "favorability": 20
+        },
+        {
+          "factionA": 2,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 6,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 2,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 5,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 4,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 6,
+    "name": "官渡对峙（200·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "建安五年正月，衣带诏事发，曹操东击刘备；刘备北奔袁绍，关羽被擒在许。袁绍简精兵十万、骑万匹，欲南向以争天下。孙策江东新定，四月遇刺。",
+    "scopeNote": "技术切片：袁绍、曹操、孙策、刘表、刘璋、张鲁、马腾七个指挥集团；曹操治所以颍川阳翟代理许都（许县不在节点）；刘备以袁绍麾下登场（奔绍），关羽在曹操军中（历史实态）；公孙瓒已于建安四年败亡不建模。事件挂接留待 P0B-15。",
+    "startYear": 200,
+    "endYear": 202,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "冀州袁绍",
+        "color": "#496b88",
+        "rulerId": 113,
+        "capitalCityId": 5,
+        "mode": "territorial",
+        "headquartersLabel": "邺城幕府",
+        "historicalNote": "幽并青冀四州在握，南许而北邺。",
+        "preferredKingdomName": "冀"
+      },
+      {
+        "id": 2,
+        "name": "许都曹操",
+        "color": "#2e6e4e",
+        "rulerId": 1,
+        "capitalCityId": 3,
+        "mode": "territorial",
+        "headquartersLabel": "许都司空府（颍川代理）",
+        "historicalNote": "奉天子以令不臣；许县不在节点，以颍川郡治阳翟代理。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 3,
+        "name": "江东孙策",
+        "color": "#b0483c",
+        "rulerId": 105,
+        "capitalCityId": 16,
+        "mode": "territorial",
+        "headquartersLabel": "吴郡将军府",
+        "historicalNote": "小霸王新定江东；四月遇刺，孙权继业由引擎寿元机制自然呈现。",
+        "preferredKingdomName": "吴"
+      },
+      {
+        "id": 4,
+        "name": "荆州刘表",
+        "color": "#8a3d6e",
+        "rulerId": 167,
+        "capitalCityId": 15,
+        "mode": "territorial",
+        "headquartersLabel": "襄阳州治",
+        "historicalNote": "持两端不助南北。",
+        "preferredKingdomName": "楚"
+      },
+      {
+        "id": 5,
+        "name": "益州刘璋",
+        "color": "#3d6e8a",
+        "rulerId": 277,
+        "capitalCityId": 19,
+        "mode": "territorial",
+        "headquartersLabel": "成都州治",
+        "historicalNote": "暗弱守成，汉中已失于张鲁。",
+        "preferredKingdomName": "蜀"
+      },
+      {
+        "id": 6,
+        "name": "汉中张鲁",
+        "color": "#5a8a3d",
+        "rulerId": 175,
+        "capitalCityId": 20,
+        "mode": "territorial",
+        "headquartersLabel": "汉中师君府",
+        "historicalNote": "五斗米道据汉中，以鬼道教民。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 7,
+        "name": "凉州马腾",
+        "color": "#7a5c9e",
+        "rulerId": 173,
+        "capitalCityId": 23,
+        "mode": "territorial",
+        "headquartersLabel": "凉州诸部",
+        "historicalNote": "与韩遂结为异姓兄弟，共镇凉州。",
+        "preferredKingdomName": "凉"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      113,
+      159,
+      160,
+      157,
+      156,
+      117,
+      2,
+      7,
+      1,
+      6,
+      115,
+      116,
+      118,
+      119,
+      8,
+      123,
+      125,
+      126,
+      100,
+      105,
+      11,
+      141,
+      142,
+      144,
+      145,
+      109,
+      167,
+      277,
+      175,
+      173,
+      174
+    ],
+    "availableFemaleIds": [
+      207
+    ],
+    "childEventIds": [
+      960
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 200,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "cityOwnership": {
+        "1": 2,
+        "3": 2,
+        "4": 2,
+        "5": 1,
+        "7": 2,
+        "8": 2,
+        "12": 1,
+        "14": 4,
+        "15": 4,
+        "16": 3,
+        "17": 3,
+        "19": 5,
+        "20": 6,
+        "21": 5,
+        "23": 7,
+        "24": 1,
+        "26": 1,
+        "27": 1,
+        "36": 2,
+        "38": 2,
+        "40": 1,
+        "41": 1,
+        "42": 1,
+        "43": 1,
+        "44": 1,
+        "45": 1,
+        "46": 1,
+        "51": 2,
+        "52": 2,
+        "59": 1,
+        "60": 4,
+        "61": 4,
+        "62": 4,
+        "63": 4,
+        "64": 4,
+        "65": 3,
+        "66": 3,
+        "68": 5,
+        "69": 5,
+        "70": 5,
+        "71": 5,
+        "72": 5,
+        "73": 5,
+        "74": 6,
+        "75": 5,
+        "76": 5,
+        "78": 6,
+        "79": 7,
+        "80": 7,
+        "83": 7
+      },
+      "officerPositions": [
+        {
+          "officerId": 113,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 159,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 160,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 157,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 156,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 117,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 2,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 7,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 1,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 6,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 115,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 116,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 118,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 119,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 8,
+          "cityId": 3,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 123,
+          "cityId": 3,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 125,
+          "cityId": 3,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 126,
+          "cityId": 3,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 100,
+          "cityId": 3,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 105,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 11,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 141,
+          "cityId": 16,
+          "factionId": 3,
+          "loyalty": 85
+        },
+        {
+          "officerId": 142,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 144,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 145,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 109,
+          "cityId": 16,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 167,
+          "cityId": 15,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 277,
+          "cityId": 19,
+          "factionId": 5,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 175,
+          "cityId": 20,
+          "factionId": 6,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 173,
+          "cityId": 23,
+          "factionId": 7,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 174,
+          "cityId": 79,
+          "factionId": 7,
+          "militaryPosition": "general",
+          "loyalty": 85
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 207,
+          "cityId": 5,
+          "status": "single"
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 7,
+          "relation": "friendly",
+          "favorability": 10
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "friendly",
+          "favorability": 10
+        },
+        {
+          "factionA": 2,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 6,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 5,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 7,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 7,
+    "name": "赤壁前夜（208·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "建安十三年正月，孙权破黄祖于江夏，刘备屯樊口一线；曹操定河北、开玄武池练水军，南取荆襄之势已成。大江之上，一场决定三分的会战正在酝酿。",
+    "scopeNote": "技术切片：曹操、刘备、孙权、刘表、刘璋、马超六个指挥集团；刘备以江夏郡治西陵代理夏口屯驻点（孙权新破黄祖后态势）；刘表八月病亡、荆州降曹由引擎寿元与玩法自然呈现；孙策已亡故。事件挂接留待 P0B-15。",
+    "startYear": 208,
+    "endYear": 210,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "邺都曹操",
+        "color": "#2e6e4e",
+        "rulerId": 1,
+        "capitalCityId": 5,
+        "mode": "territorial",
+        "headquartersLabel": "邺城丞相府",
+        "historicalNote": "罢三公自为丞相，挟北方新定之势南下。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 2,
+        "name": "屯夏口刘备",
+        "color": "#3d6e8a",
+        "rulerId": 2,
+        "capitalCityId": 60,
+        "mode": "hosted",
+        "headquartersLabel": "夏口屯所（江夏代理）",
+        "historicalNote": "依附刘表屯新野，兵败当阳后进屯夏口一线；以江夏郡治西陵代理。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 3,
+        "name": "江东孙权",
+        "color": "#b0483c",
+        "rulerId": 3,
+        "capitalCityId": 17,
+        "mode": "territorial",
+        "headquartersLabel": "建业将军府",
+        "historicalNote": "新破黄祖，内议战和；周瑜、鲁肃主战。",
+        "preferredKingdomName": "吴"
+      },
+      {
+        "id": 4,
+        "name": "荆州刘表",
+        "color": "#8a3d6e",
+        "rulerId": 167,
+        "capitalCityId": 15,
+        "mode": "territorial",
+        "headquartersLabel": "襄阳州治",
+        "historicalNote": "病笃之际，二子争立，州事决于蔡氏。",
+        "preferredKingdomName": "楚"
+      },
+      {
+        "id": 5,
+        "name": "益州刘璋",
+        "color": "#3d6e8a",
+        "rulerId": 277,
+        "capitalCityId": 19,
+        "mode": "territorial",
+        "headquartersLabel": "成都州治",
+        "historicalNote": "遣使通曹操，守益州观望。",
+        "preferredKingdomName": "蜀"
+      },
+      {
+        "id": 6,
+        "name": "关西马超",
+        "color": "#7a5c9e",
+        "rulerId": 131,
+        "capitalCityId": 23,
+        "mode": "territorial",
+        "headquartersLabel": "凉州部曲",
+        "historicalNote": "马腾入朝后超统其众（本剧本以凉州诸部抽象，关中态势未细分）。",
+        "preferredKingdomName": "凉"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      1,
+      252,
+      12,
+      124,
+      8,
+      123,
+      126,
+      100,
+      9,
+      120,
+      116,
+      117,
+      118,
+      101,
+      115,
+      102,
+      2,
+      4,
+      6,
+      7,
+      10,
+      3,
+      11,
+      141,
+      142,
+      107,
+      144,
+      145,
+      109,
+      147,
+      149,
+      151,
+      167,
+      277,
+      131,
+      238,
+      192
+    ],
+    "availableFemaleIds": [
+      203,
+      207
+    ],
+    "childEventIds": [
+      958,
+      961,
+      962,
+      963
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "recommendedFaction": 3,
+    "startState": {
+      "year": 208,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "7": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 4,
+        "15": 4,
+        "16": 3,
+        "17": 3,
+        "19": 5,
+        "21": 5,
+        "22": 6,
+        "23": 6,
+        "24": 1,
+        "26": 1,
+        "27": 1,
+        "31": 1,
+        "32": 1,
+        "33": 1,
+        "34": 1,
+        "36": 1,
+        "37": 1,
+        "38": 1,
+        "40": 1,
+        "41": 1,
+        "42": 1,
+        "43": 1,
+        "44": 1,
+        "45": 1,
+        "46": 1,
+        "49": 1,
+        "50": 1,
+        "51": 1,
+        "52": 1,
+        "53": 1,
+        "54": 1,
+        "55": 1,
+        "56": 1,
+        "57": 1,
+        "58": 1,
+        "59": 1,
+        "60": 2,
+        "61": 4,
+        "62": 4,
+        "63": 4,
+        "64": 4,
+        "65": 3,
+        "66": 3,
+        "67": 3,
+        "68": 5,
+        "69": 5,
+        "70": 5,
+        "71": 5,
+        "72": 5,
+        "73": 5,
+        "75": 5,
+        "76": 5,
+        "77": 6,
+        "79": 6,
+        "80": 6,
+        "83": 6
+      },
+      "officerPositions": [
+        {
+          "officerId": 1,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 252,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 12,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 124,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 8,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 123,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 126,
+          "cityId": 5,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 100,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 9,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 120,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 116,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 117,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 118,
+          "cityId": 5,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 101,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 115,
+          "cityId": 18,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 102,
+          "cityId": 18,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 2,
+          "cityId": 60,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 4,
+          "cityId": 60,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 6,
+          "cityId": 60,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 7,
+          "cityId": 60,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 10,
+          "cityId": 60,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 3,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 11,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 141,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 85
+        },
+        {
+          "officerId": 142,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 107,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 144,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 145,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 109,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 147,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 149,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 85
+        },
+        {
+          "officerId": 151,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 85
+        },
+        {
+          "officerId": 167,
+          "cityId": 15,
+          "factionId": 4,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 277,
+          "cityId": 19,
+          "factionId": 5,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 131,
+          "cityId": 23,
+          "factionId": 6,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 238,
+          "cityId": 23,
+          "factionId": 6,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 192,
+          "cityId": 23,
+          "factionId": 6,
+          "militaryPosition": "general",
+          "loyalty": 85
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 203,
+          "cityId": 17,
+          "status": "single"
+        },
+        {
+          "femaleId": 207,
+          "cityId": 5,
+          "status": "single"
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "war",
+          "favorability": -70
+        },
+        {
+          "factionA": 1,
+          "factionB": 4,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 6,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 4,
+          "relation": "friendly",
+          "favorability": 15
+        },
+        {
+          "factionA": 2,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 4,
+          "relation": "hostile",
+          "favorability": -20
+        },
+        {
+          "factionA": 3,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 5,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 6,
+          "relation": "neutral",
+          "favorability": 0
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 8,
+    "name": "汉中与襄樊（219·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "建安二十四年，刘备定汉中、进位汉中王，魏延镇汉中；关羽北围樊城、水淹七军，威震华夏，曹操议徙都以避其锐。而江东吕蒙称病还建业，白衣渡江之谋已动。",
+    "scopeNote": "技术切片：曹魏、蜀汉、孙吴三个指挥集团；开局取建安二十四年九月态势（汉中已易主、进位已成，关羽犹围樊城）；樊城以宛代理、居巢以寿春代理；夏侯渊正月殁于定军山，不在登场之列；辽东公孙氏、上庸申氏未建模。事件挂接留待 P0B-15。",
+    "startYear": 219,
+    "endYear": 221,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "曹魏",
+        "color": "#2e6e4e",
+        "rulerId": 1,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "洛阳魏王行台",
+        "historicalNote": "汉中新失，关羽骤起，内忧外患交集。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 2,
+        "name": "蜀汉",
+        "color": "#3d6e8a",
+        "rulerId": 2,
+        "capitalCityId": 19,
+        "mode": "territorial",
+        "headquartersLabel": "成都汉中王行辕",
+        "historicalNote": "进位汉中王，关羽董督荆州北伐襄樊。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 3,
+        "name": "孙吴",
+        "color": "#b0483c",
+        "rulerId": 3,
+        "capitalCityId": 17,
+        "mode": "territorial",
+        "headquartersLabel": "建业将军府",
+        "historicalNote": "吕蒙称病还建业，陆逊代屯陆口，外交阴结曹操。",
+        "preferredKingdomName": "吴"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      1,
+      252,
+      12,
+      124,
+      194,
+      258,
+      122,
+      117,
+      223,
+      101,
+      116,
+      118,
+      115,
+      9,
+      2,
+      4,
+      6,
+      7,
+      10,
+      131,
+      14,
+      130,
+      200,
+      3,
+      142,
+      15,
+      145,
+      109,
+      108,
+      148,
+      151
+    ],
+    "availableFemaleIds": [
+      207,
+      203
+    ],
+    "childEventIds": [
+      961,
+      977
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 219,
+      "month": 9,
+      "factions": [
+        1,
+        2,
+        3
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "7": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "14": 2,
+        "15": 1,
+        "16": 3,
+        "17": 3,
+        "18": 1,
+        "19": 2,
+        "20": 2,
+        "21": 2,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "27": 1,
+        "29": 3,
+        "30": 3,
+        "31": 1,
+        "32": 1,
+        "33": 1,
+        "34": 1,
+        "35": 1,
+        "36": 1,
+        "37": 1,
+        "38": 1,
+        "40": 1,
+        "41": 1,
+        "42": 1,
+        "43": 1,
+        "44": 1,
+        "45": 1,
+        "46": 1,
+        "49": 1,
+        "50": 1,
+        "51": 1,
+        "52": 1,
+        "53": 1,
+        "54": 1,
+        "55": 1,
+        "56": 1,
+        "57": 1,
+        "58": 1,
+        "59": 1,
+        "60": 3,
+        "61": 2,
+        "62": 3,
+        "63": 2,
+        "64": 3,
+        "65": 3,
+        "66": 3,
+        "67": 3,
+        "68": 2,
+        "69": 2,
+        "70": 2,
+        "71": 2,
+        "72": 2,
+        "73": 2,
+        "75": 2,
+        "76": 2,
+        "77": 1,
+        "79": 1,
+        "80": 1,
+        "83": 1,
+        "102": 3,
+        "103": 3,
+        "104": 3,
+        "105": 3,
+        "106": 3
+      },
+      "officerPositions": [
+        {
+          "officerId": 1,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 252,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 12,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 124,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 194,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 258,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 85
+        },
+        {
+          "officerId": 122,
+          "cityId": 2,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 117,
+          "cityId": 2,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 223,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 101,
+          "cityId": 13,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 116,
+          "cityId": 13,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 118,
+          "cityId": 13,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 115,
+          "cityId": 18,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 9,
+          "cityId": 18,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 2,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 4,
+          "cityId": 19,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 6,
+          "cityId": 14,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 7,
+          "cityId": 21,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 10,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 131,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 14,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 130,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 200,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 3,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 142,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 15,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 85
+        },
+        {
+          "officerId": 145,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 109,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 108,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 148,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 151,
+          "cityId": 17,
+          "factionId": 3,
+          "loyalty": 85
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 207,
+          "cityId": 5,
+          "status": "single"
+        },
+        {
+          "femaleId": 203,
+          "cityId": 17,
+          "status": "single"
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "hostile",
+          "favorability": -30
+        }
+      ],
+      "completedEvents": []
+    }
+  },
+  {
+    "id": 9,
+    "name": "五丈原对峙（234·0-B 历史切片）",
+    "type": "historical",
+    "noLifespan": false,
+    "description": "建兴十二年春，诸葛亮出斜谷，屯五丈原与司马懿对峙渭南，分兵屯田为久驻之基；孙权应约北上合肥新城，三路并举。天下三分之局，将在此数年间见分晓。",
+    "scopeNote": "技术切片：曹魏、蜀汉、孙吴三个指挥集团；五丈原渭南对峙以槐里代理魏军前线、诸葛亮自汉中出兵；张郃（231）、曹真（231）已殁不在登场之列；辽东公孙氏未建模。事件挂接留待 P0B-15。",
+    "startYear": 234,
+    "endYear": 240,
+    "factionSetups": [
+      {
+        "id": 1,
+        "name": "曹魏",
+        "color": "#2e6e4e",
+        "rulerId": 253,
+        "capitalCityId": 1,
+        "mode": "territorial",
+        "headquartersLabel": "洛阳宫省",
+        "historicalNote": "明帝临朝，东西两线拒诸葛、孙权。",
+        "preferredKingdomName": "魏"
+      },
+      {
+        "id": 2,
+        "name": "蜀汉",
+        "color": "#3d6e8a",
+        "rulerId": 262,
+        "capitalCityId": 19,
+        "mode": "territorial",
+        "headquartersLabel": "成都宫省",
+        "historicalNote": "相父诸葛亮总理军政，北伐以图中原。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 3,
+        "name": "孙吴",
+        "color": "#b0483c",
+        "rulerId": 3,
+        "capitalCityId": 17,
+        "mode": "territorial",
+        "headquartersLabel": "建业宫省",
+        "historicalNote": "应蜀约共举，亲攻合肥新城；荆扬与交州连成一片。",
+        "preferredKingdomName": "吴"
+      }
+    ],
+    "eventIds": [],
+    "availableOfficerIds": [
+      253,
+      12,
+      207,
+      208,
+      224,
+      209,
+      262,
+      4,
+      130,
+      129,
+      133,
+      200,
+      138,
+      139,
+      3,
+      205,
+      206,
+      204,
+      244
+    ],
+    "availableFemaleIds": [
+      221
+    ],
+    "childEventIds": [
+      975,
+      977
+    ],
+    "availableEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "defaultEventLayers": [
+      "official_history",
+      "annotated_history",
+      "literature",
+      "legend",
+      "gameplay"
+    ],
+    "playableFactions": [
+      1,
+      2,
+      3
+    ],
+    "recommendedFaction": 2,
+    "startState": {
+      "year": 234,
+      "month": 1,
+      "factions": [
+        1,
+        2,
+        3
+      ],
+      "activeFactionIds": [
+        1,
+        2,
+        3
+      ],
+      "cityOwnership": {
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1,
+        "5": 1,
+        "7": 1,
+        "8": 1,
+        "11": 1,
+        "12": 1,
+        "13": 1,
+        "15": 1,
+        "16": 3,
+        "17": 3,
+        "18": 1,
+        "19": 2,
+        "20": 2,
+        "21": 2,
+        "22": 1,
+        "23": 1,
+        "24": 1,
+        "26": 1,
+        "27": 1,
+        "29": 3,
+        "30": 3,
+        "31": 1,
+        "32": 1,
+        "33": 1,
+        "34": 1,
+        "35": 1,
+        "36": 1,
+        "37": 1,
+        "38": 1,
+        "40": 1,
+        "41": 1,
+        "42": 1,
+        "43": 1,
+        "44": 1,
+        "45": 1,
+        "46": 1,
+        "49": 1,
+        "50": 1,
+        "51": 1,
+        "52": 1,
+        "53": 1,
+        "54": 1,
+        "55": 1,
+        "56": 1,
+        "57": 1,
+        "58": 1,
+        "59": 1,
+        "60": 3,
+        "62": 3,
+        "63": 3,
+        "64": 3,
+        "65": 3,
+        "66": 3,
+        "67": 3,
+        "68": 2,
+        "69": 2,
+        "70": 2,
+        "71": 2,
+        "72": 2,
+        "73": 2,
+        "74": 2,
+        "75": 2,
+        "76": 2,
+        "77": 1,
+        "78": 2,
+        "79": 1,
+        "80": 1,
+        "81": 1,
+        "82": 1,
+        "83": 1,
+        "84": 1,
+        "85": 1,
+        "86": 1,
+        "102": 3,
+        "103": 3,
+        "104": 3,
+        "105": 3,
+        "106": 3
+      },
+      "officerPositions": [
+        {
+          "officerId": 253,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 12,
+          "cityId": 35,
+          "factionId": 1,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 85
+        },
+        {
+          "officerId": 207,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 208,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 224,
+          "cityId": 35,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 209,
+          "cityId": 35,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 262,
+          "cityId": 19,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 4,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 85
+        },
+        {
+          "officerId": 130,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 129,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 133,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 200,
+          "cityId": 20,
+          "factionId": 2,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 138,
+          "cityId": 19,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 139,
+          "cityId": 19,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 3,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 205,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 206,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 204,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 244,
+          "cityId": 17,
+          "factionId": 3,
+          "militaryPosition": "general",
+          "loyalty": 85
+        }
+      ],
+      "femalePositions": [
+        {
+          "femaleId": 221,
+          "cityId": 5,
+          "status": "married"
+        }
+      ],
+      "initialDiplomacy": [
+        {
+          "factionA": 1,
+          "factionB": 2,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 3,
+          "relation": "war",
+          "favorability": -60
+        },
+        {
+          "factionA": 2,
+          "factionB": 3,
+          "relation": "allied",
+          "favorability": 30
+        }
       ],
       "completedEvents": []
     }

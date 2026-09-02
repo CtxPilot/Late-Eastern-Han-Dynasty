@@ -204,7 +204,7 @@ prestige(德望→征兵/登用)  fortitude(韧性→守城)  scholarship(学识
 女性(females.json)         ~70KB   → 全量加载（Session 427 P0B-11 扩至 90 条后实测 71KB）
 子女(children.json)        ~17KB   → 全量加载（Session 427 P0B-12 扩至 50 条后实测 17KB）
 技能(skills.json)          ~160KB  → 全量加载（Session 428 P0B-13 扩至 149 条后实测 166KB）
-剧本(scenarios.json)       ~10KB   → 仅加载当前选择剧本
+剧本(scenarios.json)       ~90KB   → 仅加载当前选择剧本（Session 429 P0B-14 扩至 9 剧本后实测 89KB）
 事件(events.json)          ~20KB   → 全量加载(需快速遍历条件匹配)
 套装(itemsets.json)        ~3KB    → 全量加载
 ```
