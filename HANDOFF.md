@@ -9,12 +9,22 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 426**（0-B 数据扩容 P0B-10：items.json 20→165 宝物落地） |
-| 阶段 | Phase 0-B **数据扩容进行中**（cities 106 / formations 27 / units 24 / items 165 已落地）+ 玩法环/离线可玩保持；系统数 **27 大** |
-| 代码最新 | Session 426（P0B-10：`scripts/gen-0b-items.mjs` 生成新增 145 条 id 21~165 + validate-data expected 20→165；全量回归绿后本会话提交） |
-| 文档最新 | **Session 426 双写**（docs/08 §四 165 落地口径、docs/09 P0B-10 行、docs/12 S13、10-progress 日志+P0B 勾选、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
-| 本交接用途 | 0-B 数据续批推进至 P0B-10 完成；下一步方向：P0B-11 females 续批或 docs/43 S1 实装 |
-| 下一步 | ①0-B 数据扩容续批（下一候选 **P0B-11 females.json 90+**，需先核 08 全量口径；P0B-12/13 亦可小批推进）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三） |
+| 会话 | **Session 427**（0-B 数据扩容 P0B-11：females.json 10→90 女性角色落地） |
+| 阶段 | Phase 0-B **数据扩容进行中**（cities 106 / formations 27 / units 24 / items 165 / females 90 已落地）+ 玩法环/离线可玩保持；系统数 **27 大** |
+| 代码最新 | Session 427（P0B-11：`scripts/gen-0b-females.mjs` 生成新增 80 条 id 211~290 + validate-data expected 10→90；全量回归绿后本会话提交） |
+| 文档最新 | **Session 427 双写**（docs/08 §六 90 落地口径、docs/09 P0B-11 行、docs/11 体积、docs/12 头部进度、docs/35 主线、10-progress 日志+P0B 勾选、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
+| 本交接用途 | 0-B 数据续批推进至 P0B-11 完成；下一步方向：P0B-12 children 续批或 docs/43 S1 实装 |
+| 下一步 | ①0-B 数据扩容续批（下一候选 **P0B-12 children.json 50+**，需先核 08 §七口径；P0B-13 skills 149 亦可推进）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三） |
+
+### Session 427 交接要点
+
+- **P0B-11 females.json 10→90**：新增 80 条（id 211~290），脚本 `scripts/gen-0b-females.mjs`（幂等；七重自检：重名/重 id/canCommand 红线/事件引用/夫君不在册/locationId 越界/技能键越界）。覆盖汉魏蜀吴后妃宫眷、谋略才识、义烈守节、联姻宗女与传说层（分组详见 10-progress Session 427 日志）。
+- **宪法红线**：全部史书/裴注/《晋书》/演义/传说可考（简介括注出处层），零自创；**仅祝融 canCommand=true**，本批一律 false（脚本强校验）。
+- **关键口径**：`initialHusbandId` 仅指 officers 在册武将（曹丕 252/刘禅 262/何晏 231/钟繇 258/郭淮 224 等核对在册），夫君不在册者仿祝融先例只写 initialStatus，寡妇可引亡夫（邹氏→张济 179）；`locationId` 取 106 城史实郡国治所；技能限 skills.json 30 键；talents 沿用 0-A 十三词表；未知年份取约值并在简介标注。
+- **运行时零扰动**：GameState 女性注入按剧本 `availableFemaleIds` 白名单（state-pipeline.ts:154-156），新 id 未入白名单——金样未重举 **3/3** 保持；校验链唯一改动点 validate-data females expected 10→90。
+- **验证全绿**：validate-data（90 记录 + 交叉引用）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client 71）、verify-items **32/32**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check`。
+- 文档：docs/08（§六 90 落地口径，真源先行）、docs/09（P0B-11 行）、docs/11（females ~10KB→~70KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress（Session 427 日志 + P0B 表勾选）、HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API/UI 改动；新 id 未入剧本白名单，婚配池消费留待 P0B-14 全量剧本挂接；`marriageRequirements`/`fatherId`/`motherId` 本批未用。0-B 剩余：P0B-06 officers 1000+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7、P0B-15 events 全量；docs/43 S1 待批准。
 
 ### Session 426 交接要点
 

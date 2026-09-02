@@ -1,3 +1,15 @@
+## 2026-09-03 — Session 427 · 0-B 数据扩容 P0B-11（females.json 10→90 女性角色）
+
+- Phase：**Phase 0-B 数据扩容**；Session 426 收官 P0B-10 后按 HANDOFF「下一步」进入 P0B-11。
+- **P0B-11 females.json 10→90**：新增 80 条（id 211~290），脚本 `scripts/gen-0b-females.mjs`（幂等；重名/重 id/canCommand 红线/事件引用/夫君不在册/locationId 越界/技能键越界七重自检）。覆盖：汉末后妃宗室（伏寿/曹节/唐姬/董贵人/阳安公主/曹宪/曹华等）、曹魏后妃宫眷（卞夫人/郭女王/毛皇后/环夫人/尹夫人/杜夫人/张昌蒲等）、蜀汉（甘夫人/穆皇后/敬哀与张皇后/张飞妻夏侯氏）、孙吴（吴夫人/谢徐潘袁王夫人/孙鲁班鲁育/陆逊妻/周瑜女/徐氏复仇）、谋略才识（辛宪英/王元姬/夏侯徽/羊徽瑜/钟琰/阮氏）、义烈守节（王异/赵娥/姜叙母/夏侯令女/吕荣/皇甫规妻/荀采/赵媛姜）、联姻宗女与传说层（董白/吕氏/关氏/鲍三娘/邹氏/吴国太/刘兰芝文学层）。
+- **宪法红线**（docs/00 §九）：全部为史书/裴注/《晋书》/演义/民间传说可考人物，简介括注出处层，零自创；**仅祝融 `canCommand=true`**，本批一律 false。
+- **关键口径（docs/08 真源同步）**：`initialHusbandId` 仅指向 officers.json 在册武将（曹丕 252/刘禅 262/何晏 231/钟繇 258/郭淮 224 等均已核对），夫君不在册者（献帝/曹叡/朱据等）仿 0-A 祝融先例只写 `initialStatus`，寡妇可引亡夫（如邹氏→张济 179）；`locationId` 取 106 城史实郡国治所（开阳/禄福/甘陵/武阳等）；技能仅用 skills.json 30 键，talents 沿用 0-A 十三词表；年份未知者取约值并在简介标注。
+- **运行时零扰动**：GameState 女性注入按剧本 `availableFemaleIds` 白名单（state-pipeline.ts:154-156），两剧本白名单均未收录新 id（201~210 与空），静态扩容不进局——金样未重举 **3/3** 保持。
+- **校验链**：validate-data females expected 10→90（唯一改动点），全文件 Zod + 交叉引用全绿。
+- **验证（全绿）**：validate-data（90 记录）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-items **32/32**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check` 通过。
+- 文档：docs/08（§六 90 落地口径，真源先行）、docs/09（P0B-11 行）、docs/11（females 体积估算 ~10KB→~70KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API/UI 改动；白名单未收录新 id，英靈集结 Demo 之外的剧本尚未消费新增女性（P0B-14 全量剧本时再挂接婚配池）；`marriageRequirements`/`fatherId`/`motherId` 字段本批未用（0-A 同惯例）。0-B 剩余：P0B-06 officers 1000+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-03 — Session 426 · 0-B 数据扩容 P0B-10（items.json 20→165 宝物）
 
 - Phase：**Phase 0-B 数据扩容**；Session 425 补录双写后按 HANDOFF「下一步」进入 P0B-10。会话开始时生成脚本 `scripts/gen-0b-items.mjs` 与扩容后 items.json 已在工作区（前会话遗留未提交态），本会话完成真源核对、校验链同步、全量回归与双写。
@@ -1412,7 +1424,7 @@
 | P0B-08 | formations.json（全量 27阵型：18陆+9水） | [x] | Session 424：id 0..26 齐 |
 | P0B-09 | units.json（全量 24兵种） | [x] | Session 424：8陆+攻城+3水+12特殊 |
 | P0B-10 | items.json（全量 165宝物） | [x] | Session 426：0-A 20 + 新增 145（id 21~165），validate-data expected 165 |
-| P0B-11 | females.json（全量 90+女性） | [ ] | — |
+| P0B-11 | females.json（全量 90+女性） | [x] | Session 427：0-A 10 + 新增 80（id 211~290），validate-data expected 90 |
 | P0B-12 | children.json（全量 50+子女） | [ ] | — |
 | P0B-13 | skills.json（全量 149技能） | [ ] | 69通用+80专属 |
 | P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [ ] | 以08数字真源为准；约30势力190全量开局仍属0-B |

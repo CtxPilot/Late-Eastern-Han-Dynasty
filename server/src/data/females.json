@@ -340,5 +340,2856 @@
     "relatedEvents": [],
     "canCommand": false,
     "description": "刘备夫人，糜竺之妹（《三国志·先主传》）"
+  },
+  {
+    "id": 211,
+    "name": "卞夫人",
+    "birthYear": 160,
+    "deathYear": 230,
+    "family": "commoner",
+    "clanName": "卞",
+    "factionId": null,
+    "locationId": 54,
+    "initialStatus": "married",
+    "initialHusbandId": 1,
+    "influence": {
+      "household": 70,
+      "counsel": 55,
+      "martial": 10,
+      "prestige": 75,
+      "fortitude": 65,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "charisma": 3,
+      "politics": 4
+    },
+    "teachableSkills": [
+      "commerce",
+      "eloquence"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "eloquence",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "economicBoost"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹操继室武宣皇后，琅琊开阳人，倡家出身，抚诸子以德，性约俭（《三国志·魏书·后妃传》）"
+  },
+  {
+    "id": 212,
+    "name": "郭女王",
+    "birthYear": 184,
+    "deathYear": 235,
+    "family": "greatClan",
+    "clanName": "郭",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 252,
+    "influence": {
+      "household": 55,
+      "counsel": 75,
+      "martial": 5,
+      "prestige": 60,
+      "fortitude": 55,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "discord"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "diplomaticGrace",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "文德郭皇后，安平广宗人，讳女王，有智数，曹丕定嗣多资其谋（《三国志·魏书·后妃传》）"
+  },
+  {
+    "id": 213,
+    "name": "甘夫人",
+    "birthYear": 180,
+    "deathYear": 209,
+    "family": "commoner",
+    "clanName": "甘",
+    "factionId": null,
+    "locationId": 37,
+    "initialStatus": "married",
+    "initialHusbandId": 2,
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 60,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "calm",
+      "farming"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "刘备妾室，沛人，随军流转，长坂之难赖赵云获全（《三国志·二主妃子传》）"
+  },
+  {
+    "id": 214,
+    "name": "吴夫人",
+    "birthYear": 155,
+    "deathYear": 202,
+    "family": "greatClan",
+    "clanName": "吴",
+    "factionId": 3,
+    "locationId": 16,
+    "initialStatus": "married",
+    "initialHusbandId": 114,
+    "influence": {
+      "household": 70,
+      "counsel": 60,
+      "martial": 5,
+      "prestige": 70,
+      "fortitude": 60,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "politics": 4,
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "commerce",
+      "calm"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "commerce",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "moraleAnchor"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙坚妻武烈皇后，吴郡富春人，吴景之姊，孙策孙权生母，助定江东（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 215,
+    "name": "吴氏",
+    "birthYear": 165,
+    "deathYear": 245,
+    "family": "greatClan",
+    "clanName": "吴",
+    "factionId": null,
+    "locationId": 7,
+    "initialStatus": "married",
+    "initialHusbandId": 2,
+    "influence": {
+      "household": 60,
+      "counsel": 45,
+      "martial": 5,
+      "prestige": 70,
+      "fortitude": 55,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "politics": 3,
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "穆皇后，陈留人，吴懿之妹，先为刘瑁妻，再适刘备，章武元年立为后（《三国志·二主妃子传》）"
+  },
+  {
+    "id": 216,
+    "name": "伏寿",
+    "birthYear": 178,
+    "deathYear": 214,
+    "family": "greatClan",
+    "clanName": "伏",
+    "factionId": null,
+    "locationId": 54,
+    "initialStatus": "married",
+    "influence": {
+      "household": 55,
+      "counsel": 45,
+      "martial": 5,
+      "prestige": 70,
+      "fortitude": 60,
+      "scholarship": 45
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "eloquence",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "prestige",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "献帝伏皇后，琅琊东武人，伏完之女，密书其父谋讨曹操，事泄遇害（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 217,
+    "name": "曹节",
+    "birthYear": 196,
+    "deathYear": 260,
+    "family": "greatClan",
+    "clanName": "曹",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "married",
+    "influence": {
+      "household": 50,
+      "counsel": 50,
+      "martial": 5,
+      "prestige": 75,
+      "fortitude": 70,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "politics": 3,
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "eloquence",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "prestige",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "献帝曹皇后，曹操中女，魏受禅时捧玺绶不为使者所夺，后为山阳公夫人（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 218,
+    "name": "唐姬",
+    "birthYear": 172,
+    "deathYear": 230,
+    "family": "localPower",
+    "clanName": "唐",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 55,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "弘农王妃，少帝刘辩之妃，辩遇鸩前起舞诀别，献帝追念故恩封为弘农王妃（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 219,
+    "name": "董贵人",
+    "birthYear": 180,
+    "deathYear": 200,
+    "family": "greatClan",
+    "clanName": "董",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "married",
+    "influence": {
+      "household": 35,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 50,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "politics": 1
+    },
+    "teachableSkills": [
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "献帝董贵人，车骑将军董承之女，衣带诏事发，身怀六甲而遇害（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 220,
+    "name": "张春华",
+    "birthYear": 189,
+    "deathYear": 247,
+    "family": "greatClan",
+    "clanName": "张",
+    "factionId": null,
+    "locationId": 31,
+    "initialStatus": "married",
+    "initialHusbandId": 12,
+    "influence": {
+      "household": 55,
+      "counsel": 60,
+      "martial": 5,
+      "prestige": 50,
+      "fortitude": 70,
+      "scholarship": 45
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "calm"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "宣穆张皇后，河内平皋人，司马懿妻，少有德行，生司马师司马昭（《晋书·后妃传》）"
+  },
+  {
+    "id": 221,
+    "name": "王元姬",
+    "birthYear": 217,
+    "deathYear": 268,
+    "family": "greatClan",
+    "clanName": "王",
+    "factionId": null,
+    "locationId": 53,
+    "initialStatus": "married",
+    "initialHusbandId": 208,
+    "influence": {
+      "household": 60,
+      "counsel": 70,
+      "martial": 0,
+      "prestige": 65,
+      "fortitude": 60,
+      "scholarship": 80
+    },
+    "statBonus": {
+      "intelligence": 4,
+      "politics": 3
+    },
+    "teachableSkills": [
+      "farming",
+      "insight"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "bloodlineScholar",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "文明王皇后，东海郯人，王朗孙女，司马昭妻，性聪慧料事多中，尝言钟会必乱（《晋书·后妃传》）"
+  },
+  {
+    "id": 222,
+    "name": "羊徽瑜",
+    "birthYear": 214,
+    "deathYear": 278,
+    "family": "greatClan",
+    "clanName": "羊",
+    "factionId": null,
+    "locationId": 49,
+    "initialStatus": "married",
+    "initialHusbandId": 207,
+    "influence": {
+      "household": 55,
+      "counsel": 50,
+      "martial": 0,
+      "prestige": 65,
+      "fortitude": 55,
+      "scholarship": 50
+    },
+    "statBonus": {
+      "charisma": 3,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "景献羊皇后，泰山南城人，羊祜之姊，司马师继室，温仁有德（《晋书·后妃传》）"
+  },
+  {
+    "id": 223,
+    "name": "夏侯徽",
+    "birthYear": 211,
+    "deathYear": 235,
+    "family": "greatClan",
+    "clanName": "夏侯",
+    "factionId": null,
+    "locationId": 37,
+    "initialStatus": "married",
+    "initialHusbandId": 207,
+    "influence": {
+      "household": 50,
+      "counsel": 60,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 50,
+      "scholarship": 60
+    },
+    "statBonus": {
+      "intelligence": 3
+    },
+    "teachableSkills": [
+      "insight",
+      "medicine"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "景怀夏侯皇后，沛国谯人，夏侯尚女，明识有器量，为司马师所鸩（《晋书·后妃传》）"
+  },
+  {
+    "id": 224,
+    "name": "王异",
+    "birthYear": 175,
+    "deathYear": 230,
+    "family": "localPower",
+    "clanName": "王",
+    "factionId": null,
+    "locationId": 22,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 70,
+      "martial": 10,
+      "prestige": 45,
+      "fortitude": 85,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "fortify",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "economicBoost"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "赵昂妻，天水人，冀城之变佐夫运谋复城，勉子殉义（《三国志》裴注引皇甫谧《列女传》）"
+  },
+  {
+    "id": 225,
+    "name": "辛宪英",
+    "birthYear": 191,
+    "deathYear": 269,
+    "family": "greatClan",
+    "clanName": "辛",
+    "factionId": null,
+    "locationId": 3,
+    "initialStatus": "married",
+    "influence": {
+      "household": 55,
+      "counsel": 85,
+      "martial": 0,
+      "prestige": 60,
+      "fortitude": 60,
+      "scholarship": 75
+    },
+    "statBonus": {
+      "intelligence": 5,
+      "politics": 3
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "bloodlineScholar",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "辛毗之女，颍川阳翟人，曹丕得立而泣知魏祚不长，弟辛敞从曹爽之难先从其言（《三国志》裴注引《世语》）"
+  },
+  {
+    "id": 226,
+    "name": "夏侯令女",
+    "birthYear": 200,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "夏侯",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 90,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹文叔妻，早寡无子，家人强令再嫁，断鼻明志（《三国志》裴注引皇甫谧《列女传》）"
+  },
+  {
+    "id": 227,
+    "name": "阮氏",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "阮",
+    "factionId": null,
+    "locationId": 7,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 70,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 60,
+      "scholarship": 55
+    },
+    "statBonus": {
+      "intelligence": 3,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "许允妻，阮共之女，识有过人者，允下狱时教二子自全之道（《世说新语·贤媛》）"
+  },
+  {
+    "id": 228,
+    "name": "赵娥",
+    "birthYear": 170,
+    "deathYear": 230,
+    "family": "commoner",
+    "clanName": "赵",
+    "factionId": null,
+    "locationId": 83,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 40,
+      "martial": 25,
+      "prestige": 55,
+      "fortitude": 90,
+      "scholarship": 15
+    },
+    "statBonus": {
+      "war": 2
+    },
+    "teachableSkills": [
+      "bravery",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "酒泉福禄人，庞淯母，父为李寿所害，白日都亭手刃仇人，诣县自首，遇赦得免（《后汉书·列女传》）"
+  },
+  {
+    "id": 229,
+    "name": "姜叙母",
+    "birthYear": 170,
+    "deathYear": 213,
+    "family": "greatClan",
+    "clanName": "姜",
+    "factionId": null,
+    "locationId": 22,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 50,
+      "martial": 5,
+      "prestige": 50,
+      "fortitude": 85,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "bravery",
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "杨阜之姑，冀城之变中历数马超之恶，慨然就刑（《三国志·杨阜传》）"
+  },
+  {
+    "id": 230,
+    "name": "徐庶母",
+    "birthYear": 170,
+    "deathYear": 210,
+    "family": "commoner",
+    "clanName": "徐",
+    "factionId": null,
+    "locationId": 3,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 70,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "徐庶之母，颍川人，曹操劫执以招庶，庶辞先主而北归（《三国志·诸葛亮传》，演义增自缢之节）"
+  },
+  {
+    "id": 231,
+    "name": "蔡氏",
+    "birthYear": 175,
+    "deathYear": 240,
+    "family": "greatClan",
+    "clanName": "蔡",
+    "factionId": null,
+    "locationId": 7,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 50,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 55,
+      "scholarship": 65
+    },
+    "statBonus": {
+      "intelligence": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "蔡邕之女，羊衜妻，羊祜生母（《晋书·羊祜传》）"
+  },
+  {
+    "id": 232,
+    "name": "董白",
+    "birthYear": 175,
+    "deathYear": 192,
+    "family": "localPower",
+    "clanName": "董",
+    "factionId": null,
+    "locationId": 77,
+    "initialStatus": "single",
+    "influence": {
+      "household": 45,
+      "counsel": 25,
+      "martial": 5,
+      "prestige": 60,
+      "fortitude": 35,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "董卓孙女，未及笄封渭阳君，卓诛随族灭（《后汉书·董卓传》裴注引《英雄记》）"
+  },
+  {
+    "id": 233,
+    "name": "严氏",
+    "birthYear": 172,
+    "deathYear": 220,
+    "family": "localPower",
+    "clanName": "严",
+    "factionId": null,
+    "locationId": 9,
+    "initialStatus": "married",
+    "initialHusbandId": 5,
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 30,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "吕布之妻，演义中屡劝布勿从陈宫之谋（《三国演义》）"
+  },
+  {
+    "id": 234,
+    "name": "吕氏",
+    "birthYear": 200,
+    "deathYear": 260,
+    "family": "localPower",
+    "clanName": "吕",
+    "factionId": null,
+    "locationId": 9,
+    "initialStatus": "single",
+    "influence": {
+      "household": 35,
+      "counsel": 30,
+      "martial": 5,
+      "prestige": 45,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "吕布之女，袁术为子求婚以结援，婚未成而布败（《三国志·吕布传》）"
+  },
+  {
+    "id": 235,
+    "name": "樊氏",
+    "birthYear": 175,
+    "deathYear": 230,
+    "family": "commoner",
+    "clanName": "樊",
+    "factionId": null,
+    "locationId": 62,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 35,
+      "counsel": 25,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "commerce",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "concubineHarmony"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "桂阳赵范寡嫂，有国色，范欲以配赵云，云辞之（《三国志》裴注引《云别传》）"
+  },
+  {
+    "id": 236,
+    "name": "毛皇后",
+    "birthYear": 205,
+    "deathYear": 237,
+    "family": "commoner",
+    "clanName": "毛",
+    "factionId": null,
+    "locationId": 31,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 45,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "明悼毛皇后，河内人，太和元年立后，景初元年坐事赐死（《三国志·魏书·后妃传》）"
+  },
+  {
+    "id": 237,
+    "name": "张昌蒲",
+    "birthYear": 195,
+    "deathYear": 257,
+    "family": "localPower",
+    "clanName": "张",
+    "factionId": null,
+    "locationId": 24,
+    "initialStatus": "married",
+    "initialHusbandId": 258,
+    "influence": {
+      "household": 50,
+      "counsel": 60,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 55,
+      "scholarship": 70
+    },
+    "statBonus": {
+      "intelligence": 4,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "bloodlineScholar",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "钟繇妾，钟会生母，字昌蒲，雅有识致，亲授会书算（《三国志》裴注引《张氏传》）"
+  },
+  {
+    "id": 238,
+    "name": "金乡公主",
+    "birthYear": 200,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "曹",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 231,
+    "influence": {
+      "household": 45,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 50,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "何晏之妻，尹夫人与曹操所生，尝忧晏骄纵必罹其祸（《三国志》裴注引《魏末传》）"
+  },
+  {
+    "id": 239,
+    "name": "夏侯氏",
+    "birthYear": 178,
+    "deathYear": 230,
+    "family": "greatClan",
+    "clanName": "夏侯",
+    "factionId": null,
+    "locationId": 37,
+    "initialStatus": "married",
+    "initialHusbandId": 7,
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 15,
+      "prestige": 40,
+      "fortitude": 50,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "war": 1,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "riding",
+      "archery"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineWarrior",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "张飞妻，夏侯霸从妹，建安五年出行樵采为飞所得，生二女皆为刘禅后（《三国志》裴注引《魏略》）"
+  },
+  {
+    "id": 240,
+    "name": "敬哀皇后",
+    "birthYear": 210,
+    "deathYear": 237,
+    "family": "greatClan",
+    "clanName": "张",
+    "factionId": null,
+    "locationId": 19,
+    "initialStatus": "married",
+    "initialHusbandId": 262,
+    "influence": {
+      "household": 50,
+      "counsel": 35,
+      "martial": 5,
+      "prestige": 60,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "charisma": 2,
+      "politics": 1
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "刘禅第一任皇后，张飞长女，章武元年为太子妃，建兴元年立后（《三国志·二主妃子传》）"
+  },
+  {
+    "id": 241,
+    "name": "张皇后",
+    "birthYear": 212,
+    "deathYear": 264,
+    "family": "greatClan",
+    "clanName": "张",
+    "factionId": null,
+    "locationId": 19,
+    "initialStatus": "married",
+    "initialHusbandId": 262,
+    "influence": {
+      "household": 48,
+      "counsel": 32,
+      "martial": 5,
+      "prestige": 55,
+      "fortitude": 48,
+      "scholarship": 28
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "刘禅继后，张飞次女，敬哀后崩，延熙元年立为后（《三国志·二主妃子传》）"
+  },
+  {
+    "id": 242,
+    "name": "关氏",
+    "birthYear": 200,
+    "deathYear": 260,
+    "family": "localPower",
+    "clanName": "关",
+    "factionId": null,
+    "locationId": 14,
+    "initialStatus": "single",
+    "influence": {
+      "household": 30,
+      "counsel": 25,
+      "martial": 40,
+      "prestige": 50,
+      "fortitude": 55,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "war": 2
+    },
+    "teachableSkills": [
+      "bravery",
+      "riding"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineWarrior",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "关羽之女，孙权为子求婚不允（《三国演义》虎女之语，云南民间尊称关三小姐，传说层）"
+  },
+  {
+    "id": 243,
+    "name": "孙鲁班",
+    "birthYear": 225,
+    "deathYear": 253,
+    "family": "greatClan",
+    "clanName": "孙",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "initialHusbandId": 244,
+    "influence": {
+      "household": 60,
+      "counsel": 65,
+      "martial": 5,
+      "prestige": 60,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 3,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "discord",
+      "insight"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "discord",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "diplomaticGrace",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙权长女，字大虎，全琮妻，号全公主，构陷太子和与妹鲁育（《三国志·吴书》）"
+  },
+  {
+    "id": 244,
+    "name": "孙鲁育",
+    "birthYear": 228,
+    "deathYear": 255,
+    "family": "greatClan",
+    "clanName": "孙",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "influence": {
+      "household": 50,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 55,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙权小女，字小虎，朱据妻，号朱公主，为姊鲁班所谮遇害（《三国志·吴书》）"
+  },
+  {
+    "id": 245,
+    "name": "孙氏",
+    "birthYear": 208,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "孙",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "initialHusbandId": 15,
+    "influence": {
+      "household": 50,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 55,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙策之女，陆逊妻（《三国志·陆逊传》）"
+  },
+  {
+    "id": 246,
+    "name": "周氏",
+    "birthYear": 205,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "周",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "betrothed",
+    "influence": {
+      "household": 45,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 45,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "周瑜之女，许配太子孙登为妃（《三国志·孙登传》）"
+  },
+  {
+    "id": 247,
+    "name": "谢夫人",
+    "birthYear": 180,
+    "deathYear": 205,
+    "family": "greatClan",
+    "clanName": "谢",
+    "factionId": 3,
+    "locationId": 66,
+    "initialStatus": "married",
+    "initialHusbandId": 3,
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 50,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙权原配谢夫人，会稽山阴人，徐氏入宠后失意早卒（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 248,
+    "name": "徐夫人",
+    "birthYear": 182,
+    "deathYear": 215,
+    "family": "greatClan",
+    "clanName": "徐",
+    "factionId": 3,
+    "locationId": 16,
+    "initialStatus": "married",
+    "initialHusbandId": 3,
+    "influence": {
+      "household": 50,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "commerce"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙权徐夫人，吴郡富春人，徐琨之女，初适陆尚再嫁，抚养孙登（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 249,
+    "name": "潘淑",
+    "birthYear": 228,
+    "deathYear": 252,
+    "family": "commoner",
+    "clanName": "潘",
+    "factionId": 3,
+    "locationId": 66,
+    "initialStatus": "married",
+    "initialHusbandId": 3,
+    "influence": {
+      "household": 45,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "farming",
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙亮母潘皇后，会稽句章人，没入织室而得幸，立为后，为宫人所害（生年无考取约值）（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 250,
+    "name": "袁夫人",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "袁",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "initialHusbandId": 3,
+    "influence": {
+      "household": 45,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 55,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "politics": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙权袁夫人，袁术之女，贤而无子，抚养宫中诸子（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 251,
+    "name": "王夫人",
+    "birthYear": 205,
+    "deathYear": 245,
+    "family": "greatClan",
+    "clanName": "王",
+    "factionId": 3,
+    "locationId": 54,
+    "initialStatus": "married",
+    "initialHusbandId": 3,
+    "influence": {
+      "household": 45,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 45,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙和母王夫人，琅琊人，宠冠后庭，太子和立而遭构，忧卒（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 252,
+    "name": "蔡夫人",
+    "birthYear": 180,
+    "deathYear": 220,
+    "family": "greatClan",
+    "clanName": "蔡",
+    "factionId": 1,
+    "locationId": 15,
+    "initialStatus": "married",
+    "initialHusbandId": 167,
+    "influence": {
+      "household": 55,
+      "counsel": 50,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 40,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "discord",
+      "insight"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "discord",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "刘表后妻，蔡瑁之姊，刘琮生母，表卒后主举州降曹（《三国志·刘表传》，演义增献荆州之节）"
+  },
+  {
+    "id": 253,
+    "name": "冯氏",
+    "birthYear": 178,
+    "deathYear": 200,
+    "family": "localPower",
+    "clanName": "冯",
+    "factionId": null,
+    "locationId": 18,
+    "initialStatus": "married",
+    "initialHusbandId": 181,
+    "influence": {
+      "household": 40,
+      "counsel": 25,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 35,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "冯方女，避乱扬州，袁术登城见而悦之，宠幸冠诸姬，为诸婢共缢杀（《后汉书·袁术传》）"
+  },
+  {
+    "id": 254,
+    "name": "郭氏",
+    "birthYear": 180,
+    "deathYear": 215,
+    "family": "localPower",
+    "clanName": "郭",
+    "factionId": null,
+    "locationId": 2,
+    "initialStatus": "married",
+    "initialHusbandId": 178,
+    "influence": {
+      "household": 40,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 25,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "discord",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "郭汜妻，性猜忌，与李傕妻互谗，离间李郭相攻，长安大乱（《三国志》裴注引《九州春秋》）"
+  },
+  {
+    "id": 255,
+    "name": "环夫人",
+    "birthYear": 180,
+    "deathYear": 230,
+    "family": "localPower",
+    "clanName": "环",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 1,
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 45,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹操妾室，曹冲生母，冲早慧而夭，操哀甚（《三国志·武文世王公传》）"
+  },
+  {
+    "id": 256,
+    "name": "尹夫人",
+    "birthYear": 190,
+    "deathYear": 240,
+    "family": "greatClan",
+    "clanName": "尹",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 1,
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 45,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "何进子妇，何晏生母，曹操为司空时纳之（《三国志》裴注引《魏略》）"
+  },
+  {
+    "id": 257,
+    "name": "崔氏",
+    "birthYear": 205,
+    "deathYear": 221,
+    "family": "greatClan",
+    "clanName": "崔",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 220,
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 40,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "charisma": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹植妻，崔琰兄女，以衣绣为曹操登台所见，遣还赐死（《三国志》裴注引《世语》）"
+  },
+  {
+    "id": 258,
+    "name": "荀采",
+    "birthYear": 178,
+    "deathYear": 198,
+    "family": "greatClan",
+    "clanName": "荀",
+    "factionId": null,
+    "locationId": 3,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 35,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 80,
+      "scholarship": 55
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "荀爽少女，聪敏有才艺，适阴瑜，瑜卒，父欲逼嫁郭氏，自尽明志（《后汉书·列女传》）"
+  },
+  {
+    "id": 259,
+    "name": "徐氏",
+    "birthYear": 190,
+    "deathYear": 240,
+    "family": "greatClan",
+    "clanName": "徐",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 45,
+      "counsel": 60,
+      "martial": 15,
+      "prestige": 50,
+      "fortitude": 70,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "intelligence": 3,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "calm"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "insight",
+        "bonus": 3
+      }
+    ],
+    "talents": [
+      "household",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙翊妻，翊为妫览戴员所害，徐氏佯许览婚，密结旧部手刃仇人（《三国志》裴注引《吴历》）"
+  },
+  {
+    "id": 260,
+    "name": "诸葛氏",
+    "birthYear": 200,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "诸葛",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 45,
+      "scholarship": 45
+    },
+    "statBonus": {
+      "politics": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "farming"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "诸葛瑾之女，张承妻（《三国志·吴书》）"
+  },
+  {
+    "id": 261,
+    "name": "刘兰芝",
+    "birthYear": 180,
+    "deathYear": 200,
+    "family": "commoner",
+    "clanName": "刘",
+    "factionId": null,
+    "locationId": 65,
+    "initialStatus": "married",
+    "influence": {
+      "household": 30,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 30,
+      "fortitude": 75,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "汉乐府孔雀东南飞女主人公，建安中庐江府小吏焦仲卿妻，被遣自誓不嫁，举身赴清池（汉乐府《孔雀东南飞》，文学层）"
+  },
+  {
+    "id": 262,
+    "name": "柏夫人",
+    "birthYear": 200,
+    "deathYear": 260,
+    "family": "localPower",
+    "clanName": "柏",
+    "factionId": null,
+    "locationId": 31,
+    "initialStatus": "married",
+    "initialHusbandId": 12,
+    "influence": {
+      "household": 45,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 45,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "charisma": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "司马懿宠妾，司马伦生母，张春华由是失宠（《晋书·后妃传》）"
+  },
+  {
+    "id": 263,
+    "name": "曹宪",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "曹",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 55,
+      "fortitude": 45,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "politics": 1,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "献帝贵人，曹操之女，建安十八年与妹曹华同入宫（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 264,
+    "name": "曹华",
+    "birthYear": 197,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "曹",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "married",
+    "influence": {
+      "household": 38,
+      "counsel": 32,
+      "martial": 0,
+      "prestige": 52,
+      "fortitude": 42,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "献帝贵人，曹操之女，与姊曹宪同入宫（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 265,
+    "name": "杜夫人",
+    "birthYear": 190,
+    "deathYear": 240,
+    "family": "localPower",
+    "clanName": "杜",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 1,
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 50,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "秦宜禄前妻，生秦朗，关羽屡请以为妻，曹操自纳之（《三国志》裴注引《蜀记》）"
+  },
+  {
+    "id": 266,
+    "name": "阳安公主",
+    "birthYear": 160,
+    "deathYear": 230,
+    "family": "imperial",
+    "clanName": "刘",
+    "factionId": null,
+    "locationId": 1,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 60,
+      "fortitude": 45,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "汉桓帝之女阳安长公主，下嫁伏完（《后汉书·皇后纪》）"
+  },
+  {
+    "id": 267,
+    "name": "吴国太",
+    "birthYear": 158,
+    "deathYear": 220,
+    "family": "greatClan",
+    "clanName": "吴",
+    "factionId": 3,
+    "locationId": 16,
+    "initialStatus": "married",
+    "initialHusbandId": 114,
+    "influence": {
+      "household": 55,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 3,
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙坚次妻，演义中孙尚香生母，甘露寺看新郎许嫁刘备（《三国演义》）"
+  },
+  {
+    "id": 268,
+    "name": "鲍三娘",
+    "birthYear": 200,
+    "deathYear": 260,
+    "family": "commoner",
+    "clanName": "鲍",
+    "factionId": 2,
+    "locationId": 20,
+    "initialStatus": "married",
+    "influence": {
+      "household": 25,
+      "counsel": 25,
+      "martial": 70,
+      "prestige": 40,
+      "fortitude": 65,
+      "scholarship": 10
+    },
+    "statBonus": {
+      "war": 3
+    },
+    "teachableSkills": [
+      "bravery",
+      "riding"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineWarrior",
+      "nightRaid"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "关索之妻，民间传说女将，相传镇守葭萌战殁（明《花关索传》与川北民间传说层）"
+  },
+  {
+    "id": 269,
+    "name": "习氏",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "习",
+    "factionId": null,
+    "locationId": 15,
+    "initialStatus": "married",
+    "influence": {
+      "household": 50,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 70,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "庞林妻，习祯之妹，城破相失十余年，养孤守节，后得完聚（《三国志》裴注引《襄阳记》）"
+  },
+  {
+    "id": 270,
+    "name": "邹氏",
+    "birthYear": 170,
+    "deathYear": 220,
+    "family": "localPower",
+    "clanName": "邹",
+    "factionId": null,
+    "locationId": 13,
+    "initialStatus": "widow",
+    "initialHusbandId": 179,
+    "influence": {
+      "household": 35,
+      "counsel": 25,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 40,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "张济遗孀，演义称邹氏，曹操纳之而致张绣夜袭宛城（《三国志·张绣传》，演义名之邹氏）"
+  },
+  {
+    "id": 271,
+    "name": "王经母",
+    "birthYear": 190,
+    "deathYear": 260,
+    "family": "commoner",
+    "clanName": "王",
+    "factionId": null,
+    "locationId": 44,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 35,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 80,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹魏尚书王经之母，经坐高贵乡公事下狱，母笑谓人谁不死正恐不得死所，母子同日就刑（《三国志》裴注引《汉晋春秋》）"
+  },
+  {
+    "id": 272,
+    "name": "虞氏",
+    "birthYear": 205,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "虞",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 40,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 50,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "魏明帝为平原王时王妃，帝即位立毛氏为后，虞氏绌还邺宫，愤言曹氏自好立贱（《三国志·魏书·后妃传》）"
+  },
+  {
+    "id": 273,
+    "name": "阴贵人",
+    "birthYear": 210,
+    "deathYear": 260,
+    "family": "localPower",
+    "clanName": "阴",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "initialHusbandId": 252,
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 40,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "concubineHarmony",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "魏文帝贵人阴氏，甄后见黜后有宠（《三国志·魏书·后妃传》）"
+  },
+  {
+    "id": 274,
+    "name": "清河公主",
+    "birthYear": 200,
+    "deathYear": 250,
+    "family": "greatClan",
+    "clanName": "曹",
+    "factionId": null,
+    "locationId": 5,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 45,
+      "martial": 0,
+      "prestige": 55,
+      "fortitude": 50,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "politics": 2,
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹操之女清河公主，下嫁夏侯楙，夫妇不睦，楙几为其所构（《三国志》裴注引《魏略》）"
+  },
+  {
+    "id": 275,
+    "name": "吕荣",
+    "birthYear": 190,
+    "deathYear": 195,
+    "family": "commoner",
+    "clanName": "吕",
+    "factionId": null,
+    "locationId": 16,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 35,
+      "fortitude": 85,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "loyaltyAura",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "吴郡许升妻吕荣，躬勤家业劝夫笃学，遭乱不屈被害（《后汉书·列女传》）"
+  },
+  {
+    "id": 276,
+    "name": "赵媛姜",
+    "birthYear": 195,
+    "deathYear": 210,
+    "family": "commoner",
+    "clanName": "赵",
+    "factionId": null,
+    "locationId": 69,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 50,
+      "martial": 10,
+      "prestige": 35,
+      "fortitude": 75,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "intelligence": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "犍为盛道妻，夫坐法系狱，夜纵之携子遁走，己以身当吏而死（《后汉书·列女传》）"
+  },
+  {
+    "id": 277,
+    "name": "钟琰",
+    "birthYear": 215,
+    "deathYear": 265,
+    "family": "greatClan",
+    "clanName": "钟",
+    "factionId": null,
+    "locationId": 3,
+    "initialStatus": "married",
+    "influence": {
+      "household": 50,
+      "counsel": 55,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 50,
+      "scholarship": 80
+    },
+    "statBonus": {
+      "intelligence": 4,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [
+      {
+        "skill": "eloquence",
+        "bonus": 2
+      }
+    ],
+    "talents": [
+      "bloodlineScholar",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "王浑妻，钟繇曾孙女，数岁能属文，博览群艺（《晋书·列女传》）"
+  },
+  {
+    "id": 278,
+    "name": "孟宗母",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "commoner",
+    "clanName": "孟",
+    "factionId": null,
+    "locationId": 60,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 35,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 30,
+      "fortitude": 60,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孟宗之母，嗜笋，冬月宗入竹林哀哭而笋生（《三国志》裴注引《楚国先贤传》）"
+  },
+  {
+    "id": 279,
+    "name": "刘氏",
+    "birthYear": 180,
+    "deathYear": 283,
+    "family": "commoner",
+    "clanName": "刘",
+    "factionId": null,
+    "locationId": 69,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 40,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 30,
+      "fortitude": 65,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "李密祖母，躬亲抚养其孤孙，密后以《陈情表》辞晋征召（《晋书·李密传》）"
+  },
+  {
+    "id": 280,
+    "name": "丁夫人",
+    "birthYear": 175,
+    "deathYear": 220,
+    "family": "localPower",
+    "clanName": "丁",
+    "factionId": null,
+    "locationId": 37,
+    "initialStatus": "single",
+    "influence": {
+      "household": 50,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 65,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "childEducator"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "曹操正室，曹昂养母，昂殁于宛后哀哭不辍，操怒而遣归（《三国志》裴注引《魏略》）"
+  },
+  {
+    "id": 281,
+    "name": "王氏",
+    "birthYear": 200,
+    "deathYear": 260,
+    "family": "greatClan",
+    "clanName": "王",
+    "factionId": null,
+    "locationId": 24,
+    "initialStatus": "married",
+    "initialHusbandId": 224,
+    "influence": {
+      "household": 45,
+      "counsel": 50,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 55,
+      "scholarship": 40
+    },
+    "statBonus": {
+      "intelligence": 2,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "insight",
+      "eloquence"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "郭淮妻，王凌之妹，坐凌罪当死，诸子泣请，宣帝特原之（《三国志》裴注引《世语》）"
+  },
+  {
+    "id": 282,
+    "name": "任氏",
+    "birthYear": 180,
+    "deathYear": 240,
+    "family": "commoner",
+    "clanName": "任",
+    "factionId": null,
+    "locationId": 80,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 50,
+      "martial": 0,
+      "prestige": 30,
+      "fortitude": 65,
+      "scholarship": 45
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "train",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "皇甫谧叔母，收养谧而严课其学，谧感其言乃就学成名（《晋书·皇甫谧传》）"
+  },
+  {
+    "id": 283,
+    "name": "韩氏",
+    "birthYear": 190,
+    "deathYear": 250,
+    "family": "localPower",
+    "clanName": "韩",
+    "factionId": null,
+    "locationId": 79,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 40,
+      "fortitude": 45,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "politics": 1
+    },
+    "teachableSkills": [
+      "eloquence",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "diplomaticGrace"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "韩遂之女，遂以女妻阎行，欲结其心（《三国志》裴注引《典略》）"
+  },
+  {
+    "id": 284,
+    "name": "张氏",
+    "birthYear": 195,
+    "deathYear": 250,
+    "family": "localPower",
+    "clanName": "张",
+    "factionId": null,
+    "locationId": 23,
+    "initialStatus": "betrothed",
+    "influence": {
+      "household": 40,
+      "counsel": 25,
+      "martial": 5,
+      "prestige": 35,
+      "fortitude": 40,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "riding",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "张绣之女，曹操为子曹均娶之，以安绣心（《三国志·张绣传》）"
+  },
+  {
+    "id": 285,
+    "name": "马伦",
+    "birthYear": 150,
+    "deathYear": 193,
+    "family": "greatClan",
+    "clanName": "马",
+    "factionId": null,
+    "locationId": 35,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 45,
+      "counsel": 65,
+      "martial": 0,
+      "prestige": 55,
+      "fortitude": 55,
+      "scholarship": 70
+    },
+    "statBonus": {
+      "intelligence": 3,
+      "politics": 2
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "bloodlineScholar",
+      "prestige"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "袁隗妻，名伦，马融之女，出嫁时才辩应对传为佳话（《后汉书·列女传》）"
+  },
+  {
+    "id": 286,
+    "name": "皇甫规妻",
+    "birthYear": 165,
+    "deathYear": 192,
+    "family": "greatClan",
+    "clanName": "皇甫",
+    "factionId": null,
+    "locationId": 80,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 30,
+      "counsel": 55,
+      "martial": 10,
+      "prestige": 55,
+      "fortitude": 90,
+      "scholarship": 55
+    },
+    "statBonus": {
+      "charisma": 3
+    },
+    "teachableSkills": [
+      "eloquence",
+      "insight"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "prestige",
+      "loyaltyAura"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "皇甫规之妻，工文能书，董卓聘之，诣卓门骂之被害（《后汉书·列女传》）"
+  },
+  {
+    "id": 287,
+    "name": "姜维母",
+    "birthYear": 175,
+    "deathYear": 230,
+    "family": "commoner",
+    "clanName": "姜",
+    "factionId": null,
+    "locationId": 22,
+    "initialStatus": "widow",
+    "influence": {
+      "household": 35,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 25,
+      "fortitude": 60,
+      "scholarship": 30
+    },
+    "statBonus": {
+      "politics": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "姜维之母，居冀城，维归蜀后得书令求当归（《三国志》裴注引孙盛《杂记》）"
+  },
+  {
+    "id": 288,
+    "name": "何姬",
+    "birthYear": 228,
+    "deathYear": 280,
+    "family": "localPower",
+    "clanName": "何",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "influence": {
+      "household": 45,
+      "counsel": 35,
+      "martial": 0,
+      "prestige": 50,
+      "fortitude": 60,
+      "scholarship": 20
+    },
+    "statBonus": {
+      "politics": 2,
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "farming",
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "childEducator",
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙和妾，孙皓生母，皓即位尊为太后（生年无考取约值）（《三国志·吴书》）"
+  },
+  {
+    "id": 289,
+    "name": "朱氏",
+    "birthYear": 242,
+    "deathYear": 265,
+    "family": "greatClan",
+    "clanName": "朱",
+    "factionId": 3,
+    "locationId": 17,
+    "initialStatus": "married",
+    "influence": {
+      "household": 40,
+      "counsel": 30,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 40,
+      "scholarship": 25
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "孙休皇后，朱据与孙鲁育之女，尊为景皇后，孙皓立后被害（《三国志·妃嫔传》）"
+  },
+  {
+    "id": 290,
+    "name": "甄姜",
+    "birthYear": 183,
+    "deathYear": 230,
+    "family": "greatClan",
+    "clanName": "甄",
+    "factionId": null,
+    "locationId": 41,
+    "initialStatus": "married",
+    "influence": {
+      "household": 50,
+      "counsel": 40,
+      "martial": 0,
+      "prestige": 45,
+      "fortitude": 45,
+      "scholarship": 35
+    },
+    "statBonus": {
+      "charisma": 2
+    },
+    "teachableSkills": [
+      "calm",
+      "commerce"
+    ],
+    "enhanceableSkills": [],
+    "talents": [
+      "household"
+    ],
+    "relatedEvents": [],
+    "canCommand": false,
+    "description": "中山无极甄氏长女，文昭甄皇后长姊（《三国志》裴注引《魏书》）"
   }
 ]

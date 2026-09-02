@@ -623,7 +623,7 @@ Phase 4 — 特殊人物审核
 
 ## 六、females.json — 女性角色
 
-**90+条记录**。
+**全量 90 条已落地（Session 427 P0B-11）：0-A 10 条（id 201~210）+ 0-B 新增 80 条（id 211~290，脚本 `scripts/gen-0b-females.mjs` 生成），达标 90+ 下限**。0-B 新增口径：全部为史书/裴注/《晋书》/演义/民间传说可考人物（禁止自创，简介括注出处层）；宪法 §九——**仅祝融 `canCommand=true`**，本批一律 false；`initialHusbandId` 仅指向 officers.json 在册武将（夫君不在册者仿祝融先例只写 initialStatus，寡妇可引亡夫）；`locationId` 取 106 城史实郡国治所；技能仅用 skills.json 30 键，talents 沿用 0-A 十三词表；剧本 `availableFemaleIds` 白名单未收录新 id，GameState 注入面与金样零变化。
 
 ### 字段说明
 

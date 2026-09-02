@@ -201,7 +201,7 @@ prestige(德望→征兵/登用)  fortitude(韧性→守城)  scholarship(学识
 城市数据(cities.json)      ~10KB   → 全量加载
 阵型(formations.json)      ~5KB    → 全量加载
 兵种(units.json)           ~5KB    → 全量加载
-女性(females.json)         ~10KB   → 全量加载
+女性(females.json)         ~70KB   → 全量加载（Session 427 P0B-11 扩至 90 条后实测 71KB）
 子女(children.json)        ~5KB    → 全量加载
 技能(skills.json)          ~30KB   → 全量加载
 剧本(scenarios.json)       ~10KB   → 仅加载当前选择剧本

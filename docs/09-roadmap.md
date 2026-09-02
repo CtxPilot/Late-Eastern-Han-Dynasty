@@ -278,7 +278,7 @@
 | P0B-08 | formations.json（全量） | 27阵型（18陆+9水） | P0A-08 |
 | P0B-09 | units.json（全量） | 24兵种（8陆+攻城+3水+12特殊，Session 424 修订口径） | P0A-09 |
 | P0B-10 | items.json（全量） | 165宝物（Session 426 落地：0-A 20 + 新增 145，id 1~165） | P0A-10 |
-| P0B-11 | females.json（全量） | 90+女性 | P0A-11 |
+| P0B-11 | females.json（全量） | 90+女性（Session 427 落地：0-A 10 + 新增 80，id 201~290） | P0A-11 |
 | P0B-12 | children.json（全量） | 50+子女事件 | P0A-12 |
 | P0B-13 | skills.json（全量） | 149技能定义(69通用×5级+80专属) | P0A-13 |
 | P0B-14 | scenarios.json（全量） | 首批7历史剧本+英雄集结；约30势力190全量开局仍属0-B | P0A-14 |
