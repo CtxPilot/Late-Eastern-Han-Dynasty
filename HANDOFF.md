@@ -9,15 +9,16 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 430**（P0B-15 events 24→59 落地 + P0B-06 第一梯队 officers 223→240） |
-| 阶段 | Phase 0-B **数据扩容进行中**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 240 已落地）——P0B-06 1000+ 目标尚差 ~760 人（需新建普查名单）；系统数 **27 大** |
-| 代码最新 | Session 430（P0B-15：`scripts/gen-0b-events.mjs` 新增 35 事件 id 300~334 + eventIds 双向链接，引擎 probe 实测触发/挂起/效果落城；P0B-06 第一梯队：`scripts/gen-0b-officers.mjs` +17 人 id 310~326 清空 docs/14 候选池；validate-data expected 24→59、223→240；全量回归绿后本会话提交） |
-| 文档最新 | **Session 430 双写**（docs/08 §十 59 落地口径、docs/09 P0B-15 行、docs/11 体积、docs/12 头部进度、docs/35 主线、10-progress 日志+P0B 勾选、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
-| 本交接用途 | 0-B 数据扩容仅剩 P0B-06 officers 1000+（第一梯队已清空 docs/14 候选池）；其余方向：docs/43 S1 实装或 0-B 闸门实测 |
-| 下一步 | ①**P0B-06 officers.json 240→1000+**（0-B 最后一批）：docs/14 候选池已耗尽，需以 `docs/13-three-kingdoms-chronicle.md` 编年为主要史料源**新建普查名单**（州郡牧守/杂号将军/名士/各势力中层 ~760 人），沿第一梯队范式（定稿五维→hidden 派生→era 断言→幂等合并）分梯队推进，脚本生成+重点人物人工校对（08 §五既定）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三，agent 不可代跑） |
+| 会话 | **Session 431**（P0B-06 收官普查 officers 240→1001，**0-B 数据扩容 P0B-06~15 全部达标**） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大** |
+| 代码最新 | Session 431（P0B-06 收官：`scripts/gen-0b-officers-census.mjs` 分块普查 +761 人 id 327~1087，全部正史/裴注/演义可考；validate-data expected 240→1001；全量回归绿后本会话提交） |
+| 文档最新 | **Session 431 双写**（docs/08 §五 1001 口径+普查方法、docs/14 v2.2 版本注、docs/09/10 P0B-06 勾选、docs/11 体积、docs/12 0-B 收官、docs/35 主线、10-progress 日志、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
+| 本交接用途 | **0-B 数据扩容（P0B-06~15）全部达标收官**；后续方向：docs/43 S1 实装（待批准）或 0-B 闸门真人实测或后置系统切片 |
+| 下一步 | ①**docs/43 D1~D12 批准 → S1 围城合流实装**（用户拍板门槛）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③后置系统按 `12-system-map.md` S 清单逐项立项（如 S13 套装/专属共鸣/消耗品运行时、P5 体系等） |
 
 ### Session 427 交接要点
 
+- **P0B-06 收官普查 officers.json 240→1001（Session 431，0-B 数据批次全部达标）**：`scripts/gen-0b-officers-census.mjs` 分块普查 761 人（id 327~1087），全部正史/裴注/演义可考（方士 4 人仍禁录）；五维按 docs/14 等级表角色模板带内值+id 确定性微调；生卒约值打 `生卒约` 标签待人工校对；hidden 与 child.ts 同源派生；skills 空数组与 P0B-13 断言兼容；幂等合并+冲突断言（曾拦截 54 行重名/伪名）。**P0B-06 已勾选，0-B 表全部勾选完成**。
 - **P0B-06 第一梯队 officers.json 223→240**：`scripts/gen-0b-officers.mjs`（幂等）落库 docs/14 附录六「—」候选池清零后的 17 人（id 310~326：毛玠/崔琰/杨修/丁仪/秦宓/谯周/阚泽/郝萌/张勋/雷薄/刘琮/马休/马铁/刘循/张卫/杨昂/袁谭）——五维取 docs/14 定稿值，hidden 按 child.ts 同源公式派生，skills 空数组（与 P0B-13 悬空引用断言兼容），生卒年考据值+约值并用（约值待人工校对）。**1000+ 目标尚差 ~760 人**：需以 docs/13 编年新建普查名单（独立工作量），P0B 表保持未勾选（诚实边界）。左慈/于吉/管辂/祢衡按 04 §3.2 方士禁录原则不录入。
 - **P0B-15 events.json 24→59**：新增 35 事件（id 300~334），7 历史剧本各 5 事件叙事线，`eventIds` 双向链接；全部单剧本链接规避势力耦合、decisionFactionId 显式、效果实体必须在场（loyalty/recruit 目标 ∈ availableOfficerIds、war/relation 目标 active、develop 仅 farm）；引擎 probe 四路径实测：AI 自动结算（S3 E300）、玩家挂起（S3/S6）、效果落城（S9 E330 汉中 farm 240→250）；剧本 1/2 与既有 24 事件逐字节保留，金样 3/3 未重举；顺带 S6 补张昭@16（承接「内事托张昭」）。**注意脚本顺序：gen-0b-events.mjs 必须在 gen-0b-scenarios.mjs 之后运行**（后者重排会清空 eventIds 链接，前者负责重新挂接）。
 - **P0B-14 scenarios.json 2→9**：新增 7 历史切片 id 3~9（184 黄巾/190 群雄讨董/194 群雄逐鹿/200 官渡/208 赤壁前夜/219 汉中与襄樊（月=9）/234 五丈原），沿关东义兵切片范式（未声明城无主、未布点武将在野、代理席位+scopeNote）；时代存活硬断言（甄宓 194 仅 11 岁、钟会 234 仅 9 岁被拦截；夏侯渊/张郃/曹真/太史慈等殁者滤除）；`initialDiplomacy` 显式全对覆盖；剧本 1/2 逐字节保留，金样 3/3 未重举；**引擎级 probe 实测 S9/S7/S3 buildGameState 构建通过**；eventIds 已由 P0B-15 挂接；约 30 势力 190 全量开局仍属 0-B（与 P0B-06 互馈）。
@@ -27,9 +28,9 @@
 - **宪法红线**：全部史书/裴注/《晋书》/演义/传说可考（简介括注出处层），零自创；**仅祝融 canCommand=true**，本批一律 false（脚本强校验）。
 - **关键口径**：`initialHusbandId` 仅指 officers 在册武将（曹丕 252/刘禅 262/何晏 231/钟繇 258/郭淮 224 等核对在册），夫君不在册者仿祝融先例只写 initialStatus，寡妇可引亡夫（邹氏→张济 179）；`locationId` 取 106 城史实郡国治所；技能限 skills.json 30 键；talents 沿用 0-A 十三词表；未知年份取约值并在简介标注。
 - **运行时零扰动**：女性按剧本 `availableFemaleIds`（state-pipeline.ts:154-156）、子女按剧本 `childEventIds`（child.ts tickChildrenAppear/catchUpChildren）双白名单注入，新 id 均未入白名单——金样未重举 **3/3** 保持；校验链改动点仅 validate-data females 10→90、children 5→50。
-- **验证全绿**：validate-data（officers 240 / events 59 / scenarios 9 / skills 149 / females 90 / children 50 + 交叉引用）、verify-merit **25/25**、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client 71）、verify-scenario-events **32**、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、compliance（786 files）、引擎 probe（S9/S7/S3 构建 + 事件触发/挂起/效果落城实测）、`git diff --check`。
+- **验证全绿**：validate-data（officers 1001 / events 59 / scenarios 9 / skills 149 / females 90 / children 50 + 交叉引用）、verify-merit **25/25**、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client 71）、verify-scenario-events **32**、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、compliance（788 files）、引擎 probe（S9/S1 构建在 1001 目录下白名单注入行为不变 + 事件触发/挂起/效果落城实测）、`git diff --check`。
 - 文档：docs/08（§六/§七/§八/§九/§十 落地口径，真源先行）、docs/09（P0B-11/12/13/14/15 行）、docs/11（females ~70KB / children ~17KB / skills ~160KB / scenarios ~90KB / events ~60KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress（Session 427~430 日志 + P0B 表勾选，含 430 续：P0B-06 第一梯队）、HANDOFF 双写。
-- 边界：各批均为纯静态数据扩容零引擎/RNG 改动（P0B-13 显示层映射生成、P0B-14/15 未做浏览器点击验收——EventDialog/ScenarioSelect 随目录自动出现属既有路径）；每剧本 5 事件为一束核心叙事线骨架，更长叙事线与 mutexGroup 留待扩充；0-B 剩余：P0B-06 officers 1000+；docs/43 S1 待批准。
+- 边界：各批均为纯静态数据扩容零引擎/RNG 改动（P0B-13 显示层映射生成、P0B-14/15/431 未做浏览器点击验收——UI 随目录自动出现属既有路径）；普查人物五维为带内模板值待人工精修，约值生卒带标签；新增武将未入剧本白名单（后续剧本按需挂接）、skills 空。**0-B 数据扩容全部达标**；docs/43 S1 待批准；0-B 闸门待真人游玩。
 
 ### Session 426 交接要点
 

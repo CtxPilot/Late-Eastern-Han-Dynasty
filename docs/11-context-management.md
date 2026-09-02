@@ -196,7 +196,7 @@ prestige(德望→征兵/登用)  fortitude(韧性→守城)  scholarship(学识
 ## 七、数据文件加载策略
 
 ```
-武将数据(officers.json)    >200KB  → 仅加载出生年±50年内的武将（场景筛选）
+武将数据(officers.json)    ~1.2MB  → 仅加载出生年±50年内的武将（场景筛选）（Session 431 P0B-06 扩至 1001 条后实测 1.16MB；原「仅加载±50年」策略改为全量静态目录，运行态仍按剧本白名单注入）
 宝物数据(items.json)       ~65KB   → 全量加载（Session 426 P0B-10 扩至 165 条后实测 66KB）
 城市数据(cities.json)      ~10KB   → 全量加载
 阵型(formations.json)      ~5KB    → 全量加载
