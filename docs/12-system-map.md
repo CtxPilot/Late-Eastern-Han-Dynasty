@@ -11,7 +11,7 @@
 |:----:|------|
 | D | 仅设计 | S | 壳 | M | Demo 可玩 | C | 主路径完整 | P | 打磨 |
 
-策略：玩法优先 · 0-A 小数据验证已完成 · **0-B 数据扩容进行中**（Session 424：cities 106 / formations 27 / units 24；Session 426：items 165；Session 427：females 90 落地；余 children/skills/scenarios/events/officers）。
+策略：玩法优先 · 0-A 小数据验证已完成 · **0-B 数据扩容进行中**（Session 424：cities 106 / formations 27 / units 24；Session 426：items 165；Session 427：females 90 + children 50 落地；余 skills/scenarios/events/officers）。
 分布实施主线见 `docs/35-phased-implementation-roadmap.md`（S10 收口 → 大系统深化 → L2/屯田 → SQLite → 0-B）。
 
 ---

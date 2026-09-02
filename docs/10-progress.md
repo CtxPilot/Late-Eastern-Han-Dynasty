@@ -1,14 +1,17 @@
-## 2026-09-03 — Session 427 · 0-B 数据扩容 P0B-11（females.json 10→90 女性角色）
+## 2026-09-03 — Session 427 · 0-B 数据扩容双批（P0B-11 females 10→90 + P0B-12 children 5→50）
 
 - Phase：**Phase 0-B 数据扩容**；Session 426 收官 P0B-10 后按 HANDOFF「下一步」进入 P0B-11。
 - **P0B-11 females.json 10→90**：新增 80 条（id 211~290），脚本 `scripts/gen-0b-females.mjs`（幂等；重名/重 id/canCommand 红线/事件引用/夫君不在册/locationId 越界/技能键越界七重自检）。覆盖：汉末后妃宗室（伏寿/曹节/唐姬/董贵人/阳安公主/曹宪/曹华等）、曹魏后妃宫眷（卞夫人/郭女王/毛皇后/环夫人/尹夫人/杜夫人/张昌蒲等）、蜀汉（甘夫人/穆皇后/敬哀与张皇后/张飞妻夏侯氏）、孙吴（吴夫人/谢徐潘袁王夫人/孙鲁班鲁育/陆逊妻/周瑜女/徐氏复仇）、谋略才识（辛宪英/王元姬/夏侯徽/羊徽瑜/钟琰/阮氏）、义烈守节（王异/赵娥/姜叙母/夏侯令女/吕荣/皇甫规妻/荀采/赵媛姜）、联姻宗女与传说层（董白/吕氏/关氏/鲍三娘/邹氏/吴国太/刘兰芝文学层）。
 - **宪法红线**（docs/00 §九）：全部为史书/裴注/《晋书》/演义/民间传说可考人物，简介括注出处层，零自创；**仅祝融 `canCommand=true`**，本批一律 false。
 - **关键口径（docs/08 真源同步）**：`initialHusbandId` 仅指向 officers.json 在册武将（曹丕 252/刘禅 262/何晏 231/钟繇 258/郭淮 224 等均已核对），夫君不在册者（献帝/曹叡/朱据等）仿 0-A 祝融先例只写 `initialStatus`，寡妇可引亡夫（如邹氏→张济 179）；`locationId` 取 106 城史实郡国治所（开阳/禄福/甘陵/武阳等）；技能仅用 skills.json 30 键，talents 沿用 0-A 十三词表；年份未知者取约值并在简介标注。
 - **运行时零扰动**：GameState 女性注入按剧本 `availableFemaleIds` 白名单（state-pipeline.ts:154-156），两剧本白名单均未收录新 id（201~210 与空），静态扩容不进局——金样未重举 **3/3** 保持。
-- **校验链**：validate-data females expected 10→90（唯一改动点），全文件 Zod + 交叉引用全绿。
-- **验证（全绿）**：validate-data（90 记录）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-items **32/32**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check` 通过。
-- 文档：docs/08（§六 90 落地口径，真源先行）、docs/09（P0B-11 行）、docs/11（females 体积估算 ~10KB→~70KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
-- 边界：纯静态数据扩容，零引擎/RNG/API/UI 改动；白名单未收录新 id，英靈集结 Demo 之外的剧本尚未消费新增女性（P0B-14 全量剧本时再挂接婚配池）；`marriageRequirements`/`fatherId`/`motherId` 字段本批未用（0-A 同惯例）。0-B 剩余：P0B-06 officers 1000+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+- **P0B-12 children.json 5→50**（同会话双批，沿 Session 424 多批次先例）：新增 45 条（childId 955~999），脚本 `scripts/gen-0b-children.mjs`（幂等；重名/重 id/childId 撞武将 id/childName 撞 officers 姓名/fatherId 不在册/motherId 越界/appearYear≠birth+16/母教悬空/技能键越界九重自检）。覆盖：曹魏二代（夏侯楙/霸/玄、曹爽/彪/肇、典满/许仪/庞会、郭奕/王肃、司马攸/伦等）、蜀汉（刘璿/刘永、赵统/广、关彝/张遵、张绍、庞宏、马承、蒋斌）、孙吴（孙绍/和/霸/朗、周循/胤、全怿、吕据、步阐等）、他支（袁尚）与传说层（关索 source=folklore）。
+- **P0B-12 口径（docs/08 §七真源同步）**：全部史书可考子嗣（关索为民间传说层）；`fatherId` 仅指 officers 在册武将、`motherId` 指 females 在册女性且母不详取 0（引擎 bloodline 按 id>0 过滤既定约定）；`appearYear=birthYear+16`；childId 收敛 950~999 子女专用段且脚本强校验不与 officers 姓名/ID 重复；`motherBonus` 仅母亲可考时手书（引擎仅在父母已婚且均在局内时消费）。自检先后拦截两处真实缺陷：邹氏寡妇亡夫引用（口径修正后放行）、陈泰已在册（officers 228，换曹芳——曹叡 253/司马炎等 5 名候选撞静态武将同被拦截剔除）。
+- **P0B-12 运行时零扰动**：子女登场按剧本 `childEventIds` 白名单（child.ts tickChildrenAppear/catchUpChildren 双过滤），新 id 未入白名单（scenario1 仅 950~954）；validate-data children expected 5→50（本批第二处唯一改动点）。
+- **校验链**：validate-data females 10→90、children 5→50（两处唯一改动点），全文件 Zod + 交叉引用全绿。
+- **验证（全绿）**：validate-data（females 90 / children 50）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check` 通过。
+- 文档：docs/08（§六/§七 落地口径，真源先行）、docs/09（P0B-11/12 行）、docs/11（females ~70KB / children ~17KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API/UI 改动；females/children 新 id 均未入剧本白名单，婚配池与子女登场消费留待 P0B-14 全量剧本挂接；`marriageRequirements`/`fatherId`/`motherId`（females 表）本批未用（0-A 同惯例）。0-B 剩余：P0B-06 officers 1000+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
 
 ## 2026-09-03 — Session 426 · 0-B 数据扩容 P0B-10（items.json 20→165 宝物）
 
@@ -1425,7 +1428,7 @@
 | P0B-09 | units.json（全量 24兵种） | [x] | Session 424：8陆+攻城+3水+12特殊 |
 | P0B-10 | items.json（全量 165宝物） | [x] | Session 426：0-A 20 + 新增 145（id 21~165），validate-data expected 165 |
 | P0B-11 | females.json（全量 90+女性） | [x] | Session 427：0-A 10 + 新增 80（id 211~290），validate-data expected 90 |
-| P0B-12 | children.json（全量 50+子女） | [ ] | — |
+| P0B-12 | children.json（全量 50+子女） | [x] | Session 427：0-A 5 + 新增 45（id 955~999），validate-data expected 50 |
 | P0B-13 | skills.json（全量 149技能） | [ ] | 69通用+80专属 |
 | P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [ ] | 以08数字真源为准；约30势力190全量开局仍属0-B |
 | P0B-15 | events.json（全量） | [ ] | — |

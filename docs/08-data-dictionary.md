@@ -684,7 +684,7 @@ Phase 4 — 特殊人物审核
 
 ## 七、children.json — 子女生育事件
 
-**全量设计 ~50+ 条；0-A 实际 5 条**（诸葛瞻/关兴/张苞/曹丕/孙登）。  
+**全量 50 条已落地（Session 427 P0B-12）：0-A 5 条（childId 950~954）+ 0-B 新增 45 条（childId 955~999，脚本 `scripts/gen-0b-children.mjs` 生成），达标 ~50+ 设计规模**。0-B 新增口径：全部史书可考子嗣（关索为民间传说层 source=folklore）；`fatherId` 仅指 officers.json 在册武将，`motherId` 指 females.json 在册女性、母不详者取 0（引擎 bloodline 按 id>0 过滤为既定约定）；`appearYear = birthYear + 16`；childId 收敛于 950~999 子女专用段且不与 officers 姓名/ID 重复（脚本强校验，防动态入库撞静态武将）；剧本 `childEventIds` 白名单未收录新 id，GameState 注入面与金样零变化。
 **玩法**：`appearYear` 正月由 `child.ts` 动态生成武将；姻亲 UI 显示状态；可不预置 officers。
 
 ### 字段说明

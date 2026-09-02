@@ -129,5 +129,773 @@
       ],
       "extraTalents": []
     }
+  },
+  {
+    "childId": 955,
+    "childName": "张虎",
+    "fatherId": 115,
+    "motherId": 0,
+    "birthYear": 210,
+    "appearYear": 226,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 62,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 956,
+    "childName": "司马攸",
+    "fatherId": 208,
+    "motherId": 221,
+    "birthYear": 246,
+    "appearYear": 262,
+    "source": "history",
+    "baseStats": {
+      "leadership": 72,
+      "war": 45,
+      "intelligence": 82,
+      "politics": 85,
+      "charisma": 88
+    },
+    "motherBonus": {
+      "fromScholarship": {
+        "politics": 3,
+        "intelligence": 2
+      },
+      "fromBloodline": {},
+      "extraSkills": [
+        "calm"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 957,
+    "childName": "邓忠",
+    "fatherId": 209,
+    "motherId": 0,
+    "birthYear": 232,
+    "appearYear": 248,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 72,
+      "intelligence": 55,
+      "politics": 40,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 958,
+    "childName": "夏侯玄",
+    "fatherId": 190,
+    "motherId": 0,
+    "birthYear": 209,
+    "appearYear": 225,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 40,
+      "intelligence": 82,
+      "politics": 70,
+      "charisma": 85
+    }
+  },
+  {
+    "childId": 959,
+    "childName": "曹彪",
+    "fatherId": 1,
+    "motherId": 0,
+    "birthYear": 195,
+    "appearYear": 211,
+    "source": "history",
+    "baseStats": {
+      "leadership": 65,
+      "war": 62,
+      "intelligence": 55,
+      "politics": 50,
+      "charisma": 60
+    }
+  },
+  {
+    "childId": 960,
+    "childName": "袁尚",
+    "fatherId": 113,
+    "motherId": 0,
+    "birthYear": 178,
+    "appearYear": 194,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 55,
+      "intelligence": 65,
+      "politics": 50,
+      "charisma": 68
+    }
+  },
+  {
+    "childId": 961,
+    "childName": "夏侯楙",
+    "fatherId": 9,
+    "motherId": 0,
+    "birthYear": 192,
+    "appearYear": 208,
+    "source": "history",
+    "baseStats": {
+      "leadership": 45,
+      "war": 40,
+      "intelligence": 50,
+      "politics": 55,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 962,
+    "childName": "夏侯霸",
+    "fatherId": 120,
+    "motherId": 0,
+    "birthYear": 191,
+    "appearYear": 207,
+    "source": "history",
+    "baseStats": {
+      "leadership": 70,
+      "war": 80,
+      "intelligence": 50,
+      "politics": 40,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 963,
+    "childName": "曹爽",
+    "fatherId": 122,
+    "motherId": 0,
+    "birthYear": 205,
+    "appearYear": 221,
+    "source": "history",
+    "baseStats": {
+      "leadership": 60,
+      "war": 50,
+      "intelligence": 50,
+      "politics": 55,
+      "charisma": 65
+    }
+  },
+  {
+    "childId": 964,
+    "childName": "曹肇",
+    "fatherId": 189,
+    "motherId": 0,
+    "birthYear": 215,
+    "appearYear": 231,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 48,
+      "intelligence": 62,
+      "politics": 58,
+      "charisma": 65
+    }
+  },
+  {
+    "childId": 965,
+    "childName": "典满",
+    "fatherId": 13,
+    "motherId": 0,
+    "birthYear": 205,
+    "appearYear": 221,
+    "source": "history",
+    "baseStats": {
+      "leadership": 45,
+      "war": 72,
+      "intelligence": 35,
+      "politics": 30,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 966,
+    "childName": "许仪",
+    "fatherId": 100,
+    "motherId": 0,
+    "birthYear": 218,
+    "appearYear": 234,
+    "source": "history",
+    "baseStats": {
+      "leadership": 42,
+      "war": 68,
+      "intelligence": 38,
+      "politics": 32,
+      "charisma": 40
+    }
+  },
+  {
+    "childId": 967,
+    "childName": "庞会",
+    "fatherId": 192,
+    "motherId": 0,
+    "birthYear": 215,
+    "appearYear": 231,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 82,
+      "intelligence": 45,
+      "politics": 35,
+      "charisma": 40
+    }
+  },
+  {
+    "childId": 968,
+    "childName": "徐盖",
+    "fatherId": 116,
+    "motherId": 0,
+    "birthYear": 216,
+    "appearYear": 232,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 62,
+      "intelligence": 48,
+      "politics": 45,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 969,
+    "childName": "张雄",
+    "fatherId": 117,
+    "motherId": 0,
+    "birthYear": 218,
+    "appearYear": 234,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 60,
+      "intelligence": 50,
+      "politics": 45,
+      "charisma": 48
+    }
+  },
+  {
+    "childId": 970,
+    "childName": "乐綝",
+    "fatherId": 119,
+    "motherId": 0,
+    "birthYear": 218,
+    "appearYear": 234,
+    "source": "history",
+    "baseStats": {
+      "leadership": 52,
+      "war": 65,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 971,
+    "childName": "李祯",
+    "fatherId": 102,
+    "motherId": 0,
+    "birthYear": 215,
+    "appearYear": 231,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 50,
+      "intelligence": 60,
+      "politics": 62,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 972,
+    "childName": "郭奕",
+    "fatherId": 125,
+    "motherId": 0,
+    "birthYear": 206,
+    "appearYear": 222,
+    "source": "history",
+    "baseStats": {
+      "leadership": 40,
+      "war": 30,
+      "intelligence": 78,
+      "politics": 72,
+      "charisma": 65
+    }
+  },
+  {
+    "childId": 973,
+    "childName": "郝凯",
+    "fatherId": 223,
+    "motherId": 0,
+    "birthYear": 228,
+    "appearYear": 244,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 58,
+      "intelligence": 50,
+      "politics": 45,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 974,
+    "childName": "王肃",
+    "fatherId": 256,
+    "motherId": 0,
+    "birthYear": 195,
+    "appearYear": 211,
+    "source": "history",
+    "baseStats": {
+      "leadership": 40,
+      "war": 25,
+      "intelligence": 85,
+      "politics": 82,
+      "charisma": 72
+    }
+  },
+  {
+    "childId": 975,
+    "childName": "曹芳",
+    "fatherId": 253,
+    "motherId": 0,
+    "birthYear": 232,
+    "appearYear": 248,
+    "source": "history",
+    "baseStats": {
+      "leadership": 45,
+      "war": 30,
+      "intelligence": 58,
+      "politics": 62,
+      "charisma": 68
+    }
+  },
+  {
+    "childId": 976,
+    "childName": "司马伦",
+    "fatherId": 208,
+    "motherId": 262,
+    "birthYear": 248,
+    "appearYear": 264,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 40,
+      "intelligence": 55,
+      "politics": 60,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 977,
+    "childName": "刘璿",
+    "fatherId": 262,
+    "motherId": 0,
+    "birthYear": 224,
+    "appearYear": 240,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 35,
+      "intelligence": 60,
+      "politics": 62,
+      "charisma": 65
+    }
+  },
+  {
+    "childId": 978,
+    "childName": "赵统",
+    "fatherId": 10,
+    "motherId": 0,
+    "birthYear": 216,
+    "appearYear": 232,
+    "source": "history",
+    "baseStats": {
+      "leadership": 62,
+      "war": 75,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 979,
+    "childName": "赵广",
+    "fatherId": 10,
+    "motherId": 0,
+    "birthYear": 222,
+    "appearYear": 238,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 74,
+      "intelligence": 42,
+      "politics": 35,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 980,
+    "childName": "马承",
+    "fatherId": 131,
+    "motherId": 0,
+    "birthYear": 216,
+    "appearYear": 232,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 72,
+      "intelligence": 40,
+      "politics": 38,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 981,
+    "childName": "庞宏",
+    "fatherId": 127,
+    "motherId": 0,
+    "birthYear": 211,
+    "appearYear": 227,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 40,
+      "intelligence": 70,
+      "politics": 65,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 982,
+    "childName": "张绍",
+    "fatherId": 7,
+    "motherId": 239,
+    "birthYear": 212,
+    "appearYear": 228,
+    "source": "history",
+    "baseStats": {
+      "leadership": 45,
+      "war": 48,
+      "intelligence": 55,
+      "politics": 60,
+      "charisma": 62
+    },
+    "motherBonus": {
+      "fromScholarship": {},
+      "fromBloodline": {
+        "war": 2
+      },
+      "extraSkills": [],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 983,
+    "childName": "关彝",
+    "fatherId": 263,
+    "motherId": 0,
+    "birthYear": 218,
+    "appearYear": 234,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 65,
+      "intelligence": 48,
+      "politics": 42,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 984,
+    "childName": "张遵",
+    "fatherId": 264,
+    "motherId": 0,
+    "birthYear": 216,
+    "appearYear": 232,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 70,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 985,
+    "childName": "蒋斌",
+    "fatherId": 138,
+    "motherId": 0,
+    "birthYear": 222,
+    "appearYear": 238,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 50,
+      "intelligence": 58,
+      "politics": 60,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 986,
+    "childName": "刘永",
+    "fatherId": 2,
+    "motherId": 0,
+    "birthYear": 210,
+    "appearYear": 226,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 42,
+      "intelligence": 60,
+      "politics": 65,
+      "charisma": 62
+    }
+  },
+  {
+    "childId": 987,
+    "childName": "孙绍",
+    "fatherId": 105,
+    "motherId": 205,
+    "birthYear": 200,
+    "appearYear": 216,
+    "source": "history",
+    "baseStats": {
+      "leadership": 60,
+      "war": 55,
+      "intelligence": 60,
+      "politics": 55,
+      "charisma": 70
+    },
+    "motherBonus": {
+      "fromScholarship": {},
+      "fromBloodline": {
+        "charisma": 2
+      },
+      "extraSkills": [
+        "eloquence"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 988,
+    "childName": "孙和",
+    "fatherId": 3,
+    "motherId": 251,
+    "birthYear": 224,
+    "appearYear": 240,
+    "source": "history",
+    "baseStats": {
+      "leadership": 62,
+      "war": 45,
+      "intelligence": 78,
+      "politics": 75,
+      "charisma": 80
+    },
+    "motherBonus": {
+      "fromScholarship": {
+        "politics": 2
+      },
+      "fromBloodline": {},
+      "extraSkills": [],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 989,
+    "childName": "孙霸",
+    "fatherId": 3,
+    "motherId": 0,
+    "birthYear": 228,
+    "appearYear": 244,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 55,
+      "intelligence": 60,
+      "politics": 55,
+      "charisma": 65
+    }
+  },
+  {
+    "childId": 990,
+    "childName": "周循",
+    "fatherId": 11,
+    "motherId": 206,
+    "birthYear": 200,
+    "appearYear": 216,
+    "source": "history",
+    "baseStats": {
+      "leadership": 62,
+      "war": 55,
+      "intelligence": 75,
+      "politics": 55,
+      "charisma": 78
+    },
+    "motherBonus": {
+      "fromScholarship": {},
+      "fromBloodline": {
+        "intelligence": 2,
+        "charisma": 2
+      },
+      "extraSkills": [
+        "insight"
+      ],
+      "extraTalents": []
+    }
+  },
+  {
+    "childId": 991,
+    "childName": "周胤",
+    "fatherId": 11,
+    "motherId": 206,
+    "birthYear": 205,
+    "appearYear": 221,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 50,
+      "intelligence": 60,
+      "politics": 45,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 992,
+    "childName": "鲁淑",
+    "fatherId": 141,
+    "motherId": 0,
+    "birthYear": 218,
+    "appearYear": 234,
+    "source": "history",
+    "baseStats": {
+      "leadership": 52,
+      "war": 45,
+      "intelligence": 65,
+      "politics": 60,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 993,
+    "childName": "韩综",
+    "fatherId": 145,
+    "motherId": 0,
+    "birthYear": 210,
+    "appearYear": 226,
+    "source": "history",
+    "baseStats": {
+      "leadership": 50,
+      "war": 60,
+      "intelligence": 40,
+      "politics": 35,
+      "charisma": 40
+    }
+  },
+  {
+    "childId": 994,
+    "childName": "周邵",
+    "fatherId": 109,
+    "motherId": 0,
+    "birthYear": 202,
+    "appearYear": 218,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 65,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 48
+    }
+  },
+  {
+    "childId": 995,
+    "childName": "步阐",
+    "fatherId": 206,
+    "motherId": 0,
+    "birthYear": 222,
+    "appearYear": 238,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 50,
+      "intelligence": 60,
+      "politics": 62,
+      "charisma": 50
+    }
+  },
+  {
+    "childId": 996,
+    "childName": "全怿",
+    "fatherId": 244,
+    "motherId": 243,
+    "birthYear": 215,
+    "appearYear": 231,
+    "source": "history",
+    "baseStats": {
+      "leadership": 55,
+      "war": 55,
+      "intelligence": 50,
+      "politics": 48,
+      "charisma": 55
+    }
+  },
+  {
+    "childId": 997,
+    "childName": "吕据",
+    "fatherId": 245,
+    "motherId": 0,
+    "birthYear": 208,
+    "appearYear": 224,
+    "source": "history",
+    "baseStats": {
+      "leadership": 62,
+      "war": 58,
+      "intelligence": 55,
+      "politics": 50,
+      "charisma": 52
+    }
+  },
+  {
+    "childId": 998,
+    "childName": "孙朗",
+    "fatherId": 114,
+    "motherId": 0,
+    "birthYear": 195,
+    "appearYear": 211,
+    "source": "history",
+    "baseStats": {
+      "leadership": 45,
+      "war": 50,
+      "intelligence": 45,
+      "politics": 40,
+      "charisma": 45
+    }
+  },
+  {
+    "childId": 999,
+    "childName": "关索",
+    "fatherId": 6,
+    "motherId": 0,
+    "birthYear": 210,
+    "appearYear": 226,
+    "source": "folklore",
+    "baseStats": {
+      "leadership": 58,
+      "war": 78,
+      "intelligence": 45,
+      "politics": 30,
+      "charisma": 60
+    }
   }
 ]
