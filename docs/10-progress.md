@@ -1,3 +1,13 @@
+## 2026-09-03 — Session 430（续） · P0B-06 第一梯队（officers.json 223→240：docs/14 候选池清零）
+
+- Phase：**Phase 0-B 数据扩容**；P0B-15 收官后同会话推进 P0B-06。**诚实边界：P0B-06 1000+ 目标未完成，本梯队为第一梯队**，P0B 表保持未勾选。
+- **候选池盘点**：`docs/14-officer-stats-reference.md` 附录六指定的「—」候选共 187 名（去重），与 officers.json 223 差集后仅 30 名——其中 6 名属女性区（应入 females.json，已在册或已有对应者）、4 名方士（左慈/于吉/管辂/祢衡，04 §3.2 明令禁录 officers）、4 名名称变体（歩骘=步骘/祝融夫人=祝融/蔡文姬=蔡琰/甄氏=甄宓，已在册）、1 名袁尚已由 P0B-12 子女事件（childId 960）覆盖，**可录入候选实际仅 17 人**。
+- **第一梯队落库（id 310~326）**：毛玠/崔琰/杨修/丁仪/秦宓/谯周/阚泽/郝萌/张勋/雷薄/刘琮/马休/马铁/刘循/张卫/杨昂/袁谭。五维取 docs/14 定稿参考值（统武智政魅→leadership/war/intelligence/politics/charisma）；hidden 按 `engine/child.ts buildChildOfficer` 同源公式派生（power/burst/agility/intuition/awe/strategy/tactics 等）；生卒年有史可考者取考据值（杨修 175~219、谯周 201~270、马休马铁 212 同死、袁谭 203、郝萌 196 被诛等），史无明文者取约值（待人工校对，08 §五既定流程）；unitProficiency 全 C 起步、formationMastery [0]、skills/tags 空、avatarGene 省略（D-0B-7）。脚本 `scripts/gen-0b-officers.mjs`（幂等；id/姓名与既有 223 及子女 950~999 冲突断言、生卒年序断言、五维范围断言）。
+- **校验链**：validate-data officers expected 223→240（唯一改动点），全文件 Zod 全绿（新增者 skills 为空数组，与 P0B-13 悬空引用断言兼容）。
+- **验证（全绿）**：validate-data（240 武将）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-merit **25/25**、verify-campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、scenario/events **32**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、`git diff --check` 通过。
+- 文档：docs/08（§五 240 计数 + 候选池清零 + 剩余普查计划）、docs/14（v2.1 版本注）、docs/09/10（P0B-06 行备注，未勾选）、docs/12/35（头部与主线）、HANDOFF 双写。
+- 边界：**P0B-06 的 1000+ 目标尚差 ~760 人**——docs/14 候选池已耗尽，需以 `docs/13-three-kingdoms-chronicle.md` 编年为主要史料源新建普查名单（补州郡牧守/杂号将军/名士/各势力中层），沿本梯队范式分梯队推进；该普查为独立工作量，本轮未启动。docs/43 S1 仍待批准；0-B 闸门须真人游玩。
+
 ## 2026-09-03 — Session 430 · 0-B 数据扩容 P0B-15（events.json 24→59：7 剧本叙事线挂接）
 
 - Phase：**Phase 0-B 数据扩容**；Session 429 收官 P0B-14 后按 HANDOFF「下一步」进入 P0B-15。
@@ -1458,7 +1468,7 @@
 
 | ID | 任务 | 状态 | 备注 |
 |:--:|------|:--:|------|
-| P0B-06 | officers.json（全量 1000+武将） | [ ] | 脚本生成+重点人物人工校对 |
+| P0B-06 | officers.json（全量 1000+武将） | [ ] | 第一梯队 223→240（docs/14 候选池清零，Session 430）；1000+ 需新建普查名单（以 13 编年为主要史料源），见 08 §五 |
 | P0B-07 | cities.json（全量 106城：105郡国+襄阳） | [x] | Session 424：106 记录 + 官道网 ~170 边 + GAME_SEAT_GEO 补经纬 |
 | P0B-08 | formations.json（全量 27阵型：18陆+9水） | [x] | Session 424：id 0..26 齐 |
 | P0B-09 | units.json（全量 24兵种） | [x] | Session 424：8陆+攻城+3水+12特殊 |

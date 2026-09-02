@@ -16172,5 +16172,965 @@
       "名士",
       "汉室忠臣"
     ]
+  },
+  {
+    "id": 310,
+    "name": "毛玠",
+    "birthYear": 165,
+    "deathYear": 216,
+    "stats": {
+      "leadership": 40,
+      "war": 15,
+      "intelligence": 72,
+      "politics": 82,
+      "charisma": 65
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 4,
+      "lifespan": 216,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 45,
+      "burst": 43,
+      "agility": 48,
+      "luck": 50,
+      "intuition": 58,
+      "awe": 40,
+      "strategy": 64,
+      "tactics": 58
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "兖州",
+      "文官",
+      "谋臣"
+    ]
+  },
+  {
+    "id": 311,
+    "name": "崔琰",
+    "birthYear": 163,
+    "deathYear": 216,
+    "stats": {
+      "leadership": 30,
+      "war": 12,
+      "intelligence": 68,
+      "politics": 85,
+      "charisma": 60
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 4,
+      "lifespan": 216,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 44,
+      "burst": 43,
+      "agility": 47,
+      "luck": 50,
+      "intuition": 57,
+      "awe": 37,
+      "strategy": 62,
+      "tactics": 57
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "冀州",
+      "文官"
+    ]
+  },
+  {
+    "id": 312,
+    "name": "杨修",
+    "birthYear": 175,
+    "deathYear": 219,
+    "stats": {
+      "leadership": 30,
+      "war": 15,
+      "intelligence": 85,
+      "politics": 60,
+      "charisma": 35
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 5,
+      "lifespan": 219,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 45,
+      "burst": 43,
+      "agility": 48,
+      "luck": 50,
+      "intuition": 61,
+      "awe": 37,
+      "strategy": 68,
+      "tactics": 61
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "弘农",
+      "文官"
+    ]
+  },
+  {
+    "id": 313,
+    "name": "丁仪",
+    "birthYear": 175,
+    "deathYear": 220,
+    "stats": {
+      "leadership": 25,
+      "war": 10,
+      "intelligence": 72,
+      "politics": 55,
+      "charisma": 30
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 4,
+      "lifespan": 220,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 43,
+      "burst": 42,
+      "agility": 47,
+      "luck": 50,
+      "intuition": 58,
+      "awe": 36,
+      "strategy": 64,
+      "tactics": 58
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "沛国",
+      "文官"
+    ]
+  },
+  {
+    "id": 314,
+    "name": "秦宓",
+    "birthYear": 170,
+    "deathYear": 226,
+    "stats": {
+      "leadership": 20,
+      "war": 10,
+      "intelligence": 75,
+      "politics": 55,
+      "charisma": 65
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 5,
+      "lifespan": 226,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 43,
+      "burst": 42,
+      "agility": 47,
+      "luck": 50,
+      "intuition": 58,
+      "awe": 35,
+      "strategy": 65,
+      "tactics": 58
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "益州",
+      "文官"
+    ]
+  },
+  {
+    "id": 315,
+    "name": "谯周",
+    "birthYear": 201,
+    "deathYear": 270,
+    "stats": {
+      "leadership": 10,
+      "war": 2,
+      "intelligence": 72,
+      "politics": 70,
+      "charisma": 40
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 4,
+      "lifespan": 270,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 40,
+      "burst": 40,
+      "agility": 45,
+      "luck": 50,
+      "intuition": 58,
+      "awe": 32,
+      "strategy": 64,
+      "tactics": 58
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "士族",
+      "益州",
+      "文官"
+    ]
+  },
+  {
+    "id": 316,
+    "name": "阚泽",
+    "birthYear": 170,
+    "deathYear": 243,
+    "stats": {
+      "leadership": 30,
+      "war": 15,
+      "intelligence": 80,
+      "politics": 65,
+      "charisma": 58
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 5,
+      "lifespan": 243,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 45,
+      "burst": 43,
+      "agility": 48,
+      "luck": 50,
+      "intuition": 60,
+      "awe": 37,
+      "strategy": 66,
+      "tactics": 60
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "寒门",
+      "扬州",
+      "文官"
+    ]
+  },
+  {
+    "id": 317,
+    "name": "郝萌",
+    "birthYear": 160,
+    "deathYear": 196,
+    "stats": {
+      "leadership": 40,
+      "war": 55,
+      "intelligence": 20,
+      "politics": 8,
+      "charisma": 20
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 3,
+      "composure": 1,
+      "lifespan": 196,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 58,
+      "burst": 53,
+      "agility": 56,
+      "luck": 50,
+      "intuition": 45,
+      "awe": 40,
+      "strategy": 46,
+      "tactics": 45
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "并州",
+      "武将"
+    ]
+  },
+  {
+    "id": 318,
+    "name": "张勋",
+    "birthYear": 155,
+    "deathYear": 199,
+    "stats": {
+      "leadership": 55,
+      "war": 60,
+      "intelligence": 35,
+      "politics": 18,
+      "charisma": 25
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 2,
+      "lifespan": 199,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 60,
+      "burst": 55,
+      "agility": 57,
+      "luck": 50,
+      "intuition": 48,
+      "awe": 43,
+      "strategy": 51,
+      "tactics": 48
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "淮南",
+      "武将"
+    ]
+  },
+  {
+    "id": 319,
+    "name": "雷薄",
+    "birthYear": 158,
+    "deathYear": 200,
+    "stats": {
+      "leadership": 40,
+      "war": 50,
+      "intelligence": 20,
+      "politics": 10,
+      "charisma": 15
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 3,
+      "composure": 1,
+      "lifespan": 200,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 56,
+      "burst": 52,
+      "agility": 55,
+      "luck": 50,
+      "intuition": 45,
+      "awe": 40,
+      "strategy": 46,
+      "tactics": 45
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "淮南",
+      "武将"
+    ]
+  },
+  {
+    "id": 320,
+    "name": "刘琮",
+    "birthYear": 175,
+    "deathYear": 230,
+    "stats": {
+      "leadership": 30,
+      "war": 15,
+      "intelligence": 40,
+      "politics": 35,
+      "charisma": 30
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 1,
+      "composure": 2,
+      "lifespan": 230,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 45,
+      "burst": 43,
+      "agility": 48,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 37,
+      "strategy": 53,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "汉室",
+      "荆州"
+    ]
+  },
+  {
+    "id": 321,
+    "name": "马休",
+    "birthYear": 180,
+    "deathYear": 212,
+    "stats": {
+      "leadership": 55,
+      "war": 68,
+      "intelligence": 30,
+      "politics": 18,
+      "charisma": 25
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 2,
+      "lifespan": 212,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 62,
+      "burst": 57,
+      "agility": 58,
+      "luck": 50,
+      "intuition": 47,
+      "awe": 43,
+      "strategy": 50,
+      "tactics": 47
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "凉州",
+      "武将"
+    ]
+  },
+  {
+    "id": 322,
+    "name": "马铁",
+    "birthYear": 183,
+    "deathYear": 212,
+    "stats": {
+      "leadership": 50,
+      "war": 65,
+      "intelligence": 28,
+      "politics": 15,
+      "charisma": 20
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 1,
+      "lifespan": 212,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 61,
+      "burst": 56,
+      "agility": 58,
+      "luck": 50,
+      "intuition": 47,
+      "awe": 42,
+      "strategy": 49,
+      "tactics": 47
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "凉州",
+      "武将"
+    ]
+  },
+  {
+    "id": 323,
+    "name": "刘循",
+    "birthYear": 200,
+    "deathYear": 260,
+    "stats": {
+      "leadership": 52,
+      "war": 40,
+      "intelligence": 38,
+      "politics": 25,
+      "charisma": 35
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 2,
+      "composure": 2,
+      "lifespan": 260,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 53,
+      "burst": 50,
+      "agility": 53,
+      "luck": 50,
+      "intuition": 49,
+      "awe": 43,
+      "strategy": 52,
+      "tactics": 49
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "益州",
+      "武将"
+    ]
+  },
+  {
+    "id": 324,
+    "name": "张卫",
+    "birthYear": 160,
+    "deathYear": 215,
+    "stats": {
+      "leadership": 62,
+      "war": 58,
+      "intelligence": 35,
+      "politics": 18,
+      "charisma": 30
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 3,
+      "composure": 2,
+      "lifespan": 215,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 59,
+      "burst": 54,
+      "agility": 56,
+      "luck": 50,
+      "intuition": 48,
+      "awe": 45,
+      "strategy": 51,
+      "tactics": 48
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "汉中",
+      "武将"
+    ]
+  },
+  {
+    "id": 325,
+    "name": "杨昂",
+    "birthYear": 158,
+    "deathYear": 215,
+    "stats": {
+      "leadership": 55,
+      "war": 62,
+      "intelligence": 30,
+      "politics": 12,
+      "charisma": 20
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 2,
+      "lifespan": 215,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 60,
+      "burst": 55,
+      "agility": 57,
+      "luck": 50,
+      "intuition": 47,
+      "awe": 43,
+      "strategy": 50,
+      "tactics": 47
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "汉中",
+      "武将"
+    ]
+  },
+  {
+    "id": 326,
+    "name": "袁谭",
+    "birthYear": 168,
+    "deathYear": 203,
+    "stats": {
+      "leadership": 62,
+      "war": 72,
+      "intelligence": 42,
+      "politics": 35,
+      "charisma": 40
+    },
+    "hidden": {
+      "compatibility": 75,
+      "righteousness": 8,
+      "ambition": 8,
+      "valor": 4,
+      "composure": 2,
+      "lifespan": 203,
+      "growth": "mid",
+      "personality": "calm",
+      "ideal": "fame",
+      "bloodline": [],
+      "ceilingBonus": null,
+      "power": 64,
+      "burst": 58,
+      "agility": 59,
+      "luck": 50,
+      "intuition": 50,
+      "awe": 45,
+      "strategy": 54,
+      "tactics": 50
+    },
+    "unitProficiency": {
+      "lightInfantry": "C",
+      "heavyInfantry": "C",
+      "spearman": "C",
+      "archer": "C",
+      "crossbowman": "C",
+      "lightCavalry": "C",
+      "heavyCavalry": "C",
+      "horseArcher": "C",
+      "lightNavy": "C",
+      "mediumNavy": "C",
+      "heavyNavy": "C",
+      "siege": "C"
+    },
+    "formationMastery": [
+      0
+    ],
+    "skills": [],
+    "tags": [
+      "汝南",
+      "君主亲族"
+    ]
   }
 ]
