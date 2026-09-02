@@ -1,3 +1,13 @@
+## 2026-09-03 — Session 426 · 0-B 数据扩容 P0B-10（items.json 20→165 宝物）
+
+- Phase：**Phase 0-B 数据扩容**；Session 425 补录双写后按 HANDOFF「下一步」进入 P0B-10。会话开始时生成脚本 `scripts/gen-0b-items.mjs` 与扩容后 items.json 已在工作区（前会话遗留未提交态），本会话完成真源核对、校验链同步、全量回归与双写。
+- **P0B-10 items.json 20→165**：新增 145 条（id 21~165），脚本 `scripts/gen-0b-items.mjs`（幂等，含重名/重 id/initial 禁用/shop 缺价/品类缺子类五重自检）。分布：主武器 29（七星宝刀/古锭刀/双铁戟/龙胆亮银枪/虎头湛金枪等）、副武器 13（李广弓/铁胎弓/连环弩/飞刀等）、盔甲 17（明光铠/兽面吞头连环铠/龙鳞甲等）、坐骑 12（爪黄飞电/汗血宝马/大宛良马等）、兵书 23（六韬/三略/史记/青囊书/太平要术/西蜀地形图等）、特殊 22（玉带诏/尚方宝剑/假节钺/木牛流马/铜虎符等）、消耗品 29（金疮药系/酒类/军粮丸/参茸补品等）。
+- **规则口径（docs/08 真源同步）**：新增条目一律不带 `initial` 采集途径——`applyInitialItems` 按 INITIAL 过滤（engine/items.ts:307），开局宝配与 turn-golden 金样指纹不受扩容扰动；`baseEffect` 复用运行时已消费词汇 + 少量风味类型（`ItemStaticSchema.baseEffect.type` 为自由字符串，引擎未知类型按无效果处理）；`equipRequirement` 平铺键（minWar 等）与 0-A 现有数据一致（08 §四示例中的 `minStats` 嵌套写法为旧示例，实际数据自 0-A 起即平铺）；商店货与消耗品以 common/rare 为主，shopPrice 40~2500。
+- **校验链**：validate-data items expected 20→165（唯一改动点），全文件 Zod 通过（165 记录 + 13 州覆盖 + 经纬投影 + 史实排序 + 场景/事件交叉引用全绿）。
+- **验证（全绿）**：validate-data（165）、turn-golden **3/3**（金样无扰动，未重举）、`pnpm test` 三包链（shared→server 3→client **71**）、verify-items **32/32**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check` 通过。
+- 文档：docs/08（§四 165 落地口径）、docs/09（P0B-10 行）、docs/12（S13 后置清单移出 items 全量）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容——新增 baseEffect 中引擎未消费类型（poison/arrow_resist/morale/medicine/illusion/terrain_sight/divination/calm/logistics/fire_damage/legitimacy/recruit_bonus/commerce 等）按无效果落库（0-A 已有同先例），依赖未实装引擎的效果消费仍属 S13 后置项；消耗品使用（`consumable` 配置）运行时仍未接入；套装/bond 未新增（itemsets 与专属共鸣仍后置）。0-B 剩余数据类未动（P0B-06 officers 1000+、P0B-11 females 90+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量）；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-02 — Session 424 · 0-B 数据扩容三批（P0B-07 cities 30→106 + P0B-08 formations 7→27 + P0B-09 units 9→24）
 
 - Phase：**Phase 0-B 数据扩容**；Session 423 规格轮（docs/43）落盘后进入数据扩容。**文档滞后说明**：本会话代码与回归已提交（`19d75e9`、`bef2563`），但 10-progress/HANDOFF 双写未完成，由 Session 425 依据提交记录与实测复核补录。
@@ -1401,7 +1411,7 @@
 | P0B-07 | cities.json（全量 106城：105郡国+襄阳） | [x] | Session 424：106 记录 + 官道网 ~170 边 + GAME_SEAT_GEO 补经纬 |
 | P0B-08 | formations.json（全量 27阵型：18陆+9水） | [x] | Session 424：id 0..26 齐 |
 | P0B-09 | units.json（全量 24兵种） | [x] | Session 424：8陆+攻城+3水+12特殊 |
-| P0B-10 | items.json（全量 165宝物） | [ ] | — |
+| P0B-10 | items.json（全量 165宝物） | [x] | Session 426：0-A 20 + 新增 145（id 21~165），validate-data expected 165 |
 | P0B-11 | females.json（全量 90+女性） | [ ] | — |
 | P0B-12 | children.json（全量 50+子女） | [ ] | — |
 | P0B-13 | skills.json（全量 149技能） | [ ] | 69通用+80专属 |

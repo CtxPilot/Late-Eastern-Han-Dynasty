@@ -374,7 +374,7 @@
 
 ## 四、items.json — 宝物数据
 
-**0-A 20 条（Session 266 起已接运行时：装备/卸下/赏赐/搜索入库/初始宝配）；全量 165 条 0-B**。
+**全量 165 条已落地（Session 426 P0B-10）：0-A 20 条（id 1~20，Session 266 起已接运行时：装备/卸下/赏赐/搜索入库/初始宝配）+ 0-B 新增 145 条（id 21~165，脚本 `scripts/gen-0b-items.mjs` 生成）**。0-B 新增条目一律**不带 `initial` 采集途径**（开局宝配与 turn-golden 金样不受扩容扰动），名刀名马走 search/shop/event/loot/craft/inherit；`baseEffect` 复用运行时已消费词汇（defense/crit_rate/duel_boost/charge_damage/vs_cavalry/range/armor_pierce/authority/mobility）+ 少量风味类型（引擎未知类型按无效果处理，schema 为自由字符串合法）；商店货与消耗品以 common/rare 为主，`shopPrice` 按品质 40~2500。
 
 ### 字段说明
 

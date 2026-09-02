@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 425**（补录 Session 424 双写 + 0-B 数据扩容续批判定） |
-| 阶段 | Phase 0-B **数据扩容进行中**（Session 424 起：cities 106 / formations 27 / units 24 已落地）+ 玩法环/离线可玩保持；系统数 **27 大** |
-| 代码最新 | Session 424（0-B 数据扩容三批：P0B-07 cities 30→106 + 官道网、P0B-08 formations 7→27、P0B-09 units 9→24；已提交 `19d75e9` `bef2563`，Session 425 实测复核全绿） |
-| 文档最新 | **Session 425 补录 Session 424 双写**（10-progress 会话日志 + P0B 表勾选 + 09 行同步）；docs/43 多军协同规格 v1.0 仍待批准；docs/08 已随 424 同步 |
-| 本交接用途 | Session 424 代码已落盘但双写滞后 → Session 425 补录；此后续作方向：0-B 数据续批（P0B-10 items 等）或 docs/43 S1 实装 |
-| 下一步 | ①0-B 数据扩容续批（下一候选 **P0B-10 items.json 165 宝物**，需先核 08 全量清单）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三） |
+| 会话 | **Session 426**（0-B 数据扩容 P0B-10：items.json 20→165 宝物落地） |
+| 阶段 | Phase 0-B **数据扩容进行中**（cities 106 / formations 27 / units 24 / items 165 已落地）+ 玩法环/离线可玩保持；系统数 **27 大** |
+| 代码最新 | Session 426（P0B-10：`scripts/gen-0b-items.mjs` 生成新增 145 条 id 21~165 + validate-data expected 20→165；全量回归绿后本会话提交） |
+| 文档最新 | **Session 426 双写**（docs/08 §四 165 落地口径、docs/09 P0B-10 行、docs/12 S13、10-progress 日志+P0B 勾选、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
+| 本交接用途 | 0-B 数据续批推进至 P0B-10 完成；下一步方向：P0B-11 females 续批或 docs/43 S1 实装 |
+| 下一步 | ①0-B 数据扩容续批（下一候选 **P0B-11 females.json 90+**，需先核 08 全量口径；P0B-12/13 亦可小批推进）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三） |
+
+### Session 426 交接要点
+
+- **P0B-10 items.json 20→165**：新增 145 条（id 21~165），脚本 `scripts/gen-0b-items.mjs`（幂等；重名/重 id/initial 禁用/shop 缺价/品类缺子类五重自检）。分布：主武器 29 / 副武器 13 / 盔甲 17 / 坐骑 12 / 兵书 23 / 特殊 22 / 消耗品 29。
+- **关键口径**：新增条目一律**不带 `initial`**——`applyInitialItems` 按 INITIAL 过滤（engine/items.ts:307），开局宝配与 turn-golden 金样**零扰动（未重举，3/3 保持）**；`baseEffect.type` 为自由字符串（ItemStaticSchema），新增风味类型引擎未知按无效果处理（0-A 同先例）；`equipRequirement` 平铺键与 0-A 一致；商店货/消耗品以 common/rare 为主，shopPrice 40~2500。
+- **校验链唯一改动点**：validate-data items expected 20→165（server/src/scripts/validate-data.ts）。
+- **验证全绿**：validate-data（165 记录 + 13 州覆盖 + 经纬投影 + 史实排序 + 场景/事件交叉引用）、turn-golden **3/3**、`pnpm test` 三包链（shared→server 3→client 71）、verify-items **32/32**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、`git diff --check`。
+- 文档：docs/08（§四 165 落地口径，真源先行）、docs/09（P0B-10 行）、docs/12（S13 后置清单移出「items 全量」，补风味类型/消耗品/套装边界）、10-progress（Session 426 日志 + P0B 表勾选）、HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API 改动；消耗品 `consumable` 配置落库但运行时未接；套装/bond/itemsets 未新增。0-B 剩余：P0B-06 officers 1000+、P0B-11 females 90+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量；docs/43 S1 待批准。
 
 ### Session 424 交接要点（Session 425 补录）
 
@@ -1302,7 +1311,7 @@ OfficerDetail 功绩等级/称号/进度条/带兵+ 展示（君主仍显示国�
 | S10 | 战斗 | **M+（三层架构已实装）** | 六角战斗与完整单挑均统一权威 PRNG，确定续玩 5/5 + 3/3；其余三层战斗、战役 Army 与设计边界保持不变 |
 | S11 | 人事 | **M+** | 搜索/登用接权威 PRNG，确定续玩 32/32；R2 修复义理/野心 100 倍量纲错误并与 UI 同源；现有赏赐/任命确定性 |
 | S12 | 官职功绩体力 | **M+** | 精简任命；**功绩等级系统已实装（Session 261）**：`shared/merit.ts` 20 级表/映射/衰减/文武分岔 + `Officer.meritLevel/meritPath/peakMeritLevel` + 任命功绩门槛（君主任命豁免）+ 季度衰减 + OfficerDetail 等级/进度条展示；**6.1 获取点 100% 实装（Session 262+263+264）**：`meritGrant.ts` 统一守卫发放（君主不发）+ 内政（开发/施米/征兵/训练，城主）+ 人事（搜索寻才+8/宝物 5% 稀有+5/登用+4/联姻+10）+ 外交（同盟+10 使节君主不出使/劝降+30）+ 军事（破城+30/守城+8/灭国+50/计策+5 + 野战击破溃散+20/险胜+10/守方击退+10，`militaryMerit.ts` + `Plot.casterOfficerId` 缺省军师）；**数值消费 100% 实装（Session 265）**：`meritAttrBonusFor` 属性加成（Lv16 文武分岔）计入有效属性（体力/单挑/六角/暴率/战役战力）+ `meritEffects` 特殊效果（单挑+/开发+/暴率+/内政效率/被俘-/适性+/体力恢复）接入 duel/civil/crit/campaign/battle/turn + `formationTroopCap` 带兵+ 接出征上限（AI 同规则）+ 君主特例切片 C（任命忠诚±/赏赐/赐婚/笼络守卫）；`verify-merit-consume` 18/18 + `verify-s265-ui` 8/8。体力完整。**后置**：等级表依赖未实装引擎的效果（搜索宝物已由 S13 改为真宝物入库，Session 266） |
-| S13 | 宝物 | **M** | **0-A 完整闭环已实装（Session 266）**：`shared/items.ts` 纯函数 + `Officer.equipment` 5 槽 + `Faction.inventory`；装备/卸下/赏赐（忠诚+5~20 按品质）/搜索真宝物入库（零新增 RNG）/初始宝配；六维加成进有效属性 + baseEffect 可落地（defense/crit_rate/duel_boost 机制）；`/items/equip|unequip|grant` API；OfficerDetail 装备 tab + 六维装+N；verify-items 32/32 + verify-s266-ui 17/17。**后置（0-B）**：8+2 槽/套装/专属共鸣/消耗品/缴获传承/items 全量 |
+| S13 | 宝物 | **M** | **0-A 完整闭环已实装（Session 266）**：`shared/items.ts` 纯函数 + `Officer.equipment` 5 槽 + `Faction.inventory`；装备/卸下/赏赐（忠诚+5~20 按品质）/搜索真宝物入库（零新增 RNG）/初始宝配；六维加成进有效属性 + baseEffect 可落地（defense/crit_rate/duel_boost 机制）；`/items/equip|unequip|grant` API；OfficerDetail 装备 tab + 六维装+N；verify-items 32/32 + verify-s266-ui 17/17。**items 全量 165 条已落地（Session 426 P0B-10）**。**后置（0-B）**：8+2 槽/套装/专属共鸣/消耗品运行时/缴获传承 |
 | S14 | 事件 | **M+** | 场景/史料层隔离、窗口/前置/互斥/失效、玩家/AI选择、EventDialog来源标签；190共24事件/5条叙事线 |
 | S15 | AI | **M+** | 军事 AI 最多双线、动态留守；停战/两月粮不足/兵力低于守军55%主动撤退；无五维作弊且固定 seed 复现；**守方 Army 入郡域场景已完成（R6，Session 258）**；**县级主动 AI 已完成（Session 259）**：`commandery-defender-ai.ts` 决策（收复/移动/撤退）+ `engageCounty` 参战溃退闭环；**大地图 AI 向郡域增援已完成（Session 260）**：`maybeReinforceCommandery` 郡治城编成增援军直接入场（上限 2、概率随占县提升、接权威 RNG） |
 | S16 | 剧本/存档 | **M+** | v1 信封、完整 Schema/跨引用、迁移、受锁内存恢复及可序列化 `xorshift32-v1` 已实装；浏览器 JSON 导入/导出 + **Session 340 SQLite 命名槽位**（`$XDG_DATA_HOME/leh/saves.db`，遗留 JSON 一次性迁入）；系统菜单槽位 UI 已接通。多用户/云同步仍后置 |
