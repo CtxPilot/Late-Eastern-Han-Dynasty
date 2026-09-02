@@ -1,3 +1,14 @@
+## 2026-09-03 — Session 430 · 0-B 数据扩容 P0B-15（events.json 24→59：7 剧本叙事线挂接）
+
+- Phase：**Phase 0-B 数据扩容**；Session 429 收官 P0B-14 后按 HANDOFF「下一步」进入 P0B-15。
+- **P0B-15 events.json 24→59**：新增 35 事件（id 300~334），为 P0B-14 七历史剧本各挂接 5 事件叙事线——S3 天公将军举义→广宗围城 / S4 关东举义→盟散内讧 / S5 濮阳鏖兵→孙郎渡江 / S6 白马延津→仓亭余烬 / S7 南征之檄→火烧赤壁 / S8 进位汉中王→受禅台 / S9 屯田渭滨→吴师退屯。脚本 `scripts/gen-0b-events.mjs`（幂等；窗口越界/决策势力在野/效果目标在场与在野/外交对齐/双向链接/基线不变九重自检；**运行顺序须在 gen-0b-scenarios.mjs 之后**，本批顺带给 S6 补入张昭@16 以承接「内事托张昭」选项）。
+- **设计口径**：①全部单剧本链接（scenarioIds=[唯一剧本]），规避多剧本势力本地 id 耦合，validate-data「active in every linked scenario」约束天然满足；②decisionFactionId 全部显式（无决策势力的引擎语义是挂起给玩家，必须避免）；③效果实体必须在场——loyalty/recruit 目标 ∈ 剧本 availableOfficerIds（引擎 recruit 仅对 FREE 武将生效），war/relation 目标势力 active，develop 仅 farm；④演义名场面（当阳/柴桑/乌巢为史，赤壁火攻计出演义桥段者标注）分层标注 sourceClass 与 sources，不把演义标成正史；⑤剧本 1/2 与既有 24 事件（id 100~123）逐字节保留（脚本断言）。
+- **引擎级实测（tsx probe）**：S3 玩家=汉军 @184-2 → E300 天公举义由 AI（黄巾）自动结算入 completedEvents；S3 玩家=黄巾 → E300 挂起 pendingEvents 等待抉择；S6 玩家=曹操 @200-9 → E317 乌巢焚粮挂起；S9 玩家=魏 @234-3 → E330 由 AI 蜀汉结算且 develop 效果落城（汉中 farm 240→250）。事件触发/AI 权重抉择/玩家挂起/效果落城四条路径全部实测通过。
+- **校验链**：validate-data events expected 24→59（唯一改动点），全文件 Zod + scenario/event 双向交叉引用全绿。
+- **验证（全绿）**：validate-data（59 事件）、turn-golden **3/3**、`pnpm test` 三包链（shared 472 → server 3 → client **71**）、verify-scenario-events **32**、verify-items **32/32**、verify-child-engine **4/4**、campaign **71/71**、save-campaign **9/9**、save-game-state **10/10**、turn-cadence **28/28**、ai-military-rng **38/38**、client/server typecheck、compliance（786 files）、`git diff --check` 通过。
+- 文档：docs/08（§十 59 落地口径，真源先行）、docs/09（P0B-15 行）、docs/11（events ~20KB→~60KB）、docs/12（头部扩容进度）、docs/35（已完成清单）、10-progress/HANDOFF 双写。
+- 边界：纯静态数据扩容，零引擎/RNG/API 改动；每剧本 5 事件为「一束核心叙事线」骨架，更长叙事线（五线×更多事件）与互斥组（mutexGroup 0-A 已用、本批未用）留待后续扩充；0-B 数据扩容仅剩 **P0B-06 officers 1000+**。docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-03 — Session 429 · 0-B 数据扩容 P0B-14（scenarios.json 2→9：首批 7 历史剧本）
 
 - Phase：**Phase 0-B 数据扩容**；Session 428 收官 P0B-13 后按 HANDOFF「下一步」进入 P0B-14。
@@ -1456,7 +1467,7 @@
 | P0B-12 | children.json（全量 50+子女） | [x] | Session 427：0-A 5 + 新增 45（id 955~999），validate-data expected 50 |
 | P0B-13 | skills.json（全量 149技能） | [x] | Session 428：69通用×5级（0-A 30 条 L1 不变补全）+80专属；修复 officers 9 个悬空 skillId；生成 client skill-names 映射 |
 | P0B-14 | scenarios.json（首批7历史剧本+英雄集结） | [x] | Session 429：新增 id 3~9 七历史切片（引擎 probe 实测构建），validate-data expected 2→9；事件挂接留待 P0B-15 |
-| P0B-15 | events.json（全量） | [ ] | — |
+| P0B-15 | events.json（全量） | [x] | Session 430：24+35=59 事件，7 剧本各 5 事件叙事线 eventIds 双向链接，引擎 probe 实测触发 |
 
 ---
 

@@ -5,34 +5,85 @@
     "description": "曹操在陈留散家财、合义兵，响应关东诸军。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 2, "endYear": 190, "endMonth": 3 },
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 2,
+      "endYear": 190,
+      "endMonth": 3
+    },
     "decisionFactionId": 1,
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      }
     ],
     "dialogues": [
-      { "speakerId": 1, "speakerName": "曹操", "text": "今举义兵，正为天下除乱。诸君可愿同往？" }
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "今举义兵，正为天下除乱。诸君可愿同往？"
+      }
     ],
     "choices": [
       {
         "label": "散财合兵，移书诸军",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "brave": 20, "bold": 15 },
-        "aiIdealWeights": { "hegemony": 20, "fame": 10 },
+        "aiPersonalityWeights": {
+          "brave": 20,
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "hegemony": 20,
+          "fame": 10
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 2, "field": "favorability", "value": 10 },
-          { "type": "war", "target": "faction", "targetId": 4, "field": "relation", "value": "war" }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": 10
+          },
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 4,
+            "field": "relation",
+            "value": "war"
+          }
         ]
       },
       {
         "label": "谨慎观望，保存乡兵",
         "aiWeight": 20,
-        "aiPersonalityWeights": { "cautious": 45 },
+        "aiPersonalityWeights": {
+          "cautious": 45
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 500
+          }
         ]
       }
     ]
@@ -43,32 +94,74 @@
     "description": "关东诸军推举袁绍为盟主，分屯河内、酸枣与鲁阳等处。",
     "category": "diplomacy",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》", "《后汉书·袁绍刘表列传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 3, "endYear": 190, "endMonth": 4 },
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《后汉书·袁绍刘表列传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 3,
+      "endYear": 190,
+      "endMonth": 4
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [100],
+    "prerequisiteEventIds": [
+      100
+    ],
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerId": 113, "speakerName": "袁绍", "text": "诸军同举义旗，当先明号令，而后可以进兵。" }
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "诸军同举义旗，当先明号令，而后可以进兵。"
+      }
     ],
     "choices": [
       {
         "label": "承任盟主，整合诸营",
         "aiWeight": 65,
-        "aiPersonalityWeights": { "bold": 10 },
-        "aiIdealWeights": { "fame": 30, "hegemony": 15 },
+        "aiPersonalityWeights": {
+          "bold": 10
+        },
+        "aiIdealWeights": {
+          "fame": 30,
+          "hegemony": 15
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 1, "field": "favorability", "value": 15 },
-          { "type": "relation", "target": "faction", "targetId": 3, "field": "favorability", "value": 15 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 15
+          },
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": 15
+          }
         ]
       },
       {
         "label": "辞让虚名，各军自进",
         "aiWeight": 15,
-        "aiPersonalityWeights": { "cautious": 35, "gentle": 20 },
+        "aiPersonalityWeights": {
+          "cautious": 35,
+          "gentle": 20
+        },
         "effects": []
       }
     ]
@@ -79,36 +172,96 @@
     "description": "董卓面对关东军势，议迁都长安；焚毁洛阳并非年份到来后的必然结果。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·董卓传》", "《后汉书·董卓列传》", "《资治通鉴》卷五十九"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 4, "endYear": 190, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·董卓传》",
+      "《后汉书·董卓列传》",
+      "《资治通鉴》卷五十九"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 4,
+      "endYear": 190,
+      "endMonth": 6
+    },
     "decisionFactionId": 4,
-    "prerequisiteEventIds": [101],
+    "prerequisiteEventIds": [
+      101
+    ],
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 1, "operator": "equals", "value": 4 },
-      { "type": "city", "field": "controllerId", "targetId": 2, "operator": "equals", "value": 4 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 1,
+        "operator": "equals",
+        "value": 4
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 2,
+        "operator": "equals",
+        "value": 4
+      }
     ],
     "dialogues": [
-      { "speakerId": 112, "speakerName": "董卓", "text": "关东兵盛，洛阳不可久守。西迁长安，可据险制天下。" }
+      {
+        "speakerId": 112,
+        "speakerName": "董卓",
+        "text": "关东兵盛，洛阳不可久守。西迁长安，可据险制天下。"
+      }
     ],
     "choices": [
       {
         "label": "西迁长安",
         "aiWeight": 75,
-        "aiPersonalityWeights": { "bold": 15, "cautious": 10 },
-        "aiIdealWeights": { "hegemony": 20 },
+        "aiPersonalityWeights": {
+          "bold": 15,
+          "cautious": 10
+        },
+        "aiIdealWeights": {
+          "hegemony": 20
+        },
         "effects": [
-          { "type": "capital", "target": "faction", "targetId": 4, "field": "capitalCityId", "value": 2 },
-          { "type": "troops", "target": "city", "targetId": 1, "field": "troops", "value": -1000 }
+          {
+            "type": "capital",
+            "target": "faction",
+            "targetId": 4,
+            "field": "capitalCityId",
+            "value": 2
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": -1000
+          }
         ]
       },
       {
         "label": "收敛暴政，固守洛阳",
         "aiWeight": 10,
-        "aiPersonalityWeights": { "gentle": 35 },
+        "aiPersonalityWeights": {
+          "gentle": 35
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 1, "field": "troops", "value": 800 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 800
+          }
         ]
       }
     ]
@@ -119,38 +272,110 @@
     "description": "曹操主张乘势追击，孤军在荥阳汴水一带受挫；是否冒险由曹操势力决定。",
     "category": "battle",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 5, "endYear": 190, "endMonth": 8 },
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 5,
+      "endYear": 190,
+      "endMonth": 8
+    },
     "decisionFactionId": 1,
-    "prerequisiteEventIds": [100, 102],
+    "prerequisiteEventIds": [
+      100,
+      102
+    ],
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 },
-      { "type": "event", "field": "choice", "targetId": 100, "operator": "equals", "value": 0 },
-      { "type": "event", "field": "choice", "targetId": 102, "operator": "equals", "value": 0 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      },
+      {
+        "type": "event",
+        "field": "choice",
+        "targetId": 100,
+        "operator": "equals",
+        "value": 0
+      },
+      {
+        "type": "event",
+        "field": "choice",
+        "targetId": 102,
+        "operator": "equals",
+        "value": 0
+      }
     ],
     "dialogues": [
-      { "speakerId": 1, "speakerName": "曹操", "text": "举义兵以诛暴乱，大众已合，诸君何疑？失此不进，操窃耻之。" }
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "举义兵以诛暴乱，大众已合，诸君何疑？失此不进，操窃耻之。"
+      }
     ],
     "choices": [
       {
         "label": "冒险西进，追击董军",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "brave": 25, "reckless": 25, "bold": 10 },
-        "aiIdealWeights": { "hegemony": 15 },
+        "aiPersonalityWeights": {
+          "brave": 25,
+          "reckless": 25,
+          "bold": 10
+        },
+        "aiIdealWeights": {
+          "hegemony": 15
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": -1200 },
-          { "type": "war", "target": "faction", "targetId": 4, "field": "relation", "value": "war" }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": -1200
+          },
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 4,
+            "field": "relation",
+            "value": "war"
+          }
         ]
       },
       {
         "label": "保全义军，等待诸营齐进",
         "aiWeight": 20,
-        "aiPersonalityWeights": { "cautious": 45 },
+        "aiPersonalityWeights": {
+          "cautious": 45
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 300
+          }
         ]
       }
     ]
@@ -161,20 +386,50 @@
     "description": "《三国演义》的虎牢关文学演出，不作为正史战果或战术模拟；关闭演义与传说层后不会触发。",
     "category": "battle",
     "sourceClass": "literature",
-    "sources": ["《三国演义》第五回"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 5, "endYear": 190, "endMonth": 8 },
+    "sources": [
+      "《三国演义》第五回"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 5,
+      "endYear": 190,
+      "endMonth": 8
+    },
     "decisionFactionId": 3,
-    "prerequisiteEventIds": [101],
+    "prerequisiteEventIds": [
+      101
+    ],
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 3, "operator": "equals", "value": true },
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "文学叙事：先有温酒斩华雄，继而刘、关、张三人轮战吕布。正史无此战记载；正史华雄为孙坚军所斩。" }
+      {
+        "speakerName": "史官",
+        "text": "文学叙事：先有温酒斩华雄，继而刘、关、张三人轮战吕布。正史无此战记载；正史华雄为孙坚军所斩。"
+      }
     ],
     "choices": [
-      { "label": "按文学层收录此段", "aiWeight": 100, "effects": [] }
+      {
+        "label": "按文学层收录此段",
+        "aiWeight": 100,
+        "effects": []
+      }
     ]
   },
   {
@@ -183,37 +438,85 @@
     "description": "初平元年二月，孙坚以鲁阳军前锋身份首战董卓，破卓将徐荣于梁东。",
     "category": "battle",
     "sourceClass": "official_history",
-    "sources": ["《三国志·吴书·孙破虏讨逆传》", "《后汉书·孙破虏传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 2, "endYear": 190, "endMonth": 6 },
+    "sources": [
+      "《三国志·吴书·孙破虏讨逆传》",
+      "《后汉书·孙破虏传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 2,
+      "endYear": 190,
+      "endMonth": 6
+    },
     "decisionFactionId": 3,
     "decisionOfficerId": 114,
-    "prerequisiteEventIds": [100],
+    "prerequisiteEventIds": [
+      100
+    ],
     "mutexGroup": "孙坚讨董线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 3, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平元年二月，孙坚以鲁阳军前锋身份首战董卓。" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "董卓祸国殃民，吾当先破其锋！" },
-      { "speakerName": "旁白", "text": "坚进至梁东，为卓将徐荣所败，坚引十余骑溃围走。" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "此败非战之罪，吾当重整旗鼓。" }
+      {
+        "speakerName": "史官",
+        "text": "初平元年二月，孙坚以鲁阳军前锋身份首战董卓。"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "董卓祸国殃民，吾当先破其锋！"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "坚进至梁东，为卓将徐荣所败，坚引十余骑溃围走。"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "此败非战之罪，吾当重整旗鼓。"
+      }
     ],
     "choices": [
       {
         "label": "收拢残兵，再战卓军",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "brave": 25 },
+        "aiPersonalityWeights": {
+          "brave": 25
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": -300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": -300
+          }
         ]
       },
       {
         "label": "退守鲁阳，固守待援",
         "aiWeight": 25,
-        "aiPersonalityWeights": { "cautious": 30 },
+        "aiPersonalityWeights": {
+          "cautious": 30
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": 200 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": 200
+          }
         ]
       }
     ]
@@ -224,38 +527,90 @@
     "description": "初平元年冬，孙坚收拢残兵，大破董卓军于阳人，斩华雄。卓惧坚威力，遣李傕求和。",
     "category": "battle",
     "sourceClass": "official_history",
-    "sources": ["《三国志·吴书·孙破虏讨逆传》", "《资治通鉴》卷五十九"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 6, "endYear": 190, "endMonth": 12 },
+    "sources": [
+      "《三国志·吴书·孙破虏讨逆传》",
+      "《资治通鉴》卷五十九"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 6,
+      "endYear": 190,
+      "endMonth": 12
+    },
     "decisionFactionId": 3,
     "decisionOfficerId": 114,
-    "prerequisiteEventIds": [105],
+    "prerequisiteEventIds": [
+      105
+    ],
     "mutexGroup": "孙坚讨董线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 3, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "孙坚收拢残兵，进至阳人。" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "前败之耻，今日当雪！" },
-      { "speakerName": "旁白", "text": "坚大破卓军，斩其都督华雄。" },
-      { "speakerName": "史官", "text": "卓惧坚威力，遣李傕求和。坚曰：'卓逆天无道，吾不与汝同朝！'" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "卓逆天无道，荡覆王室，吾不与汝同朝！" }
+      {
+        "speakerName": "史官",
+        "text": "孙坚收拢残兵，进至阳人。"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "前败之耻，今日当雪！"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "坚大破卓军，斩其都督华雄。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "卓惧坚威力，遣李傕求和。坚曰：'卓逆天无道，吾不与汝同朝！'"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "卓逆天无道，荡覆王室，吾不与汝同朝！"
+      }
     ],
     "choices": [
       {
         "label": "乘胜追击，直取洛阳",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "brave": 30, "hegemony": 10 },
+        "aiPersonalityWeights": {
+          "brave": 30,
+          "hegemony": 10
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": -500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": -500
+          }
         ]
       },
       {
         "label": "稳扎稳打，巩固战果",
         "aiWeight": 35,
-        "aiPersonalityWeights": { "cautious": 25 },
+        "aiPersonalityWeights": {
+          "cautious": 25
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": 300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": 300
+          }
         ]
       }
     ]
@@ -266,28 +621,75 @@
     "description": "文学叙事：刘关张虎牢关三英战吕布。正史无此战，布传仅记'布射画戟'退曹。",
     "category": "historical",
     "sourceClass": "literature",
-    "sources": ["《三国演义》第五回"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 1, "endYear": 190, "endMonth": 12 },
+    "sources": [
+      "《三国演义》第五回"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 1,
+      "endYear": 190,
+      "endMonth": 12
+    },
     "decisionOfficerId": 2,
-    "prerequisiteEventIds": [100],
+    "prerequisiteEventIds": [
+      100
+    ],
     "mutexGroup": "蜀汉亮相线",
     "conditions": [
-      { "type": "officer", "field": "officerId", "operator": "in", "value": [2, 6, 7] }
+      {
+        "type": "officer",
+        "field": "officerId",
+        "operator": "in",
+        "value": [
+          2,
+          6,
+          7
+        ]
+      }
     ],
     "dialogues": [
-      { "speakerName": "旁白", "text": "文学叙事：刘关张虎牢关三英战吕布。正史无此战。" },
-      { "speakerId": 6, "speakerName": "关羽", "text": "吕布虽勇，吾兄弟三人何惧！" },
-      { "speakerId": 7, "speakerName": "张飞", "text": "三姓家奴，敢与吾战否！" },
-      { "speakerId": 2, "speakerName": "刘备", "text": "吾等虽微，亦有报国之志。" }
+      {
+        "speakerName": "旁白",
+        "text": "文学叙事：刘关张虎牢关三英战吕布。正史无此战。"
+      },
+      {
+        "speakerId": 6,
+        "speakerName": "关羽",
+        "text": "吕布虽勇，吾兄弟三人何惧！"
+      },
+      {
+        "speakerId": 7,
+        "speakerName": "张飞",
+        "text": "三姓家奴，敢与吾战否！"
+      },
+      {
+        "speakerId": 2,
+        "speakerName": "刘备",
+        "text": "吾等虽微，亦有报国之志。"
+      }
     ],
     "choices": [
       {
         "label": "按文学层收录此段",
         "aiWeight": 100,
         "effects": [
-          { "type": "loyalty", "target": "officer", "targetId": 6, "field": "loyalty", "value": 5 },
-          { "type": "loyalty", "target": "officer", "targetId": 7, "field": "loyalty", "value": 5 }
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 6,
+            "field": "loyalty",
+            "value": 5
+          },
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 7,
+            "field": "loyalty",
+            "value": 5
+          }
         ]
       },
       {
@@ -303,38 +705,96 @@
     "description": "初平元年二月，董卓迁都长安，尽徙洛阳百万口。纵火焚宫庙，二百里内无复鸡犬。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·董卓传》", "《后汉书·董卓列传》", "《资治通鉴》卷五十九"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 1, "endYear": 190, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·董卓传》",
+      "《后汉书·董卓列传》",
+      "《资治通鉴》卷五十九"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 1,
+      "endYear": 190,
+      "endMonth": 6
+    },
     "decisionFactionId": 4,
-    "prerequisiteEventIds": [102],
+    "prerequisiteEventIds": [
+      102
+    ],
     "mutexGroup": "董卓暴政线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平元年二月，董卓迁都长安。" },
-      { "speakerId": 112, "speakerName": "董卓", "text": "洛阳不可守，尽徙其民西入关中。" },
-      { "speakerName": "旁白", "text": "卓纵火焚宫庙，发掘帝陵。二百里内，室屋荡尽，无复鸡犬。" },
-      { "speakerName": "史官", "text": "洛阳自光武中兴以来，二百年繁华，一朝化为灰烬。" },
-      { "speakerId": 112, "speakerName": "董卓", "text": "天道变迁，非吾之罪。" }
+      {
+        "speakerName": "史官",
+        "text": "初平元年二月，董卓迁都长安。"
+      },
+      {
+        "speakerId": 112,
+        "speakerName": "董卓",
+        "text": "洛阳不可守，尽徙其民西入关中。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "卓纵火焚宫庙，发掘帝陵。二百里内，室屋荡尽，无复鸡犬。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "洛阳自光武中兴以来，二百年繁华，一朝化为灰烬。"
+      },
+      {
+        "speakerId": 112,
+        "speakerName": "董卓",
+        "text": "天道变迁，非吾之罪。"
+      }
     ],
     "choices": [
       {
         "label": "焚尽洛阳，驱民西迁",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "bold": 20 },
+        "aiPersonalityWeights": {
+          "bold": 20
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 1, "field": "troops", "value": 1000 },
-          { "type": "population", "target": "city", "targetId": 2, "field": "population", "value": 100000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 1000
+          },
+          {
+            "type": "population",
+            "target": "city",
+            "targetId": 2,
+            "field": "population",
+            "value": 100000
+          }
         ]
       },
       {
         "label": "保留洛阳宫殿，仅迁人口",
         "aiWeight": 25,
-        "aiPersonalityWeights": { "cautious": 15 },
+        "aiPersonalityWeights": {
+          "cautious": 15
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 1, "field": "troops", "value": 500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 500
+          }
         ]
       }
     ]
@@ -345,36 +805,85 @@
     "description": "初平元年冬，诸侯各怀异心。袁绍屯河内，张邈、刘岱、桥瑁、袁遗屯酸枣，袁术屯鲁阳，孙坚进击洛阳。盟约名存实亡。",
     "category": "diplomacy",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》", "《资治通鉴》卷五十九"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 6, "endYear": 190, "endMonth": 12 },
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《资治通鉴》卷五十九"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 6,
+      "endYear": 190,
+      "endMonth": 12
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [101],
+    "prerequisiteEventIds": [
+      101
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平元年冬，关东诸侯各怀异心，盟约名存实亡。" },
-      { "speakerId": 113, "speakerName": "袁绍", "text": "诸君空谈义兵，不肯进击，绍甚失望。" },
-      { "speakerName": "旁白", "text": "绍虽盟主，不能制诸军。军粮将尽，诸军自散。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "今兵以义动，持疑而不进，失天下之望。" },
-      { "speakerName": "史官", "text": "操独引兵西击董卓，诸军莫有应者。" }
+      {
+        "speakerName": "史官",
+        "text": "初平元年冬，关东诸侯各怀异心，盟约名存实亡。"
+      },
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "诸君空谈义兵，不肯进击，绍甚失望。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "绍虽盟主，不能制诸军。军粮将尽，诸军自散。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "今兵以义动，持疑而不进，失天下之望。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "操独引兵西击董卓，诸军莫有应者。"
+      }
     ],
     "choices": [
       {
         "label": "承认联军瓦解，各自为战",
         "aiWeight": 50,
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 3, "field": "favorability", "value": -10 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": -10
+          }
         ]
       },
       {
         "label": "尝试维持联盟，最后努力",
         "aiWeight": 40,
-        "aiPersonalityWeights": { "chivalry": 15 },
+        "aiPersonalityWeights": {
+          "chivalry": 15
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 1, "field": "favorability", "value": 10 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 10
+          }
         ]
       }
     ]
@@ -385,36 +894,83 @@
     "description": "初平二年，袁绍用逢纪谋，以公孙瓒击冀州为胁，迫韩馥让冀州。绍遂领冀州牧。",
     "category": "diplomacy",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·袁绍传》裴松之注引《英雄记》", "《后汉书·袁绍传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 12, "endYear": 191, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·袁绍传》裴松之注引《英雄记》",
+      "《后汉书·袁绍传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 12,
+      "endYear": 191,
+      "endMonth": 6
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [109],
+    "prerequisiteEventIds": [
+      109
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平二年，袁绍用逢纪谋，取冀州。" },
-      { "speakerName": "旁白", "text": "绍以公孙瓒将南取冀州为胁，迫韩馥让位。馥惧，遂以冀州授绍。" },
-      { "speakerId": 113, "speakerName": "袁绍", "text": "冀州乃天下资重之地，绍当据之以图大业。" },
-      { "speakerName": "史官", "text": "绍领冀州牧，以沮授为监军，审配、逢纪统军事。" }
+      {
+        "speakerName": "史官",
+        "text": "初平二年，袁绍用逢纪谋，取冀州。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "绍以公孙瓒将南取冀州为胁，迫韩馥让位。馥惧，遂以冀州授绍。"
+      },
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "冀州乃天下资重之地，绍当据之以图大业。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "绍领冀州牧，以沮授为监军，审配、逢纪统军事。"
+      }
     ],
     "choices": [
       {
         "label": "吞并冀州，壮大实力",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "hegemony": 25 },
+        "aiPersonalityWeights": {
+          "hegemony": 25
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 5, "field": "troops", "value": 1000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 1000
+          }
         ]
       },
       {
         "label": "以德服人，安抚冀州旧臣",
         "aiWeight": 25,
-        "aiPersonalityWeights": { "chivalry": 20 },
+        "aiPersonalityWeights": {
+          "chivalry": 20
+        },
         "effects": [
-          { "type": "loyalty", "target": "officer", "targetId": 113, "field": "loyalty", "value": 10 }
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 113,
+            "field": "loyalty",
+            "value": 10
+          }
         ]
       }
     ]
@@ -425,36 +981,83 @@
     "description": "初平二年冬，公孙瓒以界桥之战与袁绍对峙。瓒以步骑三万列方阵，绍以麹义八百先登破之。",
     "category": "battle",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·公孙瓒传》裴松之注引《英雄记》", "《后汉书·公孙瓒传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 1, "endYear": 191, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·公孙瓒传》裴松之注引《英雄记》",
+      "《后汉书·公孙瓒传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 1,
+      "endYear": 191,
+      "endMonth": 6
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [110],
+    "prerequisiteEventIds": [
+      110
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平二年冬，公孙瓒击袁绍，军至界桥。" },
-      { "speakerName": "旁白", "text": "瓒以步骑三万列方阵，绍以麹义八百先登破之。" },
-      { "speakerId": 113, "speakerName": "袁绍", "text": "公孙瓒恃众而骄，吾当破之。" },
-      { "speakerName": "史官", "text": "绍将麹义以八百先登，大破瓒军。绍遂进屯界桥。" }
+      {
+        "speakerName": "史官",
+        "text": "初平二年冬，公孙瓒击袁绍，军至界桥。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "瓒以步骑三万列方阵，绍以麹义八百先登破之。"
+      },
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "公孙瓒恃众而骄，吾当破之。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "绍将麹义以八百先登，大破瓒军。绍遂进屯界桥。"
+      }
     ],
     "choices": [
       {
         "label": "乘胜追击，彻底击溃公孙瓒",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "brave": 20 },
+        "aiPersonalityWeights": {
+          "brave": 20
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 5, "field": "troops", "value": -500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": -500
+          }
         ]
       },
       {
         "label": "见好就收，巩固冀州",
         "aiWeight": 35,
-        "aiPersonalityWeights": { "cautious": 25 },
+        "aiPersonalityWeights": {
+          "cautious": 25
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 5, "field": "troops", "value": 300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 300
+          }
         ]
       }
     ]
@@ -465,39 +1068,96 @@
     "description": "初平元年，曹操独立追击董卓失败后，转向经营兖州。得报信之助，任兖州刺史。",
     "category": "historical",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·武帝纪》", "《资治通鉴》卷五十九"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 6, "endYear": 191, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《资治通鉴》卷五十九"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 6,
+      "endYear": 191,
+      "endMonth": 6
+    },
     "decisionFactionId": 1,
     "decisionOfficerId": 1,
-    "prerequisiteEventIds": [103],
+    "prerequisiteEventIds": [
+      103
+    ],
     "mutexGroup": "曹操崛起线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平元年，曹操独立追击董卓失败，还军陈留。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "联军不足与谋，吾当自图大业。" },
-      { "speakerName": "旁白", "text": "操得报信之助，收编黄巾余部，势力渐盛。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "天下英雄，唯使君与操耳。" },
-      { "speakerName": "史官", "text": "操任兖州刺史，练兵聚粮，渐成一方诸侯。" }
+      {
+        "speakerName": "史官",
+        "text": "初平元年，曹操独立追击董卓失败，还军陈留。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "联军不足与谋，吾当自图大业。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "操得报信之助，收编黄巾余部，势力渐盛。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "天下英雄，唯使君与操耳。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "操任兖州刺史，练兵聚粮，渐成一方诸侯。"
+      }
     ],
     "choices": [
       {
         "label": "广纳贤才，招揽谋士",
         "aiWeight": 55,
-        "aiPersonalityWeights": { "chivalry": 15 },
+        "aiPersonalityWeights": {
+          "chivalry": 15
+        },
         "effects": [
-          { "type": "loyalty", "target": "officer", "targetId": 1, "field": "loyalty", "value": 5 }
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 1,
+            "field": "loyalty",
+            "value": 5
+          }
         ]
       },
       {
         "label": "练兵备战，扩充军力",
         "aiWeight": 40,
-        "aiPersonalityWeights": { "brave": 15 },
+        "aiPersonalityWeights": {
+          "brave": 15
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 500
+          }
         ]
       }
     ]
@@ -508,35 +1168,81 @@
     "description": "吕布初为丁原义子，后杀丁原投董卓，又为董卓义子。正史无貂蝉，因侍婢私通而杀卓。",
     "category": "diplomacy",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·吕布传》", "《后汉书·吕布传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 190, "startMonth": 1, "endYear": 192, "endMonth": 4 },
+    "sources": [
+      "《三国志·魏书·吕布传》",
+      "《后汉书·吕布传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 1,
+      "endYear": 192,
+      "endMonth": 4
+    },
     "decisionOfficerId": 5,
-    "prerequisiteEventIds": [100],
+    "prerequisiteEventIds": [
+      100
+    ],
     "mutexGroup": "吕布线",
     "conditions": [
-      { "type": "officer", "field": "officerId", "operator": "in", "value": [5] }
+      {
+        "type": "officer",
+        "field": "officerId",
+        "operator": "in",
+        "value": [
+          5
+        ]
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "吕布字奉先，五原九原人也。" },
-      { "speakerId": 5, "speakerName": "吕布", "text": "吾有虓虎之勇，当择明主而事。" },
-      { "speakerName": "旁白", "text": "布初为丁原义子，后杀原投卓，又为卓义子。" },
-      { "speakerName": "史官", "text": "吕布反复无常，天下谓之'三姓家奴'。" },
-      { "speakerId": 5, "speakerName": "吕布", "text": "大丈夫生于天地间，岂能郁郁久居人下！" }
+      {
+        "speakerName": "史官",
+        "text": "吕布字奉先，五原九原人也。"
+      },
+      {
+        "speakerId": 5,
+        "speakerName": "吕布",
+        "text": "吾有虓虎之勇，当择明主而事。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "布初为丁原义子，后杀原投卓，又为卓义子。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "吕布反复无常，天下谓之'三姓家奴'。"
+      },
+      {
+        "speakerId": 5,
+        "speakerName": "吕布",
+        "text": "大丈夫生于天地间，岂能郁郁久居人下！"
+      }
     ],
     "choices": [
       {
         "label": "效忠董卓，为义父征战",
         "aiWeight": 50,
-        "aiPersonalityWeights": { "cautious": 10 },
+        "aiPersonalityWeights": {
+          "cautious": 10
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 4, "field": "favorability", "value": 15 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 4,
+            "field": "favorability",
+            "value": 15
+          }
         ]
       },
       {
         "label": "暗中观望，等待时机",
         "aiWeight": 40,
-        "aiPersonalityWeights": { "bold": 15 },
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
         "effects": []
       }
     ]
@@ -547,27 +1253,65 @@
     "description": "文学叙事：连环计使吕布与董卓反目。正史无貂蝉其人，吕布杀卓因与侍婢私通。",
     "category": "historical",
     "sourceClass": "literature",
-    "sources": ["《三国演义》第六~第八回"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 1, "endYear": 192, "endMonth": 4 },
+    "sources": [
+      "《三国演义》第六~第八回"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 1,
+      "endYear": 192,
+      "endMonth": 4
+    },
     "decisionOfficerId": 5,
-    "prerequisiteEventIds": [113],
+    "prerequisiteEventIds": [
+      113
+    ],
     "mutexGroup": "吕布线",
     "conditions": [
-      { "type": "officer", "field": "officerId", "operator": "in", "value": [5] }
+      {
+        "type": "officer",
+        "field": "officerId",
+        "operator": "in",
+        "value": [
+          5
+        ]
+      }
     ],
     "dialogues": [
-      { "speakerName": "旁白", "text": "文学叙事：连环计使吕布与董卓反目，以貂蝉之故杀卓。正史无貂蝉其人。" },
-      { "speakerId": 5, "speakerName": "吕布", "text": "董卓暴虐，天下共诛之。布虽不才，亦有除贼之志。" },
-      { "speakerName": "旁白", "text": "正史中吕布杀董卓是因为与董卓侍婢私通，恐事发觉，心不自安。" },
-      { "speakerId": 5, "speakerName": "吕布", "text": "义父？布之义父，杀布者也！" }
+      {
+        "speakerName": "旁白",
+        "text": "文学叙事：连环计使吕布与董卓反目，以貂蝉之故杀卓。正史无貂蝉其人。"
+      },
+      {
+        "speakerId": 5,
+        "speakerName": "吕布",
+        "text": "董卓暴虐，天下共诛之。布虽不才，亦有除贼之志。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "正史中吕布杀董卓是因为与董卓侍婢私通，恐事发觉，心不自安。"
+      },
+      {
+        "speakerId": 5,
+        "speakerName": "吕布",
+        "text": "义父？布之义父，杀布者也！"
+      }
     ],
     "choices": [
       {
         "label": "按文学层收录此段",
         "aiWeight": 100,
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 4, "field": "favorability", "value": -20 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 4,
+            "field": "favorability",
+            "value": -20
+          }
         ]
       },
       {
@@ -583,41 +1327,111 @@
     "description": "初平三年，黄巾余部寇略兖州，曹操击破之，收编三十余万，号青州兵。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》", "《资治通鉴》卷六十"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 6, "endYear": 192, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《资治通鉴》卷六十"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 6,
+      "endYear": 192,
+      "endMonth": 6
+    },
     "decisionFactionId": 1,
     "decisionOfficerId": 1,
-    "prerequisiteEventIds": [112],
+    "prerequisiteEventIds": [
+      112
+    ],
     "mutexGroup": "曹操崛起线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "黄巾余部寇略兖州，杀任城相郑遂。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "黄巾虽乱，其众可为我用。" },
-      { "speakerName": "旁白", "text": "操击破之，受降卒三十余万，男女百餘万口，收其精锐者，号为青州兵。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "得此生力，大事可图矣！" },
-      { "speakerName": "史官", "text": "自是操兵大振，兖州遂定。" }
+      {
+        "speakerName": "史官",
+        "text": "黄巾余部寇略兖州，杀任城相郑遂。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "黄巾虽乱，其众可为我用。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "操击破之，受降卒三十余万，男女百餘万口，收其精锐者，号为青州兵。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "得此生力，大事可图矣！"
+      },
+      {
+        "speakerName": "史官",
+        "text": "自是操兵大振，兖州遂定。"
+      }
     ],
     "choices": [
       {
         "label": "尽数收编，扩充军力",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "hegemony": 25, "bold": 10 },
+        "aiPersonalityWeights": {
+          "hegemony": 25,
+          "bold": 10
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 3000 },
-          { "type": "population", "target": "city", "targetId": 7, "field": "population", "value": 50000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 3000
+          },
+          {
+            "type": "population",
+            "target": "city",
+            "targetId": 7,
+            "field": "population",
+            "value": 50000
+          }
         ]
       },
       {
         "label": "择精锐编入，余者遣散",
         "aiWeight": 25,
-        "aiPersonalityWeights": { "cautious": 35 },
+        "aiPersonalityWeights": {
+          "cautious": 35
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 1500 },
-          { "type": "population", "target": "city", "targetId": 7, "field": "population", "value": 20000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 1500
+          },
+          {
+            "type": "population",
+            "target": "city",
+            "targetId": 7,
+            "field": "population",
+            "value": 20000
+          }
         ]
       }
     ]
@@ -628,20 +1442,51 @@
     "description": "初平二年秋，关东诸军盟约彻底瓦解。袁绍据冀州，公孙瓒据幽州，曹操据兖州，各不相属。",
     "category": "diplomacy",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》", "《资治通鉴》卷六十"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 6, "endYear": 191, "endMonth": 12 },
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《资治通鉴》卷六十"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 6,
+      "endYear": 191,
+      "endMonth": 12
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [109],
+    "prerequisiteEventIds": [
+      109
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平二年秋，关东诸军盟约彻底瓦解。" },
-      { "speakerId": 113, "speakerName": "袁绍", "text": "盟约已散，天下当以力取之。" },
-      { "speakerName": "旁白", "text": "诸侯混战时代正式开启。从讨董义军到互相攻伐，仅一年而已。" },
-      { "speakerName": "史官", "text": "自是之后，天下纷争，遂无宁日。" }
+      {
+        "speakerName": "史官",
+        "text": "初平二年秋，关东诸军盟约彻底瓦解。"
+      },
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "盟约已散，天下当以力取之。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "诸侯混战时代正式开启。从讨董义军到互相攻伐，仅一年而已。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "自是之后，天下纷争，遂无宁日。"
+      }
     ],
     "choices": [
       {
@@ -652,9 +1497,17 @@
       {
         "label": "联曹抗瓒，拉拢曹操",
         "aiWeight": 40,
-        "aiPersonalityWeights": { "bold": 20 },
+        "aiPersonalityWeights": {
+          "bold": 20
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 1, "field": "favorability", "value": 15 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 15
+          }
         ]
       }
     ]
@@ -665,36 +1518,85 @@
     "description": "联军既散，各方争夺兖州。曹操以陈留为基，与周边势力对峙。",
     "category": "battle",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·武帝纪》裴松之注引《魏晋世语》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 3, "endYear": 191, "endMonth": 9 },
+    "sources": [
+      "《三国志·魏书·武帝纪》裴松之注引《魏晋世语》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 3,
+      "endYear": 191,
+      "endMonth": 9
+    },
     "decisionFactionId": 1,
-    "prerequisiteEventIds": [109],
+    "prerequisiteEventIds": [
+      109
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "联军既散，各方争夺兖州。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "兖州膏腴之地，四战之所。得之者霸，失之者亡。" },
-      { "speakerName": "旁白", "text": "操练兵秣马，渐成一方诸侯。" }
+      {
+        "speakerName": "史官",
+        "text": "联军既散，各方争夺兖州。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "兖州膏腴之地，四战之所。得之者霸，失之者亡。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "操练兵秣马，渐成一方诸侯。"
+      }
     ],
     "choices": [
       {
         "label": "主动出击，扩张地盘",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "brave": 20 },
+        "aiPersonalityWeights": {
+          "brave": 20
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": -300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": -300
+          }
         ]
       },
       {
         "label": "固守待变，积蓄力量",
         "aiWeight": 30,
-        "aiPersonalityWeights": { "cautious": 35 },
+        "aiPersonalityWeights": {
+          "cautious": 35
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 400 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 400
+          }
         ]
       }
     ]
@@ -705,38 +1607,89 @@
     "description": "坚既破卓军，南击刘表。单马行岘山，为祖军士所射杀。其子孙策年方十七。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·吴书·孙破虏讨逆传》", "《后汉书·刘表传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 6, "endYear": 192, "endMonth": 2 },
+    "sources": [
+      "《三国志·吴书·孙破虏讨逆传》",
+      "《后汉书·刘表传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 6,
+      "endYear": 192,
+      "endMonth": 2
+    },
     "decisionFactionId": 3,
     "decisionOfficerId": 114,
-    "prerequisiteEventIds": [106],
+    "prerequisiteEventIds": [
+      106
+    ],
     "mutexGroup": "孙坚讨董线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 3, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "坚既破卓军，遂南击刘表。" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "董卓已遁，刘表阻我归路。当先破表，再图西进。" },
-      { "speakerName": "旁白", "text": "坚单马行岘山，为祖军士所射。" },
-      { "speakerId": 114, "speakerName": "孙坚", "text": "天不假年……伯符，汝当继吾志！" },
-      { "speakerName": "史官", "text": "初平三年春，孙坚殁于岘山。其子孙策年方十七，承父旧部。" }
+      {
+        "speakerName": "史官",
+        "text": "坚既破卓军，遂南击刘表。"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "董卓已遁，刘表阻我归路。当先破表，再图西进。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "坚单马行岘山，为祖军士所射。"
+      },
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "天不假年……伯符，汝当继吾志！"
+      },
+      {
+        "speakerName": "史官",
+        "text": "初平三年春，孙坚殁于岘山。其子孙策年方十七，承父旧部。"
+      }
     ],
     "choices": [
       {
         "label": "孙策继位，继续西进",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "brave": 20 },
+        "aiPersonalityWeights": {
+          "brave": 20
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": 200 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": 200
+          }
         ]
       },
       {
         "label": "孙策继位，退守江东",
         "aiWeight": 35,
-        "aiPersonalityWeights": { "cautious": 30 },
+        "aiPersonalityWeights": {
+          "cautious": 30
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 13, "field": "troops", "value": 500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": 500
+          }
         ]
       }
     ]
@@ -747,36 +1700,79 @@
     "description": "操既定兖州，复东向经略。渐成气候，诸侯莫敢轻视。",
     "category": "battle",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 8, "endYear": 192, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 8,
+      "endYear": 192,
+      "endMonth": 6
+    },
     "decisionFactionId": 1,
     "decisionOfficerId": 1,
-    "prerequisiteEventIds": [112],
+    "prerequisiteEventIds": [
+      112
+    ],
     "mutexGroup": "曹操崛起线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "操既定兖州，复东向经略。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "天下英雄，唯使君与操耳。" },
-      { "speakerName": "旁白", "text": "操渐成气候，诸侯莫敢轻视。" }
+      {
+        "speakerName": "史官",
+        "text": "操既定兖州，复东向经略。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "天下英雄，唯使君与操耳。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "操渐成气候，诸侯莫敢轻视。"
+      }
     ],
     "choices": [
       {
         "label": "继续东进，夺取徐州",
         "aiWeight": 55,
-        "aiPersonalityWeights": { "hegemony": 20 },
+        "aiPersonalityWeights": {
+          "hegemony": 20
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": -300 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": -300
+          }
         ]
       },
       {
         "label": "巩固兖州，暂缓东进",
         "aiWeight": 35,
-        "aiPersonalityWeights": { "cautious": 30 },
+        "aiPersonalityWeights": {
+          "cautious": 30
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 400 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 400
+          }
         ]
       }
     ]
@@ -787,27 +1783,62 @@
     "description": "袁术既与兄绍不和，引兵南下寿春，图谋淮南。遣孙坚击刘表。",
     "category": "diplomacy",
     "sourceClass": "annotated_history",
-    "sources": ["《三国志·魏书·袁术传》", "《后汉书·袁术传》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 191, "startMonth": 6, "endYear": 192, "endMonth": 2 },
+    "sources": [
+      "《三国志·魏书·袁术传》",
+      "《后汉书·袁术传》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 6,
+      "endYear": 192,
+      "endMonth": 2
+    },
     "decisionFactionId": 2,
-    "prerequisiteEventIds": [109],
+    "prerequisiteEventIds": [
+      109
+    ],
     "mutexGroup": "联军瓦解线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 2, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "袁术既与兄绍不和，引兵南下寿春。" },
-      { "speakerName": "旁白", "text": "术遣孙坚击刘表，坚遂南下，殁于岘山。" },
-      { "speakerName": "史官", "text": "袁氏兄弟阋墙，天下更无宁日。" }
+      {
+        "speakerName": "史官",
+        "text": "袁术既与兄绍不和，引兵南下寿春。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "术遣孙坚击刘表，坚遂南下，殁于岘山。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "袁氏兄弟阋墙，天下更无宁日。"
+      }
     ],
     "choices": [
       {
         "label": "联合袁术，对抗袁绍",
         "aiWeight": 40,
-        "aiPersonalityWeights": { "bold": 15 },
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 2, "field": "favorability", "value": -10 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": -10
+          }
         ]
       },
       {
@@ -823,37 +1854,89 @@
     "description": "初平三年四月，司徒王允与吕布密谋诛董卓。卓入贺，布持矛刺卓。",
     "category": "battle",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·董卓传》", "《后汉书·董卓列传》", "《资治通鉴》卷六十"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 192, "startMonth": 1, "endYear": 192, "endMonth": 6 },
+    "sources": [
+      "《三国志·魏书·董卓传》",
+      "《后汉书·董卓列传》",
+      "《资治通鉴》卷六十"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 192,
+      "startMonth": 1,
+      "endYear": 192,
+      "endMonth": 6
+    },
     "decisionOfficerId": 5,
-    "prerequisiteEventIds": [114],
+    "prerequisiteEventIds": [
+      114
+    ],
     "mutexGroup": "董卓暴政线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平三年四月，帝有疾新愈，大会未央殿。" },
-      { "speakerName": "史官", "text": "卓朝服升车，陈兵夹道，自营至宫。" },
-      { "speakerName": "旁白", "text": "布持矛刺卓，卓惊呼：'布何在！'布曰：'有诏讨贼臣！'" },
-      { "speakerId": 5, "speakerName": "吕布", "text": "有诏讨贼臣！" },
-      { "speakerName": "史官", "text": "布斩卓，夷三族。百姓歌舞于道，卖珠玉衣装市酒肉相庆。" }
+      {
+        "speakerName": "史官",
+        "text": "初平三年四月，帝有疾新愈，大会未央殿。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "卓朝服升车，陈兵夹道，自营至宫。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "布持矛刺卓，卓惊呼：'布何在！'布曰：'有诏讨贼臣！'"
+      },
+      {
+        "speakerId": 5,
+        "speakerName": "吕布",
+        "text": "有诏讨贼臣！"
+      },
+      {
+        "speakerName": "史官",
+        "text": "布斩卓，夷三族。百姓歌舞于道，卖珠玉衣装市酒肉相庆。"
+      }
     ],
     "choices": [
       {
         "label": "吕布立威，统领董卓旧部",
         "aiWeight": 60,
-        "aiPersonalityWeights": { "hegemony": 20, "brave": 10 },
+        "aiPersonalityWeights": {
+          "hegemony": 20,
+          "brave": 10
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 1, "field": "troops", "value": 1000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 1000
+          }
         ]
       },
       {
         "label": "弃洛阳东走，投奔袁绍",
         "aiWeight": 35,
-        "aiPersonalityWeights": { "cautious": 25 },
+        "aiPersonalityWeights": {
+          "cautious": 25
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 2, "field": "favorability", "value": 10 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": 10
+          }
         ]
       }
     ]
@@ -864,36 +1947,83 @@
     "description": "董卓既死，其部将李傕、郭汜听贾诩之谋，攻陷长安，杀王允，天下更乱。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·董卓传》", "《后汉书·董卓列传》", "《资治通鉴》卷六十一"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 192, "startMonth": 4, "endYear": 192, "endMonth": 12 },
+    "sources": [
+      "《三国志·魏书·董卓传》",
+      "《后汉书·董卓列传》",
+      "《资治通鉴》卷六十一"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 192,
+      "startMonth": 4,
+      "endYear": 192,
+      "endMonth": 12
+    },
     "decisionFactionId": 4,
-    "prerequisiteEventIds": [121],
+    "prerequisiteEventIds": [
+      121
+    ],
     "mutexGroup": "董卓暴政线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 4, "operator": "equals", "value": true }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "卓部将李傕、郭汜欲散兵归乡，贾诩曰：'闻长安议欲尽诛凉州人。'" },
-      { "speakerName": "史官", "text": "傕、汜乃收兵西向长安。" },
-      { "speakerName": "旁白", "text": "傕、汜攻陷长安，杀王允。天子复以傕为车骑将军，傕、汜共秉朝政。" },
-      { "speakerName": "史官", "text": "自是之后，朝廷号令出于傕、汜，天子形同虚设。" }
+      {
+        "speakerName": "史官",
+        "text": "卓部将李傕、郭汜欲散兵归乡，贾诩曰：'闻长安议欲尽诛凉州人。'"
+      },
+      {
+        "speakerName": "史官",
+        "text": "傕、汜乃收兵西向长安。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "傕、汜攻陷长安，杀王允。天子复以傕为车骑将军，傕、汜共秉朝政。"
+      },
+      {
+        "speakerName": "史官",
+        "text": "自是之后，朝廷号令出于傕、汜，天子形同虚设。"
+      }
     ],
     "choices": [
       {
         "label": "傕、汜把持朝政",
         "aiWeight": 70,
-        "aiPersonalityWeights": { "bold": 15 },
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 2, "field": "troops", "value": 500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 2,
+            "field": "troops",
+            "value": 500
+          }
         ]
       },
       {
         "label": "天子密诏曹操勤王",
         "aiWeight": 25,
-        "aiPersonalityWeights": { "chivalry": 15 },
+        "aiPersonalityWeights": {
+          "chivalry": 15
+        },
         "effects": [
-          { "type": "relation", "target": "faction", "targetId": 1, "field": "favorability", "value": 20 }
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 20
+          }
         ]
       }
     ]
@@ -904,40 +2034,2946 @@
     "description": "初平三年，曹操被拜为兖州牧，正式入主兖州，奠定霸业根基。",
     "category": "historical",
     "sourceClass": "official_history",
-    "sources": ["《三国志·魏书·武帝纪》"],
-    "scenarioIds": [2],
-    "dateWindow": { "startYear": 192, "startMonth": 1, "endYear": 192, "endMonth": 12 },
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      2
+    ],
+    "dateWindow": {
+      "startYear": 192,
+      "startMonth": 1,
+      "endYear": 192,
+      "endMonth": 12
+    },
     "decisionFactionId": 1,
     "decisionOfficerId": 1,
-    "prerequisiteEventIds": [115],
+    "prerequisiteEventIds": [
+      115
+    ],
     "mutexGroup": "曹操崛起线",
     "conditions": [
-      { "type": "faction", "field": "isAlive", "targetId": 1, "operator": "equals", "value": true },
-      { "type": "city", "field": "controllerId", "targetId": 7, "operator": "equals", "value": 1 }
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 1
+      }
     ],
     "dialogues": [
-      { "speakerName": "史官", "text": "初平三年，曹操得报允为兖州牧。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "兖州既得，进可图天下，退可守一方。" },
-      { "speakerName": "旁白", "text": "操既入兖州，安抚百姓，练兵聚粮，渐为天下最强诸侯之一。" },
-      { "speakerId": 1, "speakerName": "曹操", "text": "天下大乱，正是英雄用武之时。" }
+      {
+        "speakerName": "史官",
+        "text": "初平三年，曹操得报允为兖州牧。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "兖州既得，进可图天下，退可守一方。"
+      },
+      {
+        "speakerName": "旁白",
+        "text": "操既入兖州，安抚百姓，练兵聚粮，渐为天下最强诸侯之一。"
+      },
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "天下大乱，正是英雄用武之时。"
+      }
     ],
     "choices": [
       {
         "label": "稳固兖州，徐图天下",
         "aiWeight": 65,
-        "aiPersonalityWeights": { "hegemony": 20, "cautious": 15 },
+        "aiPersonalityWeights": {
+          "hegemony": 20,
+          "cautious": 15
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": 500 },
-          { "type": "gold", "target": "city", "targetId": 7, "field": "gold", "value": 2000 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": 500
+          },
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 7,
+            "field": "gold",
+            "value": 2000
+          }
         ]
       },
       {
         "label": "乘势出击，东征西讨",
         "aiWeight": 30,
-        "aiPersonalityWeights": { "brave": 25, "bold": 10 },
+        "aiPersonalityWeights": {
+          "brave": 25,
+          "bold": 10
+        },
         "effects": [
-          { "type": "troops", "target": "city", "targetId": 7, "field": "troops", "value": -500 }
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": -500
+          }
         ]
+      }
+    ]
+  },
+  {
+    "id": 300,
+    "name": "天公将军举义",
+    "description": "张角以「苍天已死，黄天当立」相号召，八州并起，天下响应。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《后汉书·皇甫嵩传》"
+    ],
+    "scenarioIds": [
+      3
+    ],
+    "dateWindow": {
+      "startYear": 184,
+      "startMonth": 2,
+      "endYear": 184,
+      "endMonth": 3
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 40,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 183,
+        "speakerName": "张角",
+        "text": "苍天已死，黄天当立。岁在甲子，天下大吉！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "传檄八州，同日俱举",
+        "aiWeight": 80,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 40,
+            "field": "troops",
+            "value": 2000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20,
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "hegemony": 20
+        }
+      },
+      {
+        "label": "深沟高垒，蓄势待发",
+        "aiWeight": 20,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 44,
+            "field": "gold",
+            "value": 800
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 40
+        }
+      }
+    ]
+  },
+  {
+    "id": 301,
+    "name": "汉室驰檄讨贼",
+    "description": "洛阳震动，汉廷解除党锢，发天下精兵分路进讨。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《后汉书·皇甫嵩传》"
+    ],
+    "scenarioIds": [
+      3
+    ],
+    "dateWindow": {
+      "startYear": 184,
+      "startMonth": 3,
+      "endYear": 184,
+      "endMonth": 4
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 1,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 280,
+        "speakerName": "皇甫嵩",
+        "text": "宜解党锢之禁，发中厩钱马，出兵以讨之。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "解除党锢，悉发精兵",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "hegemony": 15
+        }
+      },
+      {
+        "label": "遣使赦抚，分化贼众",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 280,
+            "field": "loyalty",
+            "value": 5
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 302,
+    "name": "颍川之役",
+    "description": "波才所部黄巾攻略颍川，长社告急，皇甫嵩驰赴前线。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志》"
+    ],
+    "scenarioIds": [
+      3
+    ],
+    "dateWindow": {
+      "startYear": 184,
+      "startMonth": 4,
+      "endYear": 184,
+      "endMonth": 8
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 3,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 280,
+        "speakerName": "皇甫嵩",
+        "text": "贼依草结营，当因风纵火，出其不意破之。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "因风纵火，夜袭长社",
+        "aiWeight": 65,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 2000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        }
+      },
+      {
+        "label": "持重坚壁，俟其自乱",
+        "aiWeight": 35,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 1,
+            "field": "gold",
+            "value": 1000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 40
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      301
+    ]
+  },
+  {
+    "id": 303,
+    "name": "凉州烽火",
+    "description": "北宫伯玉、边章裹挟羌胡叛乱，劫韩遂主兵事，兵锋指向三辅。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《后汉书·董卓传》"
+    ],
+    "scenarioIds": [
+      3
+    ],
+    "dateWindow": {
+      "startYear": 184,
+      "startMonth": 6,
+      "endYear": 184,
+      "endMonth": 12
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 23,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 174,
+        "speakerName": "韩遂",
+        "text": "事已至此，唯有举兵自全。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "联羌攻掠三辅",
+        "aiWeight": 55,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 1,
+            "field": "relation",
+            "value": "war"
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 23,
+            "field": "troops",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20
+        }
+      },
+      {
+        "label": "受抚拜将，暂附汉室",
+        "aiWeight": 45,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 25
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 304,
+    "name": "广宗围城",
+    "description": "张角困守广宗，皇甫嵩筑围凿堑，造云梯以临城。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志》"
+    ],
+    "scenarioIds": [
+      3
+    ],
+    "dateWindow": {
+      "startYear": 184,
+      "startMonth": 8,
+      "endYear": 184,
+      "endMonth": 12
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 40,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 280,
+        "speakerName": "皇甫嵩",
+        "text": "贼众困乏，破之必矣。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "筑围凿堑，昼夜急攻",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 2200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        }
+      },
+      {
+        "label": "缓困待其内变",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 1,
+            "field": "gold",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 35
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      301
+    ]
+  },
+  {
+    "id": 305,
+    "name": "关东举义",
+    "description": "关东州郡同时俱起，众各数万，共推袁绍为盟主讨董卓。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》",
+      "《后汉书·袁绍传》"
+    ],
+    "scenarioIds": [
+      4
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 2,
+      "endYear": 190,
+      "endMonth": 3
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 46,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "董卓逆天无道，今举义兵，天下响应。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "自领盟主，移檄讨董",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 1,
+            "field": "relation",
+            "value": "war"
+          },
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": 15
+          },
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 4,
+            "field": "favorability",
+            "value": 15
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        },
+        "aiIdealWeights": {
+          "fame": 20
+        }
+      },
+      {
+        "label": "虚张盟主之名，按兵自保",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 46,
+            "field": "gold",
+            "value": 1000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 40
+        }
+      }
+    ]
+  },
+  {
+    "id": 306,
+    "name": "焚洛迁都",
+    "description": "关东兵起，董卓胁天子迁都长安，尽徙洛阳人数百万口，焚烧宫庙官府。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《后汉书·董卓传》"
+    ],
+    "scenarioIds": [
+      4
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 3,
+      "endYear": 190,
+      "endMonth": 4
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 1,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 112,
+        "speakerName": "董卓",
+        "text": "关东兵盛，徙都长安以避之。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "徙天子都长安",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "capital",
+            "target": "faction",
+            "targetId": 1,
+            "field": "capitalCityId",
+            "value": 2
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 2,
+            "field": "troops",
+            "value": 2000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "留守雒阳，力战关东",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 2200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20
+        }
+      }
+    ]
+  },
+  {
+    "id": 307,
+    "name": "荥阳追击",
+    "description": "曹操引兵西追董卓，至荥阳汴水，遇卓将徐荣，战不利。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志》"
+    ],
+    "scenarioIds": [
+      4
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 3,
+      "endYear": 190,
+      "endMonth": 5
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 7,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "举义兵以诛暴乱，今大众已合，诸君何疑！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "孤军西追，以死继之",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 7,
+            "field": "troops",
+            "value": -600
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 30
+        }
+      },
+      {
+        "label": "还屯陈留，养锐图后",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 7,
+            "field": "gold",
+            "value": 900
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 40
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      305
+    ]
+  },
+  {
+    "id": 308,
+    "name": "阳人之捷",
+    "description": "孙坚与董卓军战于阳人，大破之，枭其都督华雄。",
+    "category": "historical",
+    "sourceClass": "annotated_history",
+    "sources": [
+      "《三国志·吴书·孙破虏讨逆传》"
+    ],
+    "scenarioIds": [
+      4
+    ],
+    "dateWindow": {
+      "startYear": 190,
+      "startMonth": 10,
+      "endYear": 191,
+      "endMonth": 2
+    },
+    "decisionFactionId": 4,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 64,
+        "operator": "equals",
+        "value": 4
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 114,
+        "speakerName": "孙坚",
+        "text": "贼势已沮，宜乘胜进兵洛阳。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "乘胜进逼洛阳",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 1,
+            "field": "relation",
+            "value": "war"
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 64,
+            "field": "troops",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        }
+      },
+      {
+        "label": "整军实，缓进兵",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 64,
+            "field": "gold",
+            "value": 800
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 309,
+    "name": "盟散内讧",
+    "description": "义兵既合而各怀异计，袁术扣减军粮，盟约渐解。",
+    "category": "historical",
+    "sourceClass": "annotated_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》裴注引《英雄记》"
+    ],
+    "scenarioIds": [
+      4
+    ],
+    "dateWindow": {
+      "startYear": 191,
+      "startMonth": 1,
+      "endYear": 191,
+      "endMonth": 8
+    },
+    "decisionFactionId": 5,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 5,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 13,
+        "operator": "equals",
+        "value": 5
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 181,
+        "speakerName": "袁术",
+        "text": "盟军各拥部众，粮秣当从权裁节。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "扣粮自肥，阴图南阳",
+        "aiWeight": 55,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 13,
+            "field": "troops",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "续供军粮，共讨国贼",
+        "aiWeight": 45,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": 15
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 20
+        },
+        "aiIdealWeights": {
+          "fame": 15
+        }
+      }
+    ]
+  },
+  {
+    "id": 310,
+    "name": "濮阳鏖兵",
+    "description": "吕布屯濮阳与曹操相持百余日，蝗虫大起，百姓相食，两家粮尽而止。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      5
+    ],
+    "dateWindow": {
+      "startYear": 194,
+      "startMonth": 3,
+      "endYear": 194,
+      "endMonth": 9
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 51,
+        "operator": "equals",
+        "value": 2
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 8,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "布得野而不得城，且收麦恤众，再图后举。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "反攻濮阳，力战复兖",
+        "aiWeight": 65,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 51,
+            "field": "troops",
+            "value": 1800
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20
+        }
+      },
+      {
+        "label": "收麦坚壁，缓图再举",
+        "aiWeight": 35,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 51,
+            "field": "gold",
+            "value": 1300
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 35
+        }
+      }
+    ]
+  },
+  {
+    "id": 311,
+    "name": "曹嵩之难",
+    "description": "曹操父曹嵩避难琅琊，过徐州为陶谦部将所杀。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》裴注"
+    ],
+    "scenarioIds": [
+      5
+    ],
+    "dateWindow": {
+      "startYear": 194,
+      "startMonth": 6,
+      "endYear": 194,
+      "endMonth": 10
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 9,
+        "operator": "equals",
+        "value": 6
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "嵩吾父也，此仇不报，何颜立于天下！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "尽起兖州之兵复仇",
+        "aiWeight": 80,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 6,
+            "field": "relation",
+            "value": "war"
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 30
+        },
+        "aiIdealWeights": {
+          "hegemony": 15
+        }
+      },
+      {
+        "label": "忍愤兴诉，移檄州郡",
+        "aiWeight": 20,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 6,
+            "field": "favorability",
+            "value": -15
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 312,
+    "name": "三让徐州",
+    "description": "陶谦病笃，谓别驾糜竺曰：非刘备不能安此州，遂以州托之。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·先主传》"
+    ],
+    "scenarioIds": [
+      5
+    ],
+    "dateWindow": {
+      "startYear": 194,
+      "startMonth": 10,
+      "endYear": 195,
+      "endMonth": 3
+    },
+    "decisionFactionId": 6,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 6,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 9,
+        "operator": "equals",
+        "value": 6
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 250,
+        "speakerName": "陶谦",
+        "text": "非刘备不能安此州也。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "举州托于刘备",
+        "aiWeight": 65,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 2,
+            "field": "loyalty",
+            "value": 15
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 20
+        },
+        "aiIdealWeights": {
+          "fame": 20
+        }
+      },
+      {
+        "label": "传位长子，量力自守",
+        "aiWeight": 35,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 9,
+            "field": "troops",
+            "value": 900
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 313,
+    "name": "关中大乱",
+    "description": "李傕、郭汜相攻于长安，天子为质于营中，公卿百官随从死者不可胜数。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《后汉书·董卓传》"
+    ],
+    "scenarioIds": [
+      5
+    ],
+    "dateWindow": {
+      "startYear": 195,
+      "startMonth": 3,
+      "endYear": 195,
+      "endMonth": 8
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 2,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 177,
+        "speakerName": "李傕",
+        "text": "郭阿多叛公矣！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "纵兵相攻，两不相下",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 2,
+            "field": "troops",
+            "value": -1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20
+        }
+      },
+      {
+        "label": "讲和罢兵，共奉天子",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 2,
+            "field": "gold",
+            "value": 1000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 314,
+    "name": "孙郎渡江",
+    "description": "孙策说袁术，愿助平江东以报父仇，术以旧部千余人与之。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·孙破虏讨逆传》"
+    ],
+    "scenarioIds": [
+      5
+    ],
+    "dateWindow": {
+      "startYear": 195,
+      "startMonth": 5,
+      "endYear": 195,
+      "endMonth": 12
+    },
+    "decisionFactionId": 5,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 5,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 18,
+        "operator": "equals",
+        "value": 5
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 105,
+        "speakerName": "孙策",
+        "text": "愿助将军平定江东，以雪父仇。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "假兵渡江，平定江东",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 18,
+            "field": "troops",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        }
+      },
+      {
+        "label": "留策自随，不假兵柄",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 105,
+            "field": "loyalty",
+            "value": -10
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 35
+        }
+      }
+    ]
+  },
+  {
+    "id": 315,
+    "name": "白马延津",
+    "description": "袁绍遣颜良攻东郡太守刘延于白马，曹操北救，官渡之势自此始。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      6
+    ],
+    "dateWindow": {
+      "startYear": 200,
+      "startMonth": 3,
+      "endYear": 200,
+      "endMonth": 6
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 5,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "南向以争天下，先取白马。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "遣良围白马",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "并力缓进，步步为营",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 5,
+            "field": "gold",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 316,
+    "name": "江东变起",
+    "description": "孙策遇刺于丹徒，创甚，呼弟孙权佩以印绶，托以后事。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·张昭传》",
+      "《三国志·吴书·孙破虏讨逆传》"
+    ],
+    "scenarioIds": [
+      6
+    ],
+    "dateWindow": {
+      "startYear": 200,
+      "startMonth": 4,
+      "endYear": 200,
+      "endMonth": 6
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 16,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 105,
+        "speakerName": "孙策",
+        "text": "举江东之众，决机于两陈之间，与天下争衡，卿不如我；举贤任能，各尽其心，以保江东，我不如卿。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "以弟权继领部众",
+        "aiWeight": 80,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 11,
+            "field": "loyalty",
+            "value": 10
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 20
+        },
+        "aiIdealWeights": {
+          "fame": 15
+        }
+      },
+      {
+        "label": "内事托张昭，外托周瑜",
+        "aiWeight": 20,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 149,
+            "field": "loyalty",
+            "value": 10
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      }
+    ]
+  },
+  {
+    "id": 317,
+    "name": "乌巢焚粮",
+    "description": "袁绍谋士许攸来奔，献烧乌巢之策，曹操亲率轻兵夜袭，大破袁军。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      6
+    ],
+    "dateWindow": {
+      "startYear": 200,
+      "startMonth": 9,
+      "endYear": 200,
+      "endMonth": 11
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 3,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "袁氏失此天授，破之必矣！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "亲率轻兵，夜袭乌巢",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 3,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 30
+        },
+        "aiIdealWeights": {
+          "hegemony": 20
+        }
+      },
+      {
+        "label": "坚垒官渡，待其自变",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 3,
+            "field": "gold",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 318,
+    "name": "汝南扰局",
+    "description": "刘备奉袁绍命，与刘辟等略汝南，扰曹操后方。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·先主传》"
+    ],
+    "scenarioIds": [
+      6
+    ],
+    "dateWindow": {
+      "startYear": 200,
+      "startMonth": 8,
+      "endYear": 201,
+      "endMonth": 3
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 5,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "遣玄德南徇，可分曹氏之势。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "遣备徇汝南，扰曹之后",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "并力官渡，正面决胜",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 1000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      }
+    ]
+  },
+  {
+    "id": 319,
+    "name": "仓亭余烬",
+    "description": "官渡既败，袁绍郁愤呕血，复收散卒攻曹操于仓亭，再不利。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志》"
+    ],
+    "scenarioIds": [
+      6
+    ],
+    "dateWindow": {
+      "startYear": 201,
+      "startMonth": 8,
+      "endYear": 202,
+      "endMonth": 4
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 5,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 113,
+        "speakerName": "袁绍",
+        "text": "吾自军中积累，未尝如官渡之败！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "收残兵，再图南向",
+        "aiWeight": 55,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 1400
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "平叛安后，训卒养民",
+        "aiWeight": 45,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 5,
+            "field": "gold",
+            "value": 1400
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      317
+    ]
+  },
+  {
+    "id": 320,
+    "name": "南征之檄",
+    "description": "曹操罢三公自为丞相，大治水军于玄武池，移檄南征荆州。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·武帝纪》"
+    ],
+    "scenarioIds": [
+      7
+    ],
+    "dateWindow": {
+      "startYear": 208,
+      "startMonth": 6,
+      "endYear": 208,
+      "endMonth": 9
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 5,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 1,
+        "speakerName": "曹操",
+        "text": "今治水军八十万众，方与将军会猎于吴。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "大治水军，南征荆州",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 5,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        },
+        "aiIdealWeights": {
+          "hegemony": 20
+        }
+      },
+      {
+        "label": "先定关西，缓图江南",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 6,
+            "field": "relation",
+            "value": "war"
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 321,
+    "name": "刘表病笃",
+    "description": "刘表病笃，荆州内二子争立，外惧曹氏之逼。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·刘表传》"
+    ],
+    "scenarioIds": [
+      7
+    ],
+    "dateWindow": {
+      "startYear": 208,
+      "startMonth": 7,
+      "endYear": 208,
+      "endMonth": 9
+    },
+    "decisionFactionId": 4,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 4,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 15,
+        "operator": "equals",
+        "value": 4
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 167,
+        "speakerName": "刘表",
+        "text": "荆州之地，托付何人方保无虞？"
+      }
+    ],
+    "choices": [
+      {
+        "label": "属琮以州，附曹自保",
+        "aiWeight": 55,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 1,
+            "field": "favorability",
+            "value": 25
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 35
+        }
+      },
+      {
+        "label": "以州托刘备，共御北敌",
+        "aiWeight": 45,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 2,
+            "field": "loyalty",
+            "value": 10
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 20
+        },
+        "aiIdealWeights": {
+          "fame": 15
+        }
+      }
+    ]
+  },
+  {
+    "id": 322,
+    "name": "当阳之败",
+    "description": "曹操以轻骑追刘备，一日一夜行三百余里，及于当阳长坂。",
+    "category": "historical",
+    "sourceClass": "annotated_history",
+    "sources": [
+      "《三国志·蜀书·先主传》"
+    ],
+    "scenarioIds": [
+      7
+    ],
+    "dateWindow": {
+      "startYear": 208,
+      "startMonth": 9,
+      "endYear": 208,
+      "endMonth": 10
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 60,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 10,
+        "speakerName": "赵云",
+        "text": "主公且上马，云愿死战护送家眷！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "斜趋汉津，进屯夏口",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 60,
+            "field": "troops",
+            "value": 900
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      },
+      {
+        "label": "收兵死战，不弃百姓",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 6,
+            "field": "loyalty",
+            "value": 8
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        },
+        "aiIdealWeights": {
+          "fame": 20
+        }
+      }
+    ]
+  },
+  {
+    "id": 323,
+    "name": "柴桑定盟",
+    "description": "诸葛亮随鲁肃见孙权于柴桑，陈联刘抗曹之势，孙权决计破操。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·诸葛亮传》"
+    ],
+    "scenarioIds": [
+      7
+    ],
+    "dateWindow": {
+      "startYear": 208,
+      "startMonth": 10,
+      "endYear": 208,
+      "endMonth": 11
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 60,
+        "operator": "equals",
+        "value": 2
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 17,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "将军能与豫州协力，破曹军必矣——鼎足之形成矣。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "结孙氏，共抗曹操",
+        "aiWeight": 80,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": 40
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "fame": 20
+        }
+      },
+      {
+        "label": "引兵自图荆南",
+        "aiWeight": 20,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": -20
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 324,
+    "name": "火烧赤壁",
+    "description": "黄盖献火攻之策，先书诈降，乘东南风纵火，尽烧北军船舰，曹操北还。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·周瑜传》"
+    ],
+    "scenarioIds": [
+      7
+    ],
+    "dateWindow": {
+      "startYear": 208,
+      "startMonth": 11,
+      "endYear": 209,
+      "endMonth": 1
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 17,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 144,
+        "speakerName": "黄盖",
+        "text": "操军方连船舰，首尾相接，可烧而走也。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "用火攻，尽烧北船",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 1,
+            "field": "relation",
+            "value": "war"
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        }
+      },
+      {
+        "label": "阻江为营，持久拒之",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 325,
+    "name": "进位汉中王",
+    "description": "群下上表推刘备为汉中王，设坛场于沔阳，陈兵出境，拜关羽为前将军假节钺。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·先主传》"
+    ],
+    "scenarioIds": [
+      8
+    ],
+    "dateWindow": {
+      "startYear": 219,
+      "startMonth": 9,
+      "endYear": 219,
+      "endMonth": 10
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 19,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 2,
+        "speakerName": "刘备",
+        "text": "备不得已，顺众议进位，以图讨逆。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "设坛沔水，进位汉中王",
+        "aiWeight": 80,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 19,
+            "field": "gold",
+            "value": 2000
+          },
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 6,
+            "field": "loyalty",
+            "value": 5
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "fame": 20
+        }
+      },
+      {
+        "label": "上表辞让，以卑自守",
+        "aiWeight": 20,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 4,
+            "field": "loyalty",
+            "value": 5
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      }
+    ]
+  },
+  {
+    "id": 326,
+    "name": "水淹七军",
+    "description": "关羽攻樊，汉水泛涨，于禁七军皆没，禁降羽，庞德不屈而死，羽威震华夏。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·关羽传》"
+    ],
+    "scenarioIds": [
+      8
+    ],
+    "dateWindow": {
+      "startYear": 219,
+      "startMonth": 9,
+      "endYear": 219,
+      "endMonth": 11
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 14,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 6,
+        "speakerName": "关羽",
+        "text": "秋霖大水，天助我也——乘势攻樊！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "乘汉水泛涨，攻樊执禁",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 14,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 25
+        }
+      },
+      {
+        "label": "顿兵坚城，缓图万全",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 14,
+            "field": "gold",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 327,
+    "name": "白衣渡江",
+    "description": "吕蒙称病还建业，陆逊代之卑辞自抑；蒙潜军白衣摇橹，昼夜兼行袭取江陵。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·吕蒙传》"
+    ],
+    "scenarioIds": [
+      8
+    ],
+    "dateWindow": {
+      "startYear": 219,
+      "startMonth": 11,
+      "endYear": 220,
+      "endMonth": 1
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 17,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 142,
+        "speakerName": "吕蒙",
+        "text": "羽意已骄，可乘虚而入——将士皆作商人服，昼夜西上。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "白衣摇橹，袭取江陵",
+        "aiWeight": 75,
+        "effects": [
+          {
+            "type": "war",
+            "target": "faction",
+            "targetId": 2,
+            "field": "relation",
+            "value": "war"
+          },
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 2500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        }
+      },
+      {
+        "label": "罢兵修好，共分荆州",
+        "aiWeight": 25,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": 25
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 328,
+    "name": "麦城之困",
+    "description": "江陵既失，关羽进退失据，西还麦城，权遣将断其走道。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志》"
+    ],
+    "scenarioIds": [
+      8
+    ],
+    "dateWindow": {
+      "startYear": 219,
+      "startMonth": 12,
+      "endYear": 220,
+      "endMonth": 2
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 14,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 6,
+        "speakerName": "关羽",
+        "text": "虎女焉能再事小人！宁死不降。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "敛兵西保，再图荆州",
+        "aiWeight": 55,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 19,
+            "field": "gold",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      },
+      {
+        "label": "婴城死守，以待援兵",
+        "aiWeight": 45,
+        "effects": [
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 6,
+            "field": "loyalty",
+            "value": 8
+          }
+        ],
+        "aiPersonalityWeights": {
+          "brave": 20
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      327
+    ]
+  },
+  {
+    "id": 329,
+    "name": "受禅台",
+    "description": "曹丕承父基业，汉献帝禅位，丕即皇帝位，国号大魏，汉亡。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·魏书·文帝纪》"
+    ],
+    "scenarioIds": [
+      8
+    ],
+    "dateWindow": {
+      "startYear": 220,
+      "startMonth": 10,
+      "endYear": 220,
+      "endMonth": 12
+    },
+    "decisionFactionId": 1,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 1,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 1,
+        "operator": "equals",
+        "value": 1
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 252,
+        "speakerName": "曹丕",
+        "text": "舜禹之事，吾知之矣。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "受禅代汉，建号大魏",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 2,
+            "field": "favorability",
+            "value": -40
+          },
+          {
+            "type": "relation",
+            "target": "faction",
+            "targetId": 3,
+            "field": "favorability",
+            "value": -20
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        },
+        "aiIdealWeights": {
+          "hegemony": 25
+        }
+      },
+      {
+        "label": "谨守臣节，奉汉如故",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 1,
+            "field": "troops",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 330,
+    "name": "屯田渭滨",
+    "description": "诸葛亮出斜谷屯五丈原，分兵屯田于渭滨与魏民杂处，为久驻之基。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·蜀书·诸葛亮传》"
+    ],
+    "scenarioIds": [
+      9
+    ],
+    "dateWindow": {
+      "startYear": 234,
+      "startMonth": 3,
+      "endYear": 234,
+      "endMonth": 5
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 20,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "亮欲为久驻之计，耕者杂于渭滨居民之间。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "分兵屯田，为久驻之基",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "develop",
+            "target": "city",
+            "targetId": 20,
+            "field": "farm",
+            "value": 10
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      },
+      {
+        "label": "恃众求战，先声夺人",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 20,
+            "field": "troops",
+            "value": 1800
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        }
+      }
+    ]
+  },
+  {
+    "id": 331,
+    "name": "合肥新城之围",
+    "description": "孙权应蜀之约，亲率大军号称十万攻合肥新城，东西并进。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·吴主传》"
+    ],
+    "scenarioIds": [
+      9
+    ],
+    "dateWindow": {
+      "startYear": 234,
+      "startMonth": 5,
+      "endYear": 234,
+      "endMonth": 8
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 17,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 3,
+        "speakerName": "孙权",
+        "text": "蜀约既定，兵不可虚出——北上合肥！"
+      }
+    ],
+    "choices": [
+      {
+        "label": "亲率大军，应约北上",
+        "aiWeight": 65,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 2200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
+      },
+      {
+        "label": "声东击西，观衅而止",
+        "aiWeight": 35,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 17,
+            "field": "gold",
+            "value": 1500
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ]
+  },
+  {
+    "id": 332,
+    "name": "巾帼之遗",
+    "description": "诸葛亮数挑战，司马懿不出，乃遗巾帼妇人之饰以激之。",
+    "category": "historical",
+    "sourceClass": "annotated_history",
+    "sources": [
+      "《三国志·蜀书·诸葛亮传》裴注引《魏氏春秋》"
+    ],
+    "scenarioIds": [
+      9
+    ],
+    "dateWindow": {
+      "startYear": 234,
+      "startMonth": 6,
+      "endYear": 234,
+      "endMonth": 9
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 20,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "懿甘受巾帼之辱，其志不可小觑。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "遗巾帼以激其战",
+        "aiWeight": 60,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 20,
+            "field": "troops",
+            "value": 900
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 20
+        }
+      },
+      {
+        "label": "分兵屯田，坚忍持重",
+        "aiWeight": 40,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 19,
+            "field": "gold",
+            "value": 900
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      330
+    ]
+  },
+  {
+    "id": 333,
+    "name": "星陨五丈原",
+    "description": "相持百余日，诸葛亮病笃，卒于军中，年五十四；蜀军秘不发丧，整军而退。",
+    "category": "historical",
+    "sourceClass": "annotated_history",
+    "sources": [
+      "《三国志·蜀书·诸葛亮传》"
+    ],
+    "scenarioIds": [
+      9
+    ],
+    "dateWindow": {
+      "startYear": 234,
+      "startMonth": 8,
+      "endYear": 234,
+      "endMonth": 11
+    },
+    "decisionFactionId": 2,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 2,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 20,
+        "operator": "equals",
+        "value": 2
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 4,
+        "speakerName": "诸葛亮",
+        "text": "悠悠苍天，曷此其极……愿陛下亲贤臣，远小人，则汉室之隆，犹可计日而待。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "举哀徐退，整军还汉",
+        "aiWeight": 70,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 20,
+            "field": "troops",
+            "value": 1200
+          },
+          {
+            "type": "loyalty",
+            "target": "officer",
+            "targetId": 130,
+            "field": "loyalty",
+            "value": 5
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 25
+        }
+      },
+      {
+        "label": "秘不发丧，缓退断后",
+        "aiWeight": 30,
+        "effects": [
+          {
+            "type": "gold",
+            "target": "city",
+            "targetId": 19,
+            "field": "gold",
+            "value": 1000
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      }
+    ],
+    "prerequisiteEventIds": [
+      330
+    ]
+  },
+  {
+    "id": 334,
+    "name": "吴师退屯",
+    "description": "魏将拒守合肥新城，吴军士卒多病，权遂引军退。",
+    "category": "historical",
+    "sourceClass": "official_history",
+    "sources": [
+      "《三国志·吴书·吴主传》"
+    ],
+    "scenarioIds": [
+      9
+    ],
+    "dateWindow": {
+      "startYear": 234,
+      "startMonth": 7,
+      "endYear": 234,
+      "endMonth": 10
+    },
+    "decisionFactionId": 3,
+    "conditions": [
+      {
+        "type": "faction",
+        "field": "isAlive",
+        "targetId": 3,
+        "operator": "equals",
+        "value": true
+      },
+      {
+        "type": "city",
+        "field": "controllerId",
+        "targetId": 17,
+        "operator": "equals",
+        "value": 3
+      }
+    ],
+    "dialogues": [
+      {
+        "speakerId": 3,
+        "speakerName": "孙权",
+        "text": "新城未拔，士卒多病——全师而退，来年再举。"
+      }
+    ],
+    "choices": [
+      {
+        "label": "全师而退，保境息民",
+        "aiWeight": 65,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 1200
+          }
+        ],
+        "aiPersonalityWeights": {
+          "cautious": 30
+        }
+      },
+      {
+        "label": "留兵再举，志在必得",
+        "aiWeight": 35,
+        "effects": [
+          {
+            "type": "troops",
+            "target": "city",
+            "targetId": 17,
+            "field": "troops",
+            "value": 800
+          }
+        ],
+        "aiPersonalityWeights": {
+          "bold": 15
+        }
       }
     ]
   }

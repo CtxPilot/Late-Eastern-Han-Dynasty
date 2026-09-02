@@ -778,7 +778,13 @@
         "preferredKingdomName": "凉"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      300,
+      301,
+      302,
+      303,
+      304
+    ],
     "availableOfficerIds": [
       280,
       281,
@@ -1041,7 +1047,13 @@
         "preferredKingdomName": "楚"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      305,
+      306,
+      307,
+      308,
+      309
+    ],
     "availableOfficerIds": [
       112,
       5,
@@ -1572,7 +1584,13 @@
         "preferredKingdomName": "楚"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      310,
+      311,
+      312,
+      313,
+      314
+    ],
     "availableOfficerIds": [
       5,
       104,
@@ -2095,7 +2113,13 @@
         "preferredKingdomName": "凉"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      315,
+      316,
+      317,
+      318,
+      319
+    ],
     "availableOfficerIds": [
       113,
       159,
@@ -2118,6 +2142,7 @@
       100,
       105,
       11,
+      149,
       141,
       142,
       144,
@@ -2372,6 +2397,12 @@
           "cityId": 16,
           "factionId": 3,
           "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 149,
+          "cityId": 16,
+          "factionId": 3,
           "loyalty": 85
         },
         {
@@ -2659,7 +2690,13 @@
         "preferredKingdomName": "凉"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      320,
+      321,
+      322,
+      323,
+      324
+    ],
     "availableOfficerIds": [
       1,
       252,
@@ -3221,7 +3258,13 @@
         "preferredKingdomName": "吴"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      325,
+      326,
+      327,
+      328,
+      329
+    ],
     "availableOfficerIds": [
       1,
       252,
@@ -3664,7 +3707,13 @@
         "preferredKingdomName": "吴"
       }
     ],
-    "eventIds": [],
+    "eventIds": [
+      330,
+      331,
+      332,
+      333,
+      334
+    ],
     "availableOfficerIds": [
       253,
       12,

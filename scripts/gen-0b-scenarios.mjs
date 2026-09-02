@@ -152,7 +152,7 @@ const NEW_SCENARIOS = [
         officers: [['曹操', 3, 'grandGeneral', 100], ['关羽', 3, 'general'], ['张辽', 3, 'general'], ['徐晃', 3, 'general'], ['于禁', 3, 'general'], ['乐进', 3, 'captain'], ['荀彧', 3], ['荀攸', 3], ['郭嘉', 3], ['程昱', 3], ['许褚', 3, 'captain']] },
       { name: '江东孙策', color: '#b0483c', ruler: '孙策', capital: 16, mode: 'territorial', hq: '吴郡将军府', kingdom: '吴',
         note: '小霸王新定江东；四月遇刺，孙权继业由引擎寿元机制自然呈现。', cities: [16, 17, 65, 66],
-        officers: [['孙策', 16, 'grandGeneral', 100], ['周瑜', 16, 'general'], ['鲁肃', 16], ['吕蒙', 16, 'captain'], ['黄盖', 16, 'general'], ['韩当', 16, 'captain'], ['周泰', 16, 'captain']] },
+        officers: [['孙策', 16, 'grandGeneral', 100], ['周瑜', 16, 'general'], ['张昭', 16], ['鲁肃', 16], ['吕蒙', 16, 'captain'], ['黄盖', 16, 'general'], ['韩当', 16, 'captain'], ['周泰', 16, 'captain']] },
       { name: '荆州刘表', color: '#8a3d6e', ruler: '刘表', capital: 15, mode: 'territorial', hq: '襄阳州治', kingdom: '楚',
         note: '持两端不助南北。', cities: [14, 15, 60, 61, 62, 63, 64],
         officers: [['刘表', 15, 'grandGeneral', 100]] },
