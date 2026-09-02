@@ -1,3 +1,13 @@
+## 2026-09-02 — Session 424 · 0-B 数据扩容三批（P0B-07 cities 30→106 + P0B-08 formations 7→27 + P0B-09 units 9→24）
+
+- Phase：**Phase 0-B 数据扩容**；Session 423 规格轮（docs/43）落盘后进入数据扩容。**文档滞后说明**：本会话代码与回归已提交（`19d75e9`、`bef2563`），但 10-progress/HANDOFF 双写未完成，由 Session 425 依据提交记录与实测复核补录。
+- **P0B-07 cities.json 30→106**（`19d75e9`）：`docs/08` 真源修订——106 = 13州 **105 郡国治所 + 襄阳特例节点**（刘表治所重镇，非郡国，沿用 0-A 节点；战场域归南郡模板，不单设模板）；`GAME_SEAT_GEO` 补 76 郡国治所经纬度（取 SEATS 表），下邳国治所修正至睢宁古邳镇（原值误标徐州市区、与彭城重叠）；cities.json 新增 id 31~106（河南~交州 76 郡国，含 tier/人口/开发/县数/纬度带/可征兵种）；`CITY_ROAD_EDGES` 扩至 ~170 边（函谷/陇关/河西走廊/居延道/秦直道/居庸关/五尺道/灵渠等），全图单连通+全城覆盖测试；validate-data expected 106；verify-save-campaign 30→106 断言更新；turn-golden 金样重举（终态摘要含 106 城、逐月指纹不变）。
+- **P0B-08 formations 7→27**（`bef2563`）：补 12 陆阵（鱼鳞/偃月/长蛇/衡轭/疏阵/数阵/钩形/玄襄/车悬/八卦/云阵，`05 §4.5.1` 点值 + §4.6 极效果 + §4.4 科技树前置）+ 9 水阵（横/纵/雁回/包围/火攻/撞角/连环/突袭/水龙，三层前置 + A 适性门禁）；id 0..26 齐。
+- **P0B-09 units 9→24**（`bef2563`）：+弩兵/骑射/攻城器械 + 12 特殊兵种（虎豹骑/青州兵/陷阵营/白马义从/西凉铁骑/丹阳/解烦/白耳/无当飞军/藤甲/象兵/黄巾），含 traits/克制/征兵需求(factionTag)/五级战法；08/09 规模口径 21+→24。
+- **验证（Session 425 实测复核全绿）**：validate-data（106/27/24 全过）、turn-golden **3/3**、campaign **71/71**、ai-military-rng **38/38**、turn-cadence **28/28**、shared **472/472**、server **3/3**；提交声明另含 s420 36 / s421 15 / s422 13 / save-game-state 10 / client 71。
+- 文档：docs/08（106 记录、24 兵种、105 口径说明）、docs/09（P0B-09 24 兵种口径）已随提交同步；**10-progress/HANDOFF/12/35 由 Session 425 补同步**。
+- 边界：0-B 剩余数据类未动（P0B-06 officers 1000+、P0B-10 items 165、P0B-11 females 90+、P0B-12 children 50+、P0B-13 skills 149、P0B-14 scenarios 首批 7 剧本、P0B-15 events 全量）；docs/43 S1 围城合流实装仍待用户批准 D1~D12。
+
 ## 2026-09-01 — Session 423 · 多军协同战斗设计规格（围城合流 + 六角多军，纯设计轮）
 
 - Phase：**S10 多军团长债·规格轮**；Session 422 委任三片收官后，HANDOFF「下一步」唯一可由 agent 推进项即「六角战场多军协同另行切片」（docs/42 §九既定边界）。沿 Session 419 先例：先规格、D1~D12 待批准、批准前不写实装代码。
@@ -1388,9 +1398,9 @@
 | ID | 任务 | 状态 | 备注 |
 |:--:|------|:--:|------|
 | P0B-06 | officers.json（全量 1000+武将） | [ ] | 脚本生成+重点人物人工校对 |
-| P0B-07 | cities.json（全量 105城） | [ ] | 坐标取自 cities-geo-reference；name 用治所 |
-| P0B-08 | formations.json（全量 27阵型：18陆+9水） | [ ] | 0-B 暂停 |
-| P0B-09 | units.json（全量 21兵种） | [ ] | — |
+| P0B-07 | cities.json（全量 106城：105郡国+襄阳） | [x] | Session 424：106 记录 + 官道网 ~170 边 + GAME_SEAT_GEO 补经纬 |
+| P0B-08 | formations.json（全量 27阵型：18陆+9水） | [x] | Session 424：id 0..26 齐 |
+| P0B-09 | units.json（全量 24兵种） | [x] | Session 424：8陆+攻城+3水+12特殊 |
 | P0B-10 | items.json（全量 165宝物） | [ ] | — |
 | P0B-11 | females.json（全量 90+女性） | [ ] | — |
 | P0B-12 | children.json（全量 50+子女） | [ ] | — |

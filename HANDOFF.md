@@ -9,12 +9,22 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 423**（多军协同战斗设计规格：围城合流 S1 + 六角多军 S2，纯设计轮） |
-| 阶段 | Phase 0-A + Demo 玩法环 + **离线可玩（Pages 默认）**；**暂缓 0-B**；系统数 **27 大** |
-| 代码最新 | Session 422（`runDelegationMilitary` + `tickDelegationReports`/`pruneDelegationRegions` 双插点 + AI `maxFieldArmies` 动态化 + 季报卡；Session 421/422 改动已复核全绿并提交 `5fd58c9`） |
-| 文档最新 | **`docs/43` 多军协同战斗规格 v1.0（Session 423 落盘，D1~D12 推荐值待批准）**；docs/42 v1.3；10/HANDOFF 双写 |
-| 本交接用途 | docs/43 待用户批准（或改判 D1~D12）→ 批准后按 §七进入 S1 实装；0-B 闸门实测（`41` §三）仍待真人游玩 |
-| 下一步 | ①docs/43 D1~D12 批准 → S1 围城合流自动战实装（`verify-s423-siege-merge`；若金样场景含同城多军围城需删重举）；②0-B 闸门实测（须真人游玩记录主观感受，不可由 agent 代跑） |
+| 会话 | **Session 425**（补录 Session 424 双写 + 0-B 数据扩容续批判定） |
+| 阶段 | Phase 0-B **数据扩容进行中**（Session 424 起：cities 106 / formations 27 / units 24 已落地）+ 玩法环/离线可玩保持；系统数 **27 大** |
+| 代码最新 | Session 424（0-B 数据扩容三批：P0B-07 cities 30→106 + 官道网、P0B-08 formations 7→27、P0B-09 units 9→24；已提交 `19d75e9` `bef2563`，Session 425 实测复核全绿） |
+| 文档最新 | **Session 425 补录 Session 424 双写**（10-progress 会话日志 + P0B 表勾选 + 09 行同步）；docs/43 多军协同规格 v1.0 仍待批准；docs/08 已随 424 同步 |
+| 本交接用途 | Session 424 代码已落盘但双写滞后 → Session 425 补录；此后续作方向：0-B 数据续批（P0B-10 items 等）或 docs/43 S1 实装 |
+| 下一步 | ①0-B 数据扩容续批（下一候选 **P0B-10 items.json 165 宝物**，需先核 08 全量清单）；②docs/43 D1~D12 批准 → S1 围城合流实装；③0-B 闸门实测仍待真人游玩（`41` §三） |
+
+### Session 424 交接要点（Session 425 补录）
+
+- **0-B 数据扩容三批落地**（提交 `19d75e9` + `bef2563`，author CtxPilot 09-02 00:12/00:23；Session 425 依提交记录与实测复核补录文档，原会话未做 10/HANDOFF 双写）。
+- **P0B-07 cities 30→106**：`docs/08` 真源修订 106 = 105 郡国治所 + 襄阳特例节点（刘表治所重镇、非郡国，战场域归南郡模板）；`GAME_SEAT_GEO` 补 76 治所经纬（下邳国治所修正至睢宁古邳镇）；cities.json 新增 id 31~106；`CITY_ROAD_EDGES` 扩 ~170 边（函谷/陇关/河西走廊/居延道/秦直道/居庸关/五尺道/灵渠等）+ 全图单连通/全城覆盖测试；validate-data expected 106；verify-save-campaign 断言 30→106；**turn-golden 金样重举**（终态摘要含 106 城、逐月指纹不变）。
+- **P0B-08 formations 7→27**：+12 陆阵（鱼鳞/偃月/长蛇/衡轭/疏阵/数阵/钩形/玄襄/车悬/八卦/云阵）+ 9 水阵（横/纵/雁回/包围/火攻/撞角/连环/突袭/水龙），id 0..26 齐。
+- **P0B-09 units 9→24**：+弩/骑射/攻城器械 + 12 特殊（虎豹骑/青州兵/陷阵营/白马义从/西凉铁骑/丹阳/解烦/白耳/无当飞军/藤甲/象兵/黄巾），含 traits/克制/征兵需求(factionTag)/五级战法。
+- **Session 425 实测复核**：validate-data、turn-golden **3/3**、campaign **71**、ai-military-rng **38**、turn-cadence **28**、shared **472**、server **3** 全绿。
+- 文档：08/09 已随提交同步（Session 424 时点）；10-progress 会话日志 + P0B 表勾选 + 09 P0B-07 行 105→106 由 Session 425 补录。
+- 边界：P0B-06/10/11/12/13/14/15 未动；docs/43 S1 仍待批准；0-B 闸门实测仍待真人游玩。
 
 ### Session 423 交接要点
 
