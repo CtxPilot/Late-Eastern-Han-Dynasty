@@ -210,6 +210,11 @@ export function unequipItem(officerId: number, itemId: number): Promise<GameStat
 export function grantTreasure(officerId: number, itemId: number): Promise<GameState> {
   return call('grantTreasure', [officerId, itemId]);
 }
+
+/** S13 消耗品使用（Session 432）。 */
+export function useConsumable(officerId: number, itemId: number): Promise<GameState> {
+  return call('useConsumable', [officerId, itemId]);
+}
 export function recruitOfficer(officerId: number, recruiterId?: number): Promise<GameState> {
   return call('recruitOfficer', [officerId, recruiterId]);
 }

@@ -20,7 +20,7 @@ import {
 } from '@leh/shared';
 import { adoptSaveEnvelope, buildGameState, buildSaveEnvelope, runEndTurnPipeline } from '../engine/state-pipeline.js';
 import { staticData } from '../data/loader.js';
-import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem } from '../engine/items.js';
+import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem, useConsumable } from '../engine/items.js';
 import {
   conscript,
   developCity,
@@ -534,6 +534,14 @@ export function doUnequipItem(officerId: number, itemId: number): GameState {
 export function doGrantTreasure(officerId: number, itemId: number): GameState {
   return withLock(() => {
     currentGame = grantTreasure(getGame(), officerId, itemId);
+    return getClientGame();
+  });
+}
+
+/** S13 消耗品使用（Session 432）：体力/士气/军粮类效果，扣势力库存。 */
+export function doUseConsumable(officerId: number, itemId: number): GameState {
+  return withLock(() => {
+    currentGame = useConsumable(getGame(), officerId, itemId);
     return getClientGame();
   });
 }

@@ -477,6 +477,15 @@ gameRouter.post('/items/grant', (req, res) => {
   }
 });
 
+/** S13 消耗品使用（Session 432）：{ officerId, itemId } 体力/士气/军粮类效果 */
+gameRouter.post('/items/use', (req, res) => {
+  try {
+    res.json(gameService.doUseConsumable(Number(req.body.officerId), Number(req.body.itemId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'use consumable failed' });
+  }
+});
+
 /** S11/S12 任命：三轨 + 霸府 { officerId, track, position, cityId? } */
 gameRouter.post('/personnel/appoint', (req, res) => {
   try {

@@ -349,6 +349,12 @@ export async function grantTreasure(officerId: number, itemId: number): Promise<
   return data;
 }
 
+/** S13 消耗品使用（Session 432）：体力/士气/军粮类效果。 */
+export async function useConsumable(officerId: number, itemId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/use', { officerId, itemId });
+  return data;
+}
+
 export async function recruitOfficer(
   officerId: number,
   recruiterId?: number,

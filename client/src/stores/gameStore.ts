@@ -98,6 +98,7 @@ interface Store {
   equipItem: (officerId: number, itemId: number) => Promise<void>;
   unequipItem: (officerId: number, itemId: number) => Promise<void>;
   grantTreasure: (officerId: number, itemId: number) => Promise<void>;
+  useConsumable: (officerId: number, itemId: number) => Promise<void>;
   appointOfficer: (
     officerId: number,
     track: 'civil' | 'local' | 'military' | 'hegemony',
@@ -898,6 +899,15 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '赏赐完成' });
     } catch (e) {
       set({ error: errMsg(e, '赏赐宝物失败'), loading: false });
+    }
+  },
+  useConsumable: async (officerId, itemId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.useConsumable(officerId, itemId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '使用完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '使用失败'), loading: false });
     }
   },
 

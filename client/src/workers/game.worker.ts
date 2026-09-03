@@ -175,7 +175,7 @@ import {
   plantFemaleFromGift,
   unstationCounter,
 } from '../../../server/src/engine/spy.js';
-import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem } from '../../../server/src/engine/items.js';
+import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem, useConsumable } from '../../../server/src/engine/items.js';
 import { createDuel, DEFAULT_DUEL_CONFIG, runDuelToCompletion, stepDuel } from '../../../server/src/battle/duel.js';
 import { buildAnnualBudget } from '../../../server/src/engine/budget.js';
 import { appointOfficer } from '../../../server/src/engine/appoint.js';
@@ -715,6 +715,13 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   unequipItem(officerId: number, itemId: number): GameState {
     return withLock(() => {
       currentGame = unequipItem(getGame(), officerId, itemId);
+      return getClientGame();
+    });
+  },
+
+  useConsumable(officerId: number, itemId: number): GameState {
+    return withLock(() => {
+      currentGame = useConsumable(getGame(), officerId, itemId);
       return getClientGame();
     });
   },

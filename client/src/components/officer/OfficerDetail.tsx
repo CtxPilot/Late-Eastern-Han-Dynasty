@@ -345,6 +345,7 @@ function EquipmentTab({
   const itemsCatalog = useGameStore((s) => s.itemsCatalog);
   const unequipItem = useGameStore((s) => s.unequipItem);
   const grantTreasure = useGameStore((s) => s.grantTreasure);
+  const useConsumable = useGameStore((s) => s.useConsumable);
   const loading = useGameStore((s) => s.loading);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
@@ -407,6 +408,37 @@ function EquipmentTab({
           );
         })}
       </div>
+
+      <h3 className="mt-4 text-xs tracking-widest text-amber-500">消耗品（S13 运行时）</h3>
+      {(() => {
+        const consumables = inventoryEntries
+          .map(([id, count]) => ({ item: itemById(Number(id)), count }))
+          .filter((x) => x.item?.category === 'consumable' && x.item.consumable != null);
+        if (consumables.length === 0) {
+          return <p className="text-xs text-stone-600" data-testid="consumable-empty">势力库存中没有可用的消耗品。</p>;
+        }
+        return (
+          <div className="space-y-1.5">
+            {consumables.map(({ item, count }) => (
+              <div key={item!.id} className="flex items-center justify-between rounded border border-stone-800 bg-stone-900/50 px-3 py-1.5" data-testid={`consumable-${item!.id}`}>
+                <div>
+                  <div className="text-xs text-amber-200">{item!.name} ×{count}</div>
+                  <div className="text-xs text-stone-500">{item!.consumable?.effect.description}</div>
+                </div>
+                <InkButton
+                  type="button"
+                  data-testid={`btn-use-consumable-${item!.id}`}
+                  disabled={loading}
+                  onClick={() => useConsumable(officer.id, item!.id)}
+                  className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
+                >
+                  使用
+                </InkButton>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {!isRuler && (
         <>

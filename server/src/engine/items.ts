@@ -8,6 +8,9 @@ import {
   type EquipStatBonus,
   type ItemStatic,
   AcquisitionMethod,
+  OfficerStatus,
+  calcStaminaMax,
+  meritLevelFor,
 } from '@leh/shared';
 import type { GameState, Officer } from '@leh/shared';
 import { getStaticData } from '../data/loader.js';
@@ -354,3 +357,74 @@ export const itemsTestHooks = {
   removeFromInventory,
   itemById,
 };
+
+/**
+ * S13 消耗品运行时（Session 432）：使用势力库存中的消耗品。
+ * docs/08 §四 consumable 配置；效果映射：
+ * - stamina / heal → 武将体力恢复（heal 以体力代理伤势，0-A 口径；上限 calcStaminaMax）
+ * - morale → 武将所在城部队士气 +value（0~100）
+ * - food → 武将所在城军粮 +value
+ * - 其余类型（cure/poison_weapon/stun/war_boost/intel_boost/calm）依赖未实装系统，
+ *   明确报错后置。零 RNG、零新存档字段。
+ */
+export function useConsumable(state: GameState, officerId: number, itemId: number): GameState {
+  const officer = state.officers[officerId];
+  if (!officer) throw new Error('武将不存在');
+  if (officer.faction == null) throw new Error('在野武将不可使用势力库存消耗品');
+  const item = itemById(itemId);
+  if (!item) throw new Error('宝物不存在');
+  if (item.category !== 'consumable' || !item.consumable) {
+    throw new Error(`${item.name} 不是消耗品`);
+  }
+  const fid = officer.faction;
+  if ((state.factions[fid].inventory?.[itemId] ?? 0) < 1) {
+    throw new Error(`${item.name} 不在势力库存中`);
+  }
+  if (officer.status === OfficerStatus.DEAD) throw new Error('阵亡武将不可使用消耗品');
+
+  const effect = item.consumable.effect;
+  const applyStamina = (target: Officer): Officer => {
+    const max = calcStaminaMax(target, meritLevelFor(target.merit ?? 0), state.currentYear - target.birthYear);
+    if ((target.stamina ?? 0) >= max) throw new Error(`${target.name} 体力已满，无需使用${item.name}`);
+    return { ...target, stamina: Math.min(max, (target.stamina ?? 0) + effect.value) };
+  };
+
+  let officers = state.officers;
+  let cities = state.cities;
+  let used = false;
+
+  switch (effect.type) {
+    case 'stamina':
+    case 'heal': {
+      officers = { ...officers, [officerId]: applyStamina(officer) };
+      used = true;
+      break;
+    }
+    case 'morale': {
+      const cityId = officer.location;
+      const city = cityId != null ? cities[cityId] : undefined;
+      if (!city) throw new Error('武将不在城中，无法使用士气类消耗品');
+      cities = {
+        ...cities,
+        [city.id]: { ...city, troopsMorale: Math.max(0, Math.min(100, city.troopsMorale + effect.value)) },
+      };
+      used = true;
+      break;
+    }
+    case 'food': {
+      const cityId = officer.location;
+      const city = cityId != null ? cities[cityId] : undefined;
+      if (!city) throw new Error('武将不在城中，无法使用军粮类消耗品');
+      cities = { ...cities, [city.id]: { ...city, food: city.food + effect.value } };
+      used = true;
+      break;
+    }
+    default:
+      throw new Error(`消耗品效果「${effect.type}」暂未接入运行时`);
+  }
+  if (!used) throw new Error('消耗品使用失败');
+
+  let s: GameState = { ...state, officers, cities };
+  s = tryConsumeFactionInventoryItem(s, fid, itemId) ?? s;
+  return pushLog(s, 'item_use', `${officer.name} 使用 ${item.name}`);
+}
