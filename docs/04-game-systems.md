@@ -1568,6 +1568,8 @@ L3 套装效果：
 
 ### 12.3 消耗品
 
+> **Session 432 实装（S13 消耗品运行时最小切片）**：当前运行时**直接从势力库存消耗**，不经过下述 2 快捷槽（快捷槽分配/携带上限/战斗中使用/缴获补给仍留 0-B）。引擎 `useConsumable(state, officerId, itemId)`（`server/src/engine/items.ts`）：stamina/heal→武将体力恢复（上限 `calcStaminaMax`，体力已满拒绝）；morale→武将所在城部队士气 +value（0~100 夹）；food→武将所在城军粮 +value；cure/poison_weapon/stun/war_boost/intel_boost/calm 依赖未实装系统，明确报错后置。在野/阵亡武将、非消耗品、库存不足均拒绝；零 RNG、零新存档字段、日志 `item_use`。API `POST /api/game/items/use` + Worker 离线镜像 + OfficerDetail 装备 tab 消耗品区；验证 `pnpm verify-s432-consumable` 13/13。
+
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 
 ```

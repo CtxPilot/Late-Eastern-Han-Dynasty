@@ -537,7 +537,7 @@ POST   /api/v1/games/:id/marriage/divorce
 
 ### 2.8 宝物/装备
 
-> **Session 266 实装（S13 0-A）**：装备/卸下/赏赐已实装，路径为现行 `POST /api/game/items/equip|unequip|grant`（Body `{ officerId, itemId }`，返回 `GameState`）；`use`（消耗品）仍 0-B。
+> **Session 266 实装（S13 0-A）**：装备/卸下/赏赐已实装，路径为现行 `POST /api/game/items/equip|unequip|grant`（Body `{ officerId, itemId }`，返回 `GameState`）；**Session 432**：消耗品使用已实装 `POST /api/game/items/use`（见下）。
 
 ```
 POST   /api/game/items/equip
@@ -555,10 +555,10 @@ POST   /api/game/items/grant
   Body: { officerId: number, itemId: number }
   Response: { ...GameState }
 
-POST   /api/v1/games/:id/items/:itemId/use
-  使用消耗品（0-B）
-  Body: { officerId: number }
-  Response: { result: string, remaining: number }
+POST   /api/game/items/use
+  使用消耗品（Session 432 已实装：直接扣势力库存；stamina/heal→体力、上限 calcStaminaMax；morale→所在城士气；food→所在城军粮；其余类型明确拒绝；零 RNG）
+  Body: { officerId: number, itemId: number }
+  Response: { ...GameState }
 ```
 
 ### 2.9 内政·设施 & 资源

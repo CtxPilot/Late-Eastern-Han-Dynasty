@@ -1,3 +1,12 @@
+## 2026-09-03 — Session 432 · S13 消耗品运行时（体力/士气/军粮 + 前后端链路）
+
+- Phase：**S13 宝物后置项**；HANDOFF「下一步」后置系统逐项立项（消耗品运行时），纯玩法切片、零数据扩容。
+- **引擎 `useConsumable(state, officerId, itemId)`**（`server/src/engine/items.ts`）：stamina/heal→武将体力恢复（上限 `calcStaminaMax`，体力已满拒绝）；morale→武将所在城 `troopsMorale` +value（0~100 夹）；food→武将所在城 `food` +value；cure/poison_weapon/stun/war_boost/intel_boost/calm 依赖未实装系统，明确报错后置。在野/阵亡武将、非消耗品、库存不足均拒绝；**零 RNG、零新存档字段**，日志 `item_use`。
+- **前后端链路**：`POST /api/game/items/use`（routes + `doUseConsumable` service）+ Worker 离线镜像（`game.worker.ts` + offline-api + store）+ OfficerDetail 装备 tab「消耗品（S13 运行时）」区（势力库存 consumable 列表 + 使用按钮，无库存时空态文案）。
+- **验证（全绿）**：`verify-s432-consumable` **13/13**（体力 10→25/库存扣减/日志/上限、士气+10、军粮+200、cure 拒绝、非消耗品拒绝、库存不足拒绝、在野拒绝、体力满拒绝、Schema 往返、目录核对）、verify-items **32/32**、server/client typecheck。
+- 文档：docs/04（§12.3 Session 432 实装注：库存直耗口径 vs 2 快捷槽设计）、docs/06（§2.8 `use` 端点实装更新）、docs/07（消耗品区）、docs/12（S13 消耗品运行时）、docs/35（主线 ㊔）、10-progress/HANDOFF 双写。
+- 边界：2 消耗品快捷槽分配/携带上限、战斗中使用、缴获/传承/没收、套装 L3/专属共鸣 L2、未接入 baseEffect 类型仍后置；docs/43 S1 围城合流实装仍待用户批准 D1~D12；0-B 闸门待真人游玩。
+
 ## 2026-09-03 — Session 431 · P0B-06 收官普查（officers.json 240→1001，0-B 数据扩容全部达标）
 
 - Phase：**Phase 0-B 数据扩容**；HANDOFF「下一步」指定 P0B-06 收官普查，以 `docs/13-three-kingdoms-chronicle.md` 编年与正史/裴注/演义可考人物为源新建普查名单，**P0B 表最后一项勾选，0-B 数据扩容（P0B-06~15）全部达标**。

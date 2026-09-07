@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 431**（P0B-06 收官普查 officers 240→1001，**0-B 数据扩容 P0B-06~15 全部达标**） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大** |
-| 代码最新 | Session 431（P0B-06 收官：`scripts/gen-0b-officers-census.mjs` 分块普查 +761 人 id 327~1087，全部正史/裴注/演义可考；validate-data expected 240→1001；全量回归绿后本会话提交） |
-| 文档最新 | **Session 431 双写**（docs/08 §五 1001 口径+普查方法、docs/14 v2.2 版本注、docs/09/10 P0B-06 勾选、docs/11 体积、docs/12 0-B 收官、docs/35 主线、10-progress 日志、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
-| 本交接用途 | **0-B 数据扩容（P0B-06~15）全部达标收官**；后续方向：docs/43 S1 实装（待批准）或 0-B 闸门真人实测或后置系统切片 |
-| 下一步 | ①**docs/43 D1~D12 批准 → S1 围城合流实装**（用户拍板门槛）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③后置系统按 `12-system-map.md` S 清单逐项立项（如 S13 套装/专属共鸣/消耗品运行时、P5 体系等） |
+| 会话 | **Session 432**（S13 消耗品运行时：`useConsumable` 体力/士气/军粮 + 前后端链路，`verify-s432` 13/13 ✅） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 后置项首片落地 |
+| 代码最新 | Session 432（`server/src/engine/items.ts useConsumable` + `POST /items/use` + Worker 离线镜像 + OfficerDetail 消耗品区；提交 `eb064ae`；`verify-s432-consumable` 13/13 + verify-items 32/32 + 双端 typecheck 全绿） |
+| 文档最新 | **Session 432 双写**（docs/04 §12.3 实装注、docs/06 §2.8 端点更新、docs/07 消耗品区、docs/12 S13 行、docs/35 主线 ㊔、10-progress 日志、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
+| 本交接用途 | **S13 消耗品运行时收口**；后续方向：docs/43 S1 实装（待批准）或 0-B 闸门真人实测或 S13 剩余后置逐项立项 |
+| 下一步 | ①**docs/43 D1~D12 批准 → S1 围城合流实装**（用户拍板门槛）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项 |
+
+### Session 432 交接要点
+
+- **S13 消耗品运行时最小切片**：引擎 `useConsumable`（stamina/heal→体力上限 `calcStaminaMax`、morale→所在城士气 0~100 夹、food→所在城军粮；cure 等 6 类明确拒绝后置；在野/阵亡/非消耗品/库存不足/体力满均拒绝；零 RNG、零新存档字段、日志 `item_use`）+ `POST /api/game/items/use`（routes + service）+ Worker 离线镜像（worker/offline-api/store）+ OfficerDetail 消耗品区（库存列表 + 使用按钮 + 空态文案）。提交 `eb064ae`。
+- **口径要点**：当前为**库存直耗**，2 消耗品快捷槽（分配/携带上限/战斗中使用）仍是 0-B 设计未动；heal 以体力代理伤势沿 0-A 口径。
+- **验证全绿**：`verify-s432-consumable` **13/13**、verify-items **32/32**、server/client typecheck（本会话复核通过）。
+- 文档：docs/04 §12.3 实装注、docs/06 §2.8 端点更新、docs/07 消耗品区、docs/12 S13 行、docs/35 主线 ㊔、10-progress Session 432 日志、HANDOFF 双写。
+- 边界：快捷槽/战斗中使用/缴获传承/套装 L3/专属共鸣 L2/未接入 effect 类型仍后置；docs/43 S1 待批准；0-B 闸门待真人游玩。
 
 ### Session 427 交接要点
 
