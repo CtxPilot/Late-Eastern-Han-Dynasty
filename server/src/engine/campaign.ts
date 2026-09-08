@@ -69,7 +69,7 @@ import { clearCityCounterOnCapture } from './spy.js';
 import { collectAnnihilatedDefenderCommanders, MANUAL_VICTORY_RECOVERY_RATIO } from './battle.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
-import { equipBonusFor } from './items.js';
+import { equipBonusFor, getItemById } from './items.js';
 import { grantMeritTo } from './meritGrant.js';
 import { FAME_CAPTURE_CITY, FAME_OCCUPY_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
 import {
@@ -89,6 +89,8 @@ const MERIT_SIEGE_SURRENDER = 30;
 // ====== 常量 ======
 
 export const MIN_CAMPAIGN_TROOPS = 1000;
+/** docs/05 §11.2 战利品：胜者缴获败者阵亡主将/副将单件装备概率（Session 436 实装）。 */
+export const LOOT_EQUIPMENT_CHANCE = 0.3;
 export const GARRISON_RESERVE = 500;
 /** 每 100 兵力每回合耗粮 × 地形系数 */
 export const FOOD_PER_100_PER_TURN = 3;
@@ -1798,6 +1800,38 @@ function applyBattleResultToState(
   const armies = state.campaignArmies.filter((a) => !participantIds.has(a.id));
   const captivesByAttacker: number[] = [];
   const captivesByDefender: number[] = [];
+  /**
+   * docs/05 §11.2（Session 436）：胜者缴获败者阵亡主将/副将装备——每件独立
+   * 掷点（`LOOT_EQUIPMENT_CHANCE`），无装备/无胜者不掷点（零 RNG 消耗）；
+   * 仅移走缴获件，未中件留原主（沿 S1 行为）。顺序固定（军序→槽序）保证确定性。
+   */
+  const seizedLootNames: string[] = [];
+  const seizeKilledEquipment = (officerId: number, victorFactionId: number | null): void => {
+    if (victorFactionId == null) return;
+    const o = officers[officerId];
+    if (!o) return;
+    const order = ['weaponPrimary', 'weaponSecondary', 'armor', 'mount', 'tome'] as const;
+    const ids: { slot: (typeof order)[number]; id: number }[] = [];
+    for (const slot of order) {
+      const id = o.equipment?.[slot];
+      if (id != null) ids.push({ slot, id });
+    }
+    // 无装备不掷点（零 RNG 消耗）：旧用例与 Schema 路径逐字节不受扰。
+    if (ids.length === 0) return;
+    const faction = factions[victorFactionId];
+    if (!faction) return;
+    const inventory = { ...(faction.inventory ?? {}) };
+    const equipment = { ...(o.equipment ?? {}) };
+    for (const { slot, id } of ids) {
+      if (rng() < LOOT_EQUIPMENT_CHANCE) {
+        inventory[id] = (inventory[id] ?? 0) + 1;
+        delete equipment[slot];
+        seizedLootNames.push(getItemById(id)?.name ?? `宝物${id}`);
+      }
+    }
+    factions[victorFactionId] = { ...faction, inventory };
+    officers[officerId] = { ...o, equipment };
+  };
 
   // 更新攻方 Army（每军一份；单军时与旧 `updatedArmy` 等价）
   // 士气夹紧 0~100（`runAutoBattle` 内部上限 120，与 services/game.ts:1720、game.worker.ts:1802 同口径；
@@ -1827,6 +1861,8 @@ function applyBattleResultToState(
             const status = result.commanderStatus[oid];
             if (status === 'killed') {
               officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
+              // Session 436：攻方胜 → 缴获被歼敌军阵亡者装备
+              seizeKilledEquipment(oid, primary.factionId);
             } else if (status === 'captured') {
               officers[oid] = { ...o, status: OfficerStatus.PRISONER };
               captivesByAttacker.push(oid);
@@ -1843,10 +1879,25 @@ function applyBattleResultToState(
         // 攻方败：敌军保留
         armies.push({ ...enemy, troops: result.defenderRemaining, morale: result.defenderMoraleAfter });
       }
+      // Session 436：攻方胜则缴获被歼/被斩敌将装备（全歼与单挑斩杀均覆盖；
+      // 残部退守时其阵亡者同样缴获，存活者不碰）。
+      if (result.winner === 'attacker') {
+        for (const oid of [enemy.commanderId, ...enemy.subCommanderIds]) {
+          if (result.commanderStatus[oid] === 'killed') {
+            seizeKilledEquipment(oid, primary.factionId);
+          }
+        }
+      }
     }
   }
 
   // 攻方主将/副将伤亡（合流时覆盖各军主将与副将）
+  // Session 436：攻方败 → 守方缴获阵亡攻方装备（胜者缴获败者；胜时不缴活口）。
+  const defenderFactionId = resolution.enemyArmyId != null
+    ? state.campaignArmies.find((a) => a.id === resolution.enemyArmyId)?.factionId ?? null
+    : resolution.defCityId != null
+      ? (cities[resolution.defCityId]?.ruler ?? state.cities[resolution.defCityId]?.ruler ?? null)
+      : null;
   for (const { army } of attackers) {
     for (const oid of [army.commanderId, ...army.subCommanderIds]) {
       const o = officers[oid];
@@ -1854,6 +1905,8 @@ function applyBattleResultToState(
       const status = result.commanderStatus[oid];
       if (status === 'killed') {
         officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
+        // Session 436：攻方败 → 守方缴获（胜者缴获败者；胜时不碰己方阵亡装备，沿 S1 行为）。
+        if (result.winner === 'defender') seizeKilledEquipment(oid, defenderFactionId);
       } else if (status === 'captured') {
         officers[oid] = { ...o, status: OfficerStatus.PRISONER };
         captivesByDefender.push(oid);
@@ -1999,7 +2052,9 @@ function applyBattleResultToState(
         ? `${target.name} 开城投降！${subject}占领`
         : `${subject}攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}${
             familyShockIds.length > 0 ? `；家属所在城失陷，${familyShockIds.length} 城士气−${FAMILY_CAPTURE_MORALE_HIT}` : ''
-          }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}`;
+          }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}${
+            seizedLootNames.length > 0 ? `；缴获${seizedLootNames.join('、')}` : ''
+          }`;
       return sealCaptures(pushLog(after, 'campaign_capture', msg));
     }
   }
@@ -2041,7 +2096,9 @@ function applyBattleResultToState(
     return sealCaptures(pushLog(
       defeatedState,
       'campaign_defeat',
-      `${subject}战败，残部 ${attackers.reduce((n, item) => n + item.remaining, 0)} 退回`,
+      `${subject}战败，残部 ${attackers.reduce((n, item) => n + item.remaining, 0)} 退回${
+        seizedLootNames.length > 0 ? `；被缴获${seizedLootNames.join('、')}` : ''
+      }`,
     ));
   }
 
@@ -2062,7 +2119,9 @@ function applyBattleResultToState(
   return sealCaptures(pushLog(
     fieldState,
     'campaign_field_win',
-    `${subject}野战胜利，敌军溃退`,
+    `${subject}野战胜利，敌军溃退${
+      seizedLootNames.length > 0 ? `；缴获${seizedLootNames.join('、')}` : ''
+    }`,
   ));
 }
 

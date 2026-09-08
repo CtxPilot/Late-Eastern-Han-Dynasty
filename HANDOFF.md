@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 435**（S13 快捷槽分配/携带：`consumableSlots` ≤2×99 + 分配/卸下 + 使用扣槽优先，`verify-s435` 32/32 ✅） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 两片 + docs/43 S1/S2 均已落地 |
-| 代码最新 | Session 435（`engine/items.ts` 分配/卸下/扣槽优先 + `POST /items/assign|unassign` 五镜像 + OfficerDetail 快捷槽块；未提交；`verify-s435` 32/32 + s432 13/13 + 回归矩阵全绿） |
-| 文档最新 | **Session 435 双写**（docs/04 §12.3 实装注、docs/06 §2.8 双端点、docs/07 快捷槽块、docs/12 S13 行、docs/35 主线 ㊗、10-progress 日志、本文件） |
-| 本交接用途 | **S13 快捷槽分配/携带收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（战斗中使用/缴获传承/8 槽剩余/套装 L3/专属共鸣 L2/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+| 会话 | **Session 436**（S13 装备缴获：胜者缴获败者阵亡主将/副将装备 30%/件，`verify-s436` 12/12 ✅，金样零扰动） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地 |
+| 代码最新 | Session 436（`campaign.ts` `seizeKilledEquipment` + 战报追加；未提交；`verify-s436` 12/12 + 回归矩阵全绿，金样零变化） |
+| 文档最新 | **Session 436 双写**（docs/05 §11.2 实装注、docs/04 §12.3 缴获指向、docs/12 S13 行、docs/35 主线 ㊙、10-progress 日志、本文件） |
+| 本交接用途 | **S13 装备缴获收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（战斗中使用/传承没收/8 槽剩余/套装 L3/专属共鸣 L2/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 436 交接要点
+
+- **缴获最小切片**：`applyBattleResultToState` 内 `seizeKilledEquipment`（胜者缴获败者阵亡主将/副将装备，每件 30%，军序槽序固定；无装备不掷点；缴获入胜者库存并清槽，未中留原主；战报追加缴获/被缴获）。被俘/残部/六角/劝降不缴。
+- **关键修正**：首版只放全歼分支——实测 200 场零全歼（溃散线 30% 先触发），遂补残部退守分支覆盖单挑战杀；全歼在现机制下几不可达（文档已注）。
+- **验证全绿**：`verify-s436-battlefield-loot` **12/12**（胜缴获六韬/败缴获青龙偃月刀/守恒/确定性/Schema/金样扫描 0 缴获）、turn-golden 3/3（零变化，无需重举）、campaign 71、ai-military-rng 38、turn-cadence 28、save 9/9/10/10、s432 13/13、items 32/32、s433 41/41、s434 65/65、s435 32/32、shared 481、server 3、client 71、三端 typecheck、parity 5/5、compliance、diff-check。
+- 边界：传承/没收、8 槽剩余、套装 L3、共鸣 L2、战斗中使用、未接入 effect 仍后置；0-B 闸门待真人游玩。
+- 文档：docs/05 §11.2、docs/04 §12.3、docs/12 S13、docs/35 主线 ㊙、10-progress Session 436 日志、HANDOFF 双写。
 
 ### Session 435 交接要点
 

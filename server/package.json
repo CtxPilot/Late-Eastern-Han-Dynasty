@@ -70,6 +70,7 @@
     "verify-s433-siege-merge": "tsx src/scripts/verify-s433-siege-merge.ts",
     "verify-s434-hex-multi-army": "tsx src/scripts/verify-s434-hex-multi-army.ts",
     "verify-s435-consumable-slots": "tsx src/scripts/verify-s435-consumable-slots.ts",
+    "verify-s436-battlefield-loot": "tsx src/scripts/verify-s436-battlefield-loot.ts",
     "verify-skill-consume": "tsx src/scripts/verify-skill-consume.ts",
     "verify-relations-runtime": "tsx src/scripts/verify-relations-runtime.ts",
     "verify-mandate-consume": "tsx src/scripts/verify-mandate-consume.ts",
