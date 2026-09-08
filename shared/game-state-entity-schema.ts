@@ -111,6 +111,14 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
       })
       .strict()
       .optional(),
+    consumableSlots: z
+      .array(
+        z
+          .object({ itemId: PositiveIdSchema, count: z.number().int().min(1).max(99) })
+          .strict(),
+      )
+      .max(2)
+      .optional(),
     skillTreeState: z.record(z.string(), z.number().int().nonnegative()).optional(),
     skillPointsSpent: z.number().int().nonnegative().optional(),
     traitLevels: z.record(z.string(), z.number().int().nonnegative()).optional(),

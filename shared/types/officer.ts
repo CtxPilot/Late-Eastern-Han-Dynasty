@@ -17,7 +17,7 @@ import type {
   SkillType,
 } from '../enums/index.js';
 import type { OfficerStats } from './common.js';
-import type { Equipment } from './item.js';
+import type { ConsumableSlot, Equipment } from './item.js';
 
 /** 兵种使用/战法熟练记录（Session 350 proficiency 威力真源） */
 export interface UnitUsageRecord {
@@ -117,6 +117,11 @@ export interface Officer extends OfficerStatic {
   beauties: number[];
   /** 装备槽（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书；8+2 槽全量留 0-B，S13 Session 266 实装） */
   equipment?: Equipment;
+  /**
+   * 消耗品快捷槽（S13 Session 435 实装分配/携带：至多 2 种，每种叠加 ≤99；
+   * 使用优先扣槽、不足回退势力库存；战斗中使用/缴获补给仍后置）。
+   */
+  consumableSlots?: ConsumableSlot[];
   /** 技能树状态：nodeId → 当前等级（0=未解锁） */
   skillTreeState?: Record<string, number>;
   /** 已消耗的技能点数 */

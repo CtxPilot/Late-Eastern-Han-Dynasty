@@ -242,6 +242,88 @@ export function unequipItem(state: GameState, officerId: number, itemId: number)
   );
 }
 
+/** 快捷槽上限（docs/04 §12.3）：至多 2 种，每种叠加 ≤99。 */
+export const CONSUMABLE_SLOT_KINDS = 2;
+export const CONSUMABLE_SLOT_COUNT_MAX = 99;
+
+/**
+ * docs/04 §12.3（Session 435）：从势力库存分配 N 件消耗品至武将快捷槽。
+ * 同类叠加（总量 ≤99），新种类需空槽（至多 2 种）；count 缺省 1。
+ * 在野/阵亡拒绝；非消耗品、数量非法、库存不足拒绝。零 RNG，日志 `item_assign`。
+ */
+export function assignConsumableToSlot(
+  state: GameState,
+  officerId: number,
+  itemId: number,
+  count = 1,
+): GameState {
+  const officer = state.officers[officerId];
+  if (!officer) throw new Error('武将不存在');
+  if (officer.faction == null) throw new Error('在野武将不可分配消耗品');
+  if (officer.status === OfficerStatus.DEAD) throw new Error('阵亡武将不可分配消耗品');
+  const item = itemById(itemId);
+  if (!item) throw new Error('宝物不存在');
+  if (item.category !== 'consumable' || !item.consumable) {
+    throw new Error(`${item.name} 不是消耗品`);
+  }
+  if (!Number.isInteger(count) || count < 1) throw new Error('分配数量须为正整数');
+  const fid = officer.faction;
+  if ((state.factions[fid].inventory?.[itemId] ?? 0) < count) {
+    throw new Error(`${item.name} 势力库存不足`);
+  }
+  const slots = [...(officer.consumableSlots ?? [])];
+  const existing = slots.find((slot) => slot.itemId === itemId);
+  if (existing) {
+    if (existing.count + count > CONSUMABLE_SLOT_COUNT_MAX) {
+      throw new Error(`${item.name} 快捷槽已达叠加上限（99）`);
+    }
+    existing.count += count;
+  } else {
+    if (slots.length >= CONSUMABLE_SLOT_KINDS) {
+      throw new Error('快捷槽已满（至多携带 2 种消耗品）');
+    }
+    slots.push({ itemId, count });
+  }
+  let s: GameState = {
+    ...state,
+    officers: { ...state.officers, [officerId]: { ...officer, consumableSlots: slots } },
+  };
+  s = removeFromInventory(s, fid, itemId, count);
+  return pushLog(s, 'item_assign', `${officer.name} 携带 ${item.name}×${count}`);
+}
+
+/**
+ * docs/04 §12.3（Session 435）：从武将快捷槽卸下 N 件消耗品回势力库存。
+ * count 缺省整栈（全部卸下）。未携带/数量不足拒绝。零 RNG，日志 `item_unassign`。
+ */
+export function unassignConsumableFromSlot(
+  state: GameState,
+  officerId: number,
+  itemId: number,
+  count?: number,
+): GameState {
+  const officer = state.officers[officerId];
+  if (!officer) throw new Error('武将不存在');
+  if (officer.faction == null) throw new Error('在野武将不可卸下消耗品');
+  const slots = [...(officer.consumableSlots ?? [])];
+  const index = slots.findIndex((slot) => slot.itemId === itemId);
+  if (index < 0) throw new Error('该武将快捷槽未携带此消耗品');
+  const slot = slots[index]!;
+  const take = count ?? slot.count;
+  if (!Number.isInteger(take) || take < 1 || take > slot.count) {
+    throw new Error('卸下数量非法');
+  }
+  if (take === slot.count) slots.splice(index, 1);
+  else slots[index] = { itemId, count: slot.count - take };
+  const nextOfficer: Officer = { ...officer };
+  if (slots.length > 0) nextOfficer.consumableSlots = slots;
+  else delete nextOfficer.consumableSlots;
+  let s: GameState = { ...state, officers: { ...state.officers, [officerId]: nextOfficer } };
+  s = addToInventory(s, officer.faction, itemId, take);
+  const item = itemById(itemId);
+  return pushLog(s, 'item_unassign', `${officer.name} 卸下 ${item?.name ?? '消耗品'}×${take}`);
+}
+
 /**
  * 赏赐宝物（04 §11.1）：势力库存出 → 武将自行装备；忠诚+5~20 按品质。
  * §3.8 君主特例：目标为君主时拒绝（君主不参与宝物赏赐记录）。
@@ -377,7 +459,9 @@ export function useConsumable(state: GameState, officerId: number, itemId: numbe
     throw new Error(`${item.name} 不是消耗品`);
   }
   const fid = officer.faction;
-  if ((state.factions[fid].inventory?.[itemId] ?? 0) < 1) {
+  // Session 435：快捷槽优先，槽与库存合计不足才拒绝（报错沿 432 口径，不断言）。
+  const slotCount = (officer.consumableSlots ?? []).find((slot) => slot.itemId === itemId)?.count ?? 0;
+  if (slotCount + (state.factions[fid].inventory?.[itemId] ?? 0) < 1) {
     throw new Error(`${item.name} 不在势力库存中`);
   }
   if (officer.status === OfficerStatus.DEAD) throw new Error('阵亡武将不可使用消耗品');
@@ -425,6 +509,20 @@ export function useConsumable(state: GameState, officerId: number, itemId: numbe
   if (!used) throw new Error('消耗品使用失败');
 
   let s: GameState = { ...state, officers, cities };
-  s = tryConsumeFactionInventoryItem(s, fid, itemId) ?? s;
+  // Session 435：优先扣快捷槽（归零删格），槽空回退扣势力库存。
+  const afterOfficer = s.officers[officerId]!;
+  const afterSlots = [...(afterOfficer.consumableSlots ?? [])];
+  const afterIndex = afterSlots.findIndex((slot) => slot.itemId === itemId);
+  if (afterIndex >= 0) {
+    const slot = afterSlots[afterIndex]!;
+    if (slot.count > 1) afterSlots[afterIndex] = { itemId, count: slot.count - 1 };
+    else afterSlots.splice(afterIndex, 1);
+    const updated: Officer = { ...afterOfficer };
+    if (afterSlots.length > 0) updated.consumableSlots = afterSlots;
+    else delete updated.consumableSlots;
+    s = { ...s, officers: { ...s.officers, [officerId]: updated } };
+  } else {
+    s = tryConsumeFactionInventoryItem(s, fid, itemId) ?? s;
+  }
   return pushLog(s, 'item_use', `${officer.name} 使用 ${item.name}`);
 }

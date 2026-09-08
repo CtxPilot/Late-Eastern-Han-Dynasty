@@ -22,7 +22,7 @@ import {
 } from '@leh/shared';
 import { adoptSaveEnvelope, buildGameState, buildSaveEnvelope, runEndTurnPipeline } from '../engine/state-pipeline.js';
 import { staticData } from '../data/loader.js';
-import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem, useConsumable } from '../engine/items.js';
+import { assignConsumableToSlot, duelEquipBonusFor, equipItem, grantTreasure, unassignConsumableFromSlot, unequipItem, useConsumable } from '../engine/items.js';
 import {
   conscript,
   developCity,
@@ -548,6 +548,22 @@ export function doGrantTreasure(officerId: number, itemId: number): GameState {
 export function doUseConsumable(officerId: number, itemId: number): GameState {
   return withLock(() => {
     currentGame = useConsumable(getGame(), officerId, itemId);
+    return getClientGame();
+  });
+}
+
+/** S13 快捷槽分配（Session 435）：势力库存 → 武将快捷槽。 */
+export function doAssignConsumable(officerId: number, itemId: number, count = 1): GameState {
+  return withLock(() => {
+    currentGame = assignConsumableToSlot(getGame(), officerId, itemId, count);
+    return getClientGame();
+  });
+}
+
+/** S13 快捷槽卸下（Session 435）：武将快捷槽 → 势力库存（count 缺省整栈）。 */
+export function doUnassignConsumable(officerId: number, itemId: number, count?: number): GameState {
+  return withLock(() => {
+    currentGame = unassignConsumableFromSlot(getGame(), officerId, itemId, count);
     return getClientGame();
   });
 }

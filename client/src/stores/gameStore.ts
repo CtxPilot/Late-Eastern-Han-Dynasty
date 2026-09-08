@@ -99,6 +99,8 @@ interface Store {
   unequipItem: (officerId: number, itemId: number) => Promise<void>;
   grantTreasure: (officerId: number, itemId: number) => Promise<void>;
   useConsumable: (officerId: number, itemId: number) => Promise<void>;
+  assignConsumable: (officerId: number, itemId: number, count?: number) => Promise<void>;
+  unassignConsumable: (officerId: number, itemId: number, count?: number) => Promise<void>;
   appointOfficer: (
     officerId: number,
     track: 'civil' | 'local' | 'military' | 'hegemony',
@@ -909,6 +911,26 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '使用完成' });
     } catch (e) {
       set({ error: errMsg(e, '使用失败'), loading: false });
+    }
+  },
+
+  assignConsumable: async (officerId, itemId, count = 1) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.assignConsumable(officerId, itemId, count);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '分配完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '分配失败'), loading: false });
+    }
+  },
+
+  unassignConsumable: async (officerId, itemId, count) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.unassignConsumable(officerId, itemId, count);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '卸下完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '卸下失败'), loading: false });
     }
   },
 

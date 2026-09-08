@@ -215,6 +215,16 @@ export function grantTreasure(officerId: number, itemId: number): Promise<GameSt
 export function useConsumable(officerId: number, itemId: number): Promise<GameState> {
   return call('useConsumable', [officerId, itemId]);
 }
+
+/** S13 快捷槽分配（Session 435）。 */
+export function assignConsumable(officerId: number, itemId: number, count = 1): Promise<GameState> {
+  return call('assignConsumable', [officerId, itemId, count]);
+}
+
+/** S13 快捷槽卸下（Session 435）。 */
+export function unassignConsumable(officerId: number, itemId: number, count?: number): Promise<GameState> {
+  return call('unassignConsumable', [officerId, itemId, count]);
+}
 export function recruitOfficer(officerId: number, recruiterId?: number): Promise<GameState> {
   return call('recruitOfficer', [officerId, recruiterId]);
 }

@@ -9,12 +9,19 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 434**（docs/43 S2 六角多军实装：`createBattle` 多军编组 + `siege-storm` 端点 + 亲统按军结算，`verify-s434` 65/65 + UI 27/27 ✅） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 首片 + docs/43 S1/S2 均已落地 |
-| 代码最新 | Session 434（`engine/battle.ts` 多军编组 + `campaign.ts` 亲统结算 + services 双端点 + 五镜像 + 军令亲统按钮 + 军旗条；未提交；`verify-s434` 65/65 + UI 27/27 + 回归矩阵全绿） |
-| 文档最新 | **Session 434 双写**（docs/43 S2 状态、docs/05 §10.2 实装注、docs/06 新端点、docs/07 亲统入口、docs/12 S10、docs/35 主线 ㊖、10-progress 日志、本文件）；docs/43 回合中途增援仍后置 |
-| 本交接用途 | **docs/43 S2 六角多军收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项或增援入场另行立项 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+| 会话 | **Session 435**（S13 快捷槽分配/携带：`consumableSlots` ≤2×99 + 分配/卸下 + 使用扣槽优先，`verify-s435` 32/32 ✅） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 两片 + docs/43 S1/S2 均已落地 |
+| 代码最新 | Session 435（`engine/items.ts` 分配/卸下/扣槽优先 + `POST /items/assign|unassign` 五镜像 + OfficerDetail 快捷槽块；未提交；`verify-s435` 32/32 + s432 13/13 + 回归矩阵全绿） |
+| 文档最新 | **Session 435 双写**（docs/04 §12.3 实装注、docs/06 §2.8 双端点、docs/07 快捷槽块、docs/12 S13 行、docs/35 主线 ㊗、10-progress 日志、本文件） |
+| 本交接用途 | **S13 快捷槽分配/携带收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（战斗中使用/缴获传承/8 槽剩余/套装 L3/专属共鸣 L2/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 435 交接要点
+
+- **快捷槽最小切片**：`Officer.consumableSlots?`（≤2×≤99，空槽删字段，旧档兼容）+ 分配/卸下引擎 + 使用扣槽优先回退库存 + 双端点五镜像 + parity 2 别名 + OfficerDetail 快捷槽块（分配/使用/卸下）。
+- **验证全绿**：`verify-s435-consumable-slots` **32/32**、s432 13/13、verify-items 32/32、shared 481、server 3、campaign 71、ai-military-rng 38、turn-cadence 28、save 9/9/10/10、s433 41/41、s434 65/65、client 71、三端 typecheck、parity 5/5、compliance、diff-check。
+- 边界：战斗中使用、缴获补给、8 槽剩余、套装 L3、专属共鸣 L2、未接入 effect 类型仍后置；UI 未做浏览器验收（新档无消耗品初始库存）；0-B 闸门待真人游玩。
+- 文档：docs/04 §12.3、docs/06 §2.8、docs/07、docs/12 S13、docs/35 主线 ㊗、10-progress Session 435 日志、HANDOFF 双写。
 
 ### Session 434 交接要点
 

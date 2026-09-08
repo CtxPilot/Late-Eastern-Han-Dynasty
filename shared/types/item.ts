@@ -76,3 +76,12 @@ export type Equipment = Partial<Record<EquipSlot, number>>;
 
 /** Faction.inventory: 宝物 id → 数量（势力未分配库存）。 */
 export type ItemInventory = Record<number, number>;
+
+/**
+ * Officer.consumableSlots 条目（S13 Session 435）：快捷槽一种消耗品 + 叠加数。
+ * 至多 2 条（04 §12.3），每条 count 1~99。
+ */
+export interface ConsumableSlot {
+  itemId: number;
+  count: number;
+}

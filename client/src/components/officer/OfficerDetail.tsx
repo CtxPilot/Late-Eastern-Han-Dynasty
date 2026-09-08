@@ -346,6 +346,8 @@ function EquipmentTab({
   const unequipItem = useGameStore((s) => s.unequipItem);
   const grantTreasure = useGameStore((s) => s.grantTreasure);
   const useConsumable = useGameStore((s) => s.useConsumable);
+  const assignConsumable = useGameStore((s) => s.assignConsumable);
+  const unassignConsumable = useGameStore((s) => s.unassignConsumable);
   const loading = useGameStore((s) => s.loading);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
@@ -411,6 +413,50 @@ function EquipmentTab({
 
       <h3 className="mt-4 text-xs tracking-widest text-amber-500">消耗品（S13 运行时）</h3>
       {(() => {
+        // Session 435：快捷槽（至多 2 种）优先展示 + 使用/卸下；库存列表分配入库。
+        const slots = (officer.consumableSlots ?? [])
+          .map((slot) => ({ item: itemById(slot.itemId), count: slot.count }))
+          .filter((x) => x.item != null);
+        return (
+          <>
+            {slots.length > 0 ? (
+              <div className="mb-1.5 space-y-1.5">
+                {slots.map(({ item, count }) => (
+                  <div key={item!.id} className="flex items-center justify-between rounded border border-amber-900/60 bg-amber-950/20 px-3 py-1.5" data-testid={`consumable-slot-${item!.id}`}>
+                    <div>
+                      <div className="text-xs text-amber-200">{item!.name} ×{count}（快捷槽）</div>
+                      <div className="text-xs text-stone-500">{item!.consumable?.effect.description}</div>
+                    </div>
+                    <div className="flex gap-1">
+                      <InkButton
+                        type="button"
+                        data-testid={`btn-use-slot-${item!.id}`}
+                        disabled={loading}
+                        onClick={() => useConsumable(officer.id, item!.id)}
+                        className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
+                      >
+                        使用
+                      </InkButton>
+                      <InkButton
+                        type="button"
+                        data-testid={`btn-unassign-slot-${item!.id}`}
+                        disabled={loading}
+                        onClick={() => unassignConsumable(officer.id, item!.id)}
+                        className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
+                      >
+                        卸下
+                      </InkButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mb-1.5 text-xs text-stone-600" data-testid="consumable-slots-empty">快捷槽为空（至多携带 2 种消耗品）。</p>
+            )}
+          </>
+        );
+      })()}
+      {(() => {
         const consumables = inventoryEntries
           .map(([id, count]) => ({ item: itemById(Number(id)), count }))
           .filter((x) => x.item?.category === 'consumable' && x.item.consumable != null);
@@ -425,15 +471,26 @@ function EquipmentTab({
                   <div className="text-xs text-amber-200">{item!.name} ×{count}</div>
                   <div className="text-xs text-stone-500">{item!.consumable?.effect.description}</div>
                 </div>
-                <InkButton
-                  type="button"
-                  data-testid={`btn-use-consumable-${item!.id}`}
-                  disabled={loading}
-                  onClick={() => useConsumable(officer.id, item!.id)}
-                  className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
-                >
-                  使用
-                </InkButton>
+                <div className="flex gap-1">
+                  <InkButton
+                    type="button"
+                    data-testid={`btn-assign-consumable-${item!.id}`}
+                    disabled={loading}
+                    onClick={() => assignConsumable(officer.id, item!.id)}
+                    className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
+                  >
+                    分配
+                  </InkButton>
+                  <InkButton
+                    type="button"
+                    data-testid={`btn-use-consumable-${item!.id}`}
+                    disabled={loading}
+                    onClick={() => useConsumable(officer.id, item!.id)}
+                    className="px-2 py-0.5 rounded border border-stone-700 text-stone-300 text-xs disabled:opacity-40"
+                  >
+                    使用
+                  </InkButton>
+                </div>
               </div>
             ))}
           </div>

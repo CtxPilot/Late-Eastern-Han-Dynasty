@@ -1,3 +1,13 @@
+## 2026-09-08 — Session 435 · S13 快捷槽分配/携带（消耗品 2 槽）
+
+- Phase：**S13 宝物后置项**；HANDOFF「下一步」后置逐项立项（快捷槽分配/携带），不碰战斗中使用（六角/白刃）、8 槽剩余、套装 L3、专属共鸣 L2、缴获传承、未接入 effect 类型。
+- **模型**（shared）：`ConsumableSlot {itemId,count}`（`types/item.ts`）+ `Officer.consumableSlots?`（`types/officer.ts`）+ Zod（`game-state-entity-schema.ts`：strict 条目、count 1~99、max 2、整体 optional——旧档缺省兼容，S2 教训：Schema 只断言权威原态）。
+- **引擎**（`server/src/engine/items.ts`，零 RNG）：`assignConsumableToSlot`（库存→槽，同类叠加≤99/新种类需空槽≤2 种，在野/阵亡/非消耗品/数量非法/库存不足拒绝，日志 `item_assign`）+ `unassignConsumableFromSlot`（槽→库存，count 缺省整栈，空槽删字段，日志 `item_unassign`）；`useConsumable` 优先扣槽、槽空回退库存（报错/日志沿 432 口径，s432 13/13 零改动）。
+- **链路**：`POST /items/assign|unassign`（routes + `doAssign/doUnassignConsumable` service + worker 镜像 + api/offline-api + store）+ parity 别名 2 行 + OfficerDetail 快捷槽块（槽列表使用/卸下 + 库存行分配，testid `consumable-slot-*/btn-assign/btn-use-slot/btn-unassign-slot-*`）。
+- **验证（全绿）**：`verify-s435-consumable-slots` **32/32**（分配/叠加/2 种上限/99 上限/六类拒绝/部分与整栈卸下/扣槽优先/回退库存/删字段/Schema 正反/JSON 往返）+ s432 13/13 + verify-items 32/32 + shared 481 + server 3 + campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/9/10/10 + s433 41/41 + s434 65/65 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- 边界：战斗中使用、缴获补给、8 槽剩余、套装 L3、专属共鸣 L2、未接入 effect 类型仍后置；UI 未做浏览器验收（随 432 同口径：新档无消耗品初始库存，纯 gameplay 拿不到消耗品）；0-B 闸门待真人游玩。
+- 文档：docs/04 §12.3 实装注、docs/06 §2.8 双端点、docs/07 快捷槽块、docs/12 S13 行、docs/35 主线 ㊗、本日志与 HANDOFF 双写。
+
 ## 2026-09-08 — Session 434 · docs/43 S2 六角多军实装（亲统攻城）
 
 - Phase：**S2 六角多军**；S1 验收后，只做合流军六角入场 + 亲统结算，不碰回合中途增援（§八另行立项）、`engaged` 野战、白刃战多军、协同数值加成。

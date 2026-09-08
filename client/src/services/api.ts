@@ -355,6 +355,18 @@ export async function useConsumable(officerId: number, itemId: number): Promise<
   return data;
 }
 
+/** S13 快捷槽分配（Session 435）。 */
+export async function assignConsumable(officerId: number, itemId: number, count = 1): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/assign', { officerId, itemId, count });
+  return data;
+}
+
+/** S13 快捷槽卸下（Session 435，count 缺省整栈）。 */
+export async function unassignConsumable(officerId: number, itemId: number, count?: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/items/unassign', { officerId, itemId, count });
+  return data;
+}
+
 export async function recruitOfficer(
   officerId: number,
   recruiterId?: number,

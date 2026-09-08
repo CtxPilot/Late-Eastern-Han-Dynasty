@@ -127,6 +127,9 @@ const ALIAS_MAP = {
   unstationCounter: 'doUnstationCounter',
   // 消耗品运行时（S13，Session 432）：services 前缀 do*，worker 沿用引擎函数名
   useConsumable: 'doUseConsumable',
+  // 快捷槽分配/卸下（S13，Session 435）：同上
+  assignConsumable: 'doAssignConsumable',
+  unassignConsumable: 'doUnassignConsumable',
 };
 
 /** 服务导出的离线可达解析：同名 handler 或别名映射。 */

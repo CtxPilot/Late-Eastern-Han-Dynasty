@@ -181,7 +181,7 @@ import {
   plantFemaleFromGift,
   unstationCounter,
 } from '../../../server/src/engine/spy.js';
-import { duelEquipBonusFor, equipItem, grantTreasure, unequipItem, useConsumable } from '../../../server/src/engine/items.js';
+import { assignConsumableToSlot, duelEquipBonusFor, equipItem, grantTreasure, unassignConsumableFromSlot, unequipItem, useConsumable } from '../../../server/src/engine/items.js';
 import { createDuel, DEFAULT_DUEL_CONFIG, runDuelToCompletion, stepDuel } from '../../../server/src/battle/duel.js';
 import { buildAnnualBudget } from '../../../server/src/engine/budget.js';
 import { appointOfficer } from '../../../server/src/engine/appoint.js';
@@ -728,6 +728,22 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   useConsumable(officerId: number, itemId: number): GameState {
     return withLock(() => {
       currentGame = useConsumable(getGame(), officerId, itemId);
+      return getClientGame();
+    });
+  },
+
+  /** S13 快捷槽分配（Session 435，离线镜像）。 */
+  assignConsumable(officerId: number, itemId: number, count = 1): GameState {
+    return withLock(() => {
+      currentGame = assignConsumableToSlot(getGame(), officerId, itemId, count);
+      return getClientGame();
+    });
+  },
+
+  /** S13 快捷槽卸下（Session 435，离线镜像）。 */
+  unassignConsumable(officerId: number, itemId: number, count?: number): GameState {
+    return withLock(() => {
+      currentGame = unassignConsumableFromSlot(getGame(), officerId, itemId, count);
       return getClientGame();
     });
   },

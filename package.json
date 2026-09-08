@@ -114,6 +114,7 @@
     "verify-s432-consumable": "pnpm --filter @leh/server verify-s432-consumable",
     "verify-s433-siege-merge": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s433-siege-merge",
     "verify-s434-hex-multi-army": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s434-hex-multi-army",
+    "verify-s435-consumable-slots": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s435-consumable-slots",
     "verify-skill-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-skill-consume",
     "verify-relations-runtime": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-relations-runtime",
     "verify-mandate-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-mandate-consume",

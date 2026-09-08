@@ -486,6 +486,24 @@ gameRouter.post('/items/use', (req, res) => {
   }
 });
 
+/** S13 快捷槽分配（Session 435）：{ officerId, itemId, count? } 势力库存 → 武将快捷槽 */
+gameRouter.post('/items/assign', (req, res) => {
+  try {
+    res.json(gameService.doAssignConsumable(Number(req.body.officerId), Number(req.body.itemId), req.body.count == null ? 1 : Number(req.body.count)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'assign consumable failed' });
+  }
+});
+
+/** S13 快捷槽卸下（Session 435）：{ officerId, itemId, count? } 快捷槽 → 势力库存 */
+gameRouter.post('/items/unassign', (req, res) => {
+  try {
+    res.json(gameService.doUnassignConsumable(Number(req.body.officerId), Number(req.body.itemId), req.body.count == null ? undefined : Number(req.body.count)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'unassign consumable failed' });
+  }
+});
+
 /** S11/S12 任命：三轨 + 霸府 { officerId, track, position, cityId? } */
 gameRouter.post('/personnel/appoint', (req, res) => {
   try {

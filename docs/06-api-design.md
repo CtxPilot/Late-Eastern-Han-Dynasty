@@ -537,7 +537,7 @@ POST   /api/v1/games/:id/marriage/divorce
 
 ### 2.8 宝物/装备
 
-> **Session 266 实装（S13 0-A）**：装备/卸下/赏赐已实装，路径为现行 `POST /api/game/items/equip|unequip|grant`（Body `{ officerId, itemId }`，返回 `GameState`）；**Session 432**：消耗品使用已实装 `POST /api/game/items/use`（见下）。
+> **Session 266 实装（S13 0-A）**：装备/卸下/赏赐已实装，路径为现行 `POST /api/game/items/equip|unequip|grant`（Body `{ officerId, itemId }`，返回 `GameState`）；**Session 432**：消耗品使用已实装 `POST /api/game/items/use`（见下）；**Session 435**：快捷槽分配/卸下已实装 `POST /api/game/items/assign|unassign`（见下）。
 
 ```
 POST   /api/game/items/equip
@@ -556,8 +556,18 @@ POST   /api/game/items/grant
   Response: { ...GameState }
 
 POST   /api/game/items/use
-  使用消耗品（Session 432 已实装：直接扣势力库存；stamina/heal→体力、上限 calcStaminaMax；morale→所在城士气；food→所在城军粮；其余类型明确拒绝；零 RNG）
+  使用消耗品（Session 432 已实装：直接扣势力库存；stamina/heal→体力、上限 calcStaminaMax；morale→所在城士气；food→所在城军粮；其余类型明确拒绝；零 RNG。Session 435：优先扣快捷槽，槽空回退库存）
   Body: { officerId: number, itemId: number }
+  Response: { ...GameState }
+
+POST   /api/game/items/assign
+  快捷槽分配（Session 435 已实装：势力库存→武将快捷槽；同类叠加≤99，新种类需空槽≤2 种；在野/阵亡/非消耗品/库存不足拒绝；零 RNG）
+  Body: { officerId: number, itemId: number, count?: number（缺省 1） }
+  Response: { ...GameState }
+
+POST   /api/game/items/unassign
+  快捷槽卸下（Session 435 已实装：快捷槽→势力库存；count 缺省整栈；未携带/超量拒绝；零 RNG）
+  Body: { officerId: number, itemId: number, count?: number（缺省整栈） }
   Response: { ...GameState }
 ```
 
