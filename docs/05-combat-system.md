@@ -2839,6 +2839,11 @@ interface TournamentRecord {
 > `docs/43-multi-army-battle-design.md`（围城合流 S1 + 六角多军 S2，D1~D12 拍板点含推荐值，
 > R1~R4 不变量；待批准后实装）——多军围城合流、围城进度共享、按军比例回流、单位帽 8、
 > 部署偏移与军旗区分均以 docs/43 为准；回合中途增援入场另行立项。
+>
+> **S1 实装（Session 433）**：战役层围城合流自动战已落地（`collectSiegeMergeGroup` 组军序=兵力降序→id 升序；
+> 合成军兵力/粮草求和、四维按兵力加权 floor、主军主导编成+squads/structures 拼接；损耗按兵力占比 floor 分摊尾差归主军；
+> siegeState 主军唯一持有、join/撤退迁移不重置、劝降读主军围城月数；AI/玩家同规则；`engaged` 野战保持 1v1）。
+> 六角多军（S2：单位帽 8/`siege-storm` 端点/军旗区分）仍后置。
 
 ### 10.3 关隘战
 

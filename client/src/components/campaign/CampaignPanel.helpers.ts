@@ -4,6 +4,7 @@
 import {
   DipRelation,
   areCitiesRoadAdjacent,
+  collectSiegeMergeGroup,
   findDiplomacy,
   type CampaignArmy,
   type City,
@@ -41,4 +42,16 @@ export function campaignArmyPhaseLabel(
     return '暂驻（友方城池）';
   }
   return '暂驻（中立城池）';
+}
+
+/**
+ * docs/43 D12：围城合流标注——同城同势力围城军 ≥2 时返回「N 军合流 · 共 X 兵」，
+ * 否则 null。口径与引擎 `collectSiegeMergeGroup` 同源（shared 纯函数）。
+ */
+export function siegeMergeLabel(game: GameState, army: CampaignArmy): string | null {
+  if (army.phase !== 'sieging') return null;
+  const group = collectSiegeMergeGroup(game.campaignArmies, army.id);
+  if (group.length < 2) return null;
+  const troops = group.reduce((sum, item) => sum + item.troops, 0);
+  return `${group.length} 军合流 · 共 ${troops} 兵`;
 }

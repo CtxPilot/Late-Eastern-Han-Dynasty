@@ -124,6 +124,8 @@ const ALIAS_MAP = {
   tribute: 'doTribute',
   unequipItem: 'doUnequipItem',
   unstationCounter: 'doUnstationCounter',
+  // 消耗品运行时（S13，Session 432）：services 前缀 do*，worker 沿用引擎函数名
+  useConsumable: 'doUseConsumable',
 };
 
 /** 服务导出的离线可达解析：同名 handler 或别名映射。 */

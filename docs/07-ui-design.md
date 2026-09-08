@@ -597,6 +597,8 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 └────────────────────────────────────────────┘
 ```
 
+> Session 433（docs/43 S1·D12）：同城同势力围城军 ≥2 时，左栏战役 Army 列表与军令面板 Army 卡均显示「N 军合流 · 共 X 兵」标注（`siegeMergeLabel`，与引擎 `collectSiegeMergeGroup` 同源 shared 纯函数）；强攻终审追加「合流」条目（主军主导、各军按兵力分摊损耗）。
+
 ### 10.3 设施建造菜单
 
 ```

@@ -51,6 +51,9 @@ import {
   weakestHostileCityId,
   armyTransportForMarch,
   transportMarchFoodMul,
+  apportionArmyLosses,
+  buildMergedSiegeArmy,
+  collectSiegeMergeGroup,
   type AutoBattleResult,
   type CampaignArmy,
   type CampaignFormationOptions,
@@ -97,6 +100,111 @@ export const MARCH_MORALE_DECAY = 2;
 export const MARCH_ORG_DECAY = 1;
 /** 驻守组织度恢复 */
 export const GARRISON_ORG_RECOVER = 5;
+
+// ====== 围城合流（docs/43 S1 · D3/D4/D5/D7） ======
+
+/** 合流组排序：兵力降序 → id 升序（与 shared 纯函数同口径） */
+function byTroopsDescThenId(a: CampaignArmy, b: CampaignArmy): number {
+  return b.troops - a.troops || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
+/** 新建围城状态（抵达敌城时的初始值，D5 只迁移不重置）。 */
+function freshSiegeState(city: GameState['cities'][number]): NonNullable<CampaignArmy['siegeState']> {
+  return {
+    wallDurability: (city.stats.wall ?? 0) * 100,
+    maxWallDurability: (city.stats.wall ?? 0) * 100,
+    gateDurability: 100,
+    siegeTurns: 0,
+    attackerStructures: [],
+    defenderBonus: 0,
+    surrenderChance: 10,
+  };
+}
+
+/** 同城同势力已在围城且持有进度的友军（join 对象；无则 undefined）。 */
+function allySiegeHolder(
+  armies: readonly CampaignArmy[],
+  arriving: CampaignArmy,
+): CampaignArmy | undefined {
+  const targetId = arriving.currentNodeId;
+  return armies.find(
+    (other) =>
+      other.id !== arriving.id &&
+      other.factionId === arriving.factionId &&
+      other.phase === 'sieging' &&
+      (other.targetNodeId ?? other.currentNodeId) === targetId &&
+      other.siegeState != null,
+  );
+}
+
+/**
+ * D5/R3：抵达敌城转入围城时决定 siegeState 归属——
+ * 同城同势力已有围城军持有 → 本军 join（不重置、不自持）；否则由本军建立/复用围城状态。
+ */
+function siegeStateForArrival(
+  armies: readonly CampaignArmy[],
+  arriving: CampaignArmy,
+  targetCity: GameState['cities'][number],
+  ownState: CampaignArmy['siegeState'] = undefined,
+): CampaignArmy['siegeState'] {
+  if (allySiegeHolder(armies, arriving)) return undefined;
+  return ownState ?? freshSiegeState(targetCity);
+}
+
+/**
+ * D5：持有围城进度的军离场（撤退/调遣）时，把进度交给同城同势力剩余兵力最大军
+ * （迁移不重置，R3 至多一份）。`armies` 为离场后（或离场中）的军队数组。
+ */
+export function transferSiegeStateOnLeave(
+  armies: readonly CampaignArmy[],
+  leaving: CampaignArmy,
+): CampaignArmy[] {
+  const siegeState = leaving.siegeState;
+  if (!siegeState) return [...armies];
+  const targetId = leaving.targetNodeId ?? leaving.currentNodeId;
+  const heir = armies
+    .filter(
+      (a) =>
+        a.id !== leaving.id &&
+        a.factionId === leaving.factionId &&
+        a.phase === 'sieging' &&
+        (a.targetNodeId ?? a.currentNodeId) === targetId,
+    )
+    .slice()
+    .sort(byTroopsDescThenId)[0];
+  if (!heir) return [...armies];
+  return armies.map((a) => (a.id === heir.id ? { ...a, siegeState: { ...siegeState } } : a));
+}
+
+/**
+ * R3/D5 归一化：同势力同围城目标至多一份 siegeState，且由兵力最大军（主军）持有；
+ * 主军更替只迁移不重置，重复持有者清空。无多军围城时为恒等变换。
+ */
+function reconcileSiegeOwnership(armies: CampaignArmy[]): CampaignArmy[] {
+  let next = armies;
+  const seen = new Set<string>();
+  for (const army of armies) {
+    if (army.phase !== 'sieging') continue;
+    const key = `${army.factionId}:${army.targetNodeId ?? army.currentNodeId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const group = collectSiegeMergeGroup(next, army.id);
+    if (group.length < 2) continue;
+    const primary = group[0]!;
+    const holder = group.find((a) => a.siegeState != null);
+    if (!holder?.siegeState) continue;
+    const progress = holder.siegeState;
+    const groupIds = new Set(group.map((a) => a.id));
+    next = next.map((item) => {
+      if (item.id === primary.id) {
+        return item.siegeState === progress ? item : { ...item, siegeState: progress };
+      }
+      if (groupIds.has(item.id) && item.siegeState) return { ...item, siegeState: undefined };
+      return item;
+    });
+  }
+  return next;
+}
 
 // ====== 节点初始化 ======
 
@@ -497,7 +605,17 @@ export function tickCampaignMarch(state: GameState): GameState {
         target.ruler !== a.factionId &&
         isHostileOrAtWar(state.diplomacy, a.factionId, target.ruler)
       ) {
-        armies[i] = { ...a, phase: 'sieging', currentNodeId: a.targetNodeId ?? a.currentNodeId };
+        // docs/43 D5：抵达即入围城——已有同城同势力围城军持有进度则 join（不重置），
+        // 否则复用本军既有进度（路径为空 ⇒ 目标即当前节点）或新建（修复原到达分支不建 siegeState 缺口）。
+        const arriving: CampaignArmy = {
+          ...a,
+          phase: 'sieging',
+          currentNodeId: a.targetNodeId ?? a.currentNodeId,
+        };
+        armies[i] = {
+          ...arriving,
+          siegeState: siegeStateForArrival(armies, arriving, target, a.siegeState),
+        };
         logs.push(`${a.name} 抵达 ${target.name}，进入围城`);
       } else {
         armies[i] = { ...a, phase: 'garrison', currentNodeId: a.targetNodeId ?? a.currentNodeId };
@@ -588,16 +706,13 @@ export function tickCampaignMarch(state: GameState): GameState {
       msg = `${a.name} 在 ${targetCity?.name ?? nextNodeId} 与 ${enemyArmy.name} 遭遇，进入野战`;
     } else if (isEnemyCity && restPath.length === 0) {
       phase = 'sieging';
-      siegeState = {
-        wallDurability: (targetCity.stats.wall ?? 0) * 100,
-        maxWallDurability: (targetCity.stats.wall ?? 0) * 100,
-        gateDurability: 100,
-        siegeTurns: 0,
-        attackerStructures: [],
-        defenderBonus: 0,
-        surrenderChance: 10,
-      };
-      msg = `${a.name} 兵临 ${targetCity.name}，开始围城`;
+      // docs/43 D5：同城同势力已有围城军持有进度 → 本军 join（不重置、不自持）；否则本军建立。
+      const arriving: CampaignArmy = { ...a, currentNodeId: nextNodeId };
+      const holder = allySiegeHolder(armies, arriving);
+      siegeState = siegeStateForArrival(armies, arriving, targetCity);
+      msg = holder
+        ? `${a.name} 兵临 ${targetCity.name}，与友军合流围城`
+        : `${a.name} 兵临 ${targetCity.name}，开始围城`;
     }
 
     armies[i] = {
@@ -616,7 +731,13 @@ export function tickCampaignMarch(state: GameState): GameState {
     if (msg) logs.push(msg);
   }
 
-  let next: GameState = { ...state, campaignArmies: armies, cities, officers };
+  // docs/43 D5/R3：围城进度唯一化（多军围同城时由兵力最大军持有，迁移不重置）
+  let next: GameState = {
+    ...state,
+    campaignArmies: reconcileSiegeOwnership(armies),
+    cities,
+    officers,
+  };
   for (const m of logs) next = pushLog(next, 'campaign_march_tick', m);
   return next;
 }
@@ -1157,14 +1278,17 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
     .filter((o): o is Officer => !!o && o.faction === targetCity.ruler && o.status === OfficerStatus.ACTIVE);
   const defCmd = defenders.sort((a, b) => b.stats.charisma - a.stats.charisma)[0];
 
-  const turns = army.siegeState?.siegeTurns ?? 0;
+  // docs/43 D5：围城进度读主军（同城合流军共享围城月数）
+  const group = collectSiegeMergeGroup(state.campaignArmies, armyId);
+  const primary = group[0] ?? army;
+  const turns = primary.siegeState?.siegeTurns ?? 0;
   let chance = 10 + (commander ? (commander.stats.charisma - (defCmd?.stats.charisma ?? 70)) * 0.5 : 0) + turns * 2;
   chance = Math.max(5, Math.min(60, chance));
 
   const roll = rng() * 100;
   if (roll >= chance) {
     const armies = state.campaignArmies.map((a) =>
-      a.id === armyId && a.siegeState
+      a.id === primary.id && a.siegeState
         ? { ...a, siegeState: { ...a.siegeState, siegeTurns: (a.siegeState.siegeTurns ?? 0) + 1 } }
         : a,
     );
@@ -1174,18 +1298,19 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
     };
   }
 
-  // 投降 → 占城
-  const captured = applyBattleResultToState(state, army, {
+  // 投降 → 占城（合流军整组入城，零伤亡）
+  const mergedTroops = group.reduce((n, a) => n + a.troops, 0);
+  const captured = applyBattleResultToState(state, group.map((a) => ({ army: a, remaining: a.troops })), {
     winner: 'attacker',
     rounds: 0,
     battlefield: targetCity.name,
     attackerCasualties: 0,
     defenderCasualties: 0,
-    attackerRemaining: army.troops,
+    attackerRemaining: mergedTroops,
     defenderRemaining: 0,
     commanderStatus: defCmd ? { [defCmd.id]: 'captured' } : {},
     duels: [],
-    attackerMoraleAfter: army.morale,
+    attackerMoraleAfter: primary.morale,
     defenderMoraleAfter: 0,
     prisoners: Math.floor(targetCity.troops * 0.5),
     spoils: { gold: Math.floor(targetCity.gold * 0.5), food: Math.floor(targetCity.food * 0.5) },
@@ -1206,7 +1331,29 @@ export function assault(
   return assaultForFaction(state, armyId, state.playerFactionId, rng);
 }
 
-/** 服务端权威入口：指定势力对其已接战 Army 执行自动强攻。 */
+/** 同节点敌方 Army 中兵力最大者（docs/43 D3 守方口径：现状「第一支」升级为「兵力最大」，确定性）。 */
+function largestEnemyArmyAt(
+  state: GameState,
+  army: CampaignArmy,
+  targetId: number,
+): CampaignArmy | undefined {
+  return state.campaignArmies
+    .filter(
+      (a) =>
+        a.id !== army.id &&
+        a.factionId !== army.factionId &&
+        isHostileOrAtWar(state.diplomacy, army.factionId, a.factionId) &&
+        a.currentNodeId === targetId,
+    )
+    .slice()
+    .sort(byTroopsDescThenId)[0];
+}
+
+/**
+ * 服务端权威入口：指定势力对其已接战 Army 执行自动强攻。
+ * docs/43 S1：`phase='sieging'` 时同城同势力围城军自动合流，一次 `runAutoBattle`
+ * （合成军入参、各军按 D7 分摊回写）；`engaged` 野战保持 1v1（D2）。
+ */
 export function assaultForFaction(
   state: GameState,
   armyId: string,
@@ -1224,20 +1371,19 @@ export function assaultForFaction(
   const targetCity = state.cities[targetId];
   if (!targetCity) throw new Error('目标节点不存在');
 
-  // 查找同节点敌方 Army
-  const enemyArmy = state.campaignArmies.find(
-    (a) =>
-      a.id !== army.id &&
-      a.factionId !== army.factionId &&
-      isHostileOrAtWar(state.diplomacy, army.factionId, a.factionId) &&
-      a.currentNodeId === targetId,
-  );
+  // 围城合流组（D3）：组[0] 为主军；单军时 group=[army]，走原逐字节路径（R4）
+  const group = army.phase === 'sieging' ? collectSiegeMergeGroup(state.campaignArmies, army.id) : [];
+  const merged = group.length > 1 ? buildMergedSiegeArmy(group) : army;
+  const acting = group.length > 1 ? group[0]! : army;
+
+  // 同节点敌方 Army（兵力最大者）优先；无则围城打城驻军
+  const enemyArmy = largestEnemyArmyAt(state, acting, targetId);
   if (
     !enemyArmy &&
     (
       targetCity.ruler == null ||
-      targetCity.ruler === army.factionId ||
-      !isHostileOrAtWar(state.diplomacy, army.factionId, targetCity.ruler)
+      targetCity.ruler === acting.factionId ||
+      !isHostileOrAtWar(state.diplomacy, acting.factionId, targetCity.ruler)
     )
   ) {
     throw new Error('目标非敌方');
@@ -1245,13 +1391,24 @@ export function assaultForFaction(
 
   const result = runAutoBattle(
     state,
-    army,
+    merged,
     enemyArmy ?? null,
     enemyArmy ? null : { cityId: targetId, garrison: targetCity.troops, wall: targetCity.stats.wall ?? 0 },
     rng,
   );
 
-  const next = applyBattleResultToState(state, army, result, {
+  let attackers: AttackerSettlement[];
+  if (group.length > 1) {
+    const losses = apportionArmyLosses(group, result.attackerCasualties);
+    attackers = group.map((member, index) => ({
+      army: member,
+      remaining: member.troops - (losses[index] ?? 0),
+    }));
+  } else {
+    attackers = [{ army, remaining: result.attackerRemaining }];
+  }
+
+  const next = applyBattleResultToState(state, attackers, result, {
     type: enemyArmy ? 'field_battle' : 'assault',
     defCityId: enemyArmy ? undefined : targetId,
     enemyArmyId: enemyArmy?.id,
@@ -1281,8 +1438,9 @@ export function retreatArmy(state: GameState, armyId: string): GameState {
         }
       : a,
   );
+  // docs/43 D5：持有围城进度者撤退 → 进度移交同城剩余兵力最大军（迁移不重置）
   return pushLog(
-    { ...state, campaignArmies: armies },
+    { ...state, campaignArmies: transferSiegeStateOnLeave(armies, army) },
     'campaign_retreat',
     `${army.name} 撤退（士气 -10）`,
   );
@@ -1296,38 +1454,55 @@ interface BattleResolution {
   enemyArmyId?: string;
 }
 
-/** 将自动战斗结果应用到 GameState */
+/** 攻方结算片（docs/43 D7）：一场战斗后每支参战军的兵力回写 */
+interface AttackerSettlement {
+  army: CampaignArmy;
+  /** 战后该军兵力（= 原兵力 − 分摊损耗，D7/R2 比例守恒） */
+  remaining: number;
+}
+
+/**
+ * 将自动战斗结果应用到 GameState。
+ * docs/43 S1：攻方改为结算片列表（长度 1 = 原单军路径逐字节不变）；`attackers[0]` 为主军，
+ * 占城归属/功绩/俘虏归属/战报主语取主军口径，各军兵力按 D7 分摊回写。
+ */
 function applyBattleResultToState(
   state: GameState,
-  army: CampaignArmy,
+  attackers: readonly AttackerSettlement[],
   result: AutoBattleResult,
   resolution: BattleResolution,
   rng: () => number,
 ): GameState {
+  const primary = attackers[0]?.army;
+  if (!primary) throw new Error('战后结算缺少攻方');
+  /** D12 战报主语：单军=军名；合流=「主军名等 N 支」 */
+  const subject = attackers.length > 1 ? `${primary.name}等 ${attackers.length} 支` : primary.name;
   let cities = { ...state.cities };
   let officers = { ...state.officers };
   let factions = { ...state.factions };
-  // 两支参战 Army 都先从权威数组移除，随后按战果各自最多回写一次。
+  // 参战 Army 都先从权威数组移除，随后按战果各自最多回写一次。
   // 旧逻辑只移除攻方，防守方残军 push 后与原对象并存，且攻方战败分支还会重复回写攻方。
   const participantIds = new Set([
-    army.id,
+    ...attackers.map((item) => item.army.id),
     ...(resolution.enemyArmyId ? [resolution.enemyArmyId] : []),
   ]);
   const armies = state.campaignArmies.filter((a) => !participantIds.has(a.id));
   const captivesByAttacker: number[] = [];
   const captivesByDefender: number[] = [];
 
-  // 更新攻方 Army
-  const updatedArmy: CampaignArmy = {
+  // 更新攻方 Army（每军一份；单军时与旧 `updatedArmy` 等价）
+  // 士气夹紧 0~100（`runAutoBattle` 内部上限 120，与 services/game.ts:1720、game.worker.ts:1802 同口径；
+  // 原战役路径漏夹紧会写出 Schema 非法军士气）。
+  const updatedArmies: CampaignArmy[] = attackers.map(({ army, remaining }) => ({
     ...army,
-    troops: result.attackerRemaining,
-    morale: result.attackerMoraleAfter,
+    troops: remaining,
+    morale: Math.max(0, Math.min(100, result.attackerMoraleAfter)),
     organization: Math.max(0, army.organization - 10),
     fatigue: Math.min(100, army.fatigue + 20),
     experience: army.experience + (result.winner === 'attacker' ? 50 : 20),
     phase: result.winner === 'attacker' ? 'garrison' : 'retreating',
     siegeState: undefined,
-  };
+  }));
 
   // 移除被歼灭的敌方 Army
   if (resolution.enemyArmyId) {
@@ -1362,25 +1537,27 @@ function applyBattleResultToState(
     }
   }
 
-  // 攻方主将/副将伤亡
-  for (const oid of [army.commanderId, ...army.subCommanderIds]) {
-    const o = officers[oid];
-    if (!o) continue;
-    const status = result.commanderStatus[oid];
-    if (status === 'killed') {
-      officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
-    } else if (status === 'captured') {
-      officers[oid] = { ...o, status: OfficerStatus.PRISONER };
-      captivesByDefender.push(oid);
-    } else if (status === 'wounded') {
-      officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
+  // 攻方主将/副将伤亡（合流时覆盖各军主将与副将）
+  for (const { army } of attackers) {
+    for (const oid of [army.commanderId, ...army.subCommanderIds]) {
+      const o = officers[oid];
+      if (!o) continue;
+      const status = result.commanderStatus[oid];
+      if (status === 'killed') {
+        officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
+      } else if (status === 'captured') {
+        officers[oid] = { ...o, status: OfficerStatus.PRISONER };
+        captivesByDefender.push(oid);
+      } else if (status === 'wounded') {
+        officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
+      }
     }
   }
 
   const sealCaptures = (s: GameState): GameState => {
     let out = s;
     if (captivesByAttacker.length > 0) {
-      out = applyCapturedRelations(out, captivesByAttacker, army.commanderId);
+      out = applyCapturedRelations(out, captivesByAttacker, primary.commanderId);
     }
     if (captivesByDefender.length > 0) {
       const enemyCmd =
@@ -1432,16 +1609,31 @@ function applyBattleResultToState(
           freedIds.push(oid);
         }
       }
-      // 攻方主将调入
-      const movedCmdIds = [army.commanderId, ...army.subCommanderIds];
+      // 释放武将后同步势力名册（Schema「势力武将清单与武将归属一致」；对齐 march.ts:349 范式）。
+      // 原战役路径漏同步：守城武将转在野后旧主 officerIds 仍悬挂，完整 Schema 校验失败（存量缺陷）。
+      if (prevRuler != null && factions[prevRuler] && freedIds.length > 0) {
+        factions[prevRuler] = {
+          ...factions[prevRuler],
+          officerIds: factions[prevRuler].officerIds.filter(
+            (id) => officers[id]?.faction === prevRuler,
+          ),
+        };
+      }
+      // 攻方主将/副将调入（合流时各军主将副将一并入城）
+      const movedCmdIds: number[] = [];
+      for (const { army } of attackers) {
+        for (const oid of [army.commanderId, ...army.subCommanderIds]) {
+          if (!movedCmdIds.includes(oid)) movedCmdIds.push(oid);
+        }
+      }
       for (const oid of movedCmdIds) {
         if (officers[oid]) officers[oid] = { ...officers[oid], location: targetId };
       }
-      // 占城
+      // 占城（驻军 = 各军残兵之和 = result.attackerRemaining，R2）
       cities[targetId] = {
         ...target,
-        ruler: army.factionId,
-        troops: result.attackerRemaining,
+        ruler: primary.factionId,
+        troops: attackers.reduce((n, item) => n + item.remaining, 0),
         troopsMorale: Math.min(80, Math.max(40, (target.troopsMorale ?? 70) - 15)),
         stats: {
           ...target.stats,
@@ -1461,12 +1653,14 @@ function applyBattleResultToState(
           troopsMorale: Math.max(0, (shocked.troopsMorale ?? 70) - FAMILY_CAPTURE_MORALE_HIT),
         };
       }
-      // 从出发城移除已迁入的武将
-      if (army.fromNodeId != null && cities[army.fromNodeId]) {
+      // 从各自出发城移除已迁入的武将
+      for (const { army } of attackers) {
+        if (army.fromNodeId == null || !cities[army.fromNodeId]) continue;
         const from = cities[army.fromNodeId];
+        const ownIds = [army.commanderId, ...army.subCommanderIds];
         cities[army.fromNodeId] = {
           ...from,
-          officers: from.officers.filter((id) => !movedCmdIds.includes(id)),
+          officers: from.officers.filter((id) => !ownIds.includes(id)),
         };
       }
       // 重新计算势力城池
@@ -1477,38 +1671,41 @@ function applyBattleResultToState(
         cities,
         officers,
         factions,
-        campaignArmies: [...armies, updatedArmy],
+        campaignArmies: [...armies, ...updatedArmies],
         pendingFamilyTreatment:
-          army.factionId === state.playerFactionId ? pendingFamilyTreatment : null,
+          primary.factionId === state.playerFactionId ? pendingFamilyTreatment : null,
       };
-      // 军事功绩：破城 +30（Army 主将）；若占城导致目标势力覆灭再 +50（灭国）
-      after = grantMeritTo(after, army.commanderId, MERIT_CAPTURE_CITY);
+      // 军事功绩：破城 +30（主军主将）；若占城导致目标势力覆灭再 +50（灭国）
+      after = grantMeritTo(after, primary.commanderId, MERIT_CAPTURE_CITY);
       // S27 声望：强攻破城 +20 / 开城投降占城 +10；灭国再 +50（docs/08 §十七）
-      after = grantFame(after, army.factionId, resolution.type === 'siege_surrender' ? FAME_OCCUPY_CITY : FAME_CAPTURE_CITY);
+      after = grantFame(after, primary.factionId, resolution.type === 'siege_surrender' ? FAME_OCCUPY_CITY : FAME_CAPTURE_CITY);
       if (prevRuler != null && factions[prevRuler] && !factions[prevRuler].isAlive) {
-        after = grantMeritTo(after, army.commanderId, MERIT_ANNIHILATE_FACTION);
-        after = grantFame(after, army.factionId, FAME_ANNIHILATE_FACTION);
+        after = grantMeritTo(after, primary.commanderId, MERIT_ANNIHILATE_FACTION);
+        after = grantFame(after, primary.factionId, FAME_ANNIHILATE_FACTION);
       }
       after = clearCityCounterOnCapture(after, targetId);
-      after = lootBeautyOnCapture(after, targetId, army.factionId, rng);
+      after = lootBeautyOnCapture(after, targetId, primary.factionId, rng);
       after = syncFactionResources(after);
       const msg = resolution.type === 'siege_surrender'
-        ? `${target.name} 开城投降！${army.name} 占领`
-        : `${army.name} 攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}${
+        ? `${target.name} 开城投降！${subject}占领`
+        : `${subject}攻占 ${target.name}！俘获士兵 ${result.prisoners}，缴获金 ${result.spoils.gold}、粮 ${result.spoils.food}${
             familyShockIds.length > 0 ? `；家属所在城失陷，${familyShockIds.length} 城士气−${FAMILY_CAPTURE_MORALE_HIT}` : ''
           }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}`;
       return sealCaptures(pushLog(after, 'campaign_capture', msg));
     }
   }
 
-  // 攻方败 → 残兵回流
-  if (result.winner === 'defender' && army.fromNodeId != null) {
-    const from = cities[army.fromNodeId];
-    if (from) {
-      cities[army.fromNodeId] = {
-        ...from,
-        troops: from.troops + result.attackerRemaining,
-      };
+  // 攻方败 → 残兵回流（各军按 D7 分摊残兵退回各自出发城）
+  if (result.winner === 'defender' && attackers.every((item) => item.army.fromNodeId != null)) {
+    for (const { army, remaining } of attackers) {
+      const fromId = army.fromNodeId!;
+      const from = cities[fromId];
+      if (from) {
+        cities[fromId] = {
+          ...from,
+          troops: from.troops + remaining,
+        };
+      }
     }
     // 军事功绩：守城 +8（守方主将，守方击退攻方围城；仅限围城战，野战无守城一说）
     let defeatedState: GameState = { ...state, cities, officers, factions, campaignArmies: armies };
@@ -1525,19 +1722,22 @@ function applyBattleResultToState(
         defeatedState = grantMeritTo(defeatedState, enemyCmd, MERIT_FIELD_ROUT);
       }
     }
-    // Army 残部退回（兵力极少则解散）
-    if (result.attackerRemaining > MIN_CAMPAIGN_TROOPS) {
-      armies.push({ ...updatedArmy, phase: 'garrison', currentNodeId: army.fromNodeId, targetNodeId: undefined, path: [] });
+    // Army 残部退回（各军兵力极少则解散）
+    for (const updated of updatedArmies) {
+      const origin = attackers.find((item) => item.army.id === updated.id)!.army;
+      if (updated.troops > MIN_CAMPAIGN_TROOPS) {
+        armies.push({ ...updated, phase: 'garrison', currentNodeId: origin.fromNodeId!, targetNodeId: undefined, path: [] });
+      }
     }
     return sealCaptures(pushLog(
       defeatedState,
       'campaign_defeat',
-      `${army.name} 战败，残部 ${result.attackerRemaining} 退回`,
+      `${subject}战败，残部 ${attackers.reduce((n, item) => n + item.remaining, 0)} 退回`,
     ));
   }
 
   // 野战胜（无 defCityId）：Army 驻守当前节点
-  armies.push({ ...updatedArmy, phase: 'garrison' });
+  for (const updated of updatedArmies) armies.push({ ...updated, phase: 'garrison' });
   // 军事功绩：野战击破——守方溃散（击破敌军主力，30% 溃散线）攻方主将 +20；
   // 未溃散险胜 +10。引擎结构下守方 30% 溃散线兜底，"全歼（残 0）"不可达，
   // 故以"溃散"为重大战果判定（docs/04 §6.1）。
@@ -1547,13 +1747,13 @@ function applyBattleResultToState(
   let fieldState: GameState = { ...state, cities, officers, factions, campaignArmies: armies };
   fieldState = grantMeritTo(
     fieldState,
-    army.commanderId,
+    primary.commanderId,
     defRouted ? MERIT_FIELD_ANNIHILATE : MERIT_FIELD_ROUT,
   );
   return sealCaptures(pushLog(
     fieldState,
     'campaign_field_win',
-    `${army.name} 野战胜利，敌军溃退`,
+    `${subject}野战胜利，敌军溃退`,
   ));
 }
 

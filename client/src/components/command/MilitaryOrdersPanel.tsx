@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import type { CampaignArmy, CampaignPhase, GameState, StructureType } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
-import { campaignArmyPhaseLabel } from '../campaign/CampaignPanel.helpers';
+import { campaignArmyPhaseLabel, siegeMergeLabel } from '../campaign/CampaignPanel.helpers';
 
 const PHASE_LABEL: Record<CampaignPhase, string> = {
   garrison: '驻守',
@@ -177,11 +177,13 @@ export function MilitaryOrdersPanel() {
 }
 
 function ArmyStatus({ game, army }: { game: GameState; army: CampaignArmy }) {
+  const merge = siegeMergeLabel(game, army);
   return (
     <article className="border border-stone-800 bg-stone-900/60 px-3 py-2">
       <div className="flex justify-between"><strong className="text-stone-100">{army.name}</strong><span className="text-red-200">{campaignArmyPhaseLabel(game, army, PHASE_LABEL)}</span></div>
       <p className="mt-1 text-xs text-stone-500">{game.cities[army.currentNodeId]?.name ?? `节点${army.currentNodeId}`} · 兵 {army.troops} · 粮 {army.food} · 士气 {army.morale}</p>
       <p className="text-xs text-stone-600">组织 {army.organization} · 疲劳 {army.fatigue}</p>
+      {merge ? <p className="mt-0.5 text-xs text-red-200" data-testid="military-merge-label">{merge}</p> : null}
     </article>
   );
 }
@@ -218,6 +220,11 @@ function orderItems(game: GameState, draft: OrderDraft) {
   } else if (draft.kind === 'advisor') {
     items.push({ label: '立即后果', value: ADVISOR_ACTIONS.find((item) => item.value === draft.action)?.effect ?? draft.action });
   } else {
+    // docs/43 D12：攻城终审标注合流规模（主军主将主导、各军按兵力分摊损耗）
+    if (draft.kind === 'assault' && army) {
+      const merge = siegeMergeLabel(game, army);
+      if (merge) items.push({ label: '合流', value: merge });
+    }
     items.push({ label: '立即后果', value: orderSummary(draft) });
   }
   return items;

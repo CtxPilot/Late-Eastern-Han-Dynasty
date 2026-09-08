@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 432**（S13 消耗品运行时：`useConsumable` 体力/士气/军粮 + 前后端链路，`verify-s432` 13/13 ✅） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 后置项首片落地 |
-| 代码最新 | Session 432（`server/src/engine/items.ts useConsumable` + `POST /items/use` + Worker 离线镜像 + OfficerDetail 消耗品区；提交 `eb064ae`；`verify-s432-consumable` 13/13 + verify-items 32/32 + 双端 typecheck 全绿） |
-| 文档最新 | **Session 432 双写**（docs/04 §12.3 实装注、docs/06 §2.8 端点更新、docs/07 消耗品区、docs/12 S13 行、docs/35 主线 ㊔、10-progress 日志、本文件）；docs/43 多军协同规格 v1.0 仍待批准 |
-| 本交接用途 | **S13 消耗品运行时收口**；后续方向：docs/43 S1 实装（待批准）或 0-B 闸门真人实测或 S13 剩余后置逐项立项 |
-| 下一步 | ①**docs/43 D1~D12 批准 → S1 围城合流实装**（用户拍板门槛）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项 |
+| 会话 | **Session 433**（docs/43 S1 围城合流实装：合成军一次自动战 + siegeState 主军共享/迁移 + 损耗按军分摊，`verify-s433` 41/41 + UI 21/21 ✅） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 首片 + docs/43 S1 已落地 |
+| 代码最新 | Session 433（`shared/campaign-utils.ts` 合流三纯函数 + `engine/campaign.ts` 合流化 + `aiMilitary.ts` 组结算 + 双面板合流标注；未提交；`verify-s433-siege-merge` 41/41 + UI 21/21 + turn-golden 重举全绿） |
+| 文档最新 | **Session 433 双写**（docs/43 S1 实装状态、docs/04 AI 围城组口径、docs/05 §10.2 实装注、docs/07 D12 标注、docs/12 S10 行、docs/35 主线 ㊕、10-progress 日志、本文件）；docs/43 S2 六角多军仍后置 |
+| 本交接用途 | **docs/43 S1 围城合流收口**；后续方向：S2 六角多军立项或 0-B 闸门真人实测或 S13 剩余后置逐项立项 |
+| 下一步 | ①**docs/43 S2 六角多军 + `siege-storm` 端点立项**（S1 验收后；回合中途增援仍另行立项）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项 |
+
+### Session 433 交接要点
+
+- **S1 围城合流最小切片**：shared 三纯函数（`collectSiegeMergeGroup`/`buildMergedSiegeArmy`/`apportionArmyLosses`，D3/D4/D7，R1 不落库）+ `assaultForFaction` 围城组一次 `runAutoBattle` + 到达 join/主军持有/撤退迁移（D5/R3，顺带修复到达分支不建 siegeState 缺口）+ 劝降读主军月数 + AI 组结算 + 双面板「N 军合流」标注与强攻终审合流条目（D12）。附带两处存量修补：攻方士气夹紧 0~100、占城同步旧主 `officerIds`。
+- **金样重举合法**：12 月金样 7 月起曹操军双军围平原（8 月起月月合成强攻）致 RNG 流前移，11~12 月军粮 prints + digest 重举，1~10 月逐字节不变；单军 R4 逐字节等价有专项断言背书。
+- **验证全绿**：`verify-s433-siege-merge` **41/41**、shared 481（含新增 9）、UI **21/21**（console 0 error）、turn-golden 3/3、campaign 71、ai-military-rng 38、turn-cadence 28、save 9/9/10/10、parity 5/5、client 71、三端 typecheck、compliance、diff-check。
+- **脚本教训**：0-B 剧本扩容后选剧本/势力须 h2/strong 精确匹配（模糊含「曹操」会误入群雄讨董）；战役列表在左栏手风琴内须先展开；`verify-s416-worker-parity` 补 `useConsumable` 别名（432 遗漏）。
+- 文档：docs/43（S1 状态+§七已落地）、docs/04、docs/05 §10.2、docs/07、docs/12 S10、docs/35 主线 ㊕、10-progress Session 433 日志、HANDOFF 双写。
+- 边界：野战/白刃战多军、回合中途增援、协同加成、AI 委任化、S2 六角多军均不做；0-B 闸门待真人游玩。
 
 ### Session 432 交接要点
 

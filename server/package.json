@@ -67,6 +67,7 @@
     "start": "node dist/index.js",
     "verify-items": "tsx src/scripts/verify-items.ts",
     "verify-s432-consumable": "tsx src/scripts/verify-s432-consumable.ts",
+    "verify-s433-siege-merge": "tsx src/scripts/verify-s433-siege-merge.ts",
     "verify-skill-consume": "tsx src/scripts/verify-skill-consume.ts",
     "verify-relations-runtime": "tsx src/scripts/verify-relations-runtime.ts",
     "verify-mandate-consume": "tsx src/scripts/verify-mandate-consume.ts",

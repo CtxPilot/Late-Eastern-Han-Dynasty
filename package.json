@@ -112,6 +112,7 @@
     "verify-compliance": "node scripts/verify-compliance.mjs",
     "verify-items": "pnpm --filter @leh/server verify-items",
     "verify-s432-consumable": "pnpm --filter @leh/server verify-s432-consumable",
+    "verify-s433-siege-merge": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s433-siege-merge",
     "verify-skill-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-skill-consume",
     "verify-relations-runtime": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-relations-runtime",
     "verify-mandate-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-mandate-consume",

@@ -1,3 +1,16 @@
+## 2026-09-08 — Session 433 · docs/43 S1 围城合流实装（战役层自动战）
+
+- Phase：**S1 围城合流**；docs/43 D1~D12 推荐值已拍板（S1 切片），只做战役层自动战合流，不碰 `engaged` 野战（D2 保持 1v1）、六角多军（S2）、回合中途增援。
+- **合流纯函数**（`shared/campaign-utils.ts`，双端共用、零 RNG）：`collectSiegeMergeGroup`（D3：同势力+同围城目标+sieging，军序=兵力降序→id 升序，`group[0]` 即主军）+ `buildMergedSiegeArmy`（D4：结算期临时对象不落库 R1；兵力/粮草求和、四维按兵力加权 floor、主军主导编成、非主军主将进 `subCommanderIds` 可成战损对象、squads/structures 拼接；单军组返回真身 R4）+ `apportionArmyLosses`（D7/R2：损耗按兵力占比 floor 分摊、尾差归主军、夹紧不超本军兵力）。
+- **引擎**（`server/src/engine/campaign.ts`）：`assaultForFaction` 围城组一次 `runAutoBattle`（合成军入参、D7 分摊回写、占城驻军=各军残兵之和 R2、战报主语「主军名等 N 支」D12）；`siegeStateForArrival`/`allySiegeHolder` 到达 join 不重置（修复原到达分支不建 siegeState 缺口，D5）；`reconcileSiegeOwnership` 同城同势力至多一份 siegeState 由主军持有（R3）；`transferSiegeStateOnLeave` 主军撤退/调遣迁移不重置（D5，接 `retreatArmy` + AI 撤退）；`trySiegeSurrender` 读主军围城月数、投降整组零伤亡入城；守方口径「第一支」→同节点兵力最大敌军（确定性）；`applyBattleResultToState` 改攻方结算片列表（单军=原路径等价 R4）。附带两处存量修补：攻方士气夹紧 0~100（旧路径可写出 Schema 非法士气）、占城同步旧主 `officerIds`（对齐 march.ts:349 范式）。
+- **AI 对等**（`aiMilitary.ts`）：围城军按组一次结算（组级补给/劣势判定，单军组与旧口径逐字节一致 R4），`engaged` 野战不动；战报主语「主军名等 N 支」（D12）。
+- **UI**（D12）：`siegeMergeLabel`（shared 同源）→ CampaignPanel 军列表 `campaign-army-merge` + 详情 `campaign-merge-detail` + MilitaryOrdersPanel `military-merge-label` + 强攻终审「合流」条目。
+- **验证（全绿）**：`verify-s433-siege-merge` **41/41**（合成12000战/分摊尾差/R2守恒/join不重置/撤退迁移/劝降+2%/月/AI一次战报/单军与 `runAutoBattle` 直接调用逐字节一致/双局24月确定性/Schema）+ shared `siege-merge.test.ts` 9 用例（481/481）+ `verify-s433-siege-merge-ui` **21/21**（曹操双路出征邺/濮阳→平原→合流标注→军令标注→强攻终审合流条目→取消不结算，console 0 error）+ turn-golden **3/3** + campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/9/10/10 + parity 5/5 + client 71 + 三端 typecheck + compliance + diff-check。
+- **金样重举（docs/43 预警兑现）**：12 月金样 7 月起出现曹操军双军围平原（8 月起月月「吕虔军等 2 支」合成强攻），`runAutoBattle` 调用次数减少致权威 RNG 流前移；`turn-golden-12.json` 11~12 月军粮 prints（13795→13823、14256→14306）+ digest 重举，1~10 月逐字节不变。单军 R4 等价已由 §4 逐字节断言背书，差异仅源于合流后月份。
+- **UI 脚本两处修补**：① 0-B 剧本扩容后 #4~#8 剧本卡描述亦含「曹操」，选剧本/势力改 h2/strong 精确匹配（此前误入群雄讨董致 10 项级联失败）；② 战役 Army 列表寄于左栏「战役」手风琴（闭合不渲染），先展开再断言。另补 `verify-s416-worker-parity` `useConsumable→doUseConsumable` 别名（Session 432 遗漏）与验证脚本 `DipRelation.WAR` 类型修补。
+- 文档：docs/43（S1 实装状态 + §七已落地）、docs/04（AI 围城组口径注）、docs/05 §10.2（S1 实装注，S2 后置）、docs/07（D12 合流标注）、docs/12（S10 行）、docs/35（主线 ㊕）、本日志与 HANDOFF 双写。
+- 边界：`engaged` 野战/白刃战多军、回合中途增援、协同数值加成、AI 势力委任化、S2 六角多军（单位帽 8/`siege-storm`/军旗区分）均不做；0-B 闸门待真人游玩。
+
 ## 2026-09-03 — Session 432 · S13 消耗品运行时（体力/士气/军粮 + 前后端链路）
 
 - Phase：**S13 宝物后置项**；HANDOFF「下一步」后置系统逐项立项（消耗品运行时），纯玩法切片、零数据扩容。

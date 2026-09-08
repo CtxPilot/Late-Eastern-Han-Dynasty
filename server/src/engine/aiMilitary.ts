@@ -9,6 +9,7 @@ import {
   OfficerStatus,
   UnitType,
   canTravelMacroAdjacent,
+  collectSiegeMergeGroup,
   countFieldArmies,
   formationTroopCap,
   getCommanderyTemplateByTemplateId,
@@ -21,7 +22,7 @@ import {
 } from '@leh/shared';
 import { getPlotAttackModifier, isEmptyFortDeterring, isInstigateForcedAttack, isSecretCrossingGarrisonHold } from './plot.js';
 import { getPolicyAttackModifier } from './policy.js';
-import { assaultForFaction, startCampaignForFaction } from './campaign.js';
+import { assaultForFaction, startCampaignForFaction, transferSiegeStateOnLeave } from './campaign.js';
 
 export const AI_MILITARY_CONFIG = Object.freeze({
   minRaidSourceTroops: 2_000,
@@ -145,7 +146,8 @@ function withdrawAiArmy(state: GameState, armyId: string, reason: string): GameS
       : item,
   );
   return pushLog(
-    { ...state, campaignArmies: armies },
+    // docs/43 D5：持有围城进度者离场 → 进度移交同城剩余兵力最大军（迁移不重置）
+    { ...state, campaignArmies: transferSiegeStateOnLeave(armies, army) },
     'ai_retreat',
     `【军情】${army.name}${reason}，撤回${state.cities[destination]?.name ?? '本营'}`,
   );
@@ -180,28 +182,43 @@ export function runAiMilitary(
     const engaged = s.campaignArmies.filter((army) =>
       army.factionId === f.id && (army.phase === 'sieging' || army.phase === 'engaged')
     ).sort((a, b) => a.id.localeCompare(b.id));
+    const handled = new Set<string>();
     for (const army of engaged) {
+      if (handled.has(army.id)) continue;
       const target = s.cities[army.targetNodeId ?? army.currentNodeId];
       if (!target?.ruler || !canAiAttackFaction(s, f.id, target.ruler)) {
         s = withdrawAiArmy(s, army.id, '因战事已止');
+        handled.add(army.id);
         continue;
       }
+      // docs/43 S1 D3：围城军按同城合流组一次结算（组[0]=主军，玩家/AI 同规则）；
+      // engaged 野战保持 1v1（D2）。组级补给/劣势判定在单军组下与逐军口径逐字节一致（R4）。
+      const group = army.phase === 'sieging' ? collectSiegeMergeGroup(s.campaignArmies, army.id) : [army];
+      const groupTroops = group.reduce((n, item) => n + item.troops, 0);
+      const groupFood = group.reduce((n, item) => n + item.food, 0);
       const lacksSupply =
-        army.food < monthlyArmyFood(army.troops) * AI_MILITARY_CONFIG.retreatFoodMonths;
-      const outmatched = army.troops < target.troops * AI_MILITARY_CONFIG.retreatTroopRatio;
+        groupFood < monthlyArmyFood(groupTroops) * AI_MILITARY_CONFIG.retreatFoodMonths;
+      const outmatched = groupTroops < target.troops * AI_MILITARY_CONFIG.retreatTroopRatio;
       if (lacksSupply || outmatched) {
-        s = withdrawAiArmy(s, army.id, lacksSupply ? '因粮道不继' : '因敌强我弱');
+        for (const member of group) {
+          s = withdrawAiArmy(s, member.id, lacksSupply ? '因粮道不继' : '因敌强我弱');
+          handled.add(member.id);
+        }
         continue;
       }
-      const beforeTroops = army.troops;
-      const outcome = assaultForFaction(s, army.id, f.id, resolutionRng);
+      const primary = group[0]!;
+      const beforeTroops = groupTroops;
+      const outcome = assaultForFaction(s, primary.id, f.id, resolutionRng);
       const factionName = s.factions[f.id]?.name ?? '某军';
       const result = outcome.result;
+      // D12：月结战报主语=「主军名等 N 支」（单军即军名）
+      const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
       s = pushLog(
         outcome.state,
         'ai_battle_report',
-        `【战报】${factionName}攻${target.name}${result.winner === 'attacker' ? '得胜' : '失利'}：攻方损${result.attackerCasualties}、守方损${result.defenderCasualties}（出阵${beforeTroops}）`,
+        `【战报】${factionName}·${subject}攻${target.name}${result.winner === 'attacker' ? '得胜' : '失利'}：攻方损${result.attackerCasualties}、守方损${result.defenderCasualties}（出阵${beforeTroops}）`,
       );
+      for (const member of group) handled.add(member.id);
     }
     // R6 后续 · S15 深化（Session 260）：郡域增援 —— 该 AI 势力为郡域守方时，
     // 评估是否从郡治大地图城市编成增援 Army 直接入场（不走大地图行军）。

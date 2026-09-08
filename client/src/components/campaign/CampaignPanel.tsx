@@ -4,6 +4,7 @@
 import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
 import { FormationType, UnitType, countFieldArmies, maxFieldArmies, type CampaignArmy } from '@leh/shared';
+import { siegeMergeLabel } from './CampaignPanel.helpers';
 import { useGameStore } from '../../stores/gameStore';
 
 const PHASE_LABEL: Record<string, string> = {
@@ -177,6 +178,7 @@ export function CampaignPanel() {
   const currentNode = selectedArmy
     ? game.cities[selectedArmy.currentNodeId]
     : null;
+  const selectedMergeLabel = selectedArmy ? siegeMergeLabel(game, selectedArmy) : null;
 
   return (
     <div className="text-xs text-stone-300 leading-snug">
@@ -339,6 +341,7 @@ export function CampaignPanel() {
             {myArmies.map((a) => {
               const cmd = game.officers[a.commanderId];
               const node = game.cities[a.currentNodeId];
+              const mergeLabel = siegeMergeLabel(game, a);
               return (
                 <InkButton
                   key={a.id}
@@ -358,6 +361,11 @@ export function CampaignPanel() {
                     {node?.name ?? a.currentNodeId} · 兵{a.troops}/{a.maxTroops} · 粮{a.food} · 士{a.morale}
                     {cmd ? ` · ${cmd.name}` : ''}
                   </div>
+                  {mergeLabel && (
+                    <div className="text-rose-400/80 mt-0.5" data-testid="campaign-army-merge">
+                      {mergeLabel}
+                    </div>
+                  )}
                 </InkButton>
               );
             })}
@@ -396,6 +404,11 @@ export function CampaignPanel() {
               <div className="mt-1 text-rose-400/80">
                 围城第 {selectedArmy.siegeState.siegeTurns} 回合
                 · 城墙 {selectedArmy.siegeState.wallDurability}/{selectedArmy.siegeState.maxWallDurability}
+              </div>
+            )}
+            {selectedMergeLabel && (
+              <div className="text-rose-400/80" data-testid="campaign-merge-detail">
+                {selectedMergeLabel}
               </div>
             )}
             {selectedArmy.structures.length > 0 && (
