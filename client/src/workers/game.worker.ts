@@ -50,6 +50,8 @@ import {
   type StrategyType,
   type StructureType,
   mergeSkillsWithTree,
+  collectSiegeMergeGroup,
+  isHostileOrAtWar,
   relationState,
   resolveAffinity,
   skillPointsForMerit,
@@ -114,8 +116,12 @@ import {
 } from '../../../server/src/engine/battle.js';
 import {
   advisorAction as campaignAdvisorActionEngine,
+  armyInActiveBattle as campaignArmyInActiveBattleEngine,
   assault as campaignAssaultEngine,
+  largestEnemyArmyAt as campaignLargestEnemyArmyAtEngine,
   orderMarch as campaignOrderMarchEngine,
+  resolveStormArmies as campaignResolveStormArmiesEngine,
+  settleSiegeStormBattle as campaignSettleSiegeStormBattleEngine,
   retreatArmy as campaignRetreatArmyEngine,
   startCampaign as campaignStartEngine,
   trySiegeSurrender as campaignTrySiegeSurrenderEngine,
@@ -1010,11 +1016,11 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
     });
   },
 
-  retreat(): BattleState {
+  retreat(armyId?: string): BattleState {
     return withLock(() => {
       const battle = getActiveBattle();
       if (!battle) throw new Error('无战斗');
-      const nextBattle = retreatBattle(battle);
+      const nextBattle = retreatBattle(battle, armyId);
       commitActiveBattle(nextBattle);
       return nextBattle;
     });
@@ -1106,6 +1112,14 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
           activeMelee: resolved,
         };
         currentGame = applyMeleeSettlement(withoutBattle, resolved);
+        return getClientGame();
+      }
+      // docs/43 S2 D10：亲统攻城六角结算镜像（与服务端 exitBattle 同源分支）。
+      const stormArmies = campaignResolveStormArmiesEngine(state, battle);
+      if (stormArmies.length > 0) {
+        if (battle.phase !== 'over') throw new Error('六角战斗尚未结束，不能提前结算');
+        const nextState = campaignSettleSiegeStormBattleEngine(state, battle, stormArmies, runtimeRandom);
+        commitActiveBattle(null, nextState);
         return getClientGame();
       }
       let nextState = state;
@@ -1980,6 +1994,51 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       const result = campaignAssaultEngine(getGame(), armyId, runtimeRandom);
       currentGame = result.state;
       return { game: getClientGame(), result: result.result };
+    });
+  },
+
+  /** docs/43 S2 D11：亲统攻城（离线镜像，与服务端 doCampaignSiegeStorm 同源规则）。 */
+  campaignSiegeStorm(armyId: string): { game: GameState; battleId: string } {
+    return withLock(() => {
+      const state = getGame();
+      if (state.activeBattles.length > 0) throw new Error('已有未结算战斗');
+      const army = state.campaignArmies.find((item) => item.id === armyId);
+      if (!army) throw new Error('Army 不存在');
+      if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
+      if (army.phase !== 'sieging') throw new Error('当前非围城阶段');
+      if (campaignArmyInActiveBattleEngine(state, armyId)) throw new Error('该军正在六角激战中');
+      const targetId = army.targetNodeId ?? army.currentNodeId;
+      const targetCity = state.cities[targetId];
+      if (
+        !targetCity ||
+        targetCity.ruler == null ||
+        targetCity.ruler === army.factionId ||
+        !isHostileOrAtWar(state.diplomacy, army.factionId, targetCity.ruler)
+      ) {
+        throw new Error('目标非敌方');
+      }
+      const group = collectSiegeMergeGroup(state.campaignArmies, armyId);
+      if (group.length === 0) throw new Error('合流组不存在');
+      const primary = group[0]!;
+      const enemyArmy = campaignLargestEnemyArmyAtEngine(state, primary, targetId);
+      if (enemyArmy && campaignArmyInActiveBattleEngine(state, enemyArmy.id)) throw new Error('守军正在他处激战');
+      const battle = createBattle(state, targetId, {
+        ...(group.length > 1 ? { attackerArmies: group } : { attackerArmy: primary }),
+        ...(enemyArmy ? { defenderArmy: enemyArmy } : {}),
+      });
+      const inBattle = new Set(battle.units.map((unit) => unit.armyId));
+      const sidelined = group.filter((member) => !inBattle.has(member.id)).map((member) => member.name);
+      const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
+      const message = `${subject}亲统强攻 ${targetCity.name}（六角）${sidelined.length > 0 ? `；${sidelined.join('、')}屯于城下策应` : ''}`;
+      currentGame = {
+        ...state,
+        activeBattles: [battle],
+        actionLog: [
+          { year: state.currentYear, month: state.currentMonth, type: 'siege_storm', message },
+          ...state.actionLog,
+        ].slice(0, 80),
+      };
+      return { game: getClientGame(), battleId: battle.id };
     });
   },
 

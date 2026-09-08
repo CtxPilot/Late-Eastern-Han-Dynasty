@@ -75,6 +75,7 @@ const ALIAS_MAP = {
   appoint: 'doAppoint',
   buyArms: 'doBuyArms',
   campaignAssault: 'doCampaignAssault',
+  campaignSiegeStorm: 'doCampaignSiegeStorm',
   cancelPlot: 'doCancelPlot',
   clearTournamentChampionBet: 'doClearTournamentChampionBet',
   conscript: 'doConscript',

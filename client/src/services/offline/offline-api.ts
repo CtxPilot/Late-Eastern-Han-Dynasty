@@ -330,8 +330,8 @@ export function battleAbility(attackerId: string, targetId: string, abilityId: s
 export function battleFinishPlayer(): Promise<BattleState> {
   return call('finishPlayer');
 }
-export function battleRetreat(): Promise<BattleState> {
-  return call('retreat');
+export function battleRetreat(armyId?: string): Promise<BattleState> {
+  return call('retreat', [armyId]);
 }
 export function battleChangeFormation(unitId: string, targetFormation: FormationType): Promise<BattleState> {
   return call('formation', [unitId, targetFormation]);
@@ -375,6 +375,10 @@ export function campaignBuild(armyId: string, structureType: string): Promise<Ga
 }
 export function campaignAssault(armyId: string): ReturnType<typeof import('../api').campaignAssault> {
   return call('campaignAssault', [armyId]);
+}
+/** docs/43 S2 D11：亲统攻城（离线经 worker 同源实现）。 */
+export function campaignSiegeStorm(armyId: string): ReturnType<typeof import('../api').campaignSiegeStorm> {
+  return call('campaignSiegeStorm', [armyId]);
 }
 export function campaignSiegeSurrender(armyId: string): ReturnType<typeof import('../api').campaignSiegeSurrender> {
   return call('campaignSiegeSurrender', [armyId]);

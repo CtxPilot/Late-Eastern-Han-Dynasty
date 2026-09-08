@@ -860,9 +860,9 @@ gameRouter.post('/battle/finish-player', (_req, res) => {
 });
 
 /** S10 六角战术撤退：服务端派生态势校验后进入战斗结束态。 */
-gameRouter.post('/battle/retreat', (_req, res) => {
+gameRouter.post('/battle/retreat', (req, res) => {
   try {
-    res.json(gameService.battleRetreat());
+    res.json(gameService.battleRetreat(req.body?.armyId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'retreat failed' });
   }
@@ -985,6 +985,15 @@ gameRouter.post('/campaign/:armyId/assault', (req, res) => {
     res.json(gameService.doCampaignAssault(req.params.armyId));
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : 'campaign assault failed' });
+  }
+});
+
+/** docs/43 S2 D11：亲统攻城（六角）。 */
+gameRouter.post('/campaign/:armyId/siege/storm', (req, res) => {
+  try {
+    res.json(gameService.doCampaignSiegeStorm(req.params.armyId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'campaign siege storm failed' });
   }
 });
 

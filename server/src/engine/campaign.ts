@@ -55,6 +55,7 @@ import {
   buildMergedSiegeArmy,
   collectSiegeMergeGroup,
   type AutoBattleResult,
+  type BattleState,
   type CampaignArmy,
   type CampaignFormationOptions,
   type CampaignNode,
@@ -65,6 +66,7 @@ import {
   type StructureType,
 } from '@leh/shared';
 import { clearCityCounterOnCapture } from './spy.js';
+import { collectAnnihilatedDefenderCommanders, MANUAL_VICTORY_RECOVERY_RATIO } from './battle.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
 import { equipBonusFor } from './items.js';
@@ -1260,6 +1262,8 @@ export function trySiegeSurrender(state: GameState, armyId: string, rng: () => n
   if (!army) throw new Error('Army 不存在');
   if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
   if (army.phase !== 'sieging') throw new Error('当前非围城阶段');
+  // docs/43 S2：激战中卫士
+  if (armyInActiveBattle(state, armyId)) throw new Error('该军正在六角激战中');
 
   const targetCity = state.cities[army.targetNodeId ?? army.currentNodeId];
   if (!targetCity) throw new Error('围城目标不存在');
@@ -1331,8 +1335,309 @@ export function assault(
   return assaultForFaction(state, armyId, state.playerFactionId, rng);
 }
 
-/** 同节点敌方 Army 中兵力最大者（docs/43 D3 守方口径：现状「第一支」升级为「兵力最大」，确定性）。 */
-function largestEnemyArmyAt(
+// ====== 亲统攻城六角结算（docs/43 S2 · D10/D11） ======
+
+/**
+ * 激战中卫士：该军是否有单位正在未结算六角战斗中。
+ * 自动强攻/劝降/撤退须拒绝激战中 Army（战后结算以六角快照为准，不可中途另算）。
+ */
+export function armyInActiveBattle(state: GameState, armyId: string): boolean {
+  return state.activeBattles.some(
+    (battle) => !battle.settled && battle.units.some((unit) => unit.armyId === armyId),
+  );
+}
+
+/**
+ * docs/43 S2：从六角战斗快照派生亲统结算组——攻方单位 armyId 全部可解析为
+ * 同势力、围城中、目标即 `battle.cityId` 的真源军（无 activeMelee 前提下由
+ * exitBattle 调用；activeMelee 战术白刃优先判定）。
+ * 任一参战军失配即返回空数组（调用方回退演示日志分支，不做脏写）。
+ * 不新增存档字段：判定只读既有 `units[].armyId` + `campaignArmies`。
+ */
+export function collectSiegeStormGroup(state: GameState, battle: BattleState): CampaignArmy[] {
+  if (battle.fromCityId != null || battle.cityId == null || battle.phase !== 'over' || battle.settled) return [];
+  return resolveStormArmies(state, battle);
+}
+
+/**
+ * 亲统参战军解析（无回合条件，供 exitBattle 未结束分支先行识别）：
+ * 攻方单位 armyId 全部可解析为同势力、围城中、目标即 `battle.cityId` 的真源军。
+ */
+export function resolveStormArmies(state: GameState, battle: BattleState): CampaignArmy[] {
+  if (battle.fromCityId != null || battle.cityId == null) return [];
+  const ids = [...new Set(
+    battle.units.filter((unit) => unit.side === 'attacker').map((unit) => unit.armyId),
+  )];
+  if (ids.length === 0) return [];
+  const armies: CampaignArmy[] = [];
+  for (const id of ids) {
+    const army = state.campaignArmies.find((item) => item.id === id);
+    if (!army || army.phase !== 'sieging' || (army.targetNodeId ?? army.currentNodeId) !== battle.cityId) {
+      return [];
+    }
+    armies.push(army);
+  }
+  const factionId = armies[0]!.factionId;
+  if (!armies.every((army) => army.factionId === factionId)) return [];
+  return armies.sort(byTroopsDescThenId);
+}
+
+/** 六角快照某军某侧兵力（initial 含被歼单位 maxTroops；alive 含已撤退单位现兵）。 */
+function stormArmySnapshot(
+  battle: BattleState,
+  armyId: string,
+  side: 'attacker' | 'defender',
+): { initial: number; alive: number; aliveNoRetreat: number; maxAlive: number } {
+  let initial = 0;
+  let alive = 0;
+  let aliveNoRetreat = 0;
+  let maxAlive = 0;
+  for (const unit of battle.units) {
+    if (unit.side !== side || unit.armyId !== armyId) continue;
+    initial += unit.maxTroops;
+    if (unit.isDestroyed) continue;
+    alive += unit.troopCount;
+    maxAlive += unit.maxTroops;
+    if (!unit.isRetreated) aliveNoRetreat += unit.troopCount;
+  }
+  return { initial, alive, aliveNoRetreat, maxAlive };
+}
+
+/** 存活单位士气均值（floor，0~100；无存活回退 army.morale）。 */
+function stormArmyMorale(battle: BattleState, armyId: string, side: 'attacker' | 'defender', fallback: number): number {
+  const morales = battle.units
+    .filter((unit) => unit.side === side && unit.armyId === armyId && !unit.isDestroyed)
+    .map((unit) => unit.morale);
+  if (morales.length === 0) return fallback;
+  return Math.max(0, Math.min(100, Math.floor(morales.reduce((sum, value) => sum + value, 0) / morales.length)));
+}
+
+/**
+ * docs/43 S2 D10：亲统六角结算（按军回流）。
+ * - 胜利 vs 城驻军 → 占城（15% 伤兵归队军内结算，Σ残兵入城）+ 各军解散；
+ * - 胜利 vs 野战敌军 → 敌军歼灭/击溃，各军维持围城（主军 siegeState 保留）；
+ * - 败北 → 各军残兵按 15% 回流各自 from 城（守军残兵写回城防）；
+ * - 战术撤退 → 各军残兵按 50% 回流（独立分支，无功绩）。
+ * 胜/败复用 `applyBattleResultToState`（合成 AutoBattleResult，主军口径功绩/俘虏/缴获
+ * 与自动战同源）；战场生擒沿 exitBattle 战术分支口径（被歼守方单位主将径直被俘）。
+ */
+export function settleSiegeStormBattle(
+  state: GameState,
+  battle: BattleState,
+  group: CampaignArmy[],
+  rng: () => number,
+): GameState {
+  const targetId = battle.cityId;
+  const targetCity = targetId == null ? undefined : state.cities[targetId];
+  if (targetId == null || !targetCity) throw new Error('目标节点不存在');
+  const primary = group[0];
+  if (!primary) throw new Error('亲统结算缺少攻方');
+  const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
+
+  // 守方：同节点敌军（D3，单位 armyId 可解析且敌对）或城驻军（legacy 演示单位）。
+  const defenderIds = [...new Set(battle.units.filter((unit) => unit.side === 'defender').map((unit) => unit.armyId))];
+  const enemyCandidate = defenderIds.length === 1
+    ? state.campaignArmies.find((item) => item.id === defenderIds[0])
+    : undefined;
+  const enemyArmy = enemyCandidate && enemyCandidate.factionId !== primary.factionId ? enemyCandidate : undefined;
+  const defInitial = battle.units
+    .filter((unit) => unit.side === 'defender')
+    .reduce((sum, unit) => sum + unit.maxTroops, 0);
+  const defAlive = battle.units
+    .filter((unit) => unit.side === 'defender' && !unit.isDestroyed)
+    .reduce((sum, unit) => sum + unit.troopCount, 0);
+  const defMorale = (): number => {
+    const morales = battle.units.filter((unit) => unit.side === 'defender' && !unit.isDestroyed).map((unit) => unit.morale);
+    if (morales.length === 0) return targetCity.troopsMorale ?? 70;
+    return Math.max(0, Math.min(100, Math.floor(morales.reduce((sum, value) => sum + value, 0) / morales.length)));
+  };
+
+  const atkSnaps = group.map((army) => ({ army, snap: stormArmySnapshot(battle, army.id, 'attacker') }));
+  const atkInitial = atkSnaps.reduce((sum, item) => sum + item.snap.initial, 0);
+  const atkMorale = (): number => {
+    const morales = battle.units
+      .filter((unit) => unit.side === 'attacker' && group.some((army) => army.id === unit.armyId) && !unit.isDestroyed)
+      .map((unit) => unit.morale);
+    if (morales.length === 0) return primary.morale;
+    return Math.max(0, Math.min(100, Math.floor(morales.reduce((sum, value) => sum + value, 0) / morales.length)));
+  };
+  const voluntaryRetreat = battle.units.some((unit) => unit.side === 'attacker' && unit.isRetreated);
+
+  // 战场生擒（攻方胜）：被歼守方单位主将径直被俘（沿 exitBattle 战术分支口径）。
+  const sealBattleCaptures = (next: GameState): GameState => {
+    if (battle.winner !== 'attacker') return next;
+    const capturedIds = collectAnnihilatedDefenderCommanders(battle);
+    if (capturedIds.length === 0) return next;
+    const names: string[] = [];
+    return pushLog(
+      {
+        ...next,
+        officers: Object.fromEntries(
+          Object.entries(next.officers).map(([id, officer]) => {
+            if (!capturedIds.includes(officer.id)) return [id, officer];
+            names.push(officer.name);
+            return [id, { ...officer, status: OfficerStatus.PRISONER }];
+          }),
+        ),
+      },
+      'battle_capture',
+      `【战报】战场生擒：${names.join('、')}`,
+    );
+  };
+
+  if (battle.winner === 'attacker') {
+    // —— 胜利：15% 伤兵归队军内结算（对齐 settleTacticalMeleeTroops），Σ残兵入城 ——
+    const attackers = atkSnaps.map(({ army, snap }) => {
+      const wounded = Math.max(0, snap.maxAlive - snap.aliveNoRetreat);
+      const recovery = Math.floor(wounded * MANUAL_VICTORY_RECOVERY_RATIO);
+      return { army, remaining: Math.min(snap.maxAlive, snap.aliveNoRetreat + recovery) };
+    });
+    const atkRemaining = attackers.reduce((sum, item) => sum + item.remaining, 0);
+    const result: AutoBattleResult = {
+      winner: 'attacker',
+      rounds: 0,
+      battlefield: targetCity.name,
+      attackerCasualties: Math.max(0, atkInitial - atkSnaps.reduce((sum, item) => sum + item.snap.aliveNoRetreat, 0)),
+      defenderCasualties: Math.max(0, defInitial - defAlive),
+      attackerRemaining: atkRemaining,
+      defenderRemaining: enemyArmy ? defAlive : 0,
+      commanderStatus: {},
+      duels: [],
+      attackerMoraleAfter: atkMorale(),
+      defenderMoraleAfter: enemyArmy ? defMorale() : 0,
+      prisoners: enemyArmy ? 0 : Math.floor(targetCity.troops * 0.5),
+      spoils: enemyArmy
+        ? { gold: 0, food: 0 }
+        : { gold: Math.floor(targetCity.gold * 0.5), food: Math.floor(targetCity.food * 0.5) },
+      events: [],
+    };
+    const next = applyBattleResultToState(
+      state,
+      attackers,
+      result,
+      enemyArmy ? { type: 'field_battle', enemyArmyId: enemyArmy.id } : { type: 'assault', defCityId: targetId },
+      rng,
+    );
+    const ids = new Set(group.map((army) => army.id));
+    if (enemyArmy) {
+      // 野胜：亲统围城军继续围城（非驻守）——phase 复原，主军围城进度保留（R3）。
+      const savedSiege = primary.siegeState;
+      return sealBattleCaptures({
+        ...next,
+        campaignArmies: next.campaignArmies.map((army) =>
+          ids.has(army.id)
+            ? { ...army, phase: 'sieging' as const, siegeState: army.id === primary.id ? savedSiege : undefined }
+            : army,
+        ),
+      });
+    }
+    // 攻城胜：D10 各军解散入城（驻军 = Σ残兵，R2）。
+    return sealBattleCaptures(pushLog(
+      { ...next, campaignArmies: next.campaignArmies.filter((army) => !ids.has(army.id)) },
+      'siege_disband',
+      `${subject}解散入城`,
+    ));
+  }
+
+  if (voluntaryRetreat) {
+    // —— 战术撤退：各军残兵 50% 回流各自 from 城（独立分支，无功绩） ——
+    const rate = 0.5;
+    const cities = { ...state.cities };
+    const armies = state.campaignArmies.filter(
+      (army) => !group.some((member) => member.id === army.id) && army.id !== enemyArmy?.id,
+    );
+    let remnantsTotal = 0;
+    for (const army of group) {
+      const snap = stormArmySnapshot(battle, army.id, 'attacker');
+      const remnants = Math.floor(snap.alive * rate);
+      remnantsTotal += remnants;
+      const fromId = army.fromNodeId ?? primary.fromNodeId ?? army.currentNodeId;
+      const from = cities[fromId];
+      if (from && remnants > 0) cities[fromId] = { ...from, troops: from.troops + remnants };
+      if (remnants > MIN_CAMPAIGN_TROOPS) {
+        armies.push({
+          ...army,
+          troops: remnants,
+          morale: stormArmyMorale(battle, army.id, 'attacker', army.morale),
+          organization: Math.max(0, army.organization - 10),
+          fatigue: Math.min(100, army.fatigue + 20),
+          experience: army.experience + 20,
+          phase: 'garrison',
+          currentNodeId: fromId,
+          targetNodeId: undefined,
+          path: [],
+          siegeState: undefined,
+        });
+      }
+    }
+    if (!enemyArmy) {
+      const target = cities[targetId]!;
+      cities[targetId] = {
+        ...target,
+        troops: defAlive,
+        troopsMorale: Math.min(100, (target.troopsMorale ?? 70) + 5),
+      };
+    } else {
+      armies.push({ ...enemyArmy, troops: defAlive, morale: defMorale() });
+    }
+    return pushLog(
+      { ...state, cities, campaignArmies: armies },
+      'campaign_retreat',
+      `${subject}有序撤退，残部 ${remnantsTotal} 退回`,
+    );
+  }
+
+  // —— 败北：各军残兵 15% 回流（复用败北分支：回流/驻守/解散/守方功绩） ——
+  const rate = 0.15;
+  const armies = group.map((army) =>
+    army.fromNodeId != null ? army : { ...army, fromNodeId: primary.fromNodeId },
+  );
+  const attackers = armies.map((army) => {
+    const snap = stormArmySnapshot(battle, army.id, 'attacker');
+    return { army, remaining: Math.floor(snap.alive * rate) };
+  });
+  const atkRemaining = attackers.reduce((sum, item) => sum + item.remaining, 0);
+  const result: AutoBattleResult = {
+    winner: 'defender',
+    rounds: 0,
+    battlefield: targetCity.name,
+    attackerCasualties: Math.max(0, atkInitial - atkRemaining),
+    defenderCasualties: Math.max(0, defInitial - defAlive),
+    attackerRemaining: atkRemaining,
+    defenderRemaining: defAlive,
+    commanderStatus: {},
+    duels: [],
+    attackerMoraleAfter: atkMorale(),
+    defenderMoraleAfter: defMorale(),
+    prisoners: 0,
+    spoils: { gold: 0, food: 0 },
+    events: [],
+  };
+  const next = applyBattleResultToState(
+    state,
+    attackers,
+    result,
+    enemyArmy ? { type: 'field_battle', enemyArmyId: enemyArmy.id } : { type: 'assault', defCityId: targetId },
+    rng,
+  );
+  if (enemyArmy) return next;
+  // 败北分支不改城防——守军残兵写回（对齐 legacy settleBattle）。
+  const patched = next.cities[targetId]!;
+  return {
+    ...next,
+    cities: {
+      ...next.cities,
+      [targetId]: {
+        ...patched,
+        troops: defAlive,
+        troopsMorale: Math.min(100, (patched.troopsMorale ?? 70) + 5),
+      },
+    },
+  };
+}
+
+/** 同节点敌方 Army 中兵力最大者（docs/43 D3 守方口径）：S2 亲统服务共用，导出。 */
+export function largestEnemyArmyAt(
   state: GameState,
   army: CampaignArmy,
   targetId: number,
@@ -1366,6 +1671,8 @@ export function assaultForFaction(
   if (army.phase !== 'sieging' && army.phase !== 'engaged') {
     throw new Error('当前阶段不可强攻');
   }
+  // docs/43 S2：激战中卫士——六角战斗未结算前不可另行自动结算
+  if (armyInActiveBattle(state, armyId)) throw new Error('该军正在六角激战中');
 
   const targetId = army.targetNodeId ?? army.currentNodeId;
   const targetCity = state.cities[targetId];
@@ -1422,6 +1729,8 @@ export function retreatArmy(state: GameState, armyId: string): GameState {
   if (!army) throw new Error('Army 不存在');
   if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
   if (army.phase === 'garrison') throw new Error('驻守中无需撤退');
+  // docs/43 S2：激战中卫士
+  if (armyInActiveBattle(state, armyId)) throw new Error('该军正在六角激战中');
 
   const fromId = army.fromNodeId ?? army.currentNodeId;
   const path = planPath(state, army.currentNodeId, fromId);

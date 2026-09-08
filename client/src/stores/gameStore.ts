@@ -178,6 +178,7 @@ interface Store {
   campaignMarch: (armyId: string, targetNodeId: number) => Promise<void>;
   campaignBuild: (armyId: string, structureType: string) => Promise<void>;
   campaignAssault: (armyId: string) => Promise<void>;
+  campaignSiegeStorm: (armyId: string) => Promise<void>;
   campaignSiegeSurrender: (armyId: string) => Promise<void>;
   campaignRetreat: (armyId: string) => Promise<void>;
   campaignAdvisorAction: (armyId: string, action: 'inspire' | 'trap' | 'retreat' | 'scout') => Promise<void>;
@@ -1263,8 +1264,16 @@ export const useGameStore = create<Store>((set, get) => ({
 
   retreatBattle: async () => {
     try {
-      const battle = await api.battleRetreat();
-      set({ battle, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
+      // docs/43 S2 D10：有选中单位时仅撤其所在军，否则撤首支活跃攻方军（单军战斗与旧全军语义一致）。
+      const { battle, selectedUnitId } = get();
+      const attackerUnits = battle?.units.filter((unit) => unit.side === 'attacker') ?? [];
+      const isActive = (unit: { isRetreated: boolean; isDestroyed: boolean; troopCount: number }): boolean =>
+        !unit.isRetreated && !unit.isDestroyed && unit.troopCount > 0;
+      const armyId = attackerUnits.find((unit) => unit.id === selectedUnitId)?.armyId
+        ?? attackerUnits.find(isActive)?.armyId
+        ?? attackerUnits[0]?.armyId;
+      const next = await api.battleRetreat(armyId);
+      set({ battle: next, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
     } catch (e) {
       set({ error: errMsg(e, '撤退失败') });
     }
@@ -1380,6 +1389,18 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: msg, lastBattleResult: result });
     } catch (e) {
       set({ error: errMsg(e, '强攻失败'), loading: false });
+    }
+  },
+
+  campaignSiegeStorm: async (armyId) => {
+    set({ loading: true, error: null });
+    try {
+      const { game, battleId } = await api.campaignSiegeStorm(armyId);
+      const battle = game.activeBattles.find((item) => item.id === battleId) ?? game.activeBattles[0] ?? null;
+      const after = pushScene(get().sceneStack, { scene: 'battle', battleId: battle?.id ?? battleId });
+      set({ game, battle, sceneStack: after, screen: screenOf(after), loading: false, lastActionOk: game.actionLog[0]?.message ?? '亲统强攻' });
+    } catch (e) {
+      set({ error: errMsg(e, '亲统强攻失败'), loading: false });
     }
   },
 

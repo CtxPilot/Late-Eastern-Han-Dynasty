@@ -891,6 +891,12 @@ POST   /api/v1/games/:id/campaign/:armyId/assault
    Body: {}
    Response: { result: AutoBattleResult }
 
+POST   /api/v1/games/:id/campaign/:armyId/siege/storm
+   亲统强攻（Session 434，docs/43 S2 D11：围城军六角亲统；合流组全体入场，每侧至多 8 队）
+   Body: {}
+   Response: { battleId: string }
+   约束：该军 sieging + 目标敌对 + 无未结算战斗；单军走单数编成（R4）
+
 POST   /api/v1/games/:id/campaign/:armyId/siege/surrender
    劝降
    Body: {}
@@ -1126,6 +1132,9 @@ Session 336：`battle/move` 审计写入 `beforeFacing`；`battle/undo` 在字�
 `isRetreated=true`、`hasActed=true`、`mp=0`，并将战斗置为 `phase=over/winner=defender`，该动作
 不消费 RNG。客户端随后调用既有 `/battle/exit`，战役层识别撤退标记并按 50% 返回率结算。
 这是 0-A 最小切片；敌军主动撤退、追击/截击、攻城突围和多军团协同仍后置。
+
+> Session 434（docs/43 S2 D10）：`/battle/retreat` 接受可选 `Body: { armyId?: string }`——传入时仅撤该军
+> 单位（余部继续战斗，仅全军撤光才结束，胜者守方）；缺省沿旧全军语义。客户端无选中单位时撤首支活跃攻方军。
 
 ### Session 279 · 阵型整合 API 规划边界
 

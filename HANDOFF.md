@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 433**（docs/43 S1 围城合流实装：合成军一次自动战 + siegeState 主军共享/迁移 + 损耗按军分摊，`verify-s433` 41/41 + UI 21/21 ✅） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 首片 + docs/43 S1 已落地 |
-| 代码最新 | Session 433（`shared/campaign-utils.ts` 合流三纯函数 + `engine/campaign.ts` 合流化 + `aiMilitary.ts` 组结算 + 双面板合流标注；未提交；`verify-s433-siege-merge` 41/41 + UI 21/21 + turn-golden 重举全绿） |
-| 文档最新 | **Session 433 双写**（docs/43 S1 实装状态、docs/04 AI 围城组口径、docs/05 §10.2 实装注、docs/07 D12 标注、docs/12 S10 行、docs/35 主线 ㊕、10-progress 日志、本文件）；docs/43 S2 六角多军仍后置 |
-| 本交接用途 | **docs/43 S1 围城合流收口**；后续方向：S2 六角多军立项或 0-B 闸门真人实测或 S13 剩余后置逐项立项 |
-| 下一步 | ①**docs/43 S2 六角多军 + `siege-storm` 端点立项**（S1 验收后；回合中途增援仍另行立项）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；③S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项 |
+| 会话 | **Session 434**（docs/43 S2 六角多军实装：`createBattle` 多军编组 + `siege-storm` 端点 + 亲统按军结算，`verify-s434` 65/65 + UI 27/27 ✅） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 首片 + docs/43 S1/S2 均已落地 |
+| 代码最新 | Session 434（`engine/battle.ts` 多军编组 + `campaign.ts` 亲统结算 + services 双端点 + 五镜像 + 军令亲统按钮 + 军旗条；未提交；`verify-s434` 65/65 + UI 27/27 + 回归矩阵全绿） |
+| 文档最新 | **Session 434 双写**（docs/43 S2 状态、docs/05 §10.2 实装注、docs/06 新端点、docs/07 亲统入口、docs/12 S10、docs/35 主线 ㊖、10-progress 日志、本文件）；docs/43 回合中途增援仍后置 |
+| 本交接用途 | **docs/43 S2 六角多军收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项或增援入场另行立项 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（2 快捷槽/套装 L3/专属共鸣 L2/缴获传承/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 434 交接要点
+
+- **S2 六角多军最小切片**：`createBattle` 复数 opts + `buildSideUnits`（帽 8/策应/±4 偏移，单军分支零改动）+ `settleSiegeStormBattle`（合成 AutoBattleResult 复用胜/败 + 撤退独立分支 + 三卫士）+ `doCampaignSiegeStorm`/`exitBattle` 分支/`battleRetreat` 作用域 + 五镜像 + 军令亲统按钮 + 军旗条（DOM 条 + 旗面军名）。
+- **验证全绿**：`verify-s434-hex-multi-army` **65/65**、UI **27/27**（console 0 error）、turn-golden 3/3（零变化）、campaign 71、ai-military-rng 38、turn-cadence 28、save 9/9/10/10、s433 41/41、shared 481、client 71、三端 typecheck、parity 5/5、compliance、diff-check。
+- **教训**：Schema 只断言权威原态（service 输出是脱敏投影）；store 撤退回退取首支活跃军。
+- 文档：docs/43（S2 状态 + §七已落地）、docs/05 §10.2、docs/06、docs/07、docs/12 S10、docs/35 主线 ㊖、10-progress Session 434 日志、HANDOFF 双写。
+- 边界：回合中途增援、野战/白刃战多军、协同加成、AI 委任化、六角主将伤亡、缴获半城先例均不做/简化；0-B 闸门待真人游玩。
 
 ### Session 433 交接要点
 

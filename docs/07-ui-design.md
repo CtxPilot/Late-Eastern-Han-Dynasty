@@ -598,6 +598,8 @@ LeftPanel → 军事 → 出征 → 弹出 BattleSetupModal
 ```
 
 > Session 433（docs/43 S1·D12）：同城同势力围城军 ≥2 时，左栏战役 Army 列表与军令面板 Army 卡均显示「N 军合流 · 共 X 兵」标注（`siegeMergeLabel`，与引擎 `collectSiegeMergeGroup` 同源 shared 纯函数）；强攻终审追加「合流」条目（主军主导、各军按兵力分摊损耗）。
+>
+> Session 434（docs/43 S2·D11/D12）：军令新增「亲统强攻」按钮（仅围城军，终审含合流条目，提交后切入六角战场）；BattleView 顶部信息条在多军参战时显示「参战：X 军×N · Y 军×M」军旗条（`battle-army-banners`），旗面同步附军名；战术撤退按选中单位所在军执行（无选中撤首支活跃攻方军）。
 
 ### 10.3 设施建造菜单
 

@@ -618,8 +618,8 @@ export async function battleFinishPlayer(): Promise<BattleState> {
   return data;
 }
 
-export async function battleRetreat(): Promise<BattleState> {
-  const { data } = await http.post<BattleState>('/battle/retreat');
+export async function battleRetreat(armyId?: string): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/retreat', armyId ? { armyId } : {});
   return data;
 }
 
@@ -712,6 +712,12 @@ export async function campaignBuild(armyId: string, structureType: string): Prom
 
 export async function campaignAssault(armyId: string): Promise<{ game: GameState; result: AutoBattleResult }> {
   const { data } = await http.post<{ game: GameState; result: AutoBattleResult }>(`/campaign/${armyId}/assault`);
+  return data;
+}
+
+/** docs/43 S2 D11：亲统攻城（六角）。 */
+export async function campaignSiegeStorm(armyId: string): Promise<{ game: GameState; battleId: string }> {
+  const { data } = await http.post<{ game: GameState; battleId: string }>(`/campaign/${armyId}/siege/storm`);
   return data;
 }
 

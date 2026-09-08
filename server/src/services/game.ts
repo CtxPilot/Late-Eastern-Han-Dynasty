@@ -4,7 +4,9 @@
 import {
   NobilityRank,
   OfficerStatus,
+  collectSiegeMergeGroup,
   grantMerit,
+  isHostileOrAtWar,
   maskGameStateForPlayer,
   setTournamentPreferredMode,
   setTournamentPlayerEntries,
@@ -68,12 +70,16 @@ import {
 } from '../engine/battle.js';
 import {
   advisorAction as campaignAdvisorAction,
+  armyInActiveBattle as campaignArmyInActiveBattle,
   assault as campaignAssaultEngine,
   buildStructure as campaignBuildStructure,
   getCampaignNodes,
+  largestEnemyArmyAt as campaignLargestEnemyArmyAt,
   orderMarch as campaignOrderMarch,
+  resolveStormArmies as campaignResolveStormArmies,
   retreatArmy as campaignRetreatArmy,
   runAutoBattle,
+  settleSiegeStormBattle as campaignSettleSiegeStormBattle,
   startCampaign as campaignStartCampaign,
   trySiegeSurrender as campaignTrySiegeSurrender,
   type AdvisorAction,
@@ -930,12 +936,12 @@ export function battleFinishPlayer(): BattleState {
   });
 }
 
-/** S10 六角战术撤退：标记有序撤出，随后由 exitBattle 统一回写残兵。 */
-export function battleRetreat(): BattleState {
+/** S10 六角战术撤退：标记有序撤出，随后由 exitBattle 统一回写残兵。传入 armyId 时仅撤该军（docs/43 S2 D10），缺省全军。 */
+export function battleRetreat(armyId?: string): BattleState {
   return withLock(() => {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
-    const nextBattle = retreatBattle(battle);
+    const nextBattle = retreatBattle(battle, armyId);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
@@ -1077,6 +1083,15 @@ export function exitBattle(): GameState {
       currentGame = applyMeleeSettlement(withoutBattle, resolved);
       return getClientGame();
     }
+    // docs/43 S2 D10：亲统攻城六角结算（按军回流）。activeMelee 战术白刃优先已上置；
+    // 此处识别无 activeMelee 的围城军六角战；未结束拒绝提前结算（沿战术分支口径）。
+    const stormArmies = campaignResolveStormArmies(state, battle);
+    if (stormArmies.length > 0) {
+      if (battle.phase !== 'over') throw new Error('六角战斗尚未结束，不能提前结算');
+      const nextState = campaignSettleSiegeStormBattle(state, battle, stormArmies, runtimeRandom);
+      commitActiveBattle(null, nextState);
+      return getClientGame();
+    }
     let nextState = state;
     if (!battle.settled && battle.fromCityId != null) {
       nextState = settleBattle(state, battle, runtimeRandom);
@@ -1183,6 +1198,55 @@ export function doCampaignAssault(armyId: string): { game: GameState; result: im
     const result = campaignAssaultEngine(getGame(), armyId, runtimeRandom);
     currentGame = result.state;
     return { game: getClientGame(), result: result.result };
+  });
+}
+
+/**
+ * docs/43 S2 D11：亲统攻城（六角）。校验该军 sieging + 收集合流军（D3）→
+ * 守方取同节点兵力最大敌军或城驻军（D3）→ `createBattle` 多军（D8/D9）→ 入列
+ * `activeBattles`（单列约束，已有未结算战斗拒绝）。单军走单数 opts（R4）。
+ */
+export function doCampaignSiegeStorm(armyId: string): { game: GameState; battleId: string } {
+  return withLock(() => {
+    const state = getGame();
+    if (state.activeBattles.length > 0) throw new Error('已有未结算战斗');
+    const army = state.campaignArmies.find((item) => item.id === armyId);
+    if (!army) throw new Error('Army 不存在');
+    if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
+    if (army.phase !== 'sieging') throw new Error('当前非围城阶段');
+    if (campaignArmyInActiveBattle(state, armyId)) throw new Error('该军正在六角激战中');
+    const targetId = army.targetNodeId ?? army.currentNodeId;
+    const targetCity = state.cities[targetId];
+    if (
+      !targetCity ||
+      targetCity.ruler == null ||
+      targetCity.ruler === army.factionId ||
+      !isHostileOrAtWar(state.diplomacy, army.factionId, targetCity.ruler)
+    ) {
+      throw new Error('目标非敌方');
+    }
+    const group = collectSiegeMergeGroup(state.campaignArmies, armyId);
+    if (group.length === 0) throw new Error('合流组不存在');
+    const primary = group[0]!;
+    const enemyArmy = campaignLargestEnemyArmyAt(state, primary, targetId);
+    if (enemyArmy && campaignArmyInActiveBattle(state, enemyArmy.id)) throw new Error('守军正在他处激战');
+    const battle = createBattle(state, targetId, {
+      ...(group.length > 1 ? { attackerArmies: group } : { attackerArmy: primary }),
+      ...(enemyArmy ? { defenderArmy: enemyArmy } : {}),
+    });
+    const inBattle = new Set(battle.units.map((unit) => unit.armyId));
+    const sidelined = group.filter((member) => !inBattle.has(member.id)).map((member) => member.name);
+    const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
+    const message = `${subject}亲统强攻 ${targetCity.name}（六角）${sidelined.length > 0 ? `；${sidelined.join('、')}屯于城下策应` : ''}`;
+    currentGame = {
+      ...state,
+      activeBattles: [battle],
+      actionLog: [
+        { year: state.currentYear, month: state.currentMonth, type: 'siege_storm', message },
+        ...state.actionLog,
+      ].slice(0, 80),
+    };
+    return { game: getClientGame(), battleId: battle.id };
   });
 }
 

@@ -1,3 +1,15 @@
+## 2026-09-08 — Session 434 · docs/43 S2 六角多军实装（亲统攻城）
+
+- Phase：**S2 六角多军**；S1 验收后，只做合流军六角入场 + 亲统结算，不碰回合中途增援（§八另行立项）、`engaged` 野战、白刃战多军、协同数值加成。
+- **编组**（`server/src/engine/battle.ts`）：`CreateBattleOpts.attackerArmies/defenderArmies`（调用方兵力降序，主军 group[0]）；`buildSideUnits` 按军序逐军入战，多军侧单位帽 `HEX_SIDE_UNIT_CAP=8`（单军侧无帽，R4），满帽整军不入战（名入 `sidelined`，战斗日志「X 军屯于城下策应」，不损耗不回流、继续围城）；第 N 支入战军锚点 r 轴 ±4N（攻 +／守 −，越界夹紧），跨军 `occupied` 累积复用 `projectHexDeployment`；开战语「主军名等 N 支亲统强攻」+ 入战兵力（策应军不计入）；`attackerFaction` 取主军势力（多军分支）。单数/legacy 分支零改动。
+- **结算**（`campaign.ts` `settleSiegeStormBattle`，D10）：参战组从战斗快照派生（`collectSiegeStormGroup`/`resolveStormArmies`，攻方 armyId 全解析为同势力围城军，零新存档字段）；胜利合成 `AutoBattleResult` 复用胜/败分支（15% 伤兵归队军内结算对齐 `settleTacticalMeleeTroops`；vs 驻军占城 Σ残兵入城 + 各军解散 + `siege_disband` 日志；vs 野战敌军歼敌后各军维持围城、主军 siegeState 保留；缴获/俘虏沿 surrender 半城先例，六角主将不死）；败北 15% 回流 + 极小解散 + 守军残兵写回城防（败北分支不改城防，对齐 legacy）；战术撤退独立分支 50% 回流无功绩；战场生擒沿 exitBattle 战术口径。`armyInActiveBattle` 卫士接自动战/劝降/撤退（激战中拒绝）。
+- **服务与镜像**（D11）：`doCampaignSiegeStorm`（sieging/敌对/无未结算战斗校验，单军走单数 opts R4）+ `exitBattle` 亲统分支（未结束拒绝提前结算）+ `battleRetreat(armyId?)`；routes（`/campaign/:armyId/siege/storm` + retreat body）/worker（含 exitBattle 镜像）/api/offline-api/store（亲统切战场 + 撤退按选中军、无选中撤首支活跃攻方军）五镜像 + parity 别名 `campaignSiegeStorm`。
+- **UI**（D12）：军令「亲统强攻」按钮（仅围城，终审含合流条目）+ BattleView `battle-army-banners` 参战军旗条与旗面军名。
+- **验证（全绿）**：`verify-s434-hex-multi-army` **65/65**（帽 8/策应/偏移无重叠/单军路由等价/胜解散+归队/败 15%+解散+守军写回/撤退全链路/service/野胜围城/卫士/撤退作用域/确定性/Schema）+ UI **27/27**（双路出征→亲统终审→军旗条→分军撤退战斗继续→余部撤退→退出结算回世界屏，console 0 error）+ turn-golden 3/3（金样无六角战零变化）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/9/10/10 + s433 41/41 + shared 481 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- **教训两则**：① service 返回是 S06 脱敏投影（敌方 hidden 置 50），Schema 只断言权威原态（`getGame()`），此前误断言 masked 输出；② store 撤退回退须取首支活跃军（units[0] 可能是已撤军，否则二次撤退抛错）。
+- 文档：docs/43（S2 状态 + §七已落地）、docs/05 §10.2（S2 实装注）、docs/06（siege-storm + retreat body）、docs/07（亲统入口/军旗条）、docs/12 S10、docs/35 主线 ㊖、本日志与 HANDOFF 双写。
+- 边界：回合中途增援、野战/白刃战多军、协同加成、AI 委任化、六角主将伤亡（存活）、缴获按半城先例（非 runAutoBattle 公式）仍后置/简化；0-B 闸门待真人游玩。
+
 ## 2026-09-08 — Session 433 · docs/43 S1 围城合流实装（战役层自动战）
 
 - Phase：**S1 围城合流**；docs/43 D1~D12 推荐值已拍板（S1 切片），只做战役层自动战合流，不碰 `engaged` 野战（D2 保持 1v1）、六角多军（S2）、回合中途增援。

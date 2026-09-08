@@ -151,6 +151,22 @@ export interface CreateBattleOpts {
   /** 可选战役编成；缺省时保留 0-A 单位演示入口。 */
   attackerArmy?: CampaignArmy;
   defenderArmy?: CampaignArmy;
+  /**
+   * docs/43 S2（D8/D9）：六角多军编成（调用方按兵力降序传入，主军 group[0]）。
+   * 非空时走多军分支；单军请继续用单数 opts（旧分支逐字节不变，R4）。
+   */
+  attackerArmies?: CampaignArmy[];
+  defenderArmies?: CampaignArmy[];
+}
+
+/** docs/43 S2 D8：六角每侧 BattleUnit 上限（单军分支不受帽约束，R4）。 */
+export const HEX_SIDE_UNIT_CAP = 8;
+/** docs/43 S2 D9：多军部署 r 轴偏移步长（攻 +4／守 −4，越界夹紧，确定性）。 */
+export const HEX_ARMY_ANCHOR_R_STEP = 4;
+
+/** 合流军序：兵力降序 → id 升序（与 shared collectSiegeMergeGroup 同口径）。 */
+function byTroopsDescThenId(a: CampaignArmy, b: CampaignArmy): number {
+  return b.troops - a.troops || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
 const WEATHER_CHANGE_MIN = 3;
@@ -204,6 +220,7 @@ function unitsFromArmy(
   totalTroops: number,
   moraleOverride: number | undefined,
   anchor: { q: number; r: number },
+  occupied: readonly { q: number; r: number }[] = [],
 ): BattleUnit[] {
   const formations = getStaticData().formations;
   const record = formations.find((formation) => formation.id === army.formation);
@@ -213,7 +230,7 @@ function unitsFromArmy(
     : [{ officerId: army.commanderId, role: 'main' as const, position: 'center' as const, unitType: army.unitType, troops: army.troops, morale: army.morale }];
   const positions = [...new Set(squads.map((squad) => squad.role === 'main' ? 'center' : squad.position))];
   const deployment = resolveFormationDeployment(record, positions);
-  const projected = projectHexDeployment(deployment, positions, anchor, side, { width: COLS, height: ROWS });
+  const projected = projectHexDeployment(deployment, positions, anchor, side, { width: COLS, height: ROWS }, occupied);
   const troopAllocation = allocateTroops(squads, totalTroops);
   return squads.map((squad, index) => {
     const officer = state.officers[squad.officerId];
@@ -253,6 +270,56 @@ function unitsFromArmy(
   });
 }
 
+/**
+ * docs/43 S2（D8/D9）：一侧多军编组。按军序逐军入战；`armies.length > 1` 时整侧
+ * 单位帽 `HEX_SIDE_UNIT_CAP`，加满则整军不入战（名入 `sidelined`，不损耗不回流、
+ * 继续围城）；第 N 支入战军锚点沿 r 轴偏移 `±4N`（攻 +／守 −，越界夹紧），跨军
+ * `occupied` 累积复用 `projectHexDeployment` 碰撞收缩与回退。单军（length 1）
+ * 不设帽、锚点即基准——与旧单军分支同输出（R4）。
+ *
+ * `armies === null` 时回退 legacy 演示单位（守方城驻军等无编成场景）。
+ */
+function buildSideUnits(
+  state: GameState,
+  armies: readonly CampaignArmy[] | null,
+  legacyFallback: BattleUnit,
+  side: 'attacker' | 'defender',
+  totalTroops: number,
+  moraleOverride: number | undefined,
+  baseAnchor: { q: number; r: number },
+  rDirection: 1 | -1,
+  occupied: { q: number; r: number }[],
+  sidelined: string[],
+  included: CampaignArmy[],
+): BattleUnit[] {
+  if (!armies) return [legacyFallback];
+  const ordered = [...armies].sort(byTroopsDescThenId);
+  const cap = ordered.length > 1 ? HEX_SIDE_UNIT_CAP : Number.POSITIVE_INFINITY;
+  const units: BattleUnit[] = [];
+  let used = 0;
+  let includedCount = 0;
+  for (const army of ordered) {
+    const count = army.squads.length > 0 ? army.squads.length : 1;
+    if (used + count > cap) {
+      sidelined.push(army.name);
+      continue;
+    }
+    const anchor = {
+      q: Math.max(0, Math.min(COLS - 1, baseAnchor.q)),
+      r: Math.max(0, Math.min(ROWS - 1, baseAnchor.r + rDirection * HEX_ARMY_ANCHOR_R_STEP * includedCount)),
+    };
+    // 单军时沿用侧总兵力覆盖（旧语义：opts.attackTroops 优先）；多军时各军自持兵力。
+    const perTroops = ordered.length === 1 ? totalTroops : army.troops;
+    const fresh = unitsFromArmy(state, army, side, perTroops, moraleOverride, anchor, occupied);
+    for (const unit of fresh) occupied.push({ ...unit.position });
+    units.push(...fresh);
+    used += count;
+    includedCount += 1;
+    included.push(army);
+  }
+  return units;
+}
+
 export function createBattle(
   state: GameState,
   cityId: number,
@@ -262,10 +329,13 @@ export function createBattle(
   if (!city) throw new Error('城市不存在');
 
   const playerFaction = state.playerFactionId;
-  const defenderFaction = city.ruler ?? 1;
+  const attackerArmies = opts.attackerArmies?.length ? [...opts.attackerArmies].sort(byTroopsDescThenId) : null;
+  const defenderArmies = opts.defenderArmies?.length ? [...opts.defenderArmies].sort(byTroopsDescThenId) : null;
+  const defenderFaction = defenderArmies?.[0]?.factionId ?? city.ruler ?? 1;
   const fromCityId = opts.fromCityId;
-  const attackerArmy = opts.attackerArmy;
-  const defenderArmy = opts.defenderArmy;
+  const attackerArmy = attackerArmies?.[0] ?? opts.attackerArmy;
+  const defenderArmy = defenderArmies?.[0] ?? opts.defenderArmy;
+  const multiSide = attackerArmies != null || defenderArmies != null;
 
   // 优先用出发城主将，其次任意己方现役
   const playerOfficer = attackerArmy
@@ -334,10 +404,14 @@ export function createBattle(
     factionHasActivePolicy(state, defenderFaction, PolicyType.PREPARE_DEFENSE),
   );
 
-  const atkTroops = Math.max(1, opts.attackTroops ?? attackerArmy?.troops ?? 5000);
+  const atkTroops = Math.max(1, opts.attackTroops
+    ?? (attackerArmies ? attackerArmies.reduce((sum, army) => sum + army.troops, 0) : undefined)
+    ?? attackerArmy?.troops ?? 5000);
   // S27 守方民兵：民心 ≥60 时 floor(人口 × 0.02 × 民心/100)（docs/08 §十七）
   const militia = defenderMilitia(city.population, city.stats.morale ?? 70);
-  const defTroops = Math.max(1, (opts.defendTroops ?? defenderArmy?.troops ?? Math.max(500, city.troops || 4500)) + militia);
+  const defTroops = Math.max(1, (opts.defendTroops
+    ?? (defenderArmies ? defenderArmies.reduce((sum, army) => sum + army.troops, 0) : undefined)
+    ?? defenderArmy?.troops ?? Math.max(500, city.troops || 4500)) + militia);
   let atkMorale = opts.attackMorale ?? 90;
   let defMorale = opts.defendMorale ?? 80;
   // S27 世家暗通：世家满意度 <30 → 守军士气 −15%（docs/08 §十七）
@@ -396,7 +470,19 @@ export function createBattle(
       statusEffects: [],
     },
   ];
-  const units: BattleUnit[] = attackerArmy || defenderArmy
+  // docs/43 S2 多军分支（任一侧传入复数编成）；单数/legacy 走旧分支逐字节不变（R4）。
+  const occupiedCells: { q: number; r: number }[] = [];
+  const sidelinedArmies: string[] = [];
+  const includedAttackers: CampaignArmy[] = [];
+  const includedDefenders: CampaignArmy[] = [];
+  const units: BattleUnit[] = multiSide
+    ? [
+      ...buildSideUnits(state, attackerArmies ?? (attackerArmy ? [attackerArmy] : null),
+        legacyUnits[0], 'attacker', atkTroops, opts.attackMorale, { q: 2, r: 3 }, 1, occupiedCells, sidelinedArmies, includedAttackers),
+      ...buildSideUnits(state, defenderArmies ?? (defenderArmy ? [defenderArmy] : null),
+        legacyUnits[1], 'defender', defTroops, opts.defendMorale, { q: 16, r: 11 }, -1, occupiedCells, sidelinedArmies, includedDefenders),
+    ]
+    : attackerArmy || defenderArmy
     ? [
       ...(attackerArmy
         ? unitsFromArmy(state, attackerArmy, 'attacker', atkTroops, opts.attackMorale, { q: 2, r: 3 })
@@ -409,16 +495,30 @@ export function createBattle(
 
   const fromName =
     fromCityId != null ? state.cities[fromCityId]?.name ?? String(fromCityId) : null;
-  const openMsg = fromName
-    ? `${fromName} 军进攻 ${city.name}（攻 ${atkTroops} / 守 ${defTroops}）`
-    : `于 ${city.name} 附近开战（攻 ${atkTroops} / 守 ${defTroops}）`;
+  // docs/43 S2 D8/D12：多军分支开战语（主军名等 N 支亲统强攻）；单数/legacy 沿旧语（R4）。
+  const stormCount = (attackerArmies?.length ?? 0) + (attackerArmy && !attackerArmies ? 1 : 0);
+  const stormPrimary = attackerArmies?.[0] ?? attackerArmy;
+  // 多军开战语报入战兵力（策应军不计入）；单数/legacy 沿旧数（R4）。
+  const atkDisplay = multiSide && includedAttackers.length > 0
+    ? includedAttackers.reduce((sum, army) => sum + army.troops, 0) : atkTroops;
+  const defDisplay = multiSide && includedDefenders.length > 0
+    ? includedDefenders.reduce((sum, army) => sum + army.troops, 0) : defTroops;
+  const openMsg = multiSide && stormPrimary
+    ? `${stormPrimary.name}等 ${stormCount} 支亲统强攻 ${city.name}（攻 ${atkDisplay} / 守 ${defDisplay}）`
+    : fromName
+      ? `${fromName} 军进攻 ${city.name}（攻 ${atkTroops} / 守 ${defTroops}）`
+      : `于 ${city.name} 附近开战（攻 ${atkTroops} / 守 ${defTroops}）`;
+  const openLog: BattleState['log'] = [{ turn: 1, message: openMsg }];
+  for (const name of sidelinedArmies) {
+    openLog.push({ turn: 1, message: `${name}屯于城下策应` });
+  }
 
   return {
     id: `battle-${cityId}-${Date.now()}`,
     turn: 1,
     weather: Weather.CLEAR,
     weatherChangeTimer: WEATHER_CHANGE_MIN,
-    attackerFaction: playerFaction,
+    attackerFaction: attackerArmies?.[0]?.factionId ?? playerFaction,
     defenderFaction,
     isSiege: true,
     cityId,
@@ -428,11 +528,11 @@ export function createBattle(
     phase: 'player',
     winner: null,
     hexGrid: { width: COLS, height: ROWS, terrain: buildTerrain() },
-    log: [{ turn: 1, message: openMsg }],
+    log: openLog,
     actionHistory: [],
     tacticalPoints: HEX_TACTICAL_POINTS + ((state.officers[playerOfficer.id]?.stats.intelligence ?? 50) >= 80 ? 1 : 0),
     tacticalPointsUsed: 0,
-    message: '出征开战！移动/攻击，歼灭守军即可占城',
+    message: multiSide ? '亲统强攻！多军协同，歼灭守军即可占城' : '出征开战！移动/攻击，歼灭守军即可占城',
   };
 }
 
@@ -925,10 +1025,16 @@ function bestRetreatPursuer(
   return best;
 }
 
-export function retreatBattle(battle: BattleState): BattleState {
+export function retreatBattle(battle: BattleState, armyId?: string): BattleState {
   if (battle.phase !== 'player') throw new Error('非玩家回合');
   assertBattleNotPausedForDuel(battle);
-  const attackers = battle.units.filter((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit));
+  // docs/43 S2 D10：单军撤退仅撤该军单位——传入 armyId 时只标记该军活跃单位；
+  // 其余各军继续战斗（phase 保持、winner 为空）；缺省时沿旧语义全军撤退。
+  const scope = armyId ?? null;
+  if (scope && !battle.units.some((unit) => unit.side === 'attacker' && unit.armyId === scope && isActiveBattleUnit(unit))) {
+    throw new Error('该军无可撤部队');
+  }
+  const attackers = battle.units.filter((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit) && (!scope || unit.armyId === scope));
   if (attackers.length === 0) throw new Error('我军已无可撤部队');
   const surrounded = attackers.filter((unit) => isUnitSurrounded(battle.units, unit.id)
     && !(battle.isSiege && isEdgeForSiegeBreakout(unit, battle)));
@@ -994,22 +1100,27 @@ export function retreatBattle(battle: BattleState): BattleState {
     PursuitMessages.push(`${pursuer.commanderName} 追击 ${retreater.commanderName}，造成 ${dmg} 伤害${killed ? '—被追击溃灭' : ''}`);
   }
   const pursuitLog = PursuitMessages.length ? `；追击：${PursuitMessages.join('；')}` : '';
+  const marked = working.map((unit) => {
+    if (unit.side !== 'attacker') return unit;
+    const original = attackers.find((candidate) => candidate.id === unit.id);
+    if (!original) return unit;
+    // 已被追击至溃灭的单位不再标记撤退，保留溃灭状态
+    if (unit.isDestroyed || unit.troopCount <= 0) {
+      return { ...unit, hasActed: true, mp: 0 };
+    }
+    return { ...unit, isRetreated: true, hasActed: true, mp: 0 };
+  });
+  // 按军撤退后若仍有活跃攻方单位，战斗继续（仅全军撤光才结束，胜者守方）。
+  const stillFighting = marked.some((unit) => unit.side === 'attacker' && isActiveBattleUnit(unit));
   return {
     ...battle,
-    units: working.map((unit) => {
-      if (unit.side !== 'attacker') return unit;
-      const original = attackers.find((candidate) => candidate.id === unit.id);
-      if (!original) return unit;
-      // 已被追击至溃灭的单位不再标记撤退，保留溃灭状态
-      if (unit.isDestroyed || unit.troopCount <= 0) {
-        return { ...unit, hasActed: true, mp: 0 };
-      }
-      return { ...unit, isRetreated: true, hasActed: true, mp: 0 };
-    }),
-    phase: 'over',
-    winner: 'defender',
-    message: `我军有序撤退（${names}），残部将返回出发城${pursuitLog}`,
-    log: [...battle.log, { turn: battle.turn, message: `战术撤退：${names}${pursuitLog}` }],
+    units: marked,
+    phase: stillFighting ? battle.phase : 'over',
+    winner: stillFighting ? null : 'defender',
+    message: stillFighting
+      ? `${names}有序撤出，其余各军继续战斗${pursuitLog}`
+      : `我军有序撤退（${names}），残部将返回出发城${pursuitLog}`,
+    log: [...battle.log, { turn: battle.turn, message: stillFighting ? `分军撤退：${names}${pursuitLog}` : `战术撤退：${names}${pursuitLog}` }],
   };
 }
 

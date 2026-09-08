@@ -97,6 +97,8 @@
 |----|----------|----------|
 | S1 | `verify-s423-siege-merge`（engine 级） | 双军围同城 assault → 一次合成自动战（兵力=Σ）；损耗按比例分摊且尾差归主军；siegeState 共享/转移；劝降读主军围城月数；AI 对等（多军围城 AI 同样合成）；**单军路径与现状逐字节一致**；双局 24 月确定性；过完整 GameStateSchema |
 | S2 | `verify-s424-hex-multi-army`（engine 级）+ headless UI | createBattle 多军编组（单位帽 8、满帽整军不入战日志、部署偏移无重叠）；`siege-storm` 端点五镜像 + parity 5/5；六角胜利按军解散入城 / 败退按军回流 from 城；单军路径等价；BattleView 军旗区分目检 |
+
+> **S2 实装状态（Session 434 · 已落地）**：专项 `verify-s434-hex-multi-army` **65/65**（编组帽 8/策应日志/偏移无重叠/单军路由等价/胜占城解散+15%归队/败 15% 回流+极小解散+守军写回/撤退全链路 50%/野胜维持围城+进度保留/激战卫士/按军撤退/确定性/Schema）+ UI `verify-s434-hex-multi-army-ui` **27/27**（双路出征→亲统终审→军旗条→分军撤退战斗继续→余部撤退→退出结算回世界屏，console 0 error）。实现落点：`battle.ts`（`attackerArmies/defenderArmies` opts + `buildSideUnits` + `retreatBattle` 作用域）→ `campaign.ts`（`settleSiegeStormBattle` 合成 AutoBattleResult 复用胜/败分支 + 撤退独立分支 + `armyInActiveBattle` 三卫士）→ services 双端点（`doCampaignSiegeStorm` + `exitBattle` 分支 + `battleRetreat` 作用域）→ routes/worker/api/offline/store 五镜像 + parity 别名 → 军令亲统按钮 + 军旗条。回归矩阵 turn-golden 3/3（金样无六角战，零变化）/campaign 71/ai-military-rng 38/turn-cadence 28/save 全套/parity 5/5/三端 typecheck 全绿。回合中途增援仍后置（§八）。
 | 回归矩阵 | turn-golden、campaign 71、ai-military-rng 38、save 全套、s374 44、parity 5/5 | **注意**：S1 改变「同城多军各打一场 → 合打一场」的 runAutoBattle 调用次数，若金样 12 月场景中存在同城多军围城，权威 RNG 流将前移——届时按既定流程**删金样重举**（同 Session 422），并在会话日志明示原因 |
 
 > **S1 实装状态（Session 433 · 已落地）**：专项 `verify-s433-siege-merge` **41/41**（双军合成自动战/D7 分摊/siegeState 共享迁移/劝降读主军/AI 对等/单军与 `runAutoBattle` 直接调用逐字节一致/双局 24 月确定性/Schema）+ UI `verify-s433-siege-merge-ui` **21/21**（双路出征→合流标注→军令标注→强攻终审合流条目，console 0 error）+ shared `siege-merge.test.ts` 9 用例。金样预警兑现：12 月金样存在曹操军双军围平原合流（8 月起月月合成强攻），权威 RNG 流前移，`turn-golden-12.json` 11~12 月军粮 prints + digest 已重举（1~10 月逐字节不变）；回归矩阵 campaign 71/ai-military-rng 38/turn-cadence 28/save 全套/parity 5/5/三端 typecheck 全绿。S2 六角多军仍后置。
@@ -108,7 +110,7 @@
 1. **S1**（Session 433 已落地）：`engine/campaign.ts`（合流编组纯函数 + assaultForFaction 合流化 +
    tickCampaignMarch join 不重置）+ `engine/aiMilitary.ts`（逐军 assault 改合流 assault）+
    回流分摊；文档 04 §10.2/§17、05 攻城段、08（若数值落真源）、12 S10、10/HANDOFF 双写。
-2. **S2**（S1 验收后）：`engine/battle.ts` createBattle 多军 + `services/routes/worker/offline-api/api/store`
+2. **S2**（Session 434 已落地）：`engine/battle.ts` createBattle 多军 + `services/routes/worker/offline-api/api/store`
    五处镜像 + BattleView/军列表 UI；文档 06（新端点）、07（CMD 域）、12、10/HANDOFF 双写。
 
 ## 八、明确不做

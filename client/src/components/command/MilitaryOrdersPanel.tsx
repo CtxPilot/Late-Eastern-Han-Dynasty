@@ -39,6 +39,7 @@ const ADVISOR_ACTIONS: readonly { value: AdvisorAction; label: string; effect: s
 
 type OrderDraft =
   | { kind: 'assault'; armyId: string }
+  | { kind: 'siegeStorm'; armyId: string }
   | { kind: 'surrender'; armyId: string }
   | { kind: 'retreat'; armyId: string }
   | { kind: 'build'; armyId: string; structureType: StructureType }
@@ -48,6 +49,7 @@ export function validateMilitaryOrder(game: GameState, draft: OrderDraft): strin
   const army = game.campaignArmies.find((item) => item.id === draft.armyId);
   if (!army || army.factionId !== game.playerFactionId) return '所选军队已不存在或归属已经变化。';
   if (draft.kind === 'assault' && !['sieging', 'engaged'].includes(army.phase)) return `军队阶段已变为${PHASE_LABEL[army.phase]}，不能强攻。`;
+  if (draft.kind === 'siegeStorm' && army.phase !== 'sieging') return `军队阶段已变为${PHASE_LABEL[army.phase]}，不能亲统强攻（仅围城可发起六角攻城）。`;
   if (draft.kind === 'surrender' && army.phase !== 'sieging') return `军队阶段已变为${PHASE_LABEL[army.phase]}，不能劝降。`;
   if (draft.kind === 'retreat' && !['marching', 'garrison'].includes(army.phase)) return `军队阶段已变为${PHASE_LABEL[army.phase]}，不能撤退。`;
   if (draft.kind === 'build') {
@@ -76,6 +78,7 @@ export function MilitaryOrdersPanel() {
   const error = useGameStore((state) => state.error);
   const campaignBuild = useGameStore((state) => state.campaignBuild);
   const campaignAssault = useGameStore((state) => state.campaignAssault);
+  const campaignSiegeStorm = useGameStore((state) => state.campaignSiegeStorm);
   const campaignSiegeSurrender = useGameStore((state) => state.campaignSiegeSurrender);
   const campaignRetreat = useGameStore((state) => state.campaignRetreat);
   const campaignAdvisorAction = useGameStore((state) => state.campaignAdvisorAction);
@@ -118,6 +121,9 @@ export function MilitaryOrdersPanel() {
                   <OrderButton testId="military-order-assault" label="强攻" danger onClick={() => setDraft({ kind: 'assault', armyId: selectedArmy.id })} />
                 ) : null}
                 {selectedArmy.phase === 'sieging' ? (
+                  <OrderButton testId="military-order-siege-storm" label="亲统强攻" danger onClick={() => setDraft({ kind: 'siegeStorm', armyId: selectedArmy.id })} />
+                ) : null}
+                {selectedArmy.phase === 'sieging' ? (
                   <OrderButton testId="military-order-surrender" label="劝降" onClick={() => setDraft({ kind: 'surrender', armyId: selectedArmy.id })} />
                 ) : null}
                 {selectedArmy.phase === 'marching' || selectedArmy.phase === 'garrison' ? (
@@ -155,7 +161,7 @@ export function MilitaryOrdersPanel() {
         summary={draft ? orderSummary(draft) : ''}
         items={draft ? orderItems(game, draft) : []}
         loading={loading}
-        danger={draft?.kind === 'assault'}
+        danger={draft?.kind === 'assault' || draft?.kind === 'siegeStorm'}
         error={error}
         validateBeforeConfirm={() => {
           const latest = useGameStore.getState().game;
@@ -165,6 +171,7 @@ export function MilitaryOrdersPanel() {
         onConfirm={async () => {
           if (!draft) return;
           if (draft.kind === 'assault') await campaignAssault(draft.armyId);
+          if (draft.kind === 'siegeStorm') await campaignSiegeStorm(draft.armyId);
           if (draft.kind === 'surrender') await campaignSiegeSurrender(draft.armyId);
           if (draft.kind === 'retreat') await campaignRetreat(draft.armyId);
           if (draft.kind === 'build') await campaignBuild(draft.armyId, draft.structureType);
@@ -194,6 +201,7 @@ function OrderButton({ testId, label, danger = false, onClick }: { testId: strin
 
 function orderTitle(draft: OrderDraft): string {
   if (draft.kind === 'assault') return '确认发动强攻';
+  if (draft.kind === 'siegeStorm') return '确认亲统强攻';
   if (draft.kind === 'surrender') return '确认劝降守军';
   if (draft.kind === 'retreat') return '确认撤退';
   if (draft.kind === 'build') return `确认营建${STRUCTURES.find((item) => item.value === draft.structureType)?.label ?? draft.structureType}`;
@@ -202,6 +210,7 @@ function orderTitle(draft: OrderDraft): string {
 
 function orderSummary(draft: OrderDraft): string {
   if (draft.kind === 'assault') return '将立即进行自动战斗结算，可能造成大量伤亡或改变城池归属。';
+  if (draft.kind === 'siegeStorm') return '将进入六角亲统攻城（合流军全体入场，每侧至多 8 队，满帽整军城下策应）；胜则占城解散，败则残部回流。';
   if (draft.kind === 'surrender') return '将立即进行劝降判定；成功会改变目标城归属。';
   if (draft.kind === 'retreat') return '军队将撤回最近己方节点并损失士气。';
   if (draft.kind === 'build') return '将立即扣除势力金并开始回合化建造；大型设施会中止行军。';
@@ -221,7 +230,7 @@ function orderItems(game: GameState, draft: OrderDraft) {
     items.push({ label: '立即后果', value: ADVISOR_ACTIONS.find((item) => item.value === draft.action)?.effect ?? draft.action });
   } else {
     // docs/43 D12：攻城终审标注合流规模（主军主将主导、各军按兵力分摊损耗）
-    if (draft.kind === 'assault' && army) {
+    if ((draft.kind === 'assault' || draft.kind === 'siegeStorm') && army) {
       const merge = siegeMergeLabel(game, army);
       if (merge) items.push({ label: '合流', value: merge });
     }
