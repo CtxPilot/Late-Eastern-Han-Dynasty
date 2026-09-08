@@ -9,12 +9,19 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 436**（S13 装备缴获：胜者缴获败者阵亡主将/副将装备 30%/件，`verify-s436` 12/12 ✅，金样零扰动） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地 |
-| 代码最新 | Session 436（`campaign.ts` `seizeKilledEquipment` + 战报追加；未提交；`verify-s436` 12/12 + 回归矩阵全绿，金样零变化） |
-| 文档最新 | **Session 436 双写**（docs/05 §11.2 实装注、docs/04 §12.3 缴获指向、docs/12 S13 行、docs/35 主线 ㊙、10-progress 日志、本文件） |
-| 本交接用途 | **S13 装备缴获收口**；后续方向：0-B 闸门真人实测或 S13 剩余后置逐项立项 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑，通过后方可解锁后续大系统扩容授权）；②S13 剩余后置（战斗中使用/传承没收/8 槽剩余/套装 L3/专属共鸣 L2/未接入 effect 类型）按 `12-system-map.md` 逐项立项；③回合中途增援入场另行立项（docs/43 §八） |
+| 会话 | **Session 437**（S13 剩余逐项立项：纯设计轮，`docs/44` 落盘，D1~D12 含推荐值 + R1~R4 + 切片 S4a~S4d，待批准） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 待批 |
+| 代码最新 | Session 436 已提交 `7043c0b`（`campaign.ts` `seizeKilledEquipment` + 战报追加；`verify-s436` 12/12 + 回归矩阵全绿，金样零变化）；Session 437 零代码改动 |
+| 文档最新 | **Session 437 双写**（docs/44 落盘、docs/04 §12.3 立项指向、docs/12 S13 行、docs/35 主线 ㊚、10-progress 日志、本文件） |
+| 本交接用途 | **S13 剩余后置逐项立项**；后续方向：docs/44 批准后按 D12 开 S4a，或 0-B 闸门真人实测 |
+| 下一步 | ①**docs/44 批准**（D4/D6 的 0.3 概率、D1 类型范围、D12 切片顺序待用户拍板；批准即开 S4a 消耗品缴获）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 437 交接要点
+
+- **纯设计轮**（沿 419/docs-42、423/docs-43 先例）：`docs/44-s13-remaining-proposal.md` 落盘——8 项分组（缴获链 T2/T3/T4 + 战斗中使用 T1 + 数据门 T5~T8）/ D1~D12 拍板点各附推荐值 / R1~R4 不变量 / 验收方案（每片独立 verify-s43x + 436 回归矩阵）/ 切片 S4a 消耗品缴获→S4b 阵亡回库→S4c 被俘没收→S4d 战斗中使用→数据门。
+- **实勘结论**：items.json 165 条 bond 零命中（T7 数据缺失实锤）；自然死亡写入点未定位（T3 首轮只做战斗阵亡）；`hasActed` 为战斗行动力代价提供先例；手动没收无实现。
+- 验证：引用行号逐一实勘复核 + `git diff --check`；零代码，回归矩阵不跑。
+- 文档：docs/44、docs/04 §12.3、docs/12 S13、docs/35 主线 ㊚、10-progress Session 437 日志、HANDOFF 双写。
 
 ### Session 436 交接要点
 
