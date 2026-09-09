@@ -112,6 +112,7 @@ import {
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
+  useBattleConsumable,
   settleTacticalMeleeTroops,
 } from '../../../server/src/engine/battle.js';
 import {
@@ -1049,6 +1050,17 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       const nextBattle = changeBattleFormation(battle, unitId, targetFormation, getGame());
       commitActiveBattle(nextBattle);
       return nextBattle;
+    });
+  },
+
+  /** S13 战斗中使用（Session 441 S4d）：五镜像之离线引擎（签名与在线服务一致）。 */
+  useBattleConsumable(unitId: string, itemId: number): { battle: BattleState; game: GameState } {
+    return withLock(() => {
+      const battle = getActiveBattle();
+      if (!battle) throw new Error('无战斗');
+      const out = useBattleConsumable(battle, unitId, Number(itemId), getGame());
+      commitActiveBattle(out.battle, out.state);
+      return { battle: out.battle, game: getClientGame() };
     });
   },
 

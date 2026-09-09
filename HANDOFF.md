@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 440**（S13 被俘没收 S4c：docs/44 D6 落地，`rollCaptiveEquipmentLoot` + 四处挂接 + `verify-s44c` 26/26 + 回归矩阵全绿，金样零扰动） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a/S4b 已落地，S4c 本轮 |
-| 代码最新 | Session 440 待提交（`items.ts` 纯掷点 + 常量单源 + `campaign.ts`/`battle.ts` 四处挂接 + `verify-s44c-captive-loot.ts` 26/26 + 回归矩阵全绿，金样零变化）；Session 439 已提交 `fe914f3` |
-| 文档最新 | **Session 440 双写**（docs/05 §11.2 实装注、docs/04 §12.3 实装注、docs/12 S13 行、docs/35 主线 ㊝、docs/44 状态节、10-progress 日志、本文件） |
-| 本交接用途 | **S13 缴获链收口**；后续方向：按 docs/44 D12 开 S4d，或 0-B 闸门真人实测 |
-| 下一步 | ①**S4d 战斗中使用**（D1 仅 stamina/heal、D2 耗整次行动、D3 新端点 `battle/use-consumable` 五镜像 + BattleView 按钮，零 RNG，AI 不用）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+| 会话 | **Session 441**（S13 战斗中使用 S4d：docs/44 D1~D3 落地，`useBattleConsumable` + 新端点五镜像 + BattleView + `verify-s44d` 24/24 + UI 26/26 + 回归矩阵全绿，金样零扰动；docs/44 切片收官） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地 |
+| 代码最新 | Session 441 待提交（`battle.ts` 引擎 + 五镜像 + BattleView + `verify-s44d-battle-consumable.ts` 24/24 + `verify-s44d-battle-consumable-ui.mjs` 26/26 + 回归矩阵全绿，金样零变化）；Session 440 已提交 `12b6970` |
+| 文档最新 | **Session 441 双写**（docs/04 §12.3 实装注 + 使用规则句、docs/06 六角端点表、docs/07 药品按钮、docs/12 S13 行、docs/35 主线 ㊞、docs/44 状态节、10-progress 日志、本文件） |
+| 本交接用途 | **S13 缴获链收口 + 战斗中使用**；后续方向：数据门待批，或 0-B 闸门真人实测 |
+| 下一步 | ①**数据门立项**（T5a/T5b 8 槽剩余三槽、T6 套装 L3、T7 共鸣 L2、T8 未接入 effect——待数据批次 + 数值拍板）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 441 交接要点
+
+- **S4d 战斗中使用最小切片**：`battle.ts` `useBattleConsumable`（玩家回合/未单挑暂停/我军活跃未行动/主将存在/D1 类型门→复用 `useConsumable` 扣槽优先/体力上限/`item_use`→单位 `hasActed + mp=0` + 战报/日志，零 RNG；无 AI 调用）+ `POST /battle/use-consumable`（`{unitId, itemId}` → `{battle, game}` 脱敏）五镜像（routes→services→worker→api/offline-api→store，parity 别名 `useBattleConsumable`）+ BattleView 药品按钮/选择器/空态/体满置灰。
+- **诚实边界**：新档零消耗品初始库存 + 搜索约 700 次一可用 → 成功点击纯 gameplay 不可达；浏览器端仅验收门禁/空态/开合/console（沿 432/435 先例）；成功路径由引擎脚本全覆盖。逐单位 commanderId 扣槽（分队独立）；武将无 stamina 字段视为 0。
+- **验证全绿**：`verify-s44d-battle-consumable` **24/24**（成功/截断/分队/八拒绝/Schema/确定性）+ `verify-s44d-battle-consumable-ui` **26/26**（出征→围城→亲统→门禁/空态/开合/console 0 error）+ turn-golden 3/3（零变化）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/10/62 + battle-rng 5/5 + duel-rng 3/3 + bf-p3 13/13 + bf-p4 20/20 + melee 12/12 + s432 13/13 + items 32/32 + s433 41/41 + s434 65/65 + s435 32/32 + s436 12/12 + s44a 12/12 + s44b 16/16 + s44c 26/26 + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- 边界：T1b（兵力/状态类）、手动没收（D7）、数据门仍后置；0-B 闸门待真人游玩。后台残留 vite dev（:5173）+ headless chrome 进程（policy 禁止 kill，已告知用户清理）。
+- 文档：docs/04 §12.3、docs/06 端点表、docs/07 药品按钮、docs/12 S13、docs/35 主线 ㊞、docs/44 状态节、10-progress Session 441 日志、HANDOFF 双写。
 
 ### Session 440 交接要点
 

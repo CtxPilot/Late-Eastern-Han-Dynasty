@@ -640,6 +640,12 @@ export async function battleChangeFormation(unitId: string, targetFormation: imp
   return data;
 }
 
+/** S13 战斗中使用（Session 441 S4d）：GameState 亦变（体力/槽/库存/日志），同单返回。 */
+export async function battleUseConsumable(unitId: string, itemId: number): Promise<{ battle: BattleState; game: GameState }> {
+  const { data } = await http.post<{ battle: BattleState; game: GameState }>('/battle/use-consumable', { unitId, itemId });
+  return data;
+}
+
 export async function getActiveBattle(): Promise<BattleState | null> {
   try {
     const { data } = await http.get<BattleState>('/battle');

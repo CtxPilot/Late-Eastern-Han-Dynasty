@@ -288,6 +288,7 @@ POST   /api/game/battle/move|attack|fire|weather|finish-player|enemy-phase
 POST   /api/game/battle/retreat   → BattleState  // 玩家回合有序撤退；受围时400
 GET    /api/game/battle/abilities/:unitId → { abilities: UsableAbility[] }  // S10 可用战法
 POST   /api/game/battle/ability   { attackerId, targetId, abilityId }  // S10 施放战法
+POST   /api/game/battle/use-consumable   { unitId, itemId }  // S13 战斗中使用（Session 441 S4d：参战武将行动回合使用恢复体力类消耗品，耗整次行动；仅 stamina/heal；扣槽优先回退库存；零 RNG；AI 不用）→ { battle, game }
 POST   /api/game/battle/exit         → GameState  // 结算占城或残兵回流
 ```
 

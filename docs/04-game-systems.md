@@ -1579,6 +1579,8 @@ L3 套装效果：
 > **Session 439 S4b 实装（S13 阵亡回库，docs/44 D5）**：战斗阵亡者（已标 `DEAD`）未被缴获的装备 + 快捷槽余量全部回原势力库存（`returnKilledRemains`，挂在全部缴获掷点之后，尸身恒空；残部退守未标死者不碰）。零 RNG、零战报、零新端点/字段/UI；验证 `pnpm verify-s44b-battle-inheritance` 16/16（退守斩杀边界/胜方损将/战败回库守恒/无物零改动），`verify-s44a` 守恒口径同步更新为缴获 + 回库 + 留身三项，金样零扰动。
 >
 > **Session 440 S4c 实装（S13 被俘没收，docs/44 D6）**：被俘主将/副将装备按件独立 30% 归俘获方（`items.ts` `rollCaptiveEquipmentLoot` 纯掷点 + `LOOT_EQUIPMENT_CHANCE` 单一真源；未中件被俘者保留，随招降/赎回另行立项）。挂接四处：自动战全歼敌俘/战败攻俘（复用缴获函数）+ 亲统生擒 + 单挑被俘（战报追加缴获）；劝降释放/手动没收（D7）不做。零新端点/字段；验证 `pnpm verify-s44c-captive-loot` 26/26，金样零扰动。
+>
+> **Session 441 S4d 实装（S13 战斗中使用，docs/44 D1~D3）**：参战武将行动回合使用 1 件恢复体力类消耗品（`battle.ts` `useBattleConsumable`：仅 stamina/heal，耗整次行动 `hasActed + mp=0`，复用 `useConsumable` 扣槽优先/体力上限/日志 `item_use`，零 RNG，AI 不用）。新端点 `POST /battle/use-consumable`（`{unitId, itemId}` → `{battle, game}`）走五处镜像（routes→services→worker→api/offline-api→store，parity 别名 `useBattleConsumable`）+ BattleView 药品按钮/选择器/空态。验证 `pnpm verify-s44d-battle-consumable` 24/24（成功/截断/分队/八拒绝）+ `pnpm verify-s44d-battle-consumable-ui` 26/26（门禁/空态/开合/console 零错误；成功点击需真实库存，浏览器端诚实边界），金样零扰动。
 
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 
@@ -1591,7 +1593,7 @@ L3 套装效果：
 
 使用规则：
   - 一次性使用，用后该格数量 -1
-  - 战斗中可在行动回合使用（消耗 1 次行动力）
+  - 战斗中可在行动回合使用（消耗 1 次行动力；Session 441 S4d 已实装：仅 stamina/heal 恢复主将体力，耗整次行动 `hasActed`，扣槽优先回退库存，零 RNG，AI 不用；morale/food/其余类型战斗中拒绝）
   - 内政/行军界面也可使用（不消耗行动力，仅消耗品本身）
   - 数量归零后该格变为空，需补给后方可再次使用
 

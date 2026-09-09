@@ -1,3 +1,13 @@
+## 2026-09-10 — Session 441 · S13 战斗中使用 S4d（docs/44 D1~D3）
+
+- Phase：**S13 宝物后置项**；docs/44 D12 切片第四片（缴获链收口完成）。只做战斗中使用（仅 stamina/heal + 耗整次行动 + 新端点五镜像 + BattleView 按钮），不碰 T1b（金疮药兵力恢复/火油/锦囊/解毒草，兵力与状态数值未拍板）、数据门。
+- **实现**：`battle.ts` `useBattleConsumable(battle, unitId, itemId, state)`（玩家回合/未单挑暂停/我军活跃未行动单位/主将存在/D1 类型门→复用 `useConsumable` 扣槽优先/体力上限/`item_use`→单位 `hasActed + mp=0` + 战报/日志，零 RNG；无 AI 调用，P4）+ `POST /battle/use-consumable`（`{unitId, itemId}` → `{battle, game}` 脱敏）五镜像（routes→services→worker→api/offline-api→store，parity 别名 `useBattleConsumable`）+ BattleView 药品按钮/选择器/空态/体满置灰（`btn-battle-consumable`/`battle-consumable-picker`/`battle-consumable-<id>`/`battle-consumable-empty`）。
+- **关键实勘（诚实边界）**：新档零消耗品初始库存（无 `initial`  acquisition 消耗品）+ 搜索约 700 次一可用（70 池/7 可用/5% 宝物率，金矿也不够）→ 成功点击纯 gameplay 不可达；浏览器端仅验收门禁/空态/开合/console（沿 432/435 未做浏览器验收先例，本轮 strictly more）；成功路径由引擎脚本全覆盖。武将无 stamina 字段即视为 0（可用）；逐单位 commanderId 扣槽（分队主将独立）。
+- **验证（全绿）**：`verify-s44d-battle-consumable` **24/24**（成功恢复 +15/扣槽/行动结束/战报日志/确定性/Schema + 上限截断 + 分队独立 + 八拒绝：morale/food/cure/非消耗品/已行动/敌方/非玩家回合/体满/无库存）+ `verify-s44d-battle-consumable-ui` **26/26**（出征→围城→亲统→门禁/空态/开合/console 0 error）+ turn-golden 3/3（零变化：新端点无 AI/金样调用）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/10/62 + battle-rng 5/5 + duel-rng 3/3 + bf-p3 13/13 + bf-p4 20/20 + melee 12/12 + s432 13/13 + items 32/32 + s433 41/41 + s434 65/65 + s435 32/32 + s436 12/12 + s44a 12/12 + s44b 16/16 + s44c 26/26 + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- 边界：T1b（兵力/状态类）、手动没收（D7）、数据门仍后置；0-B 闸门待真人游玩。
+- 文档：docs/04 §12.3 实装注 + 使用规则句、docs/05（无战利品变动，不碰）、docs/06 六角端点表 + docs/07 药品按钮、docs/12 S13 行、docs/35 主线 ㊞、docs/44 状态节、本日志与 HANDOFF 双写。
+- **Next**：docs/44 切片全部落地（S4a~S4d）；剩余数据门（T5a/T5b 8 槽、T6 套装、T7 共鸣、T8 effect）待数据批次 + 数值拍板；或 0-B 闸门真人实测。
+
 ## 2026-09-09 — Session 440 · S13 被俘没收 S4c（docs/44 D6）
 
 - Phase：**S13 宝物后置项**；docs/44 D12 切片第三片。只做被俘自动没收（被俘主将/副将装备按件独立 30% 归俘获方），不碰手动没收（D7 只立项不实装）、战斗中使用（S4d）、数据门。

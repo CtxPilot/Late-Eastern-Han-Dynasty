@@ -54,7 +54,7 @@ import {
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
-import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot } from './items.js';
+import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot, useConsumable } from './items.js';
 import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
@@ -571,6 +571,45 @@ function appendBattleAction(
     id: `${idPrefix}-${battle.turn}-${seq}`,
     logicalTimestamp: battle.turn * 1000 + seq,
   }].slice(-3);
+}
+
+/**
+ * docs/04 §12.3（Session 441 S4d，docs/44 D1~D3）：战斗中使用消耗品——参战武将
+ * 在行动回合使用 1 件（消耗整次行动，置 `hasActed=true, mp=0`，沿变阵先例）。
+ * 仅 stamina/heal（恢复主将体力，沿 432 上限；morale/food 在六角无着落点、
+ * 其余类型沿 432 拒绝）；扣槽优先回退库存（复用 `useConsumable`，日志 `item_use`、
+ * 零 RNG）；已行动/非活跃/敌方单位拒绝；AI 不用（无 AI 调用点，P4）。
+ */
+export function useBattleConsumable(
+  battle: BattleState,
+  unitId: string,
+  itemId: number,
+  state: GameState,
+): { battle: BattleState; state: GameState } {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+  const unit = battle.units.find((u) => u.id === unitId && u.side === 'attacker');
+  if (!unit || !isActiveBattleUnit(unit)) throw new Error('单位不存在或已溃');
+  if (unit.hasActed) throw new Error('本单位已经行动，不能使用消耗品');
+  const commanderId = unit.commanderId;
+  if (state.officers[commanderId] == null) throw new Error('主将不存在');
+  const def = getItemById(itemId);
+  const kind = def?.category === 'consumable' ? def.consumable?.effect.type : undefined;
+  if (kind !== 'stamina' && kind !== 'heal') throw new Error('战斗中仅可使用恢复体力类消耗品');
+  const before = state.officers[commanderId]?.stamina ?? 0;
+  const nextState = useConsumable(state, commanderId, itemId);
+  const restored = (nextState.officers[commanderId]?.stamina ?? 0) - before;
+  const itemName = def?.name ?? `宝物${itemId}`;
+  const entry = `${unit.commanderName} 使用 ${itemName}（体力 +${restored}，行动结束）`;
+  return {
+    battle: {
+      ...battle,
+      units: battle.units.map((u) => (u.id === unit.id ? { ...u, hasActed: true, mp: 0 } : u)),
+      message: entry,
+      log: [...battle.log, { turn: battle.turn, message: entry }],
+    },
+    state: nextState,
+  };
 }
 
 export function changeBattleFormation(

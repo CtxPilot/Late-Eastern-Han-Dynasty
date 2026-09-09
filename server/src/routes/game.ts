@@ -896,6 +896,16 @@ gameRouter.post('/battle/formation', (req, res) => {
   }
 });
 
+/** S13 战斗中使用（Session 441 S4d）：参战武将行动回合使用恢复体力类消耗品。 */
+gameRouter.post('/battle/use-consumable', (req, res) => {
+  try {
+    const { unitId, itemId } = req.body as { unitId: string; itemId: number };
+    res.json(gameService.battleUseConsumable(String(unitId), Number(itemId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'battle consumable failed' });
+  }
+});
+
 /** S10 §8 玩家发起单挑 */
 gameRouter.post('/battle/duel/challenge', (req, res) => {
   try {

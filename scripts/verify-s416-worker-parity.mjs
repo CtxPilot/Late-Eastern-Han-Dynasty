@@ -130,6 +130,8 @@ const ALIAS_MAP = {
   // 快捷槽分配/卸下（S13，Session 435）：同上
   assignConsumable: 'doAssignConsumable',
   unassignConsumable: 'doUnassignConsumable',
+  // 战斗中使用（S13，Session 441 S4d）：六角 battle/* 口径，handler 短名映射
+  useBattleConsumable: 'battleUseConsumable',
 };
 
 /** 服务导出的离线可达解析：同名 handler 或别名映射。 */

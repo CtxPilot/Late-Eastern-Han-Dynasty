@@ -346,6 +346,10 @@ export function battleRetreat(armyId?: string): Promise<BattleState> {
 export function battleChangeFormation(unitId: string, targetFormation: FormationType): Promise<BattleState> {
   return call('formation', [unitId, targetFormation]);
 }
+/** S13 战斗中使用（Session 441 S4d）：与在线同签（{battle, game}）。 */
+export function battleUseConsumable(unitId: string, itemId: number): Promise<{ battle: BattleState; game: GameState }> {
+  return call('useBattleConsumable', [unitId, itemId]);
+}
 export async function getActiveBattle(): Promise<BattleState | null> {
   try {
     return await call<BattleState | null>('getBattle');

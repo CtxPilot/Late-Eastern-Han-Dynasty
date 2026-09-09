@@ -65,6 +65,7 @@ import {
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
+  useBattleConsumable,
   settleTacticalMeleeTroops,
   collectAnnihilatedDefenderCommanders,
 } from '../engine/battle.js';
@@ -970,6 +971,21 @@ export function battleChangeFormation(unitId: string, targetFormation: import('@
     const nextBattle = changeBattleFormation(battle, unitId, targetFormation, getGame());
     commitActiveBattle(nextBattle);
     return nextBattle;
+  });
+}
+
+/** S13 战斗中使用（Session 441 S4d，docs/44 D3）：参战武将行动回合使用恢复体力类
+ * 消耗品（耗整次行动）。GameState 亦变（体力/槽/库存/日志），故同单返回脱敏 game。 */
+export function battleUseConsumable(
+  unitId: string,
+  itemId: number,
+): { battle: import('@leh/shared').BattleState; game: import('@leh/shared').GameState } {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const out = useBattleConsumable(battle, unitId, Number(itemId), getGame());
+    commitActiveBattle(out.battle, out.state);
+    return { battle: out.battle, game: getClientGame() };
   });
 }
 

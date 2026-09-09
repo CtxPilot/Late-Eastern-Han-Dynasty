@@ -167,6 +167,8 @@ interface Store {
   finishPlayer: () => Promise<void>;
   retreatBattle: () => Promise<void>;
   changeBattleFormation: (targetFormation: import('@leh/shared').FormationType) => Promise<void>;
+  /** S13 战斗中使用（Session 441 S4d）：选中单位使用恢复体力类消耗品（耗整次行动）。 */
+  battleUseConsumable: (itemId: number) => Promise<void>;
   runEnemy: () => Promise<void>;
   exitBattle: () => Promise<void>;
   duelChallenge: (challengerUnitId: string, targetUnitId: string, stance: import('@leh/shared').DuelStance) => Promise<void>;
@@ -1309,6 +1311,17 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ battle, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
     } catch (e) {
       set({ error: errMsg(e, '变阵失败') });
+    }
+  },
+
+  battleUseConsumable: async (itemId: number) => {
+    const unitId = get().selectedUnitId;
+    if (!unitId) return;
+    try {
+      const { battle, game } = await api.battleUseConsumable(unitId, itemId);
+      set({ battle, game, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
+    } catch (e) {
+      set({ error: errMsg(e, '使用消耗品失败') });
     }
   },
 

@@ -83,7 +83,7 @@ P4 **AI 不用消耗品**（沿天气主动技能「敌军 AI 不改」先例、
 
 S4a→S4b→S4c→S4d，每片双写 `04 §12.3` + `05 §11.2`（缴获链）/ `06`（新端点）/ `07`（UI）+ `10-progress` + `HANDOFF` + 本文件状态节。数据门切片另起数据批次文档。
 
-> **本文件状态**：Session 437 纯设计轮落盘；**Session 438 S4a 已落地**（`seizeKilledConsumables` + `verify-s44a` 12/12 + 回归矩阵全绿 + 金样零扰动；05 残部注勘误）。**Session 439 S4b 已落地**（`returnKilledRemains` + `verify-s44b` 16/16 + `verify-s44a` 守恒口径同步 + 回归矩阵全绿 + 金样零扰动；实勘沉淀：全歼双掷点 quirk / 退守斩杀留活口，另行立项才动）。**Session 440 S4c 已落地**（`rollCaptiveEquipmentLoot` + 四处挂接 + `verify-s44c` 26/26 + 回归矩阵全绿 + 金样零扰动；实勘：自动战 1200 场被俘 0 次，真实被俘来源是六角）。下一步按 D12 开 S4d。
+> **本文件状态**：Session 437 纯设计轮落盘；**Session 438 S4a 已落地**（`seizeKilledConsumables` + `verify-s44a` 12/12 + 回归矩阵全绿 + 金样零扰动；05 残部注勘误）。**Session 439 S4b 已落地**（`returnKilledRemains` + `verify-s44b` 16/16 + `verify-s44a` 守恒口径同步 + 回归矩阵全绿 + 金样零扰动；实勘沉淀：全歼双掷点 quirk / 退守斩杀留活口，另行立项才动）。**Session 440 S4c 已落地**（`rollCaptiveEquipmentLoot` + 四处挂接 + `verify-s44c` 26/26 + 回归矩阵全绿 + 金样零扰动；实勘：自动战 1200 场被俘 0 次，真实被俘来源是六角）。**Session 441 S4d 已落地**（`useBattleConsumable` + 新端点五镜像 + BattleView + `verify-s44d` 24/24 + UI 26/26 + 回归矩阵全绿 + 金样零扰动；诚实边界：成功点击需真实库存，浏览器端仅门禁/空态）。**切片全部落地**；数据门待数据批次 + 数值拍板。
 
 ## 八、明确不做
 
