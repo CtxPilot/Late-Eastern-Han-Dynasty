@@ -6,6 +6,8 @@ import {
   equipmentStatBonus,
   equipSlotFor,
   type EquipStatBonus,
+  type Equipment,
+  type ItemInventory,
   type ItemStatic,
   AcquisitionMethod,
   OfficerStatus,
@@ -240,6 +242,39 @@ export function unequipItem(state: GameState, officerId: number, itemId: number)
     'item_unequip',
     `${officer.name} 卸下 ${item?.name ?? '宝物'}`,
   );
+}
+
+/**
+ * docs/05 §11.2 战利品：胜者缴获败者阵亡/被俘主将单件装备概率
+ *（Session 436 实装，S4c 被俘没收沿用；六角单挑/亲统生擒共用）。
+ */
+export const LOOT_EQUIPMENT_CHANCE = 0.3;
+
+/**
+ * docs/05 §11.2（Session 440 S4c，沿 436 口径）：被俘没收掷点——装备按件独立
+ * `chance` 整件入库，未中件保留；纯函数（调用方守卫无装备不调用 → 零 RNG 消耗）。
+ * 槽序固定（军序由调用方保证），与 `seizeKilledEquipment` 同口径。
+ */
+export function rollCaptiveEquipmentLoot(
+  equipment: Equipment | undefined,
+  inventory: ItemInventory | undefined,
+  chance: number,
+  rng: () => number,
+): { equipment: Equipment; inventory: ItemInventory; names: string[] } {
+  const order = ['weaponPrimary', 'weaponSecondary', 'armor', 'mount', 'tome'] as const;
+  const kept: Equipment = { ...(equipment ?? {}) };
+  const stock: ItemInventory = { ...(inventory ?? {}) };
+  const names: string[] = [];
+  for (const slot of order) {
+    const id = kept[slot];
+    if (id == null) continue;
+    if (rng() < chance) {
+      stock[id] = (stock[id] ?? 0) + 1;
+      delete kept[slot];
+      names.push(itemById(id)?.name ?? `宝物${id}`);
+    }
+  }
+  return { equipment: kept, inventory: stock, names };
 }
 
 /** 快捷槽上限（docs/04 §12.3）：至多 2 种，每种叠加 ≤99。 */

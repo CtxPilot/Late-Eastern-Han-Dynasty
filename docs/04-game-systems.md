@@ -1577,6 +1577,8 @@ L3 套装效果：
 > **Session 438 S4a 实装（S13 消耗品缴获，docs/44 D4）**：胜者缴获败者阵亡主将/副将快捷槽消耗品——每种独立 30% 整叠转移（`LOOT_CONSUMABLE_CHANCE`，`server/src/engine/campaign.ts` `seizeKilledConsumables`，调用点/顺序与 436 `seizeKilledEquipment` 三处完全镜像，无槽零 RNG 消耗）；缴获入胜者势力库存，未中种留原主尸身槽；战报追加「缴获…×N/被缴获…×N」。零新端点/字段/UI；验证 `pnpm verify-s44a-consumable-loot` 12/12，金样零扰动。
 >
 > **Session 439 S4b 实装（S13 阵亡回库，docs/44 D5）**：战斗阵亡者（已标 `DEAD`）未被缴获的装备 + 快捷槽余量全部回原势力库存（`returnKilledRemains`，挂在全部缴获掷点之后，尸身恒空；残部退守未标死者不碰）。零 RNG、零战报、零新端点/字段/UI；验证 `pnpm verify-s44b-battle-inheritance` 16/16（退守斩杀边界/胜方损将/战败回库守恒/无物零改动），`verify-s44a` 守恒口径同步更新为缴获 + 回库 + 留身三项，金样零扰动。
+>
+> **Session 440 S4c 实装（S13 被俘没收，docs/44 D6）**：被俘主将/副将装备按件独立 30% 归俘获方（`items.ts` `rollCaptiveEquipmentLoot` 纯掷点 + `LOOT_EQUIPMENT_CHANCE` 单一真源；未中件被俘者保留，随招降/赎回另行立项）。挂接四处：自动战全歼敌俘/战败攻俘（复用缴获函数）+ 亲统生擒 + 单挑被俘（战报追加缴获）；劝降释放/手动没收（D7）不做。零新端点/字段；验证 `pnpm verify-s44c-captive-loot` 26/26，金样零扰动。
 
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 

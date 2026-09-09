@@ -1,3 +1,13 @@
+## 2026-09-09 — Session 440 · S13 被俘没收 S4c（docs/44 D6）
+
+- Phase：**S13 宝物后置项**；docs/44 D12 切片第三片。只做被俘自动没收（被俘主将/副将装备按件独立 30% 归俘获方），不碰手动没收（D7 只立项不实装）、战斗中使用（S4d）、数据门。
+- **关键实勘（决定切片形状）**：自动战野战 1200 场被俘 0 次——溃散线 30% 使 `defenderRemaining<=0` 全歼分支结构性不可达，且 `commanderStatus` 无攻方 `captured` 来源（单挑仅被斩）；真实被俘来源是六角（亲统 `sealBattleCaptures` 生擒 + 单挑 `captured/surrendered`）。故 S4c 挂接四处：自动战全歼敌俘/战败攻俘（复用 `seizeKilledEquipment`，零新语义）+ 亲统生擒 + 单挑被俘；劝降俘获转在野释放，不在没收面。
+- **实现**：`items.ts` 纯掷点 `rollCaptiveEquipmentLoot` + `LOOT_EQUIPMENT_CHANCE` 单一真源移至 `items.ts`（`campaign.ts` 改进口沿用，外部引用兼容）；`battle.ts` 单挑分支（`rng` 缺席则跳过，禁静默回退）；战报沿缴获口径追加（`battle_capture`/单挑/`campaign_*` 行内）。无装备/无胜方不掷点；未中件被俘者保留。
+- **验证（全绿）**：`verify-s44c-captive-loot` **26/26**（helper 精确分账 + 零 RNG + 确定性/ storm 生擒守恒 3+1=4 + 标俘 + 战报 + 确定性 + Schema/单挑全中 +4/全不中保留 + 战报正反 + Schema/无装备生擒库存逐字节不变 + 照常标俘 + Schema）+ turn-golden 3/3（零变化：金样无六角战 + 全歼不可达，无需重举）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/10/62 + battle-rng 5/5 + duel-rng 3/3 + bf-p3 13/13 + bf-p4 20/20 + melee 12/12 + s432 13/13 + items 32/32 + s433 41/41 + s434 65/65 + s435 32/32 + s436 12/12 + s44a 12/12 + s44b 16/16 + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- 边界：手动没收忠诚惩罚（D7）、战斗中使用（S4d）、数据门仍后置；0-B 闸门待真人游玩。
+- 文档：docs/05 §11.2 实装注、docs/04 §12.3 实装注、docs/12 S13 行、docs/35 主线 ㊝、docs/44 状态节、本日志与 HANDOFF 双写。
+- **Next**：按 D12 开 S4d 战斗中使用（D1 仅 stamina/heal、D2 耗整次行动、D3 新端点 `battle/use-consumable` 五镜像 + BattleView 按钮，零 RNG，AI 不用）。
+
 ## 2026-09-09 — Session 439 · S13 阵亡回库 S4b（docs/44 D5）
 
 - Phase：**S13 宝物后置项**；docs/44 D12 切片第二片。只做战斗阵亡者传承（未缴获装备 + 槽余量回原势力库存），不碰被俘没收（S4c）、战斗中使用（S4d）、数据门、自然死亡（写入点未定位，沿 D5）。

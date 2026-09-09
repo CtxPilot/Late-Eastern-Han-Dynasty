@@ -69,7 +69,7 @@ import { clearCityCounterOnCapture } from './spy.js';
 import { collectAnnihilatedDefenderCommanders, MANUAL_VICTORY_RECOVERY_RATIO } from './battle.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
-import { equipBonusFor, getItemById } from './items.js';
+import { equipBonusFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot } from './items.js';
 import { grantMeritTo } from './meritGrant.js';
 import { FAME_CAPTURE_CITY, FAME_OCCUPY_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
 import {
@@ -89,8 +89,8 @@ const MERIT_SIEGE_SURRENDER = 30;
 // ====== 常量 ======
 
 export const MIN_CAMPAIGN_TROOPS = 1000;
-/** docs/05 §11.2 战利品：胜者缴获败者阵亡主将/副将单件装备概率（Session 436 实装）。 */
-export const LOOT_EQUIPMENT_CHANCE = 0.3;
+// docs/05 §11.2 战利品单件装备概率：Session 440 起由 items.ts 单一真源导出（沿 436 口径）。
+export { LOOT_EQUIPMENT_CHANCE };
 /** docs/05 §11.2 战利品：胜者缴获败者阵亡主将/副将快捷槽消耗品概率（Session 438 S4a 实装，沿 436 口径）。 */
 export const LOOT_CONSUMABLE_CHANCE = 0.3;
 export const GARRISON_RESERVE = 500;
@@ -1473,19 +1473,35 @@ export function settleSiegeStormBattle(
     const capturedIds = collectAnnihilatedDefenderCommanders(battle);
     if (capturedIds.length === 0) return next;
     const names: string[] = [];
+    const officers = Object.fromEntries(
+      Object.entries(next.officers).map(([id, officer]) => {
+        if (!capturedIds.includes(officer.id)) return [id, officer];
+        names.push(officer.name);
+        return [id, { ...officer, status: OfficerStatus.PRISONER }];
+      }),
+    );
+    // Session 440 S4c：被俘没收——被歼守方单位主将装备按件独立 30% 归攻方
+    // （沿 436 口径；无装备不掷点零 RNG 消耗；未中件被俘者保留）。
+    const lootNames: string[] = [];
+    const factions = { ...next.factions };
+    for (const id of capturedIds) {
+      const o: Officer | undefined = officers[id];
+      if (!o || Object.keys(o.equipment ?? {}).length === 0) continue;
+      const victor = factions[primary.factionId];
+      if (!victor) break;
+      const out = rollCaptiveEquipmentLoot(o.equipment, victor.inventory, LOOT_EQUIPMENT_CHANCE, rng);
+      officers[id] = { ...o, equipment: out.equipment };
+      factions[primary.factionId] = { ...victor, inventory: out.inventory };
+      lootNames.push(...out.names);
+    }
     return pushLog(
       {
         ...next,
-        officers: Object.fromEntries(
-          Object.entries(next.officers).map(([id, officer]) => {
-            if (!capturedIds.includes(officer.id)) return [id, officer];
-            names.push(officer.name);
-            return [id, { ...officer, status: OfficerStatus.PRISONER }];
-          }),
-        ),
+        officers,
+        factions,
       },
       'battle_capture',
-      `【战报】战场生擒：${names.join('、')}`,
+      `【战报】战场生擒：${names.join('、')}${lootNames.length > 0 ? `；缴获${lootNames.join('、')}` : ''}`,
     );
   };
 
@@ -1932,6 +1948,9 @@ function applyBattleResultToState(
             } else if (status === 'captured') {
               officers[oid] = { ...o, status: OfficerStatus.PRISONER };
               captivesByAttacker.push(oid);
+              // Session 440 S4c：被俘没收——按件独立 30% 归俘获方（沿 436 口径，
+              // 未中件被俘者保留，随招降/赎回另行立项）。
+              seizeKilledEquipment(oid, primary.factionId);
             } else if (status === 'wounded') {
               officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
             }
@@ -1986,6 +2005,9 @@ function applyBattleResultToState(
       } else if (status === 'captured') {
         officers[oid] = { ...o, status: OfficerStatus.PRISONER };
         captivesByDefender.push(oid);
+        // Session 440 S4c：攻方败 → 守方没收被俘攻方装备（胜者缴获败者，沿 436；
+        // 攻方胜时不碰己方被俘装备，随招降/赎回另行立项）。
+        if (result.winner === 'defender') seizeKilledEquipment(oid, defenderFactionId);
       } else if (status === 'wounded') {
         officers[oid] = { ...o, stamina: Math.max(0, o.stamina - 30) };
       }

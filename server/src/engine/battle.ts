@@ -54,7 +54,7 @@ import {
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
-import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor } from './items.js';
+import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot } from './items.js';
 import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
@@ -2014,6 +2014,18 @@ function applyDuelOutcome(
       );
     }
     message = `${winnerOff?.name ?? '胜方'} 俘获 ${loserOff?.name ?? '败将'}！`;
+    // Session 440 S4c：被俘没收——败者装备按件独立 30% 归胜方势力（沿 436 口径；
+    // 无装备/无 rng/无胜方势力不掷点；未中件被俘者保留）。
+    const victorFactionId = winnerOff?.faction;
+    if (loserOff && rng != null && victorFactionId != null && Object.keys(loserOff.equipment ?? {}).length > 0) {
+      const victor = state.factions[victorFactionId];
+      if (victor) {
+        const loot = rollCaptiveEquipmentLoot(loserOff.equipment, victor.inventory, LOOT_EQUIPMENT_CHANCE, rng);
+        loserOff.equipment = loot.equipment;
+        state.factions[victorFactionId] = { ...victor, inventory: loot.inventory };
+        if (loot.names.length > 0) message += `；缴获${loot.names.join('、')}`;
+      }
+    }
   } else if (result.outcome === 'escaped') {
     if (loserUnit) {
       units = units.map((u) =>

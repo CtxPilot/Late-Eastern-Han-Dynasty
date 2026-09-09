@@ -106,7 +106,8 @@
     "verify-save-slots": "tsx src/scripts/verify-save-slots.ts",
     "verify-s411-manual-victory-bonus": "tsx src/scripts/verify-s411-manual-victory-bonus.ts",
     "verify-s413-state-cow": "tsx src/scripts/verify-s413-state-cow.ts",
-    "verify-s414-save-slim": "tsx src/scripts/verify-s414-save-slim.ts"
+    "verify-s414-save-slim": "tsx src/scripts/verify-s414-save-slim.ts",
+    "verify-s44c-captive-loot": "tsx src/scripts/verify-s44c-captive-loot.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",
