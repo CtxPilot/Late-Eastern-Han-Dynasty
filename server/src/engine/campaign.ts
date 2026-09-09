@@ -1866,6 +1866,36 @@ function applyBattleResultToState(
     else delete next.consumableSlots;
     officers[officerId] = next;
   };
+  /**
+   * docs/05 §11.2（Session 439 S4b，docs/44 D5）：战斗阵亡者传承——未被缴获的
+   * 装备 + 快捷槽余量全部回阵亡者原势力库存（阵亡者装备不再凭空消失）。
+   * 零 RNG、零战报（静默回库）；仅处理已标 `DEAD` 者——残部退守未标死的
+   * “被斩”不碰（沿 436 行为）；尸身无物时零状态改动（金样零扰动）。
+   * 调用点在全部缴获掷点之后（敌方第二循环 / 攻方循环），尸身总是清空。
+   */
+  const returnKilledRemains = (officerId: number): void => {
+    const o = officers[officerId];
+    if (!o || o.status !== OfficerStatus.DEAD) return;
+    if (o.faction == null) return;
+    const order = ['weaponPrimary', 'weaponSecondary', 'armor', 'mount', 'tome'] as const;
+    const gearIds: number[] = [];
+    for (const slot of order) {
+      const id = o.equipment?.[slot];
+      if (id != null) gearIds.push(id);
+    }
+    const slots = o.consumableSlots ?? [];
+    // 尸身无物：零状态改动。
+    if (gearIds.length === 0 && slots.length === 0) return;
+    const origin = factions[o.faction];
+    if (!origin) return;
+    const inventory = { ...(origin.inventory ?? {}) };
+    for (const id of gearIds) inventory[id] = (inventory[id] ?? 0) + 1;
+    for (const slot of slots) inventory[slot.itemId] = (inventory[slot.itemId] ?? 0) + slot.count;
+    factions[o.faction] = { ...origin, inventory };
+    const next: Officer = { ...o, equipment: {} };
+    delete next.consumableSlots;
+    officers[officerId] = next;
+  };
 
   // 更新攻方 Army（每军一份；单军时与旧 `updatedArmy` 等价）
   // 士气夹紧 0~100（`runAutoBattle` 内部上限 120，与 services/game.ts:1720、game.worker.ts:1802 同口径；
@@ -1923,6 +1953,8 @@ function applyBattleResultToState(
             seizeKilledEquipment(oid, primary.factionId);
             // Session 438 S4a：残部退守分支同样缴获阵亡者快捷槽消耗品
             seizeKilledConsumables(oid, primary.factionId);
+            // Session 439 S4b：缴获掷点结束后，未缴获余量回阵亡者原势力库存
+            returnKilledRemains(oid);
           }
         }
       }
@@ -1949,6 +1981,8 @@ function applyBattleResultToState(
           seizeKilledEquipment(oid, defenderFactionId);
           seizeKilledConsumables(oid, defenderFactionId);
         }
+        // Session 439 S4b：攻方阵亡者余量（无论胜败）一律回原势力库存。
+        returnKilledRemains(oid);
       } else if (status === 'captured') {
         officers[oid] = { ...o, status: OfficerStatus.PRISONER };
         captivesByDefender.push(oid);

@@ -174,7 +174,8 @@
     "verify-s413-state-cow": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s413-state-cow",
     "verify-s414-save-slim": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s414-save-slim",
     "verify-s416-worker-parity": "node scripts/verify-s416-worker-parity.mjs",
-    "verify-s420-delegation-ui": "node scripts/verify-s420-delegation-ui.mjs"
+    "verify-s420-delegation-ui": "node scripts/verify-s420-delegation-ui.mjs",
+    "verify-s44b-battle-inheritance": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44b-battle-inheritance"
   },
   "engines": {
     "node": ">=20"

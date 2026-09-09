@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 438**（S13 消耗品缴获 S4a：docs/44 D4 落地，`seizeKilledConsumables` + `verify-s44a` 12/12 + 回归矩阵全绿，金样零扰动） |
+| 会话 | **Session 439**（S13 阵亡回库 S4b：docs/44 D5 落地，`returnKilledRemains` + `verify-s44b` 16/16 + `verify-s44a` 守恒口径同步 + 回归矩阵全绿，金样零扰动） |
 | 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 待批 |
-| 代码最新 | Session 438 待提交（`campaign.ts` `seizeKilledConsumables` + 战报追加 + `verify-s44a-consumable-loot.ts` 12/12 + 回归矩阵全绿，金样零变化）；Session 437 零代码改动 |
-| 文档最新 | **Session 438 双写**（docs/05 §11.2 实装注 + 436 残部注勘误、docs/04 §12.3 实装注 + 获取方式句、docs/12 S13 行、docs/35 主线 ㊛、docs/44 状态节、10-progress 日志、本文件） |
-| 本交接用途 | **S13 缴获链收口**；后续方向：按 docs/44 D12 开 S4b，或 0-B 闸门真人实测 |
-| 下一步 | ①**S4b 阵亡回库**（D5：战斗阵亡者未缴获装备 + 槽余量回原势力库存；自然死亡待实勘不做）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+| 代码最新 | Session 439 待提交（`campaign.ts` `returnKilledRemains` + `verify-s44b-battle-inheritance.ts` 16/16 + `verify-s44a` 守恒口径同步 + 回归矩阵全绿，金样零变化）；Session 438 已提交 `57ed135` |
+| 文档最新 | **Session 439 双写**（docs/05 §11.2 实装注、docs/04 §12.3 实装注、docs/12 S13 行、docs/35 主线 ㊜、docs/44 状态节、10-progress 日志、本文件） |
+| 本交接用途 | **S13 缴获链收口**；后续方向：按 docs/44 D12 开 S4c，或 0-B 闸门真人实测 |
+| 下一步 | ①**S4c 被俘没收**（D6：被俘主将/副将装备按件独立 30% 归俘获方；D7 手动没收只立项不实装）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 439 交接要点
+
+- **S4b 阵亡回库最小切片**：`applyBattleResultToState` 内 `returnKilledRemains`（标 `DEAD` 者未缴获装备 + 槽余量回原势力库存，尸身恒空；挂在全部缴获掷点之后：敌方第二循环 / 攻方循环胜败不问）。零 RNG、零战报（静默回库）、零新端点/字段/UI；尸身无物零状态改动。
+- **实勘沉淀两边界（另行立项才动）**：①全歼分支对同一阵亡者缴获掷点两次（436 既有 quirk，件有效概率 1−0.7²，S4b 保序不碰）；②退守斩杀留活口（`killed` 不标死、余量留身，S4b 守卫不碰活人）；六角亲统 `commanderStatus: {}` 无阵亡。
+- **`verify-s44a` 守恒口径同步**（S4b 的预期连带）：缴获 + 回库 + 留身三项（§1 退守：5 + 0 + 3 = 8；§2 标死：3 + 5 + 0 = 8，战报不变）。
+- **验证全绿**：`verify-s44b-battle-inheritance` **16/16**（退守斩杀边界/胜方主将阵亡全数回库/战败缴获 + 回库守恒/无物零改动/Schema×4/金样 12 月 Schema）+ s44a 12/12 + turn-golden 3/3（零变化，无需重举）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 9/10/62 + s432 13/13 + items 32/32 + s433 41/41 + s434 65/65 + s435 32/32 + s436 12/12 + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance + diff-check。
+- 边界：被俘没收（S4c）、战斗中使用（S4d）、数据门、自然死亡回库仍后置；0-B 闸门待真人游玩。
+- 文档：docs/05 §11.2、docs/04 §12.3、docs/12 S13、docs/35 主线 ㊜、docs/44 状态节、10-progress Session 439 日志、HANDOFF 双写。
 
 ### Session 438 交接要点
 

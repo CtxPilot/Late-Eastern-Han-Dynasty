@@ -7,7 +7,8 @@
  *
  * 断言面：
  *   1. 攻方胜歼敌：阵亡敌将快捷槽消耗品按 30%/种整叠缴获
- *      （守恒：胜者库存增量 + 尸身槽余量 = 战前槽总量）；
+ *      （守恒：胜者库存增量 + 原方回库 + 尸身槽余量 = 战前槽总量；
+ *      Session 439 S4b 起标死者尸身恒空，余量计入原方回库）；
  *   2. 缴获入胜者势力库存，未中种留原主尸身槽；战报追加「缴获…×N」；
  *   3. 攻方败：守方缴获阵亡攻方快捷槽消耗品（方向对称，战败报「被缴获」）；
  *   4. 同种子同缴获（确定性）；无槽阵亡者无「×N」缴获标记（零 RNG 扰动）；
@@ -180,7 +181,7 @@ let lootBefore = 0;
 }
 
 if (lootSeed > 0) {
-  const run = (): { gain: number; onCorpse: number; msg: string; state: GameState } => {
+  const run = (): { gain: number; returned: number; onCorpse: number; msg: string; state: GameState } => {
     let s = freshState();
     s = deployOfficer(s, 6, 15);
     s = deployOfficer(s, 7, 14);
@@ -191,6 +192,7 @@ if (lootSeed > 0) {
     s = setWar12(s);
     s = stockOfficerSlots(s, 1, aiCmd);
     const invBefore = inventoryTotal(s, 2, LOOT_IDS);
+    const originBefore = inventoryTotal(s, 1, LOOT_IDS);
     const a = siegeArmy({ id: 'm-a', name: '关羽军', commanderId: 6, troops: 8000, fromNodeId: 15, siegeState: siegeStateOf(s, 13, 2) });
     const b = siegeArmy({ id: 'm-b', name: '张飞军', commanderId: 7, troops: 4000, fromNodeId: 14 });
     const c = siegeArmy({ id: 'e-c', name: '敌军', commanderId: aiCmd, troops: 3000, factionId: 1, phase: 'engaged', targetNodeId: undefined });
@@ -200,6 +202,8 @@ if (lootSeed > 0) {
     const log = out.state.actionLog.find((e) => e.type === 'campaign_field_win' || e.type === 'campaign_capture');
     return {
       gain: inventoryTotal(out.state, 2, LOOT_IDS) - invBefore,
+      // Session 439 S4b：标死者余量回原势力库存（退守未标死则留身，恒为 0）
+      returned: inventoryTotal(out.state, 1, LOOT_IDS) - originBefore,
       onCorpse: slotTotal(out.state, aiCmd, LOOT_IDS),
       msg: log?.message ?? '',
       state: out.state,
@@ -207,8 +211,8 @@ if (lootSeed > 0) {
   };
   const first = run();
   const second = run();
-  assert(first.gain + first.onCorpse === lootBefore, `守恒：缴获 ${first.gain} + 尸身槽 ${first.onCorpse} = 战前 ${lootBefore}`);
-  assert(first.gain === second.gain && first.msg === second.msg, '同种子同缴获（确定性）');
+  assert(first.gain + first.returned + first.onCorpse === lootBefore, `守恒：缴获 ${first.gain} + 回库 ${first.returned} + 尸身槽 ${first.onCorpse} = 战前 ${lootBefore}`);
+  assert(first.gain === second.gain && first.returned === second.returned && first.msg === second.msg, '同种子同缴获（确定性）');
   assert(first.gain > 0, `缴获命中 ${first.gain} 件（种子已预选）`);
   assert(first.msg.includes('缴获') && first.msg.includes('×'), `战报追加缴获（整叠×N）：「${first.msg.slice(-40)}」`);
   assert(GameStateSchema.safeParse(first.state).success, '缴获结算后过完整 GameStateSchema');
@@ -253,14 +257,17 @@ console.log('\n2. 攻方败：守方缴获阵亡攻方快捷槽消耗品（方�
     s = setWar12(s);
     s = stockOfficerSlots(s, 2, 6);
     const invBefore = inventoryTotal(s, 1, LOOT_IDS);
+    const originBefore = inventoryTotal(s, 2, LOOT_IDS);
     const a = siegeArmy({ id: 'm-a', name: '关羽军', commanderId: 6, troops: 1500, fromNodeId: 15, siegeState: siegeStateOf(s, 13, 1) });
     const c = siegeArmy({ id: 'e-c', name: '敌军', commanderId: aiCmd, troops: 8000, factionId: 1, phase: 'engaged', targetNodeId: undefined });
     s = { ...s, campaignArmies: [a, c] };
     const rng = new SerializableRng(killSeed);
     const out = assaultForFaction(s, 'm-a', 2, () => rng.next());
     const gain = inventoryTotal(out.state, 1, LOOT_IDS) - invBefore;
+    // Session 439 S4b：攻方主将标死，余量回攻方库存
+    const returned = inventoryTotal(out.state, 2, LOOT_IDS) - originBefore;
     const onCorpse = slotTotal(out.state, 6, LOOT_IDS);
-    assert(gain + onCorpse === killBefore, `守恒：缴获 ${gain} + 尸身槽 ${onCorpse} = 战前 ${killBefore}`);
+    assert(gain + returned + onCorpse === killBefore, `守恒：缴获 ${gain} + 回库 ${returned} + 尸身槽 ${onCorpse} = 战前 ${killBefore}`);
     const log = out.state.actionLog.find((e) => e.type === 'campaign_defeat');
     assert((log?.message.includes('被缴获') ?? false) && (log?.message.includes('×') ?? false), `战败报追加被缴获：${log?.message.slice(-30) ?? ''}`);
     assert(GameStateSchema.safeParse(out.state).success, '战败缴获后过完整 GameStateSchema');
