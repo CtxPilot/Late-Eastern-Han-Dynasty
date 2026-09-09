@@ -1573,6 +1573,8 @@ L3 套装效果：
 > **Session 435 实装（S13 快捷槽分配/携带）**：`Officer.consumableSlots?`（至多 2 条 `{itemId,count≤99}`，空槽字段清理；旧存档缺省兼容）+ `assignConsumableToSlot`（库存→槽，同类叠加/新种类需空槽，日志 `item_assign`）+ `unassignConsumableFromSlot`（槽→库存，count 缺省整栈，日志 `item_unassign`）；`useConsumable` 优先扣槽、槽空回退库存（报错/日志沿 432 口径）。API `POST /api/game/items/assign|unassign` + Worker 镜像 + OfficerDetail 快捷槽区（分配/使用/卸下）；验证 `pnpm verify-s435-consumable-slots` 32/32。战斗中使用、传承/没收仍后置（战场缴获 Session 436 已实装，见 docs/05 §11.2）。
 >
 > **Session 437 立项（S13 剩余后置，纯设计轮）**：`docs/44-s13-remaining-proposal.md`——T1 战斗中使用（仅 stamina/heal、耗整次行动、零 RNG）/T2 消耗品缴获（阵亡者快捷槽每种独立 30% 整叠转移）/T3 阵亡回库（未缴获装备 + 槽余量回原势力库存，自然死亡待实勘）/T4 被俘没收（按件 30% 归俘获方；手动没收待数值拍板）/T5~T8 数据门（8 槽剩余三槽分数据+引擎两步、套装 L3 缺 itemsets、共鸣 L2 bond 零命中、未接入 effect 逐项清单）；D1~D12 含推荐值、R1~R4、切片 S4a~S4d，待批准后实装。
+>
+> **Session 438 S4a 实装（S13 消耗品缴获，docs/44 D4）**：胜者缴获败者阵亡主将/副将快捷槽消耗品——每种独立 30% 整叠转移（`LOOT_CONSUMABLE_CHANCE`，`server/src/engine/campaign.ts` `seizeKilledConsumables`，调用点/顺序与 436 `seizeKilledEquipment` 三处完全镜像，无槽零 RNG 消耗）；缴获入胜者势力库存，未中种留原主尸身槽；战报追加「缴获…×N/被缴获…×N」。零新端点/字段/UI；验证 `pnpm verify-s44a-consumable-loot` 12/12，金样零扰动。
 
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 
@@ -1592,7 +1594,7 @@ L3 套装效果：
 获取方式：
   - 商店购买（花钱）
   - 搜索获得（特定据点/人才特长）
-  - 战斗缴获（击败携带消耗品敌军）
+  - 战斗缴获（击败携带消耗品敌军；阵亡者快捷槽每种独立 30% 整叠转移，Session 438 S4a 已实装）
   - 城市特产产出（特定城市每季自动产）
 
 典型消耗品例：

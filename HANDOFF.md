@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 437**（S13 剩余逐项立项：纯设计轮，`docs/44` 落盘，D1~D12 含推荐值 + R1~R4 + 切片 S4a~S4d，待批准） |
+| 会话 | **Session 438**（S13 消耗品缴获 S4a：docs/44 D4 落地，`seizeKilledConsumables` + `verify-s44a` 12/12 + 回归矩阵全绿，金样零扰动） |
 | 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 待批 |
-| 代码最新 | Session 436 已提交 `7043c0b`（`campaign.ts` `seizeKilledEquipment` + 战报追加；`verify-s436` 12/12 + 回归矩阵全绿，金样零变化）；Session 437 零代码改动 |
-| 文档最新 | **Session 437 双写**（docs/44 落盘、docs/04 §12.3 立项指向、docs/12 S13 行、docs/35 主线 ㊚、10-progress 日志、本文件） |
-| 本交接用途 | **S13 剩余后置逐项立项**；后续方向：docs/44 批准后按 D12 开 S4a，或 0-B 闸门真人实测 |
-| 下一步 | ①**docs/44 批准**（D4/D6 的 0.3 概率、D1 类型范围、D12 切片顺序待用户拍板；批准即开 S4a 消耗品缴获）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+| 代码最新 | Session 438 待提交（`campaign.ts` `seizeKilledConsumables` + 战报追加 + `verify-s44a-consumable-loot.ts` 12/12 + 回归矩阵全绿，金样零变化）；Session 437 零代码改动 |
+| 文档最新 | **Session 438 双写**（docs/05 §11.2 实装注 + 436 残部注勘误、docs/04 §12.3 实装注 + 获取方式句、docs/12 S13 行、docs/35 主线 ㊛、docs/44 状态节、10-progress 日志、本文件） |
+| 本交接用途 | **S13 缴获链收口**；后续方向：按 docs/44 D12 开 S4b，或 0-B 闸门真人实测 |
+| 下一步 | ①**S4b 阵亡回库**（D5：战斗阵亡者未缴获装备 + 槽余量回原势力库存；自然死亡待实勘不做）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 438 交接要点
+
+- **S4a 消耗品缴获最小切片**：`applyBattleResultToState` 内 `seizeKilledConsumables`（胜者缴获败者阵亡主将/副将快捷槽消耗品，每种独立 30% 整叠转移 `LOOT_CONSUMABLE_CHANCE`；无槽/无胜者不掷点；缴获入胜者库存，未中种留原主尸身槽；战报追加缴获/被缴获×N）。调用点与 436 三处完全镜像（敌歼 + 残部退守 + 攻方败），同武将排在装备缴获之后掷点，军序槽序固定。
+- **勘误**：docs/05 旧注「残部退守不缴」与 436 代码（残部退守分支阵亡者同样缴获，`campaign.ts:1918-1928`）矛盾——以代码为准更正，S4a 沿代码口径。
+- **验证全绿**：`verify-s44a-consumable-loot` **12/12**（胜缴获行军散×5/败缴获杜康酒×3/守恒/确定性/无槽零扰动/Schema/金样 12 月 0 缴获）、turn-golden 3/3（零变化，无需重举）、campaign 71、ai-military-rng 38、turn-cadence 28、save 9/10/62、s432 13/13、items 32/32、s433 41/41、s434 65/65、s435 32/32、s436 12/12、shared 481、server 3、client 71、三端 typecheck、parity 5/5、compliance、diff-check。
+- 边界：阵亡回库（S4b）、被俘没收（S4c）、战斗中使用（S4d）、数据门仍后置；0-B 闸门待真人游玩。
+- 文档：docs/05 §11.2、docs/04 §12.3、docs/12 S13、docs/35 主线 ㊛、docs/44 状态节、10-progress Session 438 日志、HANDOFF 双写。
 
 ### Session 437 交接要点
 

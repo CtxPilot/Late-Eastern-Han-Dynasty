@@ -91,6 +91,8 @@ const MERIT_SIEGE_SURRENDER = 30;
 export const MIN_CAMPAIGN_TROOPS = 1000;
 /** docs/05 §11.2 战利品：胜者缴获败者阵亡主将/副将单件装备概率（Session 436 实装）。 */
 export const LOOT_EQUIPMENT_CHANCE = 0.3;
+/** docs/05 §11.2 战利品：胜者缴获败者阵亡主将/副将快捷槽消耗品概率（Session 438 S4a 实装，沿 436 口径）。 */
+export const LOOT_CONSUMABLE_CHANCE = 0.3;
 export const GARRISON_RESERVE = 500;
 /** 每 100 兵力每回合耗粮 × 地形系数 */
 export const FOOD_PER_100_PER_TURN = 3;
@@ -1832,6 +1834,38 @@ function applyBattleResultToState(
     factions[victorFactionId] = { ...faction, inventory };
     officers[officerId] = { ...o, equipment };
   };
+  /**
+   * docs/05 §11.2（Session 438 S4a，docs/44 D4）：胜者缴获败者阵亡主将/副将
+   * 快捷槽消耗品——每种独立掷点（`LOOT_CONSUMABLE_CHANCE`），整叠转移；
+   * 无槽/无胜者不掷点（零 RNG 消耗）；仅移走缴获种，未中种留原主。
+   * 顺序固定（军序→槽序）保证确定性；同武将排在装备缴获之后掷点，
+   * 无槽用例的 RNG 流与 436 路径逐字节一致。
+   */
+  const seizeKilledConsumables = (officerId: number, victorFactionId: number | null): void => {
+    if (victorFactionId == null) return;
+    const o = officers[officerId];
+    if (!o) return;
+    const slots = o.consumableSlots ?? [];
+    // 无槽不掷点（零 RNG 消耗）：旧用例与 436 路径逐字节不受扰。
+    if (slots.length === 0) return;
+    const faction = factions[victorFactionId];
+    if (!faction) return;
+    const inventory = { ...(faction.inventory ?? {}) };
+    const remaining: typeof slots = [];
+    for (const slot of slots) {
+      if (rng() < LOOT_CONSUMABLE_CHANCE) {
+        inventory[slot.itemId] = (inventory[slot.itemId] ?? 0) + slot.count;
+        seizedLootNames.push(`${getItemById(slot.itemId)?.name ?? `宝物${slot.itemId}`}×${slot.count}`);
+      } else {
+        remaining.push(slot);
+      }
+    }
+    factions[victorFactionId] = { ...faction, inventory };
+    const next: Officer = { ...o };
+    if (remaining.length > 0) next.consumableSlots = remaining;
+    else delete next.consumableSlots;
+    officers[officerId] = next;
+  };
 
   // 更新攻方 Army（每军一份；单军时与旧 `updatedArmy` 等价）
   // 士气夹紧 0~100（`runAutoBattle` 内部上限 120，与 services/game.ts:1720、game.worker.ts:1802 同口径；
@@ -1863,6 +1897,8 @@ function applyBattleResultToState(
               officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
               // Session 436：攻方胜 → 缴获被歼敌军阵亡者装备
               seizeKilledEquipment(oid, primary.factionId);
+              // Session 438 S4a：攻方胜 → 缴获被歼敌军阵亡者快捷槽消耗品
+              seizeKilledConsumables(oid, primary.factionId);
             } else if (status === 'captured') {
               officers[oid] = { ...o, status: OfficerStatus.PRISONER };
               captivesByAttacker.push(oid);
@@ -1885,6 +1921,8 @@ function applyBattleResultToState(
         for (const oid of [enemy.commanderId, ...enemy.subCommanderIds]) {
           if (result.commanderStatus[oid] === 'killed') {
             seizeKilledEquipment(oid, primary.factionId);
+            // Session 438 S4a：残部退守分支同样缴获阵亡者快捷槽消耗品
+            seizeKilledConsumables(oid, primary.factionId);
           }
         }
       }
@@ -1906,7 +1944,11 @@ function applyBattleResultToState(
       if (status === 'killed') {
         officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
         // Session 436：攻方败 → 守方缴获（胜者缴获败者；胜时不碰己方阵亡装备，沿 S1 行为）。
-        if (result.winner === 'defender') seizeKilledEquipment(oid, defenderFactionId);
+        // Session 438 S4a：攻方败 → 守方同样缴获阵亡攻方快捷槽消耗品。
+        if (result.winner === 'defender') {
+          seizeKilledEquipment(oid, defenderFactionId);
+          seizeKilledConsumables(oid, defenderFactionId);
+        }
       } else if (status === 'captured') {
         officers[oid] = { ...o, status: OfficerStatus.PRISONER };
         captivesByDefender.push(oid);

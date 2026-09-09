@@ -116,6 +116,7 @@
     "verify-s434-hex-multi-army": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s434-hex-multi-army",
     "verify-s435-consumable-slots": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s435-consumable-slots",
     "verify-s436-battlefield-loot": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s436-battlefield-loot",
+    "verify-s44a-consumable-loot": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44a-consumable-loot",
     "verify-skill-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-skill-consume",
     "verify-relations-runtime": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-relations-runtime",
     "verify-mandate-consume": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-mandate-consume",
