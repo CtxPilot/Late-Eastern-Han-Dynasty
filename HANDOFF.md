@@ -9,12 +9,19 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 442**（0-B 闸门预检：0-B 剧本十年 soak UI 冒烟 `scripts/verify-0b-scenario-soak.mjs` + 9 剧本开局 9/9 + 命令坞 11/11 + 5 组合×120 回合 600/600 全绿；感受类判定仍属人工） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地 |
-| 代码最新 | Session 442 待提交（`scripts/verify-0b-scenario-soak.mjs` + `package.json` 入口，无引擎改动）；Session 441 已提交 `dbd9c50` |
-| 文档最新 | **Session 442 双写**（`docs/reviews/playtest-2026-09-10.md` 预检侧证 + 待填感受表、10-progress 日志、本文件） |
-| 本交接用途 | **0-B 闸门预检完成**；后续方向：0-B 闸门真人实测（`41` §三）→ 数据门待批，或 docs/43 §八 增援设计轮 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三「10 年一局愿意主动再来一局」，agent 不可代跑；预检已排除启动/推进阻断缺陷）；②**数据门立项**（T5a/T5b 8 槽剩余三槽、T6 套装 L3、T7 共鸣 L2、T8 未接入 effect——待数据批次 + 数值拍板）；③回合中途增援入场另行立项（docs/43 §八） |
+| 会话 | **Session 443**（增援设计轮：docs/45 纯设计规格落盘，F1~F12 实勘 + D1~D10 拍板点含推荐值 + R1~R5 + 切片 S5a~S5b，待批准） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地；docs/45 S5a/S5b 待批准 |
+| 代码最新 | Session 442 已提交 `2af1f17`（待 push，领先 origin/main 1 提交）；Session 443 纯文档轮待提交（无引擎改动） |
+| 文档最新 | **Session 443 双写**（`docs/45-hex-reinforcement-proposal.md` 落盘 + `docs/43` §八立项指针 + `docs/12` S10 行 + `docs/35` 主线 ㊟ + 10-progress 日志 + 本文件） |
+| 本交接用途 | **增援设计轮完成**；后续方向：S5a/S5b 待用户批准后实装，或 0-B 闸门真人实测（`41` §三），或数据门待批 |
+| 下一步 | ①**S5a/S5b 批准**（D7 AI 对称双向/上限值需拍板；F11 双重结算复核随 S5b）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板） |
+
+### Session 443 交接要点
+
+- **纯设计轮**（沿 419/docs-42、423/docs-43、437/docs-44 先例）：`docs/45-hex-reinforcement-proposal.md` 落盘——策应军手动入场 S5a + 行军到达自动入场 S5b + 城驻军出击后置 S5c / F1~F12 实勘（含风险 F11：AI 无守方避让，`largestEnemyArmyAt` 不滤参战军，S5b 实装前复核）/ D1~D10 拍板点各附推荐值 / R1~R5 不变量 / 验收方案（每片独立 verify-s45x + 44 体例回归矩阵）。
+- **关键实勘结论**：月结不管战斗（F2）+ 到达无视激战（F3）= 到达军可转围城但快照冻结，构成增援触发面；结算天然覆盖（F6 `resolveStormArmies` 攻方单位 armyId 解析，到达军入场即纳入、未入场自动排除，零结算改动）；容量/部署/撤退/回合边界/卫士全部现成（F5/F7/F8/F9）；首选零新存档字段（资格由 `campaignArmies` + `units[].armyId` 派生，R3）。
+- 验证：引用行号逐一实勘复核 + `git diff --check`；零代码，回归矩阵不跑（沿 437）。
+- 文档：docs/45 落盘、docs/43 §八立项指针、docs/12 S10 行、docs/35 主线 ㊟、10-progress Session 443 日志、HANDOFF 双写。
 
 ### Session 442 交接要点
 
