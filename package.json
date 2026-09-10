@@ -178,7 +178,8 @@
     "verify-s44b-battle-inheritance": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44b-battle-inheritance",
     "verify-s44d-battle-consumable": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44d-battle-consumable",
     "verify-s44d-battle-consumable-ui": "node scripts/verify-s44d-battle-consumable-ui.mjs",
-    "verify-s44c-captive-loot": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44c-captive-loot"
+    "verify-s44c-captive-loot": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s44c-captive-loot",
+    "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {
     "node": ">=20"

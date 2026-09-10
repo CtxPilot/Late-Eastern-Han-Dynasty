@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 441**（S13 战斗中使用 S4d：docs/44 D1~D3 落地，`useBattleConsumable` + 新端点五镜像 + BattleView + `verify-s44d` 24/24 + UI 26/26 + 回归矩阵全绿，金样零扰动；docs/44 切片收官） |
+| 会话 | **Session 442**（0-B 闸门预检：0-B 剧本十年 soak UI 冒烟 `scripts/verify-0b-scenario-soak.mjs` + 9 剧本开局 9/9 + 命令坞 11/11 + 5 组合×120 回合 600/600 全绿；感受类判定仍属人工） |
 | 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地 |
-| 代码最新 | Session 441 待提交（`battle.ts` 引擎 + 五镜像 + BattleView + `verify-s44d-battle-consumable.ts` 24/24 + `verify-s44d-battle-consumable-ui.mjs` 26/26 + 回归矩阵全绿，金样零变化）；Session 440 已提交 `12b6970` |
-| 文档最新 | **Session 441 双写**（docs/04 §12.3 实装注 + 使用规则句、docs/06 六角端点表、docs/07 药品按钮、docs/12 S13 行、docs/35 主线 ㊞、docs/44 状态节、10-progress 日志、本文件） |
-| 本交接用途 | **S13 缴获链收口 + 战斗中使用**；后续方向：数据门待批，或 0-B 闸门真人实测 |
-| 下一步 | ①**数据门立项**（T5a/T5b 8 槽剩余三槽、T6 套装 L3、T7 共鸣 L2、T8 未接入 effect——待数据批次 + 数值拍板）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③回合中途增援入场另行立项（docs/43 §八） |
+| 代码最新 | Session 442 待提交（`scripts/verify-0b-scenario-soak.mjs` + `package.json` 入口，无引擎改动）；Session 441 已提交 `dbd9c50` |
+| 文档最新 | **Session 442 双写**（`docs/reviews/playtest-2026-09-10.md` 预检侧证 + 待填感受表、10-progress 日志、本文件） |
+| 本交接用途 | **0-B 闸门预检完成**；后续方向：0-B 闸门真人实测（`41` §三）→ 数据门待批，或 docs/43 §八 增援设计轮 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三「10 年一局愿意主动再来一局」，agent 不可代跑；预检已排除启动/推进阻断缺陷）；②**数据门立项**（T5a/T5b 8 槽剩余三槽、T6 套装 L3、T7 共鸣 L2、T8 未接入 effect——待数据批次 + 数值拍板）；③回合中途增援入场另行立项（docs/43 §八） |
+
+### Session 442 交接要点
+
+- **0-B 闸门预检**：0-B 历史剧本（scenarios 3~9）此前从未浏览器点击验收（Session 427 自陈边界），本轮以无头浏览器补「可玩门槛」预检——`scripts/verify-0b-scenario-soak.mjs`（CDP 9242，逐组合选剧本→选非推荐势力→进入→世界屏→连续 N 回合，处置事件/家属弹窗，采集 stall/阻断/console/异常，任一非零退出 1）+ `package.json` 入口 `verify-0b-scenario-soak`（`SOAK_COMBOS`/`SOAK_TURNS`/`CDP_PORT`/`BASE_URL` 可覆盖）。
+- **结果全绿**：9 剧本开局 **9/9**（console 0）+ 命令坞 **11/11** 域入口上屏（console 0/异常 0）+ 5 组合×120 回合 = **600/600** 推进（stall 0/阻断 0/console error 0/异常 0；事件与家属弹窗均正常处置）。
+- **观察（非缺陷）**：单回合中位跨剧本高度一致 ~207ms（疑为月度反馈固定节流，非引擎负载），黄巾之乱例外 7ms；最大均落事件月 ~918ms。
+- **诚实边界**：无头脚本不覆盖手感/演出/心流，也不覆盖真实点击战报/单挑/六角战斗主观体验；耗时含客户端节流。0-B 战略闸门仍须真人判定。
+- 文档：`docs/reviews/playtest-2026-09-10.md`（预检侧证 + 待填感受表）、10-progress Session 442 日志、HANDOFF 双写。
 
 ### Session 441 交接要点
 
