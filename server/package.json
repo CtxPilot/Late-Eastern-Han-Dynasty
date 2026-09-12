@@ -74,6 +74,7 @@
     "verify-s44a-consumable-loot": "tsx src/scripts/verify-s44a-consumable-loot.ts",
     "verify-s44b-battle-inheritance": "tsx src/scripts/verify-s44b-battle-inheritance.ts",
     "verify-s44d-battle-consumable": "tsx src/scripts/verify-s44d-battle-consumable.ts",
+    "verify-s45a-manual-reinforce": "tsx src/scripts/verify-s45a-manual-reinforce.ts",
     "verify-skill-consume": "tsx src/scripts/verify-skill-consume.ts",
     "verify-relations-runtime": "tsx src/scripts/verify-relations-runtime.ts",
     "verify-mandate-consume": "tsx src/scripts/verify-mandate-consume.ts",

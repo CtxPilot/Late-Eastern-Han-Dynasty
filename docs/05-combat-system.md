@@ -2850,6 +2850,16 @@ interface TournamentRecord {
 > 含 15% 伤兵归队入城+各军解散 / 野胜歼敌后维持围城 / 败北 15% 回流 / 战术撤退 50% 回流，均按军归集，
 > 激战中自动战/劝降/撤退拒绝）；撤退支持按军作用域（仅撤该军、余部继续战斗）；BattleView 参战军旗条按军区分。
 > 回合中途增援仍后置。
+>
+> **S5a 实装（Session 444，docs/45 D1~D5/D8/D9）**：回合中途增援入场首片——策应军手动入场。
+> `battle.ts` `reinforceActiveBattle`（资格由共享 `reinforcementSideFor` 派生：仅围城亲统战
+> `fromCityId==null`、同势力同城围城军、未参战、非单挑暂停；容量沿 D3 该侧多军即 8 帽、满则整军
+> 拒绝继续策应；部署沿 D4 第 N 军 r 轴 ±4 偏移、跨军 occupied 累积；入场单位 `hasActed=true, mp=0`
+> 本回合待命；零 RNG、零新存档字段）；新端点 `POST /battle/reinforce {armyId}`（五处镜像，parity 别名
+> `reinforce`）+ BattleView「增援入场」按钮/选择器。入场军经 `resolveStormArmies` 天然纳入战后结算（R4），
+> 入场即受 `armyInActiveBattle` 三拒绝保护。验证 `pnpm verify-s45a-manual-reinforce` 39/39 +
+> `verify-s45a-manual-reinforce-ui` 23/23（console 零错误）。**S5b 行军到达自动入场**与 S5c（城驻军出击/
+> AI 对称差异化）仍待批准/后置。
 
 ### 10.3 关隘战
 

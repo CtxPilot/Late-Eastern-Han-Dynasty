@@ -289,6 +289,7 @@ POST   /api/game/battle/retreat   → BattleState  // 玩家回合有序撤退�
 GET    /api/game/battle/abilities/:unitId → { abilities: UsableAbility[] }  // S10 可用战法
 POST   /api/game/battle/ability   { attackerId, targetId, abilityId }  // S10 施放战法
 POST   /api/game/battle/use-consumable   { unitId, itemId }  // S13 战斗中使用（Session 441 S4d：参战武将行动回合使用恢复体力类消耗品，耗整次行动；仅 stamina/heal；扣槽优先回退库存；零 RNG；AI 不用）→ { battle, game }
+POST   /api/game/battle/reinforce   { armyId } → BattleState  // docs/45 S5a（Session 444）：策应军手动入场（同城同势力围城军整军追加，本回合待命；仅围城亲统战；非玩家回合/单挑暂停/不合资格/满帽 400）
 POST   /api/game/battle/exit         → GameState  // 结算占城或残兵回流
 ```
 

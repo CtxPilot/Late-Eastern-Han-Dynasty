@@ -635,6 +635,12 @@ export async function battleRetreat(armyId?: string): Promise<BattleState> {
   return data;
 }
 
+/** docs/45 S5a D8：策应军手动入场（同城同势力围城军整军追加）。 */
+export async function battleReinforce(armyId: string): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/reinforce', { armyId });
+  return data;
+}
+
 export async function battleChangeFormation(unitId: string, targetFormation: import('@leh/shared').FormationType): Promise<BattleState> {
   const { data } = await http.post<BattleState>('/battle/formation', { unitId, targetFormation });
   return data;

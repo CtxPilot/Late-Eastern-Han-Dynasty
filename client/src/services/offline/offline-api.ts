@@ -343,6 +343,10 @@ export function battleFinishPlayer(): Promise<BattleState> {
 export function battleRetreat(armyId?: string): Promise<BattleState> {
   return call('retreat', [armyId]);
 }
+/** docs/45 S5a D8：策应军手动入场（离线镜像，短名 `reinforce`）。 */
+export function battleReinforce(armyId: string): Promise<BattleState> {
+  return call('reinforce', [armyId]);
+}
 export function battleChangeFormation(unitId: string, targetFormation: FormationType): Promise<BattleState> {
   return call('formation', [unitId, targetFormation]);
 }

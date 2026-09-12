@@ -9,12 +9,21 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 443**（增援设计轮：docs/45 纯设计规格落盘，F1~F12 实勘 + D1~D10 拍板点含推荐值 + R1~R5 + 切片 S5a~S5b，待批准） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地；docs/45 S5a/S5b 待批准 |
-| 代码最新 | Session 442 已提交 `2af1f17`（待 push，领先 origin/main 1 提交）；Session 443 纯文档轮待提交（无引擎改动） |
-| 文档最新 | **Session 443 双写**（`docs/45-hex-reinforcement-proposal.md` 落盘 + `docs/43` §八立项指针 + `docs/12` S10 行 + `docs/35` 主线 ㊟ + 10-progress 日志 + 本文件） |
-| 本交接用途 | **增援设计轮完成**；后续方向：S5a/S5b 待用户批准后实装，或 0-B 闸门真人实测（`41` §三），或数据门待批 |
-| 下一步 | ①**S5a/S5b 批准**（D7 AI 对称双向/上限值需拍板；F11 双重结算复核随 S5b）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板） |
+| 会话 | **Session 444**（S10 回合中途增援 S5a 策应军手动入场实装：引擎 `reinforceActiveBattle` + 共享 `reinforcementSideFor`/`reinforcementCandidates` + 新端点 `POST /battle/reinforce` 五镜像 + BattleView 按钮/选择器；零新存档字段，金样零扰动；S5b 到达自动入场待批准） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地；docs/45 S5a 已落地 / S5b 待批准 |
+| 代码最新 | Session 444 增援 S5a 源码 + 两个 verify 脚本（**未提交**）；工作树含本轮全部改动 |
+| 文档最新 | **Session 444 双写**（docs/05 §10.2、docs/06 端点表、docs/07 增援 UI、docs/12 S10 行、docs/35 主线 ㊠、docs/45 状态节 + 10-progress 日志 + 本文件） |
+| 本交接用途 | **S5a 已交付**；后续方向：S5b 批准后实装，或 0-B 闸门真人实测（`41` §三），或数据门待批 |
+| 下一步 | ①**S5b 批准**（D6 到达自动入场时机 + **D7 AI 对称双向/守方上限值需拍板**；F11 双重结算复核随 S5b）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板） |
+
+### Session 444 交接要点
+
+- **S10 增援 S5a 策应军手动入场**（docs/45 D1 首片，用户「继续开发」＝批准推荐值，沿 419→420 先例）：`shared/hex-reinforcement.ts`（`reinforcementSideFor` + `sideArmyCount` + `reinforcementCandidates`，双端同源）+ `battle.ts` `reinforceActiveBattle`（玩家回合/未单挑暂停/D2 资格/D3 容量门禁→整军追加 + D4 第 N 军 r 轴 ±4 部署 + D5 入场 `hasActed/mp=0` 待命；零 RNG、零新存档字段）+ 端点 `POST /battle/reinforce` 五镜像（parity 别名 `reinforce`）+ BattleView 按钮/选择器；入场军经 `resolveStormArmies` 天然纳入战后结算（R4）、入场即受 `armyInActiveBattle` 三拒绝保护。
+- **切片形状实勘**：S5a 正向场景纯 UI 点击不可达（同城围城军开战时已被整组纳入；8 帽溢出军亦超帽不可再入；后至援军须在战斗屏推月结）→ UI 验收沿 s374/s369 先例经 IndexedDB 注入合法存档信封（真实战斗快照 + 一支未入战同城围城军）再读档。
+- **环境修补**：工程字体 woff2 为 `.gitignore` 排除项本机缺失→游戏拒绝启动；按 `client/public/fonts/README.md` 自 Release `assets-fonts-v1` 取回三文件并核对 SHA-256 全部一致（仅本地补齐，未改跟踪文件）。无头 Chrome 需干净 profile（旧空 `leh` DB 会致槽位保存失败）。
+- **验证全绿**：`verify-s45a-manual-reinforce` **39/39**（D2 正向/反向六拒 + D3 容量 + D4 部署 + D5 入场态 + R4 结算纳入 + F8 按军撤退 + R1 确定性 + R3 Schema + D9 候选）+ `verify-s45a-manual-reinforce-ui` **23/23**（真实 Chrome CDP 9242，console 0 error）+ turn-golden 3/3（零变化）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 10/62/9 + battle-rng 5/5 + duel-rng 3/3 + bf-p3 13/13 + bf-p4 20/20 + melee 12/12 + tactical-ai 86 + tactical-retreat 18 + s432~s44d 全绿 + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance(808) + diff-check。
+- 边界：**S5b 行军到达自动入场**（D6/D7 含 AI 对称双向/守方上限待拍板）+ F11 双重结算复核仍后置；S5c（城驻军出击/AI 差异化）后置。**docs/04 无六角战斗规则节**（真源在 docs/05），故未新增 docs/04 条目。0-B 闸门待真人游玩。
+- 文档：docs/05 §10.2、docs/06 端点表、docs/07 增援 UI、docs/12 S10 行、docs/35 主线 ㊠、docs/45 状态节、10-progress Session 444 日志、HANDOFF 双写。
 
 ### Session 443 交接要点
 

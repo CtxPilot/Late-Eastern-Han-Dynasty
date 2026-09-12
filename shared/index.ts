@@ -64,6 +64,7 @@ export * from './hostage-families.js';
 export * from './weather-skill.js';
 export * from './special-unit-proficiency.js';
 export * from './hex-positioning.js';
+export * from './hex-reinforcement.js';
 export * from './civil-development.js';
 export * from './culture.js';
 export * from './craft.js';

@@ -1,3 +1,14 @@
+## 2026-09-12 — Session 444 · S10 回合中途增援 S5a 策应军手动入场（docs/45）
+
+- Phase：**S10 战斗深化**；docs/45 D1 切片首片（用户「继续开发」＝批准推荐值，沿 419→420 先例）。只做策应军手动入场（零月结改动，S5b 到达自动入场不碰）；D2~D5/D8/D9 按推荐值落地。
+- **实现**：共享 `shared/hex-reinforcement.ts`（`reinforcementSideFor` D2 资格纯函数 + `sideArmyCount` + `reinforcementCandidates` D9 候选清单，服务端引擎与客户端 UI 同源）→ 引擎 `battle.ts` `reinforceActiveBattle(state, battle, armyId)`（玩家回合/未单挑暂停/D2 资格/D3 容量门禁→整军追加 + D4 部署第 N 军 r 轴 ±4/跨军 occupied 累积 + D5 入场 `hasActed=true, mp=0`，零 RNG、零新存档字段，入场军经 `resolveStormArmies` 天然纳入结算）→ 新端点 `POST /battle/reinforce {armyId}` 五镜像（routes→services→worker→api/offline-api→store，parity 别名 `reinforce`）→ BattleView「增援入场」按钮/选择器（`btn-battle-reinforce`/`battle-reinforce-picker`/`battle-reinforce-<armyId>`）。
+- **关键实勘（切片形状）**：S5a 正向场景纯 UI 点击下不可达——同城围城军在开战时已被 `doCampaignSiegeStorm` 整组纳入，8 帽溢出军亦超帽不可再入（容量门禁两边同口径），后至援军又须在战斗屏推进月结；故 UI 验收沿 s374/s369 先例经 IndexedDB 注入合法存档信封（真实战斗快照 + 一支未入战同城围城军）再读档落战场屏。
+- **DNS 槽位依赖**：工程字体 woff2 为 `.gitignore` 排除项，本机缺失致游戏拒绝启动（`fontBarrier` 铁律）；本轮按 `client/public/fonts/README.md` 自项目 Release `assets-fonts-v1` 取回三文件并核对 SHA-256 全部一致（字体不入 git，仅本地补齐，未改任何跟踪文件）。
+- **验证（全绿）**：`verify-s45a-manual-reinforce` **39/39**（D2 正向 + D5 入场态整军/hasActed/mp=0/满编 + D4 次军 r 偏移/无重叠/边界夹紧 + D2 反向六拒（异势力/未知/已参战/单挑暂停/非玩家回合/非围城亲统战/已结束）+ D3 容量 5+4 拒/5+3 满帽 + R4 `resolveStormArmies` 含增援军 + F8 按军撤退独立 + R1 双局确定性 + R3 增援后完整 GameStateSchema + D9 候选清单四态）+ `verify-s45a-manual-reinforce-ui` **23/23**（真实 Chrome CDP 9242：存槽→注入→读档落战场屏→按钮可见→选择器仅列资格军→点击入场→军旗条出现援军→战报含「增援入场」→console 0 error）+ turn-golden 3/3（零变化：金样无六角战）+ campaign 71 + ai-military-rng 38 + turn-cadence 28 + save 10/62/9 + battle-rng 5/5 + duel-rng 3/3 + bf-p3 13/13 + bf-p4 20/20 + melee 12/12 + tactical-ai 86 + tactical-retreat 18 + s432 13/13 + items 32/32 + s433 41/41 + s434 65/65 + s435 32/32 + s436 12/12 + s44a 12/12 + s44b 16/16 + s44c 26/26 + s44d 24/24 + shared 481 + server 3 + client 71 + 三端 typecheck/lint + parity 5/5 + compliance(808) + diff-check。
+- 边界：S5b 行军到达自动入场（D6/D7 含 AI 对称双向/守方上限待拍板）与 F11 双重结算复核仍后置；S5c（城驻军出击/AI 差异化）。**docs/04 无六角战斗规则节**（战斗规则真源在 docs/05），故本轮 docs/04 不新增增援条目。
+- 文档：docs/05 §10.2 实装注、docs/06 端点表、docs/07 增援 UI、docs/12 S10 行 + 补充、docs/35 主线 ㊠、docs/45 状态节、本日志与 HANDOFF 双写。
+- **Next**：S5b 待批准（D6 到达自动入场时机 + D7 AI 对称双向/上限值拍板；F11 复核随 S5b）；或 0-B 闸门真人实测；或数据门立项。
+
 ## 2026-09-10 — Session 443 · 回合中途增援逐项立项（纯设计轮，docs/45）
 
 - Phase：**S10 战斗深化**；HANDOFF「下一步」③增援立项。零代码改动（沿 419/docs-42、423/docs-43、437/docs-44 纯设计轮先例），落盘 `docs/45-hex-reinforcement-proposal.md`：策应军手动入场 S5a + 行军到达自动入场 S5b + 城驻军出击后置 S5c / F1~F12 实勘 / D1~D10 拍板点（含推荐值）/ R1~R5 不变量 + 验收方案。

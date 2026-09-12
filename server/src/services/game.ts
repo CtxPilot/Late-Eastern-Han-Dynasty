@@ -66,6 +66,7 @@ import {
   stepBattleDuel,
   undoLastBattleAction,
   useBattleConsumable,
+  reinforceActiveBattle,
   settleTacticalMeleeTroops,
   collectAnnihilatedDefenderCommanders,
 } from '../engine/battle.js';
@@ -986,6 +987,20 @@ export function battleUseConsumable(
     const out = useBattleConsumable(battle, unitId, Number(itemId), getGame());
     commitActiveBattle(out.battle, out.state);
     return { battle: out.battle, game: getClientGame() };
+  });
+}
+
+/**
+ * docs/45 S5a D8：策应军手动入场——同城同势力围城军整军追加进当前六角战。
+ * 资格/容量/部署/入场态由 `reinforceActiveBattle` 裁决；零 RNG、零新存档字段。
+ */
+export function battleReinforce(armyId: string): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = reinforceActiveBattle(getGame(), battle, String(armyId));
+    commitActiveBattle(nextBattle);
+    return nextBattle;
   });
 }
 

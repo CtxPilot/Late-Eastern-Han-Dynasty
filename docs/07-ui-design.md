@@ -285,6 +285,14 @@ Layer 3 — 特效
 `selectedUnitId` 也不会恢复成可操作选择。结束态的双方摘要仍可展示撤退部队的兵力快照，
 以便对应 `/battle/exit` 的残部回流结算。该边界只消费既有字段，不在客户端复制服务端合法性判定。
 
+**增援入场（docs/45 S5a，Session 444）**：玩家回合 BattleView 底部在存在资格军时显示
+`data-testid="btn-battle-reinforce"`「增援入场」按钮；点击展开 `data-testid="battle-reinforce-picker"`
+选择器，逐军列出 `data-testid="battle-reinforce-<armyId>"`（仅 D2 资格军——同城同势力围城军、未参战、
+非单挑暂停，由共享 `reinforcementCandidates` 派生；非围城亲统战不显示）。选定后提交
+`POST /api/game/battle/reinforce`，入场军整军追加、本回合待命（`hasActed=true, mp=0`），战报追加
+「… 增援入场」、军旗条（`battle-army-banners`）随即出现该军。满帽等门禁由服务端裁决并回显阻断。
+客户端不自行判定部署/容量，服务端为准。
+
 ### 6.3 单挑面板（DuelPanel） ✅ 已实装（Session 88，`client/src/components/battle/DuelPanel.tsx`）
 
 > R3（Session 244）：继续全自动逐回合结算，但玩家发起时已可选择强攻/持重/诱敌/委任；

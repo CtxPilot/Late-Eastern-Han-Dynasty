@@ -906,6 +906,15 @@ gameRouter.post('/battle/use-consumable', (req, res) => {
   }
 });
 
+/** docs/45 S5a D8：策应军手动入场（同城同势力围城军整军追加）。 */
+gameRouter.post('/battle/reinforce', (req, res) => {
+  try {
+    res.json(gameService.battleReinforce(String(req.body?.armyId)));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'reinforce failed' });
+  }
+});
+
 /** S10 §8 玩家发起单挑 */
 gameRouter.post('/battle/duel/challenge', (req, res) => {
   try {

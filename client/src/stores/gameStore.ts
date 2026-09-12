@@ -169,6 +169,8 @@ interface Store {
   changeBattleFormation: (targetFormation: import('@leh/shared').FormationType) => Promise<void>;
   /** S13 战斗中使用（Session 441 S4d）：选中单位使用恢复体力类消耗品（耗整次行动）。 */
   battleUseConsumable: (itemId: number) => Promise<void>;
+  /** docs/45 S5a D8：策应军手动入场（同城同势力围城军整军追加，本回合待命）。 */
+  reinforceBattle: (armyId: string) => Promise<void>;
   runEnemy: () => Promise<void>;
   exitBattle: () => Promise<void>;
   duelChallenge: (challengerUnitId: string, targetUnitId: string, stance: import('@leh/shared').DuelStance) => Promise<void>;
@@ -1322,6 +1324,15 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ battle, game, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
     } catch (e) {
       set({ error: errMsg(e, '使用消耗品失败') });
+    }
+  },
+
+  reinforceBattle: async (armyId: string) => {
+    try {
+      const battle = await api.battleReinforce(armyId);
+      set({ battle, selectedUnitId: null, moveRange: [], movePath: null, usableAbilities: [] });
+    } catch (e) {
+      set({ error: errMsg(e, '增援入场失败') });
     }
   },
 

@@ -68,6 +68,7 @@
     "weather-skill.ts",
     "special-unit-proficiency.ts",
     "hex-positioning.ts",
+    "hex-reinforcement.ts",
     "battle-sight.ts",
     "civil-development.ts",
     "culture.ts",

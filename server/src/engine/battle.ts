@@ -52,6 +52,8 @@ import {
   isLvBuOfficerId,
   WUKUI_DUEL_OPPONENT_MORALE_DELTA,
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
+  reinforcementSideFor,
+  sideArmyCount,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot, useConsumable } from './items.js';
@@ -676,6 +678,48 @@ export function changeBattleFormation(
         formationAfter: targetFormation,
       },
     }],
+  };
+}
+
+/**
+ * docs/45 S5a（docs/43 §八「回合中途增援入场」收口）：策应军手动入场——把同城
+ * 同势力围城军整军追加进六角战斗快照。资格由共享 `reinforcementSideFor` 派生（D2）；
+ * 容量沿 D3（该侧多军即 `HEX_SIDE_UNIT_CAP` 帽，满则整军不入、拒绝）；部署沿 D4
+ * （第 N 军锚点 r 轴偏移 ±`HEX_ARMY_ANCHOR_R_STEP`，跨军 occupied 累积）；入场单位
+ * `hasActed=true, mp=0`（D5，沿变阵先例，本回合待命）。零 RNG、零新存档字段（R1/R3）。
+ * 入场军经 `resolveStormArmies` 自然纳入战后结算（F6/R4）。
+ */
+export function reinforceActiveBattle(
+  state: GameState,
+  battle: BattleState,
+  armyId: string,
+): BattleState {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+  const army = state.campaignArmies.find((item) => item.id === armyId);
+  if (!army) throw new Error('Army 不存在');
+  const side = reinforcementSideFor(battle, army);
+  if (!side) throw new Error('该军不可作为增援入场');
+  const existing = battle.units.filter((unit) => unit.side === side);
+  const existingArmies = sideArmyCount(battle, side);
+  const incoming = army.squads.length > 0 ? army.squads.length : 1;
+  const cap = existingArmies + 1 > 1 ? HEX_SIDE_UNIT_CAP : Number.POSITIVE_INFINITY;
+  if (existing.length + incoming > cap) throw new Error('战场容量已满，该军继续屯于城下策应');
+  const baseAnchor = side === 'attacker' ? { q: 2, r: 3 } : { q: 16, r: 11 };
+  const rDirection = side === 'attacker' ? 1 : -1;
+  const anchor = {
+    q: Math.max(0, Math.min(COLS - 1, baseAnchor.q)),
+    r: Math.max(0, Math.min(ROWS - 1, baseAnchor.r + rDirection * HEX_ARMY_ANCHOR_R_STEP * existingArmies)),
+  };
+  const occupied = battle.units.map((unit) => ({ ...unit.position }));
+  const fresh = unitsFromArmy(state, army, side, army.troops, undefined, anchor, occupied)
+    .map((unit) => ({ ...unit, hasActed: true, mp: 0 }));
+  const entry = `${army.name} 增援入场（兵力 ${army.troops}，本回合待命）`;
+  return {
+    ...battle,
+    units: [...battle.units, ...fresh],
+    message: entry,
+    log: [...battle.log, { turn: battle.turn, message: entry }],
   };
 }
 

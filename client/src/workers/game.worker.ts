@@ -109,6 +109,7 @@ import {
   moveUnit,
   runEnemyPhase,
   retreatBattle,
+  reinforceActiveBattle,
   skipBattleDuel,
   stepBattleDuel,
   undoLastBattleAction,
@@ -1038,6 +1039,17 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       const battle = getActiveBattle();
       if (!battle) throw new Error('无战斗');
       const nextBattle = retreatBattle(battle, armyId);
+      commitActiveBattle(nextBattle);
+      return nextBattle;
+    });
+  },
+
+  /** docs/45 S5a D8：策应军手动入场（五镜像之离线引擎，签名与在线服务一致）。 */
+  reinforce(armyId: string): BattleState {
+    return withLock(() => {
+      const battle = getActiveBattle();
+      if (!battle) throw new Error('无战斗');
+      const nextBattle = reinforceActiveBattle(getGame(), battle, String(armyId));
       commitActiveBattle(nextBattle);
       return nextBattle;
     });
