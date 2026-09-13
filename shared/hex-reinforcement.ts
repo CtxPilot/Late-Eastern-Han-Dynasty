@@ -36,7 +36,9 @@ export interface ReinforceArmyView {
 /**
  * docs/45 D2：该军可作为本次战斗哪一侧的增援；不合资格返回 null。
  * 需同时满足：未结算未结束、围城亲统战（`fromCityId==null` 且 `cityId` 已知）、
- * 非单挑暂停、该军围城中、目标即战斗城、尚未参战、与对应侧同势力。
+ * 非单挑暂停、目标即战斗城、尚未参战、与对应侧同势力，且阶段匹配：
+ *   - 攻方侧：该军围城中（`sieging`，兵临敌城）；
+ *   - 守方侧：`sieging` 或 `garrison`（解围军抵达己方被围城即转驻守）。
  */
 export function reinforcementSideFor(
   battle: ReinforceBattleView,
@@ -45,11 +47,14 @@ export function reinforcementSideFor(
   if (battle.settled || battle.phase === 'over') return null;
   if (battle.fromCityId != null || battle.cityId == null) return null;
   if (battle.duel) return null;
-  if (army.phase !== 'sieging') return null;
   if ((army.targetNodeId ?? army.currentNodeId) !== battle.cityId) return null;
   if (battle.units.some((unit) => unit.armyId === army.id)) return null;
-  if (army.factionId === battle.attackerFaction) return 'attacker';
-  if (army.factionId === battle.defenderFaction) return 'defender';
+  if (army.factionId === battle.attackerFaction) {
+    return army.phase === 'sieging' ? 'attacker' : null;
+  }
+  if (army.factionId === battle.defenderFaction) {
+    return army.phase === 'sieging' || army.phase === 'garrison' ? 'defender' : null;
+  }
   return null;
 }
 

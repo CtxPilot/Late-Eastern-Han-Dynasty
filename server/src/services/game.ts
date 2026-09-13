@@ -67,6 +67,7 @@ import {
   undoLastBattleAction,
   useBattleConsumable,
   reinforceActiveBattle,
+  isGarrisonSortieUnit,
   settleTacticalMeleeTroops,
   collectAnnihilatedDefenderCommanders,
 } from '../engine/battle.js';
@@ -1280,13 +1281,26 @@ export function doCampaignSiegeStorm(armyId: string): { game: GameState; battleI
     const battle = createBattle(state, targetId, {
       ...(group.length > 1 ? { attackerArmies: group } : { attackerArmy: primary }),
       ...(enemyArmy ? { defenderArmy: enemyArmy } : {}),
+      // docs/46 S5c：城驻军出击——有真实守方 Army 时常备守军合成参战（无 Army 时 legacy 已代表守军）。
+      garrisonSortie: true,
     });
     const inBattle = new Set(battle.units.map((unit) => unit.armyId));
     const sidelined = group.filter((member) => !inBattle.has(member.id)).map((member) => member.name);
     const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
     const message = `${subject}亲统强攻 ${targetCity.name}（六角）${sidelined.length > 0 ? `；${sidelined.join('、')}屯于城下策应` : ''}`;
+    // docs/46 S5c D6：城驻军出击即从城中扣减（战后按合成单位存活兵力回写）。
+    const garrisonCommitted = battle.units
+      .filter((unit) => unit.side === 'defender' && isGarrisonSortieUnit(unit))
+      .reduce((sum, unit) => sum + unit.maxTroops, 0);
+    const cities = garrisonCommitted > 0
+      ? {
+          ...state.cities,
+          [targetId]: { ...state.cities[targetId]!, troops: Math.max(0, state.cities[targetId]!.troops - garrisonCommitted) },
+        }
+      : state.cities;
     currentGame = {
       ...state,
+      cities,
       activeBattles: [battle],
       actionLog: [
         { year: state.currentYear, month: state.currentMonth, type: 'siege_storm', message },

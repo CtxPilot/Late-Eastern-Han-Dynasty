@@ -33,6 +33,9 @@
    守方口径 = 同节点**第一支**敌军 Army **或** 城驻军，二者取一不叠加（`campaign.ts:1228-1250`）；
    AI 月结逐军 assault（`aiMilitary.ts:183-205`）。两支军围同城 → 两场独立自动战，各自承受完整
    城防/守军，战力浪费且战报割裂。
+   > **行号漂移勘误（Session 446，docs/46 D10）**：守方选取现行真源为
+   > `campaign.ts:1721 largestEnemyArmyAt` + `services/game.ts:1278`；`campaign.ts:1228-1250`
+   > 现为 `runAutoBattle` 单挑/士气逻辑（行号已随文件增长漂移）。
 3. **玩家无亲统攻城**：玩家围城军只有三途——`POST /campaign/:armyId/assault`（自动战，
    `routes/game.ts:974`）、`trySiegeSurrender`（劝降）、撤退；六角战入口仅 `startBattle`（城对城
    直接出征，legacy 双单位，`services/game.ts:780-793`）与白刃战 tactical（单军对单军，

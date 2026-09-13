@@ -22,7 +22,7 @@ import {
 } from '@leh/shared';
 import { getPlotAttackModifier, isEmptyFortDeterring, isInstigateForcedAttack, isSecretCrossingGarrisonHold } from './plot.js';
 import { getPolicyAttackModifier } from './policy.js';
-import { assaultForFaction, startCampaignForFaction, transferSiegeStateOnLeave } from './campaign.js';
+import { armyInActiveBattle, assaultForFaction, cityInActiveBattle, startCampaignForFaction, transferSiegeStateOnLeave } from './campaign.js';
 
 export const AI_MILITARY_CONFIG = Object.freeze({
   minRaidSourceTroops: 2_000,
@@ -185,6 +185,11 @@ export function runAiMilitary(
     const handled = new Set<string>();
     for (const army of engaged) {
       if (handled.has(army.id)) continue;
+      // docs/47 S5d：激战中的军由六角快照结算，AI 不重复结算（防 assaultForFaction 抛错中断月结）。
+      if (armyInActiveBattle(s, army.id)) {
+        handled.add(army.id);
+        continue;
+      }
       const target = s.cities[army.targetNodeId ?? army.currentNodeId];
       if (!target?.ruler || !canAiAttackFaction(s, f.id, target.ruler)) {
         s = withdrawAiArmy(s, army.id, '因战事已止');
@@ -394,6 +399,8 @@ function aiMilitaryTurn(
     const cands: Cand[] = [];
     for (const from of Object.values(s.cities).filter((city) => city.ruler === factionId)) {
       if (usedSources.has(from.id) || from.troops < AI_MILITARY_CONFIG.minRaidSourceTroops) continue;
+      // docs/47 S5d：激战城不作为出征源（守军/守军兵力正在六角战中，避免双重占用）。
+      if (cityInActiveBattle(s, from.id)) continue;
       // 暗渡陈仓明修：守军不得轻离此城出征
       if (isSecretCrossingGarrisonHold(s, from.id)) continue;
       for (const target of Object.values(s.cities)) {

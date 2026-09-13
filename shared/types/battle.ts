@@ -110,4 +110,9 @@ export interface BattleState {
   message: string;
   /** Active duel (S10 §8); while set, battle is paused until duel resolves. */
   duel?: DuelState | null;
+  /**
+   * docs/45 S5a/S5b：战斗中经增援入场的 Army id（手动策应/行军到达自动）。
+   * 旧存档缺省按无增援兼容；供 D7 AI 守方增援累计上限判定。
+   */
+  reinforcedArmyIds?: string[];
 }

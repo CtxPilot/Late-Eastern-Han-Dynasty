@@ -2858,8 +2858,32 @@ interface TournamentRecord {
 > 本回合待命；零 RNG、零新存档字段）；新端点 `POST /battle/reinforce {armyId}`（五处镜像，parity 别名
 > `reinforce`）+ BattleView「增援入场」按钮/选择器。入场军经 `resolveStormArmies` 天然纳入战后结算（R4），
 > 入场即受 `armyInActiveBattle` 三拒绝保护。验证 `pnpm verify-s45a-manual-reinforce` 39/39 +
-> `verify-s45a-manual-reinforce-ui` 23/23（console 零错误）。**S5b 行军到达自动入场**与 S5c（城驻军出击/
-> AI 对称差异化）仍待批准/后置。
+> `verify-s45a-manual-reinforce-ui` 23/23（console 零错误）。
+>
+> **S5b 实装（Session 445，docs/45 D2/D6/D7/D10）**：回合中途增援次片——行军到达自动入场。
+> `tickCampaignMarch` 两条到达分支（path 空 / path 尾节点）在军转围城（攻方）或驻守己方被围城
+> （守方解围军，D2 守方侧接受 `sieging`/`garrison`）后立即按共享 D2 资格整军注入未结算围城亲统战
+> （`fromCityId==null`），容量/部署/待命态沿 D3~D5；战报追加「X 军赶到战场，增援入场」。单挑暂停中
+> 只转围城不入场（下月/手动补入）。**D7**：双向往返同规则自动，AI 守方增援累计上限
+> `MAX_AI_DEFENDER_REINFORCEMENTS=2`（沿 F10 郡域先例，玩家/AI 攻方不受限；防添油）——为此
+> `BattleState` 增可选 `reinforcedArmyIds?: string[]`（旧档缺省按无增援兼容，Schema `.optional()`）。
+> **D10/F11**：`largestEnemyArmyAt` 排除未结算六角激战中的军，杜绝自动战对参战军的重复结算。
+> 验证 `pnpm verify-s45b-arrival-reinforce` 42/42。
+>
+> **S5c 实装（Session 446，docs/46 D1~D7）**：城驻军出击——被围城常备守军（纯数字 `City.troops`，无 Army 编成）
+> 以合成单位直接参战，闭合「守方口径野战 Army **或** 城驻军二选一」缺口（有野战 Army 守城时守军不再凭空消失）。
+> `createBattle` 增 `CreateBattleOpts.garrisonSortie`（仅 `doCampaignSiegeStorm` 开启）+ `buildGarrisonSortieUnit`
+> （`armyId='garrison-<cityId>'`、heavyInfantry/SQUARE、主将取城内 ACTIVE 武将且≠守方野战军主将、无将则不生成；
+> 兵力 = 整城 `city.troops`，`city.troops ≥ GARRISON_SORTIE_MIN_TROOPS=500`；锚点第 N 军 r 轴 −4、避重、越界夹紧；
+> 开战态可行动）；开战即从城扣减，`settleSiegeStormBattle` 单列合成守军（真源军判定/兵损统计只取真实守方单位），
+> 野胜/败北/撤退按合成单位存活兵力 1:1 回写 `city.troops`（占城由占城逻辑处置）；零 RNG、零新存档字段。
+> 验证 `pnpm verify-s46-garrison-sortie` 23/23，金样 3/3 零变化。
+>
+> **S5d 实装（Session 447，docs/47 D1~D3）**：AI/委任对六角激战的感知与避让——`campaign.ts` 增
+> `cityInActiveBattle(state, cityId)`（未结算未结束同城）；`aiMilitary.ts` `runAiMilitary` engaged 循环跳过
+> 激战军（防 `assaultForFaction` 抛错中断月结）、`aiMilitaryTurn` 出征源排除激战城（防同批兵力双重占用）；
+> `delegation.ts` `runDelegationMilitary` 委任出征源同排除。纯门禁、零 RNG、零新存档字段。验证
+> `pnpm verify-s47-ai-battle-avoidance` 15/15，金样 3/3 零变化。AI 主动反应（派援/出击/弃城决策）后置平衡轮。
 
 ### 10.3 关隘战
 

@@ -31,6 +31,7 @@ import {
   macroAdjacentCityIds,
   maxFieldArmies,
   planMacroCityPath,
+  reinforcementSideFor,
   meritEffects,
   meritLevelFor,
   meritStatBonus,
@@ -66,7 +67,7 @@ import {
   type StructureType,
 } from '@leh/shared';
 import { clearCityCounterOnCapture } from './spy.js';
-import { collectAnnihilatedDefenderCommanders, MANUAL_VICTORY_RECOVERY_RATIO } from './battle.js';
+import { aiDefenderReinforcementBlocked, buildReinforcementUnits, canReinforceSide, collectAnnihilatedDefenderCommanders, isGarrisonSortieUnit, MANUAL_VICTORY_RECOVERY_RATIO } from './battle.js';
 import { lootBeautyOnCapture } from './beauty.js';
 import { syncFactionResources } from './economy.js';
 import { equipBonusFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot } from './items.js';
@@ -592,12 +593,54 @@ export function orderMarch(state: GameState, armyId: string, targetNodeId: numbe
   );
 }
 
+/**
+ * docs/45 S5b（D6/D7）：行军到达战斗城市即时增援入场。只在存在未结算围城亲统战
+ * （`fromCityId==null`、非单挑暂停由共享 D2 判侧）时触发；D3 容量满或 D7 AI 守方
+ * 增援超限则留屯城下 + 战报一行。零 RNG（R1）；无变化返回 null。
+ */
+function reinforceArrivingArmy(
+  state: GameState,
+  battles: BattleState[],
+  arriving: CampaignArmy,
+): { battles: BattleState[]; entry: string } | null {
+  const cityId = arriving.targetNodeId ?? arriving.currentNodeId;
+  const index = battles.findIndex(
+    (b) => !b.settled && b.phase !== 'over' && b.fromCityId == null && b.cityId === cityId,
+  );
+  if (index < 0) return null;
+  const battle = battles[index]!;
+  const side = reinforcementSideFor(battle, arriving);
+  if (!side) return null;
+  const cityName = state.cities[cityId]?.name ?? String(cityId);
+  const incoming = arriving.squads.length > 0 ? arriving.squads.length : 1;
+  if (aiDefenderReinforcementBlocked(state, battle, side)) {
+    return { battles, entry: `${arriving.name} 赶到 ${cityName}，敌军增援已达上限，屯于城下策应` };
+  }
+  if (!canReinforceSide(battle, side, incoming)) {
+    return { battles, entry: `${arriving.name} 赶到 ${cityName}，战场已满，屯于城下策应` };
+  }
+  const fresh = buildReinforcementUnits(state, battle, arriving, side);
+  const entry = `${arriving.name} 赶到战场，增援入场（兵力 ${arriving.troops}，本回合待命）`;
+  const next = battles.slice();
+  next[index] = {
+    ...battle,
+    units: [...battle.units, ...fresh],
+    reinforcedArmyIds: [...(battle.reinforcedArmyIds ?? []), arriving.id],
+    message: entry,
+    log: [...battle.log, { turn: battle.turn, message: entry }],
+  };
+  return { battles: next, entry };
+}
+
 /** 回合推进：所有 marching 状态 Army 前进一节点 + 补给消耗 + 事件触发 */
 export function tickCampaignMarch(state: GameState): GameState {
   let armies = [...state.campaignArmies];
   let cities = { ...state.cities };
   const officers = { ...state.officers };
   const logs: string[] = [];
+  // docs/45 S5b：到达增援就地改写未结算战斗快照（仅在真正入场时回写，R2 无增援路径不变）。
+  let battles = [...state.activeBattles];
+  let battlesTouched = false;
 
   for (let i = 0; i < armies.length; i++) {
     const a = armies[i];
@@ -633,6 +676,13 @@ export function tickCampaignMarch(state: GameState): GameState {
               ? '暂驻友方城池'
               : '暂驻非敌对城池';
         logs.push(`${a.name} 到达 ${target?.name ?? '目的地'}，${stayLabel}待命`);
+      }
+      // docs/45 S5b：攻方围城军 / 守方解围军（驻守己方被围城）到达即尝试入场。
+      const reinforced = reinforceArrivingArmy(state, battles, armies[i]!);
+      if (reinforced) {
+        if (reinforced.battles !== battles) battlesTouched = true;
+        battles = reinforced.battles;
+        logs.push(reinforced.entry);
       }
       continue;
     }
@@ -735,6 +785,14 @@ export function tickCampaignMarch(state: GameState): GameState {
     };
 
     if (msg) logs.push(msg);
+    if (phase === 'sieging') {
+      const reinforced = reinforceArrivingArmy(state, battles, armies[i]!);
+      if (reinforced) {
+        if (reinforced.battles !== battles) battlesTouched = true;
+        battles = reinforced.battles;
+        logs.push(reinforced.entry);
+      }
+    }
   }
 
   // docs/43 D5/R3：围城进度唯一化（多军围同城时由兵力最大军持有，迁移不重置）
@@ -744,6 +802,7 @@ export function tickCampaignMarch(state: GameState): GameState {
     cities,
     officers,
   };
+  if (battlesTouched) next = { ...next, activeBattles: battles };
   for (const m of logs) next = pushLog(next, 'campaign_march_tick', m);
   return next;
 }
@@ -1352,6 +1411,16 @@ export function armyInActiveBattle(state: GameState, armyId: string): boolean {
 }
 
 /**
+ * docs/47 S5d：该城是否有未结算六角战（判据 `cityId` 一致且未结算未结束）。
+ * 供 AI/委任军事门禁——激战城不作为出征源，避免同批兵力既在场上又被抽走。
+ */
+export function cityInActiveBattle(state: GameState, cityId: number): boolean {
+  return state.activeBattles.some(
+    (battle) => !battle.settled && battle.phase !== 'over' && battle.cityId === cityId,
+  );
+}
+
+/**
  * docs/43 S2：从六角战斗快照派生亲统结算组——攻方单位 armyId 全部可解析为
  * 同势力、围城中、目标即 `battle.cityId` 的真源军（无 activeMelee 前提下由
  * exitBattle 调用；activeMelee 战术白刃优先判定）。
@@ -1439,21 +1508,38 @@ export function settleSiegeStormBattle(
   const subject = group.length > 1 ? `${primary.name}等 ${group.length} 支` : primary.name;
 
   // 守方：同节点敌军（D3，单位 armyId 可解析且敌对）或城驻军（legacy 演示单位）。
-  const defenderIds = [...new Set(battle.units.filter((unit) => unit.side === 'defender').map((unit) => unit.armyId))];
+  // docs/46 S5c：城驻军出击合成单位（`garrison-*`，无 CampaignArmy）单列——真源军判定与
+  // 既有兵损统计只取真实守方单位，合成守军存活兵力战后单独回写城 troops（D6）。
+  const garrisonUnits = battle.units.filter((unit) => unit.side === 'defender' && isGarrisonSortieUnit(unit));
+  const realDefenderUnits = battle.units.filter((unit) => unit.side === 'defender' && !isGarrisonSortieUnit(unit));
+  const defenderIds = [...new Set(realDefenderUnits.map((unit) => unit.armyId))];
   const enemyCandidate = defenderIds.length === 1
     ? state.campaignArmies.find((item) => item.id === defenderIds[0])
     : undefined;
   const enemyArmy = enemyCandidate && enemyCandidate.factionId !== primary.factionId ? enemyCandidate : undefined;
-  const defInitial = battle.units
-    .filter((unit) => unit.side === 'defender')
-    .reduce((sum, unit) => sum + unit.maxTroops, 0);
-  const defAlive = battle.units
-    .filter((unit) => unit.side === 'defender' && !unit.isDestroyed)
+  const defInitial = realDefenderUnits.reduce((sum, unit) => sum + unit.maxTroops, 0);
+  const defAlive = realDefenderUnits
+    .filter((unit) => !unit.isDestroyed)
     .reduce((sum, unit) => sum + unit.troopCount, 0);
   const defMorale = (): number => {
-    const morales = battle.units.filter((unit) => unit.side === 'defender' && !unit.isDestroyed).map((unit) => unit.morale);
+    const morales = realDefenderUnits.filter((unit) => !unit.isDestroyed).map((unit) => unit.morale);
     if (morales.length === 0) return targetCity.troopsMorale ?? 70;
     return Math.max(0, Math.min(100, Math.floor(morales.reduce((sum, value) => sum + value, 0) / morales.length)));
+  };
+  const garrisonAlive = garrisonUnits
+    .filter((unit) => !unit.isDestroyed)
+    .reduce((sum, unit) => sum + unit.troopCount, 0);
+  const garrisonMorale = ((): number => {
+    const morales = garrisonUnits.filter((unit) => !unit.isDestroyed).map((unit) => unit.morale);
+    if (morales.length === 0) return targetCity.troopsMorale ?? 70;
+    return Math.max(0, Math.min(100, Math.floor(morales.reduce((sum, value) => sum + value, 0) / morales.length)));
+  })();
+  /** docs/46 S5c D6：城驻军幸存兵力回写城 troops（A6 占城分支由占城逻辑处置，不再覆盖）。 */
+  const withGarrisonReturn = (next: GameState): GameState => {
+    if (garrisonUnits.length === 0) return next;
+    const city = next.cities[targetId];
+    if (!city) return next;
+    return { ...next, cities: { ...next.cities, [targetId]: { ...city, troops: garrisonAlive, troopsMorale: garrisonMorale } } };
   };
 
   const atkSnaps = group.map((army) => ({ army, snap: stormArmySnapshot(battle, army.id, 'attacker') }));
@@ -1542,14 +1628,14 @@ export function settleSiegeStormBattle(
     if (enemyArmy) {
       // 野胜：亲统围城军继续围城（非驻守）——phase 复原，主军围城进度保留（R3）。
       const savedSiege = primary.siegeState;
-      return sealBattleCaptures({
+      return withGarrisonReturn(sealBattleCaptures({
         ...next,
         campaignArmies: next.campaignArmies.map((army) =>
           ids.has(army.id)
             ? { ...army, phase: 'sieging' as const, siegeState: army.id === primary.id ? savedSiege : undefined }
             : army,
         ),
-      });
+      }));
     }
     // 攻城胜：D10 各军解散入城（驻军 = Σ残兵，R2）。
     return sealBattleCaptures(pushLog(
@@ -1600,11 +1686,11 @@ export function settleSiegeStormBattle(
     } else {
       armies.push({ ...enemyArmy, troops: defAlive, morale: defMorale() });
     }
-    return pushLog(
+    return withGarrisonReturn(pushLog(
       { ...state, cities, campaignArmies: armies },
       'campaign_retreat',
       `${subject}有序撤退，残部 ${remnantsTotal} 退回`,
-    );
+    ));
   }
 
   // —— 败北：各军残兵 15% 回流（复用败北分支：回流/驻守/解散/守方功绩） ——
@@ -1640,7 +1726,7 @@ export function settleSiegeStormBattle(
     enemyArmy ? { type: 'field_battle', enemyArmyId: enemyArmy.id } : { type: 'assault', defCityId: targetId },
     rng,
   );
-  if (enemyArmy) return next;
+  if (enemyArmy) return withGarrisonReturn(next);
   // 败北分支不改城防——守军残兵写回（对齐 legacy settleBattle）。
   const patched = next.cities[targetId]!;
   return {
@@ -1656,7 +1742,9 @@ export function settleSiegeStormBattle(
   };
 }
 
-/** 同节点敌方 Army 中兵力最大者（docs/43 D3 守方口径）：S2 亲统服务共用，导出。 */
+/** 同节点敌方 Army 中兵力最大者（docs/43 D3 守方口径）：S2 亲统服务共用，导出。
+ * docs/45 D10/F11：排除正处未结算六角激战的军——其结算以六角快照为准，自动战
+ * 不得重复结算。 */
 export function largestEnemyArmyAt(
   state: GameState,
   army: CampaignArmy,
@@ -1668,7 +1756,8 @@ export function largestEnemyArmyAt(
         a.id !== army.id &&
         a.factionId !== army.factionId &&
         isHostileOrAtWar(state.diplomacy, army.factionId, a.factionId) &&
-        a.currentNodeId === targetId,
+        a.currentNodeId === targetId &&
+        !armyInActiveBattle(state, a.id),
     )
     .slice()
     .sort(byTroopsDescThenId)[0];

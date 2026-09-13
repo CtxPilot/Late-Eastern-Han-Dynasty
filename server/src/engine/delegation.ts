@@ -35,7 +35,7 @@ import {
   type Officer,
 } from '@leh/shared';
 import { decideCityRule } from './ai.js';
-import { startCampaignForFaction } from './campaign.js';
+import { cityInActiveBattle, startCampaignForFaction } from './campaign.js';
 import {
   getPlotAttackModifier,
   isEmptyFortDeterring,
@@ -822,7 +822,8 @@ export function runDelegationMilitary(
     const capitalId = s.factions[playerId]?.capitalCityId;
     const validCityIds = region.cityIds.filter((id) => {
       const city = s.cities[id];
-      return !!city && city.ruler === playerId && id !== capitalId;
+      // docs/47 S5d：激战城不作为委任出征源（同批兵力可能正在六角战中）。
+      return !!city && city.ruler === playerId && id !== capitalId && !cityInActiveBattle(s, id);
     });
     if (validCityIds.length === 0) continue;
 

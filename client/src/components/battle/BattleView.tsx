@@ -112,7 +112,9 @@ export function BattleView() {
   })();
   const isMultiArmyStorm = stormAttackerArmies.length > 1;
   // docs/45 S5a D2/D9：可手动入场的同城同势力围城军（仅围城亲统战有资格；入场即本回合待命）。
-  const reinforceOptions = reinforcementCandidates(battle, game.campaignArmies);
+  // 限我方军——S5b 起 D2 守方侧接受 garrison，须防列出敌方解围军。
+  const reinforceOptions = reinforcementCandidates(battle, game.campaignArmies)
+    .filter((army) => army.factionId === game.playerFactionId);
   const playerTurn = battle.phase === 'player';
   // 战术视野（S10 §三十）：视野外守方单位不参与渲染与一切玩家交互（AI 全知不受影响）
   const visibleEnemyIds = useMemo(() => visibleEnemyIdsForPlayer(battle), [battle]);

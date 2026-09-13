@@ -54,6 +54,7 @@ import {
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
   reinforcementSideFor,
   sideArmyCount,
+  type BattleSide,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
 import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot, useConsumable } from './items.js';
@@ -159,12 +160,26 @@ export interface CreateBattleOpts {
    */
   attackerArmies?: CampaignArmy[];
   defenderArmies?: CampaignArmy[];
+  /**
+   * docs/46 S5c（D1/D2）：城驻军出击——被围城常备守军（`city.troops`）以无编成合成单位
+   * 加入守方侧直接参战（有真实守方 Army 时；无 Army 的 legacy 分支已代表守军，不重复）。
+   * 仅围城亲统战调用方（`doCampaignSiegeStorm`）显式开启；缺省关闭（R2）。
+   */
+  garrisonSortie?: boolean;
 }
 
 /** docs/43 S2 D8：六角每侧 BattleUnit 上限（单军分支不受帽约束，R4）。 */
 export const HEX_SIDE_UNIT_CAP = 8;
 /** docs/43 S2 D9：多军部署 r 轴偏移步长（攻 +4／守 −4，越界夹紧，确定性）。 */
 export const HEX_ARMY_ANCHOR_R_STEP = 4;
+/** docs/46 S5c D4：城驻军出击下限（低于此留城不出击）。 */
+export const GARRISON_SORTIE_MIN_TROOPS = 500;
+/** docs/46 S5c：城驻军合成单位 armyId 前缀（无 CampaignArmy 编成，结算据此区分）。 */
+export const GARRISON_SORTIE_ARMY_PREFIX = 'garrison-';
+/** docs/46 S5c：该单位是否为城驻军合成单位（区别于真实 CampaignArmy 单位）。 */
+export function isGarrisonSortieUnit(unit: { armyId: string }): boolean {
+  return unit.armyId.startsWith(GARRISON_SORTIE_ARMY_PREFIX);
+}
 
 /** 合流军序：兵力降序 → id 升序（与 shared collectSiegeMergeGroup 同口径）。 */
 function byTroopsDescThenId(a: CampaignArmy, b: CampaignArmy): number {
@@ -320,6 +335,61 @@ function buildSideUnits(
     included.push(army);
   }
   return units;
+}
+
+/**
+ * docs/46 S5c（D4/D5）：城驻军出击合成单位——被围城常备守军以无 CampaignArmy 编成的
+ * 单单位加入守方侧。兵力取 `city.troops` 现值（整城出击，D4），主将取城内 ACTIVE 武将
+ * （排除守方野战军主将与攻方主将），无可用武将则不出击（D5 保底不改现状）。零 RNG（R1）。
+ */
+function buildGarrisonSortieUnit(
+  state: GameState,
+  city: GameState['cities'][number],
+  cityId: number,
+  defenderFaction: number,
+  existing: readonly BattleUnit[],
+  excludeOfficerIds: readonly number[],
+  mobility: number,
+): BattleUnit | null {
+  const troops = Math.floor(city.troops);
+  if (troops < GARRISON_SORTIE_MIN_TROOPS) return null;
+  if (city.ruler !== defenderFaction) return null;
+  const garrisonOfficer =
+    Object.values(state.officers).find(
+      (o) => o.faction === defenderFaction && o.status === OfficerStatus.ACTIVE && o.location === cityId && !excludeOfficerIds.includes(o.id),
+    ) ??
+    Object.values(state.officers).find(
+      (o) => o.faction === defenderFaction && o.status === OfficerStatus.ACTIVE && !excludeOfficerIds.includes(o.id),
+    );
+  if (!garrisonOfficer) return null;
+  const defenders = new Set(existing.filter((unit) => unit.side === 'defender').map((unit) => unit.armyId)).size;
+  const occupied = new Set(existing.map((unit) => `${unit.position.q},${unit.position.r}`));
+  let r = Math.max(0, Math.min(ROWS - 1, 11 - HEX_ARMY_ANCHOR_R_STEP * Math.max(1, defenders)));
+  while (occupied.has(`16,${r}`) && r > 0) r -= 1;
+  return {
+    id: `defender-garrison-${cityId}`,
+    armyId: `${GARRISON_SORTIE_ARMY_PREFIX}${cityId}`,
+    commanderId: garrisonOfficer.id,
+    commanderName: garrisonOfficer.name,
+    factionId: defenderFaction,
+    side: 'defender',
+    unitType: 'heavyInfantry' as UnitType,
+    formation: FormationType.SQUARE,
+    troopCount: troops,
+    maxTroops: troops,
+    morale: Math.max(0, Math.min(100, city.troopsMorale ?? 70)),
+    food: 1000,
+    position: { q: 16, r },
+    facing: 3,
+    mp: mobility,
+    maxMp: mobility,
+    energy: 100,
+    maxEnergy: 100,
+    hasActed: false,
+    isRetreated: false,
+    isDestroyed: false,
+    statusEffects: [],
+  };
 }
 
 export function createBattle(
@@ -495,6 +565,13 @@ export function createBattle(
     ]
     : legacyUnits;
 
+  // docs/46 S5c：城驻军出击——仅显式开启且守方为真实 Army（无 Army 的 legacy 已代表守军，不重复）。
+  const hasRealDefender = (defenderArmies != null && defenderArmies.length > 0) || defenderArmy != null;
+  const garrisonSortieUnit = opts.garrisonSortie && hasRealDefender
+    ? buildGarrisonSortieUnit(state, city, cityId, defenderFaction, units, [enemyOfficer.id, playerOfficer.id], defMobility)
+    : null;
+  const battleUnits = garrisonSortieUnit ? [...units, garrisonSortieUnit] : units;
+
   const fromName =
     fromCityId != null ? state.cities[fromCityId]?.name ?? String(fromCityId) : null;
   // docs/43 S2 D8/D12：多军分支开战语（主军名等 N 支亲统强攻）；单数/legacy 沿旧语（R4）。
@@ -503,8 +580,9 @@ export function createBattle(
   // 多军开战语报入战兵力（策应军不计入）；单数/legacy 沿旧数（R4）。
   const atkDisplay = multiSide && includedAttackers.length > 0
     ? includedAttackers.reduce((sum, army) => sum + army.troops, 0) : atkTroops;
-  const defDisplay = multiSide && includedDefenders.length > 0
-    ? includedDefenders.reduce((sum, army) => sum + army.troops, 0) : defTroops;
+  const defDisplay = (multiSide && includedDefenders.length > 0
+    ? includedDefenders.reduce((sum, army) => sum + army.troops, 0) : defTroops)
+    + (garrisonSortieUnit?.troopCount ?? 0);
   const openMsg = multiSide && stormPrimary
     ? `${stormPrimary.name}等 ${stormCount} 支亲统强攻 ${city.name}（攻 ${atkDisplay} / 守 ${defDisplay}）`
     : fromName
@@ -513,6 +591,9 @@ export function createBattle(
   const openLog: BattleState['log'] = [{ turn: 1, message: openMsg }];
   for (const name of sidelinedArmies) {
     openLog.push({ turn: 1, message: `${name}屯于城下策应` });
+  }
+  if (garrisonSortieUnit) {
+    openLog.push({ turn: 1, message: `${garrisonSortieUnit.commanderName}率城驻军出击（兵力 ${garrisonSortieUnit.troopCount}）` });
   }
 
   return {
@@ -526,7 +607,7 @@ export function createBattle(
     cityId,
     fromCityId,
     settled: false,
-    units,
+    units: battleUnits,
     phase: 'player',
     winner: null,
     hexGrid: { width: COLS, height: ROWS, terrain: buildTerrain() },
@@ -681,6 +762,62 @@ export function changeBattleFormation(
   };
 }
 
+/** docs/45 D7：AI 守方增援累计上限（F10 郡域先例 `maxReinforceArmies`）。 */
+export const MAX_AI_DEFENDER_REINFORCEMENTS = 2;
+
+/**
+ * docs/45 D3：该侧再入 `incoming` 个单位是否仍在帽内。该侧入场后军数 > 1 即
+ * `HEX_SIDE_UNIT_CAP` 帽；整军不拆分（P2），超帽则整军不入。
+ */
+export function canReinforceSide(battle: BattleState, side: BattleSide, incoming: number): boolean {
+  const existing = battle.units.filter((unit) => unit.side === side).length;
+  const existingArmies = sideArmyCount(battle, side);
+  const cap = existingArmies + 1 > 1 ? HEX_SIDE_UNIT_CAP : Number.POSITIVE_INFINITY;
+  return existing + incoming <= cap;
+}
+
+/**
+ * docs/45 D4/D5：按军构造入场单位（调用方须先过 D2 资格 + D3 容量/D7 上限）。
+ * 第 N 军锚点沿 r 轴偏移 ±`HEX_ARMY_ANCHOR_R_STEP`（攻 +／守 −，越界夹紧），跨军
+ * `occupied` 累积复用 `projectHexDeployment`；入场单位 `hasActed=true, mp=0` 本回合待命。
+ * 零 RNG（R1），兵力/士气取军现值。
+ */
+export function buildReinforcementUnits(
+  state: GameState,
+  battle: BattleState,
+  army: CampaignArmy,
+  side: BattleSide,
+): BattleUnit[] {
+  const existingArmies = sideArmyCount(battle, side);
+  const baseAnchor = side === 'attacker' ? { q: 2, r: 3 } : { q: 16, r: 11 };
+  const rDirection = side === 'attacker' ? 1 : -1;
+  const anchor = {
+    q: Math.max(0, Math.min(COLS - 1, baseAnchor.q)),
+    r: Math.max(0, Math.min(ROWS - 1, baseAnchor.r + rDirection * HEX_ARMY_ANCHOR_R_STEP * existingArmies)),
+  };
+  const occupied = battle.units.map((unit) => ({ ...unit.position }));
+  return unitsFromArmy(state, army, side, army.troops, undefined, anchor, occupied)
+    .map((unit) => ({ ...unit, hasActed: true, mp: 0 }));
+}
+
+/**
+ * docs/45 D7：AI 守方增援累计已达上限（防添油）；玩家/AI 攻方不受限。
+ * 计数只读 `reinforcedArmyIds` 中仍在场的同侧军（旧档缺省按 0 兼容）。
+ */
+export function aiDefenderReinforcementBlocked(
+  state: GameState,
+  battle: BattleState,
+  side: BattleSide,
+): boolean {
+  if (side !== 'defender') return false;
+  if (state.factions[battle.defenderFaction]?.isPlayer) return false;
+  const inField = new Set(
+    battle.units.filter((unit) => unit.side === 'defender').map((unit) => unit.armyId),
+  );
+  const count = (battle.reinforcedArmyIds ?? []).filter((id) => inField.has(id)).length;
+  return count >= MAX_AI_DEFENDER_REINFORCEMENTS;
+}
+
 /**
  * docs/45 S5a（docs/43 §八「回合中途增援入场」收口）：策应军手动入场——把同城
  * 同势力围城军整军追加进六角战斗快照。资格由共享 `reinforcementSideFor` 派生（D2）；
@@ -700,24 +837,16 @@ export function reinforceActiveBattle(
   if (!army) throw new Error('Army 不存在');
   const side = reinforcementSideFor(battle, army);
   if (!side) throw new Error('该军不可作为增援入场');
-  const existing = battle.units.filter((unit) => unit.side === side);
-  const existingArmies = sideArmyCount(battle, side);
+  // 手动入场为玩家动作：S5b 起 D2 守方侧接受 garrison（解围军），须限己方军防误入敌军。
+  if (army.factionId !== state.playerFactionId) throw new Error('非己方 Army');
   const incoming = army.squads.length > 0 ? army.squads.length : 1;
-  const cap = existingArmies + 1 > 1 ? HEX_SIDE_UNIT_CAP : Number.POSITIVE_INFINITY;
-  if (existing.length + incoming > cap) throw new Error('战场容量已满，该军继续屯于城下策应');
-  const baseAnchor = side === 'attacker' ? { q: 2, r: 3 } : { q: 16, r: 11 };
-  const rDirection = side === 'attacker' ? 1 : -1;
-  const anchor = {
-    q: Math.max(0, Math.min(COLS - 1, baseAnchor.q)),
-    r: Math.max(0, Math.min(ROWS - 1, baseAnchor.r + rDirection * HEX_ARMY_ANCHOR_R_STEP * existingArmies)),
-  };
-  const occupied = battle.units.map((unit) => ({ ...unit.position }));
-  const fresh = unitsFromArmy(state, army, side, army.troops, undefined, anchor, occupied)
-    .map((unit) => ({ ...unit, hasActed: true, mp: 0 }));
+  if (!canReinforceSide(battle, side, incoming)) throw new Error('战场容量已满，该军继续屯于城下策应');
+  const fresh = buildReinforcementUnits(state, battle, army, side);
   const entry = `${army.name} 增援入场（兵力 ${army.troops}，本回合待命）`;
   return {
     ...battle,
     units: [...battle.units, ...fresh],
+    reinforcedArmyIds: [...(battle.reinforcedArmyIds ?? []), army.id],
     message: entry,
     log: [...battle.log, { turn: battle.turn, message: entry }],
   };

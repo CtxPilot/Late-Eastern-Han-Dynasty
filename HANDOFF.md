@@ -9,12 +9,35 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 444**（S10 回合中途增援 S5a 策应军手动入场实装：引擎 `reinforceActiveBattle` + 共享 `reinforcementSideFor`/`reinforcementCandidates` + 新端点 `POST /battle/reinforce` 五镜像 + BattleView 按钮/选择器；零新存档字段，金样零扰动；S5b 到达自动入场待批准） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 三片 + docs/43 S1/S2 均已落地；docs/44 S4a~S4d 全部落地；docs/45 S5a 已落地 / S5b 待批准 |
-| 代码最新 | Session 444 增援 S5a 源码 + 两个 verify 脚本（**未提交**）；工作树含本轮全部改动 |
-| 文档最新 | **Session 444 双写**（docs/05 §10.2、docs/06 端点表、docs/07 增援 UI、docs/12 S10 行、docs/35 主线 ㊠、docs/45 状态节 + 10-progress 日志 + 本文件） |
-| 本交接用途 | **S5a 已交付**；后续方向：S5b 批准后实装，或 0-B 闸门真人实测（`41` §三），或数据门待批 |
-| 下一步 | ①**S5b 批准**（D6 到达自动入场时机 + **D7 AI 对称双向/守方上限值需拍板**；F11 双重结算复核随 S5b）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板） |
+| 会话 | **Session 447**（S10 AI/委任六角激战避让 S5d **立项+实装同轮**：`docs/47` 落盘并经用户拍板 D1=仅确定性避让 → `cityInActiveBattle` 门禁：激战军跳过 + 激战城不作出征源（AI+委任）；`verify-s47-ai-battle-avoidance` 15/15；金样 3/3 零变化） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；docs/43 S1/S2、docs/44 S4a~S4d、docs/45 S5a/S5b、docs/46 S5c、docs/47 S5d 均已落地 |
+| 代码最新 | Session 447 S5d 源码 + verify 脚本（**未提交**）；工作树含 445~447 全部改动 |
+| 文档最新 | **Session 447 双写**（`docs/47` 新建+实装节、docs/46 D9 指针、docs/05 §10.2、docs/12 S10 行+补充、docs/35 主线 ㊣、10-progress 日志 + 本文件） |
+| 本交接用途 | **S5d 已交付**；S5b/S5c/S5d 代码待提交；后续方向：AI 主动反应/平衡轮（0-B 暂缓）、0-B 闸门真人实测（`41` §三）、数据门待批 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
+
+### Session 447 交接要点
+
+- **AI/委任六角激战避让 S5d 立项+实装**（docs/46 D9；先落 `docs/47`，用户拍板 **D1=仅确定性避让** 后同轮实装，D2/D3 按推荐值）。
+- **缺口**：`aiMilitary.ts` 与委任 `delegation.ts` 对 `activeBattles` 零引用——被围城（legacy 守军路径 `city.troops` 未扣减）月结可被抽兵出征（同批兵既在场上又行军），且 AI 若选中激战军会撞 `assaultForFaction` 抛错中断月结。
+- **实现**：`campaign.ts` 增 `cityInActiveBattle(state, cityId)`（未结算未结束同城）；`aiMilitary.ts` `runAiMilitary` engaged 循环跳过激战军、`aiMilitaryTurn` 源城循环跳过激战城；`delegation.ts` `runDelegationMilitary` `validCityIds` 过滤激战城。纯门禁、零 RNG、零新字段。
+- **验证全绿**：`verify-s47-ai-battle-avoidance` **15/15**（判据四态 + AI/委任激战城不出征**强对照：无激战则出征 1 支** + engaged 跳过激战军不抛错/保持围城/无战报 + 双局确定性）+ turn-golden 3/3（零变化）+ s46 23/23 + s45a 39/39 + s45b 42/42 + s434 65/65 + s433 41/41 + campaign 71 + ai-military-rng 38 + turn-cadence 28 + s420 36/36 + s421 15/15 + s422 13/13 + save-battle 62 + save-campaign 9 + save-game-state 10 + s435 32/32 + s436 12/12 + s44a~s44d + items 32/32 + fm4 14/14 + tactical-ai 86 + tactical-retreat 18 + bf-p3 13/13 + bf-p4 20/20 + battle-rng 5/5 + duel-rng 3/3 + shared 481 + server 3 + client 71 + 三端 lint + parity 5/5 + compliance(813) + diff-check。
+- 边界：只做确定性避让，不改 AI 评分/概率/新增行为；AI 主动反应（派援/守军弃城/出击决策）后置平衡轮；Tier II `maybeReinforceCommandery` 不涉；未复跑 headless UI（零 UI 改动）。文档：docs/47、docs/46 D9、docs/05 §10.2、docs/12 S10 行+补充、docs/35 ㊣、10-progress Session 447 日志、HANDOFF 双写。
+
+### Session 446 交接要点
+
+- **城驻军出击 S5c 立项+实装**（docs/45 S5c；先纯设计轮落 `docs/46`，用户拍板 **D1=守方侧无编成合成参战 / D2=开战即纳入 `createBattle`** 后同轮实装，D3~D10 按推荐值）。
+- **实现**：`battle.ts` 增 `GARRISON_SORTIE_MIN_TROOPS=500`/`GARRISON_SORTIE_ARMY_PREFIX='garrison-'`/`isGarrisonSortieUnit` + `buildGarrisonSortieUnit`（无 CampaignArmy 合成单位：heavyInfantry/SQUARE、整城 `city.troops`、主将取城内 ACTIVE 武将且≠守方野战军主将、无将则不生成、锚点第 N 军 r 轴 −4 避重）+ `CreateBattleOpts.garrisonSortie`；`services/game.ts` `doCampaignSiegeStorm` 开启并扣减城 troops；`campaign.ts` `settleSiegeStormBattle` 单列 `garrisonUnits`（真源军判定/兵损统计只取 `realDefenderUnits`，避免第二个 defender armyId 破坏 `enemyCandidate`）+ `withGarrisonReturn` 野胜/败北/撤退三径按合成单位存活 1:1 回写 `city.troops`（占城由占城逻辑处置）。
+- **关键实勘**：城驻军为纯数字 `City.troops`（无 Army 编成）；守方口径「野战 Army **或** 城驻军 legacy `def-1`，二选一不叠加」→ 有野战军守城时常备守军被排除（缺口）；六角战仅玩家 `doCampaignSiegeStorm` 发起 → 守方恒为 AI、无玩家手动面；`opts.garrisonSortie` 显式开启避免 Tier II 战术白刃（`createBattle` @1965）误触。
+- **验证全绿**：`verify-s46-garrison-sortie` **23/23** + turn-golden 3/3（零变化）+ s434 65/65 + s433 41/41 + s45a 39/39 + s45b 42/42 + campaign 71 + ai-military-rng 38 + turn-cadence 28 + save-battle 62 + save-campaign 9 + save-game-state 10 + s435 32/32 + s436 12/12 + s44a~s44d + items 32/32 + fm4 14/14 + tactical-ai 86 + tactical-retreat 18 + bf-p3 13/13 + bf-p4 20/20 + battle-rng 5/5 + duel-rng 3/3 + shared 481 + server 3 + client 71 + 三端 lint + parity 5/5 + compliance(811) + diff-check。
+- 边界：未复跑 headless UI（S5c 无 UI 改动）；整城一次性出击（中途分次/守军主动野战未做）；S5d AI 差异化后置；docs/43:33 行号漂移顺手勘误；0-B 闸门待真人游玩。文档：docs/46、docs/43、docs/45 §七、docs/05 §10.2、docs/12 S10 行+补充、docs/35 ㊢、10-progress Session 446 日志、HANDOFF 双写。
+
+### Session 445 交接要点
+
+- **S10 增援 S5b 行军到达自动入场**（docs/45 D1 次片，用户「继续」＝批准推荐值，沿 444 先例）：`battle.ts` 抽出 `canReinforceSide`/`buildReinforcementUnits`/`aiDefenderReinforcementBlocked`（`MAX_AI_DEFENDER_REINFORCEMENTS=2`），`reinforceActiveBattle` 改共用并记录 `reinforcedArmyIds`；`campaign.ts` `reinforceArrivingArmy` 在 `tickCampaignMarch` 两条到达分支即时注入未结算围城亲统战；`shared/hex-reinforcement.ts` D2 守方侧接受 `garrison`（解围军）；`largestEnemyArmyAt` 排除激战军（D10/F11）；`BattleState.reinforcedArmyIds?` 可选字段（类型 + Schema）。
+- **D7 拍板落地**：双向同规则自动，AI 守方增援累计上限 2（玩家/AI 攻方不受限）。
+- **验证全绿**：`verify-s45b-arrival-reinforce` **42/42** + turn-golden 3/3（零变化）+ s45a 39/39 + s434 65/65 + campaign 71 + ai-military-rng 38 + turn-cadence 28 + save-battle 62 + save-campaign 9 + save-game-state 10 + s433 41/41 + s435 32/32 + s436 12/12 + s44a~s44d + shared 481 + server 3 + client 71 + 三端 typecheck + parity 5/5 + compliance(809) + diff-check。
+- 边界：本轮未复跑 S5a/S5b headless UI（S5b 零 UI 改动）；守方解围军真实到达经「暂驻己方城」下月结转驻守后触发；S5c 后置；0-B 闸门待真人游玩。文档：docs/05 §10.2、docs/12 S10 行 + 补充、docs/35 主线 ㊡、docs/45 状态节 + D2/D7/R3、10-progress Session 445 日志、HANDOFF 双写。
 
 ### Session 444 交接要点
 

@@ -202,6 +202,7 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
     tacticalPoints: NonNegativeIntSchema.max(10).optional(),
     tacticalPointsUsed: NonNegativeIntSchema.max(10).optional(),
     duel: DuelStateRuntimeSchema.nullable().optional(),
+    reinforcedArmyIds: z.array(z.string().min(1)).max(64).optional(),
   })
   .strict()
   .superRefine((battle, ctx) => {
