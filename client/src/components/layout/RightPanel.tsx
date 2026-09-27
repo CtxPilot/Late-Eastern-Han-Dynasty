@@ -58,51 +58,57 @@ export function RightPanel() {
 
   return (
     <aside
-      className="w-72 shrink-0 border-l border-amber-900/40 bg-stone-950/95 flex flex-col text-sm overflow-hidden"
+      className="w-72 shrink-0 border-l border-amber-900/50 bg-stone-950/98 flex flex-col text-sm overflow-hidden select-none"
       data-testid="right-panel"
     >
-      <div className="px-3 py-2 border-b border-stone-800 text-amber-500/90 font-semibold tracking-wide">
-        城池详情
+      <div className="px-3 py-2 border-b border-stone-800 bg-gradient-to-r from-stone-900/90 to-stone-950 flex items-center justify-between">
+        <span className="text-amber-400 font-song font-semibold tracking-wider flex items-center gap-1.5 text-xs">
+          <span className="w-1.5 h-3 bg-amber-500 rounded-xs" aria-hidden />
+          舆情郡邑
+        </span>
+        <span className="text-[11px] text-stone-500 font-song">城防图志</span>
       </div>
 
       {!selected ? (
-        <div className="p-4 text-stone-500 text-xs leading-relaxed space-y-2">
-          <p>点中央战略卡片选城，或从左侧己方城池进入。他方城默认情报不明，需侦查或盟友共享。</p>
-          <p className="text-amber-700/80">
-            底部命令坞“外交”可进贡/结盟；结盟后可见盟友城部分信息。
+        <div className="p-4 text-stone-400 text-xs leading-relaxed space-y-3 font-song">
+          <p className="border-l-2 border-stone-700 pl-2.5 text-stone-300">
+            请点击中央天下战图或左侧城池以巡察郡邑。
+          </p>
+          <p className="text-amber-600/90 text-[11px]">
+            未遣密谍探明之城邑，军民虚实皆隐于迷雾中；经结盟或细作刺探方显其详。
           </p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto min-h-0" data-testid="city-panel">
-          <div className="px-3 py-2 border-b border-stone-900">
-            <h2 className="text-lg text-amber-400 font-semibold flex items-center gap-2 flex-wrap">
+          <div className="px-3.5 py-2.5 border-b border-stone-900 bg-stone-900/40">
+            <h2 className="text-lg text-amber-300 font-song font-bold flex items-center gap-2 flex-wrap">
               {selected.name}
               {isPlayerCity ? (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-900 text-emerald-200 border border-emerald-600">
+                <span className="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-200 border border-emerald-800 font-song">
                   己方
                 </span>
               ) : (
-                <span className="text-xs px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-600">
+                <span className="text-xs px-2 py-0.5 rounded bg-stone-900 text-stone-400 border border-stone-700 font-song">
                   他方
                 </span>
               )}
               <span
-                className={`text-xs px-1.5 py-0.5 rounded border ${
+                className={`text-xs px-2 py-0.5 rounded border font-song ${
                   vis?.kind === 'fog'
-                    ? 'border-stone-700 text-stone-500'
+                    ? 'border-stone-700 text-stone-500 bg-stone-900/50'
                     : vis?.kind === 'ally'
-                      ? 'border-sky-800 text-sky-300'
+                      ? 'border-sky-850 text-sky-300 bg-sky-950/40'
                       : vis?.kind === 'scouted'
-                        ? 'border-amber-800 text-amber-200'
-                        : 'border-emerald-800 text-emerald-300'
+                        ? 'border-amber-850 text-amber-200 bg-amber-950/40'
+                        : 'border-emerald-850 text-emerald-300 bg-emerald-950/40'
                 }`}
                 data-testid="intel-badge"
               >
                 {visBadge}
               </span>
             </h2>
-            <p className="text-xs text-stone-600 mt-0.5">
-              点下方大项展开 · 再点可收起
+            <p className="text-[11px] text-stone-500 mt-1 font-song">
+              点击下方诸项展开查阅民生、仓廪与兵防
             </p>
           </div>
 

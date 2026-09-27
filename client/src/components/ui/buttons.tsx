@@ -20,7 +20,7 @@ type BaseProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 } & { [key: `data-${string}`]: string | number | undefined };
 
 const STRUCTURAL_BASE =
-  'inline-flex items-center justify-center gap-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-1 rounded transition-all duration-150 active:scale-[0.98] select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100';
 
 export const InkButton = forwardRef<HTMLButtonElement, BaseProps>(function InkButton(
   { children, className = '', reason, disabled, ...rest },
@@ -44,7 +44,7 @@ export const SealButton = forwardRef<HTMLButtonElement, BaseProps>(function Seal
       type="button"
       disabled={disabled}
       title={reason}
-      className={`${STRUCTURAL_BASE} bg-seal-600 text-gold-200 border-2 border-gold-400 border-double font-semibold hover:bg-seal-400 px-3 py-1.5 ${className}`}
+      className={`${STRUCTURAL_BASE} bg-seal-600 text-gold-200 border-2 border-gold-400 border-double font-semibold hover:bg-seal-400 shadow-[0_2px_10px_rgba(166,25,25,0.35)] tracking-wider px-3 py-1.5 active:translate-y-px ${className}`}
     >
       {children}
     </button>
@@ -62,7 +62,7 @@ export const DangerButton = forwardRef<HTMLButtonElement, BaseProps>(function Da
       type="button"
       disabled={disabled}
       title={reason}
-      className={`${STRUCTURAL_BASE} bg-seal-900 text-gold-200 border border-seal-600 hover:bg-seal-600/70 px-3 py-1.5 ${className}`}
+      className={`${STRUCTURAL_BASE} bg-seal-900 text-gold-200 border border-seal-600 hover:bg-seal-600/70 shadow-[0_2px_8px_rgba(127,29,29,0.35)] px-3 py-1.5 ${className}`}
     >
       {children}
     </button>

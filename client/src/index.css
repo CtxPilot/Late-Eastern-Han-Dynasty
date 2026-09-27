@@ -77,9 +77,68 @@ body,
 .expression-tone { position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; z-index:1; }
 /* A′ 拓影层（批次③ · ArtDirection §五）：程序化剪影纹，multiply ≤0.18 */
 .portrait-rubbing { fill:none; stroke:var(--portrait-ink); stroke-width:1.1; opacity:.16; mix-blend-mode:multiply; }
-/* 批次①（Session 407）：.portrait-clan/.portrait-seal/.portrait-ribbon 三类为 B 层摘除后的
- * 死样式，已删除；氏族简册/官职印/印绶条由批次③按 ArtDirection.md §五 重建。
- * 注意 --portrait-seal / --portrait-ink 是组件 inline style 使用的 CSS 变量，仍保留。 */
 .officer-portrait--compact { flex:0 0 34px; width:34px; height:42px; aspect-ratio:auto; border-color:#57452e; box-shadow:none; }
+
+/* 水墨暗金微型滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0a09;
+}
+::-webkit-scrollbar-thumb {
+  background: #292524;
+  border-radius: 2px;
+  border: 1px solid #44403c;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #78350f;
+  border-color: #d7aa62;
+}
+
+/* 核心程序化材质类（DESIGN.md §四） */
+.tex-paper {
+  background-color: #171412;
+  background-image: radial-gradient(circle at 50% 50%, rgba(199, 174, 122, 0.05), transparent 75%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 8px);
+}
+
+.tex-ink-panel {
+  background-color: rgba(28, 25, 23, 0.95);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    radial-gradient(ellipse at 50% 0%, rgba(215, 170, 98, 0.06), transparent 70%);
+}
+
+.tex-bamboo {
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 6px),
+    linear-gradient(180deg, rgba(107, 78, 44, 0.35), rgba(107, 78, 44, 0.08));
+}
+
+.tex-gold-frame {
+  border: 1px solid rgba(215, 170, 98, 0.4);
+  box-shadow: inset 0 0 12px rgba(215, 170, 98, 0.08);
+}
+
+@keyframes ink-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ink-fade-in {
+  animation: ink-fade-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-fade-in {
+    animation: none !important;
+  }
+}
+
 /* SPDX-License-Identifier: MIT */
 /* Copyright (c) 2026 CtxPilot */

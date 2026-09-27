@@ -9,14 +9,44 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 447**（S10 AI/委任六角激战避让 S5d **立项+实装同轮**：`docs/47` 落盘并经用户拍板 D1=仅确定性避让 → `cityInActiveBattle` 门禁：激战军跳过 + 激战城不作出征源（AI+委任）；`verify-s47-ai-battle-avoidance` 15/15；金样 3/3 零变化） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；docs/43 S1/S2、docs/44 S4a~S4d、docs/45 S5a/S5b、docs/46 S5c、docs/47 S5d 均已落地 |
-| 代码最新 | Session 447 S5d 源码 + verify 脚本（**未提交**）；工作树含 445~447 全部改动 |
-| 文档最新 | **Session 447 双写**（`docs/47` 新建+实装节、docs/46 D9 指针、docs/05 §10.2、docs/12 S10 行+补充、docs/35 主线 ㊣、10-progress 日志 + 本文件） |
-| 本交接用途 | **S5d 已交付**；S5b/S5c/S5d 代码待提交；后续方向：AI 主动反应/平衡轮（0-B 暂缓）、0-B 闸门真人实测（`41` §三）、数据门待批 |
+| 会话 | **Session 448**（UI/UX 与交互视觉总则宪章 **DESIGN.md** 建立与全栈界面重构优化：根目录 `DESIGN.md` 落盘并写入开发宪法；`index.css` 古风水墨滚动条+程序化材质+淡入微动效；`buttons.tsx` 三级触感与朱砂金双框浮凸；`StonePanel.tsx` 金石装帧；`ScenarioSelect.tsx` 展卷起兵门面；`TopBar.tsx` 朝堂纪年与槽位石板档案库；`StrategicWorldView.tsx` 州大篆水印与割据色带；`ProvinceTopology.tsx` 官道分级印信节点；`CommandDock/Drawer`、`EventDialog`、`CommandConfirmDialog`、`TurnFeedback` 全面古朴升华；全套 71/71 前端测试+三端 typecheck+lint+compliance 814 全绿） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；UI/UX 宪法与视觉体系全面确立与收拢 |
+| 代码最新 | Session 448 UI/UX 视觉重构全部组件 + 宪法文档（本轮提交）；工作树干净 |
+| 文档最新 | **Session 448 双写**（根目录 `DESIGN.md` 新建、`docs/00-dev-constitution.md` §一/§十一写入、`AGENTS.md` 规则 5/9 更新、`docs/07-ui-design.md` 登记、10-progress 日志 + 本文件） |
+| 本交接用途 | **Session 448 已交付**；全栈 UI、交互与视觉效果完成系统性重构与宪法化；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
 | 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
 
-### Session 447 交接要点
+### Session 448 交接要点
+
+- **用户需求落实**：「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」
+- **DESIGN.md 宪章建立**：根目录新建 `DESIGN.md`，确立为全项目 UI/UX、交互与视觉系统最高法准真源。
+  - 核心美学：「金石水墨 · 拓片简册 · 印信官职」，严守免侵权版权铁律；
+  - 色彩阶梯：玄/烟/灰/黛墨色梯队、宣纸/宣影/简木纸面梯队、朱砂第一强调、金印第二强调、五大领域语义色（军朱/政金/人宣/谍青/家桃）；
+  - 字体闭环：严格锁定 `HanDynastySerif`（思源宋体）与 `HanDynastySeal`（马善政篆体），字级阶梯底线 12px，姓名印序姓上名下；
+  - 组件标准：`StonePanel` 石板容器、`SlipPanel` 简册容器、`SealButton` 朱砂金双框主令、`InkButton` 次令、`DangerButton` 危令、`SealBadge/SealIcon` 13 语义印章；
+  - 交互阻尼：150~220ms 平滑淡入微动效，严禁弹簧震颤，无障碍完全适配。
+- **开发宪法写入**：在 `docs/00-dev-constitution.md` §一「文档驱动开发」与 §十一「美术与版权铁律」中正式确立 `DESIGN.md` 宪法地位；更新 `AGENTS.md` 核心规则 5 与 9。
+- **界面与交互重构实装**：
+  1. `client/src/index.css`：古典水墨暗金微型滚动条、`.tex-paper` / `.tex-ink-panel` / `.tex-bamboo` / `.tex-gold-frame` 程序化材质类、`ink-fade-in` 动效；
+  2. `client/src/components/ui/buttons.tsx`：`active:scale-[0.98]` 触觉微缩、focus-visible 焦点金环、`SealButton` 金双框朱砂浮凸与压印动效；
+  3. `client/src/components/ui/StonePanel.tsx`：支持 `goldBorder`、`subTitle`、`headerAction`，升级金石装帧；
+  4. `client/src/components/scenario/ScenarioSelect.tsx`：开篇题匾、历史纪年印信、诸侯战旗阵营卡片、大号主令起兵印章；
+  5. `client/src/components/layout/TopBar.tsx`：汉历纪年排版、五大资源方圆印章内嵌展示、`save-slots-panel` 升级为 `StonePanel` 档案库；
+  6. `client/src/components/strategic/StrategicWorldView.tsx`：州郡大篆水印、水墨多方割据占比条、金石城池卡片；
+  7. `client/src/components/strategic/ProvinceTopology.tsx`：落实 DESIGN.md §6.2 官道印信分级（县城墨印、郡治方印暗金边、州治朱砂印、己方翡翠微标、选中金双框外发散光环、古雅水墨虚线）；
+  8. `client/src/components/command/CommandDock.tsx` & `CommandDrawer.tsx`：命令坞按压感与微金光环、命令抽屉简牍折页装帧与 Esc 提示；
+  9. `client/src/components/events/EventDialog.tsx` & `CommandConfirmDialog.tsx`：历史纪事奏折封泥装帧、出处印章化、封诏终审金石双边质感；
+  10. `client/src/components/layout/TurnFeedback.tsx`：浑天乾坤推演呼吸遮罩与古卷月结纪要；
+  11. `client/src/components/layout/LeftPanel.tsx` & `RightPanel.tsx`：机务枢要与城防图志升华。
+- **验证全绿**：
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部通过；
+  - `pnpm test`：71/71 前端测试全绿通过，shared 481、server 3 全绿；
+  - `pnpm verify-compliance`：814 个文件 SPDX 头与许可证扫描全部通过；
+  - `pnpm verify-s47-ai-battle-avoidance`：15/15 全绿通过；
+  - `pnpm lint`：全部代码风格与规范通过；
+  - 所有既有 `data-testid` 保持一致，无缝兼容自动化脚本。
+- 边界：纯 UI/UX、交互与视觉层重构，未触碰核心引擎逻辑、随机数流（RNG）、存储版本或网络协议。
+- 文档：根目录 `DESIGN.md` 新建、`docs/00-dev-constitution.md`、`AGENTS.md`、`docs/07-ui-design.md`、`docs/10-progress.md` 与本文件双写。
 
 - **AI/委任六角激战避让 S5d 立项+实装**（docs/46 D9；先落 `docs/47`，用户拍板 **D1=仅确定性避让** 后同轮实装，D2/D3 按推荐值）。
 - **缺口**：`aiMilitary.ts` 与委任 `delegation.ts` 对 `activeBattles` 零引用——被围城（legacy 守军路径 `city.troops` 未扣减）月结可被抽兵出征（同批兵既在场上又行军），且 AI 若选中激战军会撞 `assaultForFaction` 抛错中断月结。

@@ -46,19 +46,31 @@ export function LeftPanel() {
   };
   return (
     <aside
-      className="w-60 shrink-0 border-r border-amber-900/40 bg-stone-950/95 flex flex-col text-xs overflow-hidden"
+      className="w-60 shrink-0 border-r border-amber-900/50 bg-stone-950/98 flex flex-col text-xs overflow-hidden select-none"
       data-testid="left-panel"
     >
-      <div className="px-3 py-2 border-b border-stone-800 text-amber-500/90 font-semibold tracking-wide">
-        政务
+      <div className="px-3 py-2 border-b border-stone-800 bg-gradient-to-r from-stone-900/90 to-stone-950 flex items-center justify-between">
+        <span className="text-amber-400 font-song font-semibold tracking-wider flex items-center gap-1.5">
+          <span className="w-1.5 h-3 bg-amber-500 rounded-xs" aria-hidden />
+          机务枢要
+        </span>
+        <span className="text-[11px] text-stone-500 font-song">左台治政</span>
       </div>
 
-      <div className="px-2 py-1.5 text-xs text-stone-500 border-b border-stone-900 leading-snug">
-        {isPlayerCity
-          ? `当前城：${selected!.name}（命令请用底部命令坞）`
-          : selected
-            ? `已选：${selected.name}`
-            : '先选己方城，再从底部命令坞下令'}
+      <div className="px-2.5 py-1.5 text-xs text-stone-400 border-b border-stone-900/80 bg-stone-950 font-song leading-snug">
+        {isPlayerCity ? (
+          <span className="text-amber-200">
+            巡视：<strong className="text-amber-300">{selected!.name}</strong>
+            <span className="text-stone-500 block text-[11px] mt-0.5">下达军政命令请用底部命令坞</span>
+          </span>
+        ) : selected ? (
+          <span className="text-stone-300">
+            关注：<strong>{selected.name}</strong>
+            <span className="text-stone-500 block text-[11px] mt-0.5">他方城池 · 查阅防务</span>
+          </span>
+        ) : (
+          <span className="text-stone-500">点击中央战图选城，或自下方直达</span>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">

@@ -1,3 +1,29 @@
+## 2026-09-27 — Session 448 · UI/UX 与交互视觉总则宪章 DESIGN.md 建立与全栈界面重构优化
+
+- Phase：**UI/UX 体系化升级 / 交互与视觉效果重构**；依据用户明确指示「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」。
+- **宪法确立**：新建根目录 `DESIGN.md`，确立为全项目 UI、UX、交互体系、视觉效果与前端组件库的**唯一最高法准真源宪章**。同步在 `docs/00-dev-constitution.md` §一「文档驱动开发」与 §十一「美术与版权铁律」中写入其真源地位，并同步更新 `AGENTS.md` 核心规则 5 与 9。
+- **重构与视觉实现**：
+  1. **全局样式与质感**（`client/src/index.css`）：新增专属于汉代金石水墨风的细长微型滚动条（替换丑陋默认滚动条）、四组程序化材质类（`.tex-paper` 宣纸微噪、`.tex-ink-panel` 墨玉石板、`.tex-bamboo` 汉简编联、`.tex-gold-frame` 暗金双边）、`ink-fade-in` 平滑淡入动效，且全无障碍兼容 `prefers-reduced-motion`。
+  2. **按键体系升级**（`buttons.tsx`）：结构基座加入 `active:scale-[0.98]` 触感微缩动效、键盘 `focus-visible` 金印焦点环；主令 `SealButton` 赋予金双框浮凸、朱砂阴影与按压沉陷感；`DangerButton` 赋予深朱暗色警戒光晕；严格保持 reason 与无障碍属性。
+  3. **石板面板装帧**（`StonePanel.tsx`）：支持 `goldBorder` 金石边框、`subTitle` 副标与 `headerAction` 动作插槽，标题栏带有微光渐变与朱砂左缘竖条。
+  4. **开卷展史门面**（`ScenarioSelect.tsx`）：彻底重构剧本选择页面。卷首古籍题签配以朱砂大汉玉印；剧本卡片增加正史/假想印章与编年刻度；势力阵营列阵为诸侯战旗卡片，显示治所、主帅与考据；起兵主令升格为大号 `SealButton`「进入剧本」，仪式感拉满。
+  5. **朝堂顶栏**（`TopBar.tsx`）：汉历纪年排版、五大核心资源方圆印信徽章微内嵌展示；槽位存档浮层由内联裸框重构为 `StonePanel` 档案库，支持精确时间格式化与操作提示。
+  6. **战略世界屏**（`StrategicWorldView.tsx`）：州郡卡片增加州名大篆字水印（HanDynastySeal）、水墨多方割据占比条、四项关键政经防务指标；城池卡片增强治所、要隘、己方印章标记。
+  7. **官道拓扑图**（`ProvinceTopology.tsx`）：落实 DESIGN.md §6.2 官道印信分级规范。县城改以圆角墨印、郡治改以方印暗金边、州治为朱砂方印、己方城显示翡翠微标、选中态呈金双框虚线发散光环；官道路线呈古雅水墨虚线。
+  8. **命令坞与抽屉**（`CommandDock.tsx` & `CommandDrawer.tsx`）：命令坞按钮加入按压触感与激活微金光环；命令抽屉升级为汉代文书折页装帧，顶部配以篆书标题与朱砂竖线，底部增加 Esc 收起提示。
+  9. **事件与终审弹窗**（`EventDialog.tsx` & `CommandConfirmDialog.tsx`）：事件对话弹窗升格为汉末风云纪事奏折封泥装帧，史料出处与角色姓名印章化；终审确认框赋予封诏终审金石双边质感与危险操作警戒色。
+  10. **天道推演与月结纪要**（`TurnFeedback.tsx`）：天道推演遮罩加入浑天古仪金双框呼吸律动与篆字纪年；本月纪要浮卡升级为古卷拓片风。
+  11. **左右政务监察侧栏**（`LeftPanel.tsx` & `RightPanel.tsx`）：机务枢要与城防图志升华，状态展示与情报徽章深度融入水墨色调。
+- **验证（全绿）**：
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部通过。
+  - `pnpm test`：全部 71 个前端单元测试全绿通过（71/71），引擎与共享库测试全绿。
+  - `pnpm verify-compliance`：814 个文件 SPDX 头与许可证合规扫描 100% 通过。
+  - `pnpm verify-s47-ai-battle-avoidance`：15/15 全绿通过。
+  - `pnpm lint`：全仓类型与代码规范检查通过。
+  - 所有既有 `data-testid` 保持一致，无缝兼容既有测试与无头浏览器脚本。
+- **边界**：纯 UI/UX、交互与视觉层重构，未触碰任何核心引擎逻辑、随机数流（RNG）、存储版本或网络协议。
+- **文档**：新建根目录 `DESIGN.md`，同步更新 `docs/00-dev-constitution.md`、`AGENTS.md`、`docs/07-ui-design.md`、本日志与 `HANDOFF.md` 双写。
+
 ## 2026-09-13 — Session 447 · AI/委任六角激战避让 S5d 立项+实装（docs/47）
 
 - Phase：**S10 战斗深化**；docs/46 D9「AI 差异化」的确定性部分——先纯设计轮落 docs/47，用户拍板 D1=仅确定性避让后**同轮实装**。

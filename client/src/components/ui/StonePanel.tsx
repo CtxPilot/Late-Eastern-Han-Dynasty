@@ -10,20 +10,34 @@ import type { ReactNode } from 'react';
  */
 export function StonePanel({
   title,
+  subTitle,
+  headerAction,
+  goldBorder = false,
   children,
   className = '',
   bodyClassName = '',
 }: {
   title?: string;
+  subTitle?: string;
+  headerAction?: ReactNode;
+  goldBorder?: boolean;
   children: ReactNode;
   className?: string;
   bodyClassName?: string;
 }) {
   return (
-    <section className={`rounded border border-ink-700 bg-ink-900/90 ${className}`}>
+    <section
+      className={`rounded border ${
+        goldBorder ? 'border-amber-700/60 shadow-[0_4px_20px_rgba(0,0,0,0.5)]' : 'border-ink-700'
+      } bg-ink-900/95 backdrop-blur-sm ${className}`}
+    >
       {title != null && (
-        <div className="px-3 py-2 border-b border-l-2 border-ink-700/70 border-l-seal-600">
-          <h3 className="text-[15px] font-bold text-wen-100 tracking-wide">{title}</h3>
+        <div className="flex items-center justify-between px-3 py-2 border-b border-l-2 border-ink-700/70 border-l-seal-600 bg-gradient-to-r from-ink-900 via-ink-850 to-ink-900">
+          <div className="flex items-baseline gap-2 min-w-0">
+            <h3 className="text-[15px] font-bold text-wen-100 tracking-wide font-song truncate">{title}</h3>
+            {subTitle && <span className="text-xs text-stone-500 font-normal truncate">{subTitle}</span>}
+          </div>
+          {headerAction && <div className="shrink-0 ml-2">{headerAction}</div>}
         </div>
       )}
       <div className={`p-3 ${bodyClassName}`}>{children}</div>

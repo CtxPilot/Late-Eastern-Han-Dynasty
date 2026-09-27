@@ -3,15 +3,17 @@
 
 /**
  * 战略世界屏：天下→州→城 层级卡片（取代 MapCanvas 大地图交互）。
+ * 遵循 DESIGN.md §6.2 金石水墨拓片风。
  * 选城仍写入 selectedCityId，供 RightPanel / 命令坞复用。
  */
 
-import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
+import { InkButton } from './../ui/buttons';
 import { useEffect, useMemo } from 'react';
 import { buildCommanderyWorldGraph, nanjun190 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { buildCityCards, buildProvinceCards } from './buildProvinceCards';
 import { ProvinceTopology } from './ProvinceTopology';
+import { SealBadge, SealIcon } from '../ui/SealBadge';
 
 function formatCompact(n: number): string {
   if (n >= 10_000) return `${Math.round(n / 1000) / 10}万`;
@@ -59,36 +61,38 @@ export function StrategicWorldView() {
 
   return (
     <div
-      className="w-full h-full overflow-y-auto bg-stone-950 relative"
+      className="w-full h-full overflow-y-auto bg-stone-950 relative select-none"
       data-testid="strategic-world-view"
       style={{ fontFamily: 'HanDynastySerif, serif' }}
     >
+      {/* 水墨暗晕背景 */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        className="pointer-events-none absolute inset-0 opacity-[0.08]"
         style={{
           backgroundImage:
-            'radial-gradient(ellipse at 20% 10%, #a16207 0%, transparent 50%), radial-gradient(ellipse at 80% 90%, #7f1d1d 0%, transparent 45%)',
+            'radial-gradient(ellipse at 25% 15%, #b45309 0%, transparent 55%), radial-gradient(ellipse at 75% 85%, #991b1b 0%, transparent 50%)',
         }}
       />
 
       <div className="relative z-10 p-4 md:p-6 max-w-5xl mx-auto space-y-4">
-        <header className="flex flex-wrap items-end justify-between gap-3 border-b border-amber-900/50 pb-3">
+        {/* 顶部标题栏 */}
+        <header className="flex flex-wrap items-end justify-between gap-3 border-b border-amber-900/50 pb-3 bg-gradient-to-b from-stone-900/60 to-transparent p-3 rounded-t">
           <div>
-            <p className="text-xs tracking-[0.35em] text-amber-700/90">天下大势</p>
-            <h1 className="text-2xl md:text-3xl text-amber-400 font-semibold tracking-widest font-seal">
-              {isRealm ? '天下形势' : `${provinceName}`}
+            <p className="text-xs tracking-[0.35em] text-amber-600 font-song">汉家山河 · 天下大势</p>
+            <h1 className="text-2xl md:text-3xl text-amber-300 font-semibold tracking-widest font-seal mt-1">
+              {isRealm ? '天下十三州' : `${provinceName}诸郡`}
             </h1>
-            <p className="text-xs text-stone-500 mt-1">
+            <p className="text-xs text-stone-500 mt-1 font-song">
               {isRealm
-                ? '层级卡片览天下 · 点州入城'
-                : '点城查看详情与下令；道路邻接见各卡底部'}
+                ? '金石拓片总览寰宇 · 点击州府巡视郡国治所'
+                : '点击城池查阅防务政经并下令 · 道路邻接与关隘见卡片底部'}
             </p>
           </div>
           {!isRealm && (
             <InkButton
               type="button"
               data-testid="strategic-back-realm"
-              className="px-3 py-1.5 text-xs border border-amber-800/70 text-amber-300/90 rounded hover:bg-amber-950/60"
+              className="px-3 py-1.5 text-xs border border-amber-800/80 text-amber-300/90 rounded bg-stone-900/90 hover:bg-amber-950/70 hover:border-amber-600 font-song"
               onClick={() => openStrategicRealm()}
             >
               ← 返回天下
@@ -96,9 +100,10 @@ export function StrategicWorldView() {
           )}
         </header>
 
+        {/* 天下十三州网格 */}
         {isRealm ? (
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
             data-testid="strategic-province-grid"
           >
             {provinceCards.map((p) => (
@@ -106,58 +111,85 @@ export function StrategicWorldView() {
                 key={p.province}
                 type="button"
                 data-testid={`strategic-province-${p.province}`}
-                className="text-left rounded border border-stone-700/80 bg-stone-900/80 hover:border-amber-700/80 hover:bg-stone-900 p-3 transition-colors shadow-sm"
+                className="text-left rounded border border-stone-800/90 bg-stone-900/75 hover:border-amber-700 hover:bg-stone-900/95 p-3.5 transition-all shadow-md relative overflow-hidden group"
                 onClick={() => openStrategicProvince(p.province)}
               >
+                {/* 州名水印篆字 */}
+                <span
+                  className="absolute right-2 -bottom-2 text-5xl font-seal text-stone-800/20 group-hover:text-amber-500/10 transition-colors pointer-events-none"
+                  aria-hidden
+                >
+                  {p.province.slice(0, 1)}
+                </span>
+
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <h2 className="text-lg text-amber-300 tracking-wider">{p.province}</h2>
+                  <div className="flex items-center gap-2">
+                    <SealBadge char={p.province.slice(0, 1)} color="gold" size={17} />
+                    <h2 className="text-lg text-amber-300 tracking-wider font-seal">{p.province}</h2>
+                  </div>
                   {p.atWar && (
-                    <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-red-950 text-red-300 border border-red-900">
-                      战事
+                    <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-red-950/90 text-red-300 border border-red-800 font-song">
+                      烽烟激战
                     </span>
                   )}
                 </div>
+
+                {/* 主控势力状态 */}
                 {p.dominant ? (
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className="w-2.5 h-2.5 rounded-sm shrink-0"
+                      className="w-2.5 h-2.5 rounded-sm shrink-0 border border-black/40"
                       style={{ backgroundColor: p.dominant.color }}
                       aria-hidden
                     />
-                    <span className="text-xs text-stone-300">
-                      主控 {p.dominant.name}
+                    <span className="text-xs text-stone-300 font-song">
+                      主控 <strong className="text-amber-200">{p.dominant.name}</strong>
                       <span className="text-stone-500">
                         {' '}
-                        · {p.dominant.sharePct}%（{p.dominant.cityCount}/{p.cityCount}）
+                        · {p.dominant.sharePct}%（{p.dominant.cityCount}/{p.cityCount}城）
                       </span>
                     </span>
                   </div>
                 ) : (
-                  <div className="text-xs text-stone-500 mb-2">无主控势力</div>
+                  <div className="text-xs text-stone-500 mb-2 font-song">群雄交错 · 无单一主控</div>
                 )}
+
+                {/* 势力占比水墨进度条 */}
                 {p.shares.length > 0 && (
-                  <div className="mb-2 h-1.5 w-full rounded-sm overflow-hidden flex bg-stone-800" aria-hidden>
+                  <div className="mb-2.5 h-1.5 w-full rounded-sm overflow-hidden flex bg-stone-950 border border-stone-800" aria-hidden>
                     {p.shares.map((s) => (
                       <span
                         key={s.factionId}
                         style={{ width: `${s.sharePct}%`, backgroundColor: s.color }}
-                        className="h-full"
+                        className="h-full opacity-90"
                       />
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400">
-                  <span>城 {p.cityCount}</span>
-                  <span>兵 {formatCompact(p.troops)}</span>
-                  <span>口 {formatCompact(p.population)}</span>
-                  <span>粮 {formatCompact(p.food)}</span>
+
+                {/* 四项战略指标 */}
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-stone-400 font-song border-t border-stone-800/80 pt-2">
+                  <span className="flex items-center gap-1">
+                    <SealIcon kind="city" size={12} /> 城池 {p.cityCount}
+                  </span>
+                  <span className="flex items-center gap-1 text-rose-300/90">
+                    <SealIcon kind="troops" size={12} /> 守卒 {formatCompact(p.troops)}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <SealIcon kind="pop" size={12} /> 户口 {formatCompact(p.population)}
+                  </span>
+                  <span className="flex items-center gap-1 text-amber-200/90">
+                    <SealIcon kind="food" size={12} /> 积粟 {formatCompact(p.food)}
+                  </span>
                 </div>
+
+                {/* 各势力简报 */}
                 {p.shares.length > 1 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-2.5 flex flex-wrap gap-1">
                     {p.shares.slice(0, 4).map((s) => (
                       <span
                         key={s.factionId}
-                        className="text-xs px-1.5 py-0.5 rounded border border-stone-700 text-stone-400"
+                        className="text-[11px] px-1.5 py-0.5 rounded border border-stone-800 bg-stone-950/70 text-stone-400 font-song"
                         style={{ borderLeftColor: s.color, borderLeftWidth: 3 }}
                       >
                         {s.name} {s.sharePct}%
@@ -170,6 +202,7 @@ export function StrategicWorldView() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* 官道拓扑图 */}
             {provinceName && (
               <ProvinceTopology
                 cities={game.cities}
@@ -180,73 +213,80 @@ export function StrategicWorldView() {
                 title={`${provinceName} · 官道拓扑`}
               />
             )}
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-            data-testid="strategic-city-grid"
-          >
-            {cityCards.map((c) => (
-              <InkButton
-                key={c.id}
-                type="button"
-                data-testid={`strategic-city-${c.id}`}
-                className={`text-left rounded border p-3 transition-colors ${
-                  c.selected
-                    ? 'border-amber-500 bg-amber-950/50 ring-1 ring-amber-700/40'
-                    : c.isPlayer
-                      ? 'border-emerald-900/70 bg-stone-900/80 hover:border-emerald-700'
-                      : 'border-stone-700/80 bg-stone-900/80 hover:border-amber-800/60'
-                }`}
-                onClick={() => selectCity(c.id)}
-              >
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h2 className="text-base text-amber-200 tracking-wide">
-                    {c.name}
-                    {c.adminName && c.adminName !== c.name && (
-                      <span className="text-stone-500 text-xs ml-1">（{c.adminName}）</span>
-                    )}
-                  </h2>
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {c.isCapital && (
-                      <span className="text-xs px-1 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-900">
-                        治所
-                      </span>
-                    )}
-                    {c.isPass && (
-                      <span className="text-xs px-1 py-0.5 rounded bg-stone-800 text-stone-300 border border-stone-600">
-                        关隘
-                      </span>
-                    )}
-                    {c.isPlayer && (
-                      <span className="text-xs px-1 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-900">
-                        己方
-                      </span>
-                    )}
+
+            {/* 州内城池卡片网格 */}
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              data-testid="strategic-city-grid"
+            >
+              {cityCards.map((c) => (
+                <InkButton
+                  key={c.id}
+                  type="button"
+                  data-testid={`strategic-city-${c.id}`}
+                  className={`text-left rounded border p-3.5 transition-all shadow-sm ${
+                    c.selected
+                      ? 'border-amber-500 bg-amber-950/60 ring-1 ring-amber-500/80 shadow-[0_4px_16px_rgba(217,119,6,0.25)]'
+                      : c.isPlayer
+                        ? 'border-emerald-800/80 bg-stone-900/80 hover:border-emerald-600'
+                        : 'border-stone-800 bg-stone-900/70 hover:border-amber-800/70'
+                  }`}
+                  onClick={() => selectCity(c.id)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <h2 className="text-base text-amber-200 tracking-wide font-song font-semibold flex items-center gap-1">
+                      {c.name}
+                      {c.adminName && c.adminName !== c.name && (
+                        <span className="text-stone-500 text-xs ml-0.5 font-normal">（{c.adminName}）</span>
+                      )}
+                    </h2>
+                    <div className="flex flex-wrap gap-1 justify-end">
+                      {c.isCapital && (
+                        <span className="text-xs px-1.5 py-0.2 rounded bg-amber-950 text-amber-300 border border-amber-800 font-song">
+                          治所
+                        </span>
+                      )}
+                      {c.isPass && (
+                        <span className="text-xs px-1.5 py-0.2 rounded bg-stone-800 text-stone-300 border border-stone-600 font-song">
+                          要隘
+                        </span>
+                      )}
+                      {c.isPlayer && (
+                        <span className="text-xs px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-song">
+                          己方
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 mb-2 text-xs text-stone-300">
-                  {c.rulerColor && (
-                    <span
-                      className="w-2 h-2 rounded-sm shrink-0"
-                      style={{ backgroundColor: c.rulerColor }}
-                      aria-hidden
-                    />
+
+                  {/* 统治势力 */}
+                  <div className="flex items-center gap-2 mb-2 text-xs text-stone-300 font-song">
+                    {c.rulerColor && (
+                      <span
+                        className="w-2.5 h-2.5 rounded-sm shrink-0 border border-black/50"
+                        style={{ backgroundColor: c.rulerColor }}
+                        aria-hidden
+                      />
+                    )}
+                    <span>{c.rulerName ? `执掌：${c.rulerName}` : '无主之城'}</span>
+                  </div>
+
+                  {/* 资源简览 */}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400 font-song border-t border-stone-800/60 pt-2">
+                    <span className="text-rose-300/80">兵 {formatCompact(c.troops)}</span>
+                    <span>口 {formatCompact(c.population)}</span>
+                    <span className="text-amber-200/80">粮 {formatCompact(c.food)}</span>
+                    <span className="text-amber-100">金 {formatCompact(c.gold)}</span>
+                  </div>
+
+                  {c.neighborNames.length > 0 && (
+                    <p className="mt-2 text-[11px] text-stone-500 leading-snug font-song truncate">
+                      官道邻接：{c.neighborNames.join(' · ')}
+                    </p>
                   )}
-                  <span>{c.rulerName ?? '无主'}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400">
-                  <span>兵 {formatCompact(c.troops)}</span>
-                  <span>口 {formatCompact(c.population)}</span>
-                  <span>粮 {formatCompact(c.food)}</span>
-                  <span>金 {formatCompact(c.gold)}</span>
-                </div>
-                {c.neighborNames.length > 0 && (
-                  <p className="mt-2 text-xs text-stone-500 leading-snug">
-                    官道邻：{c.neighborNames.join('、')}
-                  </p>
-                )}
-              </InkButton>
-            ))}
-          </div>
+                </InkButton>
+              ))}
+            </div>
           </div>
         )}
       </div>

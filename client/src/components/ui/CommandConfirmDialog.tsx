@@ -136,7 +136,7 @@ export function CommandConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-stone-950/80 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-stone-950/85 px-4 backdrop-blur-md select-none"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !loading && !danger) onCancel();
@@ -148,29 +148,32 @@ export function CommandConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="w-full max-w-md overflow-hidden rounded border border-amber-800/70 bg-stone-950 shadow-2xl shadow-black"
+        className="w-full max-w-md overflow-hidden rounded border-2 border-double border-amber-800/80 bg-stone-950/98 shadow-[0_16px_50px_rgba(0,0,0,0.85)] motion-safe:animate-[ink-fade-in_180ms_ease-out]"
         data-testid="command-confirm-dialog"
       >
-        <div className="border-b border-amber-900/50 bg-gradient-to-r from-stone-900 via-amber-950/30 to-stone-900 px-5 py-4">
-          <div className="text-xs tracking-[0.28em] text-amber-600">{category} · 终审</div>
-          <h2 id={titleId} className="mt-1 text-lg font-bold tracking-widest text-amber-100">
+        <div className="border-b border-amber-900/60 bg-gradient-to-r from-stone-900/90 via-amber-950/40 to-stone-900/90 px-5 py-4">
+          <div className="text-xs tracking-[0.3em] text-amber-600 font-song font-medium flex items-center gap-1.5">
+            <span className="w-1.5 h-3 bg-seal-600 rounded-xs" aria-hidden />
+            {category} · 封诏终审
+          </div>
+          <h2 id={titleId} className="mt-1.5 text-xl font-bold tracking-widest text-amber-100 font-seal">
             {command}
           </h2>
-          <p className="mt-1 text-xs leading-relaxed text-stone-400">{summary}</p>
+          <p className="mt-1 text-xs leading-relaxed text-stone-400 font-song">{summary}</p>
         </div>
 
-        <dl className="divide-y divide-stone-800/80 px-5 py-2 text-xs">
+        <dl className="divide-y divide-stone-800/80 px-5 py-2.5 text-xs font-song bg-stone-950/80">
           {items.map((item) => (
             <div key={`${item.label}-${item.value}`} className="grid grid-cols-[5.5rem_1fr] gap-3 py-2.5">
-              <dt className="text-stone-500">{item.label}</dt>
-              <dd className={item.tone === 'warning' ? 'text-rose-300' : 'text-stone-200'}>{item.value}</dd>
+              <dt className="text-stone-500 font-medium">{item.label}</dt>
+              <dd className={item.tone === 'warning' ? 'text-rose-300 font-semibold' : 'text-stone-200'}>{item.value}</dd>
             </div>
           ))}
         </dl>
 
         {displayedError && (
           <p
-            className="mx-5 mb-2 rounded border border-red-900 bg-red-950/40 px-3 py-2 text-xs text-red-300"
+            className="mx-5 mb-2 rounded border border-red-900 bg-red-950/50 px-3 py-2 text-xs text-red-300 font-song"
             role="alert"
             data-testid="command-confirm-error"
           >
@@ -178,29 +181,29 @@ export function CommandConfirmDialog({
           </p>
         )}
 
-        <div className="flex gap-2 border-t border-stone-800 px-5 py-4">
+        <div className="flex gap-2.5 border-t border-stone-800/90 bg-stone-900/60 px-5 py-4">
           <InkButton
             ref={cancelRef}
             type="button"
             data-testid="command-confirm-cancel"
-            className="flex-1 rounded border border-stone-700 px-3 py-2 text-stone-300 hover:border-stone-500 disabled:opacity-40"
+            className="flex-1 rounded border border-stone-700 bg-stone-900/80 px-3 py-2 text-xs text-stone-300 hover:border-amber-700 hover:text-stone-100 disabled:opacity-40 font-song tracking-wider"
             disabled={loading}
             onClick={onCancel}
           >
-            返回修改
+            返回核准
           </InkButton>
           <InkButton
             type="button"
             data-testid="command-confirm-submit"
-            className={`flex-1 rounded border px-3 py-2 font-semibold tracking-wider disabled:opacity-50 ${
+            className={`flex-1 rounded border px-3 py-2 text-xs font-semibold tracking-widest font-song shadow-md disabled:opacity-50 transition-all ${
               danger
                 ? 'border-red-600 bg-red-950 text-red-100 hover:bg-red-900'
-                : 'border-amber-600 bg-amber-900 text-amber-100 hover:bg-amber-800'
+                : 'border-amber-600 bg-seal-600 text-gold-200 hover:bg-seal-400'
             }`}
             disabled={loading || liveValidationError != null}
             onClick={submit}
           >
-            {loading ? '传令中…' : '确认下令'}
+            {loading ? '传诏中…' : '确认下令'}
           </InkButton>
         </div>
       </section>

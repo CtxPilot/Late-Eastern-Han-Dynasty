@@ -1,20 +1,23 @@
 # UI 设计文档
 
+> 👑 **最高真源宪章**：自 Session 448 起，全项目 UI、UX、交互体系、视觉效果与前端组件库的**唯一最高真源宪章为根目录 [`DESIGN.md`](../DESIGN.md)**。
+> 本文档与 `docs/design/ArtDirection.md` 均为衍生细化规范与历史归档。凡涉及颜色 token、字体闭环、三级按键、石板面板装帧、交互阻尼动效与官道分级印信规范，一律以根目录 `DESIGN.md` 为准。
+
 ## 一、设计语言
 
-> ⚠️ **本节以下表格已部分废止（Session 184 起）**：视觉真源迁移至
-> [`docs/design/ArtDirection.md`](design/ArtDirection.md)。
+> ⚠️ **本节以下表格已部分废止（Session 184 / Session 448 确立）**：视觉与交互真源统一归收于根目录
+> [`DESIGN.md`](../DESIGN.md) 与 [`docs/design/ArtDirection.md`](design/ArtDirection.md)。
 > 具体废止项：
 > - **字体行**「正文：思源黑体 / 数字：等宽字体」——思源黑体未打包（违反 §11.7 资产闭环），
 >   正文与数字统一 `HanDynastySerif`；等宽数字废止。
 > - **配色行** `#8B6914 / #1A1206 / #E8D5B7 / #C62828`——与 `00-dev-constitution.md` §11.7
->   朱砂 `#A61919` 系及代码事实（Tailwind stone+amber）三方分裂；统一以 ArtDirection.md
+>   朱砂 `#A61919` 系及代码事实（Tailwind stone+amber）三方分裂；统一以 DESIGN.md
 >   的 `ink/paper/seal/gold` token 为准。
 > - **图标行**「自制简化像素风格图标」——与「金石水墨」基调冲突；改为「印信格」篆刻单字系统
->   （ArtDirection.md §4）。
+>   （DESIGN.md §四 / ArtDirection.md §4）。
 >
-> 保留项：主题（暗色仿卷轴）、间距（8px 网格）、圆角（≤4px）继续有效。
-> 下表保留作历史记录，**新增/改动一律以 ArtDirection.md 为准**。
+> 保留项：主题（金石水墨暗色仿卷轴）、间距（8px 网格）、圆角（≤4px）继续有效。
+> 下表保留作历史记录，**新增/改动一律以 DESIGN.md 为准**。
 
 | 要素 | 方案 |
 |------|------|

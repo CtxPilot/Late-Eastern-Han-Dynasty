@@ -58,7 +58,7 @@ export function CommandDock({
     <nav
       aria-label="大地图命令坞"
       data-testid="command-dock"
-      className="shrink-0 border-t border-amber-950/80 bg-stone-950/95 px-3 py-2 shadow-[0_-6px_20px_rgba(0,0,0,0.35)]"
+      className="shrink-0 border-t border-amber-900/60 bg-stone-950/98 px-3 py-2 shadow-[0_-8px_24px_rgba(0,0,0,0.5)] select-none"
     >
       <div className="mx-auto grid max-w-[90rem] grid-cols-5 items-stretch gap-1.5 lg:grid-cols-10">
         {COMMAND_DOCK_ITEMS.map((item) => {
@@ -73,17 +73,17 @@ export function CommandDock({
               ref={(element) => registerButton?.(item.domain, element)}
               title={item.reason}
               onClick={() => onDomainToggle(item.domain)}
-              className={`min-w-0 border px-2 py-1.5 text-xs transition-colors ${
+              className={`min-w-0 border px-2 py-1.5 text-xs transition-all ${
                 active
-                  ? 'border-amber-500 bg-amber-950/70 text-amber-100'
-                  : 'border-stone-800 bg-stone-900/75 text-stone-300 hover:border-stone-600'
+                  ? 'border-amber-500 bg-amber-950/85 text-amber-100 ring-1 ring-amber-500/70 shadow-[0_0_12px_rgba(217,119,6,0.35)]'
+                  : 'border-stone-800/90 bg-stone-900/80 text-stone-300 hover:border-amber-800/80 hover:bg-stone-900'
               }`}
             >
-              <span className="flex items-center justify-center gap-1">
+              <span className="flex items-center justify-center gap-1 font-song">
                 <SealBadge char={DOCK_SEAL[item.domain].char} color={DOCK_SEAL[item.domain].color} size={15} />
-                <span>{item.label}</span>
+                <span className="tracking-wide font-medium">{item.label}</span>
               </span>
-              <span className="mt-0.5 block text-xs text-stone-500">
+              <span className="mt-0.5 block text-xs text-stone-500 font-song">
                 {item.availability === 'available'
                   ? '可用'
                   : item.availability === 'planned'
@@ -97,7 +97,7 @@ export function CommandDock({
           type="button"
           disabled
           title="本阶段继续使用顶部“结束回合”"
-          className="min-w-0 border border-red-950 bg-red-950/25 px-3 py-1.5 text-xs text-stone-600"
+          className="min-w-0 border border-red-950/60 bg-red-950/20 px-3 py-1.5 text-xs text-stone-600 font-song"
         >
           进行
           <span className="mt-0.5 block text-xs">仍在顶部</span>
