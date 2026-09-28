@@ -1,3 +1,29 @@
+## 2026-09-28 — Session 449 · 修复开始界面滚动截断、卡片挤压与主界面进入阻断缺陷
+
+- Phase：**UI/UX 缺陷修复 / 界面健壮性加固**；针对用户报告「现在无法进入游戏主界面，且开始界面UI显示不全」。
+- **根因定位**：
+  1. **开始界面不可滚动与主界面进入按钮截断**：`client/src/index.css` 全局声明了 `#root { height: 100%; overflow: hidden; }`。`ScenarioSelect.tsx` 根标签使用了 `min-h-full overflow-auto`，未设定约束高（`height`），导致其在 0-B 剧本扩容（9 剧本）后自然高度（>1500px）超过视口，无法触发自身 `overflow-y` 滚动，而是直接被父级 `#root` 的 `overflow: hidden` 强制截断。由于第 9 剧本、势力选择网格以及底部的「进入剧本」主令按钮均位于被截断的不可见区域，真人用户在浏览器内无法向下滚动，也无法看到和点击「进入剧本」按钮，从而无法进入游戏主界面。
+  2. **开始界面与卡片 UI 横向挤压畸变**：`buttons.tsx` 的 `STRUCTURAL_BASE` 默认包含 `inline-flex items-center justify-center gap-1`。在将剧本卡、势力卡、州卡、城卡使用 `InkButton` 实现时，由于未指定垂直排列 `flex-col`，卡片内部的各直属子元素（标题、年份徽章、治所说明、历史考据等）全部默认按照 `flex-direction: row` 被横向挤压在同一行内，造成文本折行错位、宽度畸变、内容显示不全。
+  3. **自动化测试兼容性漂移**：Session 448 将 `ScenarioSelect.tsx` 剧本标题由 `h2` 改为 `h3`，破坏了 `verify-0b-scenario-soak` 及多个 UI 回归脚本的 DOM 查找；`StrategicWorldView.tsx` 标题更改亦导致 `verify-s379-strategic-cards` 查找「天下形势」失败。
+- **修复方案与实装**：
+  1. **InkButton 结构自适应加固**（`client/src/components/ui/buttons.tsx`）：增加对 `block`/`flex`/`grid` 及 `text-left` 类的自适应判定；当传入 `text-left` 且无显式 display 类时，自适应回退至 `block text-left`，避免非简单按钮的卡片型容器被强制居中并横向排列。
+  2. **剧本选择界面滚动与卡片布局修复**（`client/src/components/scenario/ScenarioSelect.tsx`）：
+     - 根元素由 `min-h-full overflow-auto` 调整为 `h-full w-full overflow-y-auto`，与 `#root` 高度闭环，激活水墨微型滚动条，保证完整视口与纵向滚动能力；
+     - 剧本卡与势力卡显式配置 `flex flex-col items-start w-full`，子容器自适应纵向流式排版；
+     - 剧本标题恢复标准 `h2` 语义化标签；修复 `bg-stone-850` 为标准 Tailwind 类名 `bg-stone-800`。
+  3. **战略世界屏卡片排版加固**（`client/src/components/strategic/StrategicWorldView.tsx`）：
+     - 州卡片网格与城池卡片网格显式配置 `flex flex-col items-stretch w-full`，消除州/城卡内指标信息的横向挤压；
+     - 顶栏副标恢复「汉家山河 · 天下形势」，保持自动化冒烟规范兼容。
+- **验证（全绿）**：
+  - `play-strategic-cards.sh --verify`（Chrome CDP 9242 真实浏览器自动化冒烟）：**21/21 全部通过**（包含进入剧本、天下形势、州卡交互、城卡切换、左栏联动、回合推进等全链路）。
+  - 无头浏览器截图实测核验：核对 `/tmp/screen_online_init.png`、`/tmp/screen_online_scrolled.png`、`/tmp/screen_online_after_click.png`，确认开始界面 9 剧本、势力网格、进入剧本按钮及滚动条全部正常呈现，点击顺利进入游戏主界面。
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部通过。
+  - `pnpm test`：71/71 前端单元测试全部通过，shared 与 server 测试全绿。
+  - `pnpm lint`：全仓通过。
+  - `pnpm verify-compliance`：814 个文件合规扫描全部通过。
+- **边界**：纯 UI/UX 布局与滚动容器修复，未改动任何核心游戏引擎、RNG 序列或网络协议。
+- **文档**：本日志与根目录 `HANDOFF.md` 双写。
+
 ## 2026-09-27 — Session 448 · UI/UX 与交互视觉总则宪章 DESIGN.md 建立与全栈界面重构优化
 
 - Phase：**UI/UX 体系化升级 / 交互与视觉效果重构**；依据用户明确指示「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」。

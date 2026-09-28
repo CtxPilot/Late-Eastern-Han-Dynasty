@@ -78,7 +78,7 @@ export function StrategicWorldView() {
         {/* 顶部标题栏 */}
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-amber-900/50 pb-3 bg-gradient-to-b from-stone-900/60 to-transparent p-3 rounded-t">
           <div>
-            <p className="text-xs tracking-[0.35em] text-amber-600 font-song">汉家山河 · 天下大势</p>
+            <p className="text-xs tracking-[0.35em] text-amber-600 font-song">汉家山河 · 天下形势</p>
             <h1 className="text-2xl md:text-3xl text-amber-300 font-semibold tracking-widest font-seal mt-1">
               {isRealm ? '天下十三州' : `${provinceName}诸郡`}
             </h1>
@@ -111,7 +111,7 @@ export function StrategicWorldView() {
                 key={p.province}
                 type="button"
                 data-testid={`strategic-province-${p.province}`}
-                className="text-left rounded border border-stone-800/90 bg-stone-900/75 hover:border-amber-700 hover:bg-stone-900/95 p-3.5 transition-all shadow-md relative overflow-hidden group"
+                className="text-left rounded border border-stone-800/90 bg-stone-900/75 hover:border-amber-700 hover:bg-stone-900/95 p-3.5 transition-all shadow-md relative overflow-hidden group flex flex-col items-stretch w-full"
                 onClick={() => openStrategicProvince(p.province)}
               >
                 {/* 州名水印篆字 */}
@@ -224,7 +224,7 @@ export function StrategicWorldView() {
                   key={c.id}
                   type="button"
                   data-testid={`strategic-city-${c.id}`}
-                  className={`text-left rounded border p-3.5 transition-all shadow-sm ${
+                  className={`text-left rounded border p-3.5 transition-all shadow-sm flex flex-col items-stretch w-full ${
                     c.selected
                       ? 'border-amber-500 bg-amber-950/60 ring-1 ring-amber-500/80 shadow-[0_4px_16px_rgba(217,119,6,0.25)]'
                       : c.isPlayer

@@ -35,7 +35,7 @@ export function ScenarioSelect() {
     : baseLayers;
 
   return (
-    <main className="min-h-full bg-stone-950 text-stone-200 px-5 py-8 overflow-auto tex-paper select-none">
+    <main className="h-full w-full bg-stone-950 text-stone-200 px-5 py-8 overflow-y-auto tex-paper select-none">
       <div className="mx-auto max-w-5xl space-y-6">
         {/* 顶部开卷题匾 */}
         <header className="border-b border-amber-900/60 pb-5 bg-gradient-to-b from-stone-900/80 to-transparent p-4 rounded-t border-t border-amber-950/40">
@@ -96,14 +96,14 @@ export function ScenarioSelect() {
                 <InkButton
                   key={item.id}
                   type="button"
-                  className={`p-4 text-left transition-all border ${
+                  className={`p-4 text-left transition-all border flex flex-col items-start w-full ${
                     isSelected
                       ? 'border-amber-500 bg-amber-950/40 ring-1 ring-amber-600/50 shadow-[0_4px_16px_rgba(180,83,9,0.2)]'
                       : 'border-stone-800 bg-stone-900/60 hover:border-amber-800/70 hover:bg-stone-900/90'
                   }`}
                   onClick={() => setScenarioId(item.id)}
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="w-full flex items-center justify-between gap-2 mb-1.5">
                     <span className="text-xs text-amber-600/90 font-medium">
                       {item.startYear}年{item.startMonth}月 · {item.type === 'historical' ? '正史纪年' : '假想推演'}
                     </span>
@@ -113,7 +113,7 @@ export function ScenarioSelect() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg text-amber-200 font-semibold tracking-wide font-song">{item.name}</h3>
+                  <h2 className="text-lg text-amber-200 font-semibold tracking-wide font-song">{item.name}</h2>
                   <p className="mt-2 text-xs leading-5 text-stone-400 font-song line-clamp-3">{item.description}</p>
                 </InkButton>
               );
@@ -149,15 +149,15 @@ export function ScenarioSelect() {
                     <InkButton
                       key={faction.id}
                       type="button"
-                      className={`border p-3 text-left transition-all relative overflow-hidden ${
+                      className={`border p-3 text-left transition-all relative overflow-hidden flex flex-col items-start w-full ${
                         isFactionSelected
-                          ? 'border-amber-500 bg-stone-850 ring-1 ring-amber-500/60 shadow-[0_2px_12px_rgba(0,0,0,0.5)]'
+                          ? 'border-amber-500 bg-stone-800 ring-1 ring-amber-500/60 shadow-[0_2px_12px_rgba(0,0,0,0.5)]'
                           : 'border-stone-800 bg-stone-900/70 hover:border-stone-600 hover:bg-stone-900'
                       }`}
                       style={isFactionSelected ? { borderLeftColor: faction.color, borderLeftWidth: 4 } : { borderLeftColor: faction.color, borderLeftWidth: 3 }}
                       onClick={() => setFactionId(faction.id)}
                     >
-                      <div className="flex items-center justify-between gap-1">
+                      <div className="w-full flex items-center justify-between gap-1">
                         <strong className="text-sm font-song tracking-wide" style={{ color: faction.color }}>
                           {faction.name}
                         </strong>

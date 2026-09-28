@@ -19,15 +19,22 @@ type BaseProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   reason?: string;
 } & { [key: `data-${string}`]: string | number | undefined };
 
-const STRUCTURAL_BASE =
-  'inline-flex items-center justify-center gap-1 rounded transition-all duration-150 active:scale-[0.98] select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100';
+const BASE_INTERACTION =
+  'rounded transition-all duration-150 active:scale-[0.98] select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-400 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100';
+
+const DEFAULT_CENTER_LAYOUT = 'inline-flex items-center justify-center gap-1';
+
+const STRUCTURAL_BASE = `${BASE_INTERACTION} ${DEFAULT_CENTER_LAYOUT}`;
 
 export const InkButton = forwardRef<HTMLButtonElement, BaseProps>(function InkButton(
   { children, className = '', reason, disabled, ...rest },
   ref,
 ) {
+  const hasCustomDisplay = /(^|\s)(block|inline-block|flex|inline-flex|grid)($|\s)/.test(className);
+  const hasTextLeft = /(^|\s)text-left($|\s)/.test(className);
+  const layoutClass = hasCustomDisplay ? '' : hasTextLeft ? 'block text-left' : DEFAULT_CENTER_LAYOUT;
   return (
-    <button {...rest} ref={ref} type="button" disabled={disabled} title={reason} className={`${STRUCTURAL_BASE} ${className}`}>
+    <button {...rest} ref={ref} type="button" disabled={disabled} title={reason} className={`${BASE_INTERACTION} ${layoutClass} ${className}`}>
       {children}
     </button>
   );

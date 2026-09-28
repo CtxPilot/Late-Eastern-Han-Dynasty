@@ -9,14 +9,33 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 448**（UI/UX 与交互视觉总则宪章 **DESIGN.md** 建立与全栈界面重构优化：根目录 `DESIGN.md` 落盘并写入开发宪法；`index.css` 古风水墨滚动条+程序化材质+淡入微动效；`buttons.tsx` 三级触感与朱砂金双框浮凸；`StonePanel.tsx` 金石装帧；`ScenarioSelect.tsx` 展卷起兵门面；`TopBar.tsx` 朝堂纪年与槽位石板档案库；`StrategicWorldView.tsx` 州大篆水印与割据色带；`ProvinceTopology.tsx` 官道分级印信节点；`CommandDock/Drawer`、`EventDialog`、`CommandConfirmDialog`、`TurnFeedback` 全面古朴升华；全套 71/71 前端测试+三端 typecheck+lint+compliance 814 全绿） |
+| 会话 | **Session 449**（修复开始界面滚动截断、卡片挤压与主界面进入阻断缺陷：`ScenarioSelect.tsx` 根容器调整为 `h-full w-full overflow-y-auto` 激活滚动条，修复父级 `#root` 视口截断致无法点击「进入剧本」缺陷；`buttons.tsx` `InkButton` 结构基座自适应加固，避免卡片容器被强制 `inline-flex` 横向挤压；`ScenarioSelect.tsx` 与 `StrategicWorldView.tsx` 剧本/势力/州/城卡片全面升级为垂直流式卡片；标题语义与冒烟测试兼容恢复；Chrome CDP 真实浏览器冒烟 21/21 全绿 + 71/71 前端测试全绿） |
 | 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；UI/UX 宪法与视觉体系全面确立与收拢 |
-| 代码最新 | Session 448 UI/UX 视觉重构全部组件 + 宪法文档（本轮提交）；工作树干净 |
-| 文档最新 | **Session 448 双写**（根目录 `DESIGN.md` 新建、`docs/00-dev-constitution.md` §一/§十一写入、`AGENTS.md` 规则 5/9 更新、`docs/07-ui-design.md` 登记、10-progress 日志 + 本文件） |
-| 本交接用途 | **Session 448 已交付**；全栈 UI、交互与视觉效果完成系统性重构与宪法化；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
+| 代码最新 | Session 449 开始界面滚动修复与全栈卡片排版加固组件；工作树干净 |
+| 文档最新 | **Session 449 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 449 已交付**；开始界面显示不全与主界面无法进入阻断缺陷彻底修复并经 CDP 真实浏览器 21/21 验证通过；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
 | 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
 
-### Session 448 交接要点
+### Session 449 交接要点
+
+- **用户反馈排查**：「现在无法进入游戏主界面，且开始界面UI显示不全」
+- **根因定位**：
+  1. `client/src/index.css` 全局 `#root` 为 `height: 100%; overflow: hidden;`，而 `ScenarioSelect.tsx` 根标签为 `min-h-full overflow-auto`（无固定高度约束），导致超出视口的内容被 `#root` 静默裁切。因第 9 剧本、势力选择网格及底部的「进入剧本」主令按钮均位于被截断的不可见区域，真人用户在浏览器内无法向下滚动，也无法看到和点击「进入剧本」按钮，从而无法进入游戏主界面；
+  2. `buttons.tsx` 中 `STRUCTURAL_BASE` 默认包含 `inline-flex items-center justify-center gap-1`，导致使用 `InkButton` 实现的剧本卡、势力卡、州卡、城卡在未显式写 `flex-col` 时，直属子元素（标题、年份、治所、考据等）全部默认按照 `flex-direction: row` 被横向挤压在单行内，造成严重排版挤压变形；
+  3. `ScenarioSelect.tsx` 剧本标题标签由 `h2` 改为 `h3`，且 `StrategicWorldView.tsx` 移除了「天下形势」，造成无头浏览器自动化冒烟脚本查找元素受阻。
+- **实装修复**：
+  1. `buttons.tsx`：`InkButton` 结构自适应加固，传入 `text-left` 且无显式 display 类时，自适应回退至 `block text-left`，支持任意多行卡片容器；
+  2. `ScenarioSelect.tsx`：根容器改为 `h-full w-full overflow-y-auto`，闭环视口并激活微型水墨滚动条；剧本卡与势力卡显式配置 `flex flex-col items-start w-full`；剧本标题恢复标准 `h2`；修复 `bg-stone-850` 为标准 Tailwind 类名 `bg-stone-800`；
+  3. `StrategicWorldView.tsx`：州卡与城卡网格显式配置 `flex flex-col items-stretch w-full`，消除指标横向挤压；顶栏副标恢复「汉家山河 · 天下形势」，保持自动化冒烟规范兼容。
+- **验证全绿**：
+  - `play-strategic-cards.sh --verify`（Chrome CDP 9242 真实浏览器自动化冒烟）：**21/21 全部通过**（包含进入剧本、天下形势、州卡交互、城卡切换、左栏联动、回合推进等全链路）；
+  - 无头浏览器截图实测核验（`/tmp/screen_online_init.png`、`/tmp/screen_online_scrolled.png`、`/tmp/screen_online_after_click.png`）：9 剧本、势力网格、进入剧本按钮及滚动条全部正常呈现，点击顺利进入游戏主界面；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部通过；
+  - `pnpm test`：全部 71 个前端单元测试全绿通过，shared 与 server 测试全绿；
+  - `pnpm verify-compliance`：814 个文件合规扫描全部通过；
+  - `pnpm lint`：全仓通过。
+- 边界：纯 UI/UX 布局与滚动容器修复，未碰游戏引擎、RNG 或网络协议。
+- 文档：`docs/10-progress.md` 与本文件双写同步。
 
 - **用户需求落实**：「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」
 - **DESIGN.md 宪章建立**：根目录新建 `DESIGN.md`，确立为全项目 UI/UX、交互与视觉系统最高法准真源。
