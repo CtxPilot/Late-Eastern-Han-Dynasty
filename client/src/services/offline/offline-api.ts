@@ -20,6 +20,7 @@ import type {
   MeleeRoundResult,
   MeleeState,
   SaveEnvelopeV1,
+  TechBranch,
 } from '@leh/shared';
 import type { RpcRequest, RpcResponse } from '../../workers/protocol';
 import { listIdbSaveSlots, readIdbSaveSlot, writeIdbSaveSlot } from '../save-idb';
@@ -565,4 +566,18 @@ export function skipBattlefieldDuel(): Promise<GameState> {
 
 export function closeBattlefieldDuel(): Promise<GameState> {
   return call('closeBattlefieldDuel');
+}
+
+// ====== 技艺与制度研发（S03 离线覆盖） ======
+
+export function getTechResearch(factionId?: number): ReturnType<typeof import('../api').getTechResearch> {
+  return call('techResearch', [factionId]);
+}
+
+export function startTechResearch(branch: TechBranch, assignedOfficerId: number): Promise<GameState> {
+  return call('startTechResearch', [branch, assignedOfficerId]);
+}
+
+export function cancelTechResearch(): Promise<GameState> {
+  return call('cancelTechResearch');
 }

@@ -13,6 +13,7 @@
  */
 import type { Season } from './enums/index.js';
 import type { City, CityDemographics } from './types/city.js';
+import { computeSanitationDemographicModifiers } from './sanitation.js';
 
 /** 默认开局比例：男成偏高（劳作/征兵社会） */
 export const DEFAULT_DEMO_RATIO = {
@@ -251,12 +252,22 @@ export function ageDemographicsTick(
     morale?: number;
     foodRatio?: number;
     maxPopulation?: number;
+    sanitation?: number;
   } = {},
 ): AgeTickResult {
   const season = opts.season ?? 0;
   const morale = opts.morale ?? 70;
   const foodRatio = Math.min(2, Math.max(0.2, opts.foodRatio ?? 1));
   const cap = opts.maxPopulation ?? 999_999;
+  const sanitMods =
+    opts.sanitation !== undefined
+      ? computeSanitationDemographicModifiers(opts.sanitation)
+      : {
+          birthMultiplier: 1.0,
+          childDeathMultiplier: 1.0,
+          adultDeathMultiplier: 1.0,
+          elderDeathMultiplier: 1.0,
+        };
 
   let adultMale = d.adultMale;
   let adultFemale = d.adultFemale;
@@ -267,7 +278,7 @@ export function ageDemographicsTick(
   const couples = Math.min(adultMale, adultFemale);
   const seasonBirth =
     season === 0 || season === 1 ? 1.1 : season === 3 ? 0.85 : 1.0; // 春夏旺、冬淡
-  const birthMod = foodRatio * (0.55 + morale / 180) * seasonBirth;
+  const birthMod = foodRatio * (0.55 + morale / 180) * seasonBirth * sanitMods.birthMultiplier;
   let births = Math.floor(couples * AGE_RATES.birthPerCouple * birthMod);
   // 承载力上限：只挡净增
   const headroom = Math.max(0, cap - (adultMale + adultFemale + child + elder));
@@ -276,7 +287,7 @@ export function ageDemographicsTick(
   child += births;
 
   // —— 2. 儿童本底死亡 ——
-  const childDeathMul = foodRatio < 0.9 ? 1.4 : 1;
+  const childDeathMul = (foodRatio < 0.9 ? 1.4 : 1) * sanitMods.childDeathMultiplier;
   const childDie = Math.min(child, Math.floor(child * AGE_RATES.childDeath * childDeathMul));
   child -= childDie;
 
@@ -289,7 +300,7 @@ export function ageDemographicsTick(
   adultFemale += toFemale;
 
   // —— 4. 成人本底死亡（男女分计，女口略高：产育风险史观简化） ——
-  const adultDieMul = foodRatio < 0.9 ? 1.3 : 1;
+  const adultDieMul = (foodRatio < 0.9 ? 1.3 : 1) * sanitMods.adultDeathMultiplier;
   const maleDie = Math.min(
     adultMale,
     Math.floor(adultMale * AGE_RATES.adultDeath * adultDieMul),
@@ -312,7 +323,7 @@ export function ageDemographicsTick(
   elder += maleToElder + femaleToElder;
 
   // —— 6. 老人衰老死亡（自然减员主因） ——
-  const elderDieMul = foodRatio < 0.9 ? 1.5 : season === 3 ? 1.2 : 1;
+  const elderDieMul = (foodRatio < 0.9 ? 1.5 : season === 3 ? 1.2 : 1) * sanitMods.elderDeathMultiplier;
   const elderDie = Math.min(elder, Math.floor(elder * AGE_RATES.elderDeath * elderDieMul));
   elder -= elderDie;
 

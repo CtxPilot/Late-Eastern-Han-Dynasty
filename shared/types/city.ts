@@ -72,6 +72,11 @@ export interface CityDemographics {
   elder: number;
 }
 
+export interface CityPlague {
+  remainingMonths: number;
+  severity: 'mild' | 'severe';
+}
+
 export type DevelopmentProjectKind =
   | 'farm'
   | 'commerce'
@@ -159,4 +164,6 @@ export interface City extends CityStatic {
   familyRelocateQuarter?: number;
   /** 家属失陷后的善待/中立/镇压处置状态。 */
   familyTreatment?: import('../hostage-families.js').FamilyTreatmentState;
+  /** S03 瘟疫状态：旧存档缺失表示无疫病。 */
+  plague?: CityPlague | null;
 }

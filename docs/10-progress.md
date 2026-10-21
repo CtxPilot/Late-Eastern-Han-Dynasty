@@ -1,3 +1,63 @@
+## 2026-10-21 — Session 453 · S03 内政深度：技艺研发系统与城池卫生疫病闭环实装
+
+- Phase：**S03 内政系统深化**；依据立项方案 `docs/51-s03-craft-research-and-sanitation-proposal.md`。
+- **背景与目标**：
+  1. 此前 S03 虽已在 Session 362~402 实装文化、工艺、交通、卫生的持续投入以及文化→登用、工艺→士气、交通→粮耗的效果消费，但《04 规则》§34.6 中规划的「技艺与制度研发体系（Craft R&D 科技树）」与「卫生防御疫病闭环」长期处于后置状态；
+  2. 城池卫生值（`stats.sanitation`）此前仅能进行内政持续投入（+60/次），缺少防御夏秋疫病灾害与调节人口繁衍的实质消费链；
+  3. 本会话目标：在守护月度金样确定性指纹（`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移）与保持向下完全兼容的前提下，全栈实装五大研发路线（农政/工商/军备/城防/教化各 Lv1~5）权威纯函数研发引擎与全套特权消费，以及城池卫生门槛防灾、人口生育与死亡率调节、夏秋时疫爆发、征兵受阻、施米/卫生结项拔除疫病闭环。
+- **实装内容**：
+  1. **数据模型与类型系统扩充**（`@leh/shared`）：
+     - `shared/types/faction.ts`：新增 `TechLevels`（五大路线等级）、`TechBranch`、`ActiveResearch`（单例研发快照，包含路线、目标等级、指派学者、总月数、剩余月数、总费用与已付金额），并在 `Faction` 实体中扩充 `techLevels?: TechLevels` 与 `activeResearch?: ActiveResearch | null`；
+     - `shared/types/city.ts`：新增 `CityPlague`（`{ remainingMonths: number, severity: 'mild' | 'severe' }`），并在 `City` 实体扩充 `plague?: CityPlague | null`；
+     - `shared/game-state-entity-schema.ts`：严格纳管 `techLevels`、`activeResearch` 与 `plague`，完全向下兼容旧档，旧档缺失缺省安全降级；
+     - `shared/tech-research.ts`：定义 5 大路线（`farming`, `commerce`, `military`, `fortification`, `cultivation`）的 5 阶配置、文化门槛（`[100, 250, 500, 700, 900]`）、金耗（`[200, 400, 800, 1600, 3200]`）与工期（`[2, 4, 6, 8, 12]` 月），以及 `safeTechLevels`、`getTechInitialGoldCost`、`TechBranchOption`、`AvailableTechResearchResult` 等类型与纯函数；
+     - `shared/sanitation.ts`：导出 `computeSanitationThresholdProgress`、`computeSanitationDemographicModifiers`（高卫生使幼老死伤率大幅降低、出生率提升；低卫生惩罚性增加死伤率）、`PLAGUE_MORTALITY_MILD`（0.8%）、`PLAGUE_MORTALITY_SEVERE`（1.5%）等常数；
+     - `shared/demographics.ts`：将卫生修饰因子 `sanitMods` 接入 `ageDemographicsTick`，使城池卫生动态影响人口自然繁衍与死伤；
+     - `shared/negotiation.ts`：在登用率计算中接入教化科技加成 `techCultivationBonus`；
+     - `@leh/shared` 55 个测试套件 496 项测试全量通过。
+  2. **服务端权威内政与研发引擎**（`server/src/engine/`）：
+     - `techResearch.ts`：纯函数确定性推演，实现 `getAvailableTechResearch`（查询 5 路线可用性、最高文化与国库门槛、指派学者列表）、`startTechResearch`（扣除 1/3 首付金并建立 activeResearch）、`cancelTechResearch`（中止项目不退首付款）与 `tickTechResearch`（每月扣除 10 金国库维护费，由指派学者推演并受智政加速，期满等级晋升并发布 `tech_researched` 权威战报）；
+     - `plague.ts`：实现 `tickCityPlagueAndSanitation`（夏秋季、人口>10000 且卫生<100 时爆发疫病，<60 为重度持续 3 月、<100 为轻度持续 2 月；超额病殁、驻军士气-3、驻留武将每月损失 15 点体力；卫生≥150 天然免疫）与 `relievePlague`（施米赈济使疫期缩短 1 月并为武将恢复 10 点体力）；
+     - `civil.ts`：
+       - `conscript`：城池有时疫时严禁征兵；军备科技 Lv1+ 征兵士气 +5，Lv5 士气上限突破至 105；
+       - `trainTroops`：军备科技 Lv2+ 训练士气效率提升 25%；
+       - `developCity`：工商科技 Lv4+ 使开发项目启动金享受 15% 优惠；
+       - `stepDevelopmentMonth`：城防科技 Lv1+ 使筑城效率提升 20%；卫生项目结项完成时彻底拔除城中疫病；
+       - `relief`：结合施药救灾，缩短疫期 1 月并恢复驻留武将体力；
+     - `turn.ts`：月结管线接入 `tickTechResearch` 与 `tickCityPlagueAndSanitation`；`settleCityMonthDetailed` 消费农政科技（Lv1 产粮+10%、Lv2 民屯+20%、Lv3 冬季免减产、Lv4 全城与部队粮耗-10%、Lv5 秋收丰产+25%）、工商科技（Lv1 商产+10%、Lv2 商产+20%、Lv3 商税+10%、Lv5 月度商税额外+20%）与教化科技（Lv5 领内城池民心每月自动 +1）；
+     - `factionPolitics.ts`：教化科技 Lv4 豁免季度势力声望自然衰减；
+     - `mandateEffects.ts`：教化科技 Lv3 豁免武将忠诚自然下野判定；
+     - `personnel.ts`：教化科技 Lv2 提升人才登用成功率 +5 百分点；
+     - 零 RNG 漂移：`turn-golden.test.ts` 3/3 金样指纹 100% 匹配。
+  3. **服务层、双端 Worker 镜像与状态流转**：
+     - `server/src/services/game.ts`：新增 `getCurrentTechResearch`、`doStartTechResearch` 与 `doCancelTechResearch`；
+     - `server/src/routes/game.ts`：新增 `GET /api/game/tech-research`、`POST /api/game/tech-research/start` 与 `POST /api/game/tech-research/cancel`；
+     - `client/src/workers/game.worker.ts`：离线 Worker 实现 `techResearch`、`startTechResearch`、`cancelTechResearch`，`scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过；
+     - `client/src/services/api.ts` 与 `offline-api.ts`：双端同源接口封装；
+     - `client/src/stores/gameStore.ts`：接入 `startTechResearch` 与 `cancelTechResearch`。
+  4. **客户端朝廷与内政金石水墨 UI 装帧**（`client/src/components/`）：
+     - `TechResearchSection.tsx`：挂载于朝廷抽屉（`CourtCommandDrawer.tsx`），展示 5 大路线等级卡片、已激活特权列表、当前研发进度条与推演月数、主持学者属性、首付金与文化要求比对，以及指派学者下拉与立项/中止操作；
+     - `CivilOverviewDrawer.tsx`：更新产业分面卫生等级（Lv0~5/5）与防灾人口门槛提示，去除历史「后置」占位文案；全分面挂载城池疫病警报条（【疫病流行 · 重度/轻度】剩余N月），标明赈济与卫生结项救治指引；
+     - `MilitaryReadinessPanel.tsx`：疫区禁止征兵拦截与状态警示。
+  5. **专项验收测试与回归**（`server/src/scripts/verify-s51-craft-research-and-sanitation.ts`）：
+     - 注册 `pnpm verify-s51-craft-research-and-sanitation` 门禁，覆盖五大路线前置门槛与启动、单例研发约束、中止不退款、月度推演与晋升、农/商/军/城/教全套特权消费、卫生人口调节乘数、夏秋时疫爆发、严禁征兵、体力损耗、施米赈济、卫生结项拔除与 GameStateSchema 解析共 43 项断言全绿通过。
+- **验证（全绿）**：
+  - `pnpm verify-s51-craft-research-and-sanitation`：**43/43 项全绿通过**；
+  - `pnpm --filter @leh/server test src/engine/turn-golden.test.ts`：`turn-golden.test.ts` 3/3 金样 100% 逐月指纹匹配零漂移；
+  - `node scripts/verify-s416-worker-parity.mjs`：离线 Worker 双向对齐 5/5 通过；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
+  - `pnpm test`：shared（55 套件 496 测试）、server（47 套件 439 测试）、client（20 套件 71 测试）超 1000 项测试全绿通过；
+  - `pnpm lint`：全仓通过；
+  - `pnpm validate-data`：全量 12 个数据 JSON 文件校验 100% 通过；
+  - `pnpm verify-compliance`：834 个文件合规扫描全绿通过。
+- **文档与宪法**：
+  - 制定方案立项 `docs/51-s03-craft-research-and-sanitation-proposal.md`；
+  - 更新 `docs/04-game-systems.md` §2.10 与 §34.7（记录 S03 技艺研发与卫生疫病闭环）；
+  - 更新 `docs/08-data-dictionary.md` 城市卫生/疫病与势力技艺字段；
+  - 更新 `docs/12-system-map.md` S03 状态（技艺研发与卫生疫病闭环全面实装）；
+  - 更新 `docs/35-phased-implementation-roadmap.md` 分步进度；
+  - 本日志与根目录 `HANDOFF.md` 双写同步。
+
 ## 2026-10-21 — Session 452 · HC-P2 称帝主线与天下一统终局胜负条件实装
 
 - Phase：**HC-P2 霸府称帝主线与天下一统终局闭环**；依据方案立项 `docs/50-hc-p2-emperor-and-endgame-proposal.md`。

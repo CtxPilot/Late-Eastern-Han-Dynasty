@@ -165,6 +165,11 @@ import { marryFemale, recruitOfficer, searchTalent } from '../../../server/src/e
 import { grantBattleIntel } from '../../../server/src/engine/intel.js';
 import { formAlliance, transferCourtNetwork, tributeGold } from '../../../server/src/engine/diplomacy.js';
 import {
+  getAvailableTechResearch,
+  startTechResearch,
+  cancelTechResearch,
+} from '../../../server/src/engine/techResearch.js';
+import {
   declareWarByFalseDecree,
   establishHegemony,
   getKingRequirements,
@@ -805,6 +810,25 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   proclaimEmperor(eraName?: string): GameState {
     return withLock(() => {
       currentGame = proclaimEmperor(getGame(), getGame().playerFactionId, eraName);
+      return getClientGame();
+    });
+  },
+
+  techResearch(factionId?: number) {
+    const g = getGame();
+    return getAvailableTechResearch(g, factionId ?? g.playerFactionId);
+  },
+
+  startTechResearch(branch: import('@leh/shared').TechBranch, assignedOfficerId: number): GameState {
+    return withLock(() => {
+      currentGame = startTechResearch(getGame(), getGame().playerFactionId, branch, assignedOfficerId);
+      return getClientGame();
+    });
+  },
+
+  cancelTechResearch(): GameState {
+    return withLock(() => {
+      currentGame = cancelTechResearch(getGame(), getGame().playerFactionId);
       return getClientGame();
     });
   },

@@ -81,11 +81,12 @@ export function resolveRecruitChance(
   recruiter: Officer,
   target: Officer,
   cultureValue = 0,
+  techCultivationBonus = 0,
 ): number {
   return calculateRecruitChance(
     recruiter,
     target,
-    eloquenceRecruitModifier(recruiter) + cultureRecruitModifier(cultureValue),
+    eloquenceRecruitModifier(recruiter) + cultureRecruitModifier(cultureValue) + techCultivationBonus,
   );
 }
 

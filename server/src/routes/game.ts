@@ -768,6 +768,36 @@ gameRouter.post('/hegemony/false-decree-war', (req, res) => {
   }
 });
 
+gameRouter.get('/tech-research', (req, res) => {
+  try {
+    const factionId = req.query?.factionId != null ? Number(req.query.factionId) : undefined;
+    res.json(gameService.getCurrentTechResearch(factionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get tech research failed' });
+  }
+});
+
+gameRouter.post('/tech-research/start', (req, res) => {
+  try {
+    const branch = req.body?.branch as import('@leh/shared').TechBranch;
+    const assignedOfficerId = Number(req.body?.assignedOfficerId);
+    if (!branch || !Number.isInteger(assignedOfficerId)) {
+      throw new Error('必须指定研发路线与指派学者');
+    }
+    res.json(gameService.doStartTechResearch(branch, assignedOfficerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'start tech research failed' });
+  }
+});
+
+gameRouter.post('/tech-research/cancel', (_req, res) => {
+  try {
+    res.json(gameService.doCancelTechResearch());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'cancel tech research failed' });
+  }
+});
+
 gameRouter.post('/battle/start', (req, res) => {
   try {
     const cityId = Number(req.body.cityId);

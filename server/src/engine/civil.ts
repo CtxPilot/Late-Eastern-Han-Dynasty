@@ -29,7 +29,6 @@ import {
   FAMILY_RELOCATE_GOLD,
   quarterKey,
   DEVELOPMENT_PROJECT_CONFIG,
-  developmentInitialGoldCost,
   craftConscriptMoraleBonus,
   type City,
   type DevelopmentProject,
@@ -40,6 +39,7 @@ import {
 import { grantMeritTo } from './meritGrant.js';
 import { equipRecruitBonusFor } from './items.js';
 import { FAME_RELIEF, grantFame, ARMS_CONSCRIPT_PER_HUNDRED, ARMS_TRAIN_COST } from './factionPolitics.js';
+import { relievePlague } from './plague.js';
 
 export type DevelopKind = DevelopmentProjectKind;
 
@@ -96,14 +96,20 @@ export function developCity(
     throw new Error('指派武将不在本城或不属己方');
   }
   if (officer.status !== 'active') throw new Error('指派武将当前不可执行内政');
-  const initialCost = developmentInitialGoldCost(kind);
+
+  const playerFaction = state.factions[state.playerFactionId];
+  const commerceTech = playerFaction?.techLevels?.commerce ?? 0;
+  const costDiscount = commerceTech >= 4 ? 0.85 : 1.0;
+  const totalGoldCost = Math.floor(conf.totalGoldCost * costDiscount);
+  const initialCost = Math.ceil(totalGoldCost / 3);
+
   if (city.gold < initialCost) throw new Error('金钱不足');
   const project: DevelopmentProject = {
     kind,
     assignedOfficerId,
     totalMonths: conf.totalMonths,
     remainingMonths: conf.totalMonths,
-    totalGoldCost: conf.totalGoldCost,
+    totalGoldCost,
     goldPaid: initialCost,
     pausedMonths: 0,
     progressLostMonths: 0,
@@ -118,7 +124,7 @@ export function developCity(
   return pushLog(
     grantMeritTo(state, assignedOfficerId, MERIT_DEVELOP_START),
     `development_start_${kind}`,
-    `${city.name} 启动${conf.label}持续开发（${conf.totalMonths}个月，首付${initialCost}金）`,
+    `${city.name} 启动${conf.label}持续开发（${conf.totalMonths}个月，首付${initialCost}金${costDiscount < 1 ? '，工商减免-15%' : ''}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
 }
@@ -225,6 +231,22 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
   ) {
     gain = Math.floor(gain * POLICY_HIGH_WALLS_WALL_MUL);
   }
+  // S03 城防路线 Lv1+：城防修筑效率 +20%
+  if (project.kind === 'wall' && city.ruler != null) {
+    const fortTech = state.factions[city.ruler]?.techLevels?.fortification ?? 0;
+    if (fortTech >= 1) {
+      gain = Math.floor(gain * 1.2);
+    }
+  }
+
+  // S03 卫生项目完成时彻底清除瘟疫
+  let updatedPlague = city.plague;
+  let plagueClearNote = '';
+  if (project.kind === 'sanitation' && city.plague) {
+    updatedPlague = undefined;
+    plagueClearNote = '，除秽清源，疫病彻底拔除！';
+  }
+
   // S27 开发满意度联动：农业完成→世家+3、商业完成→商贾+3（固定值不耗 RNG，docs/08 §十七）
   const factionKind = project.kind === 'farm' ? 'aristocracy' : project.kind === 'commerce' ? 'merchants' : null;
   const cityFactions = factionKind
@@ -243,9 +265,10 @@ export function tickDevelopmentProject(state: GameState, city: City): { city: Ci
         [conf.stat]: Math.min(999, (city.stats[conf.stat] ?? 0) + gain),
       },
       activeDevelopment: undefined,
+      plague: updatedPlague,
       ...(cityFactions ? { cityFactions } : {}),
     },
-    note: `${city.name}${conf.label}持续开发完成，${conf.label}+${gain}`,
+    note: `${city.name}${conf.label}持续开发完成，${conf.label}+${gain}${plagueClearNote}`,
   };
 }
 
@@ -259,6 +282,9 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const foodCost = 120;
   if (city.gold < goldCost) throw new Error('金钱不足');
   if (city.food < foodCost) throw new Error('粮食不足');
+  if (city.plague != null) {
+    throw new Error('城中疫病肆虐，不可强行征募丁卒（需先赈济或待疫气平息）');
+  }
 
   const d = ensureDemographics(city);
   let maxMen = maxConscriptable(d);
@@ -294,10 +320,16 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const armsCost = Math.floor(total / 100) * ARMS_CONSCRIPT_PER_HUNDRED;
   // S03 Session 401：工艺门槛 → 征兵部队士气（0-A 征兵质量代理；零额外 RNG）
   const craftMorale = craftConscriptMoraleBonus(city.stats.craft ?? 0);
+  const faction = state.factions[state.playerFactionId];
+  // S03 军备路线 Lv1+：征兵部队士气额外 +5；Lv5 部队士气上限 105
+  const militaryTech = faction?.techLevels?.military ?? 0;
+  const militaryMoraleBonus = militaryTech >= 1 ? 5 : 0;
+  const moraleCap = militaryTech >= 5 ? 105 : 100;
+  const totalMoraleBonus = (craftMorale > 0 ? craftMorale : 0) + militaryMoraleBonus;
+
   const prevTroopsMorale = city.troopsMorale ?? 70;
   const nextTroopsMorale =
-    craftMorale > 0 ? Math.min(100, prevTroopsMorale + craftMorale) : prevTroopsMorale;
-  const faction = state.factions[state.playerFactionId];
+    totalMoraleBonus > 0 ? Math.min(moraleCap, prevTroopsMorale + totalMoraleBonus) : prevTroopsMorale;
   const base: City = {
     ...city,
     gold: city.gold - goldCost,
@@ -321,12 +353,20 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
 
   const craftNote =
     craftMorale > 0
-      ? `，工艺精装士气+${craftMorale}（${prevTroopsMorale}→${nextTroopsMorale}）`
+      ? `，工艺精装士气+${craftMorale}`
+      : '';
+  const militaryNote =
+    militaryMoraleBonus > 0
+      ? `，军备精锐士气+${militaryMoraleBonus}`
+      : '';
+  const moraleNote =
+    totalMoraleBonus > 0
+      ? `${craftNote}${militaryNote}（${prevTroopsMorale}→${nextTroopsMorale}）`
       : '';
   let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_CONSCRIPT),
     'conscript',
-    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮${armsCost > 0 ? `，兵装−${armsCost}` : ''}${craftNote}）`,
+    `${city.name} 征兵 +${total}（扣男成${total}，可征余${maxMen - total}；${goldCost}金/${foodCost}粮${armsCost > 0 ? `，兵装−${armsCost}` : ''}${moraleNote}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
   if (faction && armsCost > 0) {
@@ -361,8 +401,9 @@ export function relief(state: GameState, cityId: number, rng: () => number): Gam
       : entry,
   );
 
+  const plagueRes = relievePlague(city, state.officers);
   const nextCity: City = {
-    ...city,
+    ...plagueRes.city,
     food: city.food - foodCost,
     stats: { ...city.stats, morale: nextMorale },
     cityFactions: entries,
@@ -371,8 +412,11 @@ export function relief(state: GameState, cityId: number, rng: () => number): Gam
   return pushLog(
     grantFame(grantMeritTo(state, nextCity.officers[0], MERIT_RELIEF), state.playerFactionId, FAME_RELIEF),
     'relief',
-    `${city.name} 施米安民 民心+${gain}（${prev}→${nextMorale}，耗粮${foodCost}；声望+${FAME_RELIEF}）`,
-    { cities: { ...state.cities, [cityId]: nextCity } },
+    `${city.name} 施米安民 民心+${gain}（${prev}→${nextMorale}，耗粮${foodCost}；声望+${FAME_RELIEF}）${plagueRes.note}`,
+    {
+      cities: { ...state.cities, [cityId]: nextCity },
+      officers: plagueRes.officers,
+    },
   );
 }
 
@@ -385,9 +429,15 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   if (city.food < foodCost) throw new Error('粮食不足');
   if (city.troops < 100) throw new Error('兵力不足，无法训练');
 
+  const faction = state.factions[state.playerFactionId];
+  // S03 军备路线 Lv2+：训练部队效率 +25%
+  const militaryTech = faction?.techLevels?.military ?? 0;
+  const militaryTrainMul = militaryTech >= 2 ? 1.25 : 1.0;
+
   const gain = Math.floor(
     (5 + Math.floor(rng() * 6)) *
-      (1 + civilEfficiencyOf(state, city) + trainSkillBonus(state.officers[city.officers[0]])),
+      (1 + civilEfficiencyOf(state, city) + trainSkillBonus(state.officers[city.officers[0]])) *
+      militaryTrainMul,
   );
   // 军屯期间训练收益减半（docs/05 §5.8.1；0-A 训练无经验，以士气增益代理）
   const halved = (city.militaryFarming ?? false) ? Math.floor(gain * 0.5) : gain;
@@ -399,8 +449,6 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
     food: city.food - foodCost,
     troopsMorale: next,
   };
-
-  const faction = state.factions[state.playerFactionId];
   let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_TRAIN),
     'train',

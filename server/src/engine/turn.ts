@@ -34,6 +34,7 @@ import {
   type City,
   type CityDemographics,
   type GameState,
+  type TechLevels,
 } from '@leh/shared';
 import { runAllAiTurns } from './ai.js';
 import { runAiMilitary } from './aiMilitary.js';
@@ -55,6 +56,8 @@ import { tickSameCityRelations, loadStaticRelations } from './relations.js';
 import { tickPopularWillDesertion } from './mandateEffects.js';
 import { runAnnualTournament } from './tournament.js';
 import { tickFamilyTreatment } from './hostageFamilies.js';
+import { tickTechResearch } from './techResearch.js';
+import { tickCityPlagueAndSanitation } from './plague.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -137,7 +140,7 @@ function applyFamineDeaths(d: CityDemographics, deaths: number): CityDemographic
 export function settleCityMonthDetailed(
   city: City,
   season: Season,
-  opts?: { foodMulExtra?: number; zeroFoodProd?: boolean },
+  opts?: { foodMulExtra?: number; zeroFoodProd?: boolean; techLevels?: TechLevels },
 ): {
   city: City;
   famineNote?: string;
@@ -155,6 +158,7 @@ export function settleCityMonthDetailed(
     morale: city.stats.morale ?? 70,
     foodRatio,
     maxPopulation: city.maxPopulation,
+    sanitation: city.stats.sanitation,
   });
   d = age.next;
 
@@ -167,26 +171,56 @@ export function settleCityMonthDetailed(
     season === Season.WINTER ? 0.7 : season === Season.AUTUMN ? 1.25 : season === Season.SPRING ? 1.1 : 1;
   const goldMul = season === Season.WINTER ? 1.1 : season === Season.SUMMER ? 1.1 : 1;
 
-  const farmFood = Math.floor(city.stats.farm * 3.2 * laborFactor * foodMul);
-  const civilianFood = civilianFarmingFoodProduced(
+  // S03 农政科技（farming）
+  const farmTech = opts?.techLevels?.farming ?? 0;
+  const farmTechMul = farmTech >= 3 ? 1.3 : farmTech >= 2 ? 1.2 : farmTech >= 1 ? 1.1 : 1.0;
+  const effectiveFoodMul = farmTech >= 3 && season === Season.WINTER ? 1.0 : foodMul;
+
+  const farmFood = Math.floor(city.stats.farm * 3.2 * laborFactor * effectiveFoodMul * farmTechMul);
+  const civilianFoodBase = civilianFarmingFoodProduced(
     farmingHouseholds,
     season,
     city.province,
   );
+  // Lv2+ 农政：民屯额外产粮 +20%
+  const civilianFood = farmTech >= 2 ? Math.floor(civilianFoodBase * 1.2) : civilianFoodBase;
   const militaryFood = militaryFarmingMonthlyFood(city, season);
   let foodProduced = farmFood + civilianFood + militaryFood;
+  // Lv5 农政：秋季大熟（Season.AUTUMN）额外增产 +25%
+  if (farmTech >= 5 && season === Season.AUTUMN) {
+    foodProduced = Math.floor(foodProduced * 1.25);
+  }
+
   const extraMul = opts?.foodMulExtra ?? 1;
   if (opts?.zeroFoodProd) foodProduced = 0;
   else if (extraMul !== 1) foodProduced = Math.floor(foodProduced * extraMul);
   const adultShare = (d.adultMale + d.adultFemale) / Math.max(sumSafe(d), 1);
+
   // S27 商贾满意度修正：≥70 商业 +15%、<30 −15%（docs/08 §十七）
   const merchantMod = 1 + merchantCommerceMultiplier(city.cityFactions ?? []);
-  const goldProduced = Math.floor((city.stats.commerce / 9) * (0.7 + adultShare) * goldMul * merchantMod);
+  // S03 工商科技（commerce）
+  const commerceTech = opts?.techLevels?.commerce ?? 0;
+  const commerceTechMul = commerceTech >= 3 ? 1.3 : commerceTech >= 2 ? 1.2 : commerceTech >= 1 ? 1.1 : 1.0;
+  const taxExtraMul = commerceTech >= 5 ? 1.3 : commerceTech >= 3 ? 1.1 : 1.0;
 
-  const need = cityFoodNeed({ ...city, demographics: d, troops: city.troops }, season);
+  const goldProduced = Math.floor(
+    (city.stats.commerce / 9) * (0.7 + adultShare) * goldMul * merchantMod * commerceTechMul * taxExtraMul,
+  );
+
+  let need = cityFoodNeed({ ...city, demographics: d, troops: city.troops }, season);
+  // Lv4+ 农政：领内全城与部队月度粮耗 -10%
+  if (farmTech >= 4) {
+    need = Math.floor(need * 0.9);
+  }
+
   let food = city.food + foodProduced - need;
   let famineNote: string | undefined;
   let morale = city.stats.morale ?? 70;
+  // S03 教化科技 Lv5：领内城池民心每月自动 +1
+  const cultivationTech = opts?.techLevels?.cultivation ?? 0;
+  if (cultivationTech >= 5) {
+    morale = Math.min(100, morale + 1);
+  }
   let elderDeaths = age.deaths.elder;
 
   if (food < 0) {
@@ -258,9 +292,11 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
       city.ruler != null && factionHasActivePolicy(state, city.ruler, PolicyType.HIGH_WALLS)
         ? POLICY_HIGH_WALLS_FOOD_MUL
         : 1;
+    const techLevels = city.ruler != null ? state.factions[city.ruler]?.techLevels : undefined;
     let result = settleCityMonthDetailed(projectResult.city, season, {
       foodMulExtra,
       zeroFoodProd: isScorchedCity(state, city.id),
+      techLevels,
     });
     // 军屯每季首月扣驻军士气（docs/05 §5.8.1；组织度−2 随 0-B Army 层延后）
     if (isQuarterStart && (result.city.militaryFarming ?? false)) {
@@ -349,6 +385,10 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   }
   // 事件 S14：自动触发无选项事件
   nextState = tickEvents(nextState);
+  // S03 技艺与制度研发月度推进
+  nextState = tickTechResearch(nextState);
+  // S03 城池卫生与疫病月度推进
+  nextState = tickCityPlagueAndSanitation(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）

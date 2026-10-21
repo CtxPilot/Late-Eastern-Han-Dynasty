@@ -74,6 +74,8 @@
     "culture.ts",
     "craft.ts",
     "transport.ts",
+    "sanitation.ts",
+    "tech-research.ts",
     "item-sets.ts"
   ]
 }

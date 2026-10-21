@@ -18,6 +18,7 @@ export function validateReadinessOrder(
   const city = game.cities[cityId];
   if (!city || city.ruler !== game.playerFactionId) return '所选城市已不存在或归属已经变化。';
   if (order === 'conscript') {
+    if (city.plague != null) return `城中正爆发疫病（剩余${city.plague.remainingMonths}月），禁止征兵以免军中大疫。`;
     if (city.gold < 80) return `城市金不足（需80，当前${city.gold}）。`;
     if (city.food < 120) return `城市粮不足（需120，当前${city.food}）。`;
     const available = maxConscriptable(ensureDemographics(city));
@@ -87,10 +88,22 @@ export function MilitaryReadinessPanel({ overview }: { overview: MilitaryOvervie
                   工艺精装：征兵部队士气 +{craftMoraleBonus}
                 </p>
               ) : null}
+              {city.plague != null ? (
+                <p className="mt-1 text-rose-400 font-bold" data-testid="military-readiness-plague-alert">
+                  【疫病流行·{city.plague.severity === 'severe' ? '重度' : '轻度'}】（剩余 {city.plague.remainingMonths} 月）疫区禁止征兵
+                </p>
+              ) : null}
             </article>
           ) : null}
           <div className="mb-3 grid grid-cols-2 gap-2">
-            <InkButton type="button" data-testid="military-readiness-conscript" onClick={() => setDraft('conscript')} className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100">
+            <InkButton
+              type="button"
+              data-testid="military-readiness-conscript"
+              disabled={loading || city?.plague != null}
+              title={city?.plague != null ? '城中爆发疫病，禁止征兵' : undefined}
+              onClick={() => setDraft('conscript')}
+              className="border border-red-900 bg-red-950/20 px-3 py-2 text-red-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               征兵
               <span className="mt-0.5 block text-xs text-stone-500">80金 + 120粮</span>
             </InkButton>

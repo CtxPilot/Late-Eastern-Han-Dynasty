@@ -9,45 +9,47 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 452**（HC-P2 称帝主线与天下一统终局胜负条件实装：立项 `docs/50-hc-p2-emperor-and-endgame-proposal.md`；称帝门槛 `getEmperorRequirements` 查询与校验：王阶段、争夺城池 $\ge \max(5, \lceil contestableCityCount \times 50\% \rceil)$、阶段维持 $\ge 12$ 个月、皇权 $\ge 90$；受禅代汉 vs 自主改元双路径即位；开国年号 `eraName` 确立与国号帝号自动组合；扣减 90 皇权、阶段年龄归零、天命跃升 $+20$；终局裁判纯函数 `checkEndgameStatus`：全图敌对诸侯灭亡或全占争夺城池判定「天下一统胜利」、城池全失判定「身死国灭失败」；提取前 5 位开国功臣榜与 10 条开国史诗纪事年谱；端点五镜像与 Worker 离线对齐 5/5；朝廷抽屉称帝提请与开国年号选择；金石水墨终局长卷 `EndgameModal` 支持沙盒自由探索与重开新局；专项验收 `verify-s50-emperor-and-endgame` 40/40 全绿，金样确定性指纹 3/3 严格匹配零漂移） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；HC-P0～P2 霸府称帝主线与游戏大终局全面闭环 |
-| 代码最新 | Session 452 称帝即位与天下一统终局胜负全栈实现、UI 装帧与专项验收脚本；工作树干净 |
-| 文档最新 | **Session 452 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 452 已交付**；称帝主线（HC-P2）与天下一统胜负终局已全栈交付并完成 40/40 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
+| 会话 | **Session 453**（S03 内政深度：技艺研发系统与城池卫生疫病闭环全栈实装：立项 `docs/51-s03-craft-research-and-sanitation-proposal.md`；五大研发路线「农政/工商/军备/城防/教化」各 Lv1~5 权威纯函数引擎实装；最高城池文化 `[100, 250, 500, 700, 900]` 门槛、首付金 `[200, 400, 800, 1600, 3200]`、工期 `[2, 4, 6, 8, 12]` 月与每月 10 金国库维护费闭环；指派主持学者以智政推演加速；全套科技特权消费全面接通：农产提升/民屯增益/冬灾免减产/粮耗减少/秋收大熟，商产/商税/开发启动金优惠，征兵士气+5/训练效率+25%/士气上限105，筑城效率+20%，登用率+5%/忠诚自然衰减豁免/声望季度衰减豁免/领内城池民心月度+1；城池卫生防灾与人口调节闭环：卫生分级调节幼老成人死亡率与出生率，夏秋低卫生疫病爆发、疫区严禁征兵、驻军士气与武将体力损耗；施米赈济缩短疫期并恢复体力，内政卫生结项彻底拔除疫病；朝廷抽屉技艺研发分面、内政与军事抽屉疫病警报与门禁；端点五镜像与 Worker 离线对齐 5/5；专项门禁 `verify-s51-craft-research-and-sanitation` 43/43 全绿通过，金样指纹 3/3 严格匹配零漂移） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S03 技艺研发与卫生疫病闭环全面交付 |
+| 代码最新 | Session 453 技艺研发与城池卫生疫病闭环全栈实现、UI 装帧与专项验收脚本；工作树干净 |
+| 文档最新 | **Session 453 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 453 已交付**；S03 技艺研发与卫生疫病闭环已全栈交付并完成 43/43 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
 | 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**新玩法大系统规划与深化**（对照 `12-system-map.md` 选择一个大系统）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
 
-### Session 452 交接要点
+### Session 453 交接要点
 
-- **方案与立项**：依据 `docs/50-hc-p2-emperor-and-endgame-proposal.md`，全量落地 HC-P2 称帝主线与终局胜负闭环。
+- **方案与立项**：依据 `docs/51-s03-craft-research-and-sanitation-proposal.md`，全量落地 S03 技艺研发五大路线与城池卫生疫病闭环。
 - **核心实装**：
   1. **数据模型与 Schema 扩充**（`@leh/shared`）：
-     - `Faction` 新增 `eraName?: string`（称帝开国年号）；
-     - `GameState` 新增 `endgameResult?: EndgameResult | null`，纳管 `EndgameMeritOfficer`（开国重臣功勋榜）与 `EndgameResult`（胜负终局快照，含类型、国号、年号、君主、在位月数、城池数、功臣榜与史诗年谱）；
-     - `shared/game-state-entity-schema.ts`、`shared/game-state-schema.ts` 与 `shared/game-state-full-schema.ts` 严格纳管，53 个测试套件 485 项测试全量通过。
-  2. **朝政与终局权威引擎**（`server/src/engine/`）：
-     - `hegemony.ts`：`getEmperorRequirements` 门槛查询与校验；
-     - 双路径即位机制：受禅代汉（控制汉帝城池或持有玉玺）vs 自主改元（全图存活诸侯好感 $-20$ 威慑）；
-     - 称帝权威状态转移：`proclaimEmperor` 将 `politicalStage` 置为 `'emperor'`，头衔置为 `'{kingdomName}帝'`，扣减 90 皇权，重置阶段年龄，天命基础值跃升 20 点（王阶段30 → 帝阶段50）；
-     - `endgame.ts`：`checkEndgameStatus` 纯函数确定性终局裁判，判定天下一统（`unification_victory`）与身死国灭（`defeat`），结算前 5 位开国功臣与抽取 10 条史诗纪事年谱；月结、战役占城与野战交战占城统一接入，完全零 RNG 扰动。
+     - `Faction` 新增 `techLevels?: TechLevels` 与 `activeResearch?: ActiveResearch | null`；
+     - `City` 新增 `plague?: CityPlague | null`（包含 `remainingMonths: number`, `severity: 'mild' | 'severe'`）；
+     - `shared/game-state-entity-schema.ts` 严格纳管，55 个测试套件 496 项测试全量通过。
+  2. **服务端研发与卫生疫病权威引擎**（`server/src/engine/`）：
+     - `techResearch.ts`：纯函数确定性推演，实现 `getAvailableTechResearch`、`startTechResearch`、`cancelTechResearch` 与 `tickTechResearch`；
+     - `plague.ts`：纯函数确定性推演，实现 `tickCityPlagueAndSanitation` 与 `relievePlague`；
+     - `civil.ts`：`conscript` 疫区严禁征兵与军备士气加成/上限 105；`trainTroops` 训练效率提升 25%；`developCity` 工商 Lv4 启动金减免 15%；`stepDevelopmentMonth` 城防 Lv1 效率提升 20% 与卫生结项彻底拔除疫病；`relief` 施米施药缩短疫期 1 月并恢复武将体力；
+     - `turn.ts`：月结管线挂接研发推演与时疫判定；消费农政（产粮/民屯/冬灾/粮耗/秋收）、工商（商产/商税/月度加成）与教化（民心月度+1）；
+     - `factionPolitics.ts`、`mandateEffects.ts`、`personnel.ts`：教化特权消费；
+     - 零 RNG 漂移：`turn-golden.test.ts` 3/3 金样指纹 100% 严格匹配。
   3. **服务层、Worker 镜像与状态流转**：
-     - `server/src/services/game.ts` 与 HTTP 路由 `GET /hegemony/emperor-requirements`、`POST /hegemony/proclaim-emperor`；
-     - `client/src/workers/game.worker.ts` 离线 Worker 消息对齐，`scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过；
-     - `client/src/services/api.ts` 与 `offline-api.ts` 双端同源接口封装；`client/src/stores/gameStore.ts` 状态流转。
-  4. **客户端朝堂与终局金石水墨装帧**（`client/src/components/`）：
-     - `CourtCommandDrawer.tsx`：王阶段展示称帝达成进度卡、开国年号选择与送交重大终审弹窗；
-     - `EndgameModal.tsx`：金石水墨墨韵长卷展示国号帝号、开国年号、开国重臣功勋榜与史诗纪事年谱；支持“天下已定 · 继续巡抚四海”自由沙盒继续推演，以及重整旗鼓开新局；
-     - `App.tsx`：顶层挂载终局长卷。
-  5. **专项验收测试与回归**（`server/src/scripts/verify-s50-emperor-and-endgame.ts`）：
-     - 门禁脚本覆盖门槛查询、双路径即位、状态转移、皇权扣减、天命跃升、天下一统胜利、功臣榜与年谱生成、身死国灭战败、终局幂等性与零 RNG 漂移 7 大维度共 40 项断言全绿通过。
+     - `server/src/services/game.ts` 与 HTTP 路由 `GET /api/game/tech-research`、`POST /api/game/tech-research/start`、`POST /api/game/tech-research/cancel`；
+     - `client/src/workers/game.worker.ts` 离线 Worker 实现，`scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过；
+     - `client/src/services/api.ts` 与 `offline-api.ts` 双端同源封装；`client/src/stores/gameStore.ts` 状态流转。
+  4. **客户端朝堂与内政金石水墨装帧**（`client/src/components/`）：
+     - `TechResearchSection.tsx`：挂载于朝廷抽屉（`CourtCommandDrawer.tsx`），展示五大路线卡片、已激活特权、研发进度条、主持学者属性、首付金与文化要求比对，指派学者立项/中止操作；
+     - `CivilOverviewDrawer.tsx`：卫生等级与防灾门槛提示，全分面城池疫病警报条与救治指引；
+     - `MilitaryReadinessPanel.tsx`：疫区禁止征兵拦截与状态警示。
+  5. **专项验收测试与回归**（`server/src/scripts/verify-s51-craft-research-and-sanitation.ts`）：
+     - 注册 `pnpm verify-s51-craft-research-and-sanitation` 门禁，43 项断言全绿通过。
 - **全仓验证全绿**：
-  - `pnpm verify-s50-emperor-and-endgame`：**40/40 项全绿通过**；
-  - `pnpm verify-turn-golden`：`turn-golden.test.ts` 3/3 金样 100% 逐月指纹匹配零漂移；
+  - `pnpm verify-s51-craft-research-and-sanitation`：**43/43 项全绿通过**；
+  - `pnpm --filter @leh/server test src/engine/turn-golden.test.ts`：`turn-golden.test.ts` 3/3 金样 100% 逐月指纹匹配零漂移；
   - `node scripts/verify-s416-worker-parity.mjs`：离线 Worker 双向对齐 5/5 通过；
-  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
-  - `pnpm test`：shared（53 套件 485 测试）、client（20 套件 71/71 测试）、server（全部测试）全绿通过；
+  - `pnpm typecheck`：全项目 3 模块全部 0 错误；
+  - `pnpm test`：shared、server、client 超 1000 项测试全绿通过；
   - `pnpm lint`：全仓通过；
   - `pnpm validate-data`：全量 12 个数据 JSON 文件校验 100% 通过；
-  - `pnpm verify-compliance`：825 个文件合规扫描全绿通过。
+  - `pnpm verify-compliance`：834 个文件合规扫描全绿通过。
 - **文档与宪法**：
   - 更新 `docs/04-game-systems.md` §40（记录 HC-P2 称帝与终局胜负规则）；
   - 更新 `docs/12-system-map.md` S08 与 S12 状态（HC-P0~P2 霸府称帝主线全面闭环）；

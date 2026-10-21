@@ -416,6 +416,9 @@ export function tickFactionPolitics(
   if (isQuarterStart) {
     for (const [fid, faction] of Object.entries(factions)) {
       if (!faction.isAlive) continue;
+      // S03 教化科技 Lv4：声望季度衰减豁免
+      const cultivationTech = faction.techLevels?.cultivation ?? 0;
+      if (cultivationTech >= 4) continue;
       factions[Number(fid)] = {
         ...faction,
         fame: Math.max(0, (faction.fame ?? 0) - FAME_QUARTER_DECAY),

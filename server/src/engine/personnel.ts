@@ -227,8 +227,9 @@ export function calcRecruitChance(
   recruiter: Officer,
   target: Officer,
   cultureValue = 0,
+  techCultivationBonus = 0,
 ): number {
-  return resolveRecruitChance(recruiter, target, cultureValue);
+  return resolveRecruitChance(recruiter, target, cultureValue, techCultivationBonus);
 }
 
 /**
@@ -295,7 +296,10 @@ export function recruitOfficer(
   };
 
   const cultureValue = playerCultureForRecruit(state.cities, fid, target.location);
-  const chance = calcRecruitChance(recruiter, target, cultureValue);
+  const playerFaction = state.factions[fid];
+  const cultivationTech = playerFaction?.techLevels?.cultivation ?? 0;
+  const techBonus = cultivationTech >= 2 ? 5 : 0;
+  const chance = calcRecruitChance(recruiter, target, cultureValue, techBonus);
 
   if (rng() * 100 >= chance) {
     return pushLog(

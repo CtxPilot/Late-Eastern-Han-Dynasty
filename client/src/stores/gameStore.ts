@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import { create } from 'zustand';
-import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, FamilyTreatmentMode, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult } from '@leh/shared';
+import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, EventSourceClass, FamilyTreatmentMode, GameState, ItemStatic, MeleeRoundResult, MeleeState, PathResult, TechBranch } from '@leh/shared';
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import { gameApi as api } from '../services/gateway';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
@@ -149,6 +149,8 @@ interface Store {
   establishHegemony: () => Promise<void>;
   proclaimKing: (kingdomName: string) => Promise<void>;
   proclaimEmperor: (eraName?: string) => Promise<void>;
+  startTechResearch: (branch: TechBranch, assignedOfficerId: number) => Promise<void>;
+  cancelTechResearch: () => Promise<void>;
   falseDecreeWar: (targetFactionId: number) => Promise<void>;
   transferCourtNetwork: (targetFactionId: number, amount?: number) => Promise<void>;
   plantFemale: (targetFactionId: number) => Promise<void>;
@@ -1096,6 +1098,26 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '称帝登基成功' });
     } catch (e) {
       set({ error: errMsg(e, '称帝失败'), loading: false });
+    }
+  },
+
+  startTechResearch: async (branch, assignedOfficerId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.startTechResearch(branch, assignedOfficerId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '立项研发成功' });
+    } catch (e) {
+      set({ error: errMsg(e, '立项研发失败'), loading: false });
+    }
+  },
+
+  cancelTechResearch: async () => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.cancelTechResearch();
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '已中止研发' });
+    } catch (e) {
+      set({ error: errMsg(e, '中止研发失败'), loading: false });
     }
   },
 

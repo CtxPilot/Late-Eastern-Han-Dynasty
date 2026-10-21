@@ -228,6 +228,14 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     familyBackupCityId: PositiveIdSchema.optional(),
     familyRelocateQuarter: z.number().int().optional(),
     familyTreatment: FamilyTreatmentStateSchema.optional(),
+    plague: z
+      .object({
+        remainingMonths: z.number().int().nonnegative(),
+        severity: z.enum(['mild', 'severe']),
+      })
+      .strict()
+      .nullable()
+      .optional(),
   })
   .strict()
   .superRefine((city, ctx) => {
@@ -319,6 +327,29 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
     popularWill: z.number().int().min(0).max(100).optional(),
     arms: z.number().int().nonnegative().optional(),
     delegationRegions: z.array(DelegationRegionSchema).optional(),
+    techLevels: z
+      .object({
+        farming: z.number().int().min(0).max(5),
+        commerce: z.number().int().min(0).max(5),
+        military: z.number().int().min(0).max(5),
+        fortification: z.number().int().min(0).max(5),
+        cultivation: z.number().int().min(0).max(5),
+      })
+      .strict()
+      .optional(),
+    activeResearch: z
+      .object({
+        branch: z.enum(['farming', 'commerce', 'military', 'fortification', 'cultivation']),
+        targetLevel: z.number().int().min(1).max(5),
+        assignedOfficerId: PositiveIdSchema,
+        totalMonths: z.number().int().positive(),
+        remainingMonths: z.number().int().nonnegative(),
+        totalGoldCost: z.number().int().positive(),
+        goldPaid: z.number().int().nonnegative(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
   })
   .strict();
 

@@ -115,7 +115,8 @@
     "verify-s44c-captive-loot": "tsx src/scripts/verify-s44c-captive-loot.ts",
     "verify-s48-bond-and-eight-slots": "tsx src/scripts/verify-s48-bond-and-eight-slots.ts",
     "verify-s49-itemsets-and-effects": "tsx src/scripts/verify-s49-itemsets-and-effects.ts",
-    "verify-s50-emperor-and-endgame": "tsx src/scripts/verify-s50-emperor-and-endgame.ts"
+    "verify-s50-emperor-and-endgame": "tsx src/scripts/verify-s50-emperor-and-endgame.ts",
+    "verify-s51-craft-research-and-sanitation": "tsx src/scripts/verify-s51-craft-research-and-sanitation.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",

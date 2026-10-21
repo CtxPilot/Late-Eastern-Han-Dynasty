@@ -64,7 +64,8 @@
 | `stats.culture` | number? | **Session 362 · S03 0-A**：文化持续投入值；旧存档缺省按 0 读取，当前只提供累计与 UI 展示 |
 | `stats.craft` | number? | **Session 397 · S03 0-A**：工艺持续投入值；旧存档缺省按 0；Session 401 起征兵士气消费；器械建造速度仍后置 |
 | `stats.transport` | number? | **Session 398 · S03 0-A**：交通持续投入值；旧存档缺省按 0；Session 402 起行军粮耗减免；行军速度仍后置 |
-| `stats.sanitation` | number? | **Session 399 · S03 0-A**：卫生持续投入值；旧存档缺省按 0；瘟疫抗性/人口增长率消费后置 |
+| `stats.sanitation` | number? | **Session 399 + 453 · S03**：卫生持续投入值；旧存档缺省按 0；Session 453 实装卫生防灾、人口生育死亡调节与疫病闭环 |
+| `plague` | CityPlague? | **Session 453 · S03**：城池时疫状态 `{ remainingMonths, severity }`，旧档缺失表示无疫病 |
 
 ### S03 0-A 文化持续投入数值（Session 362）
 
@@ -1188,6 +1189,8 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 | `fame` | Faction | `number?` | — | ✅ HC-P0-6 | 势力声望 0~1000；新局100，旧存档缺失按0 |
 | `imperialAuthority` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 皇权点数 0~100；开府100、季度+10、伪诏消耗40 |
 | `imperialDecreeCooldown` | Faction | `number?` | Q4 | ✅ HC-P0-6 | 伪诏宣战剩余冷却季数；使用后8，每季度-1 |
+| `techLevels` | Faction | `TechLevels?` | — | ✅ S03 | Session 453：五大研发路线等级（farming/commerce/military/fortification/cultivation，各0~5级） |
+| `activeResearch` | Faction | `ActiveResearch \| null?` | — | ✅ S03 | Session 453：当前正在研发的单例项目快照（branch/targetLevel/assignedOfficerId/totalMonths/remainingMonths/totalGoldCost/goldPaid） |
 | `tags` | Faction | `string[]?` | Q5 | ⏳ 后续 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
 | `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2/K5 | ✅ HC-P0-4 + HC-P1-3 | 单值朝职轨道：霸府三职加王国六职；三职可由 hegemon/king/emperor 任命，六职仅 king/emperor；每职势力唯一，同一人物改任会覆盖旧朝职 |
 

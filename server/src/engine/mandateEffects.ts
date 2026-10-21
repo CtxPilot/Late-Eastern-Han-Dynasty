@@ -27,6 +27,8 @@ export function tickPopularWillDesertion(
 
   for (const faction of Object.values(state.factions)) {
     if (!faction.isAlive) continue;
+    // S03 教化科技 Lv3：武将忠诚自然衰减完全豁免
+    if ((faction.techLevels?.cultivation ?? 0) >= 3) continue;
     const pw = computePopularWill(faction, state);
     const mod = popularWillDesertionModifier(pw);
     const chance = Math.max(0, BASE_DESERT_CHANCE * (1 + mod));

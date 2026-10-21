@@ -2,7 +2,7 @@
 // Copyright (c) 2026 CtxPilot
 
 import axios, { isAxiosError } from 'axios';
-import type { AutoBattleResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, DevelopmentProjectKind, EventSourceClass, FamilyTreatmentMode, GameState, GrandStrategist, ItemStatic, MeleeRoundResult, MeleeState, OfficerRelation, ScenarioFactionSetup, SkillTreeDef, StrategyModifiers, StrategyType } from '@leh/shared';
+import type { AutoBattleResult, AvailableTechResearchResult, BattleState, BattlefieldInstance, BattlefieldMap, CampaignArmy, CampaignNode, DevelopmentProjectKind, EventSourceClass, FamilyTreatmentMode, GameState, GrandStrategist, ItemStatic, MeleeRoundResult, MeleeState, OfficerRelation, ScenarioFactionSetup, SkillTreeDef, StrategyModifiers, StrategyType, TechBranch, TechBranchOption } from '@leh/shared';
 
 const http = axios.create({ baseURL: '/api/game' });
 
@@ -1061,5 +1061,26 @@ export interface FactionOverview {
 
 export async function getFactionOverview(): Promise<FactionOverview> {
   const { data } = await http.get<FactionOverview>('/faction/overview');
+  return data;
+}
+
+// ====== 技艺与制度研发 API（S03） ======
+
+export type { AvailableTechResearchResult, TechBranch, TechBranchOption };
+
+export async function getTechResearch(factionId?: number): Promise<AvailableTechResearchResult> {
+  const { data } = await http.get<AvailableTechResearchResult>('/tech-research', {
+    params: factionId != null ? { factionId } : undefined,
+  });
+  return data;
+}
+
+export async function startTechResearch(branch: TechBranch, assignedOfficerId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tech-research/start', { branch, assignedOfficerId });
+  return data;
+}
+
+export async function cancelTechResearch(): Promise<GameState> {
+  const { data } = await http.post<GameState>('/tech-research/cancel');
   return data;
 }

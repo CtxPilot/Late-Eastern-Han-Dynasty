@@ -11,7 +11,9 @@ import {
   cultureThresholdProgress,
   craftQualityThresholdProgress,
   transportRouteThresholdProgress,
+  computeSanitationThresholdProgress,
   type City,
+  type CityPlague,
   type DevelopmentProject,
   type DevelopmentProjectKind,
   type GameState,
@@ -49,6 +51,10 @@ export type CivilCitySummary = {
   transportRemaining: number;
   sanitation: number;
   sanitationMax: number;
+  sanitationLevel: number;
+  sanitationNextThreshold: number | null;
+  sanitationRemaining: number;
+  plague?: CityPlague | null;
   morale: number;
   adultMale: number;
   adultFemale: number;
@@ -68,6 +74,7 @@ function toSummary(city: City): CivilCitySummary {
   const culturePreview = cultureThresholdProgress(city.stats.culture ?? 0);
   const craftPreview = craftQualityThresholdProgress(city.stats.craft ?? 0);
   const transportPreview = transportRouteThresholdProgress(city.stats.transport ?? 0);
+  const sanitationPreview = computeSanitationThresholdProgress(city.stats.sanitation ?? 0);
   return {
     cityId: city.id,
     name: city.name,
@@ -94,8 +101,12 @@ function toSummary(city: City): CivilCitySummary {
     transportLevel: transportPreview.reachedLevels,
     transportNextThreshold: transportPreview.nextThreshold,
     transportRemaining: transportPreview.remaining,
-    sanitation: Math.min(OPTIONAL_DEVELOP_STAT_MAX, Math.max(0, Math.floor(city.stats.sanitation ?? 0))),
+    sanitation: sanitationPreview.current,
     sanitationMax: OPTIONAL_DEVELOP_STAT_MAX,
+    sanitationLevel: sanitationPreview.reachedLevels,
+    sanitationNextThreshold: sanitationPreview.nextThreshold,
+    sanitationRemaining: sanitationPreview.remaining,
+    plague: city.plague ?? null,
     morale: city.stats.morale,
     adultMale: city.demographics.adultMale,
     adultFemale: city.demographics.adultFemale,
@@ -125,11 +136,11 @@ const ORDER_CONFIG: Record<CivilOrder, {
   farm: projectOrder('farm', '开发农业', '持续9个月；完成后农业+100。'),
   commerce: projectOrder('commerce', '开发商业', '持续6个月；完成后商业+100。'),
   wall: projectOrder('wall', '开发城防', '持续12个月；完成后城防+100。'),
-  culture: projectOrder('culture', '发展文化', '持续6个月；完成后文化+60。已达技艺门槛提升登用成功率；技艺研发仍后置。'),
+  culture: projectOrder('culture', '发展文化', '持续6个月；完成后文化+60。提升登用成功率并解锁高阶势力技艺研发。'),
   craft: projectOrder('craft', '发展工艺', '持续6个月；完成后工艺+60。已达质量门槛提升征兵士气；器械建造速度仍后置。'),
   transport: projectOrder('transport', '发展交通', '持续6个月；完成后交通+60。已达路网门槛减免行军粮耗；行军速度仍后置。'),
-  sanitation: projectOrder('sanitation', '发展卫生', '持续6个月；完成后卫生+60。瘟疫抗性与人口增长率消费后置。'),
-  relief: { label: '施米安民', cost: '150粮', summary: '民心由权威随机流提升8～12，上限100。' },
+  sanitation: projectOrder('sanitation', '发展卫生', '持续6个月；完成后卫生+60。提升门槛降低人口死伤、防范疫病，结项拔除疫病。'),
+  relief: { label: '施米安民', cost: '150粮', summary: '民心提升8～12（上限100）；城中爆发疫病时施米赈济，可缩短疫期1月并为驻留武将恢复体力。' },
   reclaim: { label: '开垦荒地', cost: '50金', summary: '耗金50；智≥60武将执行：farm+20~40，流民满意度+8~15，世家−10~20。' },
   patrol: { label: '巡查缉捕', cost: '30金', summary: '耗金30；武≥60武将执行：商贾满意度+5~10，小势力−8~15，本月免叛乱判定。' },
 };
@@ -252,6 +263,22 @@ export function CivilOverviewDrawer() {
       </p>
 
       <section className="min-h-0 space-y-2 overflow-y-auto" data-testid={`command-civil-panel-${facet}`}>
+        {city.plague ? (
+          <div
+            className="border border-rose-800 bg-rose-950/40 p-3 text-xs text-rose-200"
+            data-testid="civil-plague-alert"
+          >
+            <div className="flex items-center justify-between font-bold">
+              <span className="text-rose-300">
+                【疫病流行 · {city.plague.severity === 'severe' ? '重度' : '轻度'}】
+              </span>
+              <span className="text-rose-400">剩余 {city.plague.remainingMonths} 个月</span>
+            </div>
+            <p className="mt-1 leading-relaxed text-rose-200/90">
+              疫病肆虐：禁止征兵，驻军士气持续受损，驻留武将每月消耗体力。可施米赈济以缩短疫期，或发展卫生结项以彻底拔除。
+            </p>
+          </div>
+        ) : null}
         {facet === 'overview' ? (
           <>
             <Fact label="治所" value={city.administration} />
@@ -377,8 +404,8 @@ export function CivilOverviewDrawer() {
               data-testid="command-civil-culture-threshold"
             >
               {city.cultureNextThreshold == null
-                ? '已达 Lv5 门槛；登用成功率文化加成已满（+10百分点）。技艺研发仍后置。'
-                : `距 Lv${city.cultureLevel + 1} 门槛 ${city.cultureNextThreshold} 还需 ${city.cultureRemaining} 点；已达等级为登用成功率 +${city.cultureLevel * 2} 百分点。技艺研发仍后置。`}
+                ? '已达 Lv5 门槛；登用成功率文化加成已满（+10百分点），并解锁最高阶势力技艺研发。'
+                : `距 Lv${city.cultureLevel + 1} 门槛 ${city.cultureNextThreshold} 还需 ${city.cultureRemaining} 点；已达等级为登用成功率 +${city.cultureLevel * 2} 百分点并支撑技艺研发。`}
             </p>
             <Fact label="工艺质量门槛" value={`Lv${city.craftLevel}/5`} testId="command-civil-craft-level" />
             <p
@@ -397,6 +424,15 @@ export function CivilOverviewDrawer() {
               {city.transportNextThreshold == null
                 ? '已达 Lv5 门槛；行军粮耗减免已满（−10%）。行军速度仍后置。'
                 : `距 Lv${city.transportLevel + 1} 门槛 ${city.transportNextThreshold} 还需 ${city.transportRemaining} 点；已达等级为行军粮耗 −${city.transportLevel * 2}%。行军速度仍后置。`}
+            </p>
+            <Fact label="卫生防灾门槛" value={`Lv${city.sanitationLevel}/5`} testId="command-civil-sanitation-level" />
+            <p
+              className="border border-stone-800 px-3 py-2 text-xs text-stone-500"
+              data-testid="command-civil-sanitation-threshold"
+            >
+              {city.sanitationNextThreshold == null
+                ? '已达 Lv5 门槛；全城天然免疫疫病，幼老与青壮死伤率大幅降低、出生率大幅提高。'
+                : `距 Lv${city.sanitationLevel + 1} 门槛 ${city.sanitationNextThreshold} 还需 ${city.sanitationRemaining} 点；已达等级持续降低死伤率、提升出生率。`}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <CivilButton order="farm" onClick={() => setDraft('farm')} />
@@ -453,7 +489,7 @@ export function CivilOverviewDrawer() {
             <Fact label="老者" value={city.elder} />
             <CivilButton order="relief" onClick={() => setDraft('relief')} />
             <p className="border border-stone-800 px-3 py-2 text-stone-600">
-              施米只影响民心；人口四桶保持不变。
+              施米安民提升民心；城中爆发疫病时施米赈济，可缩短疫期1月并为驻留武将恢复体力。人口四桶保持不变。
             </p>
           </>
         ) : (

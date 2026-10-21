@@ -28,6 +28,7 @@ import type { EmperorRequirementsDto, KingRequirementsDto } from '../../services
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction, CommandShellState } from './commandShellState';
 import { TournamentOverviewSection } from './TournamentOverview';
+import { TechResearchSection } from './TechResearchSection';
 
 const STAGE_LABEL = {
   vassal: '诸侯',
@@ -304,6 +305,8 @@ export function CourtCommandDrawer({
         </section>
 
         <TournamentOverviewSection />
+
+        <TechResearchSection />
 
         <section className="border-t border-stone-800 pt-3" data-testid="command-court-policy">
           <h3 className="text-xs tracking-widest text-amber-300">国策态势</h3>

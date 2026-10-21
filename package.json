@@ -187,6 +187,7 @@
     "verify-s48-bond-and-eight-slots": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s48-bond-and-eight-slots",
     "verify-s49-itemsets-and-effects": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s49-itemsets-and-effects",
     "verify-s50-emperor-and-endgame": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s50-emperor-and-endgame",
+    "verify-s51-craft-research-and-sanitation": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s51-craft-research-and-sanitation",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

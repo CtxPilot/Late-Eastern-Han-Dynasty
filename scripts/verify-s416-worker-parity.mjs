@@ -136,6 +136,10 @@ const ALIAS_MAP = {
   useBattleConsumable: 'battleUseConsumable',
   // 策应军手动入场（docs/45 S5a）：同上
   reinforce: 'battleReinforce',
+  // S03 技艺研发（Session 453）
+  techResearch: 'getCurrentTechResearch',
+  startTechResearch: 'doStartTechResearch',
+  cancelTechResearch: 'doCancelTechResearch',
 };
 
 /** 服务导出的离线可达解析：同名 handler 或别名映射。 */

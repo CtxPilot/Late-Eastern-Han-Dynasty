@@ -70,5 +70,7 @@ export * from './civil-development.js';
 export * from './culture.js';
 export * from './craft.js';
 export * from './transport.js';
+export * from './sanitation.js';
+export * from './tech-research.js';
 export * from './delegation.js';
 export * from './types/delegation.js';

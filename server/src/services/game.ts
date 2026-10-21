@@ -101,6 +101,11 @@ import {
 import { grantBattleIntel } from '../engine/intel.js';
 import { formAlliance, transferCourtNetwork, tributeGold } from '../engine/diplomacy.js';
 import {
+  getAvailableTechResearch,
+  startTechResearch,
+  cancelTechResearch,
+} from '../engine/techResearch.js';
+import {
   declareWarByFalseDecree,
   establishHegemony,
   getKingRequirements,
@@ -670,6 +675,28 @@ export function getCurrentEmperorRequirements() {
 export function doProclaimEmperor(eraName?: string): GameState {
   return withLock(() => {
     currentGame = proclaimEmperor(getGame(), getGame().playerFactionId, eraName);
+    return getClientGame();
+  });
+}
+
+/** S03：查询当前势力技艺研发全部路线与可用性。 */
+export function getCurrentTechResearch(factionId?: number) {
+  const g = getGame();
+  return getAvailableTechResearch(g, factionId ?? g.playerFactionId);
+}
+
+/** S03：启动技艺研发。 */
+export function doStartTechResearch(branch: import('@leh/shared').TechBranch, assignedOfficerId: number): GameState {
+  return withLock(() => {
+    currentGame = startTechResearch(getGame(), getGame().playerFactionId, branch, assignedOfficerId);
+    return getClientGame();
+  });
+}
+
+/** S03：中止技艺研发。 */
+export function doCancelTechResearch(): GameState {
+  return withLock(() => {
+    currentGame = cancelTechResearch(getGame(), getGame().playerFactionId);
     return getClientGame();
   });
 }

@@ -12,6 +12,27 @@ import type { DelegationRegion } from './delegation.js';
  */
 export type PoliticalStage = 'vassal' | 'hegemon' | 'king' | 'emperor';
 
+/** S03 技艺与制度研发等级（docs/04 §34.6，农政/工商/军备/城防/教化各 0~5 级）。 */
+export interface TechLevels {
+  farming: number;
+  commerce: number;
+  military: number;
+  fortification: number;
+  cultivation: number;
+}
+
+export type TechBranch = keyof TechLevels;
+
+export interface ActiveResearch {
+  branch: TechBranch;
+  targetLevel: number;
+  assignedOfficerId: number;
+  totalMonths: number;
+  remainingMonths: number;
+  totalGoldCost: number;
+  goldPaid: number;
+}
+
 export interface Faction {
   id: FactionId;
   name: string;
@@ -78,4 +99,8 @@ export interface Faction {
    * optional 追加，旧存档缺失按无委任处理。
    */
   delegationRegions?: DelegationRegion[];
+  /** S03 技艺与制度研发等级（docs/04 §34.6，各 0~5 级）。旧档缺失按 0 读取。 */
+  techLevels?: TechLevels;
+  /** S03 正在进行的技艺研发项目（单例）。旧档缺失表示无研发。 */
+  activeResearch?: ActiveResearch | null;
 }
