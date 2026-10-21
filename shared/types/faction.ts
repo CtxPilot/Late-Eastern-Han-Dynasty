@@ -53,6 +53,11 @@ export interface Faction {
    * optional 追加，旧存档缺失不改变既有阶段语义。
    */
   kingdomName?: string;
+  /**
+   * 称帝时确立的开国年号（docs/50，HC-P2）。
+   * 如“黄初”、“章武”、“黄龙”等。旧档缺失按无年号处理。
+   */
+  eraName?: string;
   /** 皇权点数（0~100），霸府能力资源；诸侯按 0 处理。 */
   imperialAuthority?: number;
   /** 伪诏宣战剩余冷却季数；每逢季度开始减 1。 */

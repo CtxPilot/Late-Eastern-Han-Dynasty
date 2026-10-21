@@ -966,6 +966,31 @@ export async function getKingRequirements(): Promise<KingRequirementsDto> {
   return data;
 }
 
+export interface EmperorRequirementsDto {
+  factionExists: { current: boolean; threshold: boolean; passed: boolean };
+  factionAlive: { current: boolean; threshold: boolean; passed: boolean };
+  politicalStage: { current: string; threshold: string; passed: boolean };
+  cityCount: { current: number; threshold: number; passed: boolean };
+  politicalStageAgeMonths: { current: number; threshold: number; passed: boolean };
+  imperialAuthority: { current: number; threshold: number; passed: boolean };
+  isAbdication: boolean;
+  contestableCityCount: number;
+  allPassed: boolean;
+  recommendedEraNames: string[];
+}
+
+/** HC-P2 朝廷称帝进度与开国年号候选。 */
+export async function getEmperorRequirements(): Promise<EmperorRequirementsDto> {
+  const { data } = await http.get<EmperorRequirementsDto>('/hegemony/emperor-requirements');
+  return data;
+}
+
+/** HC-P2 称帝状态转移与改元建国。 */
+export async function proclaimEmperor(eraName?: string): Promise<GameState> {
+  const { data } = await http.post<GameState>('/hegemony/proclaim-emperor', { eraName });
+  return data;
+}
+
 export async function falseDecreeWar(targetFactionId: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/hegemony/false-decree-war', { targetFactionId });
   return data;

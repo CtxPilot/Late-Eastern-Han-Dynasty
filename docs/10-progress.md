@@ -1,3 +1,51 @@
+## 2026-10-21 — Session 452 · HC-P2 称帝主线与天下一统终局胜负条件实装
+
+- Phase：**HC-P2 霸府称帝主线与天下一统终局闭环**；依据方案立项 `docs/50-hc-p2-emperor-and-endgame-proposal.md`。
+- **背景与目标**：
+  1. 此前游戏虽然实装了迎奉天子开霸府（HC-P0）与称王立国六职（HC-P1），但政治演进止步于王，缺少终极的「称帝即位」阶段与国号年号确立；
+  2. 游戏全流程缺乏明确的胜负终局，玩家攻灭全图或失守全城后没有终局结算与成就沉淀，缺少通关目标感；
+  3. 本会话目标：在严格遵守零 RNG 漂移（Zero RNG Perturbation）、守护月度金样确定性指纹的前提下，全栈落地 HC-P2 称帝体系（受禅代汉 vs 自主改元双路径、开国年号、皇权扣减、天命跃升）与终局胜负系统（天下一统开国长卷、开国功臣榜、史诗纪事年谱、身死国灭战败结算），完成从诸侯割据到天下归一的完整历史游戏闭环。
+- **实装内容**：
+  1. **数据模型与 Schema 扩充**（`@leh/shared`）：
+     - `shared/types/faction.ts`：`Faction` 实体新增 `eraName?: string`（称帝开国年号）；
+     - `shared/types/game.ts`：新增 `EndgameMeritOfficer`（开国重臣）、`EndgameResult`（终局结算结果单例快照，含类型、国号、年号、君主、在位月数、城池数、功臣榜与史诗年谱）与 `GameState.endgameResult?: EndgameResult | null`；
+     - `shared/game-state-entity-schema.ts`、`shared/game-state-schema.ts` 与 `shared/game-state-full-schema.ts`：严格纳管 `eraName` 与 `endgameResult`，全量时间线切片与无损持久化支持；
+     - `@leh/shared` 53 个套件 485 项测试全量通过。
+  2. **服务端朝政与终局权威引擎**（`server/src/engine/`）：
+     - `server/src/engine/hegemony.ts`：实装 `getEmperorRequirements(state, factionId)` 门槛查询（王阶段、争夺城池 $\ge \max(5, \lceil contestableCityCount \times 50\% \rceil)$、阶段维持 $\ge 12$ 个月、皇权 $\ge 90$、提供开国年号候选）；
+     - 双路径即位机制：受禅代汉（控制汉帝城池或持有传国玉玺，正统代汉）vs 自主改元（无天子且无玉玺自主登基，全图存活诸侯好感 $-20$ 威慑）；
+     - 称帝权威状态转移：`proclaimEmperor` 将 `politicalStage` 置为 `'emperor'`，头衔置为 `'{kingdomName}帝'`，扣减 90 皇权，阶段维持月数重置为 0，天命基础值跃升 20 点（王阶段30 → 帝阶段50）；
+     - `server/src/engine/endgame.ts`：纯函数确定性终局裁判 `checkEndgameStatus(state: GameState)`，判定天下一统（所有敌对诸侯灭亡或玩家控制所有争夺城池）与身死国灭（玩家城池清零或势力败亡），计算前 5 位开国功臣与抽取 10 条史诗纪事年谱；
+     - 触发点挂接：月结管线（`turn.ts`）、战役占城结算（`campaign.ts`）与野战交战占城（`march.ts`）统一接入 `checkEndgameStatus`；零 RNG 扰动，`turn-golden.test.ts` 3/3 严格匹配。
+  3. **服务层、双端 Worker 镜像与状态流转**：
+     - `server/src/services/game.ts`：新增 `getCurrentEmperorRequirements` 与 `doProclaimEmperor`；
+     - `server/src/routes/game.ts`：新增 HTTP 路由 `GET /api/game/hegemony/emperor-requirements` 与 `POST /api/game/hegemony/proclaim-emperor`；
+     - `client/src/workers/game.worker.ts`：对齐离线 Worker 消息处理，`scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过；
+     - `client/src/services/api.ts` 与 `offline-api.ts`：双端同源接口封装；
+     - `client/src/stores/gameStore.ts`：实装 `proclaimEmperor` 状态触发与刷新。
+  4. **客户端朝堂与终局金石水墨装帧**（`client/src/components/`）：
+     - `CourtCommandDrawer.tsx`：王阶段展示称帝条件达成进度卡、开国年号下拉选取框与「称帝 · 送交重大终审」按钮，配合 `CommandConfirmDialog` 仪式感确认；
+     - `EndgameModal.tsx`：采用汉代「金石水墨 · 拓片简册 · 印信官职」最高规格长卷装帧；展示天下归一 / 身死国灭烫金朱印、国号帝号与开国年号、开国重臣功勋榜及十年开国纪事年谱；
+     - 自由沙盒支持：胜利时可点击「天下已定 · 继续巡抚四海」收起弹窗继续在全图漫游推演，亦可点击「功成名就 · 载入史册」重新开局；
+     - `App.tsx`：全局顶层挂载终局长卷，支持玩家主动关闭后继续自由探索。
+  5. **专项验收测试与回归**（`server/src/scripts/verify-s50-emperor-and-endgame.ts`）：
+     - 注册 `pnpm verify-s50-emperor-and-endgame` 门禁，覆盖门槛查询、双路径即位、状态转移、皇权扣减、天命跃升、天下一统胜利、功臣榜与年谱生成、身死国灭战败、终局幂等性与零 RNG 漂移 7 大维度共 40 项断言全绿通过。
+- **验证（全绿）**：
+  - `pnpm verify-s50-emperor-and-endgame`：**40/40 项全绿通过**；
+  - `pnpm verify-turn-golden`：`turn-golden.test.ts` 3/3 金样 100% 逐月指纹匹配零漂移；
+  - `node scripts/verify-s416-worker-parity.mjs`：离线 Worker 双向对齐 5/5 通过；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
+  - `pnpm test`：shared（53 套件 485 测试）、client（20 套件 71/71 测试）、server（全部测试）全绿通过；
+  - `pnpm lint`：全仓通过；
+  - `pnpm validate-data`：全量 12 个数据 JSON 文件校验 100% 通过；
+  - `pnpm verify-compliance`：825 个文件许可证与编码合规全绿通过。
+- **文档与宪法**：
+  - 制定方案立项 `docs/50-hc-p2-emperor-and-endgame-proposal.md`；
+  - 更新 `docs/04-game-systems.md` §40（记录 HC-P2 称帝与终局胜负规则）；
+  - 更新 `docs/12-system-map.md` S08 与 S12 状态（HC-P0~P2 霸府称帝主线全面闭环）；
+  - 更新 `docs/35-phased-implementation-roadmap.md` 分步进度；
+  - 本日志与根目录 `HANDOFF.md` 双写同步。
+
 ## 2026-10-21 — Session 451 · S13 宝物系统深化：套装体系（Set L3）与未接入装备词条消费闭环实装
 
 - Phase：**S13 宝物系统深化 / 规则与数值消费闭环**；依据方案立项 `docs/49-s13-itemsets-and-effects-proposal.md`。

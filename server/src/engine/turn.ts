@@ -38,6 +38,7 @@ import {
 import { runAllAiTurns } from './ai.js';
 import { runAiMilitary } from './aiMilitary.js';
 import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, runDelegationMilitary, tickDelegationReports } from './delegation.js';
+import { checkEndgameStatus } from './endgame.js';
 import { runAllAiIntel } from './spyAi.js';
 import { tickSpyMonth } from './spy.js';
 import { tickPlotsMonth } from './plot.js';
@@ -616,5 +617,5 @@ export function tickBattlefieldInstance(state: GameState, rng: () => number): Ga
     };
   }
 
-  return { ...next, factions };
+  return checkEndgameStatus({ ...next, factions });
 }

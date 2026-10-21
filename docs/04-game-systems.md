@@ -4565,10 +4565,12 @@ interface Faction {
 | `politicalStageChangedYear` | Faction | — | 开府/称王/称帝年份记录 |
 | `politicalStageAgeMonths` | Faction | — | ✅ HC-P1-1：当前阶段完整维持月数；阶段转移归零，非诸侯每次完整月结 +1，旧档缺失按 0 |
 | `kingdomName` | Faction | K4 | ✅ HC-P1-2：首次称王写入并固定的王号，不含“王”字；存活势力间唯一 |
+| `eraName` | Faction | E1 | ✅ HC-P2：称帝即位开国年号（如黄初、建安、章武等）；未称帝为 undefined |
 | `imperialAuthority` | Faction | Q4 | ✅ HC-P0-6：皇权点数（0~100） |
 | `imperialDecreeCooldown` | Faction | Q4 | ✅ HC-P0-6：伪诏宣战剩余冷却季数 |
 | `tags` | Faction | Q5 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等） |
 | `hegemonyPosition` | Officer | Q2 | 霸府/王国/帝国专属官职独立轨道 |
+| `endgameResult` | GameState | E2 | ✅ HC-P2：终局胜负结算单例快照（含胜利/战败类型、年谱纪事、功臣榜等） |
 
 所有字段均为 **optional 追加**，存档兼容方案参照 `activeBattlefieldInstance` 无损追加经验，不升 schema 版本。
 
@@ -4593,7 +4595,15 @@ HC-P1-3 已在既有 `hegemonyPosition` 单值轨道追加六个王国官职：�
 内史（政80/魅70）、中尉（统80/武75）、郎中令（统75/魅75）、大司农（政80/智75）、
 太仆（统75/政70）。六职均为势力唯一且只有 `king/emperor` 可任；称王不会撤销既有霸府三职，
 但同一人物任命任一新朝职仍会替换本人旧值。字段形状与存档版本均不变。
-- **HC-P2**（称帝 + 帝国 + 天命）：更高门槛→称帝→帝国官职全开→天命/年号/国号→禅让事件（Q8/Q9 可选增强）
+
+- **HC-P2**（称帝 + 帝国 + 天命 + 终局闭环，Session 452 已实装）：
+  - **称帝门槛**：`getEmperorRequirements` 校验政治阶段为 `king`、城池数 $\ge \max(5, \lceil contestableCityCount \times 50\% \rceil)$、阶段维持 $\ge 12$ 个月、皇权 $\ge 90$。
+  - **双路径即位**：受禅代汉（控制汉帝城池或持有传国玉玺，正统代汉）vs 自主改元（无天子且无玉玺，强行即位，所有存活诸侯好感度 $-20$）。
+  - **状态转移与天命**：`proclaimEmperor` 将 `politicalStage` 置为 `'emperor'`，头衔置为 `'{kingdomName}帝'`，扣减 90 皇权，重置阶段年龄为 0，确立开国年号 `eraName`。天命基础值跃升 20 点（王阶段30 → 帝阶段50）。
+  - **战役终局（Endgame）**：
+    - 天下一统（`unification_victory`）：全图所有敌对诸侯灭亡或玩家控制所有争夺城池时触发。生成开国功臣榜（前 5 位功勋重臣）与十年开国史诗纪事年谱。客户端弹出古典金石墨韵长卷，支持“天下已定·继续巡抚四海”沙盒模式继续推进。
+    - 身死国灭（`defeat`）：玩家所有城池沦陷或势力败亡时触发，弹出国灭悼亡长卷，支持载入旧档或重开新局。
+  - **零 RNG 扰动**：完全纯函数确定性推导，金样测试与全回归 100% 绿色。
 
 详见 `docs/26-hegemony-court-design.md` §六。
 

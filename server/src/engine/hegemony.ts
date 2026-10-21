@@ -25,6 +25,8 @@ export const FALSE_DECREE_COOLDOWN_QUARTERS = 8;
 export const HAN_LOYALIST_FAME_PENALTY = 30;
 export const KING_STAGE_MONTHS_REQUIRED = 12;
 export const KING_IMPERIAL_AUTHORITY_REQUIRED = 80;
+export const EMPEROR_STAGE_MONTHS_REQUIRED = 12;
+export const EMPEROR_IMPERIAL_AUTHORITY_REQUIRED = 90;
 
 export interface KingRequirement<T> {
   current: T;
@@ -42,6 +44,19 @@ export interface KingRequirements {
   kingdomNameCandidates: KingdomNameCandidate[];
   contestableCityCount: number;
   allPassed: boolean;
+}
+
+export interface EmperorRequirements {
+  factionExists: KingRequirement<boolean>;
+  factionAlive: KingRequirement<boolean>;
+  politicalStage: KingRequirement<string>;
+  cityCount: KingRequirement<number>;
+  politicalStageAgeMonths: KingRequirement<number>;
+  imperialAuthority: KingRequirement<number>;
+  isAbdication: boolean;
+  contestableCityCount: number;
+  allPassed: boolean;
+  recommendedEraNames: string[];
 }
 
 export interface KingdomNameCandidate {
@@ -237,6 +252,170 @@ export function proclaimKing(
     'king_proclaimed',
     `${faction.name}称${kingdomName}王（领有${requirements.cityCount.current}城，皇权-${KING_IMPERIAL_AUTHORITY_REQUIRED}）`,
     { factions },
+  );
+}
+
+/**
+ * HC-P2 称帝门槛权威查询。
+ *
+ * 前置必须为 king（称王），且领有开局纳入争夺城池的 50% 以上（或 minCities 覆写），
+ * 维持称王满 12 个月，皇权点数达 90。
+ */
+export function getEmperorRequirements(state: GameState, factionId: number): EmperorRequirements {
+  const scenario = staticData.scenarios.find((candidate) => candidate.id === state.scenarioId);
+  if (!scenario) throw new Error(`剧本 ${state.scenarioId} 不存在`);
+
+  const faction = state.factions[factionId];
+  const contestableCityCount = Object.keys(scenario.startState.cityOwnership).length;
+  const scenarioCustomReq = scenario as typeof scenario & { emperorRequirements?: { minCities?: number } };
+  const cityThreshold = scenarioCustomReq.emperorRequirements?.minCities
+    ?? Math.max(5, Math.ceil(contestableCityCount * 0.50));
+
+  const factionExists = {
+    current: faction !== undefined,
+    threshold: true,
+    passed: faction !== undefined,
+  };
+  const factionAlive = {
+    current: faction?.isAlive ?? false,
+    threshold: true,
+    passed: faction?.isAlive === true,
+  };
+  const politicalStage = {
+    current: faction?.politicalStage ?? 'vassal',
+    threshold: 'king',
+    passed: faction?.politicalStage === 'king',
+  };
+  const cityCountValue = faction?.cityIds.length ?? 0;
+  const cityCount = {
+    current: cityCountValue,
+    threshold: cityThreshold,
+    passed: cityCountValue >= cityThreshold,
+  };
+  const stageAgeValue = faction?.politicalStageAgeMonths ?? 0;
+  const politicalStageAgeMonths = {
+    current: stageAgeValue,
+    threshold: EMPEROR_STAGE_MONTHS_REQUIRED,
+    passed: stageAgeValue >= EMPEROR_STAGE_MONTHS_REQUIRED,
+  };
+  const ruler = faction?.rulerId != null ? state.officers[faction.rulerId] : undefined;
+  const authorityValue = (faction?.imperialAuthority ?? 0) + equipAuthorityBonusFor(ruler);
+  const imperialAuthority = {
+    current: authorityValue,
+    threshold: EMPEROR_IMPERIAL_AUTHORITY_REQUIRED,
+    passed: authorityValue >= EMPEROR_IMPERIAL_AUTHORITY_REQUIRED,
+  };
+
+  // 受禅判定：控制天子 或 拥有传国玉玺（道具 15）
+  const hasJadeSeal = (faction?.inventory?.[15] ?? 0) > 0 || ruler?.equipment?.accessory === 15;
+  const isAbdication = controlsEmperor(state, factionId) || hasJadeSeal;
+
+  const kingdom = faction?.kingdomName ?? '';
+  let recommendedEraNames = ['黄初', '章武', '黄龙', '太始', '建安'];
+  if (kingdom.includes('魏')) recommendedEraNames = ['黄初', '太和', '正始'];
+  else if (kingdom.includes('蜀') || kingdom.includes('汉')) recommendedEraNames = ['章武', '建兴', '延熙'];
+  else if (kingdom.includes('吴')) recommendedEraNames = ['黄龙', '嘉禾', '赤乌'];
+  else if (kingdom.includes('晋')) recommendedEraNames = ['太始', '咸宁', '太康'];
+
+  const checks = [
+    factionExists,
+    factionAlive,
+    politicalStage,
+    cityCount,
+    politicalStageAgeMonths,
+    imperialAuthority,
+  ];
+
+  return {
+    factionExists,
+    factionAlive,
+    politicalStage,
+    cityCount,
+    politicalStageAgeMonths,
+    imperialAuthority,
+    isAbdication,
+    contestableCityCount,
+    allPassed: checks.every((requirement) => requirement.passed),
+    recommendedEraNames,
+  };
+}
+
+/**
+ * HC-P2 称帝权威状态转移。
+ *
+ * 将 politicalStage 转移为 'emperor'，确立国号与开国年号，天命跃升。
+ * 若非受禅（未控天子且无玉玺），全天下存活诸侯好感度 -20。
+ */
+export function proclaimEmperor(
+  state: GameState,
+  factionId: number,
+  eraNameInput?: string,
+): GameState {
+  const requirements = getEmperorRequirements(state, factionId);
+  const faction = state.factions[factionId];
+  if (!requirements.factionExists.passed || !faction) throw new Error('势力不存在');
+  if (!requirements.factionAlive.passed) throw new Error('势力已灭亡，无法称帝');
+  if (!requirements.politicalStage.passed) {
+    const stage = faction.politicalStage ?? 'vassal';
+    if (stage === 'emperor') throw new Error('已经称帝，不可重复提交');
+    throw new Error('需先称王并维持至少12个月，方可称帝');
+  }
+  if (!requirements.cityCount.passed) {
+    throw new Error(
+      `城池不足（需 ${requirements.cityCount.threshold}，当前 ${requirements.cityCount.current}）`,
+    );
+  }
+  if (!requirements.politicalStageAgeMonths.passed) {
+    throw new Error(
+      `称王沉淀不足（需 ${requirements.politicalStageAgeMonths.threshold} 月，当前 ${requirements.politicalStageAgeMonths.current} 月）`,
+    );
+  }
+  if (!requirements.imperialAuthority.passed) {
+    throw new Error(
+      `皇权点数不足（需 ${requirements.imperialAuthority.threshold}，当前 ${requirements.imperialAuthority.current}）`,
+    );
+  }
+
+  const eraName = (eraNameInput && eraNameInput.trim()) || requirements.recommendedEraNames[0] || '建始';
+  const authority = faction.imperialAuthority ?? 0;
+  const kingdomPrefix = faction.kingdomName || faction.name;
+
+  let nextDiplomacy = state.diplomacy;
+  // 自主称帝（非受禅代汉）导致存活诸侯好感度下降 20
+  if (!requirements.isAbdication) {
+    nextDiplomacy = state.diplomacy.map((link) => {
+      if (link.factionA === factionId || link.factionB === factionId) {
+        return {
+          ...link,
+          favorability: Math.max(-100, link.favorability - 20),
+        };
+      }
+      return link;
+    });
+  }
+
+  const factions = {
+    ...state.factions,
+    [factionId]: {
+      ...faction,
+      imperialAuthority: authority - EMPEROR_IMPERIAL_AUTHORITY_REQUIRED,
+      politicalStage: 'emperor' as PoliticalStage,
+      politicalTitle: `${kingdomPrefix}帝`,
+      eraName,
+      politicalStageChangedYear: state.currentYear,
+      politicalStageAgeMonths: 0,
+    },
+  };
+
+  const abdicationText = requirements.isAbdication
+    ? '承汉天命，受禅登基'
+    : '自主即位，改元称尊';
+
+  return pushLog(
+    state,
+    'emperor_proclaimed',
+    `${faction.name}${abdicationText}，即皇帝位（建元「${eraName}」，国号「${kingdomPrefix}」，皇权-${EMPEROR_IMPERIAL_AUTHORITY_REQUIRED}）`,
+    { factions, diplomacy: nextDiplomacy },
   );
 }
 

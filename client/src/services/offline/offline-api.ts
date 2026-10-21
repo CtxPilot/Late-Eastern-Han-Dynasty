@@ -307,6 +307,12 @@ export function falseDecreeWar(targetFactionId: number): Promise<GameState> {
 export function getKingRequirements(): ReturnType<typeof import('../api').getKingRequirements> {
   return call('kingRequirements');
 }
+export function getEmperorRequirements(): ReturnType<typeof import('../api').getEmperorRequirements> {
+  return call('emperorRequirements');
+}
+export function proclaimEmperor(eraName?: string): Promise<GameState> {
+  return call('proclaimEmperor', [eraName]);
+}
 export function startBattle(cityId: number, fromCityId?: number): Promise<BattleState> {
   return call('startBattle', [cityId, fromCityId]);
 }

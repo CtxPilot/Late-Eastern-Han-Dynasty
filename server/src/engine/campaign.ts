@@ -73,6 +73,7 @@ import { syncFactionResources } from './economy.js';
 import { equipBonusFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot } from './items.js';
 import { grantMeritTo } from './meritGrant.js';
 import { FAME_CAPTURE_CITY, FAME_OCCUPY_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
+import { checkEndgameStatus } from './endgame.js';
 import {
   MERIT_ANNIHILATE_FACTION,
   MERIT_CAPTURE_CITY,
@@ -2242,7 +2243,7 @@ function applyBattleResultToState(
           }${pendingFamilyTreatment ? `；待处置家属${pendingFamilyTreatment.familyCount}口` : ''}${
             seizedLootNames.length > 0 ? `；缴获${seizedLootNames.join('、')}` : ''
           }`;
-      return sealCaptures(pushLog(after, 'campaign_capture', msg));
+      return checkEndgameStatus(sealCaptures(pushLog(after, 'campaign_capture', msg)));
     }
   }
 

@@ -20,7 +20,7 @@ const ROOT_KEYS = [
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
   'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',
-  'pendingFamilyTreatment',
+  'pendingFamilyTreatment', 'endgameResult',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {
@@ -60,7 +60,7 @@ export const GameStateSchema = z
   .superRefine((unknownState, ctx) => {
     const state = unknownState as GameState;
     const sliceResults = [
-      GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog', 'pendingFamilyTreatment'])),
+      GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog', 'pendingFamilyTreatment', 'endgameResult'])),
       GameStateEntitiesSchema.safeParse(pickState(state, ['officers', 'cities', 'factions', 'females'])),
       GameStateCampaignSchema.safeParse(pickState(state, ['armys', 'campaignArmies', 'campaignNodes', 'grandStrategists'])),
       GameStateBattleSchema.safeParse(pickState(state, ['activeBattles', 'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance'])),

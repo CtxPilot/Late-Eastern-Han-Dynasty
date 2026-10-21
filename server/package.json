@@ -114,7 +114,8 @@
     "verify-s414-save-slim": "tsx src/scripts/verify-s414-save-slim.ts",
     "verify-s44c-captive-loot": "tsx src/scripts/verify-s44c-captive-loot.ts",
     "verify-s48-bond-and-eight-slots": "tsx src/scripts/verify-s48-bond-and-eight-slots.ts",
-    "verify-s49-itemsets-and-effects": "tsx src/scripts/verify-s49-itemsets-and-effects.ts"
+    "verify-s49-itemsets-and-effects": "tsx src/scripts/verify-s49-itemsets-and-effects.ts",
+    "verify-s50-emperor-and-endgame": "tsx src/scripts/verify-s50-emperor-and-endgame.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",

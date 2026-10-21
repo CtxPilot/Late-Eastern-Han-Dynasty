@@ -125,4 +125,39 @@ export interface GameState {
 
   /** 玩家攻城后待选择的家属处置；旧存档缺省表示没有待决项。 */
   pendingFamilyTreatment?: PendingFamilyTreatment | null;
+
+  /**
+   * 天下一统或身死国灭终局结算（HC-P2 / Session 451+）。
+   * 记录天下一统或战败时刻的史诗年谱、开国君主与功臣榜。
+   * optional 追加，游戏进行中为 undefined，旧存档完全兼容。
+   */
+  endgameResult?: EndgameResult | null;
+}
+
+/** 终局功臣榜条目 */
+export interface EndgameMeritOfficer {
+  officerId: number;
+  name: string;
+  meritLevel: number;
+  meritTitle: string;
+  officialPosition?: string;
+}
+
+/** 战役终局结算结果 */
+export interface EndgameResult {
+  type: 'unification_victory' | 'defeat';
+  achievedYear: number;
+  achievedMonth: number;
+  rulerOfficerId: number;
+  rulerName: string;
+  factionId: number;
+  factionName: string;
+  kingdomName?: string;
+  politicalTitle?: string;
+  eraName?: string;
+  totalYearsElapsed: number;
+  totalCitiesConquered: number;
+  capitalCityName: string;
+  topMeritOfficers: EndgameMeritOfficer[];
+  chronicle: string[];
 }

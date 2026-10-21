@@ -169,6 +169,8 @@ import {
   establishHegemony,
   getKingRequirements,
   proclaimKing,
+  getEmperorRequirements,
+  proclaimEmperor,
 } from '../../../server/src/engine/hegemony.js';
 import { launchPlot, cancelPlot } from '../../../server/src/engine/plot.js';
 import { setNationalPolicy } from '../../../server/src/engine/policy.js';
@@ -792,6 +794,17 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   proclaimKing(kingdomName: string): GameState {
     return withLock(() => {
       currentGame = proclaimKing(getGame(), getGame().playerFactionId, kingdomName);
+      return getClientGame();
+    });
+  },
+
+  emperorRequirements() {
+    return getEmperorRequirements(getGame(), getGame().playerFactionId);
+  },
+
+  proclaimEmperor(eraName?: string): GameState {
+    return withLock(() => {
+      currentGame = proclaimEmperor(getGame(), getGame().playerFactionId, eraName);
       return getClientGame();
     });
   },

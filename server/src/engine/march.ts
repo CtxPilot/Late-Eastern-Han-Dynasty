@@ -24,6 +24,7 @@ import { clearCityCounterOnCapture } from './spy.js';
 import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
 import { FAME_CAPTURE_CITY, FAME_ANNIHILATE_FACTION, grantFame } from './factionPolitics.js';
+import { checkEndgameStatus } from './endgame.js';
 import {
   MERIT_ANNIHILATE_FACTION,
   MERIT_CAPTURE_CITY,
@@ -387,7 +388,7 @@ export function settleBattle(
     // 接管地方人脉（势力库存↑，城市机会↓，民忠↓）
     after = lootBeautyOnCapture(after, targetId, battle.attackerFaction, rng);
     after = syncFactionResources(after);
-    return after;
+    return checkEndgameStatus(after);
   }
 
   // —— 败北或中途撤退：守军回写；攻方残兵部分回流 ——

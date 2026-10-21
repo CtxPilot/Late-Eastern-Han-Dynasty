@@ -9,6 +9,7 @@ import { BattleView } from './components/battle/BattleView';
 import { BattlefieldPanel } from './components/battlefield/BattlefieldPanel';
 import { BattlefieldSceneView } from './components/battlefield/BattlefieldSceneView';
 import { ScenarioSelect } from './components/scenario/ScenarioSelect';
+import { EndgameModal } from './components/endgame/EndgameModal';
 import { waitForGameFonts } from './utils/fontBarrier';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
   const [isEngineReady, setIsEngineReady] = useState(false);
   const [fontError, setFontError] = useState<string | null>(null);
   const [fontRetryNonce, setFontRetryNonce] = useState(0);
+  const [dismissedEndgame, setDismissedEndgame] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,9 +71,18 @@ export default function App() {
   if (screen === 'battlefield' && battlefieldInstance) return <div className="h-full flex flex-col"><BattlefieldSceneView /></div>;
   if (screen === 'battlefield' || screen === 'melee') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
 
-  // 覆亡判定（P0-1 · Session 407）：玩家势力灭亡即大势已去，进入终局屏。
+  // 覆亡判定（P0-1 · Session 407 / HC-P2）：玩家势力灭亡即大势已去，进入终局屏。
   const playerFaction = game.factions[game.playerFactionId];
   if (playerFaction && playerFaction.isAlive === false) {
+    if (game.endgameResult) {
+      return (
+        <EndgameModal
+          result={game.endgameResult}
+          onContinue={() => {}}
+          onRestart={() => openScenarioSelect()}
+        />
+      );
+    }
     return (
       <div className="h-full flex items-center justify-center flex-col gap-4 bg-stone-950" data-testid="defeat-screen">
         <h1 className="text-4xl text-seal-400 tracking-[0.3em] font-seal">大势已去</h1>
@@ -96,6 +107,13 @@ export default function App() {
 
   return <div className="h-full relative">
     <GameLayout />
+    {game.endgameResult && !dismissedEndgame && (
+      <EndgameModal
+        result={game.endgameResult}
+        onContinue={() => setDismissedEndgame(true)}
+        onRestart={() => openScenarioSelect()}
+      />
+    )}
     {showDebugBattlefield && (
       <div className="fixed top-14 right-2 z-50 flex gap-2">
         <InkButton data-testid="btn-enter-nanjun-battlefield" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-xs text-amber-50 hover:bg-amber-800" onClick={() => void enterNanjunBattlefield('nanjun')}>南郡水网</InkButton>

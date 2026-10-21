@@ -24,7 +24,7 @@ import {
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { gameApi } from '../../services/gateway';
-import type { KingRequirementsDto } from '../../services/api';
+import type { EmperorRequirementsDto, KingRequirementsDto } from '../../services/api';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 import type { CommandShellAction, CommandShellState } from './commandShellState';
 import { TournamentOverviewSection } from './TournamentOverview';
@@ -146,6 +146,7 @@ export function CourtCommandDrawer({
   const game = useGameStore((state) => state.game);
   const establishHegemony = useGameStore((state) => state.establishHegemony);
   const proclaimKing = useGameStore((state) => state.proclaimKing);
+  const proclaimEmperor = useGameStore((state) => state.proclaimEmperor);
   const falseDecreeWar = useGameStore((state) => state.falseDecreeWar);
   const grantNobility = useGameStore((state) => state.grantNobility);
   const setNationalPolicy = useGameStore((state) => state.setNationalPolicy);
@@ -156,6 +157,8 @@ export function CourtCommandDrawer({
   const [policyReviewOpen, setPolicyReviewOpen] = useState(false);
   const [kingRequirements, setKingRequirements] = useState<KingRequirementsDto | null>(null);
   const [requirementsError, setRequirementsError] = useState<string | null>(null);
+  const [emperorRequirements, setEmperorRequirements] = useState<EmperorRequirementsDto | null>(null);
+  const [emperorRequirementsError, setEmperorRequirementsError] = useState<string | null>(null);
   const model = useMemo(() => (game ? buildCourtViewModel(game) : null), [game]);
   const draft = shellState.draftByDomain.court;
   const targetFactionId =
@@ -175,6 +178,8 @@ export function CourtCommandDrawer({
   const selectedKingdomName = kingRequirements?.kingdomNameCandidates.find(
     (candidate) => candidate.name === kingdomName,
   );
+  const eraName =
+    typeof draft?.parameters.eraName === 'string' ? draft.parameters.eraName : '';
 
   useEffect(() => {
     let active = true;
@@ -188,6 +193,18 @@ export function CourtCommandDrawer({
         if (!active) return;
         setRequirementsError(reason instanceof Error ? reason.message : '称王门槛读取失败');
       });
+
+    void gameApi.getEmperorRequirements()
+      .then((requirements) => {
+        if (!active) return;
+        setEmperorRequirements(requirements);
+        setEmperorRequirementsError(null);
+      })
+      .catch((reason: unknown) => {
+        if (!active) return;
+        setEmperorRequirementsError(reason instanceof Error ? reason.message : '称帝门槛读取失败');
+      });
+
     return () => {
       active = false;
     };
@@ -264,7 +281,25 @@ export function CourtCommandDrawer({
                 })}
               </div>
             ) : null}
+            {model.stage === 'king' && emperorRequirements ? (
+              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
+                {[
+                  ['城池', emperorRequirements.cityCount],
+                  ['称王沉淀', emperorRequirements.politicalStageAgeMonths],
+                  ['皇权', emperorRequirements.imperialAuthority],
+                ].map(([label, requirement]) => {
+                  const item = requirement as EmperorRequirementsDto['cityCount'];
+                  return (
+                    <div key={label as string} className={item.passed ? 'text-emerald-300' : 'text-rose-300'}>
+                      <div>{label as string}</div>
+                      <div>{item.current}/{item.threshold}{label === '称王沉淀' ? '月' : ''}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
             {requirementsError ? <p className="mt-1 text-xs text-rose-300">{requirementsError}</p> : null}
+            {emperorRequirementsError ? <p className="mt-1 text-xs text-rose-300">{emperorRequirementsError}</p> : null}
           </div>
         </section>
 
@@ -472,8 +507,71 @@ export function CourtCommandDrawer({
                 </span>
               </InkButton>
             </div>
+          ) : model.stage === 'king' ? (
+            <div className="mt-2 border border-stone-800 bg-stone-900/40 p-2">
+              <h4 className="text-xs font-semibold text-amber-200">
+                称帝登基 · 问鼎九五
+                <span className="ml-2 font-normal text-stone-400">
+                  {emperorRequirements?.isAbdication ? '（承汉受禅 · 四海归心）' : '（改元自主即位 · 诸侯好感-20）'}
+                </span>
+              </h4>
+              <p className="mt-1 text-xs text-stone-500">
+                称帝将改元建国、确立皇帝位、天命跃升+50、臣属封王与外交威慑；消耗皇权 90，不可撤销。
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-stone-400 whitespace-nowrap">开国年号：</span>
+                <select
+                  data-testid="command-court-era-select"
+                  value={eraName}
+                  disabled={loading}
+                  onChange={(event) => {
+                    clearError();
+                    dispatch({
+                      type: 'select-command',
+                      domain: 'court',
+                      commandId: 'proclaim-emperor',
+                      parameters: { eraName: event.target.value },
+                    });
+                  }}
+                  className="w-full border border-stone-700 bg-stone-900 px-2 py-1.5 text-xs text-stone-200"
+                >
+                  <option value="">选择或沿用默认年号</option>
+                  {emperorRequirements?.recommendedEraNames.map((name) => (
+                    <option key={name} value={name}>
+                      「{name}」
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <InkButton
+                type="button"
+                data-testid="command-court-proclaim-emperor-review"
+                disabled={loading || !emperorRequirements?.allPassed}
+                title={
+                  !emperorRequirements?.allPassed
+                    ? '称帝门槛尚未全部满足'
+                    : '消耗90皇权；问鼎九五；不可撤销'
+                }
+                onClick={() => {
+                  clearError();
+                  dispatch({
+                    type: 'select-command',
+                    domain: 'court',
+                    commandId: 'proclaim-emperor',
+                    parameters: { eraName: eraName || emperorRequirements?.recommendedEraNames[0] || '建始' },
+                  });
+                  setReviewOpen(true);
+                }}
+                className="mt-2 w-full border border-amber-700 bg-amber-950/40 px-3 py-2 text-left text-amber-200 hover:bg-amber-950/70 disabled:border-stone-800 disabled:bg-transparent disabled:text-stone-600"
+              >
+                称帝 · 送交开国大典终审
+                <span className="ml-2 text-xs text-stone-400">
+                  {emperorRequirements?.allPassed ? '皇权90 · 问鼎九五' : '门槛未满足'}
+                </span>
+              </InkButton>
+            </div>
           ) : (
-            <p className="mt-2 text-stone-600">已进入{STAGE_LABEL[model.stage]}阶段，开府不可重复。</p>
+            <p className="mt-2 text-stone-600">已登皇帝位，天下归一，开府称帝已达极位。</p>
           )}
         </section>
 
@@ -597,6 +695,54 @@ export function CourtCommandDrawer({
         onConfirm={async () => {
           if (!selectedKingdomName?.available || !kingRequirements?.allPassed) return;
           await proclaimKing(selectedKingdomName.name);
+          if (useGameStore.getState().error) return;
+          setReviewOpen(false);
+          dispatch({ type: 'submit-succeeded', domain: 'court' });
+        }}
+      />
+      <CommandConfirmDialog
+        open={reviewOpen && draft?.commandId === 'proclaim-emperor'}
+        category="朝廷 · 开国大典"
+        command={`确认改元登基：称「${model.faction.kingdomName || model.faction.name}帝」`}
+        summary="称帝将升格政治阶段为最高位「皇帝」，建元改元，获得天命威慑；确认后不可撤销。"
+        items={[
+          { label: '势力', value: model.faction.name },
+          { label: '国号', value: model.faction.kingdomName || model.faction.name },
+          { label: '开国年号', value: `「${eraName || emperorRequirements?.recommendedEraNames[0] || '建始'}」`, tone: 'warning' },
+          { label: '即位性质', value: emperorRequirements?.isAbdication ? '承汉受禅（四海归心）' : '自主登基（诸侯好感-20）', tone: emperorRequirements?.isAbdication ? 'normal' : 'warning' },
+          { label: '领有城池', value: `${emperorRequirements?.cityCount.current ?? '—'}/${emperorRequirements?.cityCount.threshold ?? '—'}` },
+          { label: '称王沉淀', value: `${emperorRequirements?.politicalStageAgeMonths.current ?? '—'}/${emperorRequirements?.politicalStageAgeMonths.threshold ?? '—'}月` },
+          { label: '立即消耗', value: '皇权 90', tone: 'warning' },
+          { label: '解锁特权', value: '天命+50、臣属封王、外交威慑×1.5/+15' },
+          { label: '可否撤销', value: '不可撤销', tone: 'warning' },
+        ]}
+        loading={loading}
+        danger
+        error={error}
+        fallbackFocusSelector='[data-testid="command-domain-court"]'
+        validateBeforeConfirm={() => {
+          const latest = useGameStore.getState().game;
+          const latestFaction = latest?.factions[latest.playerFactionId];
+          if (!latest || !latestFaction || !emperorRequirements) return '朝廷状态已失效，请返回检查。';
+          if ((latestFaction.politicalStage ?? 'vassal') !== 'king') {
+            return '政治阶段必须为王阶段方可称帝。';
+          }
+          if (latestFaction.cityIds.length < emperorRequirements.cityCount.threshold) {
+            return '领有城池已低于称帝门槛，请返回检查。';
+          }
+          if ((latestFaction.politicalStageAgeMonths ?? 0) < emperorRequirements.politicalStageAgeMonths.threshold) {
+            return '称王沉淀已低于称帝门槛，请返回检查。';
+          }
+          if ((latestFaction.imperialAuthority ?? 0) < emperorRequirements.imperialAuthority.threshold) {
+            return '皇权已低于称帝门槛，请返回检查。';
+          }
+          return null;
+        }}
+        onCancel={() => setReviewOpen(false)}
+        onConfirm={async () => {
+          if (!emperorRequirements?.allPassed) return;
+          const finalEraName = eraName || emperorRequirements.recommendedEraNames[0] || '建始';
+          await proclaimEmperor(finalEraName);
           if (useGameStore.getState().error) return;
           setReviewOpen(false);
           dispatch({ type: 'submit-succeeded', domain: 'court' });

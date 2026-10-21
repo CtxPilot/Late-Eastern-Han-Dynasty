@@ -148,6 +148,7 @@ interface Store {
   tribute: (targetFactionId: number) => Promise<void>;
   establishHegemony: () => Promise<void>;
   proclaimKing: (kingdomName: string) => Promise<void>;
+  proclaimEmperor: (eraName?: string) => Promise<void>;
   falseDecreeWar: (targetFactionId: number) => Promise<void>;
   transferCourtNetwork: (targetFactionId: number, amount?: number) => Promise<void>;
   plantFemale: (targetFactionId: number) => Promise<void>;
@@ -1085,6 +1086,16 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '称王成功' });
     } catch (e) {
       set({ error: errMsg(e, '称王失败'), loading: false });
+    }
+  },
+
+  proclaimEmperor: async (eraName) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.proclaimEmperor(eraName);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '称帝登基成功' });
+    } catch (e) {
+      set({ error: errMsg(e, '称帝失败'), loading: false });
     }
   },
 

@@ -105,6 +105,8 @@ import {
   establishHegemony,
   getKingRequirements,
   proclaimKing,
+  getEmperorRequirements,
+  proclaimEmperor,
 } from '../engine/hegemony.js';
 import { launchPlot, cancelPlot } from '../engine/plot.js';
 import { setNationalPolicy } from '../engine/policy.js';
@@ -655,6 +657,19 @@ export function getCurrentKingRequirements() {
 export function doProclaimKing(kingdomName: string): GameState {
   return withLock(() => {
     currentGame = proclaimKing(getGame(), getGame().playerFactionId, kingdomName);
+    return getClientGame();
+  });
+}
+
+/** HC-P2：朝廷抽屉只读称帝门槛；候选与阈值始终来自权威引擎。 */
+export function getCurrentEmperorRequirements() {
+  return getEmperorRequirements(getGame(), getGame().playerFactionId);
+}
+
+/** HC-P2：服务层只编排权威 proclaimEmperor；withLock 拦截并发朝廷写操作。 */
+export function doProclaimEmperor(eraName?: string): GameState {
+  return withLock(() => {
+    currentGame = proclaimEmperor(getGame(), getGame().playerFactionId, eraName);
     return getClientGame();
   });
 }

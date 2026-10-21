@@ -3,8 +3,38 @@
 
 import { z } from 'zod';
 import { Season } from './enums/index.js';
-import type { GameAction, GameState } from './types/game.js';
+import type { EndgameMeritOfficer, EndgameResult, GameAction, GameState } from './types/game.js';
 import { PendingFamilyTreatmentSchema } from './hostage-families.js';
+
+export const EndgameMeritOfficerSchema: z.ZodType<EndgameMeritOfficer> = z
+  .object({
+    officerId: z.number().int().positive(),
+    name: z.string().min(1),
+    meritLevel: z.number().int().nonnegative(),
+    meritTitle: z.string().min(1),
+    officialPosition: z.string().optional(),
+  })
+  .strict();
+
+export const EndgameResultSchema: z.ZodType<EndgameResult> = z
+  .object({
+    type: z.enum(['unification_victory', 'defeat']),
+    achievedYear: z.number().int(),
+    achievedMonth: z.number().int().min(1).max(12),
+    rulerOfficerId: z.number().int().positive(),
+    rulerName: z.string().min(1),
+    factionId: z.number().int().positive(),
+    factionName: z.string().min(1),
+    kingdomName: z.string().optional(),
+    politicalTitle: z.string().optional(),
+    eraName: z.string().optional(),
+    totalYearsElapsed: z.number().int().nonnegative(),
+    totalCitiesConquered: z.number().int().nonnegative(),
+    capitalCityName: z.string().min(1),
+    topMeritOfficers: z.array(EndgameMeritOfficerSchema),
+    chronicle: z.array(z.string()),
+  })
+  .strict();
 
 const EventSourceClassSchema = z.enum([
   'official_history',
@@ -45,6 +75,7 @@ export const GameStateTimelineSchema: z.ZodType<
     | 'eventChoices'
     | 'actionLog'
     | 'pendingFamilyTreatment'
+    | 'endgameResult'
   >
 > = z
   .object({
@@ -61,6 +92,7 @@ export const GameStateTimelineSchema: z.ZodType<
     eventChoices: z.record(z.coerce.number().int().positive(), z.number().int().nonnegative()),
     actionLog: z.array(GameActionSchema),
     pendingFamilyTreatment: PendingFamilyTreatmentSchema.nullable().optional(),
+    endgameResult: EndgameResultSchema.nullable().optional(),
   })
   .strict()
   .superRefine((timeline, ctx) => {

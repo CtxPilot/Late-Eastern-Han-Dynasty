@@ -744,6 +744,22 @@ gameRouter.post('/hegemony/proclaim-king', (req, res) => {
   }
 });
 
+gameRouter.get('/hegemony/emperor-requirements', (_req, res) => {
+  try {
+    res.json(gameService.getCurrentEmperorRequirements());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get emperor requirements failed' });
+  }
+});
+
+gameRouter.post('/hegemony/proclaim-emperor', (req, res) => {
+  try {
+    res.json(gameService.doProclaimEmperor(typeof req.body?.eraName === 'string' ? req.body.eraName : undefined));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'proclaim emperor failed' });
+  }
+});
+
 gameRouter.post('/hegemony/false-decree-war', (req, res) => {
   try {
     res.json(gameService.doFalseDecreeWar(Number(req.body.targetFactionId)));
