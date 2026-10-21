@@ -9,33 +9,45 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 449**（修复开始界面滚动截断、卡片挤压与主界面进入阻断缺陷：`ScenarioSelect.tsx` 根容器调整为 `h-full w-full overflow-y-auto` 激活滚动条，修复父级 `#root` 视口截断致无法点击「进入剧本」缺陷；`buttons.tsx` `InkButton` 结构基座自适应加固，避免卡片容器被强制 `inline-flex` 横向挤压；`ScenarioSelect.tsx` 与 `StrategicWorldView.tsx` 剧本/势力/州/城卡片全面升级为垂直流式卡片；标题语义与冒烟测试兼容恢复；Chrome CDP 真实浏览器冒烟 21/21 全绿 + 71/71 前端测试全绿） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；UI/UX 宪法与视觉体系全面确立与收拢 |
-| 代码最新 | Session 449 开始界面滚动修复与全栈卡片排版加固组件；工作树干净 |
-| 文档最新 | **Session 449 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 449 已交付**；开始界面显示不全与主界面无法进入阻断缺陷彻底修复并经 CDP 真实浏览器 21/21 验证通过；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b、T6、T7、T8——待数据批次 + 数值拍板）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
+| 会话 | **Session 450**（S13 装备与宝物系统深化：8 槽位扩展与武将专属羁绊 Bond / L2 共鸣实装：立项 `docs/48-s13-bond-and-eight-slots-proposal.md`；8 槽位扩展 `weaponPrimary`/`weaponSecondary`/`headwear`/`armor`/`robe`/`mount`/`tome`/`accessory`，special 向后兼容回退；专属共鸣 L2 模型实装：专属武将装备基础加成与效果 1.5 倍 + 解锁隐藏词条与 `bonusStats`，非专属武将维持 1.0 倍基线；`items.json` 保持 165 条总量守恒，细分兜鍪冠/战袍/配饰，落库 44 件史实名将羁绊；OfficerDetail 8 槽装帧与金框共鸣徽章/典故引文；专项验收 `verify-s48-bond-and-eight-slots` 54/54 全绿 + 回归矩阵全绿，金样零扰动） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 宝物系统 8 槽与 L2 共鸣全面落地 |
+| 代码最新 | Session 450 8 槽位扩展与专属共鸣系统全栈实现及验证脚本；工作树干净 |
+| 文档最新 | **Session 450 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 450 已交付**；8 槽位扩展与专属羁绊（Bond / L2 共鸣）已全栈交付并完成 54/54 专项验证与全仓回归；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b 套装数据、未接入 effect 逐项清单）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
 
-### Session 449 交接要点
+### Session 450 交接要点
 
-- **用户反馈排查**：「现在无法进入游戏主界面，且开始界面UI显示不全」
-- **根因定位**：
-  1. `client/src/index.css` 全局 `#root` 为 `height: 100%; overflow: hidden;`，而 `ScenarioSelect.tsx` 根标签为 `min-h-full overflow-auto`（无固定高度约束），导致超出视口的内容被 `#root` 静默裁切。因第 9 剧本、势力选择网格及底部的「进入剧本」主令按钮均位于被截断的不可见区域，真人用户在浏览器内无法向下滚动，也无法看到和点击「进入剧本」按钮，从而无法进入游戏主界面；
-  2. `buttons.tsx` 中 `STRUCTURAL_BASE` 默认包含 `inline-flex items-center justify-center gap-1`，导致使用 `InkButton` 实现的剧本卡、势力卡、州卡、城卡在未显式写 `flex-col` 时，直属子元素（标题、年份、治所、考据等）全部默认按照 `flex-direction: row` 被横向挤压在单行内，造成严重排版挤压变形；
-  3. `ScenarioSelect.tsx` 剧本标题标签由 `h2` 改为 `h3`，且 `StrategicWorldView.tsx` 移除了「天下形势」，造成无头浏览器自动化冒烟脚本查找元素受阻。
-- **实装修复**：
-  1. `buttons.tsx`：`InkButton` 结构自适应加固，传入 `text-left` 且无显式 display 类时，自适应回退至 `block text-left`，支持任意多行卡片容器；
-  2. `ScenarioSelect.tsx`：根容器改为 `h-full w-full overflow-y-auto`，闭环视口并激活微型水墨滚动条；剧本卡与势力卡显式配置 `flex flex-col items-start w-full`；剧本标题恢复标准 `h2`；修复 `bg-stone-850` 为标准 Tailwind 类名 `bg-stone-800`；
-  3. `StrategicWorldView.tsx`：州卡与城卡网格显式配置 `flex flex-col items-stretch w-full`，消除指标横向挤压；顶栏副标恢复「汉家山河 · 天下形势」，保持自动化冒烟规范兼容。
-- **验证全绿**：
-  - `play-strategic-cards.sh --verify`（Chrome CDP 9242 真实浏览器自动化冒烟）：**21/21 全部通过**（包含进入剧本、天下形势、州卡交互、城卡切换、左栏联动、回合推进等全链路）；
-  - 无头浏览器截图实测核验（`/tmp/screen_online_init.png`、`/tmp/screen_online_scrolled.png`、`/tmp/screen_online_after_click.png`）：9 剧本、势力网格、进入剧本按钮及滚动条全部正常呈现，点击顺利进入游戏主界面；
-  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部通过；
-  - `pnpm test`：全部 71 个前端单元测试全绿通过，shared 与 server 测试全绿；
-  - `pnpm verify-compliance`：814 个文件合规扫描全部通过；
-  - `pnpm lint`：全仓通过。
-- 边界：纯 UI/UX 布局与滚动容器修复，未碰游戏引擎、RNG 或网络协议。
-- 文档：`docs/10-progress.md` 与本文件双写同步。
+- **方案与立项**：依据 `docs/48-s13-bond-and-eight-slots-proposal.md`，全量落地 S13 规划的 8 槽位与 L2 专属共鸣。
+- **核心实装**：
+  1. **8 槽位扩展**（`shared/enums/index.ts`、`shared/types/item.ts`、`shared/validators/index.ts`、`shared/game-state-entity-schema.ts`、`shared/items.ts`）：
+     - `EquipSlot` 正式扩充为 8 槽：`weaponPrimary`、`weaponSecondary`、`headwear`、`armor`、`robe`、`mount`、`tome`、`accessory`；
+     - `ItemCategory` 扩充 `headwear`、`robe`、`accessory`；`special` 宝物品类向后兼容映射至 `accessory`；
+     - `EQUIP_SLOT_ORDER` 规范 8 槽标准顺序；`EQUIP_SLOT_LABELS` 提供古典优雅中文展示标签；
+     - `GameStateSchema` `.strict()` 模式扩展纳管新槽位，通过往返序列化校验。
+  2. **专属共鸣（Bond / L2）机制**（`shared/items.ts`、`server/src/engine/items.ts`）：
+     - 当且仅当 `officerId === item.bond.officerId` 时激活专属共鸣；
+     - 基础属性加成（`baseStats`）享受 1.5 倍乘区（`Math.floor(stat * 1.5)`）并累加隐藏属性 `bond.bonusStats`；
+     - 基础效果数值（`baseEffect`）享受 1.5 倍乘区（`Math.floor(val * 1.5)`）并解锁隐藏词条 `bond.bonusEffect`；
+     - 非专属武将装备仅获得 1.0 倍通用基础加成，隐藏词条与属性不激活；
+     - 引擎属性加成穿透支持：`equipBonusFor`、`equipArmorDefenseFor`、`equipCritRateFor`、`duelEquipBonusFor` 全量支持专属共鸣与 8 槽累计。
+  3. **数据真源细化与历史名品羁绊**（`server/src/data/items.json`）：
+     - 宝物总量保持严格 165 条不变，重分类出 `headwear`（9 件）、`robe`（5 件）、`accessory`（18 件）及 `armor`（13 件）；
+     - 落库 44 件史实/演义经典武将专属羁绊（关羽+青龙刀/赤兔、吕布+方天戟/兽面铠/紫金冠、曹操+倚天剑/绝影/金剪/孟德新书、刘备+双股剑/的卢/带诏、赵云+亮银枪/宝雕弓/白银铠等），所有 `bond.officerId` 严格通过有效性审计。
+  4. **客户端 UI 升级**（`client/src/components/officer/OfficerDetail.tsx`）：
+     - 升级为「装备（8槽）」，支持 8 槽穿脱；
+     - 激活专属共鸣时高亮金框、显示【共鸣 150%】金标、暗金色属性与词条标签及专属史实典故引文；未激活专属时提示归属名将。
+  5. **专项验收测试**（`server/src/scripts/verify-s48-bond-and-eight-slots.ts`）：
+     - 门禁命令 `pnpm verify-s48-bond-and-eight-slots`：**54/54 全绿通过**。
+- **全仓验证全绿**：
+  - `pnpm verify-s48-bond-and-eight-slots`：54/54 通过；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
+  - `pnpm test`：shared（53 套件）、client（20 套件 71/71 测例）、server（`turn-golden.test.ts` 3/3 金样 100% 匹配）全绿通过；
+  - `pnpm lint`：全仓通过；
+  - `pnpm validate-data`：全量 165 件宝物及全量 12 个数据 JSON 文件通过；
+  - `pnpm verify-compliance`：817 个文件合规扫描通过。
+- **文档与宪法**：
+  - 更新 `docs/08-data-dictionary.md` §四、`docs/04-game-systems.md` §12、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/10-progress.md` 与本文件双写同步。
 
 - **用户需求落实**：「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」
 - **DESIGN.md 宪章建立**：根目录新建 `DESIGN.md`，确立为全项目 UI/UX、交互与视觉系统最高法准真源。

@@ -4,6 +4,7 @@
 import {
   canEquipItem,
   equipmentStatBonus,
+  equipmentEffectiveEffects,
   equipSlotFor,
   type EquipStatBonus,
   type Equipment,
@@ -19,12 +20,13 @@ import { getStaticData } from '../data/loader.js';
 import type { DuelEquipBonus } from '../battle/duel.js';
 
 /**
- * S13 宝物系统服务端引擎（Session 266 实装，0-A 5 槽）。
+ * S13 宝物系统服务端引擎（Session 266 5 槽，Session 450 扩展至 8 槽与专属共鸣 L2）。
  * 共享纯函数见 shared/items.ts；效果接入见 battle/crit/duel/campaign/stamina。
  *
- * 设计（docs/04 §十二·§十五 11.1，0-A 精简）：
+ * 设计（docs/04 §十二·§十五 11.1，docs/48）：
  * - Faction.inventory：宝物 id → 数量（势力未分配库存）
- * - Officer.equipment：5 槽（主武器/副武器/铠甲/坐骑/兵书）
+ * - Officer.equipment：8 槽（主武器/副武器/兜鍪冠/铠甲/战袍/坐骑/兵书/配饰印信）
+ * - 专属共鸣（L2 Bond）：专属武将装备时 1.5 倍基础加成 + 解锁隐藏共鸣词条
  * - 装备/卸下：库存 ↔ 武将槽位
  * - 赏赐宝物：忠诚+5~20（按品质），赐下后武将自行装备（槽空时）；§3.8 君主特例跳过
  * - 搜索宝物（personnel.ts 集成）：稀有分支入势力库存，不再纯功绩模拟
@@ -51,53 +53,42 @@ function pushLog(
   };
 }
 
-/** 装备属性加成（baseStats 六维累计；用于 effectiveStat 系函数）。 */
-export function equipBonusFor(officer: Pick<Officer, 'equipment'>): EquipStatBonus {
-  return equipmentStatBonus(officer.equipment, itemById);
+/** 装备属性加成（baseStats 六维累计；支持指定武将专属共鸣倍率）。 */
+export function equipBonusFor(officer: Pick<Officer, 'equipment'> & { id?: number }): EquipStatBonus {
+  return equipmentStatBonus(officer.equipment, itemById, officer.id);
 }
 
-/** 装备防御效果累计（baseEffect type='defense'，如黑铁甲/革甲；S13 Session 266 接入 damage.ts）。 */
-export function equipArmorDefenseFor(officer: Pick<Officer, 'equipment'>): number {
+/** 装备防御效果累计（baseEffect type='defense'，支持专属共鸣加成）。 */
+export function equipArmorDefenseFor(officer: Pick<Officer, 'equipment'> & { id?: number }): number {
   if (!officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
   let sum = 0;
-  for (const itemId of new Set(Object.values(officer.equipment))) {
-    if (itemId == null) continue;
-    const item = itemById(itemId);
-    if (!item) continue;
-    for (const e of item.baseEffect) {
-      if (e.type === 'defense') sum += e.value;
-    }
+  for (const e of effects) {
+    if (e.type === 'defense') sum += e.value;
   }
   return sum;
 }
 
-/** 装备暴率加成（baseEffect type='crit_rate'，百分比点；S13 Session 266 接入 crit.ts）。 */
-export function equipCritRateFor(officer: Pick<Officer, 'equipment'>): number {
+/** 装备暴率加成（baseEffect type='crit_rate'，支持专属共鸣加成与 bonusEffect）。 */
+export function equipCritRateFor(officer: Pick<Officer, 'equipment'> & { id?: number }): number {
   if (!officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
   let sum = 0;
-  for (const itemId of new Set(Object.values(officer.equipment))) {
-    if (itemId == null) continue;
-    const item = itemById(itemId);
-    if (!item) continue;
-    for (const e of item.baseEffect) {
-      if (e.type === 'crit_rate') sum += e.value;
-    }
+  for (const e of effects) {
+    if (e.type === 'crit_rate') sum += e.value;
   }
   return sum;
 }
 
-/** 装备单挑加成（武力 + duel_boost；S13 Session 266 接入 duel.ts）。 */
-export function duelEquipBonusFor(officer: Pick<Officer, 'equipment'>): DuelEquipBonus {
+/** 装备单挑加成（武力 + duel_boost，支持专属共鸣加成）。 */
+export function duelEquipBonusFor(officer: Pick<Officer, 'equipment'> & { id?: number }): DuelEquipBonus {
   const bonus: DuelEquipBonus = { war: 0, duelPct: 0 };
   if (!officer.equipment) return bonus;
-  for (const itemId of new Set(Object.values(officer.equipment))) {
-    if (itemId == null) continue;
-    const item = itemById(itemId);
-    if (!item) continue;
-    bonus.war += item.baseStats.war ?? 0;
-    for (const e of item.baseEffect) {
-      if (e.type === 'duel_boost') bonus.duelPct += e.value;
-    }
+  const stats = equipmentStatBonus(officer.equipment, itemById, officer.id);
+  bonus.war = stats.war ?? 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  for (const e of effects) {
+    if (e.type === 'duel_boost') bonus.duelPct += e.value;
   }
   return bonus;
 }

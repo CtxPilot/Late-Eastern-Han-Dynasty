@@ -382,7 +382,7 @@
 |------|------|------|
 | id | number | 宝物ID |
 | name | string | 宝物名 |
-| category | ItemCategory | 品类(weapon_primary/weapon_secondary/armor/mount/book/special/consumable) |
+| category | ItemCategory | 品类(weapon_primary/weapon_secondary/headwear/armor/robe/mount/book/accessory/special/consumable) |
 | quality | ItemQuality | 品质(common/rare/epic/legendary) |
 | primaryWeaponSubType? | PrimaryWeaponSubType | 主武器子类(仅weapon_primary) |
 | secondaryWeaponSubType? | SecondaryWeaponSubType | 副武器子类(仅weapon_secondary) |
@@ -390,12 +390,19 @@
 | baseStats | Partial<OfficerStats> | 基础属性加成 |
 | baseEffect | ItemEffect[] | 基础效果 |
 | equipRequirement | ItemEquipRequirement | 装备门槛 |
-| bond? | ItemBond | 专属共鸣 |
+| bond? | ItemBond | 专属共鸣（含 officerId, bonusStats?, bonusEffect?, description?） |
 | sets? | number[] | 所属套装ID |
 | consumable? | object | 消耗品配置 |
 | acquisition | AcquisitionMethod[] | 获取途径 |
 | shopPrice? | number | 商店价格 |
 | description | string | 说明 |
+
+> **装备栏位（8 槽）与专属羁绊（Bond / L2 共鸣）（Session 450）**：
+> - 武将装备槽（`Officer.equipment`）完整支持 8 槽：`weaponPrimary`（主武器）、`weaponSecondary`（副武器）、`headwear`（兜鍪/武冠）、`armor`（铠甲）、`robe`（战袍/绶带）、`mount`（坐骑）、`tome`（兵书/典籍）、`accessory`（配饰/印信）。原 `special` 宝物向后兼容映射为 `accessory`。
+> - 专属共鸣（Bond L2）计算：当且仅当装备者的 `officerId === item.bond.officerId` 时触发：
+>   1. 基础属性加成提升 1.5 倍（`Math.floor(stat * 1.5)`）并累加专属隐藏属性 `bond.bonusStats`；
+>   2. 基础效果数值提升 1.5 倍（`Math.floor(value * 1.5)`）并解锁专属隐藏词条 `bond.bonusEffect`；
+>   3. 非专属武将装备时仅获得 1.0 倍通用基础加成，隐藏词条与属性不激活。全量 165 件宝物中已落库 44 件史实/演义经典名将共鸣。
 
 > **单挑武器映射**：`primaryWeaponSubType`/`secondaryWeaponSubType` 到单挑武器威力/修正的完整映射表见 `05-combat-system.md §8.9`。`baseEffect` 中 `duel_*` 类型效果（如 `duel_boost`/`duel_first_strike`/`duel_invincible`）在单挑引擎中按 §8.9.4 规则生效。
 

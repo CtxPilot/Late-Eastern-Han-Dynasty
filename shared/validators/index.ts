@@ -337,6 +337,9 @@ export const ItemStaticSchema = z.object({
     'book',
     'special',
     'consumable',
+    'headwear',
+    'robe',
+    'accessory',
   ]),
   quality: z.enum(['common', 'rare', 'epic', 'legendary']),
   primaryWeaponSubType: z
@@ -356,6 +359,7 @@ export const ItemStaticSchema = z.object({
   bond: z
     .object({
       officerId: z.number(),
+      bonusStats: z.record(z.number()).optional(),
       bonusEffect: z.array(
         z.object({
           type: z.string(),
@@ -363,6 +367,7 @@ export const ItemStaticSchema = z.object({
           description: z.string().optional(),
         }),
       ),
+      description: z.string().optional(),
     })
     .optional(),
   sets: z.array(z.number()).optional(),

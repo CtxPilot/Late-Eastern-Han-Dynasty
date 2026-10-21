@@ -28,7 +28,9 @@ export interface ItemEquipRequirement {
 
 export interface ItemBond {
   officerId: number;
+  bonusStats?: Partial<OfficerStats>;
   bonusEffect: ItemEffect[];
+  description?: string;
 }
 
 export interface ConsumableDef {
@@ -61,15 +63,18 @@ export interface ItemStatic {
 }
 
 /**
- * 装备槽位（0-A 精简 5 槽，docs/04 §12.1；8+2 槽全量设计留 0-B）。
- * 与 07-ui-design.md §7.3 现有装备区块占位一致：主武器/副武器/铠甲/坐骑/兵书。
+ * 装备槽位（docs/04 §12.1 8 装备槽 + 2 快捷槽）。
+ * 8 格装备槽：主武器 / 副武器 / 兜鍪冠 / 铠甲 / 战袍绶带 / 坐骑 / 兵书典籍 / 配饰印信。
  */
 export type EquipSlot =
   | 'weaponPrimary'
   | 'weaponSecondary'
+  | 'headwear'
   | 'armor'
+  | 'robe'
   | 'mount'
-  | 'tome';
+  | 'tome'
+  | 'accessory';
 
 /** Officer.equipment: 槽位 → 宝物 id（未装备的槽位缺省）。 */
 export type Equipment = Partial<Record<EquipSlot, number>>;

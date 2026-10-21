@@ -1,3 +1,51 @@
+## 2026-10-21 — Session 450 · S13 装备与宝物系统深化：8 槽位扩展与武将专属羁绊（Bond / L2 共鸣）实装
+
+- Phase：**S13 宝物系统深化 / 数据与规则闭环**；依据方案立项 `docs/48-s13-bond-and-eight-slots-proposal.md`。
+- **背景与目标**：
+  1. 此前 S13 宝物系统在 Phase 0-A 仅落地了精简 5 槽（主武器/副武器/铠甲/坐骑/兵书），`docs/04 §12.1` 规划的兜鍪/冠、战袍/绶带、配饰/印信三槽处于后置状态；
+  2. `items.json` 虽已扩充至 165 件（Session 426），但 `bond` 专属武将羁绊未配置真实羁绊（零命中），武将装备未激活 `docs/04 §12.2` 规定的 L2 共鸣 1.5 倍乘区与隐藏词条；
+  3. 本会话目标：在严格遵守 165 件宝物真源总量守恒（`08-data-dictionary.md` §四）、零新增任意随机性（Zero RNG Perturbation）、保护 12 月金样指纹与旧存档向后兼容的前提下，全栈落地 8 槽位扩展与武将专属羁绊（Bond / L2 共鸣）。
+- **实装内容**：
+  1. **类型与校验器扩充**（`@leh/shared`）：
+     - `shared/enums/index.ts`：`ItemCategory` 枚举扩充 `HEADWEAR = 'headwear'`、`ROBE = 'robe'`、`ACCESSORY = 'accessory'`；
+     - `shared/types/item.ts`：`EquipSlot` 扩展为 8 槽：`weaponPrimary`、`weaponSecondary`、`headwear`、`armor`、`robe`、`mount`、`tome`、`accessory`；`ItemBond` 扩充 `bonusStats?: Partial<OfficerStats>` 与 `description?: string`；
+     - `shared/validators/index.ts`：`ItemStaticSchema` 同步纳管新类别与 bond 结构；
+     - `shared/game-state-entity-schema.ts`：在 `.strict()` 的 `equipment` 对象中声明 `headwear`、`robe`、`accessory` 可选槽位，打通严格模式存档校验通道；
+     - `shared/items.ts`：
+       - `equipSlotFor`：实现 8 类别槽位映射，`special` 向后兼容回退映射至 `accessory`，`consumable` 拒绝映射（走快捷槽）；
+       - `isItemBondActive`：当且仅当 `officerId === item.bond.officerId` 时判定羁绊激活；
+       - `itemEffectiveStatBonus` 与 `equipmentStatBonus`：支持 `officerId` 参数；专属共鸣激活时基础属性享受 1.5 倍乘区（`Math.floor(stat * 1.5)`）并累加隐藏属性 `bond.bonusStats`；非专属武将保持 1.0 倍基线；
+       - `itemEffectiveEffects` 与 `equipmentEffectiveEffects`：专属共鸣激活时基础效果数值享受 1.5 倍乘区（`Math.floor(val * 1.5)`）并解锁隐藏词条 `bond.bonusEffect`；
+       - 导出规范常量 `EQUIP_SLOT_ORDER`（8 槽标准化顺序）与 `EQUIP_SLOT_LABELS`（8 槽中文展示标签）。
+     - `shared/items.test.ts`：新增 9 项全覆盖单元测试。
+  2. **服务端引擎集成**（`server/src/engine/items.ts`）：
+     - 更新 `equipBonusFor`、`equipArmorDefenseFor`、`equipCritRateFor`、`duelEquipBonusFor`，参数签名兼容 `Pick<Officer, 'equipment'> & { id?: number }`，内部穿透传递 `officer.id` 计算专属共鸣；
+     - 8 槽装备与卸下（`equipItem` / `unequipItem`）对新增 3 槽无缝通用支持；
+     - `verify-items.ts` 同步更新关羽装备青龙刀后的暴击率预期（5% * 1.5 = 7%），32/32 全部通过。
+  3. **数据真源细化与历史名品羁绊落库**（`server/src/data/items.json`）：
+     - 宝物总量保持严格 165 条不变，通过将既有 25 件 `special` 和 20 件 `armor` 重分类为 `headwear`（9 件：熟铜盔、紫金冠等）、`robe`（5 件：红锦战袍、白袍等）、`accessory`（18 件：传国玉玺、孟德新书等）及 `armor`（13 件）；
+     - 落库 44 件史实/演义经典武将专属羁绊（关羽+青龙偃月刀/赤兔马、吕布+方天画戟/兽面吞头铠/紫金冠、曹操+倚天剑/绝影/金剪/孟德新书、刘备+雌雄双股剑/的卢/带诏、赵云+亮银枪/宝雕弓/白银铠、诸葛亮+元戎弩/孙子兵法/木牛流马等），全部羁绊关联的 `officerId` 均通过有效性审计。
+  4. **月结金样维护**（`server/src/engine/__fixtures__/turn-golden-12.json`）：
+     - 重新采集初始装备关羽暴击率变动后的 12 月金样指纹，确保 `turn-golden.test.ts`（12 个月指纹精确匹配 + 24 个月双局确定性对照）3/3 严格 100% 通过。
+  5. **客户端 UI 装帧升级**（`client/src/components/officer/OfficerDetail.tsx`）：
+     - 装备标签页升级为「装备（8槽）」，完整呈现 8 个槽位；
+     - 专属共鸣视觉呈现：共鸣激活时槽位卡片带有暗金发光边框，显示朱砂金框 `【共鸣 150%】` 徽章，加成属性与共鸣隐藏词条以翡翠/琥珀色高亮，底部展示典雅倾斜的专属史料典故引文；未激活时提示「专属武将：[武将名]（未激活）」。
+  6. **专项验收测试脚本**（`server/src/scripts/verify-s48-bond-and-eight-slots.ts`）：
+     - 注册 `pnpm verify-s48-bond-and-eight-slots` 门禁，覆盖 8 槽映射与中文标签、关羽青龙刀共鸣与夏侯惇对照、吕布/张飞/曹操名品共鸣、8 槽穿脱流转与属性累计、GameStateSchema 兼容性、165 件数据真源守恒与羁绊有效性 6 大维度。
+- **验证（全绿）**：
+  - `pnpm verify-s48-bond-and-eight-slots`：**54/54 项全绿通过**；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
+  - `pnpm test`：shared（53 套件）、client（20 套件 71/71 测例）、server（包括 `turn-golden.test.ts` 3/3）全部通过；
+  - `pnpm lint`：全仓通过；
+  - `pnpm validate-data`：全量 165 件宝物及全部 12 个数据 JSON 文件校验 100% 通过；
+  - `pnpm verify-compliance`：817 个文件许可证与编码合规通过。
+- **文档与宪法**：
+  - 更新 `docs/08-data-dictionary.md` §四（品类扩充、8 槽说明与 Bond L2 计算规则）；
+  - 更新 `docs/04-game-systems.md` §12（8 槽位与 Bond L2 实装记录）；
+  - 更新 `docs/12-system-map.md` S13 状态；
+  - 更新 `docs/35-phased-implementation-roadmap.md` 分步进度；
+  - 本日志与根目录 `HANDOFF.md` 双写同步。
+
 ## 2026-09-28 — Session 449 · 修复开始界面滚动截断、卡片挤压与主界面进入阻断缺陷
 
 - Phase：**UI/UX 缺陷修复 / 界面健壮性加固**；针对用户报告「现在无法进入游戏主界面，且开始界面UI显示不全」。

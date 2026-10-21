@@ -266,9 +266,9 @@ function run(): void {
   );
 
   // ── 6. 效果接入 ──────────────────────────────────────────────
-  // 暴率：关羽装备青龙偃月刀（crit_rate 5）
+  // 暴率：关羽装备青龙偃月刀（基线 crit_rate 5，激活专属共鸣 1.5 倍后为 7%）
   const critBonus = equipCritRateFor(guanyu);
-  assert(critBonus === 5, `关羽装备暴率加成 +5%（实际 ${critBonus}）`);
+  assert(critBonus === 7, `关羽装备青龙偃月刀专属共鸣暴率加成 1.5 倍为 7%（实际 ${critBonus}）`);
   // 防御：找装备黑铁甲（defense 8）的构造场景
   const defenseItem = allItems().find((i) => i.baseEffect.some((e) => e.type === 'defense'));
   assert(defenseItem != null, `防御宝物存在（${defenseItem?.name}）`);

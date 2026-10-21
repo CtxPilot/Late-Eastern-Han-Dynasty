@@ -1526,7 +1526,7 @@ d≤5格损耗5% → 10格12% → 15格25% → >15格40%。雨季冬季+5%。
 
 ### 12.1 装备栏位（8 + 2 槽）
 
-> **Session 266 实装标注（S13 0-A）**：**0-A 精简 5 槽已实装**（主武器/副武器/铠甲/坐骑/兵书），见下方标注；**8+2 槽全量设计**（含兜鍪/冠、战袍/绶带、配饰/印信 + 2 消耗品快捷槽）**留 0-B**。0-A 运行时字段：`Officer.equipment`（槽→宝物 id）+ `Faction.inventory`（宝物 id→数量）；引擎 `server/src/engine/items.ts`；效果接入：baseStats 六维计入有效属性（战斗/单挑/暴率/战役战力）+ baseEffect 可落地（defense→伤害防御、crit_rate→暴率、duel_boost→单挑伤害，机制预留）；验证 `pnpm verify-items` 32/32 + `verify-s266-ui` 浏览器 17/17。
+> **Session 266 实装标注（S13 0-A）**：**0-A 精简 5 槽已实装**（主武器/副武器/铠甲/坐骑/兵书）；**Session 450 扩展至完整 8+2 槽与专属共鸣（Bond / L2）**（含兜鍪/冠、战袍/绶带、配饰/印信 + 2 消耗品快捷槽）。运行时字段：`Officer.equipment`（8 槽→宝物 id）+ `Faction.inventory`（宝物 id→数量）；引擎 `server/src/engine/items.ts`；效果接入：baseStats 六维计入有效属性（战斗/单挑/暴率/战役战力，共鸣 1.5 倍）+ baseEffect 可落地（defense→伤害防御、crit_rate→暴率、duel_boost→单挑伤害，共鸣 1.5 倍加成与隐藏词条解锁）；验证 `pnpm verify-s48-bond-and-eight-slots` 54/54 全通。
 
 每位武将拥有 **8 个装备槽**（永久装备）+ **2 个消耗品快捷槽**（可携带、数量叠加）：
 
@@ -1581,6 +1581,16 @@ L3 套装效果：
 > **Session 440 S4c 实装（S13 被俘没收，docs/44 D6）**：被俘主将/副将装备按件独立 30% 归俘获方（`items.ts` `rollCaptiveEquipmentLoot` 纯掷点 + `LOOT_EQUIPMENT_CHANCE` 单一真源；未中件被俘者保留，随招降/赎回另行立项）。挂接四处：自动战全歼敌俘/战败攻俘（复用缴获函数）+ 亲统生擒 + 单挑被俘（战报追加缴获）；劝降释放/手动没收（D7）不做。零新端点/字段；验证 `pnpm verify-s44c-captive-loot` 26/26，金样零扰动。
 >
 > **Session 441 S4d 实装（S13 战斗中使用，docs/44 D1~D3）**：参战武将行动回合使用 1 件恢复体力类消耗品（`battle.ts` `useBattleConsumable`：仅 stamina/heal，耗整次行动 `hasActed + mp=0`，复用 `useConsumable` 扣槽优先/体力上限/日志 `item_use`，零 RNG，AI 不用）。新端点 `POST /battle/use-consumable`（`{unitId, itemId}` → `{battle, game}`）走五处镜像（routes→services→worker→api/offline-api→store，parity 别名 `useBattleConsumable`）+ BattleView 药品按钮/选择器/空态。验证 `pnpm verify-s44d-battle-consumable` 24/24（成功/截断/分队/八拒绝）+ `pnpm verify-s44d-battle-consumable-ui` 26/26（门禁/空态/开合/console 零错误；成功点击需真实库存，浏览器端诚实边界），金样零扰动。
+>
+> **Session 450 实装（S13 8 槽位扩展与专属羁绊 Bond / L2 共鸣，docs/48）**：
+> - **8 槽位扩展**：武将装备槽位扩展为完整 8 槽（`EQUIP_SLOT_ORDER`：`weaponPrimary`/`weaponSecondary`/`headwear`/`armor`/`robe`/`mount`/`tome`/`accessory`），新增品类 `headwear`（兜鍪/武冠）、`robe`（战袍/绶带）、`accessory`（配饰/印信），原 `special` 宝物向后兼容映射至 `accessory`；`GameStateSchema` `.strict()` 扩展接受新槽位。
+> - **专属共鸣（Bond L2）模型**：当且仅当装备者 `officerId === item.bond.officerId` 时触发：
+>   1. 基础属性加成提升 1.5 倍（`Math.floor(stat * 1.5)`）并累加隐藏属性 `bond.bonusStats`；
+>   2. 基础效果数值提升 1.5 倍（`Math.floor(val * 1.5)`）并解锁隐藏词条 `bond.bonusEffect`；
+>   3. 非专属武将装备仅获 1.0 倍通用基础加成，隐藏词条与加成不激活。
+> - **数据守恒与历史名品**：`items.json` 保持严格 165 条真源守恒；细化分类并落库 44 件史实/演义专属共鸣（青龙刀关羽、画戟吕布、蛇矛张飞、倚天剑曹操、双股剑刘备、亮银枪赵云等）。
+> - **UI 呈现**：OfficerDetail 升级为「装备（8槽）」，激活专属共鸣时高亮金框、显示【共鸣 150%】金标、暗金色属性与词条标签及专属史实典故引文；未激活专属时提示归属名将。
+> - **专项验收**：`pnpm verify-s48-bond-and-eight-slots` 54/54 全通；金样 12/12 严格无漂移。
 
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 

@@ -134,6 +134,9 @@ export enum ItemCategory {
   BOOK = 'book',
   SPECIAL = 'special',
   CONSUMABLE = 'consumable',
+  HEADWEAR = 'headwear',
+  ROBE = 'robe',
+  ACCESSORY = 'accessory',
 }
 
 export enum ItemQuality {

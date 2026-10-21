@@ -16,6 +16,9 @@ import {
   MILITARY_LABELS,
   PERSONALITY_LABEL,
   equipmentStatBonus,
+  isItemBondActive,
+  itemEffectiveStatBonus,
+  itemEffectiveEffects,
   meritAttrBonusFor,
   meritEntry,
   meritLevelFor,
@@ -365,28 +368,81 @@ function EquipmentTab({
         </p>
       )}
       <p className="text-xs text-stone-600">
-        S13 宝物系统（0-A 5 槽：主武器/副武器/铠甲/坐骑/兵书）。装备/卸下对武将自由操作；赏赐需宝物在势力库存。
+        S13 宝物系统（8 槽位：主武器/副武器/兜鍪冠/铠甲/战袍/坐骑/兵书/配饰印信 + L2 专属共鸣）。装备/卸下对武将自由操作；赏赐需宝物在势力库存。
       </p>
 
-      <h3 className="text-xs tracking-widest text-amber-500">装备（5槽）</h3>
+      <h3 className="text-xs tracking-widest text-amber-500 font-serif">装备（8槽）</h3>
       <div className="grid grid-cols-2 gap-2">
         {EQUIP_SLOT_ORDER.map((slotKey) => {
           const itemId = officer.equipment?.[slotKey];
           const item = itemId != null ? itemById(itemId) : null;
           const slotLabel = EQUIP_SLOT_LABELS[slotKey];
+          const isBond = item != null && isItemBondActive(item, officer.id);
+          const effectiveStats = item != null ? itemEffectiveStatBonus(item, officer.id) : {};
+          const effectiveEffects = item != null ? itemEffectiveEffects(item, officer.id) : [];
+
           return (
-            <div key={slotKey} className="rounded border border-stone-800 bg-stone-900/50 px-3 py-2" data-testid={`equip-slot-${slotKey}`}>
-              <div className="text-xs text-stone-500">{slotLabel}</div>
+            <div
+              key={slotKey}
+              className={`rounded border px-3 py-2 transition-all ${
+                isBond
+                  ? 'border-amber-700/60 bg-amber-950/20 shadow-[0_0_8px_rgba(217,119,6,0.15)]'
+                  : 'border-stone-800 bg-stone-900/50'
+              }`}
+              data-testid={`equip-slot-${slotKey}`}
+            >
+              <div className="flex items-center justify-between text-xs text-stone-500">
+                <span>{slotLabel}</span>
+                {isBond && (
+                  <span
+                    className="rounded border border-amber-600/60 bg-amber-900/50 px-1 py-0.2 text-[10px] text-amber-300 font-serif"
+                    data-testid={`bond-badge-${item!.id}`}
+                  >
+                    共鸣 150%
+                  </span>
+                )}
+              </div>
               {item ? (
                 <div className="mt-1">
-                  <div className="text-xs text-amber-200">{item.name}</div>
-                  <div className="text-xs text-stone-500">{QUALITY_LABEL[item.quality]} · {item.description}</div>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {Object.entries(item.baseStats).map(([k, v]) => (
-                      <span key={k} className="rounded bg-stone-800 px-1 text-xs text-emerald-300">{STAT_LABEL[k]} +{v}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-xs font-serif ${isBond ? 'text-amber-300 font-bold' : 'text-amber-200'}`}>
+                      {item.name}
+                    </span>
+                    <span className="text-[10px] text-stone-500">{QUALITY_LABEL[item.quality]}</span>
+                  </div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">{item.description}</div>
+                  {isBond && item.bond?.description && (
+                    <div className="text-[10px] text-amber-600/90 mt-0.5 italic">
+                      “{item.bond.description}”
+                    </div>
+                  )}
+                  {item.bond && !isBond && (
+                    <div className="text-[10px] text-stone-500 mt-0.5">
+                      专属武将：{game.officers[item.bond.officerId]?.name ?? `武将 #${item.bond.officerId}`}（未激活）
+                    </div>
+                  )}
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {Object.entries(effectiveStats).map(([k, v]) => (
+                      <span
+                        key={k}
+                        className={`rounded px-1 text-xs ${
+                          isBond ? 'bg-amber-950/60 text-amber-300 border border-amber-700/40' : 'bg-stone-800 text-emerald-300'
+                        }`}
+                      >
+                        {STAT_LABEL[k]} +{v}{isBond && !item.baseStats[k as keyof typeof item.baseStats] ? '' : ''}
+                      </span>
                     ))}
-                    {item.baseEffect.map((e, i) => (
-                      <span key={i} className="rounded bg-stone-800 px-1 text-xs text-amber-300">{e.description ?? `${EFFECT_LABEL[e.type] ?? e.type} +${e.value}`}</span>
+                    {effectiveEffects.map((e, i) => (
+                      <span
+                        key={i}
+                        className={`rounded px-1 text-xs ${
+                          e.description?.includes('【')
+                            ? 'bg-amber-900/40 text-amber-200 border border-amber-600/40'
+                            : 'bg-stone-800 text-amber-300'
+                        }`}
+                      >
+                        {e.description ?? `${EFFECT_LABEL[e.type] ?? e.type} +${e.value}`}
+                      </span>
                     ))}
                   </div>
                   {!isRuler && (

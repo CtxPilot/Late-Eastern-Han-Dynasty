@@ -105,9 +105,12 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
       .object({
         weaponPrimary: PositiveIdSchema.optional(),
         weaponSecondary: PositiveIdSchema.optional(),
+        headwear: PositiveIdSchema.optional(),
         armor: PositiveIdSchema.optional(),
+        robe: PositiveIdSchema.optional(),
         mount: PositiveIdSchema.optional(),
         tome: PositiveIdSchema.optional(),
+        accessory: PositiveIdSchema.optional(),
       })
       .strict()
       .optional(),
