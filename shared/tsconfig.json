@@ -73,6 +73,7 @@
     "civil-development.ts",
     "culture.ts",
     "craft.ts",
-    "transport.ts"
+    "transport.ts",
+    "item-sets.ts"
   ]
 }

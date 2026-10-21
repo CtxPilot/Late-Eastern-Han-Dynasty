@@ -9,45 +9,49 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 450**（S13 装备与宝物系统深化：8 槽位扩展与武将专属羁绊 Bond / L2 共鸣实装：立项 `docs/48-s13-bond-and-eight-slots-proposal.md`；8 槽位扩展 `weaponPrimary`/`weaponSecondary`/`headwear`/`armor`/`robe`/`mount`/`tome`/`accessory`，special 向后兼容回退；专属共鸣 L2 模型实装：专属武将装备基础加成与效果 1.5 倍 + 解锁隐藏词条与 `bonusStats`，非专属武将维持 1.0 倍基线；`items.json` 保持 165 条总量守恒，细分兜鍪冠/战袍/配饰，落库 44 件史实名将羁绊；OfficerDetail 8 槽装帧与金框共鸣徽章/典故引文；专项验收 `verify-s48-bond-and-eight-slots` 54/54 全绿 + 回归矩阵全绿，金样零扰动） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 宝物系统 8 槽与 L2 共鸣全面落地 |
-| 代码最新 | Session 450 8 槽位扩展与专属共鸣系统全栈实现及验证脚本；工作树干净 |
-| 文档最新 | **Session 450 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 450 已交付**；8 槽位扩展与专属羁绊（Bond / L2 共鸣）已全栈交付并完成 54/54 专项验证与全仓回归；后续方向：0-B 闸门真人实测、数据门立项、平衡轮 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**数据门立项**（T5a/T5b 套装数据、未接入 effect 逐项清单）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
+| 会话 | **Session 451**（S13 宝物系统深化：套装体系 Set L3 与未接入装备词条消费闭环实装：立项 `docs/49-s13-itemsets-and-effects-proposal.md`；10 大经典历史套装元数据与件数阶梯 `shared/item-sets.ts` 实装，32 件特色名宝 sets 打标严格保持 165 件守恒；复合共鸣乘区公式 `L1 base × L2 bond 1.5x × L3 set 1.2/1.5/2.0x + bonusStats/bonusEffects`；未接入词条全部闭环消费：charge_damage 六角重骑突击加成、mobility 六角部队机动力、range 远程射程、recruit_bonus 城市内政征兵、authority 称王皇权门槛；OfficerDetail 装备面板展示套装进度与特技词条；专项验收 `verify-s49-itemsets-and-effects` 48/48 全绿 + 回归矩阵全绿，金样零扰动） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S13 宝物系统全面达成完全闭环 |
+| 代码最新 | Session 451 套装体系（Set L3）与未接入装备词条消费点全栈实现及验证脚本；工作树干净 |
+| 文档最新 | **Session 451 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 451 已交付**；套装体系（Set L3）与词条消费端点已全栈交付并完成 48/48 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**新玩法大系统规划与深化**（对照 `12-system-map.md` 选择一个大系统）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
 
-### Session 450 交接要点
+### Session 451 交接要点
 
-- **方案与立项**：依据 `docs/48-s13-bond-and-eight-slots-proposal.md`，全量落地 S13 规划的 8 槽位与 L2 专属共鸣。
+- **方案与立项**：依据 `docs/49-s13-itemsets-and-effects-proposal.md`，全量落地 S13 规划的 L3 套装体系与未接入词条消费端点。
 - **核心实装**：
-  1. **8 槽位扩展**（`shared/enums/index.ts`、`shared/types/item.ts`、`shared/validators/index.ts`、`shared/game-state-entity-schema.ts`、`shared/items.ts`）：
-     - `EquipSlot` 正式扩充为 8 槽：`weaponPrimary`、`weaponSecondary`、`headwear`、`armor`、`robe`、`mount`、`tome`、`accessory`；
-     - `ItemCategory` 扩充 `headwear`、`robe`、`accessory`；`special` 宝物品类向后兼容映射至 `accessory`；
-     - `EQUIP_SLOT_ORDER` 规范 8 槽标准顺序；`EQUIP_SLOT_LABELS` 提供古典优雅中文展示标签；
-     - `GameStateSchema` `.strict()` 模式扩展纳管新槽位，通过往返序列化校验。
-  2. **专属共鸣（Bond / L2）机制**（`shared/items.ts`、`server/src/engine/items.ts`）：
-     - 当且仅当 `officerId === item.bond.officerId` 时激活专属共鸣；
-     - 基础属性加成（`baseStats`）享受 1.5 倍乘区（`Math.floor(stat * 1.5)`）并累加隐藏属性 `bond.bonusStats`；
-     - 基础效果数值（`baseEffect`）享受 1.5 倍乘区（`Math.floor(val * 1.5)`）并解锁隐藏词条 `bond.bonusEffect`；
-     - 非专属武将装备仅获得 1.0 倍通用基础加成，隐藏词条与属性不激活；
-     - 引擎属性加成穿透支持：`equipBonusFor`、`equipArmorDefenseFor`、`equipCritRateFor`、`duelEquipBonusFor` 全量支持专属共鸣与 8 槽累计。
-  3. **数据真源细化与历史名品羁绊**（`server/src/data/items.json`）：
-     - 宝物总量保持严格 165 条不变，重分类出 `headwear`（9 件）、`robe`（5 件）、`accessory`（18 件）及 `armor`（13 件）；
-     - 落库 44 件史实/演义经典武将专属羁绊（关羽+青龙刀/赤兔、吕布+方天戟/兽面铠/紫金冠、曹操+倚天剑/绝影/金剪/孟德新书、刘备+双股剑/的卢/带诏、赵云+亮银枪/宝雕弓/白银铠等），所有 `bond.officerId` 严格通过有效性审计。
+  1. **套装体系与元数据**（`shared/item-sets.ts`、`shared/items.ts`）：
+     - 声明 10 大经典历史/演义套装：威震华夏、天下无双、魏武雄风、昭烈仁德、卧龙天机、常胜龙胆、江东霸业、万人莫敌、锦马银枪、社稷正朔；
+     - 渐进阶梯（2件 1.2x、3件 1.5x、4件 2.0x 乘区）与阶梯称号、特技解锁；
+     - 复合共鸣乘区公式：`effectiveStat = Math.floor(baseStat * bondMultiplier * setMultiplier) + bondBonusStat`，装备总加成累加所有激活阶梯的 `tier.bonusStats`，总特技累加激活阶梯的 `tier.bonusEffects`；
+     - 提供纯函数 `getItemSetById`、`allItemSets` 与 `getActiveItemSets`。
+  2. **宝物数据打标**（`server/src/data/items.json`）：
+     - 严格保持 165 件总量守恒；32 件特色名宝打标 `sets: [setId, ...]`。
+  3. **未接入词条消费闭环**（`server/src/engine/`）：
+     - `charge_damage`：在六角重骑突击伤害中计入 `equipChargeBonusFor`；
+     - `mobility`：在六角战场单位生成中计入 `equipMobilityBonusFor`；
+     - `range`：在六角普通远程攻击射程校验中计入 `equipRangeBonusFor`；
+     - `recruit_bonus`：在城市内政征兵中计入城主 `equipRecruitBonusFor`；
+     - `authority`：在称王皇权门槛校验中计入君主 `equipAuthorityBonusFor`。
   4. **客户端 UI 升级**（`client/src/components/officer/OfficerDetail.tsx`）：
-     - 升级为「装备（8槽）」，支持 8 槽穿脱；
-     - 激活专属共鸣时高亮金框、显示【共鸣 150%】金标、暗金色属性与词条标签及专属史实典故引文；未激活专属时提示归属名将。
-  5. **专项验收测试**（`server/src/scripts/verify-s48-bond-and-eight-slots.ts`）：
-     - 门禁命令 `pnpm verify-s48-bond-and-eight-slots`：**54/54 全绿通过**。
+     - 装备卡片展示所属套装徽章（`[套装·xxx]`）；
+     - 新增「激活套装」专区，展示件数进度、激活阶梯金标、乘区倍率与已激活特技。
+  5. **专项验收测试**（`server/src/scripts/verify-s49-itemsets-and-effects.ts`）：
+     - 门禁命令 `pnpm verify-s49-itemsets-and-effects`：**48/48 全绿通过**。
 - **全仓验证全绿**：
+  - `pnpm verify-s49-itemsets-and-effects`：48/48 通过；
   - `pnpm verify-s48-bond-and-eight-slots`：54/54 通过；
-  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
-  - `pnpm test`：shared（53 套件）、client（20 套件 71/71 测例）、server（`turn-golden.test.ts` 3/3 金样 100% 匹配）全绿通过；
+  - `pnpm typecheck`：全项目 3 模块全部 0 错误；
+  - `pnpm test`：shared（53 套件 484 测试）、client（20 套件 71 测试）、server（含 `turn-golden.test.ts` 3/3 金样 100% 匹配零漂移）全绿通过；
   - `pnpm lint`：全仓通过；
   - `pnpm validate-data`：全量 165 件宝物及全量 12 个数据 JSON 文件通过；
-  - `pnpm verify-compliance`：817 个文件合规扫描通过。
+  - `pnpm verify-compliance`：821 个文件合规扫描通过。
 - **文档与宪法**：
-  - 更新 `docs/08-data-dictionary.md` §四、`docs/04-game-systems.md` §12、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/10-progress.md` 与本文件双写同步。
+  - 更新 `docs/08-data-dictionary.md` §四与 §十四；
+  - 更新 `docs/04-game-systems.md` §12.2；
+  - 更新 `docs/12-system-map.md` S13 状态（成熟度提升至 M+）；
+  - 更新 `docs/35-phased-implementation-roadmap.md` 分步进度；
+  - `docs/10-progress.md` 与本文件双写同步。
 
 - **用户需求落实**：「优化整个项目的UI、交互和视觉效果。可以重构。本项目无DESIGN.md文件，可以新建并写入开发宪法。」
 - **DESIGN.md 宪章建立**：根目录新建 `DESIGN.md`，确立为全项目 UI/UX、交互与视觉系统最高法准真源。

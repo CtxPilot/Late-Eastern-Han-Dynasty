@@ -1591,6 +1591,18 @@ L3 套装效果：
 > - **数据守恒与历史名品**：`items.json` 保持严格 165 条真源守恒；细化分类并落库 44 件史实/演义专属共鸣（青龙刀关羽、画戟吕布、蛇矛张飞、倚天剑曹操、双股剑刘备、亮银枪赵云等）。
 > - **UI 呈现**：OfficerDetail 升级为「装备（8槽）」，激活专属共鸣时高亮金框、显示【共鸣 150%】金标、暗金色属性与词条标签及专属史实典故引文；未激活专属时提示归属名将。
 > - **专项验收**：`pnpm verify-s48-bond-and-eight-slots` 54/54 全通；金样 12/12 严格无漂移。
+>
+> **Session 451 实装（S13 套装体系 Set L3 与未接入装备词条消费闭环，docs/49）**：
+> - **十大经典套装（Set L3）体系**：`shared/item-sets.ts` 声明 10 大经典历史/演义套装元数据（威震华夏、天下无双、魏武雄风、昭烈仁德、卧龙天机、常胜龙胆、江东霸业、万人莫敌、锦马银枪、社稷正朔），32 件特色宝物打标 `sets: number[]`，`items.json` 保持严格 165 件守恒。
+> - **渐进阶梯与复合共鸣**：达成 2/3/4 件时分别激活 1.2 / 1.5 / 2.0 倍属性乘区（`statMultiplier`），累加阶梯属性（`bonusStats`）与阶梯特技（`bonusEffects`）。复合乘区公式严格遵循 `effectiveStat = Math.floor(baseStat * bondMultiplier * setMultiplier) + bondBonusStat`，装备总加成累加所有激活阶梯的 `tier.bonusStats`。
+> - **未接入词条消费端点闭环**：
+>   - `charge_damage`：在六角战斗骑兵突击计算中计入 `equipChargeBonusFor`；
+>   - `mobility`：在六角战场单位生成（`buildSideUnits`/`createBattle`）中计入 `equipMobilityBonusFor`；
+>   - `range`：在六角普通远程攻击射程校验中计入 `equipRangeBonusFor`；
+>   - `recruit_bonus`：在城市内政征兵（`conscript`）中计入城主 `equipRecruitBonusFor`；
+>   - `authority`：在称王皇权门槛校验（`getKingRequirements`）中计入君主 `equipAuthorityBonusFor`。
+> - **UI 呈现**：OfficerDetail 装备面板新增激活套装进度卡片（当前件数/总件数）、阶梯特技称号与说明徽章，装备卡片上标明所属套装标签。
+> - **专项验收**：`pnpm verify-s49-itemsets-and-effects` 48/48 全通；全仓回归全绿，金样 3/3 严格零漂移。
 
 每位武将可携带最多 **2 种** 消耗品，每种数量可叠加（上限 99）：
 

@@ -38,6 +38,7 @@ import {
   type Season,
 } from '@leh/shared';
 import { grantMeritTo } from './meritGrant.js';
+import { equipRecruitBonusFor } from './items.js';
 import { FAME_RELIEF, grantFame, ARMS_CONSCRIPT_PER_HUNDRED, ARMS_TRAIN_COST } from './factionPolitics.js';
 
 export type DevelopKind = DevelopmentProjectKind;
@@ -277,9 +278,10 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
   const playerFaction = state.factions[state.playerFactionId];
   const popularWill = playerFaction ? computePopularWill(playerFaction, state) : 50;
   const popularRecruit = popularWillRecruitModifier(popularWill);
+  const recruitEquip = equipRecruitBonusFor(lord) / 100;
   const want = Math.floor(
     (troopsGain + bonus * 10) *
-      (1 + civilEfficiencyOf(state, city) + recruitSkillBonus(lord) + popularRecruit),
+      (1 + civilEfficiencyOf(state, city) + recruitSkillBonus(lord) + popularRecruit + recruitEquip),
   );
   let total = Math.min(want, maxMen);
   if (factionHasActivePolicy(state, state.playerFactionId, PolicyType.HIGH_WALLS)) {

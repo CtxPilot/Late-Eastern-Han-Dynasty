@@ -57,7 +57,19 @@ import {
   type BattleSide,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
-import { duelEquipBonusFor, equipArmorDefenseFor, equipBonusFor, equipCritRateFor, getItemById, LOOT_EQUIPMENT_CHANCE, rollCaptiveEquipmentLoot, useConsumable } from './items.js';
+import {
+  duelEquipBonusFor,
+  equipArmorDefenseFor,
+  equipBonusFor,
+  equipChargeBonusFor,
+  equipCritRateFor,
+  equipMobilityBonusFor,
+  equipRangeBonusFor,
+  getItemById,
+  LOOT_EQUIPMENT_CHANCE,
+  rollCaptiveEquipmentLoot,
+  useConsumable,
+} from './items.js';
 import { hexDistance, hexKey } from '../battle/hex.js';
 import { reachable } from '../battle/pathfinding.js';
 import { calcDamage, getUnitMatchup } from '../battle/damage.js';
@@ -256,8 +268,9 @@ function unitsFromArmy(
     const position = squad.role === 'main' ? 'center' : squad.position;
     const projection = projected[position] ?? { position: anchor, facing: side === 'attacker' ? 0 as const : 3 as const };
     const troops = troopAllocation[index];
+    const equipMobility = equipMobilityBonusFor(officer);
     const mobility = prepareDefenseHexMobility(
-      template.mobility,
+      template.mobility + equipMobility,
       factionHasActivePolicy(state, army.factionId, PolicyType.PREPARE_DEFENSE),
     );
     return {
@@ -468,11 +481,11 @@ export function createBattle(
   const pUnit = unitMap[pType];
   const eUnit = unitMap[eType];
   const atkMobility = prepareDefenseHexMobility(
-    pUnit.mobility,
+    pUnit.mobility + equipMobilityBonusFor(playerOfficer),
     factionHasActivePolicy(state, playerFaction, PolicyType.PREPARE_DEFENSE),
   );
   const defMobility = prepareDefenseHexMobility(
-    eUnit.mobility,
+    eUnit.mobility + equipMobilityBonusFor(enemyOfficer),
     factionHasActivePolicy(state, defenderFaction, PolicyType.PREPARE_DEFENSE),
   );
 
@@ -983,11 +996,16 @@ export function attackUnit(
   if (attacker.hasActed) throw new Error('该部队已行动');
   if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
   if (!isActiveBattleUnit(defender)) throw new Error('目标已溃');
+  const atkO = state.officers[attacker.commanderId];
+  const defO = state.officers[defender.commanderId];
+  if (!atkO || !defO) throw new Error('缺少主将');
+
   const weapon = attacker.unitType === UnitType.SPEARMAN ? 'spear' : attacker.unitType === UnitType.HEAVY_INFANTRY ? 'axe' : 'sword';
   const distance = hexDistance(attacker.position, defender.position);
   if (atkT.range > 1) {
     if (battle.weather === Weather.FOG) throw new Error('雾天远程兵种不可射击');
-    const range = effectiveUnitRange(atkT.range, battle.weather);
+    const rangeBonus = equipRangeBonusFor(atkO);
+    const range = effectiveUnitRange(atkT.range + rangeBonus, battle.weather);
     if (distance < 1 || distance > range) {
       throw new Error(`普通攻击射程为1-${range}格（当前${distance}格）`);
     }
@@ -997,10 +1015,6 @@ export function attackUnit(
     : checkMeleeTarget(attacker.position, attacker.facing ?? 0, defender.position, weapon);
   if (!targetCheck.inRange) throw new Error(`不在白刃攻击范围或朝向之外（${weapon} ${targetCheck.distance}格/${targetCheck.arc}）`);
 
-  const atkO = state.officers[attacker.commanderId];
-  const defO = state.officers[defender.commanderId];
-  if (!atkO || !defO) throw new Error('缺少主将');
-
   const strongMap = buildStrongAgainstMap();
   const matchup = getUnitMatchup(attacker.unitType, defender.unitType, strongMap);
   const atkTerrain = battle.hexGrid.terrain[attacker.position.r][attacker.position.q];
@@ -1009,11 +1023,14 @@ export function attackUnit(
   // §6.1 基础伤害（功绩+装备属性加成计入有效武力/统帅，Session 265+266；08 §二十八守城 +3）
   const atkEquip = equipBonusFor(atkO);
   const defEquip = equipBonusFor(defO);
-  // 移动后冲锋（08 §二十九）：骑兵本回合已移动的普攻按来源叠加伤害加成
+  // 移动后冲锋（08 §二十九）：骑兵本回合已移动的普攻按来源叠加伤害加成，支持装备 charge_damage 累加
   const attackerMoved = hasMovedThisTurn(attacker.mp, attacker.maxMp, battle.weather);
   const charge = attackerMoved
     ? resolveChargeBonus({ unitType: attacker.unitType, terrain: atkTerrain, formation: attacker.formation })
     : { bonusPct: 0 };
+  if (attackerMoved) {
+    charge.bonusPct += equipChargeBonusFor(atkO);
+  }
   const rawBaseDamage = calcDamage(
     {
       unitAttack: atkT.attack,

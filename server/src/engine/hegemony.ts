@@ -14,6 +14,7 @@ import {
   type PoliticalStage,
 } from '@leh/shared';
 import { staticData } from '../data/loader.js';
+import { equipAuthorityBonusFor } from './items.js';
 
 /** 霸府阶段头衔文案。汉末霸府典型为丞相（曹操迎帝都许后任丞相）。 */
 const HEGEMON_TITLE = '丞相';
@@ -145,7 +146,8 @@ export function getKingRequirements(state: GameState, factionId: number): KingRe
     threshold: KING_STAGE_MONTHS_REQUIRED,
     passed: stageAgeValue >= KING_STAGE_MONTHS_REQUIRED,
   };
-  const authorityValue = faction?.imperialAuthority ?? 0;
+  const ruler = faction?.rulerId != null ? state.officers[faction.rulerId] : undefined;
+  const authorityValue = (faction?.imperialAuthority ?? 0) + equipAuthorityBonusFor(ruler);
   const imperialAuthority = {
     current: authorityValue,
     threshold: KING_IMPERIAL_AUTHORITY_REQUIRED,

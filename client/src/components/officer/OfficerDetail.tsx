@@ -16,6 +16,8 @@ import {
   MILITARY_LABELS,
   PERSONALITY_LABEL,
   equipmentStatBonus,
+  getActiveItemSets,
+  getItemSetById,
   isItemBondActive,
   itemEffectiveStatBonus,
   itemEffectiveEffects,
@@ -410,6 +412,21 @@ function EquipmentTab({
                     </span>
                     <span className="text-[10px] text-stone-500">{QUALITY_LABEL[item.quality]}</span>
                   </div>
+                  {item.sets && item.sets.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {item.sets.map((sid) => {
+                        const setDef = getItemSetById(sid);
+                        return setDef ? (
+                          <span
+                            key={sid}
+                            className="rounded border border-amber-800/40 bg-amber-950/30 px-1 text-[10px] text-amber-400/90 font-serif"
+                          >
+                            套装·{setDef.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                   <div className="text-[11px] text-stone-400 mt-0.5">{item.description}</div>
                   {isBond && item.bond?.description && (
                     <div className="text-[10px] text-amber-600/90 mt-0.5 italic">
@@ -466,6 +483,67 @@ function EquipmentTab({
           );
         })}
       </div>
+
+      {/* L3 套装体系展示 */}
+      {(() => {
+        const activeSets = getActiveItemSets(officer.equipment, itemById);
+        if (activeSets.length === 0) return null;
+        return (
+          <div className="mt-3 space-y-2" data-testid="active-sets-panel">
+            <h3 className="text-xs tracking-widest text-amber-500 font-serif">套装激活（L3 套装效果）</h3>
+            <div className="space-y-2">
+              {activeSets.map(({ set, equippedCount, activeTier, allTiers }) => (
+                <div
+                  key={set.id}
+                  className="rounded border border-amber-800/40 bg-stone-900/60 p-2.5 shadow-sm"
+                  data-testid={`active-set-${set.id}`}
+                >
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-serif font-bold text-amber-300">
+                        【{set.name}】
+                      </span>
+                      <span className="text-[11px] text-stone-400">
+                        ({equippedCount}/{set.itemIds.length})
+                      </span>
+                      {activeTier && (
+                        <span className="rounded border border-emerald-600/50 bg-emerald-950/40 px-1.5 py-0.2 text-[10px] text-emerald-300">
+                          {activeTier.name} 激活
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-stone-500 italic">
+                      {set.description}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {allTiers.map(({ tier, active }) => (
+                      <div
+                        key={tier.count}
+                        className={`flex items-baseline justify-between rounded px-2 py-1 text-xs transition-colors ${
+                          active
+                            ? 'border border-amber-700/50 bg-amber-950/30 text-amber-200'
+                            : 'border border-stone-800/50 bg-stone-900/30 text-stone-600'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1">
+                          <span className={active ? 'text-amber-400 font-bold' : 'text-stone-600'}>
+                            [{tier.count}件套]
+                          </span>
+                          <span>{tier.name}：{tier.description}</span>
+                        </span>
+                        <span className="text-[11px]">
+                          {active ? '已达成' : `需${tier.count}件`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       <h3 className="mt-4 text-xs tracking-widest text-amber-500">消耗品（S13 运行时）</h3>
       {(() => {

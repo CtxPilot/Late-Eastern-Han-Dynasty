@@ -4,6 +4,7 @@
 import type { OfficerStats } from './types/common.js';
 import type { EquipSlot, Equipment, ItemEffect, ItemStatic } from './types/item.js';
 import { ItemCategory } from './enums/index.js';
+import { getActiveItemSets } from './item-sets.js';
 
 /**
  * S13 宝物系统共享纯函数（Session 266 5 槽，Session 450 扩展至 8 槽与专属共鸣 L2）。
@@ -67,11 +68,15 @@ export function canEquipItem(
   return { ok: true };
 }
 
-/** 单件宝物在特定武将下的有效属性加成（共鸣激活时 1.5 倍 + bonusStats）。 */
-export function itemEffectiveStatBonus(item: ItemStatic, officerId?: number): Partial<OfficerStats> {
+/** 单件宝物在特定武将下的有效属性加成（共鸣激活时 1.5 倍 + bonusStats，支持可选套装乘区）。 */
+export function itemEffectiveStatBonus(
+  item: ItemStatic,
+  officerId?: number,
+  setMultiplier = 1.0,
+): Partial<OfficerStats> {
   const acc: Partial<OfficerStats> = {};
   const isBond = isItemBondActive(item, officerId);
-  const mul = isBond ? 1.5 : 1.0;
+  const mul = (isBond ? 1.5 : 1.0) * setMultiplier;
   for (const [k, v] of Object.entries(item.baseStats)) {
     if (v == null) continue;
     const key = k as keyof OfficerStats;
@@ -87,7 +92,7 @@ export function itemEffectiveStatBonus(item: ItemStatic, officerId?: number): Pa
   return acc;
 }
 
-/** 统计装备槽位累计属性加成（支持指定武将专属共鸣倍率）。 */
+/** 统计装备槽位累计属性加成（支持指定武将专属共鸣倍率与 L3 套装效力）。 */
 export function equipmentStatBonus(
   equipment: Equipment | undefined,
   itemById: (id: number) => ItemStatic | undefined,
@@ -95,16 +100,43 @@ export function equipmentStatBonus(
 ): Partial<OfficerStats> {
   const acc: Partial<OfficerStats> = {};
   if (!equipment) return acc;
+  const activeSets = getActiveItemSets(equipment, itemById);
+  const setMultipliers = new Map<number, number>();
+  for (const as of activeSets) {
+    if (as.activeTier?.statMultiplier) {
+      for (const id of as.equippedItemIds) {
+        const prev = setMultipliers.get(id) ?? 1.0;
+        if (as.activeTier.statMultiplier > prev) {
+          setMultipliers.set(id, as.activeTier.statMultiplier);
+        }
+      }
+    }
+  }
+
   const seen = new Set<number>();
   for (const itemId of Object.values(equipment)) {
     if (itemId == null || seen.has(itemId)) continue;
     seen.add(itemId);
     const item = itemById(itemId);
     if (!item) continue;
-    const bonus = itemEffectiveStatBonus(item, officerId);
+    const setMul = setMultipliers.get(itemId) ?? 1.0;
+    const bonus = itemEffectiveStatBonus(item, officerId, setMul);
     for (const [k, v] of Object.entries(bonus)) {
       const key = k as keyof OfficerStats;
       acc[key] = (acc[key] ?? 0) + (v ?? 0);
+    }
+  }
+
+  // 累加激活套装各达成阶梯的 bonusStats
+  for (const as of activeSets) {
+    for (const t of as.allTiers) {
+      if (t.active && t.tier.bonusStats) {
+        for (const [k, v] of Object.entries(t.tier.bonusStats)) {
+          if (v == null) continue;
+          const key = k as keyof OfficerStats;
+          acc[key] = (acc[key] ?? 0) + (v as number);
+        }
+      }
     }
   }
   return acc;
@@ -115,10 +147,14 @@ export function itemStatBonus(item: ItemStatic): Partial<OfficerStats> {
   return { ...item.baseStats };
 }
 
-/** 单件宝物在特定武将下的有效效果列表（共鸣激活时 1.5 倍基础效果 + bonusEffect）。 */
-export function itemEffectiveEffects(item: ItemStatic, officerId?: number): ItemEffect[] {
+/** 单件宝物在特定武将下的有效效果列表（共鸣激活时 1.5 倍基础效果 + bonusEffect，支持可选套装乘区）。 */
+export function itemEffectiveEffects(
+  item: ItemStatic,
+  officerId?: number,
+  setMultiplier = 1.0,
+): ItemEffect[] {
   const isBond = isItemBondActive(item, officerId);
-  const mul = isBond ? 1.5 : 1.0;
+  const mul = (isBond ? 1.5 : 1.0) * setMultiplier;
   const effects: ItemEffect[] = item.baseEffect.map((e) => ({
     type: e.type,
     value: Math.floor(e.value * mul),
@@ -130,7 +166,7 @@ export function itemEffectiveEffects(item: ItemStatic, officerId?: number): Item
   return effects;
 }
 
-/** 统计装备槽位累计有效效果列表。 */
+/** 统计装备槽位累计有效效果列表（支持专属共鸣与 L3 套装效果）。 */
 export function equipmentEffectiveEffects(
   equipment: Equipment | undefined,
   itemById: (id: number) => ItemStatic | undefined,
@@ -138,13 +174,36 @@ export function equipmentEffectiveEffects(
 ): ItemEffect[] {
   const acc: ItemEffect[] = [];
   if (!equipment) return acc;
+  const activeSets = getActiveItemSets(equipment, itemById);
+  const setMultipliers = new Map<number, number>();
+  for (const as of activeSets) {
+    if (as.activeTier?.statMultiplier) {
+      for (const id of as.equippedItemIds) {
+        const prev = setMultipliers.get(id) ?? 1.0;
+        if (as.activeTier.statMultiplier > prev) {
+          setMultipliers.set(id, as.activeTier.statMultiplier);
+        }
+      }
+    }
+  }
+
   const seen = new Set<number>();
   for (const itemId of Object.values(equipment)) {
     if (itemId == null || seen.has(itemId)) continue;
     seen.add(itemId);
     const item = itemById(itemId);
     if (!item) continue;
-    acc.push(...itemEffectiveEffects(item, officerId));
+    const setMul = setMultipliers.get(itemId) ?? 1.0;
+    acc.push(...itemEffectiveEffects(item, officerId, setMul));
+  }
+
+  // 累加激活套装各达成阶梯的 bonusEffects
+  for (const as of activeSets) {
+    for (const t of as.allTiers) {
+      if (t.active && t.tier.bonusEffects) {
+        acc.push(...t.tier.bonusEffects);
+      }
+    }
   }
   return acc;
 }

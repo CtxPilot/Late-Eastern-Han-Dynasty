@@ -1,3 +1,49 @@
+## 2026-10-21 — Session 451 · S13 宝物系统深化：套装体系（Set L3）与未接入装备词条消费闭环实装
+
+- Phase：**S13 宝物系统深化 / 规则与数值消费闭环**；依据方案立项 `docs/49-s13-itemsets-and-effects-proposal.md`。
+- **背景与目标**：
+  1. 此前 S13 在 Session 450 实装了 8 槽位与 L2 专属羁绊（Bond），但 `docs/04 §12.2` 与 `docs/44 D10/D11` 所规划的「L3 套装体系（SetTier[n-2]）」与「未接入装备词条（charge_damage / mobility / range / recruit_bonus / authority 等）」仍处于后置状态；
+  2. 本会话目标：在严格遵守 165 件宝物真源总量守恒（`08-data-dictionary.md` §四）、零新增任意随机性（Zero RNG Perturbation）、保护 12/24 月金样确定性指纹的前提下，全栈落地 10 大经典历史套装体系，打通复合共鸣乘区，并将所有未接入词条消费点在权威引擎中闭环消费，同时在客户端 UI 展示套装进展与阶梯特技。
+- **实装内容**：
+  1. **类型与套装元数据定义**（`@leh/shared`）：
+     - `shared/item-sets.ts`：声明 `ItemSetTier`（阶梯所需件数 count、属性乘区 statMultiplier 1.2/1.5/2.0、阶梯 bonusStats 与 bonusEffects）、`ItemSet`（id, name, itemIds, description, tiers）与 `ActiveSetResult`；
+     - 落库 10 大经典历史/演义套装：威震华夏（关羽 3件）、天下无双（吕布 4件）、魏武雄风（曹操 4件）、昭烈仁德（刘备 3件）、卧龙天机（诸葛亮 4件）、常胜龙胆（赵云 3件）、江东霸业（孙策/孙氏 3件）、万人莫敌（张飞 3件）、锦马银枪（马超 3件）、社稷正朔（汉帝/宗庙 3件）；
+     - 提供纯函数 `getItemSetById`、`allItemSets` 与 `getActiveItemSets(equipment, items)`：按武将穿戴识别已激活的最高件数阶梯；
+     - `shared/items.ts`：更新 `itemEffectiveStatBonus`、`itemEffectiveEffects`、`equipmentStatBonus` 与 `equipmentEffectiveEffects`，支持套装 `setMultiplier`；
+     - 复合共鸣乘区公式：`effectiveStat = Math.floor(baseStat * bondMultiplier * setMultiplier) + bondBonusStat`，装备总加成自动累加激活套装阶梯的 `tier.bonusStats`，总特技词条自动累加激活阶梯的 `tier.bonusEffects`；
+     - `shared/items.test.ts`：新增 10 项全覆盖单元测试。
+  2. **宝物数据打标**（`server/src/data/items.json`）：
+     - 宝物总量严格保持 165 件守恒不变；
+     - 将 10 大经典套装涉及的 32 件特色名宝打标 `sets: [setId, ...]`，支持多套装归属（如赤兔马同时属于威震华夏与天下无双）；
+     - `pnpm validate-data` 校验 100% 通过。
+  3. **权威引擎端点消费闭环**（`server/src/engine/`）：
+     - `server/src/engine/items.ts`：导出 `equipChargeBonusFor`、`equipMobilityBonusFor`、`equipRangeBonusFor`、`equipRecruitBonusFor`、`equipAuthorityBonusFor` 与 `activeItemSetsFor`；
+     - `charge_damage`（突击伤害加成）：接入 `server/src/engine/battle.ts` 六角战重骑突击伤害计算，在 `attackerMoved` 触发时按 `1 + chargeBonus/100` 增幅最终杀伤；
+     - `mobility`（部队机动力加成）：接入 `server/src/engine/battle.ts` `buildSideUnits` 与 `createBattle`，将主副将装备机动力加成直接计入作战单位 `maxMp`；
+     - `range`（远程射程加成）：接入 `server/src/engine/battle.ts` 六角战远程普攻距离校验，在 `effectiveUnitRange` 基础上叠加热点加成；
+     - `recruit_bonus`（募兵效率加成）：接入 `server/src/engine/civil.ts` `conscript` 征兵公式，城主佩戴加成直接提升征兵转化收益；
+     - `authority`（威信加成）：接入 `server/src/engine/hegemony.ts` `getKingRequirements` 称王门槛校验，君主所佩威信宝物与社稷套装直接补强皇权点数（`imperialAuthority`）。
+  4. **客户端 UI 装帧呈现**（`client/src/components/officer/OfficerDetail.tsx`）：
+     - 装备槽位卡片上带有所属套装徽章（`[套装·xxx]`）；
+     - 装备面板下方新增「激活套装（Active Sets）」专区：显示激活套装名称、典故、收集进度卡片（如 `3/3件`）、当前激活阶梯称号金色徽章、阶梯乘区说明及已激活特技词条标签；
+     - 若未达成最低件数门槛，直观提示未激活件数；多套装并发时清晰并列排版。
+  5. **专项验收测试脚本**（`server/src/scripts/verify-s49-itemsets-and-effects.ts`）：
+     - 注册 `pnpm verify-s49-itemsets-and-effects` 门禁，覆盖：十大套装元数据与真源审计、件数阶梯激活、复合乘区公式（L1 × L2 × L3）、突击伤害消费点、机动力消费点、射程消费点、募兵效率消费点、威信消费点、activeItemSetsFor 接口 9 大维度共 48 项断言。
+- **验证（全绿）**：
+  - `pnpm verify-s49-itemsets-and-effects`：**48/48 项全绿通过**；
+  - `pnpm verify-s48-bond-and-eight-slots`：**54/54 项全绿通过**；
+  - `pnpm typecheck`：全项目 3 模块（shared、client、server）全部 0 错误；
+  - `pnpm test`：shared（53 套件 484 测试）、client（20 套件 71/71 测试）、server（含 `turn-golden.test.ts` 3/3 金样 100% 匹配零漂移）全部通过；
+  - `pnpm lint`：全仓通过；
+  - `pnpm validate-data`：全量 165 件宝物及全部 12 个数据 JSON 文件校验 100% 通过；
+  - `pnpm verify-compliance`：821 个文件许可证与编码合规通过。
+- **文档与宪法**：
+  - 更新 `docs/08-data-dictionary.md` §四（sets 字段与 L3 计算规则）与 §十四（10 套装清单与结构）；
+  - 更新 `docs/04-game-systems.md` §12.2（套装 L3 规则与词条消费实装记录）；
+  - 更新 `docs/12-system-map.md` S13 状态（成熟度提升至 M+，宝物系统达成完全闭环）；
+  - 更新 `docs/35-phased-implementation-roadmap.md` 分步进度；
+  - 本日志与根目录 `HANDOFF.md` 双写同步。
+
 ## 2026-10-21 — Session 450 · S13 装备与宝物系统深化：8 槽位扩展与武将专属羁绊（Bond / L2 共鸣）实装
 
 - Phase：**S13 宝物系统深化 / 数据与规则闭环**；依据方案立项 `docs/48-s13-bond-and-eight-slots-proposal.md`。

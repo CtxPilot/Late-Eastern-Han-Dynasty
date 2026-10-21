@@ -6,6 +6,8 @@ import {
   equipmentStatBonus,
   equipmentEffectiveEffects,
   equipSlotFor,
+  getActiveItemSets,
+  type ActiveSetResult,
   type EquipStatBonus,
   type Equipment,
   type ItemInventory,
@@ -91,6 +93,66 @@ export function duelEquipBonusFor(officer: Pick<Officer, 'equipment'> & { id?: n
     if (e.type === 'duel_boost') bonus.duelPct += e.value;
   }
   return bonus;
+}
+
+/** 装备突击伤害加成（baseEffect type='charge_damage'，支持专属共鸣与 L3 套装加成）。 */
+export function equipChargeBonusFor(officer: Pick<Officer, 'equipment'> & { id?: number }): number {
+  if (!officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  let sum = 0;
+  for (const e of effects) {
+    if (e.type === 'charge_damage') sum += e.value;
+  }
+  return sum;
+}
+
+/** 装备机动力加成（baseEffect type='mobility'，支持专属共鸣与 L3 套装加成）。 */
+export function equipMobilityBonusFor(officer: Pick<Officer, 'equipment'> & { id?: number }): number {
+  if (!officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  let sum = 0;
+  for (const e of effects) {
+    if (e.type === 'mobility') sum += e.value;
+  }
+  return sum;
+}
+
+/** 装备射程加成（baseEffect type='range'，支持专属共鸣与 L3 套装加成）。 */
+export function equipRangeBonusFor(officer: Pick<Officer, 'equipment'> & { id?: number }): number {
+  if (!officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  let sum = 0;
+  for (const e of effects) {
+    if (e.type === 'range') sum += e.value;
+  }
+  return sum;
+}
+
+/** 装备募兵效率加成（baseEffect type='recruit_bonus'，支持专属共鸣与 L3 套装加成）。 */
+export function equipRecruitBonusFor(officer?: Pick<Officer, 'equipment'> & { id?: number }): number {
+  if (!officer || !officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  let sum = 0;
+  for (const e of effects) {
+    if (e.type === 'recruit_bonus') sum += e.value;
+  }
+  return sum;
+}
+
+/** 装备威信加成（baseEffect type='authority'，支持专属共鸣与 L3 套装加成）。 */
+export function equipAuthorityBonusFor(officer?: Pick<Officer, 'equipment'> & { id?: number }): number {
+  if (!officer || !officer.equipment) return 0;
+  const effects = equipmentEffectiveEffects(officer.equipment, itemById, officer.id);
+  let sum = 0;
+  for (const e of effects) {
+    if (e.type === 'authority') sum += e.value;
+  }
+  return sum;
+}
+
+/** 武将当前激活的套装状态列表。 */
+export function activeItemSetsFor(officer: Pick<Officer, 'equipment'>): ActiveSetResult[] {
+  return getActiveItemSets(officer.equipment, itemById);
 }
 
 /** items 静态查询（按 id）。 */
