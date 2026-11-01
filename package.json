@@ -188,6 +188,8 @@
     "verify-s49-itemsets-and-effects": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s49-itemsets-and-effects",
     "verify-s50-emperor-and-endgame": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s50-emperor-and-endgame",
     "verify-s51-craft-research-and-sanitation": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s51-craft-research-and-sanitation",
+    "verify-s52-relationship-network-depth": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s52-relationship-network-depth",
+    "verify-s52-relationship-network-ui": "node scripts/verify-s52-relationship-network-ui.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

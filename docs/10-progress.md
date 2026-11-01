@@ -1,3 +1,27 @@
+## 2026-11-01 — Session 454 · S24 关系网深度：义兄弟/师徒/宿敌闭环全栈实装
+
+- Phase：**S24 关系网系统深化**；依据立项方案 `docs/52-s24-relationship-network-depth-proposal.md`。
+- **背景与目标**：S24 此前只有静态关系表 + 运行时亲和演变（Session 284/338），缺少主动缔结、战场羁绊与血仇锁闭。本会话在守护金样零漂移、旧档兼容、双端 Worker 同源前提下，实装义结金兰、拜师授业、年度授业点拨、战阵血仇、血仇不仕、宿敌同城忠诚惩罚与六角羁绊。
+- **实装内容**：
+  1. **数据模型与 Schema**：`RuntimeRelation`（含 `lastGrowthYear`）/ `RuntimeRelationSchema` / `GameState.runtimeRelations?`；`GameStateEntitiesSchema` 校验悬空武将引用与自指关系；`BattleUnit.swornFury?` 旧档可选。
+  2. **共享纯函数**：资格校验（结义/拜师）、授业目标（确定性最大差距项）、六角羁绊查询（义兄弟/宿敌/同袍死战）、血仇复仇者识别、血仇不仕命中。
+  3. **服务端引擎** `server/src/engine/relationDepth.ts`：`swearBrotherhood`、`appointMentorship`、`tickMentorshipAnnual`、`tickNemesisCoexistenceQuarter`、`registerBloodFeud`；月度管线挂接（正月点拨、季度宿敌惩罚）；`mandateEffects` 义兄弟忠诚衰减豁免；`personnel.recruitOfficer` 血仇不仕门禁（掷点/扣金前）。
+  4. **战斗接入**：玩家 `attackUnit` 与敌军 `runSimpleEnemyAi` 普攻叠加义兄弟 +5% 伤害/+5% 暴击、宿敌 +10% 暴击/+10% 反击；同袍死战一次性士气 +15、伤害 +10%；六角单挑与战役阵斩生成血仇。
+  5. **服务/端点/双端**：`doSwearBrotherhood` / `doAppointMentorship` + 两个 POST 端点；Worker 同名镜像 + parity 别名；api/offline-api/store 全链。
+  6. **UI**：OfficerDetail 关系 tab 新增 `BondTab`（运行时关系回显 + 同城缔结入口 + 门槛提示）。
+- **验证全绿**：
+  - `pnpm verify-s52-relationship-network-depth`：**53/53**；
+  - `pnpm verify-s52-relationship-network-ui`：**7/7**（真实 Chrome 1440×900，console errors 0；覆盖入口渲染与低亲和拒绝提示）；
+  - `pnpm --filter @leh/server test src/engine/turn-golden.test.ts`：**3/3** 金样逐字节零漂移；
+  - `node scripts/verify-s416-worker-parity.mjs`：**5/5**；
+  - `pnpm test`：shared **496** + server **3** + client **74** 全绿；
+  - `pnpm typecheck` / `pnpm lint`：三模块 0 错误；
+  - 回归：campaign 71、save-battle 62、save-campaign 9、save-game-state 10、battle-rng 5、tactical-ai 86、tactical-retreat 18、fm4 14、ai-military-rng 38、turn-cadence 28；
+  - `pnpm validate-data` 全量通过；`pnpm verify-compliance` 837 文件通过。
+- **偏差与诚实边界**：
+  - 授业点拨由原案「随机一项」改为确定性最大差距项（守 RNG 流）；同袍死战士气封顶 100（Zod 上限）；免疫混乱/动摇未实装；羁绊数值仅普攻路径；被俘「义不降敌」无入口未实装；残部退守未标死路径不生成血仇。
+- **文档**：`docs/52`（落地状态 + 偏差）、`docs/04` §4.4.1、`docs/05` §二十三、`docs/06` §2.14、`docs/07` §12.2.19、`docs/08` §三十一、`docs/12` S24 行、`docs/35` S24 行、本日志与 `HANDOFF.md` 双写。
+
 ## 2026-10-21 — Session 453 · S03 内政深度：技艺研发系统与城池卫生疫病闭环实装
 
 - Phase：**S03 内政系统深化**；依据立项方案 `docs/51-s03-craft-research-and-sanitation-proposal.md`。

@@ -807,6 +807,108 @@ function RelationshipsTab({
       </section>
 
       <RelationsTab officer={officer} game={game} />
+      <BondTab officer={officer} game={game} />
+    </div>
+  );
+}
+
+/**
+ * S24（Session 454，docs/52）：关系网深度缔结面。
+ * 展示运行时关系（义兄弟/师徒/宿敌）并允许玩家对同城己方武将发起结义/拜师。
+ * 资格以服务端权威校验为准，UI 仅做同城候选过滤与操作入口。
+ */
+export function BondTab({ officer, game }: { officer: Officer; game: GameState }) {
+  const swearBrotherhood = useGameStore((s) => s.swearBrotherhood);
+  const appointMentorship = useGameStore((s) => s.appointMentorship);
+  const loading = useGameStore((s) => s.loading);
+
+  const runtime = (game.runtimeRelations ?? []).filter(
+    (r) => r.fromId === officer.id || r.toId === officer.id,
+  );
+  const isOwn = officer.faction != null && officer.faction === game.playerFactionId;
+  const peers = isOwn && officer.status === 'active' && officer.location != null
+    ? Object.values(game.officers).filter(
+        (o) =>
+          o.id !== officer.id &&
+          o.faction === officer.faction &&
+          o.status === 'active' &&
+          o.location === officer.location,
+      )
+    : [];
+
+  const runtimeLabel = (type: string) => RELATION_TYPE_LABEL[type] ?? type;
+
+  return (
+    <div className="space-y-4">
+      <section>
+        <h3 className="mb-2 text-xs tracking-widest text-amber-500">金兰与师承</h3>
+        {runtime.length === 0 ? (
+          <p className="text-stone-600 text-xs">尚无义兄弟、师徒或宿敌关系</p>
+        ) : (
+          <div className="space-y-1.5">
+            {runtime.map((r, i) => {
+              const otherId = r.fromId === officer.id ? r.toId : r.fromId;
+              const other = game.officers[otherId];
+              const directed = r.type === 'master_disciple';
+              const prefix = directed
+                ? r.fromId === officer.id ? '收徒' : '拜师'
+                : '';
+              return (
+                <div
+                  key={i}
+                  data-testid={`officer-runtime-relation-${otherId}`}
+                  className="flex items-center justify-between rounded border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-stone-200">{other?.name ?? `#${otherId}`}</span>
+                    <span className="rounded bg-stone-800 px-1.5 py-0.5 text-xs text-stone-400">
+                      {runtimeLabel(r.type)}{prefix ? `·${prefix}` : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-stone-500">
+                    {r.establishedYear != null ? `${r.establishedYear}年${r.establishedMonth ?? ''}月` : '—'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {peers.length > 0 && (
+        <section>
+          <h3 className="mb-2 text-xs tracking-widest text-amber-500">同城缔结</h3>
+          <p className="mb-2 text-xs text-stone-600">
+            义结金兰需亲和 ≥80、耗金 200；拜师需师傅最高属性 ≥75 且领先徒弟 ≥10、耗金 100。
+          </p>
+          <div className="space-y-1.5">
+            {peers.map((peer) => (
+              <div
+                key={peer.id}
+                className="flex items-center justify-between rounded border border-stone-800 bg-stone-900/50 px-3 py-2 text-xs"
+              >
+                <span className="text-stone-200">{peer.name}</span>
+                <div className="flex gap-1.5">
+                  <InkButton
+                    data-testid={`officer-swear-${peer.id}`}
+                    disabled={loading}
+                    onClick={() => void swearBrotherhood(officer.id, peer.id)}
+                  >
+                    义结金兰
+                  </InkButton>
+                  <InkButton
+                    data-testid={`officer-mentor-${peer.id}`}
+                    disabled={loading}
+                    onClick={() => void appointMentorship(officer.id, peer.id)}
+                  >
+                    拜师授业
+                  </InkButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -141,6 +141,7 @@ export const BattleUnitRuntimeSchema: z.ZodType<BattleUnit> = z
     hasActed: z.boolean(),
     isRetreated: z.boolean(),
     isDestroyed: z.boolean(),
+    swornFury: z.boolean().optional(),
     statusEffects: z.array(
       z.object({ type: z.string().min(1), remainingTurns: NonNegativeIntSchema, value: z.number().optional() }).strict(),
     ),

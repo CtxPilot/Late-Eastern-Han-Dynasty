@@ -7,6 +7,7 @@
  * 设计参考 04 §3.1~3.2 / §九婚姻 / §十一赏赐；历史女角禁止搜索登用。
  */
 import {
+  findRecruitNemesis,
   isAdultForMarriage,
   MaritalStatus,
   OfficerStatus,
@@ -24,6 +25,7 @@ import { syncFactionResources } from './economy.js';
 import { grantMeritTo } from './meritGrant.js';
 import { searchTreasureIntoInventory } from './items.js';
 import { applyMarriedRelations, loadStaticRelations } from './relations.js';
+import { allRelations } from './relationDepth.js';
 
 // 功绩获取数值（docs/04 §6.1 人事条；固定值不消耗权威 RNG，待平衡）
 const MERIT_SEARCH_FOUND = 8;
@@ -277,6 +279,19 @@ export function recruitOfficer(
       );
   }
   if (!recruiter) throw new Error('无可用说客');
+
+  // S24（Session 454，docs/52 §2.2）血仇不仕：目标与说客/君主互为宿敌时，
+  // 招揽在掷点与扣金之前强制拦截（确定性、零 RNG 消费）。
+  const nemesisId = findRecruitNemesis(
+    target.id,
+    recruiter.id,
+    state.factions[fid]?.rulerId ?? null,
+    allRelations(state),
+  );
+  if (nemesisId != null) {
+    const nemesisName = state.officers[nemesisId]?.name ?? '仇敌';
+    throw new Error(`血仇未雪，誓不事仇寇！${target.name}与${nemesisName}有宿怨，绝不会应允`);
+  }
 
   // 扣金
   const payCity =

@@ -9,12 +9,34 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 453**（S03 内政深度：技艺研发系统与城池卫生疫病闭环全栈实装：立项 `docs/51-s03-craft-research-and-sanitation-proposal.md`；五大研发路线「农政/工商/军备/城防/教化」各 Lv1~5 权威纯函数引擎实装；最高城池文化 `[100, 250, 500, 700, 900]` 门槛、首付金 `[200, 400, 800, 1600, 3200]`、工期 `[2, 4, 6, 8, 12]` 月与每月 10 金国库维护费闭环；指派主持学者以智政推演加速；全套科技特权消费全面接通：农产提升/民屯增益/冬灾免减产/粮耗减少/秋收大熟，商产/商税/开发启动金优惠，征兵士气+5/训练效率+25%/士气上限105，筑城效率+20%，登用率+5%/忠诚自然衰减豁免/声望季度衰减豁免/领内城池民心月度+1；城池卫生防灾与人口调节闭环：卫生分级调节幼老成人死亡率与出生率，夏秋低卫生疫病爆发、疫区严禁征兵、驻军士气与武将体力损耗；施米赈济缩短疫期并恢复体力，内政卫生结项彻底拔除疫病；朝廷抽屉技艺研发分面、内政与军事抽屉疫病警报与门禁；端点五镜像与 Worker 离线对齐 5/5；专项门禁 `verify-s51-craft-research-and-sanitation` 43/43 全绿通过，金样指纹 3/3 严格匹配零漂移） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S03 技艺研发与卫生疫病闭环全面交付 |
-| 代码最新 | Session 453 技艺研发与城池卫生疫病闭环全栈实现、UI 装帧与专项验收脚本；工作树干净 |
-| 文档最新 | **Session 453 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 453 已交付**；S03 技艺研发与卫生疫病闭环已全栈交付并完成 43/43 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**新玩法大系统规划与深化**（对照 `12-system-map.md` 选择一个大系统）；③AI 主动反应/平衡轮（0-B 暂缓，需再授权） |
+| 会话 | **Session 454**（S24 关系网深度全栈实装：立项 `docs/52-s24-relationship-network-depth-proposal.md`；`GameState.runtimeRelations` 运行时关系；义结金兰（亲和≥80/上限2/耗金200/亲和锁100）、拜师授业（属性优势/收徒上限/耗金100/亲和锁90）、年度授业点拨（确定性最大差距项、每年每对1点）、战阵血仇（义兄弟/师徒/父子自动结仇、亲和−100）、血仇不仕登用硬门禁（零RNG/零扣金）、宿敌同城季度忠诚−10、六角义兄弟+5%伤害/+5%暴击与宿敌+10%暴击/+10%反击、同袍死战；端点二 + Worker 镜像 + OfficerDetail `BondTab`；专项门禁 `verify-s52-relationship-network-depth` 53/53、`verify-s52-relationship-network-ui` 7/7（console 0），金样 3/3 零漂移） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S24 关系网深度闭环交付 |
+| 代码最新 | Session 454 关系网深度全栈实现、战斗羁绊、UI 缔结面与双专项验收脚本；工作树待提交 |
+| 文档最新 | **Session 454 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 454 已交付**；S24 关系网深度闭环已全栈交付并完成 53+7 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**新玩法大系统规划与深化**（对照 `12-system-map.md` 选择一个大系统）；③S24 余项可选：同袍死战免疫混乱/动摇、被俘「义不降敌」、战法路径羁绊、AI 主动结义 |
+
+### Session 454 交接要点
+
+- **方案与立项**：依据 `docs/52-s24-relationship-network-depth-proposal.md`，全量落地 S24 关系网深度。
+- **核心实装**：
+  1. **数据模型与 Schema**（`@leh/shared`）：`RuntimeRelation`（from/to/type/source/establishedYear/Month/`lastGrowthYear`/note）、`RuntimeRelationSchema`、`GameState.runtimeRelations?`；`GameStateEntitiesSchema` 严格校验（悬空武将、自指拒绝）；`BattleUnit.swornFury?` 可选字段。
+  2. **共享纯函数**：`checkSwornBrotherhoodEligibility` / `checkMentorshipEligibility` / `mentorshipGrowthTarget`（确定性最大差距项）/ `swornAllyBattleBonus` / `nemesisBattleBonus` / `hasFallenSwornBrother` / `applySwornFury` / `findRecruitNemesis` / `bloodFeudAvengerIds` / `hasSwornBrotherInFaction`。
+  3. **服务端引擎** `server/src/engine/relationDepth.ts`：`swearBrotherhood`、`appointMentorship`、`tickMentorshipAnnual`、`tickNemesisCoexistenceQuarter`、`registerBloodFeud`；`turn.ts` 正月/季度挂接；`mandateEffects.ts` 义兄弟忠诚衰减豁免；`personnel.ts` 血仇不仕门禁（掷点/扣金前，零 RNG）。
+  4. **战斗接入**：`engine/battle.ts` / `battle/simpleAi.ts` / `battle/crit.ts`——义兄弟 +5% 普攻/反击伤害、+5% 暴击；宿敌 +10% 暴击、+10% 反击；同袍死战一次性士气 +15（封顶 100）、伤害 +10%；六角单挑与战役阵斩生成血仇。
+  5. **服务/端点/双端**：`doSwearBrotherhood` / `doAppointMentorship` + `POST /api/game/relations/swear-brotherhood`、`/appoint-mentorship`；Worker 同名 handler + parity 别名；`api.ts` / `offline-api.ts` / `gameStore.ts` 全链。
+  6. **UI**：`OfficerDetail` 关系 tab `BondTab`——运行时关系回显（`officer-runtime-relation-{id}`）+ 同城缔结按钮（`officer-swear-{id}` / `officer-mentor-{id}`）+ 门槛提示。
+- **全仓验证全绿**：
+  - `pnpm verify-s52-relationship-network-depth`：**53/53**；
+  - `pnpm verify-s52-relationship-network-ui`：**7/7**（真实 Chrome 1440×900，console errors 0）；
+  - `pnpm --filter @leh/server test src/engine/turn-golden.test.ts`：**3/3**（零漂移）；
+  - `node scripts/verify-s416-worker-parity.mjs`：**5/5**；
+  - `pnpm test`：shared **496** + server **3** + client **74**；
+  - `pnpm typecheck` / `pnpm lint` 三模块 0 错误；`pnpm validate-data` 通过；`pnpm verify-compliance` 837 文件通过；
+  - 回归：campaign 71、save-battle 62、save-campaign 9、save-game-state 10、battle-rng 5、tactical-ai 86、tactical-retreat 18、fm4 14、ai-military-rng 38、turn-cadence 28。
+- **偏差与诚实边界**：授业点拨原案「随机一项」→ 确定性最大差距项（守 RNG 流）；同袍死战士气封顶 100（Zod 上限）；免疫混乱/动摇未实装；羁绊数值仅普攻路径；被俘「义不降敌」无入口未实装；残部退守未标死路径不生成血仇。
+- **环境**：本次 UI 验收启动了本地 `pnpm dev`（5173/3001）与 headless Chrome（CDP 9242，profile `/tmp/leh-chrome-profile`）。按进程策略未 kill，需用户自行清理。
+- **文档**：`docs/52` 落地状态节、`docs/04` §4.4.1、`docs/05` §二十三、`docs/06` §2.14、`docs/07` §12.2.19、`docs/08` §三十一、`docs/12` S24 行、`docs/35` S24 行、`docs/10-progress.md` Session 454 日志、本文件双写。
 
 ### Session 453 交接要点
 

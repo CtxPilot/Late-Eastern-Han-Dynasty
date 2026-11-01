@@ -39,6 +39,8 @@ export interface BattleUnit {
   hasActed: boolean;
   isRetreated: boolean;
   isDestroyed: boolean;
+  /** S24（Session 454）：同袍死战激燃已触发（义兄弟同场阵亡后一次性标记；旧档缺省）。 */
+  swornFury?: boolean;
   statusEffects: BattleStatusEffect[];
 }
 

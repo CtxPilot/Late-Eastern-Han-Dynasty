@@ -1730,6 +1730,18 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
   - SVG 径向图谱：圆心=当前武将，第一圈=直接关系节点（按类型分色），悬停显示状态
 - UI 不再并列提供「社交」页签；社交关系 API（S24）与家族数据（S18）仍保持职责分离，仅在武将详情页统一呈现。
 
+**S24 关系网深度缔结面（Session 454）**：同一「关系」tab 追加 `BondTab`：
+
+- 「金兰与师承」：回显 `GameState.runtimeRelations` 中与当前武将相关的义兄弟/师徒/宿敌记录
+  （testid `officer-runtime-relation-{otherId}`，含缔结年月；师徒标注收徒/拜师方向）；
+- 「同城缔结」：当前武将为己方在职时，列出同城同势力在职武将，提供「义结金兰」（testid
+  `officer-swear-{peerId}`）与「拜师授业」（testid `officer-mentor-{peerId}`）两个次令按钮，
+  上方常驻门槛提示（亲和/耗金/属性优势）；
+- 资格以服务端权威校验为准，UI 不做复制判定；失败原因经 store error 显示于 TopBar（如「亲和不足」）。
+- 诚实边界：日常开局亲和通常 <80，成功结义在 UI 上不可直接到达；成功路径由
+  `verify-s52-relationship-network-depth` 引擎脚本覆盖，UI 由
+  `verify-s52-relationship-network-ui` 覆盖入口渲染与拒绝提示。
+
 ### 12.2.20 S25 技能树 UI（Session 284）
 
 - OfficerDetail 新增「技能」tab，展示：

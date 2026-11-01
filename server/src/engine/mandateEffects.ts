@@ -9,9 +9,11 @@
 import {
   OfficerStatus,
   computePopularWill,
+  hasSwornBrotherInFaction,
   popularWillDesertionModifier,
   type GameState,
 } from '@leh/shared';
+import { allRelations } from './relationDepth.js';
 
 const BASE_DESERT_CHANCE = 0.02;
 const LOYALTY_DROP = 8;
@@ -24,6 +26,9 @@ export function tickPopularWillDesertion(
 ): GameState {
   let officers = { ...state.officers };
   const narratives: string[] = [];
+  // S24（Session 454）：义兄弟同势力存活 → 忠诚永固，豁免自然衰减检定。
+  // 仅在运行时关系系统已激活时启用（空数组时跳过查询），保证旧档与金样零扰动。
+  const relations = (state.runtimeRelations?.length ?? 0) > 0 ? allRelations(state) : [];
 
   for (const faction of Object.values(state.factions)) {
     if (!faction.isAlive) continue;
@@ -39,6 +44,7 @@ export function tickPopularWillDesertion(
       if (o.status !== OfficerStatus.ACTIVE) continue;
       if (faction.rulerId === o.id) continue;
       if (o.loyalty >= LOYALTY_SAFE) continue;
+      if (relations.length > 0 && hasSwornBrotherInFaction(o, officers, relations)) continue;
 
       if (rng() >= chance) continue;
 

@@ -18,7 +18,7 @@ const ROOT_KEYS = [
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
   'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
-  'actionLog', 'emperorLocation', 'relationAffinities', 'tournament',
+  'actionLog', 'emperorLocation', 'relationAffinities', 'runtimeRelations', 'tournament',
   'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',
   'pendingFamilyTreatment', 'endgameResult',
 ] as const satisfies readonly (keyof GameState)[];
@@ -61,7 +61,7 @@ export const GameStateSchema = z
     const state = unknownState as GameState;
     const sliceResults = [
       GameStateTimelineSchema.safeParse(pickState(state, ['scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth', 'season', 'playerFactionId', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices', 'actionLog', 'pendingFamilyTreatment', 'endgameResult'])),
-      GameStateEntitiesSchema.safeParse(pickState(state, ['officers', 'cities', 'factions', 'females'])),
+      GameStateEntitiesSchema.safeParse(pickState(state, ['officers', 'cities', 'factions', 'females', 'runtimeRelations'])),
       GameStateCampaignSchema.safeParse(pickState(state, ['armys', 'campaignArmies', 'campaignNodes', 'grandStrategists'])),
       GameStateBattleSchema.safeParse(pickState(state, ['activeBattles', 'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance'])),
       GameStateDiplomacySchema.safeParse(pickState(state, ['diplomacy'])),

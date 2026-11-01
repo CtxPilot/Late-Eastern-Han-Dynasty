@@ -241,6 +241,8 @@ export interface CritContext {
   isSurrounded?: boolean; // 被围(乱战)
   /** 装备暴率加成（S13 Session 266：baseEffect crit_rate 累计，调用方从装备计算传入）。 */
   equipCritBonus?: number;
+  /** S24（Session 454）：义兄弟并肩 / 宿敌相搏的暴击率加成（百分点）。 */
+  relationCritBonus?: number;
 }
 
 export function computeCritRate(ctx: CritContext): number {
@@ -280,7 +282,7 @@ export function computeCritRate(ctx: CritContext): number {
   if (u === 'shenjiang') rate += 15;
 
   // 宝物（0-A 签名兜底 + 装备系统 crit_rate 效果，S13 Session 266）
-  rate += weaponCritBonus(o) + (ctx.equipCritBonus ?? 0);
+  rate += weaponCritBonus(o) + (ctx.equipCritBonus ?? 0) + (ctx.relationCritBonus ?? 0);
 
   // 暴击惩罚
   if (matchup < 1) rate -= 5;       // 被克
@@ -542,6 +544,14 @@ export interface ResolveAttackOpts {
   attackerCritBonus?: number;
   /** 守方装备暴率加成（反击暴击用）。 */
   defenderCritBonus?: number;
+  /** S24（Session 454）：攻方义兄弟并肩 / 宿敌相搏的暴击率加成（百分点）。 */
+  attackerRelationCritBonus?: number;
+  /** S24：守方反击场景的暴击率加成（百分点）。 */
+  defenderRelationCritBonus?: number;
+  /** S24：守方对宿敌的反击率加成（百分点）。 */
+  defenderRelationCounterBonus?: number;
+  /** S24：守方反击伤害加成（百分点，义兄弟并肩/同袍死战）。 */
+  defenderRelationDamagePct?: number;
   /** 六角派生态势：攻方被协同包围时，乱战暴击规则生效。 */
   attackerSurrounded?: boolean;
   /** 六角派生态势：守方被协同包围时，反击暴击规则生效。 */
@@ -571,6 +581,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
     proficiency: attacker.proficiency, terrain: opts.attackerTerrain, matchup,
     isSurrounded: opts.attackerSurrounded,
     equipCritBonus: opts.attackerCritBonus,
+    relationCritBonus: opts.attackerRelationCritBonus,
   };
   const critRate = computeCritRate(atkCritCtx);
   const critMult = computeCritMultiplier(atkCritCtx);
@@ -602,7 +613,12 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
       confused: defender.unit.statusEffects.some((e) => e.type === 'confusion' || e.type === 'stun'),
     };
     if (canCounter(counterCtx)) {
-      const counterRate = computeCounterRate(counterCtx, critRate);
+      const counterRate = clamp(
+        computeCounterRate(counterCtx, critRate) +
+          (opts.defenderRelationCounterBonus ?? 0) / 100,
+        0,
+        1,
+      );
       if (rng() < counterRate) {
         // 反击基础伤害 = 反击方 calcDamage 简化(用 baseDamage × 兵种反击系数)
         // 0-A 简化: 反击伤害 = 守方对攻方的一次 calcDamage 结果 × 反击系数
@@ -610,12 +626,18 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
         // 用守方作为攻方计算一次伤害(近似)
         const counterBase = estimateDamage(defender, attacker, matchup > 0 ? 1 / matchup : 1, opts.defenderTerrain, opts.attackerTerrain);
         counterDamage = Math.max(1, Math.round(counterBase * counterCoeff));
+        // S24：义兄弟并肩/同袍死战对反击伤害的加成（百分点，确定性）。
+        const counterPct = opts.defenderRelationDamagePct ?? 0;
+        if (counterPct > 0) {
+          counterDamage = Math.max(1, Math.round(counterDamage * (1 + counterPct / 100)));
+        }
         // 反击暴击 (§6.3): 独立roll, 基础暴击率 + 5%
         const defCritCtx: CritContext = {
           officer: defOff, unitType: defender.unit.unitType, formation: defender.unit.formation,
           proficiency: defender.proficiency, terrain: opts.defenderTerrain, matchup: 1 / matchup,
           isSurrounded: opts.defenderSurrounded,
           equipCritBonus: opts.defenderCritBonus,
+          relationCritBonus: opts.defenderRelationCritBonus,
         };
         const counterCritRate = clamp(computeCritRate(defCritCtx) + 0.05, 0.02, 0.6);
         // 独立反击暴击 roll 仍然消费；刚烈只把最终状态强制为暴击，避免重复套倍率。

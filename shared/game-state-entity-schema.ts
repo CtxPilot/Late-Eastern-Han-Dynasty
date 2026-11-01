@@ -37,6 +37,7 @@ import {
 } from './validators/index.js';
 import { CITY_FACTION_KINDS } from './city-factions.js';
 import { FamilyTreatmentStateSchema } from './hostage-families.js';
+import { RuntimeRelationSchema } from './relations.js';
 
 const PositiveIdSchema = z.number().int().positive();
 const NullablePositiveIdSchema = PositiveIdSchema.nullable();
@@ -379,13 +380,14 @@ function entityRecordSchema<T extends { id: number }>(entitySchema: z.ZodType<T>
 }
 
 export const GameStateEntitiesSchema: z.ZodType<
-  Pick<GameState, 'officers' | 'cities' | 'factions' | 'females'>
+  Pick<GameState, 'officers' | 'cities' | 'factions' | 'females' | 'runtimeRelations'>
 > = z
   .object({
     officers: entityRecordSchema(OfficerRuntimeSchema),
     cities: entityRecordSchema(CityRuntimeSchema),
     factions: entityRecordSchema(FactionRuntimeSchema),
     females: entityRecordSchema(FemaleRuntimeSchema),
+    runtimeRelations: z.array(RuntimeRelationSchema).optional(),
   })
   .strict()
   .superRefine((entities, ctx) => {
@@ -399,6 +401,30 @@ export const GameStateEntitiesSchema: z.ZodType<
         });
       }
     }
+    (entities.runtimeRelations ?? []).forEach((relation, index) => {
+      const base = ['runtimeRelations', index] as (string | number)[];
+      if (relation.fromId === relation.toId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [...base, 'toId'],
+          message: '运行时关系的双方不可为同一武将',
+        });
+      }
+      if (!entities.officers[relation.fromId]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [...base, 'fromId'],
+          message: '运行时关系引用的武将不存在',
+        });
+      }
+      if (!entities.officers[relation.toId]) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [...base, 'toId'],
+          message: '运行时关系引用的武将不存在',
+        });
+      }
+    });
   });
 
 export type GameStateEntities = z.infer<typeof GameStateEntitiesSchema>;

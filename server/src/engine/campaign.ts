@@ -83,6 +83,7 @@ import {
   pickDefenderCommander,
 } from './militaryMerit.js';
 import { applyCapturedRelations, applyJointExpeditionRelations } from './relations.js';
+import { registerBloodFeud } from './relationDepth.js';
 import { getUndermineArmyModifiers, getSecretCrossingBattleMul, getStrikeWhileHotFirstHitMul, getLureTigerWallMul, getSwapPillarLeadershipPenalty } from './plot.js';
 
 // 功绩获取数值（docs/04 §6.1 外交条；固定值不消耗权威 RNG，待平衡）
@@ -1908,6 +1909,8 @@ function applyBattleResultToState(
   const armies = state.campaignArmies.filter((a) => !participantIds.has(a.id));
   const captivesByAttacker: number[] = [];
   const captivesByDefender: number[] = [];
+  /** S24（Session 454，docs/52 §2.1）：战阵击斩结仇待结算队列，终局统一写入 runtimeRelations。 */
+  const bloodFeuds: { killerId: number; victimId: number }[] = [];
   /**
    * docs/05 §11.2（Session 436）：胜者缴获败者阵亡主将/副将装备——每件独立
    * 掷点（`LOOT_EQUIPMENT_CHANCE`），无装备/无胜者不掷点（零 RNG 消耗）；
@@ -2031,6 +2034,7 @@ function applyBattleResultToState(
             const status = result.commanderStatus[oid];
             if (status === 'killed') {
               officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
+              bloodFeuds.push({ killerId: primary.commanderId, victimId: oid });
               // Session 436：攻方胜 → 缴获被歼敌军阵亡者装备
               seizeKilledEquipment(oid, primary.factionId);
               // Session 438 S4a：攻方胜 → 缴获被歼敌军阵亡者快捷槽消耗品
@@ -2077,6 +2081,17 @@ function applyBattleResultToState(
     : resolution.defCityId != null
       ? (cities[resolution.defCityId]?.ruler ?? state.cities[resolution.defCityId]?.ruler ?? null)
       : null;
+  // 守方「击杀者」主将：野战取敌方 Army 主将，围城取守城指挥官（无则不计血仇）。
+  const enemyCommanderId = resolution.enemyArmyId != null
+    ? state.campaignArmies.find((a) => a.id === resolution.enemyArmyId)?.commanderId
+    : undefined;
+  const siegeDefCommanderId = (() => {
+    if (enemyCommanderId != null || resolution.defCityId == null) return undefined;
+    const defCity = cities[resolution.defCityId] ?? state.cities[resolution.defCityId];
+    if (!defCity || defCity.ruler == null) return undefined;
+    return pickDefenderCommander({ ...state, cities, officers }, defCity, defCity.ruler)?.id;
+  })();
+  const defenderKillerId = enemyCommanderId ?? siegeDefCommanderId;
   for (const { army } of attackers) {
     for (const oid of [army.commanderId, ...army.subCommanderIds]) {
       const o = officers[oid];
@@ -2084,6 +2099,9 @@ function applyBattleResultToState(
       const status = result.commanderStatus[oid];
       if (status === 'killed') {
         officers[oid] = { ...o, status: OfficerStatus.DEAD, location: null };
+        if (defenderKillerId != null) {
+          bloodFeuds.push({ killerId: defenderKillerId, victimId: oid });
+        }
         // Session 436：攻方败 → 守方缴获（胜者缴获败者；胜时不碰己方阵亡装备，沿 S1 行为）。
         // Session 438 S4a：攻方败 → 守方同样缴获阵亡攻方快捷槽消耗品。
         if (result.winner === 'defender') {
@@ -2104,8 +2122,14 @@ function applyBattleResultToState(
     }
   }
 
-  const sealCaptures = (s: GameState): GameState => {
-    let out = s;
+  /** S24：战阵击斩血仇统一在终局状态上写入（确定性、零 RNG；无血仇时零改动）。 */
+  const sealBloodFeuds = (s: GameState): GameState =>
+    bloodFeuds.reduce(
+      (acc, feud) => registerBloodFeud(acc, feud.killerId, feud.victimId),
+      s,
+    );
+
+  const sealCaptures = (s: GameState): GameState => {    let out = s;
     if (captivesByAttacker.length > 0) {
       out = applyCapturedRelations(out, captivesByAttacker, primary.commanderId);
     }
@@ -2130,7 +2154,7 @@ function applyBattleResultToState(
         out = applyCapturedRelations(out, captivesByDefender, captorId);
       }
     }
-    return out;
+    return sealBloodFeuds(out);
   };
 
   // 攻方胜且 defCityId → 占城

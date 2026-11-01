@@ -229,6 +229,16 @@ export function unassignConsumable(officerId: number, itemId: number, count?: nu
 export function recruitOfficer(officerId: number, recruiterId?: number): Promise<GameState> {
   return call('recruitOfficer', [officerId, recruiterId]);
 }
+
+/** S24（Session 454）：义结金兰。 */
+export function swearBrotherhood(officerAId: number, officerBId: number): Promise<GameState> {
+  return call('swearBrotherhood', [officerAId, officerBId]);
+}
+
+/** S24（Session 454）：拜师授业。 */
+export function appointMentorship(masterId: number, discipleId: number): Promise<GameState> {
+  return call('appointMentorship', [masterId, discipleId]);
+}
 export function appointOfficer(
   officerId: number,
   track: 'civil' | 'local' | 'military' | 'hegemony',

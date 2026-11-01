@@ -137,6 +137,7 @@ import {
 } from '../engine/grandStrategist.js';
 import { resolveEventChoice } from '../engine/event.js';
 import { appointOfficer } from '../engine/appoint.js';
+import { appointMentorship, swearBrotherhood } from '../engine/relationDepth.js';
 import { grantNobility } from '../engine/nobility.js';
 import { broadcast } from '../ws/broadcast.js';
 import { listSaveSlots, readSaveSlot, writeSaveSlot, type SaveSlotMeta } from './save-store.js';
@@ -2245,6 +2246,22 @@ export function getOfficerRelations(officerId: number): OfficerRelation[] {
     }
   }
   return result;
+}
+
+/** S24（Session 454，docs/52 §4）：义结金兰。 */
+export function doSwearBrotherhood(officerAId: number, officerBId: number): GameState {
+  return withLock(() => {
+    currentGame = swearBrotherhood(getGame(), officerAId, officerBId);
+    return getClientGame();
+  });
+}
+
+/** S24（Session 454，docs/52 §4）：拜师授业。 */
+export function doAppointMentorship(masterId: number, discipleId: number): GameState {
+  return withLock(() => {
+    currentGame = appointMentorship(getGame(), masterId, discipleId);
+    return getClientGame();
+  });
 }
 
 export function getSkillTrees(): SkillTreeDef[] {

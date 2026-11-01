@@ -95,6 +95,8 @@ interface Store {
   marry: (femaleId: number, officerId: number) => Promise<void>;
   searchTalent: (cityId: number) => Promise<void>;
   recruitOfficer: (officerId: number, recruiterId?: number) => Promise<void>;
+  swearBrotherhood: (officerAId: number, officerBId: number) => Promise<void>;
+  appointMentorship: (masterId: number, discipleId: number) => Promise<void>;
   equipItem: (officerId: number, itemId: number) => Promise<void>;
   unequipItem: (officerId: number, itemId: number) => Promise<void>;
   grantTreasure: (officerId: number, itemId: number) => Promise<void>;
@@ -948,6 +950,26 @@ export const useGameStore = create<Store>((set, get) => ({
       set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '登用完成' });
     } catch (e) {
       set({ error: errMsg(e, '登用失败'), loading: false });
+    }
+  },
+
+  swearBrotherhood: async (officerAId, officerBId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.swearBrotherhood(officerAId, officerBId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '义结金兰' });
+    } catch (e) {
+      set({ error: errMsg(e, '结义失败'), loading: false });
+    }
+  },
+
+  appointMentorship: async (masterId, discipleId) => {
+    set({ loading: true, error: null });
+    try {
+      const game = await api.appointMentorship(masterId, discipleId);
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '拜师完成' });
+    } catch (e) {
+      set({ error: errMsg(e, '拜师失败'), loading: false });
     }
   },
 

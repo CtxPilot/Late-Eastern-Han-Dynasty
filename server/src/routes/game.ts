@@ -1375,6 +1375,34 @@ gameRouter.get('/relations/:officerId', (req, res) => {
   }
 });
 
+/** S24（Session 454）：义结金兰 { officerAId, officerBId } */
+gameRouter.post('/relations/swear-brotherhood', (req, res) => {
+  try {
+    res.json(
+      gameService.doSwearBrotherhood(
+        Number(req.body.officerAId),
+        Number(req.body.officerBId),
+      ),
+    );
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'swear brotherhood failed' });
+  }
+});
+
+/** S24（Session 454）：拜师授业 { masterId, discipleId } */
+gameRouter.post('/relations/appoint-mentorship', (req, res) => {
+  try {
+    res.json(
+      gameService.doAppointMentorship(
+        Number(req.body.masterId),
+        Number(req.body.discipleId),
+      ),
+    );
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'appoint mentorship failed' });
+  }
+});
+
 // ====== 技能树 API（S25） ======
 
 /** 获取技能树定义（静态） */

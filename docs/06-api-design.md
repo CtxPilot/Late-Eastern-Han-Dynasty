@@ -671,7 +671,19 @@ GET    /api/game/relations/:officerId
   获取武将关系列表（Session 338：亲和度优先读 GameState.relationAffinities 运行时覆写，
   缺省回退 pairAffinity 基线；状态由 relationState 派生）
   Response: OfficerRelation[]
+
+POST   /api/game/relations/swear-brotherhood
+  义结金兰（Session 454）：己方同城在职、亲和 ≥80、非宿敌、双方结义 <2、耗金 200
+  Body: { officerAId: number, officerBId: number }
+  Response: GameState（写入 runtimeRelations + 亲和 100 + 大事记；不满足返回 400 原因）
+
+POST   /api/game/relations/appoint-mentorship
+  拜师授业（Session 454）：师傅最高属性 ≥75 且领先 ≥10、徒弟无师傅、收徒 <2、亲和 ≥40、耗金 100
+  Body: { masterId: number, discipleId: number }
+  Response: GameState（写入有向 master_disciple + 亲和 90 + 大事记；不满足返回 400 原因）
 ```
+
+离线 Worker 同名 handler：`swearBrotherhood` / `appointMentorship`（parity 别名 `doSwearBrotherhood` / `doAppointMentorship`）。
 
 ### 2.15 技能树 API（S25）
 

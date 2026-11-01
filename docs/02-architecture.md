@@ -157,7 +157,7 @@ Late-Eastern-Han-Dynasty/
 │       │   └── game.ts              # 全部 REST API 路由
 │       ├── services/
 │       │   └── game.ts              # 业务逻辑编排器
-│       ├── engine/                  # 36 个引擎模块 (核心)
+│       ├── engine/                  # 41 个引擎模块 (核心)
 │       │   ├── turn.ts              # 回合推进
 │       │   ├── civil.ts             # 内政 (开发/施米/征兵/训练)
 │       │   ├── economy.ts           # 势力金粮汇总同步
@@ -295,7 +295,7 @@ GameLayout
 ```
 路由层 (routes/game.ts — ~1250 行，80+ REST 端点)
   └─→ 服务层 (services/game.ts — ~2400 行编排器，withLock 串行)
-        ├─→ 引擎层 (engine/ × 36 + battle/ × 10，纯函数 state+rng→newState)
+        ├─→ 引擎层 (engine/ × 41 + battle/ × 10，纯函数 state+rng→newState)
         │     └─ state-pipeline.ts 双端共用管线（联机/离线同源结算，S372）
         └─→ 数据层 (loader.ts → JSON + Zod)
 ```
@@ -441,6 +441,7 @@ GameLayout
 | **爵位** | `engine/nobility.ts` | ~65 | 王命封爵七级（HC-P1-4） |
 | **国策** | `engine/policy.ts` | ~222 | L3 八国策：一策一时/下月生效/冷却6月 |
 | **关系网** | `engine/relations.ts` | ~172 | 季度同城/同征/被俘/联姻演变（S24） |
+| **关系深度** | `engine/relationDepth.ts` | ~330 | 义结金兰/拜师授业/年度点拨/宿敌同城/战阵血仇（S24，Session 454） |
 | **大会** | `engine/tournament.ts` | ~213 | 年度正月16人单败大会（S19） |
 | **人心** | `engine/mandateEffects.ts` | ~94 | 月度叛逃检定等 S26 效果 |
 | **双端管线** | `engine/state-pipeline.ts` | ~230 | buildGameState/runEndTurnPipeline/buildSaveEnvelope/adoptSaveEnvelope（S372） |

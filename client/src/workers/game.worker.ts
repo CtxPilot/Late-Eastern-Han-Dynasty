@@ -162,6 +162,7 @@ import {
   settleBattle,
 } from '../../../server/src/engine/march.js';
 import { marryFemale, recruitOfficer, searchTalent } from '../../../server/src/engine/personnel.js';
+import { appointMentorship, swearBrotherhood } from '../../../server/src/engine/relationDepth.js';
 import { grantBattleIntel } from '../../../server/src/engine/intel.js';
 import { formAlliance, transferCourtNetwork, tributeGold } from '../../../server/src/engine/diplomacy.js';
 import {
@@ -672,6 +673,22 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   recruitOfficer(officerId: number, recruiterId?: number): GameState {
     return withLock(() => {
       currentGame = recruitOfficer(getGame(), officerId, runtimeRandom, recruiterId != null ? recruiterId : undefined);
+      return getClientGame();
+    });
+  },
+
+  /** S24（Session 454）：义结金兰（镜像 doSwearBrotherhood）。 */
+  swearBrotherhood(officerAId: number, officerBId: number): GameState {
+    return withLock(() => {
+      currentGame = swearBrotherhood(getGame(), officerAId, officerBId);
+      return getClientGame();
+    });
+  },
+
+  /** S24（Session 454）：拜师授业（镜像 doAppointMentorship）。 */
+  appointMentorship(masterId: number, discipleId: number): GameState {
+    return withLock(() => {
+      currentGame = appointMentorship(getGame(), masterId, discipleId);
       return getClientGame();
     });
   },

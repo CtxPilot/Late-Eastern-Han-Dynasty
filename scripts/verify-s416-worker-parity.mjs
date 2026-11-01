@@ -99,6 +99,8 @@ const ALIAS_MAP = {
   proclaimEmperor: 'doProclaimEmperor',
   reclaimLand: 'doReclaimLand',
   recruitOfficer: 'doRecruitOfficer',
+  swearBrotherhood: 'doSwearBrotherhood',
+  appointMentorship: 'doAppointMentorship',
   recruitSpies: 'doRecruitSpies',
   releaseOfficer: 'doReleaseOfficer',
   relief: 'doRelief',

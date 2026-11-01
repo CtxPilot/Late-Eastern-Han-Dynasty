@@ -378,6 +378,30 @@ export async function recruitOfficer(
   return data;
 }
 
+/** S24（Session 454）：义结金兰。 */
+export async function swearBrotherhood(
+  officerAId: number,
+  officerBId: number,
+): Promise<GameState> {
+  const { data } = await http.post<GameState>('/relations/swear-brotherhood', {
+    officerAId,
+    officerBId,
+  });
+  return data;
+}
+
+/** S24（Session 454）：拜师授业。 */
+export async function appointMentorship(
+  masterId: number,
+  discipleId: number,
+): Promise<GameState> {
+  const { data } = await http.post<GameState>('/relations/appoint-mentorship', {
+    masterId,
+    discipleId,
+  });
+  return data;
+}
+
 /** S11/S12 任命三轨 + 霸府 */
 export async function appointOfficer(
   officerId: number,

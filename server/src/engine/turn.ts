@@ -53,6 +53,7 @@ import { tickDevelopmentProject, militaryFarmingMonthlyFood } from './civil.js';
 import { tickNationalPolicies } from './policy.js';
 import { tickFactionPolitics } from './factionPolitics.js';
 import { tickSameCityRelations, loadStaticRelations } from './relations.js';
+import { tickMentorshipAnnual, tickNemesisCoexistenceQuarter } from './relationDepth.js';
 import { tickPopularWillDesertion } from './mandateEffects.js';
 import { runAnnualTournament } from './tournament.js';
 import { tickFamilyTreatment } from './hostageFamilies.js';
@@ -383,6 +384,10 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   if (isYearStart) {
     nextState = runAnnualTournament(nextState, rng);
   }
+  // S24（Session 454）：每年正月师徒授业点拨（零 RNG；无运行时关系时零操作）
+  if (isYearStart) {
+    nextState = tickMentorshipAnnual(nextState);
+  }
   // 事件 S14：自动触发无选项事件
   nextState = tickEvents(nextState);
   // S03 技艺与制度研发月度推进
@@ -404,6 +409,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     meritDecayNotes = decay.notes;
     // S24：季度同城亲和演变（静态关系表中同城配对 +1）
     nextState = tickSameCityRelations(nextState, loadStaticRelations());
+    // S24（Session 454）：季度宿敌同城共处忠诚惩罚（零 RNG；无运行时关系时零操作）
+    nextState = tickNemesisCoexistenceQuarter(nextState);
   }
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {

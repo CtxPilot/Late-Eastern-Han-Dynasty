@@ -22,6 +22,7 @@ import type {
   TournamentState,
 } from './tournament.js';
 import type { PendingFamilyTreatment } from '../hostage-families.js';
+import type { RuntimeRelation } from '../relations.js';
 
 export interface GameAction {
   year: number;
@@ -95,6 +96,12 @@ export interface GameState {
    * 缺省时 GET relations 回退 pairAffinity 基线；旧档兼容，不升 schema 版本。
    */
   relationAffinities?: Record<string, number>;
+
+  /**
+   * S24 关系网动态缔结与变更（Session 454）。
+   * 义兄弟结义、宿敌誓仇、师徒授业等运行时关系；旧档缺省为空，完全兼容。
+   */
+  runtimeRelations?: RuntimeRelation[];
 
   /**
    * S19 单挑大会（Session 338 最小闭环）。

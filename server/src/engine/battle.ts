@@ -54,6 +54,10 @@ import {
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
   reinforcementSideFor,
   sideArmyCount,
+  applySwornFury,
+  nemesisBattleBonus,
+  swornAllyBattleBonus,
+  SWORN_FURY_DAMAGE_PCT,
   type BattleSide,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
@@ -77,6 +81,7 @@ import { hexFormationMods } from '../battle/hex-formation.js';
 import { effectiveMovement, effectiveUnitRange, hasMovedThisTurn } from '../battle/weather.js';
 import { applySpecialEffect } from '../battle/special-effects.js';
 import { runSimpleEnemyAi } from '../battle/simpleAi.js';
+import { allRelations, registerBloodFeud } from './relationDepth.js';
 import {
   aiAcceptChallenge,
   canChallenge,
@@ -1060,8 +1065,31 @@ export function attackUnit(
     },
     rng,
   );
+  // S24（Session 454，docs/52 §1.2/§2.2）：义兄弟并肩与宿敌相搏的伤害/暴击加成。
+  // 关系表为空时全部归零，既有战斗逐字节不变。
+  const relations = allRelations(state);
+  const activeUnits = battle.units.filter(
+    (u) => !u.isDestroyed && !u.isRetreated && u.troopCount > 0,
+  );
+  const attackerAllyIds = activeUnits
+    .filter((u) => u.side === 'attacker' && u.id !== attacker.id)
+    .map((u) => u.commanderId);
+  const defenderAllyIds = activeUnits
+    .filter((u) => u.side === 'defender' && u.id !== defender.id)
+    .map((u) => u.commanderId);
+  const atkSworn = swornAllyBattleBonus(atkO.id, attackerAllyIds, relations);
+  const defSworn = swornAllyBattleBonus(defO.id, defenderAllyIds, relations);
+  const atkNemesis = nemesisBattleBonus(atkO.id, defO.id, relations);
+  const defNemesis = nemesisBattleBonus(defO.id, atkO.id, relations);
+  const attackerDamagePct =
+    atkSworn.damagePct + (attacker.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
+  const defenderDamagePct =
+    defSworn.damagePct + (defender.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
+
   const baseDamage = Math.max(1, Math.round(
-    applyChargeToBaseDamage(rawBaseDamage, charge.bonusPct) * (1 + targetCheck.attackModifier),
+    applyChargeToBaseDamage(rawBaseDamage, charge.bonusPct)
+      * (1 + targetCheck.attackModifier)
+      * (1 + attackerDamagePct / 100),
   ));
 
   // §6.5 暴击/反击/连击事件流
@@ -1086,17 +1114,23 @@ export function attackUnit(
     chargePct: charge.bonusPct,
     attackerCritBonus: equipCritRateFor(atkO),
     defenderCritBonus: equipCritRateFor(defO),
+    attackerRelationCritBonus: atkSworn.critBonus + atkNemesis.critBonus,
+    defenderRelationCritBonus: defSworn.critBonus + defNemesis.critBonus,
+    defenderRelationCounterBonus: defNemesis.counterBonus,
+    defenderRelationDamagePct: defenderDamagePct,
     attackerSurrounded: isUnitSurrounded(battle.units, attacker.id),
     defenderSurrounded: isUnitSurrounded(battle.units, defender.id),
     rng,
   });
+  if (atkNemesis.critBonus > 0 || defNemesis.counterBonus > 0) result.labels.push('宿敌血战');
+  if (attacker.swornFury) result.labels.push('同袍死战');
 
   const totalDamage = result.damage + result.chainDamage;
   const matchupLabel = matchup > 1 ? '（克制）' : matchup < 1 ? '（被克）' : '';
   const eventLabel = result.labels.length ? `〔${result.labels.join('·')}〕` : '';
 
   // 应用兵力变化
-  const units = battle.units.map((u) => {
+  let units = battle.units.map((u) => {
     if (u.id === defender.id) {
       return { ...u, troopCount: result.defenderTroopsAfter, isDestroyed: result.defenderDestroyed, morale: Math.max(0, u.morale - 3) };
     }
@@ -1112,6 +1146,8 @@ export function attackUnit(
     }
     return u;
   });
+  // S24：同袍死战——本击出现义兄弟溃亡后，对存活义兄弟一次性写入激燃。
+  units = applySwornFury(units, relations);
   const actionHistory = appendBattleAction(battle, 'attack', {
     kind: 'attack',
     unitId: attacker.id,
@@ -1981,6 +2017,7 @@ export function runEnemyPhase(
     battle.turn,
     battle.weather,
     battle.isSiege,
+    allRelations(state),
   );
 
   if (result.over) {
@@ -2227,6 +2264,15 @@ function applyDuelOutcome(
     // 武将死亡 + 部队溃散
     loserOff.status = OfficerStatus.DEAD;
     loserOff.location = null;
+    // S24（Session 454，docs/52 §2.1）：阵斩触发血仇，死者义兄弟/师徒/父子与胜者结仇。
+    // registerBloodFeud 仅在存在复仇者时产生状态改动（零 RNG）；主将在战斗中已被就地标记阵亡，
+    // 故把关系与日志写回共享 state（与 loserOff.status 就地写入同口径）。
+    const withFeud = registerBloodFeud(state, result.winnerId, result.loserId);
+    if (withFeud !== state) {
+      state.runtimeRelations = withFeud.runtimeRelations;
+      state.relationAffinities = withFeud.relationAffinities;
+      state.actionLog = withFeud.actionLog;
+    }
     if (loserUnit) {
       units = units.map((u) =>
         u.id === loserUnit.id ? { ...u, troopCount: 0, isDestroyed: true, morale: 0 } : u,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, computeVisibleEnemyUnitIds, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
+import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, computeVisibleEnemyUnitIds, applySwornFury, nemesisBattleBonus, swornAllyBattleBonus, SWORN_FURY_DAMAGE_PCT, type AnyRelation, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
@@ -58,6 +58,7 @@ export function runSimpleEnemyAi(
   battleTurn?: number,
   weather: Weather = Weather.CLEAR,
   isSiege = false,
+  relations: readonly AnyRelation[] = [],
 ): { units: BattleUnit[]; message: string; over: boolean; winner: 'attacker' | 'defender' | null } {
   // 行动状态是回合契约的一部分：重入 AI（例如重复请求/恢复）不得让已行动单位再次执行。
   const liveEnemies = units.filter((u) => u.side === enemySide && isActiveBattleUnit(u));
@@ -215,7 +216,7 @@ export function runSimpleEnemyAi(
         messages.push(`${name} 雾中无法射击`);
         continue;
       }
-      const r = doAttack(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege);
+      const r = doAttack(next, acting, actingTarget, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege, relations);
       next = r.units;
       messages.push(r.message);
       if (r.over) return { units: next, message: messages.join('；'), over: true, winner: r.winner };
@@ -286,7 +287,7 @@ export function runSimpleEnemyAi(
         }
         const still = next.find((u) => u.id === movedTarget.id && isActiveBattleUnit(u));
         if (still) {
-          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege);
+          const r = doAttack(next, moved, still, terrainMap, unitTemplates, officerStats, rng, strongAgainst, officers, battleTurn, weather, isSiege, relations);
           next = r.units;
           messages.push(r.message);
           if (r.over) {
@@ -753,6 +754,7 @@ function doAttack(
   battleTurn?: number,
   weather: Weather = Weather.CLEAR,
   isSiege = false,
+  relations: readonly AnyRelation[] = [],
 ): {
   units: BattleUnit[];
   message: string;
@@ -808,7 +810,37 @@ function doAttack(
   // §6.5 暴击/反击/连击 (若有完整 officers)
   const fullAtkO = officers?.[attacker.commanderId];
   const fullDefO = officers?.[defender.commanderId];
-  let totalDamage = dmg;
+  // S24（Session 454）：义兄弟并肩 / 宿敌相搏（仅有完整武将数据时结算；空关系表零改动）。
+  const relationActive = relations.length > 0 && fullAtkO != null && fullDefO != null;
+  const activeForRelations = units.filter(
+    (u) => !u.isDestroyed && !u.isRetreated && u.troopCount > 0,
+  );
+  const atkSworn = relationActive
+    ? swornAllyBattleBonus(
+        fullAtkO.id,
+        activeForRelations.filter((u) => u.side === attacker.side && u.id !== attacker.id).map((u) => u.commanderId),
+        relations,
+      )
+    : { damagePct: 0, critBonus: 0 };
+  const defSworn = relationActive
+    ? swornAllyBattleBonus(
+        fullDefO.id,
+        activeForRelations.filter((u) => u.side === defender.side && u.id !== defender.id).map((u) => u.commanderId),
+        relations,
+      )
+    : { damagePct: 0, critBonus: 0 };
+  const atkNemesis = relationActive
+    ? nemesisBattleBonus(fullAtkO.id, fullDefO.id, relations)
+    : { critBonus: 0, counterBonus: 0 };
+  const defNemesis = relationActive
+    ? nemesisBattleBonus(fullDefO.id, fullAtkO.id, relations)
+    : { critBonus: 0, counterBonus: 0 };
+  const attackerRelationDamagePct =
+    atkSworn.damagePct + (attacker.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
+  const defenderRelationDamagePct =
+    defSworn.damagePct + (defender.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
+  const effectiveDmg = Math.max(1, Math.round(dmg * (1 + attackerRelationDamagePct / 100)));
+  let totalDamage = effectiveDmg;
   let counterDamage = 0;
   let labels: string[] = [];
   let details: string[] = [];
@@ -825,17 +857,23 @@ function doAttack(
       proficiency: fullDefO.unitProficiency[defender.unitType],
     };
     const result = resolveCritAttack({
-      attacker: atkActor, defender: defActor, baseDamage: dmg, matchup,
+      attacker: atkActor, defender: defActor, baseDamage: effectiveDmg, matchup,
       attackerTerrain: atkTerrain, defenderTerrain: defTerrain,
       distance: hexDistance(attacker.position, defender.position),
       isFirstRound: battleTurn === 1, attackerMoved,
       chargePct: charge.bonusPct,
       attackerCritBonus: equipCritRateFor(fullAtkO),
       defenderCritBonus: equipCritRateFor(fullDefO),
+      attackerRelationCritBonus: atkSworn.critBonus + atkNemesis.critBonus,
+      defenderRelationCritBonus: defSworn.critBonus + defNemesis.critBonus,
+      defenderRelationCounterBonus: defNemesis.counterBonus,
+      defenderRelationDamagePct: defenderRelationDamagePct,
       attackerSurrounded: isUnitSurrounded(units, attacker.id),
       defenderSurrounded: isUnitSurrounded(units, defender.id),
       rng,
     });
+    if (atkNemesis.critBonus > 0 || defNemesis.counterBonus > 0) result.labels.push('宿敌血战');
+    if (attacker.swornFury) result.labels.push('同袍死战');
     totalDamage = result.damage + result.chainDamage;
     counterDamage = result.counterDamage;
     labels = result.labels;
@@ -849,7 +887,7 @@ function doAttack(
 
   // 应用兵力: 守方扣 totalDamage, 攻方扣 counterDamage
   const newDefTroops = Math.max(0, defender.troopCount - totalDamage);
-  const next = units.map((u) => {
+  let next = units.map((u) => {
     if (u.id === defender.id) {
       return { ...u, troopCount: newDefTroops, isDestroyed: newDefTroops <= 0, morale: Math.max(0, u.morale - 3) };
     }
@@ -860,11 +898,13 @@ function doAttack(
         isDestroyed: attackerDestroyed,
         hasActed: true,
         mp: 0,
-        energy: Math.max(0, (u.energy ?? 100) - (totalDamage > dmg ? 5 : 0)),
+        energy: Math.max(0, (u.energy ?? 100) - (totalDamage > effectiveDmg ? 5 : 0)),
       };
     }
     return u;
   });
+  // S24：同袍死战——本击出现义兄弟溃亡后，对存活义兄弟一次性写入激燃。
+  next = applySwornFury(next, relations);
 
   // 攻方被反击致死
   const enemyAlive = sideAlive(next, attacker.side);
