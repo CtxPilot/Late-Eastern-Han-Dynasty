@@ -4,6 +4,7 @@
 import { InkButton } from './../ui/buttons';
 import { useGameStore } from '../../stores/gameStore';
 import { SealBadge } from '../ui/SealBadge';
+import { formatActionLogEntry } from '../common/eventLogParser';
 
 /**
  * 回合反馈（P0-3 · Session 407，`docs/40-game-evaluation.md`）：
@@ -69,16 +70,30 @@ export function MonthReportCard() {
       {monthReport.entries.length === 0 ? (
         <p className="px-4 py-3 text-xs text-stone-500 font-song">本月四方承平，无重大奏报。</p>
       ) : (
-        <ul className="max-h-60 overflow-y-auto px-4 py-3 space-y-1.5 font-song">
-          {monthReport.entries.slice(0, 30).map((e, i) => (
-            <li key={i} className="text-xs text-stone-300 leading-snug flex items-start gap-1.5">
-              <span className="text-amber-600/80 shrink-0 select-none">◆</span>
-              <span className="flex-1">{e.message}</span>
-            </li>
-          ))}
+        <ul className="max-h-64 overflow-y-auto px-3.5 py-3 space-y-1.5 font-mono">
+          {monthReport.entries.slice(0, 30).map((e, i) => {
+            const item = formatActionLogEntry(e, i, monthReport.year, monthReport.month);
+            return (
+              <li
+                key={i}
+                className="text-xs text-stone-300 leading-snug flex items-baseline gap-1.5 border-b border-stone-900/60 pb-1"
+              >
+                <span className="text-[10px] text-amber-500/90 font-mono font-semibold shrink-0 select-none">
+                  {item.categoryTag}
+                </span>
+                <span className="flex-1 font-song text-stone-200">{item.displayMessage}</span>
+                <span
+                  className={`text-[9px] font-song font-bold px-1 py-0.2 rounded-xs border shrink-0 select-none ${item.stampColorClass}`}
+                  style={item.stampBadgeStyle}
+                >
+                  [ {item.stampChar} ]
+                </span>
+              </li>
+            );
+          })}
           {monthReport.entries.length > 30 && (
-            <li className="text-[11px] text-stone-500 pt-1 text-center border-t border-stone-900">
-              （其余 {monthReport.entries.length - 30} 条详见行动日志）
+            <li className="text-[11px] text-stone-500 pt-1 text-center border-t border-stone-900 font-song">
+              （其余 {monthReport.entries.length - 30} 条详见起居注全卷）
             </li>
           )}
         </ul>

@@ -1,3 +1,42 @@
+## 2026-11-08 — Session 462 · P5-07a HiDPI/Wayland 适配 + P5-07c 伪 Terminal 文言战报系统
+
+- Phase：**Phase 5 打磨 / 前端体验与视觉工程**；攻克 Linux Wayland 高分屏模糊与战报沉浸感，不改金样/RNG。
+- **背景与目标**：
+  1. Linux Wayland（GNOME 40+、KDE Plasma 6）分数倍缩放（125%、150%、175%）下，Canvas/Stage 缺乏分辨率感知易产生毛边或模糊，且缓存层硬编码 pixelRatio；
+  2. 既有行动日志为纯文本流，缺少《15-linux-ui-spec.md》§2.3 与《ArtDirection.md》规划的「伪 Terminal 古籍文言战报」沉浸体验；
+  3. 推进并收口多剧本（P5-06）与部队等级系统（P5-14）的完成态。
+- **实装与验证内容**：
+  1. **HiDPI / Wayland 动态缩放适配工具链（`client/src/utils/hidpi.ts`）**：
+     - 实现 `getEffectiveDpr(win)`：动态提取设备像素比，并安全夹紧于 `[1, 3]` 区间；
+     - 实现 `observePixelRatio(onChange, win)`：利用 `matchMedia('(resolution: Ndppx)')` 动态监听 Wayland 多屏拖拽、系统缩放与浏览器缩放，实时驱动重绘；
+     - 实现 `setupHiDPIStage(stage, logicalW, logicalH, customDpr)`：自动同步 Stage 逻辑尺寸、全局 `Konva.pixelRatio` 与 DOM 容器样式像素；
+     - 实现 `getLayerCacheOptions(customDpr)`：为静态地形缓存层提供自适应烘焙倍率；
+     - `BattleView.tsx` 与 `MapCanvas.tsx` 挂接 `setupHiDPIStage`、`observePixelRatio` 与动态图层缓存，高分屏文字与六角线条锐利无锯齿。
+  2. **文言分类标签与七色状态印章解析引擎（`client/src/components/common/eventLogParser.ts`）**：
+     - 实现 `formatActionLogEntry`：将行动条目解析为古典文言格式；
+     - 分类标签引擎：映射为 `[ 旬始 ]`（turn/end_turn）、`[ 内政 ]`（civil/develop/conscript/train）、`[ 军机 ]`（military/battlefield/duel/sortie/retreat）、`[ 谍变 ]`（plot/intel）、`[ 大典 ]`（hegemony/tournament/emperor）、`[ 人伦 ]`（relations/family/marriage/oath）、`[ 天时 ]`（event/disaster/plague）；
+     - 状态印章引擎：智能识别语义派生七色古典印章：`[ 丰 ]`（翡翠绿/收获增益）、`[ 警 ]`（琥珀黄/敌袭威胁）、`[ 凶 ]`（朱砂红/伤亡疫病）、`[ 喜 ]`（赤金黄/称帝拜师大捷）、`[ 谋 ]`（苍青蓝/水攻伏兵计策）、`[ 战 ]`（赭石橙/出征鏖战）、`[ 平 ]`（玄石灰/日常中性）。
+  3. **EventLogTerminal 伪 Terminal 古籍战报组件（`client/src/components/common/EventLogTerminal.tsx`）**：
+     - 依据《15-linux-ui-spec.md》§2.3，采用 `#1c1a17` 宣纸暗色底与等宽字体+思源宋体混排；
+     - 题头点缀 Linux CLI 经典三点指示灯（朱砂/玄黄/苍碧）与 `漢末起居注 /tty-annal` 卷标；
+     - 中宽屏点阵引导线（`········`）连接文言叙事与右侧古典印章；
+     - 支持分类筛选（全部/军机/内政/谍变/天时/大典/人伦）；
+     - 支持「⛶ 展卷」大窗全屏模态层，支持全文词检索、起居注全卷通览。
+  4. **全域 UI 挂接与消费闭环**：
+     - `RightPanel.tsx`：手风琴「行动日志」升级为紧凑模式伪 Terminal 文言流，支持一键展卷；
+     - `TurnFeedback.tsx`：`MonthReportCard` 挂接文言前缀与状态印章徽标，提升月度结算古籍公文质感；
+     - `vite.config.ts`：将 `command-drawers` 细粒度拆分（~356KB），主包业务 chunk 进一步压降至 150KB，全量 11 个 JS chunks 严格受控于 410KB 以内，Vite 大包警告归零。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s462-hidpi-and-event-log-terminal.mjs`（注册 `pnpm verify-s462-hidpi-and-event-log-terminal`），6/6 专项断言全部绿色通过；
+  2. 新增单元测试 `client/src/utils/hidpi.test.ts`（4/4）、`client/src/components/common/eventLogParser.test.ts`（3/3）、`client/src/components/common/EventLogTerminal.test.tsx`（3/3）；client 单测增至 24 套件 84 项全通；
+  3. `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  4. `pnpm verify-s460-lazy-data-and-worker-chunks`：**6/6** 全绿；
+  5. `node scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
+  6. `pnpm validate-data` 12 数据文件全绿；`pnpm verify-compliance` 857 文件全绿；
+  7. `pnpm typecheck` / `pnpm lint`：全仓 0 错误；
+  8. `pnpm build`：三包构建全绿且零告警。
+- **文档**：`docs/09` P5-06/P5-07a/P5-07c/P5-14、`docs/10-progress.md` checklist + 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 461 · P5-11 全域 0-B 宏观经济与多剧本平衡性测试套件
 
 - Phase：**Phase 5 打磨 / 0-B 全域平衡性与多剧本数值收敛**；守护 0-B 大规模扩容下的长程稳定性与数值安全，不改金样/RNG。
@@ -2247,15 +2286,15 @@
 | P5-03 | AI 外交决策 | [ ] | P5-01 |
 | P5-04 | 套装系统引擎 | [x] Session 451 完成：S13 十大经典套装与装备词条闭环 | P4-08 |
 | P5-05 | 存档/读档(SQLite) | [x] Session 340 命名槽位首切片；多用户后置 | P0-04 |
-| P5-06 | 多剧本完善 | [~] | 0-A两剧本选择已实现；首批7历史剧本与全量势力后置 |
-| P5-07 | UI 美化+动画 | [ ] | P1~P4 |
+| P5-06 | 多剧本完善 | [x] Session 429/461 完成：9 大剧本 45 势力健康开局与全景数值自洽 | P0-14 |
+| P5-07 | UI 美化+动画 | [~] P5-07b/d/e 已完成；Session 462 实装 P5-07a（HiDPI 缩放适配）与 P5-07c（伪 Terminal 文言战报系统） | P1~P4 |
 | P5-08 | Canvas 动画 | [ ] | P1-03, P3-01 |
 | P5-09 | 音效系统 | [ ] | P5-07 |
 | P5-10 | 武将头像 | [ ] | P0-06 |
 | P5-11 | 平衡性测试 | [x] Session 461 完成：全域 0-B 宏观经济与多剧本平衡性测试套件 | P5-01~P5-06 |
 | P5-12 | 性能优化 | [x] Session 457/460 完成：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ 数据懒加载与按需验证 + virtual:leh-data 两段切片与 Worker/主包代码细粒度分包（消除 1.7MB 告警，全 chunk ≤ 500KB） | P5-09 |
-| P5-13 | 打包构建 | [x] Session 457 完成，Session 460 告警清零：`pnpm build` 三包全绿，client 产出 dist/ + PWA sw.js 全量纳管 | P0-05 |
-| P5-14 | 部队等级系统 | [~] Session 456 0-A 战斗投影（七级表/攻防暴击/UI）；经验获取与训练写回后置 | P2-04, P3-11 |
+| P5-13 | 打包构建 | [x] Session 457 完成，Session 460/462 零告警：`pnpm build` 三包全绿，client 产出 dist/ + PWA sw.js 全量纳管 | P0-05 |
+| P5-14 | 部队等级系统 | [x] Session 456/461 完成：0-A 战斗投影 + 六角战果经验 + 训练经验/补员稀释/建军投影 + Lv6 士气下限 50 + Lv7 铁军溃灭保留 30% 全面闭环 | P2-04, P3-11 |
 | P5-15 | 武将特性 + 属性天花板计算引擎 | [x] Session 458 完成：42项特性全量真源、天花板计算、加点门禁、服务/Worker对齐、暴击反击连击消费、UI分面 | P2-06, P0B-06 |
 
 ---

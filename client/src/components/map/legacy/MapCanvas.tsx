@@ -35,6 +35,7 @@ import {
   coverScale,
   maxScale as maxZoomScale,
 } from './mapViewport';
+import { observePixelRatio, setupHiDPIStage } from '../../../utils/hidpi';
 
 function GeoBaseLayer({
   mapImg,
@@ -228,6 +229,18 @@ export function MapCanvas() {
     setSize({ w: el.clientWidth, h: el.clientHeight });
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => {
+    return observePixelRatio(() => {
+      const el = containerRef.current;
+      if (el) setSize({ w: el.clientWidth, h: el.clientHeight });
+    });
+  }, []);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (stage) setupHiDPIStage(stage, size.w, size.h);
+  }, [size.w, size.h]);
 
   const fitFullMap = useCallback(() => {
     const el = containerRef.current;

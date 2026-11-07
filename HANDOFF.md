@@ -9,39 +9,44 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 461**（P5-11 全域 0-B 宏观经济与多剧本平衡性测试套件：9 大历史剧本 45 个可玩势力开局健康度全景审计、106 城池宏观指标合法性、1001 武将五维常模、剧本4群雄讨董连续 12 个月周年演进财政自洽、吕布有效武力 150 天花板与伤害乘区安全、水攻/伏兵战术状态机联动；`verify-s461-0b-scenarios-balance` 6/6 全绿通过） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-11/P5-12/P5-13/P5-15 完成 |
-| 代码最新 | Session 461 `server/src/scripts/verify-s461-0b-scenarios-balance.ts` 全域平衡性门禁全通，无报错运行态就绪 |
-| 文档最新 | **Session 461 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
-| 本交接用途 | **Session 461 已交付**；P5-11 验证与调优闭环；后续方向：0-B 闸门实测 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 5 / Phase 6 余项 |
+| 会话 | **Session 462**（P5-07a HiDPI/Wayland 缩放适配与 P5-07c 伪 Terminal 文言战报系统：`client/src/utils/hidpi.ts` DPR 安全夹紧与 `observePixelRatio` 分辨率监听 + BattleView/MapCanvas 接入；`eventLogParser.ts` 类别标签与七色印章引擎 + `EventLogTerminal.tsx` 伪终端古籍装帧、三点指示灯与展卷大窗模态 + RightPanel/TurnFeedback 闭环挂接；`command-drawers` 细粒度分包消除告警，全量 11 个 JS chunks ≤ 410KB；`verify-s462-hidpi-and-event-log-terminal` 6/6 全绿通过） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-06/P5-07a/P5-07c/P5-11/P5-12/P5-13/P5-14/P5-15 完成 |
+| 代码最新 | Session 462 `hidpi.ts`、`eventLogParser.ts`、`EventLogTerminal.tsx`、`RightPanel.tsx`、`TurnFeedback.tsx`、`BattleView.tsx`、`MapCanvas.tsx`、`vite.config.ts` 完成 |
+| 文档最新 | **Session 462 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
+| 本交接用途 | **Session 462 已交付**；P5-07a 与 P5-07c 收口；后续方向：0-B 闸门实测与 Phase 6 / 剩余打磨 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 5 / Phase 6 余项（P5-08 Canvas 动画、S20/S21 战斗串联） |
 
-### Session 461 交接要点
+### Session 462 交接要点
 
-- **P5-11 全域 0-B 宏观平衡性测试套件（`verify-s461-0b-scenarios-balance.ts`）**：
-  1. **全 9 剧本初始健康度全景审计**：
-     - 覆盖 9 大剧本（英雄集结、关东义兵、黄巾之乱、群雄讨董、群雄逐鹿、官渡对峙、赤壁前夜、汉中与襄樊、五丈原对峙）全部 45 个可玩势力开局；
-     - 校验势力存活、君主有效、首都归属、初始国库金粮非负无立即破产风险。
-  2. **106 座城池宏观数值域审计**：
-     - 人口 > 0（总人口超 1300 万）、农商墙防非负、民心在 [0, 100] 常模区间、驻军非负。
-  3. **1001 名武将五维常模审计**：
-     - 统/武/智/政/魅严格位于 [1, 100] 常模区间，无非法越界。
-  4. **代表剧本周年宏观演进与财政自洽**：
-     - 剧本 4（群雄讨董·曹操）连续 12 个月四季自主推进，金粮实数自洽存活，产出权威战报，零异常中断。
-  5. **极限武将战力天花板与伤害乘区安全审计**：
-     - 吕布 100+50=150 有效武力解锁 Lv5 天花板等级；极端战力（150武力 + Lv7铁军）普攻伤害有限正实数（无 NaN/无溢出）；
-     - Lv7 铁军溃灭经验保留 30%（3000→900）、普通部队溃灭经验归零；Lv6 百战部队士气下限严格锁定 50。
-  6. **战术计谋状态机联动与气力消耗校验**：
-     - 水计与伏兵释放后 energy 正常扣减，`activeStrategem` 状态置为 `'water'` / `'ambush'`，伏兵附加混乱。
+- **P5-07a HiDPI / Wayland 缩放适配（`client/src/utils/hidpi.ts`）**：
+  1. `getEffectiveDpr`：安全提取设备像素比，并严格夹紧于 `[1, 3]` 区间；
+  2. `observePixelRatio`：基于 `matchMedia('(resolution: Ndppx)')` 动态监听多屏拖拽、系统与浏览器缩放，实时响应；
+  3. `setupHiDPIStage`：同步 Stage 逻辑尺寸、全局 `Konva.pixelRatio` 与 DOM 容器样式宽高；
+  4. `getLayerCacheOptions`：为静态地形缓存层提供自适应烘焙倍率；
+  5. `BattleView.tsx` 与 `MapCanvas.tsx` 挂接 `setupHiDPIStage`、`observePixelRatio` 与动态图层缓存，Linux Wayland 高分屏字体与六角网格锐利无毛边。
+- **P5-07c 伪 Terminal 文言战报系统（`client/src/components/common/`）**：
+  1. **文言分类前缀与七色状态印章解析（`eventLogParser.ts`）**：
+     - 分类映射：`[ 旬始 ]`（旬始月结）、`[ 内政 ]`（农工商兵训）、`[ 军机 ]`（出征鏖战突围）、`[ 谍变 ]`（离间伏兵秘策）、`[ 大典 ]`（称王称帝大典）、`[ 人伦 ]`（金兰师徒婚配）、`[ 天时 ]`（大风水灾时疫）；
+     - 状态印章：`[ 丰 ]`（翡翠绿/收获增益）、`[ 警 ]`（琥珀黄/敌袭威胁）、`[ 凶 ]`（朱砂红/伤亡疫病）、`[ 喜 ]`（赤金黄/称帝拜师大捷）、`[ 谋 ]`（苍青蓝/水攻伏兵计策）、`[ 战 ]`（赭石橙/出征鏖战）、`[ 平 ]`（玄石灰/日常中性）。
+  2. **EventLogTerminal 伪 Terminal 古籍起居注组件（`EventLogTerminal.tsx`）**：
+     - 依据《15-linux-ui-spec.md》§2.3，采用 `#1c1a17` 宣纸暗色底与等宽字体+思源宋体混排；
+     - Linux CLI 经典三点指示灯（朱砂/玄黄/苍碧）与 `漢末起居注 /tty-annal` 卷标；
+     - 中宽屏点阵前导线（`········`）连接文言叙事与右侧古典印章；
+     - 支持分类筛选（全部/军机/内政/谍变/天时/大典/人伦）；
+     - 支持「⛶ 展卷」大窗全屏模态层，支持全文词检索、起居注全卷通览。
+  3. **全域 UI 挂接与消费闭环**：
+     - `RightPanel.tsx`：手风琴「行动日志」升级为紧凑模式伪 Terminal 文言流，支持一键展卷；
+     - `TurnFeedback.tsx`：`MonthReportCard` 挂接文言前缀与状态印章徽标，提升月度结算古籍公文质感；
+     - `vite.config.ts`：将 `command-drawers` 细粒度拆分（~356KB），主包业务 chunk 压降至 150KB，全量 11 个 JS chunks 严格受控于 410KB 以内，Vite 大包警告归零。
 - **全仓验证全绿**：
-  - `pnpm verify-s461-0b-scenarios-balance`：**6/6 全绿通过**；
+  - `pnpm verify-s462-hidpi-and-event-log-terminal`：**6/6 全绿通过**；
   - `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
   - `pnpm verify-s460-lazy-data-and-worker-chunks`：**6/6** 全绿；
   - `node scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
-  - `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 851 文件通过；
+  - `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 857 文件通过；
   - `pnpm typecheck` / `pnpm lint` 全仓 0 错误；
   - `pnpm test` 全仓 600+ 测试全绿通过；`pnpm build` 三包构建全绿零告警。
-- **文档**：`docs/09` P5-04/P5-11、`docs/10-progress.md` checklist + 本日志、本文件双写同步。
+- **文档**：`docs/09` P5-06/P5-07a/P5-07c/P5-14、`docs/10-progress.md` checklist + 本日志、本文件双写同步。
 
 ### Session 460 交接要点
 

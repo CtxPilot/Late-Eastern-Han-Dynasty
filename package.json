@@ -196,6 +196,7 @@
     "verify-s459-water-ambush-tactics": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s459-water-ambush-tactics",
     "verify-s460-lazy-data-and-worker-chunks": "node scripts/verify-s460-lazy-data-and-worker-chunks.mjs",
     "verify-s461-0b-scenarios-balance": "pnpm --filter @leh/shared build && pnpm --filter @leh/server exec tsx src/scripts/verify-s461-0b-scenarios-balance.ts",
+    "verify-s462-hidpi-and-event-log-terminal": "node scripts/verify-s462-hidpi-and-event-log-terminal.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

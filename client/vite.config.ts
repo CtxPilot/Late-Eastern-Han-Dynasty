@@ -260,6 +260,9 @@ export default defineConfig({
           if (id.includes('/shared/') || id.includes('@leh/shared')) {
             return 'leh-shared';
           }
+          if (id.includes('/components/command/')) {
+            return 'command-drawers';
+          }
         },
       },
     },

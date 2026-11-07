@@ -497,11 +497,11 @@
 | P5-03 | AI 外交决策(弱势求盟) | P5-01 |
 | P5-04 | 套装系统计算引擎 — **Session 451 完成**：S13 十大经典套装与装备词条（突击/机动/射程/募兵/威信）闭环，`verify-s49-itemsets-and-effects` 全绿 | P4-08 |
 | P5-05 | 存档/读档(SQLite) | **Session 340 完成首切片**：命名槽位 `saves.db` + 遗留 JSON 迁移；多用户后置 | P0-04 |
-| P5-06 | 多剧本完善 | P0-14 |
+| P5-06 | 多剧本完善 — **Session 429/461 完成**：9 大历史与架空剧本（英雄集结、关东义兵、黄巾之乱、群雄讨董、群雄逐鹿、官渡对峙、赤壁前夜、汉中与襄樊、五丈原对峙）45 势力健康开局与宏观数值自洽全量收官 | P0-14 |
 | P5-07 | UI 美化(Tailwind主题+动画) | P1~P4 |
-| P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） | P5-07 |
+| P5-07a | HiDPI/Wayland 缩放适配（`utils/hidpi.ts` + MapCanvas/BattleView 接入 `stage.scale(dpr)`） — **Session 462 完成**：DPR 范围夹紧与 `observePixelRatio` 动态分辨率监听，高分屏与分数倍缩放锐利无锯齿 | P5-07 |
 | P5-07b | XDG 存档（服务端写 `$XDG_DATA_HOME/leh/saves.db` + 前端一键导入导出 Blob） | **完成：Session 311/312 槽位 API/UI；Session 340 介质改为 SQLite；多用户留后续** | P5-05 |
-| P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） | P5-07 |
+| P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） — **Session 462 完成**：文言前缀标签与七色状态印章引擎（`eventLogParser.ts`）+ `EventLogTerminal.tsx` 终端三灯隐喻、起居注文风与展卷大窗模态 + RightPanel/TurnFeedback 闭环挂接 | P5-07 |
 | P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄）**→ 执行批次②，见 `ArtDirection.md` §九** | P5-07 |
 | P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核）**→ 引擎1（批次①/②顺带）** | P5-07 |
 | P5-08 | Canvas 动画(行军/着火/水流/落石) **→ 执行批次④（程序化几何特效）** | P1-03, P3-01 |
@@ -509,8 +509,8 @@
 | P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**；Session 124 已有四名代表人物 C+B 简化切片，待补 A 拓片层、`avatarGene` 落库与 30 人精校；详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘）**→ 批次③ Session 409 完成**：avatarGene 落库（4 原型策展+哈希派生+消解表）+ A′拓影/C 6×10×8×7/B 印信层（清 D-0B-7；officeSeal 动态官职印后置） | P0-06 |
 | P5-11 | 平衡性测试 — **Session 461 完成**：全域 0-B 宏观经济与多剧本平衡性测试套件（9 剧本 45 势力健康开局、106 城池宏观指标合法性、1001 武将五维常模、群雄讨董 12 个月周年演进收敛、吕布 150 武力极限天花板与伤害乘区安全、水攻/伏兵状态机联动）；`verify-s461-0b-scenarios-balance` 全绿 | P5-01~P5-06 |
 | P5-12 | 性能优化(Canvas缓存/数据懒加载/Worker分包) — **Session 457/460 完成**：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ 数据懒加载与按需属性加载（browser-loader lazy getter）+ virtual:leh-data 两段切片与 Worker/主包细粒度 Rollup 分包（JS chunk 全部 ≤ 500KB，彻底消除超限告警） | P5-09 |
-| P5-13 | 打包构建(生产模式) — **Session 457 完成，Session 460 零告警**：`pnpm build` 三包全绿，client 产出 `dist/`（含 PWA `sw.js` 预缓存）；所有 chunk 体积严格受控于 500KB 内 | P0-05 |
-| P5-14 | 部队等级系统(7级/经验获取/补员稀释/训练加速) — **Session 456：0-A 战斗投影 + 六角战战果经验 + 训练经验/补员稀释/建军投影 + Lv6 士气下限完成**（七级表/攻防暴击/UI/经验；Lv7 重建后置） | P2-04, P3-11 |
+| P5-13 | 打包构建(生产模式) — **Session 457 完成，Session 460/462 零告警**：`pnpm build` 三包全绿，client 产出 `dist/`（含 PWA `sw.js` 预缓存）；所有 chunk 体积严格受控于 500KB 内 | P0-05 |
+| P5-14 | 部队等级系统(7级/经验获取/补员稀释/训练加速) — **Session 456/461 完成**：0-A 战斗投影 + 六角战果经验 + 训练经验/补员稀释/建军投影 + Lv6 士气下限 50 + Lv7 铁军溃灭保留 30% 全面闭环 | P2-04, P3-11 |
 | P5-15 | 武将特性 + 属性天花板引擎（42项特性全量真源、天花板计算、加点门禁、服务/Worker对齐、暴击反击连击消费、UI分面） — **Session 458 完成** | P2-06, P0B-06 |
 
 ---

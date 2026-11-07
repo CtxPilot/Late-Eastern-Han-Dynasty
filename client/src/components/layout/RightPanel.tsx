@@ -12,6 +12,7 @@ import {
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { AccSection } from '../ui/AccSection';
+import { EventLogTerminal } from '../common/EventLogTerminal';
 
 type RightAcc =
   | 'basic'
@@ -241,16 +242,12 @@ export function RightPanel() {
             open={open === 'log'}
             onToggle={() => toggle('log')}
           >
-            <div className="px-2 max-h-40 overflow-y-auto text-xs text-stone-500">
-              {game.actionLog.slice(0, 12).map((a, i) => (
-                <div
-                  key={i}
-                  className="leading-snug py-0.5 border-b border-stone-900/50"
-                >
-                  {a.message}
-                </div>
-              ))}
-            </div>
+            <EventLogTerminal
+              entries={game.actionLog}
+              compact
+              maxEntries={16}
+              className="border-0 shadow-none bg-transparent"
+            />
           </AccSection>
 
           <div className="px-3 py-2 space-y-1">
