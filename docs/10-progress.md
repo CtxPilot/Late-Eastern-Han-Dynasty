@@ -1,3 +1,42 @@
+## 2026-11-08 — Session 470 · S21-W7 二级战术串联全量落地
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S21 三级战斗串联**；闭环 S21-W7（`shared/scenes.ts` screen 六态栈与 `setScreen` + `shared/tacticalTerrain.ts` 7 大地貌真源 + `BattleView.tsx` 切入渐变遮罩与镜头推进 + `TacticalUnitPiece.tsx` 棋子平滑滑行动画 + `BattleView.tsx` hex 悬停地形情报 Tooltip + 邻接交战触发三级白刃战 cutscene/转场 + `FogLayer.tsx` 战术视野动态散开），无第三方商业依赖、零外部素材依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 六角战术战斗（BattleView）此前进入时缺乏水墨氛围渐变过渡与镜头缩放推进，部队移动为瞬切突变，缺乏行棋滑行质感；
+  2. 战术六角格仅有底色，缺乏对 7 大古典地貌（平原/林地/山地/水域/沼泽/城垣/城塞）的移动消耗、防御/攻击地利修正以及战术锦囊悬停情报；
+  3. 战术沙盘此前视野全开，未接入 W3 FogLayer 探明视界物理挖洞遮罩，未能呈现我军推进时的迷雾消散体验；
+  4. 邻接交锋时此前直接调用结算扣血，未串联至三级横版白刃战场（screen: 'melee'），场景栈缺乏六态栈（'boot'|'world'|'campaign'|'tactical'|'melee'|'duel'）的逐层推进与回退机制；
+  5. 本会话目标：实装 `TacticalUnitPiece.tsx` 与 `tacticalTerrain.ts`，重构 `BattleView.tsx`，闭环六态栈状态机、切入渐变遮罩、镜头推进、棋子滑行、地形悬停卡片、战术迷雾散开及邻接触发三级白刃战入口。
+- **实装与验证内容**：
+  1. **screen 六态栈与状态机闭环（`shared/scenes.ts` & `gameStore.ts`）**：
+     - `Scene` 与 `Screen` 正式扩容支持 `'campaign'`，形成 `'boot' | 'world' | 'campaign' | 'tactical' | 'melee' | 'duel'` 六态栈闭环（兼顾兼容 `'battle'` 与 `'battlefield'`）；
+     - `gameStore.ts` 导出 `setScreen: (screen: Screen) => void` 统一转场接口，`meleeExit` 支持出栈回退到 `tactical` / `battle` 场景；
+     - `App.tsx` 同步挂接 `screen === 'tactical'` 与 `screen === 'battle'` 的双向识别。
+  2. **TacticalTerrain 六角地貌情报与悬停卡片（`shared/tacticalTerrain.ts` & `BattleView.tsx`）**：
+     - 依据 `TERRAIN_TABLE` 建立 7 大地形数值真源（林地移动 2/防+20%/攻-10%、山地移动 3/防+30%/攻-20%、水域移动 4/防-20%/攻-30%、城垣与城塞 99 等）；
+     - `BattleView.tsx` 挂接 `onMouseEnter` / `onMouseLeave` 事件与 `hoveredHex` 状态，纯 DOM 呈现金石古籍质感 `hex-terrain-tooltip`（地名、坐标、移动消耗、攻防修正百分比与战术锦囊）。
+  3. **棋子平滑滑行动画（`TacticalUnitPiece.tsx`）**：
+     - 独立封装战术棋子组件，维护 `prevPosRef` 坐标缓存；
+     - 当部队坐标变更时，自动调用 Konva `group.to({ x, y, duration: 0.35, easing: Konva.Easings.EaseInOut })` 平滑位移滑行，彻底替换瞬间跳跃；
+     - 完整绘制势力彩旗矩形、主帅单字姓氏、兵种印信篆字符、兵力血条与合流军旗名称。
+  4. **战术迷雾散开（`FogLayer.tsx` 战术沙盘接入）**：
+     - `BattleView.tsx` 基于存活我军单位与所在格地形/天气动态计算 `tacticalFogHoles`（消费 `effectiveSightRange`）；
+     - 嵌入独立 `<Layer listening={false}>` 的 `FogLayer` 迷雾底罩（`rgba(10, 10, 18, 0.42)`），探明六角视界通过 `destination-out` 动态开孔；
+     - 随部队平滑滑行位移，视野挖洞孔位同步跟随，呈现我军前推、迷雾散开的真实战场迷雾体验；伏兵计策下自动收缩为近距战旗迷雾。
+  5. **切入渐变遮罩与邻接交锋进入三级白刃战**：
+     - `BattleView.tsx` 挂接 `tactical-transition-overlay` 全屏水墨遮罩（进战 40ms 内从黑屏淡入战场）；
+     - 挂接 Stage 镜头推进动画（进战 Stage scale 0.88 → 1.0 推进）；
+     - 选定部队与敌军邻接时，底栏动态显现 `btn-trigger-melee`「短兵接战（入白刃）」与 `btn-direct-attack`「阵列急袭（直接结算）」；
+     - 邻接交锋时触发镜头向交锋点推进（`scaleX: 2.2, scaleY: 2.2`）、渐变遮罩加深（300ms）并自动 `pushSceneFrame({ scene: 'melee' })` 切入三级白刃战。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s470-tactical-orchestration.mjs`（注册 `pnpm verify-s470-tactical-orchestration`），6/6 专项断言全部通过；
+  2. 新增单元测试 `client/src/components/battle/tacticalViewInteraction.test.tsx`（8/8 项全绿）；
+  3. 扩充 `shared/scenes.test.ts`（14/14 项全绿，涵盖六态栈推进与逐层回退闭环）；
+  4. 全仓 100 个测试套件 680 项测试 100% 全绿（shared 59 个 530 项、server 4 个 14 项、client 37 个 136 项）；
+  5. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  6. 生产构建 `pnpm build` 全绿，CSS (69.87 KB)、主 JS (180.91 KB) 与全部 11 个 JS chunks 严格受控于预算内。
+- **文档**：`docs/10-progress.md` checklist（S21-W7 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 469 · S21-W6 一级大地图出征与围城演出全量落地
 
 - Phase：**Phase 6 前端体验 & 三级战斗串联 / S21 三级战斗串联**；闭环 S21-W6（`MarchAnimationLayer.tsx` 行军虚线带羽箭头 + 军旗占位与势力印信字 + 目标城烽火特效环与烽烟粒子 + `SiegeAssaultDialog.tsx` 围城决断弹窗与五项大战略决策指令 + `gameStore.ts` `activeSiegeArmyId` 围城攻决全局状态机 + `ProvinceTopology` 与 `GameLayout` 全栈挂接），无第三方商业依赖、零外部素材依赖、不改服务端金样与权威 RNG。
@@ -2539,7 +2578,7 @@
 | ID | 任务 | 状态 | 备注 |
 |:--:|------|:--:|------|
 | S21-W6 | 一级大地图演出 | [x] | Session 469 完成：`MarchAnimationLayer.tsx` 行军虚线带羽箭头与流光 + 军旗占位与势力字 + 目标城烽火特效环与烽烟标 + `SiegeAssaultDialog.tsx` 围城五项大战略决断弹窗 + 全局挂接 |
-| S21-W7 | 二级战术串联 | [ ] | screen 六态栈 + 切入渐变 + 棋子滑行 + hex 悬停情报 + 邻接触发三级 + 迷雾散开 |
+| S21-W7 | 二级战术串联 | [x] | Session 470 完成：`shared/scenes.ts` screen 六态栈与 setScreen + `shared/tacticalTerrain.ts` 7 大地貌真源 + `BattleView.tsx` 切入渐变遮罩与镜头推进 + `TacticalUnitPiece.tsx` 棋子平滑滑行动画 + hex 悬停地形情报卡片 + 邻接交战触发三级白刃转场 + `FogLayer.tsx` 战术迷雾散开 |
 | S21-W8 | 三级白刃战横版 | [ ] | MeleeStage Konva 方阵 30-50 图元 + 动态缩放 20-120 粒 + 纯战略指令 + 镜头推进切入 + Soldier 类移植 + 武将计特写 |
 | S21-W9 | 单挑接入 | [ ] | DuelStage 混合范式（已储备）+ 状态机串接：白刃→单挑→回白刃 |
 

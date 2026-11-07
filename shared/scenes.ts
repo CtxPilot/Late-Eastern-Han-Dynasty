@@ -16,6 +16,7 @@
 export type Scene =
   | 'scenario'
   | 'world'
+  | 'campaign'
   | 'battle'
   | 'battlefield'
   | 'melee'
@@ -33,6 +34,8 @@ export interface SceneFrame {
   encounterId?: string;
   /** 关联的六角战斗 id（scene='tactical' 时可填，复用 BattleState.id） */
   battleId?: string;
+  /** 关联的战役 Army id（scene='campaign' 时可填） */
+  armyId?: string;
 }
 
 /** 空栈的 screen 回退值 */

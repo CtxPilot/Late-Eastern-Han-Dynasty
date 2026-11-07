@@ -77,4 +77,5 @@ export * from './types/delegation.js';
 export * from './peerless.js';
 export * from './troop-level.js';
 export * from './traits.js';
+export * from './tacticalTerrain.js';
 export * from './pcg/index.js';

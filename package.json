@@ -204,6 +204,7 @@
     "verify-s467-websocket-broadcast-and-turn-overlay": "node scripts/verify-s467-websocket-broadcast-and-turn-overlay.mjs",
     "verify-s468-territory-hull-and-pcg": "node scripts/verify-s468-territory-hull-and-pcg.mjs",
     "verify-s469-level1-campaign-performance": "node scripts/verify-s469-level1-campaign-performance.mjs",
+    "verify-s470-tactical-orchestration": "node scripts/verify-s470-tactical-orchestration.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

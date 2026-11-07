@@ -301,7 +301,7 @@ export function TopBar() {
       )}
 
       {/* 结束回合主令按钮 */}
-      {screen === 'world' && (
+      {(screen === 'world' || screen === 'campaign') && (
         <SealButton
           data-testid="btn-end-turn"
           className="text-sm px-3.5 py-1.5 ml-1"

@@ -8,11 +8,12 @@ import { gameApi as api } from '../services/gateway';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
 import { playDrum } from '../utils/sfx';
 
-type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee' | 'tactical' | 'duel';
+type Screen = 'boot' | 'scenario' | 'world' | 'campaign' | 'battle' | 'battlefield' | 'melee' | 'tactical' | 'duel';
 
 interface Store {
   screen: Screen;
   sceneStack: SceneFrame[];
+  setScreen: (screen: Screen) => void;
   pushSceneFrame: (frame: SceneFrame) => void;
   popSceneFrame: () => void;
   popToSceneFrame: (scene: SceneFrame['scene']) => void;
@@ -300,6 +301,11 @@ export const useGameStore = create<Store>((set, get) => ({
     }
   },
 
+  setScreen: (screen) => set((s) => {
+    const frame: SceneFrame = { scene: screen === 'boot' ? 'world' : screen };
+    const nextStack = pushScene(s.sceneStack, frame);
+    return { screen, sceneStack: nextStack };
+  }),
   pushSceneFrame: (frame) => set((s) => { const stack = pushScene(s.sceneStack, frame); return { sceneStack: stack, screen: screenOf(stack) }; }),
   popSceneFrame: () => set((s) => { const stack = popScene(s.sceneStack); return { sceneStack: stack, screen: screenOf(stack) }; }),
   popToSceneFrame: (scene) => set((s) => { const stack = popToScene(s.sceneStack, scene); return { sceneStack: stack, screen: screenOf(stack) }; }),
@@ -1676,9 +1682,12 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { game } = await api.meleeExit();
-      const after = get().sceneStack.some((frame) => frame.scene === 'battlefield')
-        ? popToScene(get().sceneStack, 'battlefield')
-        : replaceStack({ scene: 'world' });
+      const hasTactical = get().sceneStack.some((frame) => frame.scene === 'tactical' || frame.scene === 'battle');
+      const after = hasTactical
+        ? (get().sceneStack.some((frame) => frame.scene === 'tactical') ? popToScene(get().sceneStack, 'tactical') : popToScene(get().sceneStack, 'battle'))
+        : get().sceneStack.some((frame) => frame.scene === 'battlefield')
+          ? popToScene(get().sceneStack, 'battlefield')
+          : replaceStack({ scene: 'world' });
       set({ game, melee: null, meleeLastResult: null, sceneStack: after, screen: screenOf(after), loading: false });
     } catch (e) {
       set({ error: errMsg(e, '退出白刃战失败'), loading: false });

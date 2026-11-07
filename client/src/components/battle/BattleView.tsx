@@ -3,8 +3,8 @@
 
 import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Stage, Layer, Text, Group, Line, RegularPolygon, Rect, Circle } from 'react-konva';
-import { FORMATION_LABEL, FormationType, TerrainType, Weather, calcStaminaMax, canUseWeatherActive, meritLevelFor, weatherActiveEnergyCost, tacticalTurnFromTimestamp, resolveHexSurround, reinforcementCandidates, isPeerlessOfficer, isPeerlessGhostForm, troopLevelLabel, type Officer, type BattleSideContext, type BattleLogExplanation, type DuelStance } from '@leh/shared';
+import { Stage, Layer, Text, Group, Line, RegularPolygon, Circle } from 'react-konva';
+import { FORMATION_LABEL, FormationType, TerrainType, Weather, calcStaminaMax, canUseWeatherActive, meritLevelFor, weatherActiveEnergyCost, tacticalTurnFromTimestamp, resolveHexSurround, reinforcementCandidates, isPeerlessOfficer, isPeerlessGhostForm, troopLevelLabel, getTacticalTerrainInfo, effectiveSightRange, type Officer, type BattleSideContext, type BattleLogExplanation, type DuelStance } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { DuelPanel } from './DuelPanel';
 import { ExpressionPortrait } from '../officer/ExpressionPortrait';
@@ -14,12 +14,12 @@ import Konva from 'konva';
 import { playHorn } from '../../utils/sfx';
 import { getLayerCacheOptions, observePixelRatio, setupHiDPIStage } from '../../utils/hidpi';
 import { marchDashOffset, waterRipple, shockwave } from './tacticalAnimations';
+import { TacticalUnitPiece } from './TacticalUnitPiece';
+import { FogLayer } from '../map/FogLayer';
 
 const HEX_SIZE = 28;
 const ORIGIN = { x: 50, y: 50 };
 const TERRAIN_COLOR: Record<string, string> = { [TerrainType.PLAIN]: BT.terrainPlain, [TerrainType.FOREST]: BT.terrainForest, [TerrainType.WATER]: BT.terrainWater, [TerrainType.MOUNTAIN]: BT.terrainMountain, [TerrainType.SWAMP]: BT.terrainSwamp, [TerrainType.WALL]: BT.terrainWall, [TerrainType.CITY]: BT.terrainCity };
-/** §四 兵种篆字符（0-A 9 兵种单字；0-B 特殊兵种扩容时同步） */
-const UNIT_CHAR: Record<string, string> = { lightInfantry: '步', heavyInfantry: '甲', spearman: '枪', archer: '弓', crossbowman: '弩', lightCavalry: '轻', heavyCavalry: '重', horseArcher: '射', lightNavy: '走', mediumNavy: '蒙', towerShip: '楼' };
 const HEX_FORMATIONS: readonly FormationType[] = [FormationType.SQUARE, FormationType.CIRCLE, FormationType.WEDGE, FormationType.GOOSE, FormationType.CRANE_WING, FormationType.ARROWHEAD];
 const WEATHER_OPTIONS: readonly Weather[] = [Weather.CLEAR, Weather.CLOUDY, Weather.RAIN, Weather.STORM, Weather.FOG, Weather.SNOW];
 const WEATHER_LABEL: Record<Weather, string> = { [Weather.CLEAR]: '晴', [Weather.CLOUDY]: '阴', [Weather.RAIN]: '雨', [Weather.STORM]: '暴雨', [Weather.FOG]: '雾', [Weather.SNOW]: '雪' };
@@ -33,7 +33,15 @@ const hexToPixel = (q: number, r: number, size: number) => ({ x: size * (Math.sq
 function hexCorners(size: number) { const pts: number[] = []; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); pts.push(size * Math.cos(a), size * Math.sin(a)); } return pts; }
 function hexDist(a: { q: number; r: number }, b: { q: number; r: number }) { return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2; }
 
-export function BattleView() {
+export function BattleView({
+  battle: propBattle,
+  game: propGame,
+  selectedUnitId: propSelectedUnitId,
+}: {
+  battle?: import('@leh/shared').BattleState | null;
+  game?: import('@leh/shared').GameState | null;
+  selectedUnitId?: string | null;
+} = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 1000, h: 700 });
   const [fireMode, setFireMode] = useState(false);
@@ -46,7 +54,22 @@ export function BattleView() {
   const [consumableMode, setConsumableMode] = useState(false);
   const [reinforceMode, setReinforceMode] = useState(false);
   const [duelStance, setDuelStance] = useState<DuelStance>('delegate');
-  const battle = useGameStore((s) => s.battle); const game = useGameStore((s) => s.game); const error = useGameStore((s) => s.error); const selectedUnitId = useGameStore((s) => s.selectedUnitId); const moveRange = useGameStore((s) => s.moveRange); const movePath = useGameStore((s) => s.movePath); const selectUnit = useGameStore((s) => s.selectUnit); const previewMoveTo = useGameStore((s) => s.previewMoveTo); const moveTo = useGameStore((s) => s.moveTo); const undoBattleAction = useGameStore((s) => s.undoBattleAction); const attack = useGameStore((s) => s.attack); const castFire = useGameStore((s) => s.castFire); const castWater = useGameStore((s) => s.castWater); const castAmbush = useGameStore((s) => s.castAmbush); const castWeather = useGameStore((s) => s.castWeather); const castAbility = useGameStore((s) => s.castAbility); const finishPlayer = useGameStore((s) => s.finishPlayer); const retreatBattle = useGameStore((s) => s.retreatBattle); const changeBattleFormation = useGameStore((s) => s.changeBattleFormation); const exitBattle = useGameStore((s) => s.exitBattle); const usableAbilities = useGameStore((s) => s.usableAbilities); const duelChallenge = useGameStore((s) => s.duelChallenge); const battleUseConsumable = useGameStore((s) => s.battleUseConsumable); const reinforceBattle = useGameStore((s) => s.reinforceBattle); const itemsCatalog = useGameStore((s) => s.itemsCatalog);
+  const [hoveredHex, setHoveredHex] = useState<{
+    q: number;
+    r: number;
+    terrain: string;
+    clientX: number;
+    clientY: number;
+  } | null>(null);
+  const [fadeOpacity, setFadeOpacity] = useState(1);
+  const [isClashTransitioning, setIsClashTransitioning] = useState(false);
+  const storeBattle = useGameStore((s) => s.battle);
+  const storeGame = useGameStore((s) => s.game);
+  const storeSelectedUnitId = useGameStore((s) => s.selectedUnitId);
+  const battle = propBattle ?? storeBattle;
+  const game = propGame ?? storeGame;
+  const selectedUnitId = propSelectedUnitId !== undefined ? propSelectedUnitId : storeSelectedUnitId;
+  const error = useGameStore((s) => s.error); const moveRange = useGameStore((s) => s.moveRange); const movePath = useGameStore((s) => s.movePath); const selectUnit = useGameStore((s) => s.selectUnit); const previewMoveTo = useGameStore((s) => s.previewMoveTo); const moveTo = useGameStore((s) => s.moveTo); const undoBattleAction = useGameStore((s) => s.undoBattleAction); const attack = useGameStore((s) => s.attack); const castFire = useGameStore((s) => s.castFire); const castWater = useGameStore((s) => s.castWater); const castAmbush = useGameStore((s) => s.castAmbush); const castWeather = useGameStore((s) => s.castWeather); const castAbility = useGameStore((s) => s.castAbility); const finishPlayer = useGameStore((s) => s.finishPlayer); const retreatBattle = useGameStore((s) => s.retreatBattle); const changeBattleFormation = useGameStore((s) => s.changeBattleFormation); const exitBattle = useGameStore((s) => s.exitBattle); const usableAbilities = useGameStore((s) => s.usableAbilities); const duelChallenge = useGameStore((s) => s.duelChallenge); const battleUseConsumable = useGameStore((s) => s.battleUseConsumable); const reinforceBattle = useGameStore((s) => s.reinforceBattle); const itemsCatalog = useGameStore((s) => s.itemsCatalog);
   const stageRef = useRef<Konva.Stage>(null);
   useEffect(() => { const el = containerRef.current; if (!el) return; const ro = new ResizeObserver(() => setSize({ w: el.clientWidth, h: el.clientHeight })); ro.observe(el); return () => ro.disconnect(); }, []);
   useEffect(() => {
@@ -59,6 +82,28 @@ export function BattleView() {
     const stage = stageRef.current;
     if (stage) setupHiDPIStage(stage, size.w, size.h);
   }, [size.w, size.h]);
+
+  // S21-W7 一级→二级切入渐变与镜头推进 (淡入 + stage scale 推进)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFadeOpacity(0);
+    }, 40);
+
+    const stage = stageRef.current;
+    if (stage && typeof stage.to === 'function') {
+      if (typeof stage.scale === 'function') {
+        stage.scale({ x: 0.88, y: 0.88 });
+      }
+      stage.to({
+        scaleX: 1,
+        scaleY: 1,
+        duration: 0.45,
+        easing: Konva.Easings?.EaseOut,
+      });
+    }
+
+    return () => clearTimeout(timer);
+  }, []);
   const corners = useMemo(() => hexCorners(HEX_SIZE - 1), []);
   // P2-3（Session 415，D-0B-2）：静态地形缓存层——地形格子烘焙为位图，拖拽/重绘只做位图搬运；
   // 移动高亮与单位在动态层叠加。地形随战斗创建后不变，仅在 hexGrid 变化时重烘焙。
@@ -207,68 +252,336 @@ export function BattleView() {
     ...(latestFormationIndex >= 0 ? [latestFormationIndex] : []),
   ])).sort((a, b) => b - a);
   const reportEntries = reportIndices.map((index) => battle.log[index]);
-  const onHex = (q: number, r: number) => { if (!playerTurn) return; const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r); if (occ?.side === 'attacker') { setFireMode(false); setWaterMode(false); setAmbushMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void selectUnit(occ.id); return; } if (occ?.side === 'defender' && selected?.side === 'attacker') { if (fireMode) { setFireMode(false); void castFire(occ.id); return; } if (waterMode) { setWaterMode(false); void castWater(occ.id); return; } if (ambushMode) { setAmbushMode(false); void castAmbush(occ.id); return; } if (abilitySel) { const id = abilitySel; setAbilitySel(null); void castAbility(occ.id, id); return; } if (duelMode) { setDuelMode(false); void duelChallenge(selected.id, occ.id, duelStance); return; } void attack(occ.id); return; } if (moveRange.includes(`${q},${r}`)) { setFireMode(false); setWaterMode(false); setAmbushMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void moveTo(q, r); return; } setFireMode(false); setWaterMode(false); setAmbushMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); void selectUnit(null); };
-  return <div ref={containerRef} className="w-full h-full relative" style={{ background: BT.battleBackground }}><Stage ref={stageRef} width={size.w} height={size.h} draggable><Layer x={ORIGIN.x} y={ORIGIN.y} ref={terrainLayerRef} listening={false}>{battle.hexGrid.terrain.map((row, r) => row.map((tid, q) => { const { x, y } = hexToPixel(q, r, HEX_SIZE); return <Group key={`t-${q},${r}`} x={x} y={y}><Line points={corners} closed fill={TERRAIN_COLOR[tid] ?? BT.terrainUnknown} stroke={BT.hexStroke} strokeWidth={1} opacity={0.92} /></Group>; }))}</Layer><Layer x={ORIGIN.x} y={ORIGIN.y}>{battle.hexGrid.terrain.map((row, r) => row.map((_tid, q) => { const { x, y } = hexToPixel(q, r, HEX_SIZE); const key = `${q},${r}`; const inMove = playerTurn && moveRange.includes(key); const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r); return <Group key={key} x={x} y={y} onMouseEnter={() => { if (inMove) void previewMoveTo(q, r); }} onClick={() => onHex(q, r)}><Line points={corners} closed fill={inMove ? BT.moveFill : 'rgba(0,0,0,0)'} stroke={inMove ? BT.moveStroke : 'rgba(0,0,0,0)'} strokeWidth={inMove ? 2 : 0} />{occ && <Group><Rect x={-9} y={-13} width={18} height={24} cornerRadius={2} fill={occ.side === 'attacker' ? BT.unitAttacker : BT.unitDefender} stroke={occ.id === selectedUnitId ? BT.unitSelected : occ.side === 'attacker' ? BT.flagEdgeA : BT.flagEdgeD} strokeWidth={occ.id === selectedUnitId ? 2.5 : 1.2} /><Text text={occ.commanderName.slice(0, 1)} x={-9} width={18} y={-12} align="center" fontFamily="HanDynastySerif" fontSize={13} fontStyle="bold" fill={BT.flagText} /><Text text={UNIT_CHAR[occ.unitType] ?? '军'} x={-9} width={18} y={1} align="center" fontFamily="HanDynastySeal" fontSize={9} fill={BT.flagSeal} /><Rect x={-9} y={11} width={18} height={3} fill={BT.hpBack} opacity={0.7} /><Rect x={-9} y={11} width={Math.max(2, 18 * (occ.troopCount / Math.max(1, occ.maxTroops)))} height={3} fill={BT.hpFill} />{isMultiArmyStorm && <Text text={stormAttackerArmies.find((a) => a.id === occ.armyId)?.name ?? ''} x={-20} width={40} y={15} align="center" fontFamily="HanDynastySerif" fontSize={8} fill={BT.flagText} />}</Group>}</Group>; }))}{playerTurn && selected && activeUnits.filter((u) => u.side === 'defender' && hexDist(selected.position, u.position) <= 1).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <RegularPolygon key={`atk-${u.id}`} x={p.x} y={p.y} sides={6} radius={HEX_SIZE} stroke={BT.attackRing} strokeWidth={2} dash={[4, 3]} listening={false} />; })}
-        {movePath?.found && movePath.path.length > 1 && (
-          <Line
-            ref={marchLineRef}
-            points={movePath.path.flatMap((node) => {
-              const p = hexToPixel(node.coord.q, node.coord.r, HEX_SIZE);
-              return [p.x, p.y];
-            })}
-            stroke={BT.animMarchLine}
-            strokeWidth={3}
-            dash={[8, 5]}
-            dashOffset={0}
-            lineCap="round"
-            lineJoin="round"
-            listening={false}
-          />
-        )}
-        <Group ref={waterGroupRef} listening={false}>
-          {(battle.units ?? [])
-            .filter((u) => !u.isDestroyed && (battle.activeStrategem === 'water' || u.statusEffects?.some((s) => s.type === 'slow')))
-            .map((u, i) => {
+
+  // S21-W7 战术迷雾散开 (FogLayer 方案接入)
+  const tacticalFogHoles = useMemo(() => {
+    const observers = (battle.units ?? []).filter(
+      (u) => u.side === 'attacker' && !u.isDestroyed && !u.isRetreated,
+    );
+    const isAmbush = battle.activeStrategem === 'ambush';
+    return observers.map((u) => {
+      const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+      const terrain = battle.hexGrid.terrain[u.position.r]?.[u.position.q] ?? TerrainType.PLAIN;
+      const sightRange = isAmbush ? 1.5 : effectiveSightRange(terrain, battle.weather);
+      return {
+        id: `sight-${u.id}`,
+        x: ORIGIN.x + p.x,
+        y: ORIGIN.y + p.y,
+        radius: Math.max(HEX_SIZE * 1.8, Math.round(sightRange * HEX_SIZE * 1.55)),
+      };
+    });
+  }, [battle.units, battle.hexGrid, battle.weather, battle.activeStrategem]);
+
+  const adjacentDefenders = useMemo(() => {
+    if (!playerTurn || !selected) return [];
+    return activeUnits.filter((u) => u.side === 'defender' && hexDist(selected.position, u.position) <= 1);
+  }, [playerTurn, selected, activeUnits]);
+
+  // S21-W7 邻接交战触发三级白刃战切入 (镜头拉近 + 黑屏淡出 + pushSceneFrame)
+  const enterMeleeTransition = (defenderId: string) => {
+    if (isClashTransitioning) return;
+    setIsClashTransitioning(true);
+    setFadeOpacity(1);
+
+    const defenderUnit = activeUnits.find((u) => u.id === defenderId);
+    const stage = stageRef.current;
+    if (stage && defenderUnit && typeof stage.to === 'function') {
+      const p = hexToPixel(defenderUnit.position.q, defenderUnit.position.r, HEX_SIZE);
+      const targetX = size.w / 2 - (ORIGIN.x + p.x) * 2.2;
+      const targetY = size.h / 2 - (ORIGIN.y + p.y) * 2.2;
+      stage.to({
+        scaleX: 2.2,
+        scaleY: 2.2,
+        x: targetX,
+        y: targetY,
+        duration: 0.35,
+        easing: Konva.Easings?.EaseOut,
+      });
+    }
+
+    setTimeout(() => {
+      useGameStore.getState().pushSceneFrame({ scene: 'melee' });
+    }, 320);
+  };
+
+  const onHex = (q: number, r: number) => {
+    if (!playerTurn) return;
+    const occ = activeUnits.find((u) => u.position.q === q && u.position.r === r);
+    if (occ?.side === 'attacker') {
+      setFireMode(false);
+      setWaterMode(false);
+      setAmbushMode(false);
+      setWeatherMode(false);
+      setAbilitySel(null);
+      setDuelMode(false);
+      void selectUnit(occ.id);
+      return;
+    }
+    if (occ?.side === 'defender' && selected?.side === 'attacker') {
+      if (fireMode) { setFireMode(false); void castFire(occ.id); return; }
+      if (waterMode) { setWaterMode(false); void castWater(occ.id); return; }
+      if (ambushMode) { setAmbushMode(false); void castAmbush(occ.id); return; }
+      if (abilitySel) { const id = abilitySel; setAbilitySel(null); void castAbility(occ.id, id); return; }
+      if (duelMode) { setDuelMode(false); void duelChallenge(selected.id, occ.id, duelStance); return; }
+      // S21-W7 邻接攻击触发三级白刃战
+      if (hexDist(selected.position, occ.position) <= 1) {
+        enterMeleeTransition(occ.id);
+        return;
+      }
+      void attack(occ.id);
+      return;
+    }
+    if (moveRange.includes(`${q},${r}`)) {
+      setFireMode(false);
+      setWaterMode(false);
+      setAmbushMode(false);
+      setWeatherMode(false);
+      setAbilitySel(null);
+      setDuelMode(false);
+      void moveTo(q, r);
+      return;
+    }
+    setFireMode(false);
+    setWaterMode(false);
+    setAmbushMode(false);
+    setWeatherMode(false);
+    setAbilitySel(null);
+    setDuelMode(false);
+    void selectUnit(null);
+  };
+  return (
+    <div ref={containerRef} className="w-full h-full relative" style={{ background: BT.battleBackground }}>
+      <Stage ref={stageRef} width={size.w} height={size.h} draggable>
+        <Layer x={ORIGIN.x} y={ORIGIN.y} ref={terrainLayerRef} listening={false}>
+          {battle.hexGrid.terrain.map((row, r) =>
+            row.map((tid, q) => {
+              const { x, y } = hexToPixel(q, r, HEX_SIZE);
+              return (
+                <Group key={`t-${q},${r}`} x={x} y={y}>
+                  <Line
+                    points={corners}
+                    closed
+                    fill={TERRAIN_COLOR[tid] ?? BT.terrainUnknown}
+                    stroke={BT.hexStroke}
+                    strokeWidth={1}
+                    opacity={0.92}
+                  />
+                </Group>
+              );
+            })
+          )}
+        </Layer>
+        <Layer x={ORIGIN.x} y={ORIGIN.y}>
+          {battle.hexGrid.terrain.map((row, r) =>
+            row.map((tid, q) => {
+              const { x, y } = hexToPixel(q, r, HEX_SIZE);
+              const key = `${q},${r}`;
+              const inMove = playerTurn && moveRange.includes(key);
+              return (
+                <Group
+                  key={key}
+                  x={x}
+                  y={y}
+                  onMouseEnter={(e) => {
+                    if (inMove) void previewMoveTo(q, r);
+                    const stage = e.target.getStage();
+                    const pointer = stage?.getPointerPosition();
+                    setHoveredHex({
+                      q,
+                      r,
+                      terrain: tid,
+                      clientX: pointer ? pointer.x : x + ORIGIN.x,
+                      clientY: pointer ? pointer.y : y + ORIGIN.y,
+                    });
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredHex((cur) => (cur?.q === q && cur?.r === r ? null : cur));
+                  }}
+                  onClick={() => onHex(q, r)}
+                >
+                  <Line
+                    points={corners}
+                    closed
+                    fill={inMove ? BT.moveFill : 'rgba(0,0,0,0)'}
+                    stroke={inMove ? BT.moveStroke : 'rgba(0,0,0,0)'}
+                    strokeWidth={inMove ? 2 : 0}
+                  />
+                </Group>
+              );
+            })
+          )}
+          {/* S21-W7 棋子滑行动画层 (TacticalUnitPiece node.to) */}
+          <Group name="tactical-units">
+            {activeUnits.map((u) => {
               const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
               return (
-                <Circle
-                  key={`ripple-${u.id}-${i}`}
-                  x={p.x}
-                  y={p.y}
-                  radius={14}
-                  stroke={BT.animWaterRipple}
-                  strokeWidth={1.5}
-                  opacity={0.7}
-                  listening={false}
+                <TacticalUnitPiece
+                  key={u.id}
+                  unit={u}
+                  targetPixel={p}
+                  isSelected={u.id === selectedUnitId}
+                  isMultiArmyStorm={isMultiArmyStorm}
+                  armyName={stormAttackerArmies.find((a) => a.id === u.armyId)?.name}
+                  onClick={() => onHex(u.position.q, u.position.r)}
                 />
               );
             })}
-        </Group>
-        <Group ref={shockGroupRef} listening={false}>
-          {battle.activeStrategem === 'ambush' && (battle.units ?? []).filter((u) => !u.isDestroyed && u.side === 'defender').map((u, i) => {
-            const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
-            return (
-              <RegularPolygon
-                key={`shock-${u.id}-${i}`}
-                x={p.x}
-                y={p.y}
-                sides={6}
-                radius={24}
-                stroke={BT.animShockwave}
-                strokeWidth={2}
-                opacity={0.8}
-                listening={false}
-              />
-            );
-          })}
-        </Group>
-        <Group ref={burnGroupRef} listening={false}>
-          {(battle.units ?? []).filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'burn')).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <Text key={`burn-${u.id}`} x={p.x + 7} y={p.y - 32} text="焰" fontFamily="HanDynastySeal" fontSize={14} fill={BT.attackRing} listening={false} />; })}
-          {(battle.units ?? []).filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'slow')).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <Text key={`slow-${u.id}`} x={p.x + 19} y={p.y - 32} text="水" fontFamily="HanDynastySeal" fontSize={14} fill="#38bdf8" listening={false} />; })}
-          {(battle.units ?? []).filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'confusion' || s.type === 'stun')).map((u) => { const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE); return <Text key={`conf-${u.id}`} x={p.x - 5} y={p.y - 32} text="乱" fontFamily="HanDynastySeal" fontSize={14} fill="#fbbf24" listening={false} />; })}
-        </Group>
-        <Text ref={floatRef} visible={false} listening={false} fontSize={15} fontStyle="bold" fontFamily="HanDynastySerif" fill={BT.attackRing} />
-      </Layer></Stage>
+          </Group>
+          {playerTurn &&
+            selected &&
+            activeUnits
+              .filter((u) => u.side === 'defender' && hexDist(selected.position, u.position) <= 1)
+              .map((u) => {
+                const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                return (
+                  <RegularPolygon
+                    key={`atk-${u.id}`}
+                    x={p.x}
+                    y={p.y}
+                    sides={6}
+                    radius={HEX_SIZE}
+                    stroke={BT.attackRing}
+                    strokeWidth={2}
+                    dash={[4, 3]}
+                    listening={false}
+                  />
+                );
+              })}
+          {movePath?.found && movePath.path.length > 1 && (
+            <Line
+              ref={marchLineRef}
+              points={movePath.path.flatMap((node) => {
+                const p = hexToPixel(node.coord.q, node.coord.r, HEX_SIZE);
+                return [p.x, p.y];
+              })}
+              stroke={BT.animMarchLine}
+              strokeWidth={3}
+              dash={[8, 5]}
+              dashOffset={0}
+              lineCap="round"
+              lineJoin="round"
+              listening={false}
+            />
+          )}
+          <Group ref={waterGroupRef} listening={false}>
+            {(battle.units ?? [])
+              .filter(
+                (u) =>
+                  !u.isDestroyed &&
+                  (battle.activeStrategem === 'water' || u.statusEffects?.some((s) => s.type === 'slow'))
+              )
+              .map((u, i) => {
+                const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                return (
+                  <Circle
+                    key={`ripple-${u.id}-${i}`}
+                    x={p.x}
+                    y={p.y}
+                    radius={14}
+                    stroke={BT.animWaterRipple}
+                    strokeWidth={1.5}
+                    opacity={0.7}
+                    listening={false}
+                  />
+                );
+              })}
+          </Group>
+          <Group ref={shockGroupRef} listening={false}>
+            {battle.activeStrategem === 'ambush' &&
+              (battle.units ?? [])
+                .filter((u) => !u.isDestroyed && u.side === 'defender')
+                .map((u, i) => {
+                  const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                  return (
+                    <RegularPolygon
+                      key={`shock-${u.id}-${i}`}
+                      x={p.x}
+                      y={p.y}
+                      sides={6}
+                      radius={24}
+                      stroke={BT.animShockwave}
+                      strokeWidth={2}
+                      opacity={0.8}
+                      listening={false}
+                    />
+                  );
+                })}
+          </Group>
+          <Group ref={burnGroupRef} listening={false}>
+            {(battle.units ?? [])
+              .filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'burn'))
+              .map((u) => {
+                const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                return (
+                  <Text
+                    key={`burn-${u.id}`}
+                    x={p.x + 7}
+                    y={p.y - 32}
+                    text="焰"
+                    fontFamily="HanDynastySeal"
+                    fontSize={14}
+                    fill={BT.attackRing}
+                    listening={false}
+                  />
+                );
+              })}
+            {(battle.units ?? [])
+              .filter((u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'slow'))
+              .map((u) => {
+                const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                return (
+                  <Text
+                    key={`slow-${u.id}`}
+                    x={p.x + 19}
+                    y={p.y - 32}
+                    text="水"
+                    fontFamily="HanDynastySeal"
+                    fontSize={14}
+                    fill="#38bdf8"
+                    listening={false}
+                  />
+                );
+              })}
+            {(battle.units ?? [])
+              .filter(
+                (u) => !u.isDestroyed && u.statusEffects?.some((s) => s.type === 'confusion' || s.type === 'stun')
+              )
+              .map((u) => {
+                const p = hexToPixel(u.position.q, u.position.r, HEX_SIZE);
+                return (
+                  <Text
+                    key={`conf-${u.id}`}
+                    x={p.x - 5}
+                    y={p.y - 32}
+                    text="乱"
+                    fontFamily="HanDynastySeal"
+                    fontSize={14}
+                    fill="#fbbf24"
+                    listening={false}
+                  />
+                );
+              })}
+          </Group>
+          <Text
+            ref={floatRef}
+            visible={false}
+            listening={false}
+            fontSize={15}
+            fontStyle="bold"
+            fontFamily="HanDynastySerif"
+            fill={BT.attackRing}
+          />
+        </Layer>
+        {/* S21-W7 战术迷雾层：挖洞呈现已探明视界 */}
+        <Layer listening={false}>
+          <FogLayer
+            width={Math.max(2000, size.w * 2)}
+            height={Math.max(1600, size.h * 2)}
+            fogColor="rgba(10, 10, 18, 0.42)"
+            holes={tacticalFogHoles}
+          />
+        </Layer>
+      </Stage>
     <div className="absolute top-3 left-3 right-3 flex justify-between pointer-events-none"><div className="pointer-events-auto max-w-lg rounded border border-amber-900/50 bg-stone-950/90 p-3 text-sm"><div className={battle.phase === 'enemy' ? 'text-red-400 mb-1' : battle.phase === 'over' ? 'text-amber-400 mb-1' : 'text-emerald-400 mb-1'}>{battle.phase === 'enemy' ? '【敌军行动中】' : battle.phase === 'over' ? '【战斗结束】' : '【我方回合】'}</div><div data-testid="battle-weather" className="mb-1 border-b border-stone-700 pb-1 text-amber-300">天气：{WEATHER_LABEL[battle.weather]} · {weatherEffectLabel(battle.weather)}{battle.weatherChangeTimer != null && <span> · {battle.weatherChangeTimer}回合后变化</span>}</div><div data-testid="battle-strategem" className="mb-1 border-b border-stone-700 pb-1 text-orange-300">计谋：{battle.activeStrategem === 'fire' ? '火计' : battle.activeStrategem === 'water' ? '水攻' : battle.activeStrategem === 'ambush' ? '伏兵' : '无'}</div><div data-testid="battle-surround-status" className={`mb-1 border-b border-stone-700 pb-1 ${anyAttackerSurrounded ? 'text-red-300' : 'text-stone-400'}`}>{anyAttackerSurrounded ? `协同包围：${surroundedAttackerCount} 支我军受围，变阵仅可用方阵，战术撤退受阻` : '协同包围：未形成'}</div>{isMultiArmyStorm && <div data-testid="battle-army-banners" className="mb-1 border-b border-stone-700 pb-1 text-rose-300">参战：{stormAttackerArmies.map((a) => `${a.name}×${a.count}`).join(' · ')}</div>}{battle.message}{battle.phase === 'over' && <div className="mt-1 text-amber-300">{battle.winner === 'attacker' ? battle.fromCityId != null ? '胜利！返回大地图将占领此城' : '胜利！（演示战，不改归属）' : '败北… 残部将退回出发城'}</div>}</div><div className="flex gap-2 pointer-events-auto">{attackerCard && <SideCard title={`我军 · ${attackerCard.commanderName}`} troops={attackerCard.troopCount} morale={attackerCard.morale} energy={attackerCard.energy ?? 100} portrait={game.officers[attackerCard.commanderId]} peerless={isPeerlessOfficer(game.officers[attackerCard.commanderId])} ghost={isPeerlessGhostForm(attackerCard)} level={troopLevelLabel(attackerCard.experience ?? 0)} battleSide={{ side: attackerCard.side, winner: battle.winner, morale: attackerCard.morale, isDestroyed: attackerCard.isDestroyed, isRetreated: attackerCard.isRetreated }} />}{defenderCard && <SideCard title={`敌军 · ${defenderCard.commanderName}`} troops={defenderCard.troopCount} morale={defenderCard.morale} energy={defenderCard.energy ?? 100} portrait={game.officers[defenderCard.commanderId]} peerless={isPeerlessOfficer(game.officers[defenderCard.commanderId])} ghost={isPeerlessGhostForm(defenderCard)} level={troopLevelLabel(defenderCard.experience ?? 0)} battleSide={{ side: defenderCard.side, winner: battle.winner, morale: defenderCard.morale, isDestroyed: defenderCard.isDestroyed, isRetreated: defenderCard.isRetreated }} />}</div></div>
     <BattleReport entries={reportEntries} error={error} />
     {movePath?.found && <div data-testid="move-path-summary" className="absolute bottom-20 left-1/2 -translate-x-1/2 rounded border border-sky-700 bg-stone-950/95 px-3 py-1 text-xs text-sky-200">路径 {movePath.path.length - 1} 格 · 消耗 {movePath.totalCost} · 剩余 {movePath.path.at(-1)?.remaining ?? 0} 移动力</div>}
@@ -276,6 +589,26 @@ export function BattleView() {
       {playerTurn && <>
         <InkButton data-testid="btn-finish-player" className="px-3 py-1.5 rounded bg-stone-800 border border-stone-600 text-sm" onClick={() => void finishPlayer()}>结束行动（敌军自动出手）</InkButton>
         {attacker && <InkButton data-testid="btn-select-attacker" className="px-3 py-1.5 rounded bg-emerald-900 border border-emerald-600 text-sm" onClick={() => { setFireMode(false); void selectUnit(attacker.id); }}>选择我军</InkButton>}
+        {adjacentDefenders.length > 0 && !selected?.hasActed && (
+          <>
+            <InkButton
+              data-testid="btn-trigger-melee"
+              title="两军短兵相接，切入三级横版白刃战场"
+              className="px-3 py-1.5 rounded border text-sm bg-rose-950 border-rose-700 text-rose-200 font-bold shadow-[0_0_8px_rgba(244,63,94,0.3)]"
+              onClick={() => enterMeleeTransition(adjacentDefenders[0].id)}
+            >
+              短兵接战（入白刃）
+            </InkButton>
+            <InkButton
+              data-testid="btn-direct-attack"
+              title="六角战术直接结算攻防伤害"
+              className="px-3 py-1.5 rounded border text-sm bg-stone-800 border-stone-600 text-stone-300"
+              onClick={() => void attack(adjacentDefenders[0].id)}
+            >
+              阵列急袭（直接结算）
+            </InkButton>
+          </>
+        )}
         {canChangeFormation && <InkButton data-testid="btn-battle-formation" className="px-3 py-1.5 rounded border text-sm bg-indigo-950 border-indigo-700 text-indigo-200" onClick={() => { setFormationMode((value) => !value); setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); setConsumableMode(false); }}>{formationMode ? '收起变阵' : `变阵（${battle.tacticalPoints ?? 5} TP）`}</InkButton>}
         {formationMode && canChangeFormation && <div data-testid="battle-formation-picker" className="flex gap-1 flex-wrap rounded border border-indigo-800 bg-stone-950/95 p-1">{HEX_FORMATIONS.map((formation) => <InkButton key={formation} data-testid={`battle-formation-${formation}`} disabled={selectedArmy?.formation === formation || selected?.formation === formation} className="rounded border border-stone-700 px-2 py-1 text-xs text-stone-200 disabled:opacity-40" onClick={() => { setFormationMode(false); void changeBattleFormation(formation); }}>{FORMATION_LABEL[formation]}</InkButton>)}</div>}
         {canOpenConsumable && <InkButton data-testid="btn-battle-consumable" title={staminaFull ? '主将体力已满' : '使用恢复体力类消耗品（消耗整次行动）'} className="px-3 py-1.5 rounded border text-sm bg-emerald-950 border-emerald-700 text-emerald-200" onClick={() => { setConsumableMode((value) => !value); setFormationMode(false); setFireMode(false); setWeatherMode(false); setAbilitySel(null); setDuelMode(false); }}>{consumableMode ? '收起药品' : '使用药品'}</InkButton>}
@@ -296,7 +629,46 @@ export function BattleView() {
       {battle.phase === 'over' && <InkButton data-testid="btn-exit-battle" className="px-3 py-1.5 rounded bg-amber-900 border border-amber-600 text-sm" onClick={() => void exitBattle()}>{battle.winner === 'attacker' ? '返回并占城' : '返回大地图'}</InkButton>}
     </div>
     {battle.duel && <DuelPanel duel={battle.duel} />}
-  </div>;
+    {hoveredHex && (() => {
+      const info = getTacticalTerrainInfo(hoveredHex.terrain);
+      return (
+        <div
+          data-testid="hex-terrain-tooltip"
+          className="pointer-events-none fixed z-50 rounded border border-amber-800/80 bg-stone-950/95 p-2.5 text-xs text-stone-200 shadow-[0_4px_20px_rgba(0,0,0,0.85)] max-w-[220px]"
+          style={{
+            left: Math.min(hoveredHex.clientX + 16, size.w - 240),
+            top: Math.min(hoveredHex.clientY + 16, size.h - 180),
+          }}
+        >
+          <div className="flex items-center justify-between border-b border-stone-800 pb-1 mb-1">
+            <span className="font-bold text-amber-300">{info.name} · {info.title}</span>
+            <span className="text-[10px] text-stone-500 font-mono">({hoveredHex.q}, {hoveredHex.r})</span>
+          </div>
+          <div className="space-y-0.5 text-[11px]">
+            <div className="flex justify-between text-stone-400">
+              <span>移动消耗</span>
+              <span className="text-amber-200 font-mono">{info.moveCost >= 99 ? '不可逾越' : `${info.moveCost} MP`}</span>
+            </div>
+            <div className="flex justify-between text-stone-400">
+              <span>地利修正</span>
+              <span className="text-emerald-300 font-mono">
+                攻 {info.attackMod >= 0 ? `+${Math.round(info.attackMod * 100)}%` : `${Math.round(info.attackMod * 100)}%`} · 防 {info.defenseMod >= 0 ? `+${Math.round(info.defenseMod * 100)}%` : `${Math.round(info.defenseMod * 100)}%`}
+              </span>
+            </div>
+            <div className="text-stone-300 pt-1 text-[10px] leading-tight text-amber-100/70 border-t border-stone-800/60 mt-1">
+              {info.tacticalTip}
+            </div>
+          </div>
+        </div>
+      );
+    })()}
+      <div
+        data-testid="tactical-transition-overlay"
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300 ease-out z-40 bg-stone-950"
+        style={{ opacity: fadeOpacity }}
+      />
+    </div>
+  );
 }
 
 function formationName(value?: FormationType) { return value == null ? '—' : FORMATION_LABEL[value] ?? `阵型${value}`; }

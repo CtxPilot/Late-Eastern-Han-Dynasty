@@ -15,8 +15,11 @@ import {
 } from './scenes';
 
 const world: SceneFrame = { scene: 'world' };
+const campaign: SceneFrame = { scene: 'campaign', armyId: 'army-1' };
 const battlefield: SceneFrame = { scene: 'battlefield', battlefieldId: 'bf-1' };
 const tactical: SceneFrame = { scene: 'tactical', battleId: 'b-1' };
+const melee: SceneFrame = { scene: 'melee' };
+const duel: SceneFrame = { scene: 'duel', encounterId: 'enc-1' };
 
 describe('scene stack — screenOf / topScene', () => {
   it('空栈 → screenOf=boot, topScene=null', () => {
@@ -95,5 +98,41 @@ describe('scene stack — 典型闭环', () => {
     expect(reset).toEqual([world]);
     expect(screenOf(reset)).toBe('world');
     expect(dirty).not.toEqual(reset);
+  });
+
+  it('S21 六态栈串联：world → campaign → tactical → melee → duel 逐层推进与出栈回退', () => {
+    let stack: SceneFrame[] = replaceStack(world);
+    expect(screenOf(stack)).toBe('world');
+
+    // 1. 进入出征/战役大地图
+    stack = pushScene(stack, campaign);
+    expect(screenOf(stack)).toBe('campaign');
+
+    // 2. 遭遇或亲统强攻进入二级战术六角
+    stack = pushScene(stack, tactical);
+    expect(screenOf(stack)).toBe('tactical');
+
+    // 3. 邻接交战切入三级白刃战
+    stack = pushScene(stack, melee);
+    expect(screenOf(stack)).toBe('melee');
+
+    // 4. 将领碰头/主动发起单挑切入四级
+    stack = pushScene(stack, duel);
+    expect(screenOf(stack)).toBe('duel');
+
+    // 5. 单挑决出胜负回退至白刃战
+    stack = popToScene(stack, 'melee');
+    expect(screenOf(stack)).toBe('melee');
+
+    // 6. 白刃战结算鸣金回退至二级六角战术
+    stack = popToScene(stack, 'tactical');
+    expect(screenOf(stack)).toBe('tactical');
+
+    // 7. 六角战斗大胜回退至战役层或大地图
+    stack = popToScene(stack, 'campaign');
+    expect(screenOf(stack)).toBe('campaign');
+
+    stack = popToScene(stack, 'world');
+    expect(screenOf(stack)).toBe('world');
   });
 });

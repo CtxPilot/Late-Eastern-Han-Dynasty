@@ -9,12 +9,38 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 469**（S21-W6 一级大地图出征与围城演出全量落地：`MarchAnimationLayer.tsx` 行军虚线带羽箭头 + 军旗占位与势力印信字 + 目标城烽火特效环与烽烟粒子 + `SiegeAssaultDialog.tsx` 围城决断弹窗与五项大战略决策指令 + `gameStore.ts` `activeSiegeArmyId` 围城攻决全局状态机 + `ProvinceTopology` 与 `GameLayout` 全栈挂接；单测 2 套 7 项全绿；`verify-s469-level1-campaign-performance` 5/5 全绿；全仓 99 套件 671 项测试 100% 全绿；**S21-W6 [x] 收官**） |
-| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联推进中（S21-W6 [x]）** |
-| 代码最新 | Session 469 `MarchAnimationLayer.tsx`、`MarchAnimationLayer.test.tsx`、`SiegeAssaultDialog.tsx`、`SiegeAssaultDialog.test.tsx`、`ProvinceTopology.tsx`、`GameLayout.tsx`、`gameStore.ts`、`verify-s469-level1-campaign-performance.mjs` 完成 |
-| 文档最新 | **Session 469 双写**（`docs/10-progress.md` 日志与 S21-W6 状态 + 本文件双写同步） |
-| 本交接用途 | **Session 469 已交付**；后续方向：Phase 6 S21-W7~W9（二级战术串联/白刃战横版微操/单挑接入） |
-| 下一步 | ①推进 **S21-W7**（二级战术串联：screen 六态栈切入渐变 + 镜头推进 + 棋子滑行 + hex 悬停地形情报 + 邻接触发三级 + 迷雾散开）；②推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 + 纯战略指令 + Soldier 粒子类 + 武将计特写）；③推进 **S21-W9**（单挑接入闭环）；④0-B 闸门真人游玩 120 回合实测 |
+| 会话 | **Session 470**（S21-W7 二级战术串联全量落地：`shared/scenes.ts` screen 六态栈与 `gameStore.ts` `setScreen` + `shared/tacticalTerrain.ts` 7 大地貌真源 + `BattleView.tsx` 切入渐变遮罩与镜头推进 + `TacticalUnitPiece.tsx` 棋子平滑滑行动画 + hex 悬停地形情报卡片 + 邻接交战触发三级白刃转场与 HUD 双选项 + `FogLayer.tsx` 战术沙盘动态挖洞迷雾散开；单测 8/8 全绿；`verify-s470-tactical-orchestration` 6/6 全绿；全仓 100 套件 680 项测试 100% 全绿；**S21-W7 [x] 收官**） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联推进中（S21-W6 [x]、S21-W7 [x]）** |
+| 代码最新 | Session 470 `scenes.ts`、`tacticalTerrain.ts`、`TacticalUnitPiece.tsx`、`tacticalViewInteraction.test.tsx`、`BattleView.tsx`、`gameStore.ts`、`App.tsx`、`TopBar.tsx`、`verify-s470-tactical-orchestration.mjs` 完成 |
+| 文档最新 | **Session 470 双写**（`docs/10-progress.md` 日志与 S21-W7 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 470 已交付**；后续方向：Phase 6 S21-W8~W9（白刃战横版微操/单挑接入） |
+| 下一步 | ①推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 30-50 图元 + 动态缩放 20-120 粒 + 纯战略指令 + 镜头推进切入 + Soldier 类移植 + 武将计特写）；②推进 **S21-W9**（单挑接入闭环）；③0-B 闸门真人游玩 120 回合实测 |
+
+### Session 470 交接要点
+
+- **S21-W7 screen 六态栈与转场控制（`shared/scenes.ts` & `gameStore.ts`）**：
+  1. `Scene` 与 `Screen` 联合类型扩充 `'campaign'`，形成 `'boot' | 'world' | 'campaign' | 'tactical' | 'melee' | 'duel'` 六态栈闭环（兼顾兼容 `'battle'` 与 `'battlefield'`）；
+  2. `gameStore.ts` 声明 `setScreen: (screen: Screen) => void` 统一转场接口，`meleeExit` 完善出栈逻辑，支持从白刃战直接回退至 `tactical` / `battle` 六角战场；
+  3. `App.tsx` 挂接 `screen === 'battle' || screen === 'tactical'` 双场景兼容。
+- **S21-W7 TacticalTerrain 战术地貌情报与悬停卡片（`shared/tacticalTerrain.ts` & `BattleView.tsx`）**：
+  1. 依据 `TERRAIN_TABLE` 建立 7 大地形数值真源（林地移动 2/防+20%/攻-10%、山地移动 3/防+30%/攻-20%、水域移动 4/防-20%/攻-30%、城垣与城塞 99 等）；
+  2. `BattleView.tsx` 挂接 `onMouseEnter` / `onMouseLeave` 事件与 `hoveredHex` 状态，纯 DOM 呈现金石古籍质感 `hex-terrain-tooltip`（地名、坐标、移动消耗、攻防修正百分比与战术锦囊）。
+- **S21-W7 棋子平滑滑行动画（`client/src/components/battle/TacticalUnitPiece.tsx`）**：
+  1. 独立封装战术棋子组件，维护 `prevPosRef` 坐标缓存；
+  2. 部队落点改变时自动调用 Konva `group.to({ x, y, duration: 0.35, easing: Konva.Easings.EaseInOut })` 平滑位移滑行，彻底消除瞬间闪现；
+  3. 规范渲染势力色彩旗面、主帅单字姓氏、兵种印信篆字（步/甲/枪/弓/弩/轻/重/射/走/蒙/楼）、兵力血条与合流军旗名称。
+- **S21-W7 战术迷雾散开（`FogLayer.tsx` 战术沙盘接入）**：
+  1. `BattleView.tsx` 基于存活我军单位与所在格地形/天气动态计算 `tacticalFogHoles`（消费 `effectiveSightRange`）；
+  2. 嵌入独立 `<Layer listening={false}>` 的 `FogLayer` 迷雾底罩（`rgba(10, 10, 18, 0.42)`），探明六角视界通过 `destination-out` 动态开孔；
+  3. 随部队平滑滑行位移，视野挖洞孔位同步跟随，呈现我军前推、迷雾散开的真实战场迷雾体验；伏兵计策下自动收缩为近距战旗迷雾。
+- **S21-W7 切入渐变遮罩与邻接交锋切入三级白刃战**：
+  1. `BattleView.tsx` 挂接 `tactical-transition-overlay` 全屏水墨遮罩（进战 40ms 内从黑屏淡入战场）；
+  2. 挂接 Stage 镜头推进动画（进战 Stage scale 0.88 → 1.0 推进）；
+  3. 选定部队与敌军邻接时，底栏动态显现 `btn-trigger-melee`「短兵接战（入白刃）」与 `btn-direct-attack`「阵列急袭（直接结算）」；
+  4. 邻接交锋时触发镜头向交锋点推进（`scaleX: 2.2, scaleY: 2.2`）、渐变遮罩加深（300ms）并自动 `pushSceneFrame({ scene: 'melee' })` 切入三级白刃战。
+- **全栈门禁与体积审计**：
+  1. `verify-s470-tactical-orchestration` 6/6 全绿；
+  2. 全仓 100 个套件 680 项测试 100% 全绿；`pnpm build` 产物 CSS (69.87 KB)、主 JS (180.91 KB) 与全部 11 个 JS chunks 严格受控于预算内。
 
 ### Session 469 交接要点
 

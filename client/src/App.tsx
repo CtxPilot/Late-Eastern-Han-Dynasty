@@ -67,7 +67,7 @@ export default function App() {
   );
   if (screen === 'scenario') return <ScenarioSelect />;
   if (!game) return <div className="h-full flex items-center justify-center bg-stone-950 text-red-300">游戏状态缺失，请重新选择剧本。</div>;
-  if (screen === 'battle') return <div className="h-full flex flex-col"><BattleView /></div>;
+  if (screen === 'battle' || screen === 'tactical') return <div className="h-full flex flex-col"><BattleView /></div>;
   if (screen === 'battlefield' && battlefieldInstance) return <div className="h-full flex flex-col"><BattlefieldSceneView /></div>;
   if (screen === 'battlefield' || screen === 'melee') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
 

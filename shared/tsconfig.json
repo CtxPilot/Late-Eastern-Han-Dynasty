@@ -26,6 +26,7 @@
     "stamina-cost.ts",
     "tactical-grid.ts",
     "tactical-system.ts",
+    "tacticalTerrain.ts",
     "melee-engagement.ts",
     "merit.ts",
     "items.ts",
