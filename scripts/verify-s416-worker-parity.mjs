@@ -66,6 +66,8 @@ const ALIAS_MAP = {
   usableAbilities: 'battleUsableAbilities',
   weather: 'battleWeather',
   fire: 'battleFire',
+  water: 'battleWater',
+  ambush: 'battleAmbush',
   formation: 'battleChangeFormation',
   enemyPhase: 'battleEnemyPhase',
   finishPlayer: 'battleFinishPlayer',

@@ -166,6 +166,8 @@ interface Store {
   undoBattleAction: () => Promise<void>;
   attack: (defenderId: string) => Promise<void>;
   castFire: (targetId: string) => Promise<void>;
+  castWater: (targetId: string) => Promise<void>;
+  castAmbush: (targetId: string) => Promise<void>;
   castWeather: (weather: string) => Promise<void>;
   castAbility: (targetId: string, abilityId: string) => Promise<void>;
   loadAbilities: (unitId: string) => Promise<void>;
@@ -1283,6 +1285,42 @@ export const useGameStore = create<Store>((set, get) => ({
       }
     } catch (e) {
       set({ error: errMsg(e, '火计失败') });
+    }
+  },
+
+  castWater: async (targetId) => {
+    const attackerId = get().selectedUnitId;
+    if (!attackerId) return;
+    const prevBattle = get().battle;
+    try {
+      let battle = await api.battleWater(attackerId, targetId);
+      set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      emitBattleFeedback(prevBattle, battle, targetId);
+      if (battle.phase === 'enemy') {
+        await new Promise((r) => setTimeout(r, 500));
+        battle = await api.battleEnemyPhase();
+        set({ battle });
+      }
+    } catch (e) {
+      set({ error: errMsg(e, '水计失败') });
+    }
+  },
+
+  castAmbush: async (targetId) => {
+    const attackerId = get().selectedUnitId;
+    if (!attackerId) return;
+    const prevBattle = get().battle;
+    try {
+      let battle = await api.battleAmbush(attackerId, targetId);
+      set({ battle, selectedUnitId: null, moveRange: [], usableAbilities: [] });
+      emitBattleFeedback(prevBattle, battle, targetId);
+      if (battle.phase === 'enemy') {
+        await new Promise((r) => setTimeout(r, 500));
+        battle = await api.battleEnemyPhase();
+        set({ battle });
+      }
+    } catch (e) {
+      set({ error: errMsg(e, '伏兵失败') });
     }
   },
 

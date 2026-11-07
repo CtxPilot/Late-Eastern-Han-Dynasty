@@ -611,6 +611,16 @@ export async function battleFire(attackerId: string, targetId: string): Promise<
   return data;
 }
 
+export async function battleWater(attackerId: string, targetId: string): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/water', { attackerId, targetId });
+  return data;
+}
+
+export async function battleAmbush(attackerId: string, targetId: string): Promise<BattleState> {
+  const { data } = await http.post<BattleState>('/battle/ambush', { attackerId, targetId });
+  return data;
+}
+
 export async function battleWeather(attackerId: string, weather: string): Promise<BattleState> {
   const { data } = await http.post<BattleState>('/battle/weather', { attackerId, weather });
   return data;

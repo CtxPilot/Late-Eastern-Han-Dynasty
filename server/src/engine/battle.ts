@@ -69,6 +69,7 @@ import {
   nemesisBattleBonus,
   swornAllyBattleBonus,
   SWORN_FURY_DAMAGE_PCT,
+  getOfficerTraitLevel,
   type BattleSide,
 } from '@leh/shared';
 import { getStaticData, getUnitByType } from '../data/loader.js';
@@ -144,9 +145,14 @@ function enterEnemyPhase(battle: BattleState): BattleState {
     ...battle,
     phase: 'enemy',
     actionHistory: battle.actionHistory?.map((action) => action.reversible ? { ...action, reversible: false } : action),
-    units: battle.units.map((unit) => unit.side === 'defender' && isActiveBattleUnit(unit)
-      ? { ...unit, hasActed: false, mp: effectiveMovement(unit.maxMp, battle.weather) }
-      : unit),
+    units: battle.units.map((unit) => {
+      if (unit.side === 'defender' && isActiveBattleUnit(unit)) {
+        const slow = unit.statusEffects?.find((s) => s.type === 'slow')?.value ?? 0;
+        const baseMp = effectiveMovement(unit.maxMp, battle.weather);
+        return { ...unit, hasActed: false, mp: Math.max(0, baseMp - slow) };
+      }
+      return unit;
+    }),
   };
 }
 
@@ -1577,6 +1583,317 @@ export function castFireTactic(
   });
 }
 
+const WATER_COST = 35;
+const WATER_MULT = [0.8, 1.0, 1.3, 1.6, 2.0, 2.5] as const;
+
+function waterSkillLevel(state: GameState, officerId: number): number {
+  const o = state.officers[officerId];
+  if (!o) return 0;
+  const sk = o.skills.find((s) => s.skillId === 'water');
+  return sk ? Math.min(5, Math.max(1, sk.level)) : 0;
+}
+
+function waterRange(level: number): number {
+  if (level >= 5) return 3;
+  if (level >= 3) return 2;
+  return 1;
+}
+
+/** 水计（05§7 减速/冲走，D-0B-12）：消耗气力，智力与地形判定，对敌造成水攻伤害、士气削减与减速效果 */
+export function castWaterTactic(
+  battle: BattleState,
+  attackerId: string,
+  targetId: string,
+  state: GameState,
+  rng: () => number,
+): BattleState {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+
+  const attacker = battle.units.find((u) => u.id === attackerId);
+  const target = battle.units.find((u) => u.id === targetId);
+  if (!attacker || !target) throw new Error('单位不存在');
+  if (attacker.side !== 'attacker' || target.side !== 'defender') {
+    throw new Error('水计只能对敌军施放');
+  }
+  if (attacker.hasActed) throw new Error('该部队已行动');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(target)) throw new Error('目标已溃');
+
+  const atkO = state.officers[attacker.commanderId];
+  const defO = state.officers[target.commanderId];
+  if (!atkO || !defO) throw new Error('缺少主将');
+
+  // 05 §7.2: 诸葛亮·神算 消耗-50%
+  const hasStrategistDiscount = atkO.id === 4
+    || getOfficerTraitLevel(atkO, 'god_strategist') > 0
+    || atkO.skills.some((s) => s.skillId === 'god_strategist');
+  const cost = hasStrategistDiscount ? Math.floor(WATER_COST * 0.5) : WATER_COST;
+
+  const energy = attacker.energy ?? 100;
+  if (energy < cost) throw new Error(`气力不足（需${cost}，当前${energy}）`);
+
+  const level = waterSkillLevel(state, attacker.commanderId);
+  const range = waterRange(level);
+  if (hexDistance(attacker.position, target.position) > range) {
+    throw new Error(`超出水计范围（${range}格）`);
+  }
+
+  const tTerrain =
+    battle.hexGrid.terrain[target.position.r]?.[target.position.q] ?? TerrainType.PLAIN;
+  const isWater = tTerrain === TerrainType.WATER;
+
+  // 诡计特性加成 (cunning)
+  const traitCunning = getOfficerTraitLevel(atkO, 'cunning');
+  const cunningBonus = [0, 5, 8, 12, 16, 20][traitCunning] ?? 0;
+
+  // 05 §7.1: 同火计，水域+20%；雨天+15%
+  const weatherRateBonus = (battle.weather === Weather.RAIN || battle.weather === Weather.STORM) ? 15 : 0;
+  const successRate = Math.min(
+    95,
+    Math.max(15, 30 + (atkO.stats.intelligence - defO.stats.intelligence) * 2 + level * 8 + (isWater ? 20 : 0) + weatherRateBonus + cunningBonus),
+  );
+  const roll = rng() * 100;
+  const spent = battle.units.map((u) =>
+    u.id === attacker.id
+      ? { ...u, energy: energy - cost, hasActed: true, mp: 0 }
+      : u,
+  );
+
+  if (roll >= successRate) {
+    return enterEnemyPhase({
+      ...battle,
+      units: spent,
+      message: `${atkO.name} 水计失败（成功率${successRate}%）— 敌军回合…`,
+      log: [
+        ...battle.log,
+        { turn: battle.turn, message: `${atkO.name} 水计失手` },
+      ],
+    });
+  }
+
+  const mult = WATER_MULT[level] ?? WATER_MULT[0];
+  let weatherMod = 1;
+  if (battle.weather === Weather.RAIN || battle.weather === Weather.STORM) weatherMod = 1.4;
+  if (battle.weather === Weather.SNOW) weatherMod = 0.7;
+
+  let terrainMod = 1;
+  if (isWater) terrainMod = 1.35;
+  if (tTerrain === TerrainType.MOUNTAIN) terrainMod = 0.6;
+
+  // 水战特性加成 (water_combat)
+  const traitWater = getOfficerTraitLevel(atkO, 'water_combat');
+  const traitBonus = [0, 0.10, 0.18, 0.25, 0.32, 0.40][traitWater] ?? 0;
+
+  const base = atkO.stats.intelligence * mult * 6;
+  const dmg = Math.max(
+    1,
+    Math.round(base * (1 + traitBonus) * weatherMod * terrainMod * (0.9 + rng() * 0.2)),
+  );
+  const newTroops = Math.max(0, target.troopCount - dmg);
+  const slowTurns = level >= 4 ? 2 : level >= 1 ? 1 : 0;
+  const moraleLoss = isWater ? 12 : 8;
+
+  const units = spent.map((u) => {
+    if (u.id !== target.id) return u;
+    const effects = [...u.statusEffects];
+    if (slowTurns > 0 && newTroops > 0) {
+      effects.push({ type: 'slow', remainingTurns: slowTurns, value: 1 });
+    }
+    return {
+      ...u,
+      troopCount: newTroops,
+      isDestroyed: newTroops <= 0,
+      statusEffects: effects,
+      morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - moraleLoss),
+    };
+  });
+
+  const terrainNote = isWater ? '·水域波涛' : tTerrain === TerrainType.MOUNTAIN ? '·高地避水' : '';
+  const weatherNote = weatherMod > 1 ? '·大雨涨水' : weatherMod < 1 ? '·寒冬水缓' : '';
+  const skillNote = level > 0 ? `水计·${['', '初', '通', '精', '极', '神'][level]}` : '水计（无技能）';
+
+  const attackerAlive = sideAlive(units, 'attacker');
+  const defenderAlive = sideAlive(units, 'defender');
+  if (!attackerAlive || !defenderAlive) {
+    return {
+      ...battle,
+      units,
+      phase: 'over',
+      winner: defenderAlive ? 'defender' : 'attacker',
+      activeStrategem: 'water',
+      message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote} — ${defenderAlive ? '我军溃败！' : '敌军溃败！'}`,
+      log: [
+        ...battle.log,
+        { turn: battle.turn, message: `${skillNote}击破 ${defO.name}` },
+      ],
+    };
+  }
+
+  return enterEnemyPhase({
+    ...battle,
+    units,
+    activeStrategem: 'water',
+    message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote}（敌减速/士气-${moraleLoss}，剩余 ${newTroops}）— 敌军回合…`,
+    log: [
+      ...battle.log,
+      { turn: battle.turn, message: `${skillNote} 对 ${defO.name} 造成 ${dmg}（减速）` },
+    ],
+  });
+}
+
+const AMBUSH_COST = 25;
+const AMBUSH_MULT = [0.9, 1.1, 1.4, 1.8, 2.2, 2.6] as const;
+
+function ambushSkillLevel(state: GameState, officerId: number): number {
+  const o = state.officers[officerId];
+  if (!o) return 0;
+  const sk = o.skills.find((s) => s.skillId === 'ambush');
+  return sk ? Math.min(5, Math.max(1, sk.level)) : 0;
+}
+
+function ambushRange(level: number): number {
+  if (level >= 3) return 2;
+  return 1;
+}
+
+/** 伏兵（05§7 隐藏后先手攻击/混乱，D-0B-12）：消耗气力，山林隐蔽判定，突袭造成伤害并使敌陷入混乱 */
+export function castAmbushTactic(
+  battle: BattleState,
+  attackerId: string,
+  targetId: string,
+  state: GameState,
+  rng: () => number,
+): BattleState {
+  if (battle.phase !== 'player') throw new Error('非玩家回合');
+  assertBattleNotPausedForDuel(battle);
+
+  const attacker = battle.units.find((u) => u.id === attackerId);
+  const target = battle.units.find((u) => u.id === targetId);
+  if (!attacker || !target) throw new Error('单位不存在');
+  if (attacker.side !== 'attacker' || target.side !== 'defender') {
+    throw new Error('伏兵只能对敌军施放');
+  }
+  if (attacker.hasActed) throw new Error('该部队已行动');
+  if (!isActiveBattleUnit(attacker)) throw new Error('部队已溃');
+  if (!isActiveBattleUnit(target)) throw new Error('目标已溃');
+
+  const atkO = state.officers[attacker.commanderId];
+  const defO = state.officers[target.commanderId];
+  if (!atkO || !defO) throw new Error('缺少主将');
+
+  // 05 §7.2: 诸葛亮·神算 消耗-50%，司马懿·冢虎 伏兵消耗-50%
+  const hasStrategistDiscount = atkO.id === 4 || atkO.id === 15
+    || getOfficerTraitLevel(atkO, 'god_strategist') > 0
+    || atkO.skills.some((s) => s.skillId === 'god_strategist');
+  const cost = hasStrategistDiscount ? Math.floor(AMBUSH_COST * 0.5) : AMBUSH_COST;
+
+  const energy = attacker.energy ?? 100;
+  if (energy < cost) throw new Error(`气力不足（需${cost}，当前${energy}）`);
+
+  const level = ambushSkillLevel(state, attacker.commanderId);
+  const range = ambushRange(level);
+  if (hexDistance(attacker.position, target.position) > range) {
+    throw new Error(`超出伏兵范围（${range}格）`);
+  }
+
+  const atkTerrain =
+    battle.hexGrid.terrain[attacker.position.r]?.[attacker.position.q] ?? TerrainType.PLAIN;
+  const defTerrain =
+    battle.hexGrid.terrain[target.position.r]?.[target.position.q] ?? TerrainType.PLAIN;
+  const hasCover = atkTerrain === TerrainType.FOREST || atkTerrain === TerrainType.MOUNTAIN
+    || defTerrain === TerrainType.FOREST || defTerrain === TerrainType.MOUNTAIN;
+
+  // 诡计特性加成
+  const traitCunning = getOfficerTraitLevel(atkO, 'cunning');
+  const cunningBonus = [0, 5, 8, 12, 16, 20][traitCunning] ?? 0;
+
+  // 05 §7.1: 智差+森林+20%
+  const successRate = Math.min(
+    95,
+    Math.max(20, 40 + (atkO.stats.intelligence - defO.stats.intelligence) * 2 + level * 8 + (hasCover ? 20 : 0) + cunningBonus),
+  );
+  const roll = rng() * 100;
+  const spent = battle.units.map((u) =>
+    u.id === attacker.id
+      ? { ...u, energy: energy - cost, hasActed: true, mp: 0 }
+      : u,
+  );
+
+  if (roll >= successRate) {
+    return enterEnemyPhase({
+      ...battle,
+      units: spent,
+      message: `${atkO.name} 伏兵被识破（成功率${successRate}%）— 敌军回合…`,
+      log: [
+        ...battle.log,
+        { turn: battle.turn, message: `${atkO.name} 伏兵被识破` },
+      ],
+    });
+  }
+
+  const mult = AMBUSH_MULT[level] ?? AMBUSH_MULT[0];
+  const traitAmbush = getOfficerTraitLevel(atkO, 'ambush');
+  const traitBonus = [0, 0.10, 0.18, 0.25, 0.32, 0.40][traitAmbush] ?? 0;
+  // Lv5 特性: 出伏攻击必定暴击
+  const critMultiplier = traitAmbush >= 5 ? 1.5 : 1.0;
+
+  const base = (atkO.stats.intelligence * 0.4 + atkO.stats.war * 0.6) * mult * 6;
+  const dmg = Math.max(
+    1,
+    Math.round(base * (1 + traitBonus) * critMultiplier * (0.9 + rng() * 0.2)),
+  );
+  const newTroops = Math.max(0, target.troopCount - dmg);
+  const moraleLoss = 12;
+
+  const units = spent.map((u) => {
+    if (u.id !== target.id) return u;
+    const effects = [...u.statusEffects];
+    if (newTroops > 0) {
+      effects.push({ type: 'confusion', remainingTurns: 1 });
+    }
+    return {
+      ...u,
+      troopCount: newTroops,
+      isDestroyed: newTroops <= 0,
+      statusEffects: effects,
+      morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - moraleLoss),
+    };
+  });
+
+  const coverNote = hasCover ? '·山林奇袭' : '·平原设伏';
+  const critNote = traitAmbush >= 5 ? '·出伏必暴' : '';
+  const skillNote = level > 0 ? `伏兵·${['', '初', '通', '精', '极', '神'][level]}` : '伏兵（无技能）';
+
+  const attackerAlive = sideAlive(units, 'attacker');
+  const defenderAlive = sideAlive(units, 'defender');
+  if (!attackerAlive || !defenderAlive) {
+    return {
+      ...battle,
+      units,
+      phase: 'over',
+      winner: defenderAlive ? 'defender' : 'attacker',
+      activeStrategem: 'ambush',
+      message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${coverNote}${critNote} — ${defenderAlive ? '我军溃败！' : '敌军溃败！'}`,
+      log: [
+        ...battle.log,
+        { turn: battle.turn, message: `${skillNote}奇袭 ${defO.name}` },
+      ],
+    };
+  }
+
+  return enterEnemyPhase({
+    ...battle,
+    units,
+    activeStrategem: 'ambush',
+    message: `${atkO.name} ${skillNote} 出伏奇袭！造成 ${dmg} 伤害${coverNote}${critNote}（敌混乱/士气-${moraleLoss}，剩余 ${newTroops}）— 敌军回合…`,
+    log: [
+      ...battle.log,
+      { turn: battle.turn, message: `${skillNote} 奇袭 ${defO.name} 造成 ${dmg}（混乱）` },
+    ],
+  });
+}
+
 const WEATHER_LABEL_ZH: Record<Weather, string> = {
   [Weather.CLEAR]: '晴',
   [Weather.CLOUDY]: '阴',
@@ -2093,7 +2410,7 @@ export function runEnemyPhase(
       return {
         ...u,
         hasActed: false,
-        mp: effectiveMovement(u.maxMp, weatherTick.weather),
+        mp: Math.max(0, effectiveMovement(u.maxMp, weatherTick.weather) - (u.statusEffects?.find((s) => s.type === 'slow')?.value ?? 0)),
         energy: Math.min(maxE, cur + recover),
       };
     }

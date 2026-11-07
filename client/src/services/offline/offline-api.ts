@@ -345,6 +345,12 @@ export function battleAttack(attackerId: string, defenderId: string): Promise<Ba
 export function battleFire(attackerId: string, targetId: string): Promise<BattleState> {
   return call('fire', [attackerId, targetId]);
 }
+export function battleWater(attackerId: string, targetId: string): Promise<BattleState> {
+  return call('water', [attackerId, targetId]);
+}
+export function battleAmbush(attackerId: string, targetId: string): Promise<BattleState> {
+  return call('ambush', [attackerId, targetId]);
+}
 export function battleWeather(attackerId: string, weather: string): Promise<BattleState> {
   return call('weather', [attackerId, weather]);
 }

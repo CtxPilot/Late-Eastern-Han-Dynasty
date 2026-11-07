@@ -1,3 +1,43 @@
+## 2026-11-08 — Session 459 · D-0B-12 水攻与伏兵服务端引擎与全栈实装
+
+- Phase：**S10/S20 战斗深化 / 战术计谋全栈落地**；清偿 D-0B-12 债务，不改全局 RNG/金样。
+- **水计（castWaterTactic）服务端引擎与全栈端点**：
+  1. 气力与门禁：消耗 35 气力（诸葛亮神算特权减半为 17），判定玩家回合、未行动、射程 `waterRange(level)`（Lv1~2: 1格, Lv3~4: 2格, Lv5: 3格）。
+  2. 成功率与判定：`30 + (智差)*2 + level*8 + 水域+20% + 雨天+15% + 诡计特性加成`（范围夹紧 15%~95%）。
+  3. 天气与地貌修正：雨天/暴雨伤害 ×1.4，雪天寒水伤害 ×0.7；目标处于水域地貌伤害 ×1.35 且士气扣减 12 点（常规扣 8 点）；山地高地避水伤害 ×0.6。
+  4. 水战特性加成：消费 `water_combat` 特性（Lv1~5 提供 10%~40% 伤害加成）。
+  5. 减速状态效果（slow）：成功施放附加 `{ type: 'slow', remainingTurns: level >= 4 ? 2 : 1, value: 1 }`，在回合开启时直接削减目标移动力 1 点。
+  6. 计谋状态与演出：成功时写入 `BattleState.activeStrategem = 'water'`，失败不改写并进入敌军回合。
+- **伏兵（castAmbushTactic）服务端引擎与全栈端点**：
+  1. 气力与门禁：消耗 25 气力（司马懿冢虎或孔明神算减半为 12），射程判定 `ambushRange(level)`（Lv1~2: 1格, Lv3~5: 2格）。
+  2. 成功率与山林掩护：`40 + (智差)*2 + level*8 + 山林掩护+20% + 诡计特性加成`（范围夹紧 20%~95%）。
+  3. 智武结合伤害与伏兵特性：基础伤害由智谋设伏 (40%) 与武力奇袭 (60%) 加权决定；消费 `ambush` 特性（Lv1~5 提供 10%~40% 伤害加成，Lv5 触发出伏必暴 1.5x 乘区）。
+  4. 混乱状态效果（confusion）：成功施放附加 `{ type: 'confusion', remainingTurns: 1 }` 与士气 -12；混乱部队在反击管线中被剥夺反击权（`canCounter` 返回 false），在敌军阶段被战术 AI 识别并强制待机（`runSimpleEnemyAi` 跳过行动）。
+  5. 计谋状态与演出：成功时写入 `BattleState.activeStrategem = 'ambush'`，失败不改写并进入敌军回合。
+- **服务层、Worker 镜像与全栈端点**：
+  1. `server/src/services/game.ts` 新增 `battleWater` 与 `battleAmbush`；
+  2. `server/src/routes/game.ts` 新增 `POST /battle/water` 与 `POST /battle/ambush`；
+  3. `client/src/services/api.ts` 与 `offline/offline-api.ts` 新增同名请求；
+  4. `client/src/workers/game.worker.ts` 新增 `water` 与 `ambush` handlers，`scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过；
+  5. `client/src/stores/gameStore.ts` 新增 `castWater` 与 `castAmbush` 操作。
+- **客户端战斗界面（`client/src/components/battle/BattleView.tsx`）**：
+  1. 命令坞操作栏新增「水计（气35）」与「伏兵（气25）」按钮；
+  2. 点击敌军触发水计与伏兵释放；
+  3. 战场网格状态层新增马善政篆体「水」与「乱」状态印章徽标回显。
+- **验证**：
+  1. 新增专项门禁 `server/src/scripts/verify-s459-water-ambush-tactics.ts`（注册 `pnpm verify-s459-water-ambush-tactics`），全套断言 100% 绿色通过。
+  2. `turn-golden.test.ts` 3/3 严格匹配零漂移。
+  3. `verify-tactical-ai.ts` 86/86、`verify-fire-tactic.ts` 4/4 通过。
+  4. `pnpm typecheck` / `pnpm lint` 全仓 0 错误。
+  5. `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 849 文件通过。
+  6. `pnpm test` 全仓 590+ 测试用例全绿通过。
+  7. `pnpm build` 三包全绿成功。
+- **边界（诚实）**：
+  1. 本会话全量实装水攻与伏兵服务端核心引擎、减速与混乱状态、全栈端点与 UI 按钮；
+  2. 落石、妖术等其余战术计策按路线图继续后置；
+  3. activeStrategem 状态已全面驱动 HUD 提示，二级地貌侵蚀与三级粒子已由既有 PCG/Overlay 预留管线订阅消费。
+- **文档**：`docs/09` D-0B-12、`docs/10-progress.md` checklist + 本日志、`docs/12` D-0B-12/S10/S25、`docs/35` 进度、`docs/05` §7.1/§19.5、`docs/08` §33.2、`HANDOFF.md` 双写同步。
+
 ## 2026-11-07 — Session 458 · P5-15 武将特性与属性天花板计算引擎全栈实装
 
 - Phase：**Phase 5 打磨 / S25 技能树与属性天花板**；不新增存档字段、不改全局 RNG/金样。
@@ -2178,7 +2218,7 @@
 | D-0B-9 | §35 财政税收俸禄数据模型扩展 + 引擎 | 独立 Session |
 | D-0B-10 | PCG 水墨底图若替换 geo-basemap.png 需重做 MapCanvas | 0-B 视觉升级时（可选） |
 | D-0B-11 | BattleState.activeStrategem 字段 + 服务端火计设置 | S20/S21 实装时 |
-| D-0B-12 | S17 L2 水攻/伏兵服务端引擎实装 | S17 L2 实装时 |
+| D-0B-12 | 水攻/伏兵战术计谋服务端引擎与全栈实装（castWaterTactic/castAmbushTactic） — Session 459 完成 | S10/S17 实装时 |
 | D-0B-13 | ✅ Session 102 已实装字体工程资产闭环、FontBarrier 与跨平台编码门禁；剩余 HiDPI/XDG/伪 Terminal/金石组件库/字重扩展归 P5-07a~e | P5-07 剩余 UI 适配 |
 
 ---

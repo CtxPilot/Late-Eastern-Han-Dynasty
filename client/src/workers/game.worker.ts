@@ -102,6 +102,8 @@ import {
   attackUnit,
   castAbility,
   castFireTactic,
+  castWaterTactic,
+  castAmbushTactic,
   castWeatherSkill,
   changeBattleFormation,
   challengeDuel,
@@ -1034,6 +1036,26 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       const battle = getActiveBattle();
       if (!battle) throw new Error('无战斗');
       const nextBattle = castFireTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
+      commitActiveBattle(nextBattle);
+      return nextBattle;
+    });
+  },
+
+  water(attackerId: string, targetId: string): BattleState {
+    return withLock(() => {
+      const battle = getActiveBattle();
+      if (!battle) throw new Error('无战斗');
+      const nextBattle = castWaterTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
+      commitActiveBattle(nextBattle);
+      return nextBattle;
+    });
+  },
+
+  ambush(attackerId: string, targetId: string): BattleState {
+    return withLock(() => {
+      const battle = getActiveBattle();
+      if (!battle) throw new Error('无战斗');
+      const nextBattle = castAmbushTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
       commitActiveBattle(nextBattle);
       return nextBattle;
     });

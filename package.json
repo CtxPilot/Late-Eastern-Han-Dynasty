@@ -193,6 +193,7 @@
     "verify-s455-peerless-ghost": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s455-peerless-ghost",
     "verify-s456-troop-level": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s456-troop-level",
     "verify-s458-traits-and-ceiling": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s458-traits-and-ceiling",
+    "verify-s459-water-ambush-tactics": "pnpm --filter @leh/shared build && pnpm --filter @leh/server verify-s459-water-ambush-tactics",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

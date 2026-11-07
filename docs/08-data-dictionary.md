@@ -1168,7 +1168,7 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| activeStrategem | 'none' \| 'fire' \| 'water' \| 'ambush'? | 计谋三级联动视觉驱动。火计复用已有 `/battle/fire` 引擎设置；水攻/伏兵服务端引擎后置 D-0B-12；前端未收到时默认 'none' |
+| activeStrategem | 'none' \| 'fire' \| 'water' \| 'ambush'? | 计谋三级联动视觉驱动。火计写入 'fire'；水攻写入 'water'；伏兵写入 'ambush'（Session 456 D-0B-11 + Session 459 D-0B-12 实装）；前端未收到时默认 'none' |
 
 **规模说明**：非数据规模字段，运行时状态字段，不影响 JSON 数据规模。实装时记技术债 D-0B-11。
 
@@ -1568,4 +1568,4 @@ Session 371 在不新增字段/API/RNG 的前提下落地骑兵冲锋最小切�
 `BattleState.activeStrategem?: 'none' | 'fire' | 'water' | 'ambush'`（旧档缺省视为 `none`）：
 - 服务端火计成功时写入 `'fire'`；失败不改写；
 - `BattleView` HUD `battle-strategem` 只读展示「火计/水攻/伏兵/无」；
-- 水攻/伏兵服务端引擎仍待 D-0B-12 切片，本字段先提供前端订阅契约。
+- 水攻/伏兵服务端引擎与端点已于 Session 459 实装（D-0B-12），成功分别写入 `'water'` 与 `'ambush'`。

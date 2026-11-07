@@ -9,12 +9,45 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 458**（P5-15 武将特性与属性天花板计算引擎全栈实装：42×5 项特性全量真源、天花板门禁、服务与 Worker 双向对齐、战斗暴击/反击/连击消费、OfficerDetail UI 分面；`verify-s458-traits-and-ceiling` 20/20） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-3 已清，P5-13/P5-15 完成 |
-| 代码最新 | Session 458 traits.ts / crit.ts / OfficerDetail / game.worker / gameService 全栈实装与验证完成 |
-| 文档最新 | **Session 458 双写**（`docs/10-progress.md` 日志 + `docs/09` + `docs/12` + `docs/35` + 本文件双写同步） |
-| 本交接用途 | **Session 458 已交付**；P5-15 完成；后续方向：D-0B-12 水攻/伏兵服务端、P5-12 数据懒加载/worker 分包、0-B 闸门实测 |
-| 下一步 | ①**D-0B-12 水攻/伏兵服务端**（清偿 S10 最后两项战术计谋：水攻冲溃/减速与伏兵出伏判定）；②**P5-12 数据懒加载与 Worker 分包**（消除 500KB 告警）；③**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑） |
+| 会话 | **Session 459**（D-0B-12 水攻与伏兵战术计谋服务端引擎与全栈实装：`castWaterTactic`/`castAmbushTactic`、气力消耗与神算冢虎减半、雨雪与水域地貌修正、减速 slow 与混乱 confusion 状态效果、AI 混乱待机、`activeStrategem` 驱动、全栈端点与 Worker 对齐、BattleView 按钮与篆体印章状态层；`verify-s459-water-ambush-tactics` 全通） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-13/P5-15 完成 |
+| 代码最新 | Session 459 battle.ts / simpleAi.ts / game.worker.ts / gameStore.ts / BattleView.tsx 全栈实装与验证完成 |
+| 文档最新 | **Session 459 双写**（`docs/10-progress.md` 日志 + `docs/09` + `docs/12` + `docs/35` + `docs/05` + `docs/08` + 本文件双写同步） |
+| 本交接用途 | **Session 459 已交付**；D-0B-12 清偿；后续方向：P5-12 数据懒加载与 Worker 分包、0-B 闸门实测 |
+| 下一步 | ①**P5-12 数据懒加载与 Worker 分包**（消除 1.7MB chunk 超 500KB 告警）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**P5-11 平衡性与综合体验调优** |
+
+### Session 459 交接要点
+
+- **D-0B-12 水攻与伏兵服务端核心引擎（`server/src/engine/battle.ts`）**：
+  1. **水计（`castWaterTactic`）**：
+     - 消耗 35 气力（诸葛亮神算减半为 17）；射程 `waterRange(level)`（Lv1~2: 1格, Lv3~4: 2格, Lv5: 3格）；
+     - 成功率：`30 + (智差)*2 + level*8 + 水域+20% + 雨天+15% + 诡计特性加成`（范围夹紧 15%~95%）；
+     - 天气与地貌：雨天/暴雨伤害 ×1.4，雪天伤害 ×0.7；目标在水域伤害 ×1.35 且士气扣减 12 点（常规扣 8 点）；山地高地避水伤害 ×0.6；
+     - 消费特性：`water_combat` 水战特性提供 10%~40% 伤害加成；
+     - 减速状态：成功施放附加 `{ type: 'slow', remainingTurns: level >= 4 ? 2 : 1, value: 1 }`，回合开启时直接扣减目标移动力 1 点；
+     - 计谋演出：成功时写入 `BattleState.activeStrategem = 'water'`，失败不改写。
+  2. **伏兵（`castAmbushTactic`）**：
+     - 消耗 25 气力（司马懿冢虎或孔明神算减半为 12）；射程 `ambushRange(level)`（Lv1~2: 1格, Lv3~5: 2格）；
+     - 成功率：`40 + (智差)*2 + level*8 + 山林掩护+20% + 诡计特性加成`（范围夹紧 20%~95%）；
+     - 智武混合伤害：基础伤害基于智力设伏 (40%) 与武力奇袭 (60%) 加权；消费 `ambush` 特性（Lv1~5 提供 10%~40% 伤害加成，Lv5 必定暴击 1.5x）；
+     - 混乱状态：成功施放附加 `{ type: 'confusion', remainingTurns: 1 }` 与士气 -12；混乱部队在反击管线中被剥夺反击权（`canCounter` 判定拦截），在敌军阶段被战术 AI 识别并强制待机（`runSimpleEnemyAi` 识别并跳过行动）；
+     - 计谋演出：成功时写入 `BattleState.activeStrategem = 'ambush'`，失败不改写。
+- **全栈服务层、Worker 镜像与客户端体验**：
+  1. 服务层与 HTTP：`gameService.battleWater` / `battleAmbush`，`POST /battle/water` / `POST /battle/ambush`；
+  2. 离线 Worker 与双端对齐：`client/src/workers/game.worker.ts` 实现 `water` / `ambush` handlers，`verify-s416-worker-parity.mjs` 5/5 全绿通过；
+  3. 前端交互与装帧：`BattleView.tsx` 操作栏新增「水计（气35）」与「伏兵（气25）」按钮；网格层新增马善政篆体「水」与「乱」状态印章徽标回显。
+- **全仓验证全绿**：
+  - `pnpm verify-s459-water-ambush-tactics`：**全部断言 100% 绿色通过**；
+  - `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  - `verify-tactical-ai.ts`：**86/86**、`verify-fire-tactic.ts`：**4/4**；
+  - `pnpm typecheck` / `pnpm lint` 全仓 0 错误；
+  - `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 849 文件通过；
+  - `pnpm test` 全仓通过；`pnpm build` 三包全绿成功。
+- **边界（诚实）**：
+  - 本会话全量实装水攻与伏兵服务端核心引擎、减速与混乱状态、全栈端点与 UI 按钮；
+  - 落石、妖术等其余战术计策按路线图继续后置；
+  - activeStrategem 状态已全面驱动 HUD 提示，二级地貌侵蚀与三级粒子已由既有 PCG/Overlay 预留管线订阅消费。
+- **文档**：`docs/09` D-0B-12、`docs/10-progress.md` checklist + 本日志、`docs/12` D-0B-12/S10/S25、`docs/35` 进度、`docs/05` §7.1/§19.5、`docs/08` §33.2、本文件双写同步。
 
 ### Session 458 交接要点
 

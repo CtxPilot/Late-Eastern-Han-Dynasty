@@ -82,6 +82,13 @@ export function runSimpleEnemyAi(
     const live = next.find((u) => u.id === enemy.id);
     if (!live || !isActiveBattleUnit(live)) continue;
 
+    if (live.statusEffects.some((e) => e.type === 'confusion' || e.type === 'stun')) {
+      next = markEnemyWaiting(next, live.id);
+      const name = officerStats[live.commanderId]?.name ?? '敌军';
+      messages.push(`${name} 混乱，无法行动`);
+      continue;
+    }
+
     // 0-A 最小撤退语义：低士气或重创且未被协同包围的敌军直接沿既有
     // isRetreated 终态退出战场。受围单位先交给下面的突围/接战逻辑处理，
     // 避免“被锁住却瞬间消失”；该判定确定性且不消费 RNG。

@@ -882,6 +882,24 @@ gameRouter.post('/battle/fire', (req, res) => {
   }
 });
 
+gameRouter.post('/battle/water', (req, res) => {
+  try {
+    const { attackerId, targetId } = req.body as { attackerId: string; targetId: string };
+    res.json(gameService.battleWater(attackerId, targetId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'water failed' });
+  }
+});
+
+gameRouter.post('/battle/ambush', (req, res) => {
+  try {
+    const { attackerId, targetId } = req.body as { attackerId: string; targetId: string };
+    res.json(gameService.battleAmbush(attackerId, targetId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'ambush failed' });
+  }
+});
+
 /** S10 05 §3.2 天气主动技能：诸葛亮/司马懿专属 */
 gameRouter.post('/battle/weather', (req, res) => {
   try {

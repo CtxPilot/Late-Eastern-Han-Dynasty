@@ -51,6 +51,8 @@ import {
   attackUnit,
   castAbility,
   castFireTactic,
+  castWaterTactic,
+  castAmbushTactic,
   castWeatherSkill,
   changeBattleFormation,
   challengeDuel,
@@ -926,6 +928,26 @@ export function battleFire(attackerId: string, targetId: string): BattleState {
     const battle = getActiveBattle();
     if (!battle) throw new Error('无战斗');
     const nextBattle = castFireTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
+    commitActiveBattle(nextBattle);
+    return nextBattle;
+  });
+}
+
+export function battleWater(attackerId: string, targetId: string): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = castWaterTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
+    commitActiveBattle(nextBattle);
+    return nextBattle;
+  });
+}
+
+export function battleAmbush(attackerId: string, targetId: string): BattleState {
+  return withLock(() => {
+    const battle = getActiveBattle();
+    if (!battle) throw new Error('无战斗');
+    const nextBattle = castAmbushTactic(battle, attackerId, targetId, getGame(), runtimeRandom);
     commitActiveBattle(nextBattle);
     return nextBattle;
   });
