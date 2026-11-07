@@ -9,12 +9,28 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 464**（P5-01/P5-02/P5-03 全域 AI 决策与战略协同引擎全量收官：`aiDiplomacy.ts` 弱势求盟与强邻进贡 + `aiPersonnel.ts` 同城在野武将登用与低忠赏赐维稳 + `aiMilitary.ts` 战略兵力跨路网调拔加固防线 + `negotiation.ts` 任意发起方结盟计算扩展 + `turn.ts` 月结管线闭环挂接；`turn-golden.test.ts` 3/3 金样自举与 24 个月双局确定性零 RNG 漂移通过；14/14 server 单测全绿；`verify-s464-ai-decisions` 6/6 全绿；**Phase 5 全量 15 项任务 100% 达成**） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；**Phase 5（P5-01~P5-15 共 15 大任务）全部收官 [x]** |
-| 代码最新 | Session 464 `aiDiplomacy.ts`、`aiPersonnel.ts`、`aiMilitary.ts`、`turn.ts`、`negotiation.ts`、`verify-s464-ai-decisions.mjs` 完成 |
-| 文档最新 | **Session 464 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
-| 本交接用途 | **Session 464 已交付**；Phase 5 全量收官；后续方向：0-B 闸门实测与 Phase 6 前端体验 / 三级战斗串联 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 6 前端体验 & 三级战斗串联（S20-W1~W4 / S21-W6~W9） |
+| 会话 | **Session 465**（S20-W2 TopBar 数字跳动与 EventLog 战报流化落地：`useAnimatedNumber.ts` rAF + easeOutCubic 缓动 Hook + `TopBar.tsx` 金帛/军粮/甲兵资源跳动与涨绿跌红动效 + `EventLogTerminal.tsx` 新条目平滑顶滚与 300ms 水墨淡入动画；单测 3/3 全绿；`verify-s465-animated-numbers-and-log-stream` 6/6 全绿；全仓 88 套件 623 项测试 100% 全绿） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5（P5-01~P5-15）100% 收官 [x]**；**Phase 6 前端体验 & 三级战斗串联启动（S20-W2 已收官 [x]）** |
+| 代码最新 | Session 465 `useAnimatedNumber.ts`、`useAnimatedNumber.test.tsx`、`TopBar.tsx`、`EventLogTerminal.tsx`、`verify-s465-animated-numbers-and-log-stream.mjs` 完成 |
+| 文档最新 | **Session 465 双写**（`docs/10-progress.md` 日志与 S20-W2 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 465 已交付**；后续方向：Phase 6 S20-W4 派系面板/雷达图/详情增强，或 S21-W6~W9 三级战斗串联 |
+| 下一步 | ①推进 **S20-W4**（纯 SVG `RadarChart.tsx` 五维雷达图、`factionInner.ts` 派系归属判定、`FactionPanel.tsx` 派系面板）；②推进 **S21-W6~W9**（六态栈状态机、战术切入与白刃战微操）；③0-B 闸门真人游玩 120 回合实测 |
+
+### Session 465 交接要点
+
+- **S20-W2 数字跳动缓动 Hook（`client/src/utils/useAnimatedNumber.ts` 与兼容路径 `client/src/hooks/useAnimatedNumber.ts`）**：
+  1. 纯 `requestAnimationFrame` + `easeOutCubic` 算法驱动，500ms 平滑缓动过渡；
+  2. 采用 `currentValueRef` 与 `targetValueRef` 双 Ref 机制，连续快速数字变动时平滑衔接中间插值，彻底解决 React effect cleanup 中断 rAF 的关键缺陷；
+  3. 完善的 SSR / Headless 无头降级及非有限数（NaN）安全兜底，返回 `{ value, displayValue, delta, isAnimating }`。
+- **S20-W2 TopBar 核心资源跳动与涨跌指示（`client/src/components/layout/TopBar.tsx`）**：
+  1. 金帛（`gold`）、军粮（`food`）、甲兵（`troops`）全面接入 `useAnimatedNumber`，以 `displayValue` 优雅滚动；
+  2. 挂接涨跌指示动效：上涨呈现翠绿高亮（`text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]`），下跌呈现朱红警示（`text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]`）。
+- **S20-W2 EventLog 战报流化与平滑顶滚（`client/src/components/common/EventLogTerminal.tsx`）**：
+  1. 战报容器挂接 `logContainerRef` 与 `scroll-smooth`，新起居注条目到达时自动平滑顶滚至最新记录；
+  2. 单行条目声明 `transition-all duration-300 motion-safe:animate-[ink-fade-in_300ms_ease-out]`，实现典雅水墨淡入流化。
+- **全栈门禁与体积审计**：
+  1. `verify-s465-animated-numbers-and-log-stream` 6/6 全绿；
+  2. 全仓 88 个套件 623 项测试 100% 全绿；`pnpm build` 产物 CSS (65.76 KB) 与主 JS (150.55 KB) 严格达标。
 
 ### Session 464 交接要点
 

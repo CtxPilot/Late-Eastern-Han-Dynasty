@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameAction } from '@leh/shared';
 import { formatActionLogEntry, type FormattedLogItem, type LogCategory } from './eventLogParser';
 import { InkButton } from '../ui/buttons';
@@ -22,6 +22,14 @@ export function EventLogTerminal({
   const [filterCategory, setFilterCategory] = useState<LogCategory>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const logContainerRef = useRef<HTMLDivElement>(null);
+
+  // S20-W2：新条目到达自动平滑顶滚
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [entries.length]);
 
   const formattedItems = useMemo(() => {
     return entries.map((e, i) => formatActionLogEntry(e, i));
@@ -114,7 +122,8 @@ export function EventLogTerminal({
 
         {/* 文言终端日志行 */}
         <div
-          className={`overflow-y-auto px-2.5 py-2 space-y-1 font-mono text-xs select-text ${
+          ref={logContainerRef}
+          className={`overflow-y-auto px-2.5 py-2 space-y-1 font-mono text-xs select-text scroll-smooth ${
             compact ? 'max-h-56' : 'max-h-96'
           }`}
         >
@@ -245,7 +254,7 @@ function TerminalLogRow({
   compact: boolean;
 }) {
   return (
-    <div className="flex items-baseline gap-2 py-0.5 border-b border-stone-800/40 hover:bg-stone-900/50 px-1 rounded transition-colors group">
+    <div className="flex items-baseline gap-2 py-0.5 border-b border-stone-800/40 hover:bg-stone-900/50 px-1 rounded transition-all duration-300 motion-safe:animate-[ink-fade-in_300ms_ease-out] group">
       {/* 年月简标 */}
       <span className="text-[11px] text-stone-500 font-mono shrink-0 select-none">
         {item.dateLabel}

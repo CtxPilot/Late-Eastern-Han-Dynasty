@@ -10,6 +10,7 @@ import { InkButton, SealButton } from '../ui/buttons';
 import { SealIcon } from '../ui/SealBadge';
 import { StonePanel } from '../ui/StonePanel';
 import { cycleSfxVolume, getSfxVolume } from '../../utils/sfx';
+import { useAnimatedNumber } from '../../utils/useAnimatedNumber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const SEASON_LABEL: Record<number, string> = {
@@ -73,6 +74,10 @@ export function TopBar() {
   const hasBlockingDecision = hasPendingEvent || hasPendingFamilyTreatment;
   const faction = game.factions[game.playerFactionId];
   const { gold, food, troops, cityCount } = resourceTotals;
+  // S20-W2：TopBar 核心资源数字跳动平滑缓动
+  const animGold = useAnimatedNumber(gold);
+  const animFood = useAnimatedNumber(food);
+  const animTroops = useAnimatedNumber(troops);
 
   const season = SEASON_LABEL[game.season] ?? '';
 
@@ -134,14 +139,41 @@ export function TopBar() {
 
       {/* 核心资源组 */}
       <div className="flex items-center gap-3 font-song text-xs">
-        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 text-amber-200" title="金帛府库">
-          <SealIcon kind="gold" size={15} /> <span>{gold.toLocaleString()}</span>
+        <span
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 transition-colors duration-300 ${
+            animGold.isAnimating && animGold.delta !== 0
+              ? animGold.delta > 0
+                ? 'text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]'
+                : 'text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
+              : 'text-amber-200'
+          }`}
+          title="金帛府库"
+        >
+          <SealIcon kind="gold" size={15} /> <span>{animGold.displayValue.toLocaleString()}</span>
         </span>
-        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 text-amber-100" title="军粮粟谷">
-          <SealIcon kind="food" size={15} /> <span>{food.toLocaleString()}</span>
+        <span
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 transition-colors duration-300 ${
+            animFood.isAnimating && animFood.delta !== 0
+              ? animFood.delta > 0
+                ? 'text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]'
+                : 'text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
+              : 'text-amber-100'
+          }`}
+          title="军粮粟谷"
+        >
+          <SealIcon kind="food" size={15} /> <span>{animFood.displayValue.toLocaleString()}</span>
         </span>
-        <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 text-rose-200" title="麾下甲兵">
-          <SealIcon kind="troops" size={15} /> <span>{troops.toLocaleString()}</span>
+        <span
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 transition-colors duration-300 ${
+            animTroops.isAnimating && animTroops.delta !== 0
+              ? animTroops.delta > 0
+                ? 'text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]'
+                : 'text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]'
+              : 'text-rose-200'
+          }`}
+          title="麾下甲兵"
+        >
+          <SealIcon kind="troops" size={15} /> <span>{animTroops.displayValue.toLocaleString()}</span>
         </span>
         <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-stone-900/80 border border-stone-800 text-stone-300" title="宫廷人脉（势力库存）">
           <SealIcon kind="network" size={15} /> <span>{faction?.courtNetwork ?? 0}</span>

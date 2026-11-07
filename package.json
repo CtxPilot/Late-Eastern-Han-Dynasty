@@ -199,6 +199,7 @@
     "verify-s462-hidpi-and-event-log-terminal": "node scripts/verify-s462-hidpi-and-event-log-terminal.mjs",
     "verify-s463-canvas-animations": "node scripts/verify-s463-canvas-animations.mjs",
     "verify-s464-ai-decisions": "node scripts/verify-s464-ai-decisions.mjs",
+    "verify-s465-animated-numbers-and-log-stream": "node scripts/verify-s465-animated-numbers-and-log-stream.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

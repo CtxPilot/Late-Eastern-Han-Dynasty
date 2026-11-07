@@ -1,3 +1,30 @@
+## 2026-11-08 — Session 465 · S20-W2 TopBar 数字跳动与 EventLog 战报流化落地
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W2（TopBar 数字跳动与 EventLog 起居注战报流化），无第三方商业依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 玩家在内政、征兵、月结或赏赐时，TopBar 核心资源（金帛、军粮、甲兵）数值突变切换生硬，缺乏古典策略游戏资源流转与增减的平滑视觉反馈；
+  2. 战报日志（汉末起居注）在月度推演和战斗触发时，新增条目缺乏流化进入与自动平滑滚动，影响沉浸感；
+  3. 本会话目标：实现纯 rAF + easeOutCubic 缓动计算 Hook（`useAnimatedNumber`）、TopBar 三大战略资源数字平滑跳动与涨跌高亮指示、EventLogTerminal 新战报到达自动平滑顶滚与 300ms 水墨淡入动画。
+- **实装与验证内容**：
+  1. **数字跳动缓动 Hook（`client/src/utils/useAnimatedNumber.ts` 及 `client/src/hooks/useAnimatedNumber.ts`）**：
+     - 基于纯 `requestAnimationFrame` + `easeOutCubic` 算法驱动，默认 500ms 缓动周期；
+     - 维护 `currentValueRef` 与 `targetValueRef`，在连续快速数字变更（如连点征兵或跨月结项）时平滑衔接中间值，无缝过渡至新目标值；
+     - 提供 SSR / Headless 无头降级与非有限数值（NaN/Infinity）防崩兜底；
+     - 导出 `{ value, displayValue, delta, isAnimating }`。
+  2. **TopBar 核心资源跳动与涨跌高亮（`client/src/components/layout/TopBar.tsx`）**：
+     - 金帛（`gold`）、军粮（`food`）、甲兵（`troops`）全面接入 `useAnimatedNumber` 并在界面渲染 `displayValue`；
+     - 挂接 `isAnimating` 与 `delta` 响应式动效：上涨时呈现翠绿高亮（`text-emerald-300 shadow-[0_0_8px_rgba(52,211,153,0.3)]`），下跌时呈现朱红警示（`text-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.3)]`），静止时回归金石典雅基色。
+  3. **EventLog 战报流化与平滑顶滚（`client/src/components/common/EventLogTerminal.tsx`）**：
+     - 日志行容器挂接 `logContainerRef` 与 `scroll-smooth`，在条目总数递增时自动调用 `scrollTo({ top: 0, behavior: 'smooth' })` 平滑顶滚；
+     - 单行条目挂接 `transition-all duration-300 motion-safe:animate-[ink-fade-in_300ms_ease-out]`，呈现水墨淡入流化。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s465-animated-numbers-and-log-stream.mjs`（注册 `pnpm verify-s465-animated-numbers-and-log-stream`），6/6 专项断言全部通过；
+  2. 新增单元测试 `client/src/utils/useAnimatedNumber.test.tsx`（3/3）；
+  3. 全仓 88 个测试套件 623 项测试 100% 全绿（shared 58 个 518 项、server 4 个 14 项、client 26 个 91 项）；
+  4. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  5. 生产构建 `pnpm build` 全绿，CSS (65.76 KB) 与主 JS (150.55 KB) 严格受控于预算内。
+- **文档**：`docs/10-progress.md` checklist（S20-W2 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 464 · P5-01/P5-02/P5-03 全域 AI 决策与战略协同引擎全量收官
 
 - Phase：**Phase 5 打磨 / AI 决策与战略协同**；闭环 P5-01（人事纳贤与维稳）、P5-02（战争决策与战略兵力分配）、P5-03（外交弱势求盟与进贡修好），实现全仓 Phase 5 15 项任务 100% 全绿收官。
@@ -2376,7 +2403,7 @@
 | ID | 任务 | 状态 | 备注 |
 |:--:|------|:--:|------|
 | S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [ ] | 复用已废弃的 server/src/ws/broadcast.ts；降级假进度条 |
-| S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [ ] | rAF + easeOutCubic ~30 行；type 着色/淡入/顶滚 |
+| S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [x] | Session 465 完成：rAF + easeOutCubic 缓动 Hook + TopBar 资源跳动高亮 + EventLogTerminal 平滑顶滚与淡入 |
 | S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [ ] | 凸包 graham scan；globalCompositeOperation 挖洞；layer.getContext() 命令式 |
 | S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [~] | Session 122 已完成己方名册、OfficerDetail、忠诚警报及人事操作终审窗；派系/雷达/飘字/总署重组待续 |
 
