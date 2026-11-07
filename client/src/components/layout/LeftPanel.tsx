@@ -8,11 +8,14 @@ import { CampaignPanel } from '../campaign/CampaignPanel';
 import { GrandStrategistPanel } from '../strategist/GrandStrategistPanel';
 import { HegemonyPanel } from './HegemonyPanel';
 import { AccSection } from '../ui/AccSection';
+import { FactionPanel } from './FactionPanel';
+import { deriveFactionParties } from '../../lib/factionInner';
 
 type AccordionKey =
   | 'hegemony'
   | 'campaign'
   | 'strategist'
+  | 'factions'
   | 'cities'
   | null;
 
@@ -36,6 +39,12 @@ export function LeftPanel() {
     () => (game ? Object.values(game.cities).filter((c) => c.ruler === game.playerFactionId) : []),
     [game],
   );
+
+  const factionPartiesCount = useMemo(() => {
+    if (!game) return 0;
+    const report = deriveFactionParties(game.officers, game.playerFactionId);
+    return report.parties.length;
+  }, [game]);
 
   if (!game) return null;
 
@@ -105,6 +114,16 @@ export function LeftPanel() {
           <div className="px-2 py-1">
             <GrandStrategistPanel />
           </div>
+        </AccSection>
+
+        <AccSection
+          title="门阀派系"
+          badge={factionPartiesCount}
+          accent="civil"
+          open={open === 'factions'}
+          onToggle={() => toggle('factions')}
+        >
+          <FactionPanel />
         </AccSection>
 
         <AccSection

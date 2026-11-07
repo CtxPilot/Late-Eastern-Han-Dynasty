@@ -200,6 +200,7 @@
     "verify-s463-canvas-animations": "node scripts/verify-s463-canvas-animations.mjs",
     "verify-s464-ai-decisions": "node scripts/verify-s464-ai-decisions.mjs",
     "verify-s465-animated-numbers-and-log-stream": "node scripts/verify-s465-animated-numbers-and-log-stream.mjs",
+    "verify-s466-faction-panel-and-radar": "node scripts/verify-s466-faction-panel-and-radar.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

@@ -9,12 +9,31 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 465**（S20-W2 TopBar 数字跳动与 EventLog 战报流化落地：`useAnimatedNumber.ts` rAF + easeOutCubic 缓动 Hook + `TopBar.tsx` 金帛/军粮/甲兵资源跳动与涨绿跌红动效 + `EventLogTerminal.tsx` 新条目平滑顶滚与 300ms 水墨淡入动画；单测 3/3 全绿；`verify-s465-animated-numbers-and-log-stream` 6/6 全绿；全仓 88 套件 623 项测试 100% 全绿） |
-| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5（P5-01~P5-15）100% 收官 [x]**；**Phase 6 前端体验 & 三级战斗串联启动（S20-W2 已收官 [x]）** |
-| 代码最新 | Session 465 `useAnimatedNumber.ts`、`useAnimatedNumber.test.tsx`、`TopBar.tsx`、`EventLogTerminal.tsx`、`verify-s465-animated-numbers-and-log-stream.mjs` 完成 |
-| 文档最新 | **Session 465 双写**（`docs/10-progress.md` 日志与 S20-W2 状态 + 本文件双写同步） |
-| 本交接用途 | **Session 465 已交付**；后续方向：Phase 6 S20-W4 派系面板/雷达图/详情增强，或 S21-W6~W9 三级战斗串联 |
-| 下一步 | ①推进 **S20-W4**（纯 SVG `RadarChart.tsx` 五维雷达图、`factionInner.ts` 派系归属判定、`FactionPanel.tsx` 派系面板）；②推进 **S21-W6~W9**（六态栈状态机、战术切入与白刃战微操）；③0-B 闸门真人游玩 120 回合实测 |
+| 会话 | **Session 466**（S20-W4 派系判定纯函数、派系面板与雷达图落地：`factionInner.ts` §4.5.2 出身门阀判定与凝聚力纯函数 + `FactionPanel.tsx` 门阀派系展示面板 + `RadarChart.tsx` 纯 SVG 外交地缘/武将五维双雷达图；LeftPanel 门阀派系、DiplomacyOverviewDrawer 外交雷达、OfficerDetail 五维雷达三大场景全量挂接；单测 14/14 全绿；`verify-s466-faction-panel-and-radar` 6/6 全绿；全仓 91 套件 637 项测试 100% 全绿） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 前端体验 & 三级战斗串联推进中（S20-W2 [x]、S20-W4 [x]）** |
+| 代码最新 | Session 466 `factionInner.ts`、`factionInner.test.ts`、`RadarChart.tsx`、`RadarChart.test.tsx`、`FactionPanel.tsx`、`FactionPanel.test.tsx`、`LeftPanel.tsx`、`DiplomacyOverviewDrawer.tsx`、`OfficerDetail.tsx`、`verify-s466-faction-panel-and-radar.mjs` 完成 |
+| 文档最新 | **Session 466 双写**（`docs/10-progress.md` 日志与 S20-W4 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 466 已交付**；后续方向：Phase 6 S20-W1（WebSocket 状态与断线重连/假进度条）、S20-W3（水墨地图迷雾与层级渲染），或 S21-W6~W9（三级战斗串联六态栈/白刃战横版微操） |
+| 下一步 | ①推进 **S21-W6~W9**（六态栈状态机 `screen: 'boot'|'world'|'campaign'|'tactical'|'melee'|'duel'`、大地图军旗 Tween 演出、白刃战横版微操）；②推进 **S20-W1 / S20-W3** 前端体验补全；③0-B 闸门真人游玩 120 回合实测 |
+
+### Session 466 交接要点
+
+- **S20-W4 门阀派系判定纯函数（`client/src/lib/factionInner.ts`）**：
+  1. 依据 `docs/04-game-systems.md` §4.5.2 规则：按 `officer.tags` 识别宗室、士族、豪强、寒门、边地、平民六大社会出身；
+  2. 门槛设置：豪强 ≥ 2 人，其余 ≥ 3 人自动结为派系；未达标武将归为游离散员；
+  3. 派系领袖选拔：霸府朝职（1000）、文武与地方高阶官职（200~900）、功绩与五维属性确定性加权选出领袖；
+  4. 凝聚力评分：测算并立门阀内耗与主导派系占比，给出 0~100 评分及四档等级（`上和`/`中洽`/`涣散`/`分裂`）。
+- **S20-W4 纯 SVG 手写雷达图（`client/src/components/ui/RadarChart.tsx`）**：
+  1. 纯 SVG 5 维多边形绘制，零第三方依赖，同心多边形背景网格、辐射轴线、半透明水墨色填充及顶点节点；
+  2. 导出 `buildDiplomacyRadarItems`（友好/信任/姻亲/盟约/戒备 5 维映射）与 `buildOfficerRadarItems`（统/武/智/政/魅 5 维映射）。
+- **S20-W4 派系门阀面板与三大核心场景接入**：
+  1. `client/src/components/layout/FactionPanel.tsx`：朝野门阀凝聚力进度条、派系卡片（领袖 `[ 魁 ]`、平均忠诚、文言说明与群臣名册）及散员提示；
+  2. `client/src/components/layout/LeftPanel.tsx`：机务枢要左台挂接「门阀派系」`AccSection`，即时展示势力派系结构；
+  3. `client/src/components/command/DiplomacyOverviewDrawer.tsx`：外交总览面板嵌入双边地缘态势 5 维雷达图；
+  4. `client/src/components/officer/OfficerDetail.tsx`：武将详情「六维」卡片嵌入武将五维特长雷达图。
+- **全栈门禁与体积审计**：
+  1. `verify-s466-faction-panel-and-radar` 6/6 全绿；
+  2. 全仓 91 个套件 637 项测试 100% 全绿；`pnpm build` 产物 CSS (67.39 KB)、主 JS (159.29 KB) 与命令抽屉 (351.97 KB) 严格达标。
 
 ### Session 465 交接要点
 

@@ -12,6 +12,7 @@ import {
 import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
+import { RadarChart, buildDiplomacyRadarItems } from '../ui/RadarChart';
 
 const RELATION_LABEL: Record<string, string> = {
   war: '交战',
@@ -245,6 +246,23 @@ export function DiplomacyOverviewDrawer() {
             </div>
             <div className="mt-2 text-right text-xs text-stone-500">
               已知总兵力 {selected.troops.toLocaleString('zh-CN')}
+            </div>
+
+            {/* S20-W4 纯 SVG 外交态势 5 维雷达图 */}
+            <div className="mt-3 pt-2 border-t border-stone-800/60 flex flex-col items-center">
+              <span className="text-[11px] text-stone-400 self-start mb-1 font-song">
+                双边外交地缘态势（5 维雷达）：
+              </span>
+              <div className="flex justify-center p-2 rounded bg-stone-950/60 border border-stone-800/70">
+                <RadarChart
+                  items={buildDiplomacyRadarItems(
+                    findDiplomacy(game.diplomacy, game.playerFactionId, selected.factionId),
+                  )}
+                  size={150}
+                  fillColor="rgba(217, 119, 6, 0.2)"
+                  strokeColor="#d97706"
+                />
+              </div>
             </div>
           </section> : facet === 'negotiation' ? (
             <section className="space-y-2" data-testid="command-diplomacy-negotiation">

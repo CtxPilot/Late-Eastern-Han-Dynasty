@@ -41,6 +41,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { getFactionResourceTotals } from '../../utils/factionResources';
 import { getOfficerProfile } from './OfficerPortrait';
 import { ExpressionPortrait } from './ExpressionPortrait';
+import { RadarChart, buildOfficerRadarItems } from '../ui/RadarChart';
 import { gameApi } from '../../services/gateway';
 import type * as api from '../../services/api';
 
@@ -233,6 +234,15 @@ export function OfficerDetail({ game, officer, onClose }: Props) {
                         const display = overflow > 0 ? `${capped} (+${overflow})` : String(capped);
                         return <div key={key} className="grid grid-cols-[2rem_3.5rem_1fr] items-center gap-2 text-xs"><span className="text-stone-400">{label}</span><strong className={raw >= 95 ? 'text-amber-300' : 'text-stone-100'}>{display}{meritBonus > 0 ? <span className="ml-0.5 text-emerald-400">+{meritBonus}</span> : null}{equipBonus > 0 ? <span className="ml-0.5 text-sky-300">装+{equipBonus}</span> : null}</strong><div className="h-1.5 overflow-hidden rounded bg-stone-800"><div className="h-full bg-gradient-to-r from-red-950 via-amber-800 to-amber-400" style={{ width: `${capped}%` }} /></div></div>;
                       })}
+                    </div>
+                    {/* S20-W4 武将五维雷达图 */}
+                    <div className="mt-3 flex justify-center p-2 rounded bg-stone-950/60 border border-stone-800/60">
+                      <RadarChart
+                        items={buildOfficerRadarItems(officer)}
+                        size={150}
+                        fillColor="rgba(217, 119, 6, 0.22)"
+                        strokeColor="#d97706"
+                      />
                     </div>
                   </section>
 

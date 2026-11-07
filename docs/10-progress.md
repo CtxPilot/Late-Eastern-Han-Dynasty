@@ -1,3 +1,33 @@
+## 2026-11-08 — Session 466 · S20-W4 派系判定纯函数、派系面板与雷达图落地
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W4（`factionInner.ts` §4.5.2 出身派系判定纯函数 + `FactionPanel.tsx` 门阀派系与凝聚力展示面板 + `RadarChart.tsx` 纯 SVG 外交态势/武将五维双雷达图），无第三方商业依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 势力内部群臣缺乏以汉末社会出身（士族/豪强/寒门/宗室/边地/平民）为纽带的派系门阀分化展示，玩家无法直观洞察麾下文武势力平衡与朝堂凝聚力；
+  2. 外交与武将详情缺乏多边形雷达图，双边地缘态势（友好/信任/姻亲/盟约/戒备）及武将五维特长（统/武/智/政/魅）无法一目了然；
+  3. 本会话目标：实装 `client/src/lib/factionInner.ts`、`client/src/components/ui/RadarChart.tsx`、`client/src/components/layout/FactionPanel.tsx`，并完成与机务枢要左台（`LeftPanel`）、外交命令坞（`DiplomacyOverviewDrawer`）、武将详情（`OfficerDetail`）全量挂接。
+- **实装与验证内容**：
+  1. **门阀派系判定纯函数（`client/src/lib/factionInner.ts`）**：
+     - 严格落实 docs/04 §4.5.2 规则：基于 `officer.tags` 识别宗室、边地、士族、豪强、寒门、平民六大社会出身；
+     - 设定成派门槛（豪强 ≥ 2 人，其余 ≥ 3 人），未达门槛官员统计为游离散员；
+     - 领袖评定：依据霸府朝职（1000）、文武与地方高阶官职（200~900）、功绩及属性综合权重评定；
+     - 凝聚力测算：基线 100 分，按并立派系内耗、主导派系占比及平均忠诚度加权，评定四档文言等级（`上和`/`中洽`/`涣散`/`分裂`）。
+  2. **纯 SVG 手写雷达图（`client/src/components/ui/RadarChart.tsx`）**：
+     - 纯数学几何计算与纯原生 SVG 渲染，零第三方图表库，支持 HiDPI 锐利缩放；
+     - 同心等比例多边形网格（25%、50%、75%、100%）、径向辐射轴线、金石水墨半透明填充、顶点节点与多边形文言标签自适应对齐；
+     - 导出 `buildDiplomacyRadarItems`（友好/信任/姻亲/盟约/戒备 5 维映射）与 `buildOfficerRadarItems`（统/武/智/政/魅 5 维映射）。
+  3. **门阀派系面板与全栈集成（`client/src/components/layout/FactionPanel.tsx`）**：
+     - `FactionPanel.tsx`：呈现朝野门阀凝聚力进度条与评级、派系卡片（标签色块、成员数、平均忠诚、领袖 `[ 魁 ]` 印章、文言描述、可展开群臣列表）与散员统计；
+     - `LeftPanel.tsx`：机务枢要左台挂接「门阀派系」`AccSection`，即时反映势力派系规模与变迁；
+     - `DiplomacyOverviewDrawer.tsx`：外交总览面板挂接双边地缘态势 5 维雷达图；
+     - `OfficerDetail.tsx`：武将详情「六维」卡片挂接武将五维特长雷达图。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s466-faction-panel-and-radar.mjs`（注册 `pnpm verify-s466-faction-panel-and-radar`），6/6 专项断言全部通过；
+  2. 新增单元测试 `client/src/lib/factionInner.test.ts`（9/9）、`client/src/components/ui/RadarChart.test.tsx`（4/4）、`client/src/components/layout/FactionPanel.test.tsx`（1/1）；
+  3. 全仓 91 个测试套件 637 项测试 100% 全绿（shared 58 个 518 项、server 4 个 14 项、client 29 个 105 项）；
+  4. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  5. 生产构建 `pnpm build` 全绿，CSS (67.39 KB)、主 JS (159.29 KB) 与命令抽屉 (351.97 KB) 严格受控于预算内。
+- **文档**：`docs/10-progress.md` checklist（S20-W4 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 465 · S20-W2 TopBar 数字跳动与 EventLog 战报流化落地
 
 - Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W2（TopBar 数字跳动与 EventLog 起居注战报流化），无第三方商业依赖、不改服务端金样与权威 RNG。
@@ -2405,7 +2435,7 @@
 | S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [ ] | 复用已废弃的 server/src/ws/broadcast.ts；降级假进度条 |
 | S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [x] | Session 465 完成：rAF + easeOutCubic 缓动 Hook + TopBar 资源跳动高亮 + EventLogTerminal 平滑顶滚与淡入 |
 | S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [ ] | 凸包 graham scan；globalCompositeOperation 挖洞；layer.getContext() 命令式 |
-| S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [~] | Session 122 已完成己方名册、OfficerDetail、忠诚警报及人事操作终审窗；派系/雷达/飘字/总署重组待续 |
+| S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [x] | Session 466 完成：`factionInner.ts` §4.5.2 出身派系判定 + `FactionPanel.tsx` 凝聚力条与门阀展示 + `RadarChart.tsx` 纯 SVG 外交态势/武将五维双雷达图 |
 
 ### S21 — 三级战斗串联（4 Session）
 
