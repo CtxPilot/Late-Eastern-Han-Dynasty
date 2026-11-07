@@ -3,43 +3,15 @@
 
 import { InkButton } from './../ui/buttons';
 import { useGameStore } from '../../stores/gameStore';
-import { SealBadge } from '../ui/SealBadge';
 import { formatActionLogEntry } from '../common/eventLogParser';
+export { TurnProgressOverlay } from './TurnProgressOverlay';
 
 /**
  * 回合反馈（P0-3 · Session 407，`docs/40-game-evaluation.md`）：
- * - TurnProgressOverlay：结束回合期间的全屏结算遮罩（年月 + 推演文案）。
+ * - TurnProgressOverlay：结束回合期间的全屏结算遮罩（年月 + 推演文案 + WS/离线实时进度）。
  * - MonthReportCard：月结完成后展示「本月纪要」（本次新增的 actionLog 聚合），可关闭。
  * 遵循 DESIGN.md §5.1 水墨浑天推演与古籍纪要装帧。
  */
-
-export function TurnProgressOverlay() {
-  const monthSettling = useGameStore((s) => s.monthSettling);
-  const game = useGameStore((s) => s.game);
-  if (!monthSettling || !game) return null;
-  return (
-    <div
-      className="fixed inset-0 z-40 bg-black/75 backdrop-blur-md flex items-center justify-center select-none"
-      data-testid="turn-progress-overlay"
-    >
-      <div className="rounded border-2 border-double border-gold-400/80 bg-stone-950/98 px-10 py-8 text-center shadow-[0_0_50px_rgba(215,170,98,0.25)] min-w-[300px] motion-safe:animate-[ink-fade-in_180ms_ease-out]">
-        <div className="flex items-center justify-center gap-1.5 mb-2">
-          <SealBadge char="运" color="gold" size={16} />
-          <p className="text-xs tracking-[0.4em] text-amber-600 font-song">天道流转 · 乾坤推演</p>
-        </div>
-        <p className="text-3xl text-amber-300 font-seal tracking-[0.25em] drop-shadow-md">
-          {game.currentYear}年{game.currentMonth}月
-        </p>
-        <p className="mt-3 text-xs text-stone-400 font-song tracking-wide">
-          正在结算各方城池政务、军团调度与天下烽烟…
-        </p>
-        <div className="mt-4 h-1.5 w-48 mx-auto overflow-hidden rounded-full bg-stone-900 border border-stone-800">
-          <div className="h-full w-2/5 bg-gradient-to-r from-amber-700 via-amber-400 to-amber-600 animate-pulse" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export function MonthReportCard() {
   const monthReport = useGameStore((s) => s.monthReport);

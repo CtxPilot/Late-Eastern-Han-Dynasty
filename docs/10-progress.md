@@ -1,3 +1,28 @@
+## 2026-11-08 — Session 467 · S20-W1 WebSocket 接入与 TurnProgressOverlay 落地
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W1（`useBroadcast.ts` 原生 WebSocket 订阅 /ws 通道与退避重连 + 离线/Worker 自适应假进度推进 + `TurnProgressOverlay.tsx` 全屏水墨遮罩、动态文言 phase 与百分比进度条），无第三方商业依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 服务端 `server/src/ws/broadcast.ts` 既有月结广播通道（`turn_progress` / `turn_complete` / `event_triggered`）此前在客户端完全处于未订阅废弃状态；
+  2. 客户端在结束回合时只有静态灰钮，遮罩仅为固定静态脉冲条，无实时进度读数、无推演阶段标识、无连接信道提示；
+  3. 本会话目标：实装 `client/src/hooks/useBroadcast.ts` 原生 WebSocket 订阅与退避重连机制、提供离线与无网环境自适应平滑进度推进降级，并升级 `client/src/components/layout/TurnProgressOverlay.tsx` 全屏水墨遮罩与百分比进度条。
+- **实装与验证内容**：
+  1. **WebSocket 广播订阅与自适应降级 Hook（`client/src/hooks/useBroadcast.ts`）**：
+     - 原生 WebSocket 订阅服务端 `/ws` 广播通道，统一解析 `turn_progress`、`turn_complete` 与 `event_triggered`；
+     - 具备 1s → 3s → 10s 指数退避重连机制与连接状态监听；
+     - 提供离线与 Worker 模式下的平滑假进度推进降级（0% → 15% → 25% → 55% → 75% → 88% 渐进悬停，月结完成瞬间封顶 100% 后平滑淡出）。
+  2. **回合推演全屏水墨进度遮罩（`client/src/components/layout/TurnProgressOverlay.tsx`）**：
+     - 结合 `monthSettling` 与 `broadcast.active` 双通道触发；
+     - 呈现典雅题签「天道流转 · 乾坤推演」、篆体年月标、动态文言 phase 徽章（`民政核算` / `军机布防` / `天下博弈` / `史官录简` 等）、实时战报文言与平滑百分比进度条；
+     - 底部实时信道指示点（绿点实时信道 / 灰点离线推演）；
+     - `TurnFeedback.tsx` 保持向后兼容无缝重导出。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s467-websocket-broadcast-and-turn-overlay.mjs`（注册 `pnpm verify-s467-websocket-broadcast-and-turn-overlay`），5/5 专项断言全部通过；
+  2. 新增单元测试 `client/src/components/layout/TurnProgressOverlay.test.tsx`（3/3）与 `client/src/hooks/useBroadcast.test.tsx`（1/1）；
+  3. 全仓 92 个测试套件 639 项测试 100% 全绿（shared 58 个 518 项、server 4 个 14 项、client 30 个 107 项）；
+  4. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  5. 生产构建 `pnpm build` 全绿，CSS (67.39 KB)、主 JS (159.29 KB) 严格受控于预算内。
+- **文档**：`docs/10-progress.md` checklist（S20-W1 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 466 · S20-W4 派系判定纯函数、派系面板与雷达图落地
 
 - Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W4（`factionInner.ts` §4.5.2 出身派系判定纯函数 + `FactionPanel.tsx` 门阀派系与凝聚力展示面板 + `RadarChart.tsx` 纯 SVG 外交态势/武将五维双雷达图），无第三方商业依赖、不改服务端金样与权威 RNG。
@@ -2432,7 +2457,7 @@
 
 | ID | 任务 | 状态 | 备注 |
 |:--:|------|:--:|------|
-| S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [ ] | 复用已废弃的 server/src/ws/broadcast.ts；降级假进度条 |
+| S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [x] | Session 467 完成：`useBroadcast.ts` 原生 WebSocket 订阅 /ws 通道与退避重连 + 离线/Worker 自适应假进度推进 + `TurnProgressOverlay.tsx` 全屏水墨遮罩、动态文言 phase 与百分比进度条 |
 | S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [x] | Session 465 完成：rAF + easeOutCubic 缓动 Hook + TopBar 资源跳动高亮 + EventLogTerminal 平滑顶滚与淡入 |
 | S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [ ] | 凸包 graham scan；globalCompositeOperation 挖洞；layer.getContext() 命令式 |
 | S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [x] | Session 466 完成：`factionInner.ts` §4.5.2 出身派系判定 + `FactionPanel.tsx` 凝聚力条与门阀展示 + `RadarChart.tsx` 纯 SVG 外交态势/武将五维双雷达图 |
