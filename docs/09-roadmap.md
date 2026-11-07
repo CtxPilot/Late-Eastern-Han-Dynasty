@@ -504,7 +504,7 @@
 | P5-07c | 伪 Terminal 文言战报（`EventLog` 改造，`#1c1a17` 宣纸暗色 + 等宽 + 思源宋体混排 + `[ 丰/警/凶/喜 ]` 状态色） — **Session 462 完成**：文言前缀标签与七色状态印章引擎（`eventLogParser.ts`）+ `EventLogTerminal.tsx` 终端三灯隐喻、起居注文风与展卷大窗模态 + RightPanel/TurnFeedback 闭环挂接 | P5-07 |
 | P5-07d | 金石黑框组件库（`StonePanel`/`SealButton`/`ConfirmDialog`，朱砂+黑框+宣纸黄）**→ 执行批次②，见 `ArtDirection.md` §九** | P5-07 |
 | P5-07e | 工程字体资产闭环补完（基础 woff2 已就位；剩余字重扩展与资产完整性复核）**→ 引擎1（批次①/②顺带）** | P5-07 |
-| P5-08 | Canvas 动画(行军/着火/水流/落石) **→ 执行批次④（程序化几何特效）** | P1-03, P3-01 |
+| P5-08 | Canvas 动画(行军/着火/水流/落石) — **Session 463 完成**：纯数学几何特效计算引擎（`tacticalAnimations.ts`）+ Konva.Animation 高性能驱动 + 行军虚线流光/水攻同心波纹/伏兵六角震波/火光微颤管线全挂接 | P1-03, P3-01 |
 | P5-09 | 音效系统 **→ 批次⑤ Session 409 首切片完成**（战鼓/铜磬/号角 Web Audio 合成；音色打磨后置） | P5-07 |
 | P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**；Session 124 已有四名代表人物 C+B 简化切片，待补 A 拓片层、`avatarGene` 落库与 30 人精校；详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘）**→ 批次③ Session 409 完成**：avatarGene 落库（4 原型策展+哈希派生+消解表）+ A′拓影/C 6×10×8×7/B 印信层（清 D-0B-7；officeSeal 动态官职印后置） | P0-06 |
 | P5-11 | 平衡性测试 — **Session 461 完成**：全域 0-B 宏观经济与多剧本平衡性测试套件（9 剧本 45 势力健康开局、106 城池宏观指标合法性、1001 武将五维常模、群雄讨董 12 个月周年演进收敛、吕布 150 武力极限天花板与伤害乘区安全、水攻/伏兵状态机联动）；`verify-s461-0b-scenarios-balance` 全绿 | P5-01~P5-06 |

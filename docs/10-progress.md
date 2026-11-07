@@ -1,3 +1,34 @@
+## 2026-11-08 — Session 463 · P5-08 Canvas 战术动画几何计算引擎全量落地
+
+- Phase：**Phase 5 打磨 / Canvas 程序化几何特效**；落实《ArtDirection.md》批次④纯数学动画，零外部美术资产依赖、不改金样/RNG。
+- **背景与目标**：
+  1. 既有六角战斗战场除基础高亮与文字外，行军路径缺乏视觉流光，水计、伏兵及火计等战术缺乏动态几何反馈；
+  2. 本会话目标：建立战术程序化几何动画纯数学计算引擎（`tacticalAnimations.ts`），利用 `Konva.Animation` 高性能驱动行军流光、水攻扩散同心圆、伏兵出伏震波与火光微颤，全面闭环 P5-08。
+- **实装与验证内容**：
+  1. **战术动画纯数学计算引擎（`client/src/components/battle/tacticalAnimations.ts`）**：
+     - `marchDashOffset(timeMs, speed, cyclePeriod)`：单调平滑流动虚线偏移量，驱动行军路径折线沿行进方向流光行进；
+     - `waterRipple(timeMs, maxRadius, cycleMs)`：计算水攻与减速地块的同心圆形水波扩展，半径自 2 扩张至 32，透明度平滑淡出；
+     - `fireFlicker(timeMs, offsetIndex)`：双正弦波组合微颤振幅（scale 0.7~1.3、opacity 0.4~1.0、offsetY 负向漂移），呈现火焰生动感；
+     - `shockwave(timeMs, durationMs, maxRadius)`：计算伏兵出伏与落石震地的六角同心震波，自中心向外扩展且线宽由 3 骤减至 1。
+  2. **战术色彩 Token 集中收口（`client/src/theme/canvasTokens.ts`）**：
+     - 在 `BATTLE_TOKENS` 中正式声明：`animMarchLine` (`#38bdf8`)、`animWaterRipple` (`#0ea5e9`)、`animShockwave` (`#f59e0b`)、`animFireSparks` (`#f97316`)，严守免裸色审查铁律。
+  3. **BattleView 六角画布动画管线全栈挂接（`client/src/components/battle/BattleView.tsx`）**：
+     - 接入 `marchLineRef`、`waterGroupRef`、`shockGroupRef`，通过单个 `Konva.Animation` 帧回调直接变更 Konva 节点属性，零 React 状态重渲染开销；
+     - 当 `movePath?.found` 时，动态在六角格中心网格绘制流动虚线路径；
+     - 当 `battle.activeStrategem === 'water'` 或单位带有 `slow` 减速状态时，渲染同心水纹波浪；
+     - 当 `battle.activeStrategem === 'ambush'` 时，对防守侧目标格渲染六角震波光环。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s463-canvas-animations.mjs`（注册 `pnpm verify-s463-canvas-animations`），6/6 专项断言全部绿色通过；
+  2. 新增单元测试 `client/src/components/battle/tacticalAnimations.test.ts`（4/4），client 单测套件增至 25 个 88 项全通；
+  3. `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  4. `pnpm verify-s462-hidpi-and-event-log-terminal`：**6/6** 全绿；
+  5. `pnpm verify-s460-lazy-data-and-worker-chunks`：**6/6** 全绿；
+  6. `node scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
+  7. `pnpm validate-data` 12 数据文件全绿；`pnpm verify-compliance` 857 文件全绿；
+  8. `pnpm typecheck` / `pnpm lint`：全仓 0 错误；
+  9. `pnpm build`：三包构建全绿，全部 11 个 JS chunks 严格受控于 410KB 以内，Vite 大包警告归零。
+- **文档**：`docs/09` P5-08、`docs/10-progress.md` checklist + 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 462 · P5-07a HiDPI/Wayland 适配 + P5-07c 伪 Terminal 文言战报系统
 
 - Phase：**Phase 5 打磨 / 前端体验与视觉工程**；攻克 Linux Wayland 高分屏模糊与战报沉浸感，不改金样/RNG。
@@ -2288,7 +2319,7 @@
 | P5-05 | 存档/读档(SQLite) | [x] Session 340 命名槽位首切片；多用户后置 | P0-04 |
 | P5-06 | 多剧本完善 | [x] Session 429/461 完成：9 大剧本 45 势力健康开局与全景数值自洽 | P0-14 |
 | P5-07 | UI 美化+动画 | [~] P5-07b/d/e 已完成；Session 462 实装 P5-07a（HiDPI 缩放适配）与 P5-07c（伪 Terminal 文言战报系统） | P1~P4 |
-| P5-08 | Canvas 动画 | [ ] | P1-03, P3-01 |
+| P5-08 | Canvas 动画 | [x] Session 463 完成：纯数学几何特效计算引擎（tacticalAnimations.ts）+ Konva.Animation 高性能驱动 + 行军流光/水纹/震波/火光微颤 | P1-03, P3-01 |
 | P5-09 | 音效系统 | [ ] | P5-07 |
 | P5-10 | 武将头像 | [ ] | P0-06 |
 | P5-11 | 平衡性测试 | [x] Session 461 完成：全域 0-B 宏观经济与多剧本平衡性测试套件 | P5-01~P5-06 |

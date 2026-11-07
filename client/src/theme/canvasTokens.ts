@@ -84,6 +84,11 @@ export const BATTLE_TOKENS = {
   meleeMapPanel: '#292116',
   panelShell: '#15120d',
   panelHeader: 'rgba(33, 26, 17, 0.95)',
+  // P5-08 战术程序化几何动画 Token
+  animMarchLine: '#38bdf8',
+  animWaterRipple: '#0ea5e9',
+  animShockwave: '#f59e0b',
+  animFireSparks: '#f97316',
 } as const;
 
 export type BattleTokenKey = keyof typeof BATTLE_TOKENS;

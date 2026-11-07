@@ -9,12 +9,22 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 462**（P5-07a HiDPI/Wayland 缩放适配与 P5-07c 伪 Terminal 文言战报系统：`client/src/utils/hidpi.ts` DPR 安全夹紧与 `observePixelRatio` 分辨率监听 + BattleView/MapCanvas 接入；`eventLogParser.ts` 类别标签与七色印章引擎 + `EventLogTerminal.tsx` 伪终端古籍装帧、三点指示灯与展卷大窗模态 + RightPanel/TurnFeedback 闭环挂接；`command-drawers` 细粒度分包消除告警，全量 11 个 JS chunks ≤ 410KB；`verify-s462-hidpi-and-event-log-terminal` 6/6 全绿通过） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-06/P5-07a/P5-07c/P5-11/P5-12/P5-13/P5-14/P5-15 完成 |
-| 代码最新 | Session 462 `hidpi.ts`、`eventLogParser.ts`、`EventLogTerminal.tsx`、`RightPanel.tsx`、`TurnFeedback.tsx`、`BattleView.tsx`、`MapCanvas.tsx`、`vite.config.ts` 完成 |
-| 文档最新 | **Session 462 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
-| 本交接用途 | **Session 462 已交付**；P5-07a 与 P5-07c 收口；后续方向：0-B 闸门实测与 Phase 6 / 剩余打磨 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 5 / Phase 6 余项（P5-08 Canvas 动画、S20/S21 战斗串联） |
+| 会话 | **Session 463**（P5-08 Canvas 战术动画几何计算引擎全量落地：`tacticalAnimations.ts` 纯数学几何特效函数 + `BATTLE_TOKENS` 集中收口战术动画色彩 Token + `BattleView.tsx` 行军虚线流光/水攻同心波纹/伏兵六角震波/火光微颤管线全挂接 + `tacticalAnimations.test.ts` 4/4 单测全绿 + 生产构建 11 个 JS 分包体积严格受控于 410KB 以内 + `verify-s463-canvas-animations` 6/6 全绿通过） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-06/P5-07a/P5-07c/P5-08/P5-11/P5-12/P5-13/P5-14/P5-15 完成 |
+| 代码最新 | Session 463 `tacticalAnimations.ts`、`canvasTokens.ts`、`BattleView.tsx`、`tacticalAnimations.test.ts`、`verify-s463-canvas-animations.mjs` 完成 |
+| 文档最新 | **Session 463 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
+| 本交接用途 | **Session 463 已交付**；P5-08 Canvas 战术动画收口；后续方向：0-B 闸门实测与 Phase 6 前端体验 / 战斗串联 / AI 深度决策 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 6 前端体验 & 三级战斗串联（S20/S21）或 P5-01~P5-03 AI 决策深化 |
+
+### Session 463 交接要点
+
+- **P5-08 Canvas 战术动画几何计算引擎（`client/src/components/battle/tacticalAnimations.ts`）**：
+  1. `marchDashOffset`：单调平滑流动虚线偏移量，驱动行军路径折线沿行进方向流光行进；
+  2. `waterRipple`：计算水攻与减速地块的同心圆形水波扩展，半径自 2 扩张至 32，透明度平滑淡出；
+  3. `fireFlicker`：双正弦波组合微颤振幅（scale 0.7~1.3、opacity 0.4~1.0、offsetY 负向漂移），呈现火焰生动感；
+  4. `shockwave`：计算伏兵出伏与落石震地的六角同心震波，自中心向外扩展且线宽由 3 骤减至 1；
+  5. 严守免外部商业资产与免裸色审查铁律，动画色彩在 `BATTLE_TOKENS` 集中收口；
+  6. `BattleView.tsx` 挂接 `Konva.Animation` 统一单实例驱动，直接更新 Konva 节点属性，零 React re-render，60fps 硬件加速流畅运行。
 
 ### Session 462 交接要点
 
