@@ -1,3 +1,37 @@
+## 2026-11-08 — Session 474 · FM-P5 阵型联动系统集成回归、独特性、经典体验、IP 与文档总验收通过
+
+- Phase：**Phase 3 战斗系统 / S10-FM 阵型联动子路线**；闭环 FM-P5（`server/src/scripts/verify-fm5-integration-and-balance.ts` 全链集成回归、六大基础阵型独特性与对称校验、组织度五档衰减律、免商业版权与确定性总验收通过，注册 `pnpm verify-fm5-integration-and-balance` 23/23 全绿），**标志着 S10-FM 阵型联动 0-A 子路线（FM-P0~P5）全部圆满收官！**
+- **背景与目标**：
+  1. 依据 `docs/29-formation-integration-development-plan.md`，FM-P1~P4 已相继落地 Schema、共享解析器（`formation-core.ts`）、标准/自动/六角三模式消费同源与战报解释；
+  2. FM-P5 要求收口三大工作包：FM-P5a（全链集成与目录规则回归）、FM-P5b（平衡与体验：对称局、组织度阶梯与六阵独特性）、FM-P5c（IP 审查与文档收口）；
+  3. 确保六大基础阵型（方阵/圆阵/锥形/雁行/鹤翼/锋矢）各自具备清晰策略定位（方阵均衡、圆阵防高、锥形攻强、锋矢兼顾、鹤翼暴击、雁行掩护），且变阵受限于协同受围门禁；
+  4. 本会话目标：实装 `verify-fm5-integration-and-balance.ts` 专项门禁，打通全仓回归测试，双写文档并勾除 FM-P5。
+- **实装与验证内容**：
+  1. **FM-P5a 全链集成与目录规则审计**：
+     - 校验 27 阵型全量元数据，六大基础阵型（方/圆/锥/雁/鹤/锋）全部具备合法 `tiers[0]` 点值；
+     - 变阵可用性断言：常规状态下已精通阵型全部可用；协同受围（`isSurrounded: true`）状态下变阵严格受限于方阵（SQUARE），其余阵型由 `blockReason: 'surrounded'` 严格阻断；
+  2. **FM-P5b 平衡性、对称局与阵型独特性审计**：
+     - 方阵稳扎稳打：攻防双+1，自动战力综合最高 (+0.20)；
+     - 圆阵防御特化：防+3 攻-2，综合战力修正为正 (+0.10)；
+     - 锥形阵极限强攻：攻+2 防-2，战力中性 (0.00)；
+     - 锋矢阵锐利冲锋：攻+1 防-1，战力中性 (0.00)；
+     - 组织度五档衰减律：严整档 (intact, 80+) 正面收益放大至 120%（锥形自动战力 +0.04）；瓦解档 (broken, <20) 正面收益归零且负面惩罚原值保留（锥形自动战力 -0.20）；
+     - 暴击特权链：鹤翼阵具备 +20% 暴击率特权加成，方阵保持 0% 暴击修正稳健基准；
+     - 五部部署：主帅在中军（center），坐标锚定 (0, 0)；
+     - 解释器：`explainFormationResolution` 逐项提供基础点值与组织度文言说明。
+  3. **FM-P5c 确定性与免商业版权合规**：
+     - 对称局在同等输入条件下阵型修正完全确定一致，零随机数扰动；
+     - 纯 Clean-room 几何与数学点值映射，无任何第三方商业数值或素材侵权。
+- **验证（全绿）**：
+  1. 新增专项门禁 `pnpm verify-fm5-integration-and-balance` 23/23 项断言全部通过；
+  2. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  3. 全仓 104 个测试套件 706 项测试 100% 全绿；
+  4. `validate-data`、`verify-compliance`、`typecheck`、`lint`、`build` 全仓 0 错误。
+- **里程碑达成**：
+  - **FM-P5 [x] 达成**；
+  - **S10-FM 阵型联动 0-A 子路线（FM-P0~P5）全量收官！**
+- **文档**：`docs/09-roadmap.md`、`docs/29-formation-integration-development-plan.md`、`docs/10-progress.md`、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 473 · 0-B 剧本十年（120 回合）全量长程冒烟浸泡测试总验收通过
 
 - Phase：**Phase 0-B 数据扩容与长程稳定性**；执行 0-B 闸门「真人/浏览器点击 120 回合浸泡长跑」总验收（`scripts/verify-0b-scenario-soak.mjs` 修复 `dateText` 正则提取断言；对 5 大 0-B 核心历史剧本切片与代表势力进行无头 Chrome + PWA Web Worker + IndexedDB 真实全量 120 回合推演），合计 600 回合零崩溃、零阻断、零内存泄露、零异常完美通过！
