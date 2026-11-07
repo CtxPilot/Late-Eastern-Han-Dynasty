@@ -10,6 +10,7 @@ import { FamilyTreatmentDialog } from '../family/FamilyTreatmentDialog';
 import { CommandShell } from '../command/CommandShell';
 import { FirstTurnGuide } from './FirstTurnGuide';
 import { TurnProgressOverlay, MonthReportCard } from './TurnFeedback';
+import { SiegeAssaultDialog } from '../campaign/SiegeAssaultDialog';
 
 /** P1-06 主三栏布局 + 命令坞；中央为层级卡片战略屏（Session 379 取代 MapCanvas）。 */
 export function GameLayout() {
@@ -30,6 +31,7 @@ export function GameLayout() {
       <FirstTurnGuide />
       <TurnProgressOverlay />
       <MonthReportCard />
+      <SiegeAssaultDialog />
     </div>
   );
 }

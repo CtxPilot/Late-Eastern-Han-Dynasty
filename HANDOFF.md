@@ -9,12 +9,35 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 468**（S20-W3 势力凸包算法、FogLayer 迷雾与 PCG 水墨地形引擎全量落地：`mapTerritory.ts` Graham Scan 凸包纯函数引擎与迷雾过滤 + `TerritoryLayer.tsx` 闭合领土半透明多边形 + `FogLayer.tsx` destination-out 挖洞迷雾 + `shared/pcg/` 水墨远山/自然水系/战术地貌/计谋视觉 + `client/src/battle/` 跨模块帧计数/视差背景/三级全屏粒子；单测 4 套 23 项全绿；`verify-s468-territory-hull-and-pcg` 6/6 全绿；全仓 97 套件 664 项测试 100% 全绿；**S20 前端体验 4/4 项 100% 全量收官 [x]**） |
-| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联（W6~W9）待推进** |
-| 代码最新 | Session 468 `mapTerritory.ts`、`mapTerritory.test.ts`、`TerritoryLayer.tsx`、`FogLayer.tsx`、`TerritoryAndFogLayers.test.tsx`、`shared/pcg/`（`inkMountains.ts`, `naturalRiver.ts`, `terrainTiles.ts`, `strategemVisuals.ts`, `inkMountains.test.ts`）、`client/src/battle/`（`frameCount.ts`, `meleeBackground.ts`, `meleeStrategem.ts`, `meleePcg.test.ts`）、`verify-s468-territory-hull-and-pcg.mjs` 完成 |
-| 文档最新 | **Session 468 双写**（`docs/10-progress.md` 日志与 S20-W3/S20 状态 + 本文件双写同步） |
-| 本交接用途 | **Session 468 已交付**；后续方向：Phase 6 S21-W6~W9（三级战斗串联六态栈/大地图出征演出/二级战术串联/白刃战横版微操/单挑接入） |
-| 下一步 | ①推进 **S21-W6**（一级大地图出征演出：军旗沿道路 Tween 位移 + 目标城烽火粒子 + 围城“是否攻城”弹窗 + 行军箭头）；②推进 **S21-W7**（二级战术串联：screen 六态栈 + 切入渐变 + 棋子滑行 + hex 悬停地形情报 + 邻接交战触发三级）；③推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 + 纯战略指令 + Soldier 粒子类 + 武将计特写）；④推进 **S21-W9**（单挑接入闭环）；⑤0-B 闸门真人游玩 120 回合实测 |
+| 会话 | **Session 469**（S21-W6 一级大地图出征与围城演出全量落地：`MarchAnimationLayer.tsx` 行军虚线带羽箭头 + 军旗占位与势力印信字 + 目标城烽火特效环与烽烟粒子 + `SiegeAssaultDialog.tsx` 围城决断弹窗与五项大战略决策指令 + `gameStore.ts` `activeSiegeArmyId` 围城攻决全局状态机 + `ProvinceTopology` 与 `GameLayout` 全栈挂接；单测 2 套 7 项全绿；`verify-s469-level1-campaign-performance` 5/5 全绿；全仓 99 套件 671 项测试 100% 全绿；**S21-W6 [x] 收官**） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联推进中（S21-W6 [x]）** |
+| 代码最新 | Session 469 `MarchAnimationLayer.tsx`、`MarchAnimationLayer.test.tsx`、`SiegeAssaultDialog.tsx`、`SiegeAssaultDialog.test.tsx`、`ProvinceTopology.tsx`、`GameLayout.tsx`、`gameStore.ts`、`verify-s469-level1-campaign-performance.mjs` 完成 |
+| 文档最新 | **Session 469 双写**（`docs/10-progress.md` 日志与 S21-W6 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 469 已交付**；后续方向：Phase 6 S21-W7~W9（二级战术串联/白刃战横版微操/单挑接入） |
+| 下一步 | ①推进 **S21-W7**（二级战术串联：screen 六态栈切入渐变 + 镜头推进 + 棋子滑行 + hex 悬停地形情报 + 邻接触发三级 + 迷雾散开）；②推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 + 纯战略指令 + Soldier 粒子类 + 武将计特写）；③推进 **S21-W9**（单挑接入闭环）；④0-B 闸门真人游玩 120 回合实测 |
+
+### Session 469 交接要点
+
+- **S21-W6 行军箭头、军旗与烽火演出层（`client/src/components/campaign/MarchAnimationLayer.tsx`）**：
+  1. 纯 SVG 矢量演出层，支持 HiDPI 高清自适应，全兼容州域拓扑图与世界屏；
+  2. 动态带羽虚线流光箭头，连接始发城与目标城，准确指引大军征伐动向；
+  3. 军旗占位：彩色矩形旗面（`fill={faction.color}`）+ 势力印信单字 + 兵力数值微型气泡（万/千）；
+  4. 目标城烽火特效：受围目标城池呈现脉冲警戒圈、动态虚线旋转光环与朱砂「烽火」标；
+  5. 点击军旗或围城指示即可快捷唤起围城攻决弹窗。
+- **S21-W6 围城决断古籍奏折弹窗（`client/src/components/campaign/SiegeAssaultDialog.tsx`）**：
+  1. 仿 EventDialog 金石水墨奏折风格，严守免裸色审查铁律，挂接 `SealBadge` 朱红「围」字方印；
+  2. 攻守双方战情面板：攻城军名、主帅统领、兵力、军粮、士气、战阵（统一读取 `FORMATION_LABEL` 真源）、军阶、参谋与所持攻城器械（云梯/冲车/投石机/井阑）；
+  3. 守备城池防线：守军兵力、储备粮、城防耐久条（`wall/maxWall`）、驻军士气；
+  4. 合流提示：同势力多军围城时动态呈现「【合流】N 军合流 · 共 X 兵」；
+  5. 五项大战略决断指令：`挥军强攻`（自动战斗）、`亲统登陴`（战术攻城沙盘）、`传檄劝降`（概率劝降）、`围困待变`（保持围困）、`解围班师`（撤退）。
+- **S21-W6 全栈状态机与场景挂接**：
+  1. `gameStore.ts`：声明 `activeSiegeArmyId`、`openSiegeDialog`、`closeSiegeDialog`，强攻/登陴/劝降/撤退成功后自动闭环重置；
+  2. `ProvinceTopology.tsx`：州域道路拓扑主盘无缝嵌入 `MarchAnimationLayer`；
+  3. `GameLayout.tsx`：全局挂接 `SiegeAssaultDialog`；
+  4. `CampaignPanel.tsx`：围城军条目增设「决断攻城」OpBtn。
+- **全栈门禁与体积审计**：
+  1. `verify-s469-level1-campaign-performance` 5/5 全绿；
+  2. 全仓 99 个套件 671 项测试 100% 全绿；`pnpm build` 产物 CSS (71.11 KB)、全部 11 个 JS chunks 严格受控于预算内。
 
 ### Session 468 交接要点
 

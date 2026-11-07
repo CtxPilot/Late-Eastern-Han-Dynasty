@@ -57,6 +57,7 @@ export function CampaignPanel() {
   const campaignSiegeSurrender = useGameStore((s) => s.campaignSiegeSurrender);
   const campaignRetreat = useGameStore((s) => s.campaignRetreat);
   const campaignAdvisorAction = useGameStore((s) => s.campaignAdvisorAction);
+  const openSiegeDialog = useGameStore((s) => s.openSiegeDialog);
   const selectedCityId = useGameStore((s) => s.selectedCityId);
 
   const [commanderId, setCommanderId] = useState<number | ''>('');
@@ -433,6 +434,7 @@ export function CampaignPanel() {
           <div className="grid grid-cols-2 gap-1 pt-1">
             {selectedArmy.phase === 'sieging' && (
               <>
+                <OpBtn label="决断攻城" hint="军机决断弹窗" onClick={() => openSiegeDialog(selectedArmy.id)} disabled={loading} />
                 <OpBtn label="强攻" hint="自动战斗结算" onClick={() => void handleAssault()} disabled={loading} />
                 <OpBtn label="劝降" hint="概率投降" onClick={() => void handleSurrender()} disabled={loading} />
               </>

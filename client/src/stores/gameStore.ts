@@ -196,6 +196,10 @@ interface Store {
   campaignSiegeSurrender: (armyId: string) => Promise<void>;
   campaignRetreat: (armyId: string) => Promise<void>;
   campaignAdvisorAction: (armyId: string, action: 'inspire' | 'trap' | 'retreat' | 'scout') => Promise<void>;
+  /** S21-W6: 围城攻决弹窗状态 */
+  activeSiegeArmyId: string | null;
+  openSiegeDialog: (armyId: string) => void;
+  closeSiegeDialog: () => void;
 
   // 战场地图（Tier I）
   battlefield: BattlefieldMap | null;
@@ -279,6 +283,9 @@ export const useGameStore = create<Store>((set, get) => ({
   grandStrategist: null,
   grandStrategistModifiers: null,
   grandStrategistLoading: false,
+  activeSiegeArmyId: null,
+  openSiegeDialog: (armyId) => set({ activeSiegeArmyId: armyId }),
+  closeSiegeDialog: () => set({ activeSiegeArmyId: null }),
   clearError: () => set({ error: null }),
   clearMonthReport: () => set({ monthReport: null }),
   clearBattleFeedback: () => set({ battleFeedback: null }),
@@ -1526,7 +1533,7 @@ export const useGameStore = create<Store>((set, get) => ({
     try {
       const { game, result } = await api.campaignAssault(armyId);
       const msg = `${result.battlefield} 战 — ${result.winner === 'attacker' ? '攻方胜' : '守方胜'}（伤亡 ${result.attackerCasualties}/${result.defenderCasualties}）`;
-      set({ game, loading: false, lastActionOk: msg, lastBattleResult: result });
+      set({ game, loading: false, lastActionOk: msg, lastBattleResult: result, activeSiegeArmyId: null });
     } catch (e) {
       set({ error: errMsg(e, '强攻失败'), loading: false });
     }
@@ -1538,7 +1545,7 @@ export const useGameStore = create<Store>((set, get) => ({
       const { game, battleId } = await api.campaignSiegeStorm(armyId);
       const battle = game.activeBattles.find((item) => item.id === battleId) ?? game.activeBattles[0] ?? null;
       const after = pushScene(get().sceneStack, { scene: 'battle', battleId: battle?.id ?? battleId });
-      set({ game, battle, sceneStack: after, screen: screenOf(after), loading: false, lastActionOk: game.actionLog[0]?.message ?? '亲统强攻' });
+      set({ game, battle, sceneStack: after, screen: screenOf(after), loading: false, lastActionOk: game.actionLog[0]?.message ?? '亲统强攻', activeSiegeArmyId: null });
     } catch (e) {
       set({ error: errMsg(e, '亲统强攻失败'), loading: false });
     }
@@ -1548,7 +1555,7 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { game, success } = await api.campaignSiegeSurrender(armyId);
-      set({ game, loading: false, lastActionOk: success ? '守军开城投降' : '守军拒不投降' });
+      set({ game, loading: false, lastActionOk: success ? '守军开城投降' : '守军拒不投降', activeSiegeArmyId: null });
     } catch (e) {
       set({ error: errMsg(e, '劝降失败'), loading: false });
     }
@@ -1558,7 +1565,7 @@ export const useGameStore = create<Store>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const game = await api.campaignRetreat(armyId);
-      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '撤退' });
+      set({ game, loading: false, lastActionOk: game.actionLog[0]?.message ?? '撤退', activeSiegeArmyId: null });
     } catch (e) {
       set({ error: errMsg(e, '撤退失败'), loading: false });
     }

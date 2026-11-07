@@ -14,6 +14,7 @@ import {
   type WorldGraph,
 } from '@leh/shared';
 import type { City } from '@leh/shared';
+import { MarchAnimationLayer } from '../campaign/MarchAnimationLayer';
 
 interface Props {
   cities: Record<number, City>;
@@ -81,6 +82,16 @@ export function ProvinceTopology({
   if (nodes.length === 0) return null;
 
   const byId = new Map(nodes.map((n) => [n.id, n]));
+
+  const topoNodePositions = useMemo(() => {
+    const map = new Map<number, { x: number; y: number }>();
+    for (const n of nodes) {
+      if (n.worldCityId != null) {
+        map.set(n.worldCityId, { x: n.px, y: n.py });
+      }
+    }
+    return map;
+  }, [nodes]);
 
   return (
     <div className="space-y-3" data-testid="province-topology">
@@ -194,6 +205,9 @@ export function ProvinceTopology({
               </g>
             );
           })}
+
+          {/* S21-W6 战役大地图演出：行军箭头、军旗标记与目标城烽火特效 */}
+          <MarchAnimationLayer nodePositions={topoNodePositions} width={w} height={h} />
         </svg>
 
         <p className="text-[11px] text-stone-600 mt-1 font-song text-center">

@@ -203,6 +203,7 @@
     "verify-s466-faction-panel-and-radar": "node scripts/verify-s466-faction-panel-and-radar.mjs",
     "verify-s467-websocket-broadcast-and-turn-overlay": "node scripts/verify-s467-websocket-broadcast-and-turn-overlay.mjs",
     "verify-s468-territory-hull-and-pcg": "node scripts/verify-s468-territory-hull-and-pcg.mjs",
+    "verify-s469-level1-campaign-performance": "node scripts/verify-s469-level1-campaign-performance.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {
