@@ -31,6 +31,7 @@ import {
   meritStatBonus,
   meritEffects,
   meritLevelFor,
+  getOfficerTraitLevel,
 } from '@leh/shared';
 import type { Formation } from '@leh/shared';
 import type { TerrainType } from '@leh/shared';
@@ -271,9 +272,31 @@ export function computeCritRate(ctx: CritContext): number {
   }
   // 急攻 → 暴击伤害(非率), 此处跳过
 
-  // 特性 proxy (§6.2.2): 0-A 无 traits
-  //   刚力 → bravery skill proxy (暴击伤害, 非率)
-  //   猛进/先登/乱战/夜战 → 率加成, 用 skill 近似或省略
+  // 特性消费 (§6.2.2 & docs/04 §26.3):
+  const archeryTrait = getOfficerTraitLevel(o, 'archery');
+  if (archeryTrait > 0 && (unitType === 'archer' || unitType === 'crossbowman')) {
+    rate += [0, 5, 8, 12, 16, 20][archeryTrait] ?? 0;
+  }
+  const superviseTrait = getOfficerTraitLevel(o, 'supervise');
+  if (superviseTrait > 0) {
+    rate += [0, 3, 4, 6, 8, 10][superviseTrait] ?? 0;
+  }
+  const cavalryCombatTrait = getOfficerTraitLevel(o, 'cavalry_combat');
+  if (cavalryCombatTrait > 0 && (unitType === 'lightCavalry' || unitType === 'heavyCavalry' || unitType === 'horseArcher')) {
+    rate += [0, 5, 8, 12, 16, 20][cavalryCombatTrait] ?? 0;
+  }
+  const waterCombatTrait = getOfficerTraitLevel(o, 'water_combat');
+  if (waterCombatTrait > 0 && terrain === ('water' as TerrainType)) {
+    rate += [0, 5, 8, 12, 16, 20][waterCombatTrait] ?? 0;
+  }
+  const nightCombatTrait = getOfficerTraitLevel(o, 'night_combat');
+  if (nightCombatTrait > 0 && ctx.isNight) {
+    rate += [0, 5, 8, 12, 16, 20][nightCombatTrait] ?? 0;
+  }
+  const siegeLeadTrait = getOfficerTraitLevel(o, 'siege_lead');
+  if (siegeLeadTrait > 0 && ctx.isSiege) {
+    rate += [0, 10, 18, 25, 32, 40][siegeLeadTrait] ?? 0;
+  }
 
   // 专属 (§6.2.3)
   if (u === 'wusheng') rate += 15;
@@ -303,9 +326,15 @@ export function computeCritMultiplier(ctx: CritContext): number {
   const u = uniqueOf(o);
   let mult = 1.5;
   if (u === 'wusheng') mult = 2.5; // 青龙刀 ×3.0 由 weaponCritBonus 上下文; 此处简化用 2.5, 0-B 装备后改
-  // 刚力特性 → +10~40%; 0-A proxy: bravery skill level
-  const brv = skillLevel(o, 'bravery');
-  if (brv > 0) mult *= 1 + brv * 0.075;
+  // 刚力特性 → +10~40% (docs/04 §26.3)
+  const mightTrait = getOfficerTraitLevel(o, 'might');
+  if (mightTrait > 0) {
+    mult *= 1 + ([0, 0.10, 0.18, 0.25, 0.32, 0.40][mightTrait] ?? 0);
+  } else {
+    // 0-A proxy: bravery skill level (仅当无 might 特性时兜底)
+    const brv = skillLevel(o, 'bravery');
+    if (brv > 0) mult *= 1 + brv * 0.075;
+  }
   // 急攻 → 暴击伤害 +5~25%
   const rap = skillLevel(o, 'rapidAttack');
   if (rap > 0) mult *= 1 + rap * 0.05;
@@ -333,8 +362,9 @@ export function canCounter(ctx: CounterContext): boolean {
   if (ctx.hasActed) return false;
   if (ctx.morale <= 30) return false;
   if (ctx.confused) {
-    // 沉着 Lv≥3 免疫
-    if (skillLevel(ctx.officer, 'calm') < 3) return false;
+    // 沉着特性 Lv≥3 或技能 Lv≥3 免疫混乱失反 (docs/04 §26.3)
+    const calmTrait = getOfficerTraitLevel(ctx.officer, 'calm');
+    if (calmTrait < 3 && skillLevel(ctx.officer, 'calm') < 3) return false;
   }
   // 长枪兵反击范围 1-2; 近战 1
   const range = ctx.unitType === 'spearman' ? 2 : 1;
@@ -350,7 +380,11 @@ export function computeCounterRate(ctx: CounterContext, baseCritRate: number): n
   let rate = 0.5;
   rate += skillLevel(o, 'hold') * 0.05; // 固守 +5~25%
   rate += fm.counter / 100;
-  // 特性 proxy: 铁壁 → hold skill; 镇守/乱战/殿军 后置
+  // 铁壁特性加成 (docs/04 §26.3: Lv1~5 +5%~+25%)
+  const ironWallTrait = getOfficerTraitLevel(o, 'iron_wall');
+  if (ironWallTrait > 0) {
+    rate += [0, 0.05, 0.10, 0.15, 0.20, 0.25][ironWallTrait] ?? 0;
+  }
   if (u === 'ganglie') return 1.0; // 必反
   if (u === 'elai') rate += 0.30;
   if (u === 'longdan') rate += 0.20;
@@ -368,6 +402,11 @@ export function computeCounterCoeff(ctx: CounterContext): number {
   coeff += skillLevel(o, 'hold') * 0.05;
   const fm = formationModsResolved(ctx.formation);
   coeff += fm.counterCoeff;
+  // 铁壁特性反击伤害加成 (docs/04 §26.3: Lv1~5 +3%~+15%)
+  const ironWallTrait = getOfficerTraitLevel(o, 'iron_wall');
+  if (ironWallTrait > 0) {
+    coeff += [0, 0.03, 0.06, 0.09, 0.12, 0.15][ironWallTrait] ?? 0;
+  }
   if (u === 'ganglie') coeff = 1.0; // 取代 0.6
   if (u === 'elai') coeff = 1.2;
   if (u === 'longdan') coeff = 0.8;
@@ -411,6 +450,24 @@ export function computeChainRate(ctx: ChainContext): number {
     rate += skillLevel(o, 'forcedMarch') * (ctx.movedThisTurn ? 3 : 0);
   }
   if (ctx.isFirstRound) rate += skillLevel(o, 'raid') * 10;
+
+  // 特性连击率加成 (docs/04 §26.3)
+  const continuousStrikeTrait = getOfficerTraitLevel(o, 'continuous_strike');
+  if (continuousStrikeTrait > 0) {
+    rate += [0, 5, 10, 15, 20, 25][continuousStrikeTrait] ?? 0;
+  }
+  const cavalryCombatTrait = getOfficerTraitLevel(o, 'cavalry_combat');
+  if (cavalryCombatTrait > 0 && (ctx.unitType === 'lightCavalry' || ctx.unitType === 'heavyCavalry' || ctx.unitType === 'horseArcher')) {
+    rate += [0, 5, 8, 12, 16, 20][cavalryCombatTrait] ?? 0;
+  }
+  const dashTrait = getOfficerTraitLevel(o, 'dash');
+  if (dashTrait > 0 && ctx.isCharging) {
+    rate += [0, 10, 18, 25, 32, 40][dashTrait] ?? 0;
+  }
+  const raidTrait = getOfficerTraitLevel(o, 'raid');
+  if (raidTrait > 0 && ctx.isFirstRound) {
+    rate += [0, 15, 20, 30, 40, 50][raidTrait] ?? 0;
+  }
 
   // 专属 (§6.4.3)
   if (u === 'wushuang') rate += 25;

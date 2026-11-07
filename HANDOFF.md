@@ -9,12 +9,46 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 457**（P5-13 生产构建 + P5-12 性能：`pnpm build` 三包全绿、client 410 modules；`TopBar` 资源汇总与 `LeftPanel` 己方城池列表 `useMemo`（D-0B-3）；client 74/74） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-3 已清，P5-13 完成 |
-| 代码最新 | Session 457 TopBar/LeftPanel 记忆化、Vite react/konva 分包；生产构建验证；工作树待提交 |
-| 文档最新 | **Session 457 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 457 已交付**；P5-13 完成、P5-12 推进；后续方向：P5-15 武将特性、D-0B-12 水攻/伏兵、0-B 闸门实测 |
-| 下一步 | ①**P5-15 武将特性 + 属性天花板**（42×5 特性消费）；②**D-0B-12 水攻/伏兵服务端**；③**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；④P5-12 数据懒加载/worker 分包 |
+| 会话 | **Session 458**（P5-15 武将特性与属性天花板计算引擎全栈实装：42×5 项特性全量真源、天花板门禁、服务与 Worker 双向对齐、战斗暴击/反击/连击消费、OfficerDetail UI 分面；`verify-s458-traits-and-ceiling` 20/20） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-3 已清，P5-13/P5-15 完成 |
+| 代码最新 | Session 458 traits.ts / crit.ts / OfficerDetail / game.worker / gameService 全栈实装与验证完成 |
+| 文档最新 | **Session 458 双写**（`docs/10-progress.md` 日志 + `docs/09` + `docs/12` + `docs/35` + 本文件双写同步） |
+| 本交接用途 | **Session 458 已交付**；P5-15 完成；后续方向：D-0B-12 水攻/伏兵服务端、P5-12 数据懒加载/worker 分包、0-B 闸门实测 |
+| 下一步 | ①**D-0B-12 水攻/伏兵服务端**（清偿 S10 最后两项战术计谋：水攻冲溃/减速与伏兵出伏判定）；②**P5-12 数据懒加载与 Worker 分包**（消除 500KB 告警）；③**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑） |
+
+### Session 458 交接要点
+
+- **P5-15 武将特性全量真源（`shared/traits.ts`）**：
+  1. 完整定义 42 项特性定义表（`TRAITS` 与 `TRAIT_MAP`），涵盖五大类别：战略（8 项·统率）、战术（9 项·智谋）、战斗（10 项·武力）、内政（9 项·政治）、人格（6 项·魅力）。
+  2. 每项特性包含 ID、名称、类别、关联属性、概述及 Lv1~Lv5 五级精确数值描述（遵循 `04` §26.3）。
+- **属性天花板与有效属性引擎**：
+  1. `getEffectiveStat(officer, attribute)`：裸属性 + 天花板断层隐藏加成（吕布武力+50/诸葛亮智谋+20/曹操统率+15/荀彧政治+10/刘备魅力+5）+ 功绩属性加成 + 装备加成，硬上限 255。
+  2. `getTraitRequiredStat(level, attribute)`：Lv1 0 / Lv2 60 / Lv3 80 / Lv4 90 / Lv5 97（武力）或 99（其余维）（`30` §5.3）。
+  3. `getTraitCeilingLevel(effectiveStat, attribute)`：根据有效属性计算最高可学等级，严格限制超限加点。
+- **服务层与离线 Worker 双向对齐**：
+  1. `server/src/services/game.ts` 与 `client/src/workers/game.worker.ts` 的 `upgradeTrait` 全面对齐：合法性校验、有效属性与天花板等级门槛判定、特性点扣减与错误拦截。
+  2. `resetSkillTree` 完整返还特性点并重置 `traitLevels`。
+  3. `scripts/verify-s416-worker-parity.mjs` 5/5 全绿通过。
+- **战斗数值消费（`server/src/battle/crit.ts`）**：
+  1. 暴击率：弓术（弓弩 +5%~+20%）、督战（士气≥80 +3%~+10%）、骑战（骑兵 +5%~+20%）、水战（水面 +5%~+20%）、夜战（夜间 +5%~+20%）、先登（攻城 +10%~+40%）。
+  2. 暴击倍率：刚力（暴伤 +10%~+40% 乘区）。
+  3. 反击与反击伤害：铁壁（反击率 +5%~+25%、反击伤害 +3%~+15%）；沉着（Lv3 起混乱豁免反击）。
+  4. 连击率：连战（+5%~+25%）、骑战（骑兵 +5%~+20%）、猛进（冲锋 +10%~+40%）、奇袭（首回合 +15%~+50%）。
+- **客户端 UI 界面（`client/src/components/officer/OfficerDetail.tsx`）**：
+  1. `SkillsTab` 升级为「技能树」与「武将特性」双面板，特性分面支持 [全部/战略/战术/战斗/内政/人格] 分类切换。
+  2. 每一特性展示名称、关联属性、当前等级、天花板等级上限与武将有效属性、当前级/下一级效果。
+  3. 提供可升级「+1点」、满级状态、天花板属性未达标提示及点数不足状态。
+- **全仓验证全绿**：
+  - `pnpm verify-s458-traits-and-ceiling`：**20/20** 全绿；
+  - `shared/traits.test.ts`：**10/10** 全绿；
+  - `turn-golden.test.ts`：**3/3** 严格匹配零漂移；
+  - `pnpm typecheck` / `pnpm lint` 全仓 0 错误；
+  - `pnpm validate-data` / `pnpm verify-compliance` 848 文件全部通过；
+  - `pnpm build` 三包全绿成功。
+- **边界（诚实）**：
+  - 本会话实装特性定义、天花板引擎、加点门禁、UI 分面及战斗暴击/反击/连击消费；
+  - 内政类特性（能吏/商才/屯田/教化）开发与月结消费逻辑预留 traitLevels 接口，月结自动战保持既有稳定。
+- **文档**：`docs/09` P5-15、`docs/10-progress.md` checklist + 本日志、`docs/12` S25、`docs/35` 进度、本文件双写同步。
 
 ### Session 457 交接要点
 

@@ -2184,6 +2184,10 @@ import {
   relationState,
   skillPointsForMerit,
   traitPointsForMerit,
+  TRAIT_MAP,
+  getEffectiveStat,
+  getTraitCeilingLevel,
+  getTraitRequiredStat,
 } from '@leh/shared';
 import type { StaticRelation, OfficerRelation, SkillTreeDef } from '@leh/shared';
 
@@ -2362,9 +2366,23 @@ export function upgradeTrait(officerId: number, traitId: string): ReturnType<typ
     const state = getGame();
     const officer = state.officers[officerId];
     if (!officer) throw new Error('武将不存在');
-    const traitLevels = officer.traitLevels ?? {};
+    const traitDef = TRAIT_MAP[traitId];
+    if (!traitDef) throw new Error(`特性不存在: ${traitId}`);
+
+    const traitLevels = { ...(officer.traitLevels ?? {}) };
     const currentLevel = traitLevels[traitId] ?? 0;
     if (currentLevel >= 5) throw new Error('已达最高等级');
+
+    const effective = getEffectiveStat(officer, traitDef.attribute);
+    const maxLevel = getTraitCeilingLevel(effective, traitDef.attribute);
+    if (currentLevel >= maxLevel) {
+      const nextLevel = currentLevel + 1;
+      const reqStat = getTraitRequiredStat(nextLevel, traitDef.attribute);
+      throw new Error(
+        `对应属性未达天花板（升至 Lv${nextLevel} 需 ${traitDef.name} 关联属性 ${traitDef.attribute} 达到 ${reqStat}，当前有效值 ${effective}）`,
+      );
+    }
+
     const spent = officer.traitPointsSpent ?? 0;
     const total = traitPointsForMerit(officer.meritLevel ?? 1);
     if (spent + 1 > total) throw new Error('特性点不足');

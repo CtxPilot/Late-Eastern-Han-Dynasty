@@ -119,7 +119,8 @@
     "verify-s51-craft-research-and-sanitation": "tsx src/scripts/verify-s51-craft-research-and-sanitation.ts",
     "verify-s52-relationship-network-depth": "tsx src/scripts/verify-s52-relationship-network-depth.ts",
     "verify-s455-peerless-ghost": "tsx src/scripts/verify-s455-peerless-ghost.ts",
-    "verify-s456-troop-level": "tsx src/scripts/verify-s456-troop-level.ts"
+    "verify-s456-troop-level": "tsx src/scripts/verify-s456-troop-level.ts",
+    "verify-s458-traits-and-ceiling": "tsx src/scripts/verify-s458-traits-and-ceiling.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",

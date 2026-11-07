@@ -27,6 +27,11 @@ import {
   meritNextThreshold,
   meritTitle,
   meritTroopBonus,
+  TRAITS,
+  TraitCategory,
+  getEffectiveStat,
+  getTraitCeilingLevel,
+  getTraitRequiredStat,
   type GameState,
   type Officer,
   type OfficerRelation,
@@ -986,6 +991,7 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
   const [skillState, setSkillState] = useState<api.OfficerSkillState | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTree, setSelectedTree] = useState<string>('strategy');
+  const [selectedTraitCat, setSelectedTraitCat] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     setLoading(true);
@@ -1010,6 +1016,15 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : '加点失败');
+    }
+  };
+  const handleUpgradeTrait = async (traitId: string) => {
+    try {
+      const next = await gameApi.upgradeTrait(officer.id, traitId);
+      setSkillState(next);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '特性加点失败');
     }
   };
   const handleReset = async () => {
@@ -1067,12 +1082,122 @@ function SkillsTab({ officer, game: _game }: { officer: Officer; game: GameState
         )}
       </section>
       <section>
-        <h3 className="mb-2 text-xs tracking-widest text-amber-500">特性点</h3>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-stone-300">剩余 <strong className="text-amber-300">{traitRemaining}</strong> / {traitTotal}</span>
-          <span className="text-stone-500">已用 {traitUsed}</span>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs tracking-widest text-amber-500">武将特性（42项被动天赋）</h3>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-stone-300">
+              剩余 <strong className="text-amber-300">{traitRemaining}</strong> / {traitTotal}
+            </span>
+            <span className="text-stone-500">已用 {traitUsed}</span>
+          </div>
         </div>
-        <p className="text-xs text-stone-600 mt-1">特性（被动天赋）点数化：每 5 级 merit 获得 1 特性点，用于购买特性等级。特性全量 42 项待 0-B 实装。</p>
+        <div className="flex gap-1 mb-2">
+          {[
+            { id: 'all', label: '全部' },
+            { id: TraitCategory.STRATEGY, label: '战略(统)' },
+            { id: TraitCategory.TACTICS, label: '战术(智)' },
+            { id: TraitCategory.COMBAT, label: '战斗(武)' },
+            { id: TraitCategory.CIVIL, label: '内政(政)' },
+            { id: TraitCategory.PERSONALITY, label: '人格(魅)' },
+          ].map((cat) => (
+            <InkButton
+              key={cat.id}
+              type="button"
+              onClick={() => setSelectedTraitCat(cat.id)}
+              className={`px-2 py-0.5 rounded text-xs border ${
+                selectedTraitCat === cat.id
+                  ? 'border-amber-600 bg-amber-950/40 text-amber-100'
+                  : 'border-stone-800 text-stone-400'
+              }`}
+            >
+              {cat.label}
+            </InkButton>
+          ))}
+        </div>
+        <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+          {TRAITS.filter((t) => selectedTraitCat === 'all' || t.category === selectedTraitCat).map((t) => {
+            const lv = skillState.traitLevels?.[t.id] ?? 0;
+            const effective = getEffectiveStat(officer, t.attribute);
+            const maxLevel = getTraitCeilingLevel(effective, t.attribute);
+            const maxed = lv >= 5;
+            const ceilingHit = lv >= maxLevel && !maxed;
+            const canUp = !maxed && !ceilingHit && traitRemaining >= 1;
+            const nextStatReq = lv < 5 ? getTraitRequiredStat(lv + 1, t.attribute) : 0;
+            const attrLabel =
+              {
+                leadership: '统率',
+                intelligence: '智谋',
+                war: '武力',
+                politics: '政治',
+                charisma: '魅力',
+              }[t.attribute] ?? t.attribute;
+
+            return (
+              <div
+                key={t.id}
+                className={`rounded border p-2 text-xs ${
+                  lv > 0
+                    ? 'border-amber-800/60 bg-amber-950/20'
+                    : 'border-stone-800 bg-stone-900/40'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-stone-200">{t.name}</span>
+                    <span className="text-[10px] px-1 py-0.5 rounded border border-stone-700 text-stone-400">
+                      {attrLabel}
+                    </span>
+                    <span className={`text-xs ${lv > 0 ? 'text-amber-400 font-bold' : 'text-stone-500'}`}>
+                      Lv{lv}/5
+                    </span>
+                    <span className="text-[10px] text-stone-500">
+                      天花板: Lv{maxLevel} ({attrLabel}有效 {effective})
+                    </span>
+                  </div>
+                  <div>
+                    {canUp && (
+                      <InkButton
+                        type="button"
+                        onClick={() => handleUpgradeTrait(t.id)}
+                        className="px-2 py-0.5 rounded border border-amber-800 text-amber-200 text-xs hover:bg-amber-900/30"
+                      >
+                        +1 点
+                      </InkButton>
+                    )}
+                    {maxed && <span className="text-emerald-500 text-xs">已满级</span>}
+                    {ceilingHit && (
+                      <span className="text-stone-500 text-[10px]">
+                        受限 (需{attrLabel}≥{nextStatReq})
+                      </span>
+                    )}
+                    {!maxed && !ceilingHit && traitRemaining === 0 && (
+                      <span className="text-stone-600 text-[10px]">点数不足</span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-1 text-stone-400 text-[11px] leading-relaxed">
+                  {lv > 0 ? (
+                    <div>
+                      <span className="text-amber-300">当前：</span>
+                      {t.levels[lv - 1]}
+                    </div>
+                  ) : (
+                    <div className="text-stone-500">
+                      <span>效果：</span>
+                      {t.description}
+                    </div>
+                  )}
+                  {lv > 0 && lv < 5 && (
+                    <div className="text-stone-500 mt-0.5">
+                      <span>下级：</span>
+                      {t.levels[lv]}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
     </div>
   );

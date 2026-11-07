@@ -78,6 +78,7 @@
     "tech-research.ts",
     "peerless.ts",
     "troop-level.ts",
-    "item-sets.ts"
+    "item-sets.ts",
+    "traits.ts"
   ]
 }

@@ -76,3 +76,4 @@ export * from './delegation.js';
 export * from './types/delegation.js';
 export * from './peerless.js';
 export * from './troop-level.js';
+export * from './traits.js';
