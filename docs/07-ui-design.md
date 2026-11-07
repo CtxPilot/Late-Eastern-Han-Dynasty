@@ -1012,7 +1012,7 @@ interface SpecialAppearance {
 
 ### §11.4 吕布鬼神降临（纯前端演出，服务端后置）
 
-**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果后置 D-0B-8）：
+**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果已于 Session 455 实装，见 `docs/08-data-dictionary.md` §三十二）：
 
 - **Verlet 雉翎**：3-4 节点链 Verlet 积分（每节点 {x,y,prevX,prevY}，每帧 `newX = x + (x-prevX)*damping + gravity` + 距离约束迭代 3 次 + 根节点跟随吕布头部），随移动速度/方向产生滞后摆动，挥戟时甩出弧线。零美术，纯代码。挂在 `HeroCharacter.draw()` 内，仅吕布及少数猛将（关羽/张飞/赵云）有雉翎。
 - **赤兔马烈焰足**：马蹄位置每帧生成暗红粒子（复用粒子系统）。
@@ -1020,6 +1020,8 @@ interface SpecialAppearance {
 - **方天画戟刀光**：贝塞尔曲线 + `ctx.filter='blur()'`（复用 drawSlash 逻辑）。
 - **鬼神觉醒**：前端自管 rage（rage≥100 或兵力<30% 触发），与服务端战斗公式解耦，觉醒只改外观不改数值。触发后 `shadingMode='ghost'` + `scale=1.6` + `auraColor=#6a1b9a` + 画布 `saturate(0.4)` 变暗 + 紫黑粒子。
 - **单挑登场杀**：DuelStage 扩展，斜切立绘滑入 + 红光眼粒子 + 台词框（"布在此，反臣贼子，谁敢近前？！"）。心理震慑 debuff（敌方卡牌成功率-20%）服务端后置 D-0B-8。
+
+**Session 455 服务端实装 + HUD 标识**：无双乱舞/心理震慑/鬼神已按 `docs/08` §三十二在服务端结算；六角战斗 `BattleView` 的 `SideCard` 新增 `battle-peerless-badge`「无双」与 `battle-ghost-badge`「鬼神」只读徽标（`isPeerlessOfficer` / `isPeerlessGhostForm` 同源判定），战报行同步输出〔无双乱舞〕〔鬼神〕标签。
 
 ### §11.5 计谋三级联动视觉（归入 S20 W3 子项）
 
@@ -1869,4 +1871,6 @@ HC-P1-6 仓库化 Headless 固化 1440×900 验收：推进12个月后，朝廷�
 Session 303 浏览器验收：`scripts/verify-fm4-report-ui.mjs` 通过 CDP 真实鼠标事件覆盖“选择我军→变阵→结束行动→移动→攻击”，并读取当前可用阵型以适配不同主将精通；验收要求面板同时出现变阵解释与攻击阵型贡献，且 console errors 为 0。
 
 Session 308 浏览器验收：`scripts/verify-s10-enemy-duel-ui.mjs` 通过 CDP 真实进入六角战场，推进我军至敌军相邻格并点击“结束行动（敌军自动出手）”；检测到敌军主动单挑后，确认既有 `DuelPanel` 的倾向摘要、跳过按钮和结算态均可用，console errors 为 0。移动范围偶发刷新竞态仅由验收脚本调用同一权威移动接口回退，不改变生产 UI 或战斗规则。
+
+**Session 456 新增只读标识**：六角 HUD `battle-strategem` 展示当前计谋（火计/水攻/伏兵/无）；`SideCard` 展示 `battle-troop-level`「LvN 名称」；`CampaignPanel` 我军 Army 行展示 `LvN 名称`。均为只读投影，不在客户端重算战斗数值。
 - 已有项目时禁止再启动另一项；资源或人员导致暂停时由月结算权威更新状态。

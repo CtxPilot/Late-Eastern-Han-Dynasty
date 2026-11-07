@@ -1,3 +1,52 @@
+## 2026-11-07 — Session 456 · D-0B-11 计谋状态字段 + P5-14 部队等级 0-A 战斗投影
+
+- Phase：**S10/S05 战斗深化**；清偿 D-0B-11，并推进 Phase 5 P5-14 部队等级 0-A 切片；不改战役 RNG/金样。
+- **D-0B-11（计谋状态字段）**：
+  1. `shared/types/battle.ts` 新增 `BattleState.activeStrategem?: 'none'|'fire'|'water'|'ambush'`；`game-state-battle-schema.ts` 严格纳管可选枚举。
+  2. `castFireTactic` 成功路径写入 `activeStrategem:'fire'`，失败不改写；`BattleView` HUD 新增 `battle-strategem` 只读展示。
+  3. `verify-fire-tactic` 新增成功/失败两断言（4 用例全通）。
+- **P5-14 部队等级 0-A**：
+  1. `shared/troop-level.ts`：七级阈值 `[0,100,300,600,1000,1800,3000]`、名称「新卒/训练兵/老兵/劲旅/精锐/百战/铁军」、攻/防 +0~30%、暴击 Lv4+2/Lv5+4 百分点、士气上限 100~130；`troopLevelFor`/`troopLevelInfo`/`troopLevelLabel`/`troopXpAfterWipe`/`dilutedTroopXp`；`shared/troop-level.test.ts` 4 项。
+  2. `BattleUnit.experience?` 从 `CampaignArmy.experience` 在 `unitsFromArmy` 投影；Schema 可选非负，旧档缺省 0。
+  3. `calcDamage` 新增 `troopExperience?`，攻/防按等级百分比乘算；玩家 `attackUnit`、`castAbility`、敌军 `doAttack`/`tryAbilityTactic`、追击路径全部传入；暴击率追加等级百分点。
+  4. `BattleView` SideCard `battle-troop-level` 与 `CampaignPanel` 我军 Army 行展示 `LvN 名称`。
+  5. **战果经验写回**：`troopBattleXpGain`/`troopXpAfterBattle`（参战 +20、击破 +30/队、击斩主将 +50、以少胜多 ×1.3、胜仗 ×1.5、统率 ×(1+统/200)、全灭覆盖）；`march.settleBattle` 对仍在 `campaignArmies` 的真实 Army 写回，零 RNG。
+  6. **训练与建军**：`City.troopsExperience?`（Schema 可选）训练 +5/次、军屯 +2、封顶 3000；征兵补员按 `dilutedTroopXp` 稀释；`startCampaignForFaction` 建军时投影为 Army 经验。
+  7. **Lv6 士气下限**：`troopMoraleFloor`——Lv6「百战」起战斗内士气降低后不低于 50，玩家/敌军普攻、战法、火计、追击与单挑战后统一消费。
+- **验证全绿**：
+  - `pnpm verify-s456-troop-level`：**22/22**（含六角战胜利写回经验、训练驻军经验、补员稀释、Lv6 士气下限）；
+  - `pnpm verify-s455-peerless-ghost`：**20/20**（回归）；
+  - shared **57 套件 505 项**；server turn-golden **3/3**；
+  - 回归：tactical-ai 86、save-battle 62、campaign 71、s433 41、s434 65、fire-tactic 4、verify-crit、cavalry-charge 29、battle-rng 5、fm4 14、tactical-retreat 18、worker parity 5/5；
+  - 三端 typecheck / lint / validate-data / compliance 见收尾。
+- **边界（诚实）**：P5-14 已完成战斗投影、六角战战果经验、训练经验/补员稀释与 Lv6 士气下限；Lv7 重建保留未接入；击斩/俘获主将经验暂记 0；士气上限为展示投影（`BattleUnit.morale` 仍夹紧 0~100）；战役自动战继续使用既有 `expLevelCoeff`，未改公式；水攻/伏兵引擎仍待 D-0B-12。
+- **文档**：`docs/08` §三十三、`docs/05` §二十五 + §七状态、`docs/04` §二十五、`docs/07` 六角 HUD、`docs/09` P5-14、`docs/12` S05/S10 与 D-0B-11、`docs/35` 进度、`docs/10-progress.md`  checklist + 本日志、`HANDOFF.md` 双写。
+
+## 2026-11-07 — Session 455 · D-0B-8 吕布服务端无双乱舞 / 心理震慑 / 鬼神实装
+
+- Phase：**S10 战斗深化 / 0-B 前置技术债 D-0B-8 清偿**；继续同一大系统，不扩 0-B、不新增 `BattleState` 持久字段与 RNG 消费点。
+- **背景**：吕布「无双」此前只有暴击率 +20%、连击率 +25% 不衰减与单挑倍率；D-0B-8 登记的「服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血）」长期后置。
+- **实装内容**：
+  1. **共享数值真源** `shared/peerless.ts`：`isPeerlessOfficer`（id=5 或 `uniqueSkill='wushuang'`）、`isPeerlessGhostForm`（兵力 ≤30%）、`peerlessSplashDamage`（35%，至少 1）、`peerlessLifestealHeal`（20%）、`isWithinPeerlessIntimidate`（2 格）；常量全部导出，`shared/peerless.test.ts` 覆盖。
+  2. **伤害管线**：`server/src/battle/damage.ts` `DamageInput.defenseMultiplier?`（未传=1）——鬼神形态守方防御 ×2。
+  3. **暴击/反击管线**：`server/src/battle/crit.ts` 新增 `defenderCounterRateMod?`（百分点，可负）与 `defenderCounterDamageMult?`——心理震慑下守方反击率 −10 百分点、反击伤害 ×0.9。
+  4. **玩家普攻** `engine/battle.ts` `attackUnit`：无双乱舞对首要目标相邻敌军溅射 35%（士气 −1）、鬼神吸血 20%（不超满编）、震慑攻击伤害 −10%；战报〔无双乱舞〕〔鬼神〕与波及/吸血文案。
+  5. **敌军 AI** `battle/simpleAi.ts` `doAttack`：同源接入溅射/吸血/震慑/鬼神防御；`tryAbilityTactic` 战法伤害同吃震慑与鬼神防御；玩家 `castAbility` 守方鬼神防御同源。
+  6. **UI**：`BattleView` `SideCard` 新增 `battle-peerless-badge`「无双」与 `battle-ghost-badge`「鬼神」只读徽标（共享判定同源）。
+- **验证全绿**：
+  - `pnpm verify-s455-peerless-ghost`：**20/20**（纯函数、玩家溅射/吸血、鬼神减伤、震慑 −10%、AI 溅射同源、非吕布零变化）；
+  - `pnpm --filter @leh/shared test`：**56 套件 501 项**（新增 peerless 6 项）；
+  - `pnpm --filter @leh/server test`：turn-golden **3/3** 零漂移；
+  - 回归：verify-crit 全通、verify-cavalry-charge **29/29**、verify-tactical-ai **86/86**、verify-save-battle **62/62**、verify-battle-rng **5/5**、verify-fm4 **14/14**、verify-tactical-retreat **18/18**；
+  - 三端 typecheck / lint / validate-data / compliance 见收尾。
+- **边界（诚实）**：
+  - 无双乱舞仅普攻路径；战法/AOE/火计/追击不追加溅射；
+  - 鬼神防御覆盖普攻与兵种战法 `calcDamage`，火计与追击的固定/百分比伤害不翻倍；
+  - 心理震慑为攻击瞬间格距判定，不新增持久光环字段；
+  - 单挑「敌方卡牌成功率 −20%」仍属前端口径，未接入单挑引擎；
+  - 非吕布对局 RNG 顺序、伤害与战报逐字节不变。
+- **文档**：`docs/08` §三十二（数字真源）、`docs/05` §二十四（服务端规则与边界）+ §十九.4 状态更新、`docs/04` §26.7 实装注、`docs/07` §11.4 HUD 徽标、`docs/12` S10 行与 D-0B-8 行、`docs/35` 进度与 S10 表、本日志与 `HANDOFF.md` 双写。
+
 ## 2026-11-01 — Session 454 · S24 关系网深度：义兄弟/师徒/宿敌闭环全栈实装
 
 - Phase：**S24 关系网系统深化**；依据立项方案 `docs/52-s24-relationship-network-depth-proposal.md`。
@@ -2037,7 +2086,7 @@
 | P5-11 | 平衡性测试 | [ ] | P5-01~P5-06 |
 | P5-12 | 性能优化 | [ ] | P5-09 |
 | P5-13 | 打包构建 | [ ] | P0-05 |
-| P5-14 | 部队等级系统 | [ ] | P2-04, P3-11 |
+| P5-14 | 部队等级系统 | [~] Session 456 0-A 战斗投影（七级表/攻防暴击/UI）；经验获取与训练写回后置 | P2-04, P3-11 |
 | P5-15 | 武将特性 + 属性天花板计算引擎 | [ ] | P2-06, P0B-06 |
 
 ---

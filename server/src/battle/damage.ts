@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, type TerrainType, type UnitType } from '@leh/shared';
+import { Weather, troopLevelInfo, type TerrainType, type UnitType } from '@leh/shared';
 import { TERRAIN_TABLE } from './terrain.js';
 
 export interface DamageInput {
@@ -25,6 +25,16 @@ export interface DamageInput {
    */
   formationAtk?: number;
   formationDef?: number;
+  /**
+   * D-0B-8（Session 455）：守方防御总倍率（未传按 1）。
+   * 目前仅吕布鬼神形态（兵力 ≤30%）传 2，确定性、不消费 RNG。
+   */
+  defenseMultiplier?: number;
+  /**
+   * P5-14（Session 456）：部队经验（0~3000），用于等级攻/防百分比投影。
+   * 未传按 0（新卒，0% 修正），旧调用逐字节不变。
+   */
+  troopExperience?: number;
 }
 
 /** 兵种克制系数：攻方克制守方 → 1.3；被克制 → 0.7；互无关系 → 1.0 */
@@ -46,8 +56,13 @@ export function calcDamage(
   defender: DamageInput,
   rng: () => number,
 ): number {
-  const baseAttack = attacker.unitAttack + attacker.officerWar / 10 + (attacker.formationAtk ?? 0);
-  const baseDefense = defender.unitDefense + defender.officerLeadership / 10 + (defender.armorDefense ?? 0) + (defender.formationDef ?? 0);
+  const atkLevel = troopLevelInfo(attacker.troopExperience ?? 0);
+  const defLevel = troopLevelInfo(defender.troopExperience ?? 0);
+  const baseAttack = attacker.unitAttack * (1 + atkLevel.attackPct / 100)
+    + attacker.officerWar / 10 + (attacker.formationAtk ?? 0);
+  const baseDefense = (defender.unitDefense * (1 + defLevel.defensePct / 100)
+    + defender.officerLeadership / 10 + (defender.armorDefense ?? 0) + (defender.formationDef ?? 0))
+    * (defender.defenseMultiplier ?? 1);
 
   const troopFactor = 0.3 + 0.7 * (attacker.troops / Math.max(1, attacker.maxTroops));
   const moraleFactor = 0.6 + 0.4 * (attacker.morale / 100);

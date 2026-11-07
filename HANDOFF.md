@@ -9,12 +9,41 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 454**（S24 关系网深度全栈实装：立项 `docs/52-s24-relationship-network-depth-proposal.md`；`GameState.runtimeRelations` 运行时关系；义结金兰（亲和≥80/上限2/耗金200/亲和锁100）、拜师授业（属性优势/收徒上限/耗金100/亲和锁90）、年度授业点拨（确定性最大差距项、每年每对1点）、战阵血仇（义兄弟/师徒/父子自动结仇、亲和−100）、血仇不仕登用硬门禁（零RNG/零扣金）、宿敌同城季度忠诚−10、六角义兄弟+5%伤害/+5%暴击与宿敌+10%暴击/+10%反击、同袍死战；端点二 + Worker 镜像 + OfficerDetail `BondTab`；专项门禁 `verify-s52-relationship-network-depth` 53/53、`verify-s52-relationship-network-ui` 7/7（console 0），金样 3/3 零漂移） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；S24 关系网深度闭环交付 |
-| 代码最新 | Session 454 关系网深度全栈实现、战斗羁绊、UI 缔结面与双专项验收脚本；工作树待提交 |
-| 文档最新 | **Session 454 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 454 已交付**；S24 关系网深度闭环已全栈交付并完成 53+7 专项验证与全仓回归；后续方向：0-B 闸门真人实测、新玩法切片 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；②**新玩法大系统规划与深化**（对照 `12-system-map.md` 选择一个大系统）；③S24 余项可选：同袍死战免疫混乱/动摇、被俘「义不降敌」、战法路径羁绊、AI 主动结义 |
+| 会话 | **Session 456**（D-0B-11 计谋状态字段 + P5-14 部队等级 0-A：`BattleState.activeStrategem` 火计写入 + HUD；`shared/troop-level.ts` 七级表、`BattleUnit.experience` 从 Army 投影、六角攻防/暴击等级修正、六角战战果经验写回、`City.troopsExperience` 训练经验/征兵补员稀释/建军投影、Lv6 士气下限、`BattleView`/`CampaignPanel` `LvN` 展示；`verify-s456-troop-level` 22/22） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11 已清，P5-14 0-A 战斗投影交付 |
+| 代码最新 | Session 456 troop-level 共享模块、六角伤害/暴击等级投影、BattleView/CampaignPanel 展示、activeStrategem 写入；工作树待提交 |
+| 文档最新 | **Session 456 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 456 已交付**；P5-14 0-A 与 D-0B-11 完成；后续方向：P5-14 经验经济（战果/训练/补员）、0-B 闸门真人实测、剩余 D-0B 债 |
+| 下一步 | ①**P5-14 后续切片**：战果经验结算、城市训练经验、补员稀释写回、Lv6/Lv7 特性；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③剩余 D-0B 债：D-0B-9 财政税收俸禄、D-0B-12 水攻/伏兵 |
+
+### Session 456 交接要点
+
+- **D-0B-11**：`BattleState.activeStrategem?`（none/fire/water/ambush）入类型与 Schema；火计成功写 `'fire'`、失败不改写；`BattleView` HUD `battle-strategem` 展示；`verify-fire-tactic` 增两断言。
+- **P5-14 0-A**：
+  1. `shared/troop-level.ts` 七级阈值/名称/攻防 0~30%/暴击 Lv4+2、Lv5+4/士气上限 100~130；`troopXpAfterWipe`、`dilutedTroopXp` 纯函数；shared 测试 4 项。
+  2. `BattleUnit.experience?` 由 `unitsFromArmy` 从 `CampaignArmy.experience` 投影；Schema 可选非负、旧档缺省 0。
+  3. `calcDamage` 新增 `troopExperience?`，攻/防按等级百分比；玩家/敌军普攻、战法与追击路径全传入；暴击率追加等级百分点。
+  4. UI：SideCard `battle-troop-level`、CampaignPanel Army 行 `LvN 名称`。
+  5. 战果经验：`troopBattleXpGain`/`troopXpAfterBattle` + `settleBattle` 写回真实 Army（参战/击破/以少胜多/胜仗/统率；全灭覆盖），零 RNG。
+  6. 训练与建军：`City.troopsExperience?` 训练 +5/次（军屯 +2，封顶 3000）；征兵补员按 `dilutedTroopXp` 稀释；建军投影为 Army 经验。
+  7. Lv6 士气下限：`troopMoraleFloor`，Lv6 起战斗内士气不低于 50。
+- **验证全绿**：`verify-s456-troop-level` **22/22**、`verify-s455-peerless-ghost` **20/20**、shared **57 套件 508 项**、server turn-golden **3/3**；回归 tactical-ai 86、save-battle 62、campaign 71、s433 41、s434 65、s45a 39、s45b 42、s46 23、s47 15、fire-tactic 4、verify-crit、cavalry-charge 29、battle-rng 5、fm4 14、tactical-retreat 18、worker parity 5/5；三端 typecheck/lint/validate-data/compliance 收尾全跑。
+- **边界（诚实）**：P5-14 已含战斗投影、六角战战果经验、训练经验、补员稀释与 Lv6 士气下限；Lv7 重建保留未接入；击斩/俘获主将经验暂记 0；士气上限仅展示（morale 仍夹 0~100）；战役自动战继续用既有 `expLevelCoeff`；水攻/伏兵仍待 D-0B-12。
+- **文档**：`docs/08` §三十三、`docs/05` §二十五/§七、`docs/04` §二十五、`docs/07` HUD、`docs/09` P5-14、`docs/12` S05/S10/D-0B-11、`docs/35` 进度、`docs/10-progress.md` Session 456 日志、本文件双写。
+
+### Session 455 交接要点
+
+- **目标与定位**：清偿 S10 登记的 D-0B-8「吕布服务端无双乱舞 + 心理震慑 + 鬼神数值效果」，把此前仅前端演出/单挑倍率的「无双」扩展为六角战场的完整服务端机制。
+- **核心实装**：
+  1. **共享真源** `shared/peerless.ts`：识别（id=5 或 `uniqueSkill='wushuang'`）、鬼神阈值（兵≤30%）、溅射（35%，至少 1）、吸血（20%）、震慑（2 格）与全部常量；`shared/peerless.test.ts` 6 项。
+  2. **伤害管线** `battle/damage.ts`：`DamageInput.defenseMultiplier?`，鬼神形态守方防御 ×2（未传=1，逐字节兼容）。
+  3. **暴击/反击管线** `battle/crit.ts`：`defenderCounterRateMod?`（百分点）与 `defenderCounterDamageMult?`，震慑下反击率 −10、反击伤害 ×0.9。
+  4. **玩家普攻** `engine/battle.ts` `attackUnit`：溅射、吸血、震慑、鬼神防御四链；战报〔无双乱舞〕〔鬼神〕与波及/吸血文案。
+  5. **敌军 AI** `battle/simpleAi.ts` `doAttack` 同源；`tryAbilityTactic` 与玩家 `castAbility` 的战法伤害同吃震慑/鬼神防御。
+  6. **UI**：`BattleView` `SideCard` 增加 `battle-peerless-badge`「无双」/`battle-ghost-badge`「鬼神」只读徽标。
+- **验证全绿**：`verify-s455-peerless-ghost` **20/20**；shared **56 套件 501 项**；server turn-golden **3/3**；回归 verify-crit、cavalry-charge 29、tactical-ai 86、save-battle 62、battle-rng 5、fm4 14、tactical-retreat 18；三端 typecheck/lint/validate-data/compliance 收尾全跑。
+- **边界（诚实）**：无双乱舞仅普攻；鬼神防御不覆盖火计/追击固定伤害；震慑为攻击瞬间格距判定、无持久光环字段；单挑「敌方卡牌成功率 −20%」未接入；非吕布对局零变化。
+- **文档**：`docs/08` §三十二、`docs/05` §二十四 + §十九.4、`docs/04` §26.7、`docs/07` §11.4、`docs/12` S10/D-0B-8、`docs/35` 进度与 S10 表、`docs/10-progress.md` Session 455 日志、本文件双写。
 
 ### Session 454 交接要点
 

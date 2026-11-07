@@ -39,6 +39,11 @@ export interface BattleUnit {
   hasActed: boolean;
   isRetreated: boolean;
   isDestroyed: boolean;
+  /**
+   * P5-14（Session 456）：部队经验快照（0~3000，Lv1~7）。
+   * 旧存档/演示单位缺省按 0（新卒）兼容；从 `CampaignArmy.experience` 投影。
+   */
+  experience?: number;
   /** S24（Session 454）：同袍死战激燃已触发（义兄弟同场阵亡后一次性标记；旧档缺省）。 */
   swornFury?: boolean;
   statusEffects: BattleStatusEffect[];
@@ -110,6 +115,11 @@ export interface BattleState {
   /** 当前回合已消耗的六角战术点；变阵后主将行动结束。 */
   tacticalPointsUsed?: number;
   message: string;
+  /**
+   * D-0B-11（Session 456）：当前战场计谋状态，供前端三级演出订阅。
+   * 旧存档缺省视为 'none'；当前仅火计成功写入 'fire'，水攻/伏兵待后续切片。
+   */
+  activeStrategem?: 'none' | 'fire' | 'water' | 'ambush';
   /** Active duel (S10 §8); while set, battle is paused until duel resolves. */
   duel?: DuelState | null;
   /**

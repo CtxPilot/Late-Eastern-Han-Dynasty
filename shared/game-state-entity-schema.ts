@@ -189,6 +189,7 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     courtNetworkOpportunities: z.number().int().nonnegative(),
     troops: z.number().int().nonnegative(),
     troopsMorale: z.number().min(0).max(100),
+    troopsExperience: z.number().nonnegative().optional(),
     officers: z.array(PositiveIdSchema),
     ruler: NullablePositiveIdSchema,
     developmentProgress: z

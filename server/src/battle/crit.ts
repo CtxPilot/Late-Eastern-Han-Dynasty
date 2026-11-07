@@ -556,6 +556,13 @@ export interface ResolveAttackOpts {
   attackerSurrounded?: boolean;
   /** 六角派生态势：守方被协同包围时，反击暴击规则生效。 */
   defenderSurrounded?: boolean;
+  /**
+   * D-0B-8（Session 455）：守方反击率修正（百分点，可负）。
+   * 吕布心理震慑下守方（敌军）反击率 −10。
+   */
+  defenderCounterRateMod?: number;
+  /** D-0B-8：守方反击伤害倍率（未传按 1；吕布心理震慑下 ×0.9）。 */
+  defenderCounterDamageMult?: number;
   rng: CritRng;
 }
 
@@ -615,7 +622,8 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
     if (canCounter(counterCtx)) {
       const counterRate = clamp(
         computeCounterRate(counterCtx, critRate) +
-          (opts.defenderRelationCounterBonus ?? 0) / 100,
+          (opts.defenderRelationCounterBonus ?? 0) / 100 +
+          (opts.defenderCounterRateMod ?? 0) / 100,
         0,
         1,
       );
@@ -625,7 +633,7 @@ export function resolveAttack(opts: ResolveAttackOpts): AttackResult {
         const counterCoeff = computeCounterCoeff(counterCtx);
         // 用守方作为攻方计算一次伤害(近似)
         const counterBase = estimateDamage(defender, attacker, matchup > 0 ? 1 / matchup : 1, opts.defenderTerrain, opts.attackerTerrain);
-        counterDamage = Math.max(1, Math.round(counterBase * counterCoeff));
+        counterDamage = Math.max(1, Math.round(counterBase * counterCoeff * (opts.defenderCounterDamageMult ?? 1)));
         // S24：义兄弟并肩/同袍死战对反击伤害的加成（百分点，确定性）。
         const counterPct = opts.defenderRelationDamagePct ?? 0;
         if (counterPct > 0) {

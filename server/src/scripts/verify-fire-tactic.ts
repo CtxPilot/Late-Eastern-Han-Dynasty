@@ -196,12 +196,14 @@ function assert(c: unknown, m: string): asserts c {
   assert(atk.hasActed, '应已行动');
   assert(def.troopCount < 5000, '应造成伤害');
   assert(next.message.includes('火计'), `消息应含火计: ${next.message}`);
+  assert(next.activeStrategem === 'fire', '火计成功写入 activeStrategem=fire（D-0B-11）');
 }
 
 // 失手
 {
   const next = castFireTactic(baseBattle(), 'atk-1', 'def-1', baseState(), () => 0.99);
   assert(next.message.includes('失败'), next.message);
+  assert(next.activeStrategem == null, '火计失败不写入 activeStrategem');
   assert(next.units.find((u) => u.id === 'atk-1')!.energy === 70, '失败也耗气');
 }
 

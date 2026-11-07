@@ -10,11 +10,14 @@
 import {
   OfficerStatus,
   FAMILY_CAPTURE_MORALE_HIT,
+  TROOP_XP_OUTNUMBERED_RATIO,
   canTravelMacroAdjacent,
   buildPendingFamilyTreatment,
   citiesShockedByFamilyCapture,
   playerCitiesAdjacentTo,
+  troopXpAfterBattle,
   type BattleState,
+  type CampaignArmy,
   type City,
   type GameState,
 } from '@leh/shared';
@@ -207,6 +210,45 @@ function recomputeFactionCities(
 /**
  * 战斗结束 / 撤退时写入大地图：胜则占城，否则残兵回流
  */
+/**
+ * P5-14（Session 456）：六角战后的部队经验结算（§25.2）。
+ * 仅更新仍在 `campaignArmies` 中的真实 Army；城驻军合成单位（`garrison-*`）不参与。
+ * 零 RNG：战果、击破、以少胜多、统率均来自 BattleState 快照与武将属性。
+ */
+function applyHexBattleExperience(state: GameState, battle: BattleState): CampaignArmy[] {
+  const groups = new Map<string, { side: 'attacker' | 'defender'; units: BattleState['units'] }>();
+  for (const unit of battle.units) {
+    if (unit.armyId.startsWith('garrison-')) continue;
+    const group = groups.get(unit.armyId);
+    if (group) group.units.push(unit);
+    else groups.set(unit.armyId, { side: unit.side, units: [unit] });
+  }
+  if (groups.size === 0) return state.campaignArmies;
+
+  return state.campaignArmies.map((army) => {
+    const group = groups.get(army.id);
+    if (!group) return army;
+    const ownInitial = group.units.reduce((sum, unit) => sum + Math.max(0, unit.maxTroops), 0);
+    const survived = group.units.some(
+      (unit) => !unit.isDestroyed && !unit.isRetreated && unit.troopCount > 0,
+    );
+    const enemies = battle.units.filter((unit) => unit.side !== group.side);
+    const enemyInitial = enemies.reduce((sum, unit) => sum + Math.max(0, unit.maxTroops), 0);
+    const kills = enemies.filter((unit) => unit.isDestroyed).length;
+    const commander = state.officers[army.commanderId];
+    const nextXp = troopXpAfterBattle({
+      currentXp: army.experience,
+      survived,
+      victory: battle.winner === group.side,
+      kills,
+      commanderKilled: false,
+      outnumbered: ownInitial > 0 && enemyInitial >= ownInitial * TROOP_XP_OUTNUMBERED_RATIO,
+      leadership: commander?.stats.leadership ?? 0,
+    });
+    return nextXp === army.experience ? army : { ...army, experience: nextXp };
+  });
+}
+
 export function settleBattle(
   state: GameState,
   battle: BattleState,
@@ -223,6 +265,7 @@ export function settleBattle(
 
   const target = state.cities[targetId];
   if (!target) return state;
+  const campaignArmies = applyHexBattleExperience(state, battle);
 
   const atkLeft = remainingTroops(battle, 'attacker');
   const defLeft = remainingTroops(battle, 'defender');
@@ -361,6 +404,7 @@ export function settleBattle(
       ...state,
       cities,
       officers,
+      campaignArmies,
       factions: nextFactions,
       pendingFamilyTreatment:
         battle.attackerFaction === state.playerFactionId ? pendingFamilyTreatment : null,
@@ -424,7 +468,7 @@ export function settleBattle(
   }
 
   // 军事功绩：守城 +8（守方主将，守方击退攻方）
-  let resultState: GameState = { ...state, cities, officers };
+  let resultState: GameState = { ...state, cities, officers, campaignArmies };
   if (defenderWon) {
     const defFid = battle.defenderFaction ?? target.ruler;
     if (defFid != null) {

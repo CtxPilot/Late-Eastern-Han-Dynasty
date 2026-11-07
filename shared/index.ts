@@ -74,3 +74,5 @@ export * from './sanitation.js';
 export * from './tech-research.js';
 export * from './delegation.js';
 export * from './types/delegation.js';
+export * from './peerless.js';
+export * from './troop-level.js';

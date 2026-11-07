@@ -1447,6 +1447,7 @@ chainRate = 基础10%
 - ✅ 气力 `BattleUnit.energy`（上限100，耗30，回合恢复智/10）
 - ✅ 成功率 `clamp(30+(攻智-防智)×2+技能×8, 15, 95)`；雨/暴雨伤害×0.5；雪禁用；林+25%；水×0.65
 - ✅ 伤害 ≈ 智×等级系数(0.8无技~2.5)×6×地形天气；灼烧 1~2 回合
+- ✅ **Session 456（D-0B-11）**：火计成功写入 `BattleState.activeStrategem='fire'`（失败不改写），HUD `battle-strategem` 只读展示；水攻/伏兵待 D-0B-12
 - ❌ 其余 14 种计策、蔓延格、神算减耗等后置
 
 ### 7.1 计策列表
@@ -4287,7 +4288,7 @@ Part II 保留原§一~§八 战术战斗要素 · §九~§十一 参考保留*
 
 ### §19.4 吕布鬼神降临（纯前端演出，服务端后置）
 
-**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果后置 D-0B-8）：
+**闭环设计**（纯前端演出层，服务端无双乱舞/震慑/数值效果已于 Session 455 实装，见 `docs/08-data-dictionary.md` §三十二）：
 
 - **Verlet 雉翎**：3-4 节点链 Verlet 积分（每节点 {x,y,prevX,prevY}，每帧 `newX = x + (x-prevX)*damping + gravity` + 距离约束迭代 3 次 + 根节点跟随吕布头部），随移动速度/方向产生滞后摆动。零美术，纯代码。仅吕布及少数猛将（关羽/张飞/赵云）有雉翎。
 - **赤兔马烈焰足**：马蹄位置每帧生成暗红粒子（复用粒子系统）
@@ -4749,3 +4750,35 @@ Session 336：移动审计写入 `beforeFacing`，撤销时恢复朝向（旧档
 - 原案士气上限 120 与 `BattleUnit.morale` Zod 上限 100 冲突，实装封顶 100；
 - 「免疫混乱/动摇」未实装（需逐条改状态施加点，另行切片）；
 - 血仇仅对「已标 DEAD」的阵亡者生成，残部退守的未标死路径不触发（沿 Session 439 口径）。
+
+## 二十四、吕布无双 / 心理震慑 / 鬼神服务端实装（D-0B-8，Session 455）
+
+真源数字见 `08` §三十二，共享纯函数见 `shared/peerless.ts`。三条效果均在服务端权威结算，
+玩家 `attackUnit` 与敌军 `runSimpleEnemyAi` 普攻双路径同源：
+
+| 效果 | 服务端规则 | 消费点 |
+|------|------------|--------|
+| 无双乱舞 | 吕布普攻结算后，对首要目标相邻（1 格）其他敌军造成主伤害 35%（至少 1），士气 −1 | `attackUnit` / `doAttack` 单位回写；战报〔无双乱舞〕 |
+| 心理震慑 | 吕布方圆 2 格内敌军：普攻/战法伤害 −10%，作为守方时反击率 −10 百分点、反击伤害 ×0.9 | `attackUnit`、`doAttack`、`castAbility`、`tryAbilityTactic` |
+| 鬼神 | 吕布兵力 ≤30% 时：受击防御 ×2；普攻造成伤害后按 20% 吸血回复（不超满编） | `damage.ts` `defenseMultiplier`；普攻双路径回写；战报〔鬼神〕 |
+
+**边界（诚实）**：
+- 无双乱舞只挂在普攻路径，战法/AOE/火计/追击不追加溅射；
+- 鬼神防御仅覆盖普攻与兵种战法的 `calcDamage`，火计与追击的固定/百分比伤害不翻倍；
+- 心理震慑按攻击瞬间的格距判定，不新增持久光环字段；
+- 初始战斗数值、RNG 消费顺序与既有战报在非吕布对局中逐字节不变；
+- 单挑「敌方卡牌成功率 −20%」仍属前端口径，本轮不接入单挑引擎。
+
+## 二十五、部队等级战斗投影（P5-14 0-A，Session 456）
+
+真源：`shared/troop-level.ts`；数字见 `08` §三十三。0-A 切片把既有 `CampaignArmy.experience`（0~3000）投影到六角战：
+
+- `BattleUnit.experience?` 从 Army 投影；旧档/演示单位缺省 0（Lv1，0% 修正）；
+- `calcDamage` 对攻/防按等级百分比乘算（Lv7 +30%），暴击率按 Lv4 +2/Lv5+4 百分点追加；
+- 等级纯函数：`troopLevelFor` / `troopLevelInfo` / `troopLevelLabel` / `troopXpAfterWipe` / `dilutedTroopXp` / `troopBattleXpGain` / `troopXpAfterBattle`；
+- **战果经验**：六角战 `settleBattle` 对真实 Army 写回——参战 +20、每击破 +30、击斩/俘获主将 +50、敌方 ≥1.3 倍 ×1.3、胜仗 ×1.5、统率 ×(1+统/200)；全灭覆盖 `troopXpAfterWipe`；
+- **训练与建军**：`City.troopsExperience?` 训练 +5/次（军屯 +2，封顶 3000）；征兵补员按 `dilutedTroopXp` 稀释；出征建军投影为 `CampaignArmy.experience`；
+- **Lv6 士气下限**：`troopMoraleFloor`——Lv6 起战斗内士气不低于 50；
+- `BattleView` SideCard 与 `CampaignPanel` 展示 `LvN 名称`。
+
+**未接入（诚实）**：Lv7 重建保留；击斩/俘获主将经验暂记 0；士气上限仅展示投影，`BattleUnit.morale` 仍夹紧 0~100。战役自动战继续使用既有 `expLevelCoeff`，本切片不改其公式。

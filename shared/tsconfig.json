@@ -76,6 +76,8 @@
     "transport.ts",
     "sanitation.ts",
     "tech-research.ts",
+    "peerless.ts",
+    "troop-level.ts",
     "item-sets.ts"
   ]
 }

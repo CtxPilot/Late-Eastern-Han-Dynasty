@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, computeVisibleEnemyUnitIds, applySwornFury, nemesisBattleBonus, swornAllyBattleBonus, SWORN_FURY_DAMAGE_PCT, type AnyRelation, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
+import { Weather, UnitProficiency, meritEffects, meritLevelFor, getUnitAbilityUses, recordUnitAbilityUse, resolveProficiencyPower, isUnitSurrounded, resolveHexSurround, directionTo, computeVisibleEnemyUnitIds, applySwornFury, nemesisBattleBonus, swornAllyBattleBonus, SWORN_FURY_DAMAGE_PCT, isPeerlessGhostForm, isPeerlessOfficer, isWithinPeerlessIntimidate, peerlessLifestealHeal, peerlessSplashDamage, PEERLESS_DANCE_SPLASH_RADIUS, PEERLESS_GHOST_DEFENSE_MULTIPLIER, PEERLESS_INTIMIDATE_COUNTER_PCT, PEERLESS_INTIMIDATE_DAMAGE_PCT, troopLevelInfo, troopMoraleFloor, type AnyRelation, type BattleUnit, type CombatAbilityDef, type CombatAbilityLevel, type HexCoord, type Officer, type TerrainType, type UnitTemplate, type UnitType } from '@leh/shared';
 import { hexDistance, hexKey } from './hex.js';
 import { reachable } from './pathfinding.js';
 import { calcDamage, getUnitMatchup } from './damage.js';
@@ -368,7 +368,7 @@ function applyPursuitToRetreater(
     },
     {
       unitAttack: defT.attack, unitDefense: defT.defense, officerWar: defO.war,
-      officerLeadership: defO.leadership, troops: retreater.troopCount, maxTroops: retreater.maxTroops,
+      officerLeadership: defO.leadership, troops: retreater.troopCount, maxTroops: retreater.maxTroops, troopExperience: retreater.experience,
       morale: retreater.morale, terrain: defTerrain, weather,
       armorDefense: defO.armorDefense,
       formationDef: hexFormationMods(retreater.formation).def + siegeDefBonus(isSiege, retreater.side),
@@ -383,7 +383,7 @@ function applyPursuitToRetreater(
       ...unit,
       troopCount: troops,
       isDestroyed: troops <= 0,
-      morale: Math.max(0, unit.morale - 2),
+      morale: Math.max(troopMoraleFloor(unit.experience ?? 0), unit.morale - 2),
     };
   });
   const killed = (next.find((unit) => unit.id === retreater.id)?.troopCount ?? 0) <= 0;
@@ -590,22 +590,26 @@ function tryAbilityTactic(
   const base = calcDamage(
     {
       unitAttack: template.attack, unitDefense: template.defense, officerWar: atkStats.war,
-      officerLeadership: atkStats.leadership, troops: attacker.troopCount, maxTroops: attacker.maxTroops,
+      officerLeadership: atkStats.leadership, troops: attacker.troopCount, maxTroops: attacker.maxTroops, troopExperience: attacker.experience,
       morale: attacker.morale, terrain: terrainMap[attacker.position.r]?.[attacker.position.q] ?? 'plain', matchup,
       weather,
       formationAtk: hexFormationMods(attacker.formation).atk,
     },
     {
       unitAttack: defTemplate.attack, unitDefense: defTemplate.defense, officerWar: defStats.war,
-      officerLeadership: defStats.leadership, troops: defender.troopCount, maxTroops: defender.maxTroops,
+      officerLeadership: defStats.leadership, troops: defender.troopCount, maxTroops: defender.maxTroops, troopExperience: defender.experience,
       morale: defender.morale, terrain: terrainMap[defender.position.r]?.[defender.position.q] ?? 'plain',
       weather,
       armorDefense: defStats.armorDefense,
       formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(isSiege, defender.side),
+      defenseMultiplier: isPeerlessOfficer(defOfficer) && isPeerlessGhostForm(defender) ? PEERLESS_GHOST_DEFENSE_MULTIPLIER : 1,
     },
     rng,
   );
-  const damage = Math.max(1, Math.round(base * level.power * (0.9 + rng() * 0.2)));
+  const damageBase = isPeerlessOfficer(defOfficer) && isWithinPeerlessIntimidate(attacker.position, defender.position)
+    ? Math.max(1, Math.round(base * (1 - PEERLESS_INTIMIDATE_DAMAGE_PCT / 100)))
+    : base;
+  const damage = Math.max(1, Math.round(damageBase * level.power * (0.9 + rng() * 0.2)));
   const affected = spent.filter((unit) => unit.side === defender.side && isActiveBattleUnit(unit) &&
     (unit.id === defender.id || (ability.specialEffect === 'aoe' && hexDistance(unit.position, defender.position) <= 1)));
   const next = spent.map((unit) => {
@@ -615,7 +619,7 @@ function tryAbilityTactic(
     applySpecialEffect(ability, effects, level.level);
     const troops = Math.max(0, unit.troopCount - unitDamage);
     const moraleLoss = ability.specialEffect === 'morale' ? Math.floor(unitDamage * 0.1) : 3;
-    return { ...unit, troopCount: troops, isDestroyed: troops <= 0, morale: Math.max(0, unit.morale - moraleLoss), statusEffects: effects };
+    return { ...unit, troopCount: troops, isDestroyed: troops <= 0, morale: Math.max(troopMoraleFloor(unit.experience ?? 0), unit.morale - moraleLoss), statusEffects: effects };
   });
   const attackerAlive = sideAlive(next, attacker.side);
   const defenderAlive = sideAlive(next, defender.side);
@@ -726,7 +730,7 @@ function tryFireTactic(
     ...unit,
     troopCount: troops,
     isDestroyed: troops <= 0,
-    morale: Math.max(0, unit.morale - 5),
+    morale: Math.max(troopMoraleFloor(unit.experience ?? 0), unit.morale - 5),
     statusEffects: troops > 0
       ? [...unit.statusEffects, { type: 'burn', remainingTurns: burnTurns, value: Math.max(1, Math.floor(damage * 0.15)) }]
       : unit.statusEffects,
@@ -777,6 +781,8 @@ function doAttack(
   const charge = attackerMoved
     ? resolveChargeBonus({ unitType: attacker.unitType, terrain: atkTerrain, formation: attacker.formation })
     : { bonusPct: 0 };
+  const fullAtkO = officers?.[attacker.commanderId];
+  const fullDefO = officers?.[defender.commanderId];
   const dmg = applyChargeToBaseDamage(calcDamage(
     {
       unitAttack: atkT.attack,
@@ -784,7 +790,7 @@ function doAttack(
       officerWar: atkO.war,
       officerLeadership: atkO.leadership,
       troops: attacker.troopCount,
-      maxTroops: attacker.maxTroops,
+      maxTroops: attacker.maxTroops, troopExperience: attacker.experience,
       morale: attacker.morale,
       terrain: atkTerrain,
       weather,
@@ -797,19 +803,18 @@ function doAttack(
       officerWar: defO.war,
       officerLeadership: defO.leadership,
       troops: defender.troopCount,
-      maxTroops: defender.maxTroops,
+      maxTroops: defender.maxTroops, troopExperience: defender.experience,
       morale: defender.morale,
       terrain: defTerrain,
       weather,
       armorDefense: defO.armorDefense,
       formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(isSiege, defender.side),
+      defenseMultiplier: fullDefO && isPeerlessOfficer(fullDefO) && isPeerlessGhostForm(defender) ? PEERLESS_GHOST_DEFENSE_MULTIPLIER : 1,
     },
     rng,
   ), charge.bonusPct);
 
   // §6.5 暴击/反击/连击 (若有完整 officers)
-  const fullAtkO = officers?.[attacker.commanderId];
-  const fullDefO = officers?.[defender.commanderId];
   // S24（Session 454）：义兄弟并肩 / 宿敌相搏（仅有完整武将数据时结算；空关系表零改动）。
   const relationActive = relations.length > 0 && fullAtkO != null && fullDefO != null;
   const activeForRelations = units.filter(
@@ -839,7 +844,16 @@ function doAttack(
     atkSworn.damagePct + (attacker.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
   const defenderRelationDamagePct =
     defSworn.damagePct + (defender.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
-  const effectiveDmg = Math.max(1, Math.round(dmg * (1 + attackerRelationDamagePct / 100)));
+  // D-0B-8（Session 455）：心理震慑——吕布方圆 2 格内敌军攻击伤害 −10%、反击率/伤害降低。
+  const attackerIntimidated = fullDefO != null && isPeerlessOfficer(fullDefO)
+    && isWithinPeerlessIntimidate(attacker.position, defender.position);
+  const defenderIntimidated = fullAtkO != null && isPeerlessOfficer(fullAtkO)
+    && isWithinPeerlessIntimidate(defender.position, attacker.position);
+  const effectiveDmg = Math.max(1, Math.round(
+    dmg
+      * (1 + attackerRelationDamagePct / 100)
+      * (attackerIntimidated ? 1 - PEERLESS_INTIMIDATE_DAMAGE_PCT / 100 : 1),
+  ));
   let totalDamage = effectiveDmg;
   let counterDamage = 0;
   let labels: string[] = [];
@@ -862,12 +876,14 @@ function doAttack(
       distance: hexDistance(attacker.position, defender.position),
       isFirstRound: battleTurn === 1, attackerMoved,
       chargePct: charge.bonusPct,
-      attackerCritBonus: equipCritRateFor(fullAtkO),
-      defenderCritBonus: equipCritRateFor(fullDefO),
+      attackerCritBonus: equipCritRateFor(fullAtkO) + troopLevelInfo(attacker.experience ?? 0).critPct,
+      defenderCritBonus: equipCritRateFor(fullDefO) + troopLevelInfo(defender.experience ?? 0).critPct,
       attackerRelationCritBonus: atkSworn.critBonus + atkNemesis.critBonus,
       defenderRelationCritBonus: defSworn.critBonus + defNemesis.critBonus,
       defenderRelationCounterBonus: defNemesis.counterBonus,
       defenderRelationDamagePct: defenderRelationDamagePct,
+      defenderCounterRateMod: defenderIntimidated ? -PEERLESS_INTIMIDATE_COUNTER_PCT : 0,
+      defenderCounterDamageMult: defenderIntimidated ? 1 - PEERLESS_INTIMIDATE_DAMAGE_PCT / 100 : 1,
       attackerSurrounded: isUnitSurrounded(units, attacker.id),
       defenderSurrounded: isUnitSurrounded(units, defender.id),
       rng,
@@ -882,24 +898,46 @@ function doAttack(
     attackerDestroyed = result.attackerDestroyed;
   }
 
+  // D-0B-8（Session 455）：无双乱舞溅射与鬼神吸血（仅完整吕布数据时结算）。
+  const attackerPeerless = fullAtkO != null && isPeerlessOfficer(fullAtkO);
+  const ghostBefore = attackerPeerless && isPeerlessGhostForm(attacker);
+  const splashTargets = attackerPeerless
+    ? units.filter((u) =>
+      u.side === defender.side
+      && u.id !== defender.id
+      && isActiveBattleUnit(u)
+      && hexDistance(u.position, defender.position) <= PEERLESS_DANCE_SPLASH_RADIUS)
+    : [];
+  const splashDamage = splashTargets.length > 0 ? peerlessSplashDamage(totalDamage) : 0;
+  const splashIds = new Set(splashTargets.map((u) => u.id));
+  const lifesteal = ghostBefore && !attackerDestroyed ? peerlessLifestealHeal(totalDamage) : 0;
+  if (splashTargets.length > 0) labels.push('无双乱舞');
+  if (lifesteal > 0) labels.push('鬼神');
   const matchupLabel = matchup > 1 ? '（克制）' : matchup < 1 ? '（被克）' : '';
-  const eventLabel = labels.length ? `〔${labels.join('·')}〕` : '';
+  const peerlessSuffix =
+    `${splashTargets.length > 0 ? `（乱舞波及${splashTargets.length}队）` : ''}`
+    + `${lifesteal > 0 ? `（鬼神吸血+${lifesteal}）` : ''}`;
+  const eventLabel = labels.length ? `〔${labels.join('·')}〕${peerlessSuffix}` : peerlessSuffix;
 
   // 应用兵力: 守方扣 totalDamage, 攻方扣 counterDamage
   const newDefTroops = Math.max(0, defender.troopCount - totalDamage);
   let next = units.map((u) => {
     if (u.id === defender.id) {
-      return { ...u, troopCount: newDefTroops, isDestroyed: newDefTroops <= 0, morale: Math.max(0, u.morale - 3) };
+      return { ...u, troopCount: newDefTroops, isDestroyed: newDefTroops <= 0, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 3) };
     }
     if (u.id === attacker.id) {
       return {
         ...u,
-        troopCount: attackerTroopsAfter,
+        troopCount: Math.min(u.maxTroops, attackerTroopsAfter + lifesteal),
         isDestroyed: attackerDestroyed,
         hasActed: true,
         mp: 0,
         energy: Math.max(0, (u.energy ?? 100) - (totalDamage > effectiveDmg ? 5 : 0)),
       };
+    }
+    if (splashIds.has(u.id)) {
+      const troops = Math.max(0, u.troopCount - splashDamage);
+      return { ...u, troopCount: troops, isDestroyed: troops <= 0, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 1) };
     }
     return u;
   });

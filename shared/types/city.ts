@@ -112,6 +112,11 @@ export interface City extends CityStatic {
   courtNetworkOpportunities: number;
   troops: number;
   troopsMorale: number;
+  /**
+   * P5-14（Session 456）：驻军训练经验（0~3000，Lv1~7）。
+   * 训练指令累积；出征建军时投影为 `CampaignArmy.experience`。旧档缺省=0。
+   */
+  troopsExperience?: number;
   officers: number[];
   ruler: number | null;
   facilities: CityFacility[];

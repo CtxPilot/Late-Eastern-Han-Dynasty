@@ -1520,3 +1520,52 @@ Session 371 在不新增字段/API/RNG 的前提下落地骑兵冲锋最小切�
 | 授业点拨：年度成长 | +1 | 正月；确定性取最大差距项；封顶师傅对应属性 −2；每年每对 ≤1 点 |
 
 **确定性**：关系为空时全部结算零操作；授业点拨、宿敌惩罚、血仇写入均零 RNG；金样 12 月逐字节不变。
+
+## 三十二、吕布无双 / 心理震慑 / 鬼神数字真源（D-0B-8，Session 455）
+
+真源实现：`shared/peerless.ts`；服务端消费点 `server/src/engine/battle.ts`、`server/src/battle/simpleAi.ts`、`server/src/battle/crit.ts`、`server/src/battle/damage.ts`。
+
+| 项 | 数值 | 说明 |
+|----|:----:|------|
+| 识别 | `officer.id === 5` 或 `uniqueSkill === 'wushuang'` | 0-A/0-B 吕布固定 id=5 |
+| 无双乱舞：溅射半径 | 1 格 | 首要目标相邻的其他敌军 |
+| 无双乱舞：溅射比例 | 35% | 主伤害（含连击）向下取整后 35%，至少 1；溅射目标士气 −1 |
+| 心理震慑：半径 | 2 格 | 以吕布所在格为中心 |
+| 心理震慑：攻击伤害 | −10% | 光环内敌军普攻/战法伤害 |
+| 心理震慑：反击率 / 反击伤害 | −10 百分点 / ×0.9 | 光环内敌军作为守方时 |
+| 鬼神：触发阈值 | 兵力 ≤ 满编 30% | `troopCount * 100 <= maxTroops * 30` |
+| 鬼神：防御倍率 | ×2 | 仅受击方为吕布鬼神形态时 |
+| 鬼神：吸血 | 造成伤害 20% | 普攻伤害结算后回复自身兵力，不超过满编 |
+
+**确定性**：全部效果零新增 RNG 消费点、零新增 `BattleState` 持久字段；只在吕布参战时触发，其余战斗逐字节不变。溅射/吸血/震慑在玩家 `attackUnit` 与敌军 `runSimpleEnemyAi` 双路径同源结算。
+
+## 三十三、部队等级战斗投影与计谋状态字段（Session 456）
+
+### 33.1 P5-14 部队等级（0-A 切片）
+
+真源实现：`shared/troop-level.ts`；服务端消费点 `server/src/battle/damage.ts`（攻/防百分比）与 `battle/crit.ts` 调用侧的暴击加成。
+
+| Lv | 名称 | 经验阈值 | 攻击 | 防御 | 暴击 | 士气上限 |
+|:--:|------|:--------:|:----:|:----:|:----:|:--------:|
+| 1 | 新卒 | 0 | — | — | — | 100 |
+| 2 | 训练兵 | 100 | +5% | +5% | — | 105 |
+| 3 | 老兵 | 300 | +10% | +10% | — | 110 |
+| 4 | 劲旅 | 600 | +15% | +15% | +2% | 115 |
+| 5 | 精锐 | 1000 | +20% | +20% | +4% | 120 |
+| 6 | 百战 | 1800 | +25% | +25% | +4% | 125 |
+| 7 | 铁军 | 3000 | +30% | +30% | +4% | 130 |
+
+- **战斗投影**：六角战 `BattleUnit.experience?` 从 `CampaignArmy.experience` 投影；攻/防按上表百分比乘算，暴击按百分点追加。旧档/演示单位缺省 `experience=0`（Lv1，0% 修正）。
+- **辅函数**：`troopXpAfterWipe`（全灭归零，Lv7 保留 30%）、`dilutedTroopXp`（补员按兵力加权稀释）。
+- **战果经验（Session 456 同轮）**：`troopBattleXpGain` / `troopXpAfterBattle`——参战存活 +20；每击破敌方单位 +30；击斩/俘获主将 +50；敌方初始兵力 ≥ 我方 1.3 倍 ×1.3；胜仗 ×1.5；最终 ×(1+主将统率/200)；全灭时覆盖为 `troopXpAfterWipe`。六角战 `settleBattle` 对仍在 `campaignArmies` 中的真实 Army 写回（城驻军合成单位不参与）。
+- **训练与建军（Session 456 同轮）**：`City.troopsExperience?` 由训练指令累积（+5/次，军屯 +2，封顶 3000）；征兵补员按 `dilutedTroopXp(旧兵, 旧xp, 新兵)` 稀释；出征建军时投影为 `CampaignArmy.experience`。
+- **已有消费**：战役自动战 `computePower` 自既有 `expLevelCoeff` 读取经验（本切片不改其公式，避免战役 RNG/金样漂移）。
+- **Lv6 士气下限**：`troopMoraleFloor(experience)`——Lv6「百战」起战斗内士气降低后不低于 50。
+- **本轮未接入（诚实）**：Lv7 重建保留；六角战仅对真实 Army 写回经验（合成驻军不参与），击斩/俘获主将经验暂记 0（结算时序无该快照）；士气上限仅作展示投影，`BattleUnit.morale` 仍受 0~100 Schema 夹紧。
+
+### 33.2 D-0B-11 战场计谋状态字段
+
+`BattleState.activeStrategem?: 'none' | 'fire' | 'water' | 'ambush'`（旧档缺省视为 `none`）：
+- 服务端火计成功时写入 `'fire'`；失败不改写；
+- `BattleView` HUD `battle-strategem` 只读展示「火计/水攻/伏兵/无」；
+- 水攻/伏兵服务端引擎仍待 D-0B-12 切片，本字段先提供前端订阅契约。

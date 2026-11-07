@@ -3,7 +3,7 @@
 
 import { InkButton } from './../ui/buttons'; // 批次② 三级按钮基座
 import { useMemo, useState } from 'react';
-import { FormationType, UnitType, countFieldArmies, maxFieldArmies, type CampaignArmy } from '@leh/shared';
+import { FormationType, UnitType, countFieldArmies, maxFieldArmies, troopLevelLabel, type CampaignArmy } from '@leh/shared';
 import { siegeMergeLabel } from './CampaignPanel.helpers';
 import { useGameStore } from '../../stores/gameStore';
 
@@ -358,7 +358,7 @@ export function CampaignPanel() {
                     <span className="text-stone-500">{PHASE_LABEL[a.phase] ?? a.phase}</span>
                   </div>
                   <div className="text-stone-500 mt-0.5">
-                    {node?.name ?? a.currentNodeId} · 兵{a.troops}/{a.maxTroops} · 粮{a.food} · 士{a.morale}
+                    {node?.name ?? a.currentNodeId} · 兵{a.troops}/{a.maxTroops} · 粮{a.food} · 士{a.morale} · {troopLevelLabel(a.experience)}
                     {cmd ? ` · ${cmd.name}` : ''}
                   </div>
                   {mergeLabel && (

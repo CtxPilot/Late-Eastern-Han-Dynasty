@@ -30,6 +30,7 @@ import {
   quarterKey,
   DEVELOPMENT_PROJECT_CONFIG,
   craftConscriptMoraleBonus,
+  dilutedTroopXp,
   type City,
   type DevelopmentProject,
   type DevelopmentProjectKind,
@@ -336,6 +337,8 @@ export function conscript(state: GameState, cityId: number, rng: () => number): 
     food: city.food - foodCost,
     troops: city.troops + total,
     troopsMorale: nextTroopsMorale,
+    // P5-14（Session 456）：新兵补充按兵力加权稀释驻军经验（§25.3）。
+    troopsExperience: dilutedTroopXp(city.troops, city.troopsExperience ?? 0, total),
     demographics: nextDemo,
     population: city.population,
     garrisonFamilies: (city.garrisonFamilies ?? 0) + familiesGainedOnConscript(total, city),
@@ -443,16 +446,21 @@ export function trainTroops(state: GameState, cityId: number, rng: () => number)
   const halved = (city.militaryFarming ?? false) ? Math.floor(gain * 0.5) : gain;
   const prev = city.troopsMorale ?? 70;
   const next = Math.min(100, prev + halved);
+  // P5-14（Session 456）：训练同时累积驻军经验（军屯减半；不消费额外 RNG）。
+  const xpGain = (city.militaryFarming ?? false) ? 2 : 5;
+  const prevXp = Math.max(0, city.troopsExperience ?? 0);
+  const nextXp = Math.min(3000, prevXp + xpGain);
 
   const nextCity: City = {
     ...city,
     food: city.food - foodCost,
     troopsMorale: next,
+    troopsExperience: nextXp,
   };
   let after: GameState = pushLog(
     grantMeritTo(state, nextCity.officers[0], MERIT_TRAIN),
     'train',
-    `${city.name} 训练部队 士气+${halved}${halved !== gain ? `（军屯中，原+${gain}减半）` : ''}（${prev}→${next}，耗粮${foodCost}；兵装−${ARMS_TRAIN_COST}）`,
+    `${city.name} 训练部队 士气+${halved}${halved !== gain ? `（军屯中，原+${gain}减半）` : ''}（${prev}→${next}，耗粮${foodCost}；兵装−${ARMS_TRAIN_COST}；驻军经验+${xpGain}）`,
     { cities: { ...state.cities, [cityId]: nextCity } },
   );
   if (faction && (faction.arms ?? 0) > 0) {

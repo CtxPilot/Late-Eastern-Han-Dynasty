@@ -508,7 +508,7 @@ export function startCampaignForFaction(
     maxFood: Math.max(food, troops * 3),
     morale: Math.max(1, baseMorale),
     organization: 80,
-    experience: 0,
+    experience: Math.max(0, Math.min(3000, state.cities[opts.fromNodeId]?.troopsExperience ?? 0)),
     fatigue: 0,
     squads: buildSquads(opts),
     structures: [],

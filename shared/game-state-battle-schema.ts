@@ -141,6 +141,7 @@ export const BattleUnitRuntimeSchema: z.ZodType<BattleUnit> = z
     hasActed: z.boolean(),
     isRetreated: z.boolean(),
     isDestroyed: z.boolean(),
+    experience: z.number().int().nonnegative().optional(),
     swornFury: z.boolean().optional(),
     statusEffects: z.array(
       z.object({ type: z.string().min(1), remainingTurns: NonNegativeIntSchema, value: z.number().optional() }).strict(),
@@ -200,6 +201,7 @@ export const BattleStateRuntimeSchema: z.ZodType<BattleState> = z
       beforeFormation: z.nativeEnum(FormationType).optional(), afterFormation: z.nativeEnum(FormationType).optional(),
     }).strict()).max(3).optional(),
     message: z.string(),
+    activeStrategem: z.enum(['none', 'fire', 'water', 'ambush']).optional(),
     tacticalPoints: NonNegativeIntSchema.max(10).optional(),
     tacticalPointsUsed: NonNegativeIntSchema.max(10).optional(),
     duel: DuelStateRuntimeSchema.nullable().optional(),

@@ -50,10 +50,21 @@ import {
   isCurrentWukui,
   isCurrentPojun,
   isLvBuOfficerId,
+  isPeerlessGhostForm,
+  isPeerlessOfficer,
+  isWithinPeerlessIntimidate,
+  peerlessLifestealHeal,
+  peerlessSplashDamage,
+  PEERLESS_GHOST_DEFENSE_MULTIPLIER,
+  PEERLESS_INTIMIDATE_COUNTER_PCT,
+  PEERLESS_INTIMIDATE_DAMAGE_PCT,
+  PEERLESS_DANCE_SPLASH_RADIUS,
   WUKUI_DUEL_OPPONENT_MORALE_DELTA,
   POJUN_DUEL_VS_LVBU_MORALE_DELTA,
   reinforcementSideFor,
   sideArmyCount,
+  troopLevelInfo,
+  troopMoraleFloor,
   applySwornFury,
   nemesisBattleBonus,
   swornAllyBattleBonus,
@@ -300,6 +311,7 @@ function unitsFromArmy(
       hasActed: false,
       isRetreated: false,
       isDestroyed: false,
+      experience: Math.max(0, army.experience),
       statusEffects: [],
     };
   });
@@ -1043,7 +1055,7 @@ export function attackUnit(
       officerWar: atkO.stats.war + meritStatBonus(atkO, 'war') + (atkEquip.war ?? 0),
       officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership') + (atkEquip.leadership ?? 0),
       troops: attacker.troopCount,
-      maxTroops: attacker.maxTroops,
+      maxTroops: attacker.maxTroops, troopExperience: attacker.experience,
       morale: attacker.morale,
       terrain: atkTerrain,
       weather: battle.weather,
@@ -1056,12 +1068,13 @@ export function attackUnit(
       officerWar: defO.stats.war + meritStatBonus(defO, 'war') + (defEquip.war ?? 0),
       officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership') + (defEquip.leadership ?? 0),
       troops: defender.troopCount,
-      maxTroops: defender.maxTroops,
+      maxTroops: defender.maxTroops, troopExperience: defender.experience,
       morale: defender.morale,
       terrain: defTerrain,
       weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
       formationDef: hexFormationMods(defender.formation).def + siegeDefBonus(battle, 'defender'),
+      defenseMultiplier: isPeerlessOfficer(defO) && isPeerlessGhostForm(defender) ? PEERLESS_GHOST_DEFENSE_MULTIPLIER : 1,
     },
     rng,
   );
@@ -1086,11 +1099,19 @@ export function attackUnit(
   const defenderDamagePct =
     defSworn.damagePct + (defender.swornFury ? SWORN_FURY_DAMAGE_PCT : 0);
 
-  const baseDamage = Math.max(1, Math.round(
+  const baseDamageRaw = Math.max(1, Math.round(
     applyChargeToBaseDamage(rawBaseDamage, charge.bonusPct)
       * (1 + targetCheck.attackModifier)
       * (1 + attackerDamagePct / 100),
   ));
+  // D-0B-8（Session 455）：心理震慑——吕布方圆 2 格内敌军攻击伤害 −10%。
+  const attackerIntimidated = isPeerlessOfficer(defO)
+    && isWithinPeerlessIntimidate(attacker.position, defender.position);
+  const defenderIntimidated = isPeerlessOfficer(atkO)
+    && isWithinPeerlessIntimidate(defender.position, attacker.position);
+  const baseDamage = attackerIntimidated
+    ? Math.max(1, Math.round(baseDamageRaw * (1 - PEERLESS_INTIMIDATE_DAMAGE_PCT / 100)))
+    : baseDamageRaw;
 
   // §6.5 暴击/反击/连击事件流
   const atkActor: AttackActor = {
@@ -1112,12 +1133,14 @@ export function attackUnit(
     isFirstRound: battle.turn === 1,
     attackerMoved,
     chargePct: charge.bonusPct,
-    attackerCritBonus: equipCritRateFor(atkO),
-    defenderCritBonus: equipCritRateFor(defO),
+    attackerCritBonus: equipCritRateFor(atkO) + troopLevelInfo(attacker.experience ?? 0).critPct,
+    defenderCritBonus: equipCritRateFor(defO) + troopLevelInfo(defender.experience ?? 0).critPct,
     attackerRelationCritBonus: atkSworn.critBonus + atkNemesis.critBonus,
     defenderRelationCritBonus: defSworn.critBonus + defNemesis.critBonus,
     defenderRelationCounterBonus: defNemesis.counterBonus,
     defenderRelationDamagePct: defenderDamagePct,
+    defenderCounterRateMod: defenderIntimidated ? -PEERLESS_INTIMIDATE_COUNTER_PCT : 0,
+    defenderCounterDamageMult: defenderIntimidated ? 1 - PEERLESS_INTIMIDATE_DAMAGE_PCT / 100 : 1,
     attackerSurrounded: isUnitSurrounded(battle.units, attacker.id),
     defenderSurrounded: isUnitSurrounded(battle.units, defender.id),
     rng,
@@ -1126,23 +1149,47 @@ export function attackUnit(
   if (attacker.swornFury) result.labels.push('同袍死战');
 
   const totalDamage = result.damage + result.chainDamage;
+  // D-0B-8（Session 455）：无双乱舞——吕布普攻后对首要目标相邻敌军溅射 35%。
+  const attackerPeerless = isPeerlessOfficer(atkO);
+  const ghostBefore = attackerPeerless && isPeerlessGhostForm(attacker);
+  const splashTargets = attackerPeerless
+    ? battle.units.filter((u) =>
+      u.side === defender.side
+      && u.id !== defender.id
+      && isActiveBattleUnit(u)
+      && hexDistance(u.position, defender.position) <= PEERLESS_DANCE_SPLASH_RADIUS)
+    : [];
+  const splashDamage = splashTargets.length > 0 ? peerlessSplashDamage(totalDamage) : 0;
+  const splashIds = new Set(splashTargets.map((u) => u.id));
+  const lifesteal = ghostBefore && !result.attackerDestroyed
+    ? peerlessLifestealHeal(totalDamage)
+    : 0;
+  if (splashTargets.length > 0) result.labels.push('无双乱舞');
+  if (lifesteal > 0) result.labels.push('鬼神');
   const matchupLabel = matchup > 1 ? '（克制）' : matchup < 1 ? '（被克）' : '';
-  const eventLabel = result.labels.length ? `〔${result.labels.join('·')}〕` : '';
+  const peerlessSuffix =
+    `${splashTargets.length > 0 ? `（乱舞波及${splashTargets.length}队）` : ''}`
+    + `${lifesteal > 0 ? `（鬼神吸血+${lifesteal}）` : ''}`;
+  const eventLabel = result.labels.length ? `〔${result.labels.join('·')}〕${peerlessSuffix}` : peerlessSuffix;
 
   // 应用兵力变化
   let units = battle.units.map((u) => {
     if (u.id === defender.id) {
-      return { ...u, troopCount: result.defenderTroopsAfter, isDestroyed: result.defenderDestroyed, morale: Math.max(0, u.morale - 3) };
+      return { ...u, troopCount: result.defenderTroopsAfter, isDestroyed: result.defenderDestroyed, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 3) };
     }
     if (u.id === attacker.id) {
       return {
         ...u,
-        troopCount: result.attackerTroopsAfter,
+        troopCount: Math.min(u.maxTroops, result.attackerTroopsAfter + lifesteal),
         isDestroyed: result.attackerDestroyed,
         hasActed: true,
         mp: 0,
         energy: Math.max(0, (u.energy ?? 100) - (result.chainDamage > 0 ? 5 : 0)),
       };
+    }
+    if (splashIds.has(u.id)) {
+      const troops = Math.max(0, u.troopCount - splashDamage);
+      return { ...u, troopCount: troops, isDestroyed: troops <= 0, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 1) };
     }
     return u;
   });
@@ -1337,13 +1384,13 @@ export function retreatBattle(battle: BattleState, armyId?: string): BattleState
     const base = calcDamage(
       {
         unitAttack: atkT.attack, unitDefense: atkT.defense, officerWar: 70,
-        officerLeadership: 70, troops: pursuer.troopCount, maxTroops: pursuer.maxTroops,
+        officerLeadership: 70, troops: pursuer.troopCount, maxTroops: pursuer.maxTroops, troopExperience: pursuer.experience,
         morale: pursuer.morale, terrain: atkTerrain, weather: battle.weather,
         matchup, formationAtk: hexFormationMods(pursuer.formation).atk,
       },
       {
         unitAttack: defT.attack, unitDefense: defT.defense, officerWar: 70,
-        officerLeadership: 70, troops: retreater.troopCount, maxTroops: retreater.maxTroops,
+        officerLeadership: 70, troops: retreater.troopCount, maxTroops: retreater.maxTroops, troopExperience: retreater.experience,
         morale: retreater.morale, terrain: defTerrain, weather: battle.weather,
         matchup: 1 / Math.max(0.1, matchup),
         formationDef: hexFormationMods(retreater.formation).def,
@@ -1358,7 +1405,7 @@ export function retreatBattle(battle: BattleState, armyId?: string): BattleState
         ...unit,
         troopCount: troops,
         isDestroyed: troops <= 0,
-        morale: Math.max(0, unit.morale - 2),
+        morale: Math.max(troopMoraleFloor(unit.experience ?? 0), unit.morale - 2),
       };
     });
     const killed = (working.find((unit) => unit.id === retreater.id)?.troopCount ?? 0) <= 0;
@@ -1492,7 +1539,7 @@ export function castFireTactic(
       troopCount: newTroops,
       isDestroyed: newTroops <= 0,
       statusEffects: effects,
-      morale: Math.max(0, u.morale - 5),
+      morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 5),
     };
   });
 
@@ -1509,6 +1556,7 @@ export function castFireTactic(
       units,
       phase: 'over',
       winner: defenderAlive ? 'defender' : 'attacker',
+      activeStrategem: 'fire',
       message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote} — ${defenderAlive ? '我军溃败！' : '敌军溃败！'}`,
       log: [
         ...battle.log,
@@ -1520,6 +1568,7 @@ export function castFireTactic(
   return enterEnemyPhase({
     ...battle,
     units,
+    activeStrategem: 'fire',
     message: `${atkO.name} ${skillNote} 造成 ${dmg} 伤害${terrainNote}${weatherNote}（敌剩余 ${newTroops}）— 敌军回合…`,
     log: [
       ...battle.log,
@@ -1779,7 +1828,7 @@ export function castAbility(
       officerWar: atkO.stats.war + meritStatBonus(atkO, 'war') + (atkEquip2.war ?? 0),
       officerLeadership: atkO.stats.leadership + meritStatBonus(atkO, 'leadership') + (atkEquip2.leadership ?? 0),
       troops: attacker.troopCount,
-      maxTroops: attacker.maxTroops,
+      maxTroops: attacker.maxTroops, troopExperience: attacker.experience,
       morale: attacker.morale,
       terrain: battle.hexGrid.terrain[attacker.position.r][attacker.position.q],
       weather: battle.weather,
@@ -1792,12 +1841,13 @@ export function castAbility(
       officerWar: defO.stats.war + meritStatBonus(defO, 'war') + (defEquip2.war ?? 0),
       officerLeadership: defO.stats.leadership + meritStatBonus(defO, 'leadership') + (defEquip2.leadership ?? 0),
       troops: target.troopCount,
-      maxTroops: target.maxTroops,
+      maxTroops: target.maxTroops, troopExperience: target.experience,
       morale: target.morale,
       terrain: battle.hexGrid.terrain[target.position.r][target.position.q],
       weather: battle.weather,
       armorDefense: equipArmorDefenseFor(defO),
       formationDef: hexFormationMods(target.formation).def + siegeDefBonus(battle, 'defender'),
+      defenseMultiplier: isPeerlessOfficer(defO) && isPeerlessGhostForm(target) ? PEERLESS_GHOST_DEFENSE_MULTIPLIER : 1,
     },
     rng,
   );
@@ -1818,7 +1868,7 @@ export function castAbility(
       troopCount: troops,
       isDestroyed: troops <= 0,
       statusEffects: effects,
-      morale: ability.specialEffect === 'morale' ? Math.max(0, u.morale - Math.floor(unitDamage * 0.1)) : Math.max(0, u.morale - 3),
+      morale: ability.specialEffect === 'morale' ? Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - Math.floor(unitDamage * 0.1)) : Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 3),
     };
   });
   const newTroops = Math.max(0, target.troopCount - dmg);
@@ -2122,7 +2172,7 @@ export function challengeDuel(
   if (!accepted) {
     // 拒绝: 士气 -15, 声望 -5 (简化为士气), 不消耗气力
     const units = battle.units.map((u) =>
-      u.id === defUnit.id ? { ...u, morale: Math.max(0, u.morale - 15) } : u,
+      u.id === defUnit.id ? { ...u, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 15) } : u,
     );
     return {
       battle: {
@@ -2304,7 +2354,7 @@ function applyDuelOutcome(
   } else if (result.outcome === 'escaped') {
     if (loserUnit) {
       units = units.map((u) =>
-        u.id === loserUnit.id ? { ...u, morale: Math.max(0, u.morale - 10) } : u,
+        u.id === loserUnit.id ? { ...u, morale: Math.max(troopMoraleFloor(u.experience ?? 0), u.morale - 10) } : u,
       );
     }
   }
