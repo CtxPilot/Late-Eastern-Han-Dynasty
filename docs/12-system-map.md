@@ -188,7 +188,7 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 |:--:|------|------|
 | D-0B-1 | Zustand store 拆 slice（cities/officers/factions/intel 独立）+ 局部 patch + 细粒度 selector | 0-B 扩容前 |
 | D-0B-2 | LOD 拖拽冻结（debounce / 拖拽中复用上一次 layout） | 0-B 扩容前 |
-| D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo | 0-B 扩容前 |
+| D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo。**Session 457 已清 TopBar/LeftPanel**：资源汇总与己方城池列表 `useMemo`；RightPanel 读取量小保持直算 | 0-B 扩容前 |
 | D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
 | D-0B-5 | 矢量州界 path + LOD 简化（strategic 粗 / local 细） | 0-B 引入州界时 |
 | D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序 | 0-B 扩容前 |

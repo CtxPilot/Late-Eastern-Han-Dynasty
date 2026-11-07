@@ -31,12 +31,14 @@ export function LeftPanel() {
     if (!game) return 0;
     return game.campaignArmies.filter((a) => a.factionId === game.playerFactionId).length;
   }, [game]);
+  // D-0B-3：己方城池列表随 game 变化才重算。
+  const playerCities = useMemo(
+    () => (game ? Object.values(game.cities).filter((c) => c.ruler === game.playerFactionId) : []),
+    [game],
+  );
 
   if (!game) return null;
 
-  const playerCities = Object.values(game.cities).filter(
-    (c) => c.ruler === game.playerFactionId,
-  );
   const selected = selectedCityId != null ? game.cities[selectedCityId] : null;
   const isPlayerCity = selected != null && selected.ruler === game.playerFactionId;
 

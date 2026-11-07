@@ -9,12 +9,20 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 456**（D-0B-11 计谋状态字段 + P5-14 部队等级 0-A：`BattleState.activeStrategem` 火计写入 + HUD；`shared/troop-level.ts` 七级表、`BattleUnit.experience` 从 Army 投影、六角攻防/暴击等级修正、六角战战果经验写回、`City.troopsExperience` 训练经验/征兵补员稀释/建军投影、Lv6 士气下限、`BattleView`/`CampaignPanel` `LvN` 展示；`verify-s456-troop-level` 22/22） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11 已清，P5-14 0-A 战斗投影交付 |
-| 代码最新 | Session 456 troop-level 共享模块、六角伤害/暴击等级投影、BattleView/CampaignPanel 展示、activeStrategem 写入；工作树待提交 |
-| 文档最新 | **Session 456 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 456 已交付**；P5-14 0-A 与 D-0B-11 完成；后续方向：P5-14 经验经济（战果/训练/补员）、0-B 闸门真人实测、剩余 D-0B 债 |
-| 下一步 | ①**P5-14 后续切片**：战果经验结算、城市训练经验、补员稀释写回、Lv6/Lv7 特性；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③剩余 D-0B 债：D-0B-9 财政税收俸禄、D-0B-12 水攻/伏兵 |
+| 会话 | **Session 457**（P5-13 生产构建 + P5-12 性能：`pnpm build` 三包全绿、client 410 modules；`TopBar` 资源汇总与 `LeftPanel` 己方城池列表 `useMemo`（D-0B-3）；client 74/74） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-3 已清，P5-13 完成 |
+| 代码最新 | Session 457 TopBar/LeftPanel 记忆化、Vite react/konva 分包；生产构建验证；工作树待提交 |
+| 文档最新 | **Session 457 双写**（`docs/10-progress.md` 日志 + 本文件双写同步） |
+| 本交接用途 | **Session 457 已交付**；P5-13 完成、P5-12 推进；后续方向：P5-15 武将特性、D-0B-12 水攻/伏兵、0-B 闸门实测 |
+| 下一步 | ①**P5-15 武将特性 + 属性天花板**（42×5 特性消费）；②**D-0B-12 水攻/伏兵服务端**；③**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；④P5-12 数据懒加载/worker 分包 |
+
+### Session 457 交接要点
+
+- **P5-13 生产构建**：`pnpm build` shared/server/client 三包全绿；client 410 modules，产出 `dist/` + PWA `sw.js`；main chunk 1223KB→780KB（react 130KB / konva 307KB 分包），worker 1.7MB 仍超 500KB 告警。
+- **P5-12 / D-0B-3**：`TopBar` 资源汇总 `useMemo([game])`；`LeftPanel` 己方城池列表 `useMemo([game])`；`RightPanel` 读取量小保持直算；Canvas 地形缓存沿 Session 415。
+- **验证**：client typecheck、client **74/74**、`pnpm build` 成功；shared/server 测试与全仓回归维持全绿。
+- **边界（诚实）**：P5-12 未做数据懒加载与代码分包；`dist/` 不入库。
+- **文档**：`docs/09` P5-12/P5-13/D-0B-3、`docs/10-progress.md` checklist + Session 457 日志、`docs/12` D-0B-3、本文件双写。
 
 ### Session 456 交接要点
 

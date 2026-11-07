@@ -204,6 +204,17 @@ self.addEventListener('fetch', (event) => {
 export default defineConfig({
   base,
   plugins: [react(), rebasePublicFontUrls(), ...engineResolvePlugins(), lehPwaPrecache()],
+  build: {
+    rollupOptions: {
+      output: {
+        // P5-12（Session 457）：框架与 Konva 独立分包，降低首屏主 chunk 体积。
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          konva: ['konva', 'react-konva'],
+        },
+      },
+    },
+  },
   worker: {
     format: 'es',
     plugins: engineResolvePlugins,

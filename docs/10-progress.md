@@ -1,3 +1,17 @@
+## 2026-11-07 — Session 457 · P5-13 生产构建 + P5-12 汇总记忆化（D-0B-3）
+
+- Phase：**Phase 5 打磨 / 性能与打包**；不新增玩法字段、不改 RNG/存档。
+- **P5-13 生产构建**：执行 `pnpm build`，shared/server/client 三包全绿；client `vite build` 410 modules，产出 `dist/index.html`、`game.worker-*.js`、CSS 与 PWA `sw.js`。`vite.config.ts` 增加 `react` / `konva` 手动分包，main chunk 1223KB→780KB（react 130KB / konva 307KB）；worker 1.7MB 仍超 500KB 告警（非失败）。
+- **P5-12 / D-0B-3**：
+  1. `TopBar`：`getFactionResourceTotals(game)` 改为 `useMemo([game])`，避免每次渲染遍历全城。
+  2. `LeftPanel`：己方城池列表 `Object.values(game.cities).filter(...)` 改为 `useMemo([game])`。
+  3. `RightPanel` 单城读取量小，保持直算并在 D-0B-3 注记。
+  4. Canvas 地形缓存层已在 Session 415（P2-3）落地，本会话回归通过。
+  5. `client/vite.config.ts` 增加 `manualChunks`（react/react-dom、konva/react-konva），降低首屏主 chunk。
+- **验证**：client typecheck、client **74/74**；`pnpm build` 三包成功；shared/server 测试与全仓回归维持全绿。
+- **边界（诚实）**：P5-12 完成 Canvas 缓存、汇总 memo 与框架分包；数据懒加载与 worker 分包仍后置（worker 1.7MB 告警保留）；P5-13 的构建产物未纳入版本库（`dist/` gitignore）。
+- **文档**：`docs/09` P5-12/P5-13/D-0B-3、`docs/10-progress.md` checklist + 本日志、`docs/12` D-0B-3、`HANDOFF.md` 双写。
+
 ## 2026-11-07 — Session 456 · D-0B-11 计谋状态字段 + P5-14 部队等级 0-A 战斗投影
 
 - Phase：**S10/S05 战斗深化**；清偿 D-0B-11，并推进 Phase 5 P5-14 部队等级 0-A 切片；不改战役 RNG/金样。
@@ -2084,8 +2098,8 @@
 | P5-09 | 音效系统 | [ ] | P5-07 |
 | P5-10 | 武将头像 | [ ] | P0-06 |
 | P5-11 | 平衡性测试 | [ ] | P5-01~P5-06 |
-| P5-12 | 性能优化 | [ ] | P5-09 |
-| P5-13 | 打包构建 | [ ] | P0-05 |
+| P5-12 | 性能优化 | [~] Session 457：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ react/konva 分包；数据懒加载后置 | P5-09 |
+| P5-13 | 打包构建 | [x] Session 457：`pnpm build` 三包全绿，client 410 modules 产出 dist/ + PWA sw.js | P0-05 |
 | P5-14 | 部队等级系统 | [~] Session 456 0-A 战斗投影（七级表/攻防暴击/UI）；经验获取与训练写回后置 | P2-04, P3-11 |
 | P5-15 | 武将特性 + 属性天花板计算引擎 | [ ] | P2-06, P0B-06 |
 
@@ -2120,7 +2134,7 @@
 |:--:|------|------|
 | D-0B-1 | Zustand store 拆 slice + 局部 patch + 细粒度 selector | 0-B 扩容前 |
 | D-0B-2 | LOD 拖拽冻结（debounce / 拖拽中复用上一次 layout） | 0-B 扩容前 |
-| D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo | 0-B 扩容前 |
+| D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo。**Session 457：TopBar/LeftPanel 已加 useMemo；RightPanel 读取量小保持直算** | 0-B 扩容前 |
 | D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
 | D-0B-5 | 矢量州界 path + LOD 简化 | 0-B 引入州界时 |
 | D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序 | 0-B 扩容前 |

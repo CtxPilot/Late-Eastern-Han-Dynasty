@@ -10,7 +10,7 @@ import { InkButton, SealButton } from '../ui/buttons';
 import { SealIcon } from '../ui/SealBadge';
 import { StonePanel } from '../ui/StonePanel';
 import { cycleSfxVolume, getSfxVolume } from '../../utils/sfx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const SEASON_LABEL: Record<number, string> = {
   [Season.SPRING]: '春',
@@ -34,6 +34,11 @@ export function TopBar() {
   const [slotName, setSlotName] = useState('manual-1');
   const [slots, setSlots] = useState<SaveSlotMeta[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  // D-0B-3：资源汇总随 game 变化才重算，避免每次渲染遍历全城。
+  const resourceTotals = useMemo(
+    () => (game ? getFactionResourceTotals(game, game.playerFactionId) : { gold: 0, food: 0, troops: 0, cityCount: 0 }),
+    [game],
+  );
 
   useEffect(() => {
     if (!slotsOpen) return;
@@ -67,10 +72,7 @@ export function TopBar() {
   const hasPendingFamilyTreatment = game.pendingFamilyTreatment != null;
   const hasBlockingDecision = hasPendingEvent || hasPendingFamilyTreatment;
   const faction = game.factions[game.playerFactionId];
-  const { gold, food, troops, cityCount } = getFactionResourceTotals(
-    game,
-    game.playerFactionId,
-  );
+  const { gold, food, troops, cityCount } = resourceTotals;
 
   const season = SEASON_LABEL[game.season] ?? '';
 
