@@ -179,8 +179,8 @@ function haveCommonEnemy(
 export function calculateAllianceChance(
   state: GameState,
   targetFactionId: number,
+  sourceFactionId: number = state.playerFactionId,
 ): AllianceChanceBreakdown {
-  const sourceFactionId = state.playerFactionId;
   const envoy = selectAllianceEnvoy(state, sourceFactionId);
   const bilateral = favorabilityBetween(
     state,

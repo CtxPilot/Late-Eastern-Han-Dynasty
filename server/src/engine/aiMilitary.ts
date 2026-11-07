@@ -13,6 +13,7 @@ import {
   countFieldArmies,
   formationTroopCap,
   getCommanderyTemplateByTemplateId,
+  isAllied,
   isHostileOrAtWar,
   maxFieldArmies,
   resolveArmyCountyNodeId,
@@ -225,6 +226,8 @@ export function runAiMilitary(
       );
       for (const member of group) handled.add(member.id);
     }
+    // P5-02 AI 战略兵力分配（Session 464）：多城势力后方安全城向前线危城调拔精兵与辎重
+    s = rebalanceAiGarrisons(s, f.id);
     // R6 后续 · S15 深化（Session 260）：郡域增援 —— 该 AI 势力为郡域守方时，
     // 评估是否从郡治大地图城市编成增援 Army 直接入场（不走大地图行军）。
     // 置于常规出征之前（守土优先）：增援军 phase='garrison' 不占 activeFronts 名额，
@@ -233,6 +236,98 @@ export function runAiMilitary(
     s = aiMilitaryTurn(s, f.id, resolutionRng, decisionRng);
   }
   return s;
+}
+
+/**
+ * P5-02 AI 战争决策与战略兵力分配（后方安全城向接壤前线危城兵力调配与集结）。
+ * 零 RNG 消费，确定性启发式规则：
+ * 1. 势力城池 ≥ 2；
+ * 2. 识别后方安全城（接壤城池均为本方或同盟，驻军充裕 > 3500 且留守 > 2000）；
+ * 3. 识别前线危城（接壤敌城兵力总和大于本城，或驻军不足 3500）；
+ * 4. 沿宏观直连路网进行兵力调拨（每次 800~2000 兵与对应军粮）；
+ * 5. 写入玩家可见文言军情战报。
+ */
+export function rebalanceAiGarrisons(state: GameState, factionId: number): GameState {
+  const myCities = Object.values(state.cities).filter((c) => c.ruler === factionId);
+  if (myCities.length < 2) return state;
+
+  const rearCities: Array<{ id: number; spareTroops: number; spareFood: number }> = [];
+  const threatenedFrontCities: Array<{ id: number; deficit: number }> = [];
+
+  for (const c of myCities) {
+    if (state.activeBattles && cityInActiveBattle(state, c.id)) continue;
+    const adjIds = macroAdjacentCityIds(c.id);
+    let enemyTroops = 0;
+    let hasEnemyNeighbor = false;
+
+    for (const adjId of adjIds) {
+      const adjCity = state.cities[adjId];
+      if (!adjCity || adjCity.ruler == null || adjCity.ruler === factionId) continue;
+      if (isAllied(state.diplomacy, factionId, adjCity.ruler)) continue;
+      hasEnemyNeighbor = true;
+      enemyTroops += adjCity.troops;
+    }
+
+    if (!hasEnemyNeighbor) {
+      // 后方绝对安全城
+      if (c.troops > 3500) {
+        const spareTroops = Math.min(c.troops - 2000, 2000);
+        const spareFood = Math.min(Math.max(0, c.food - 3000), spareTroops * 2);
+        if (spareTroops >= 800) {
+          rearCities.push({ id: c.id, spareTroops, spareFood });
+        }
+      }
+    } else {
+      // 前线城
+      if (c.troops < 3500 || c.troops < enemyTroops * 0.8) {
+        const deficit = Math.max(3500 - c.troops, enemyTroops - c.troops);
+        threatenedFrontCities.push({ id: c.id, deficit });
+      }
+    }
+  }
+
+  if (rearCities.length === 0 || threatenedFrontCities.length === 0) return state;
+
+  // 排序：后方按富余兵力降序，前线按缺口降序，保持确定性
+  rearCities.sort((a, b) => b.spareTroops - a.spareTroops || a.id - b.id);
+  threatenedFrontCities.sort((a, b) => b.deficit - a.deficit || a.id - b.id);
+
+  for (const rear of rearCities) {
+    for (const front of threatenedFrontCities) {
+      if (canTravelMacroAdjacent(rear.id, front.id)) {
+        const moveTroops = Math.min(rear.spareTroops, front.deficit);
+        if (moveTroops < 500) continue;
+        const moveFood = Math.min(rear.spareFood, moveTroops * 2);
+
+        const fromCity = state.cities[rear.id];
+        const toCity = state.cities[front.id];
+        if (!fromCity || !toCity) continue;
+
+        const cities = {
+          ...state.cities,
+          [fromCity.id]: {
+            ...fromCity,
+            troops: fromCity.troops - moveTroops,
+            food: fromCity.food - moveFood,
+          },
+          [toCity.id]: {
+            ...toCity,
+            troops: toCity.troops + moveTroops,
+            food: toCity.food + moveFood,
+          },
+        };
+
+        const factionName = state.factions[factionId]?.name ?? '某军';
+        return pushLog(
+          { ...state, cities },
+          'ai_military',
+          `【军机】${factionName}自后方${fromCity.name}调拨精兵${moveTroops}、军粮${moveFood}石进驻前线${toCity.name}，加固防线！`,
+        );
+      }
+    }
+  }
+
+  return state;
 }
 
 /**

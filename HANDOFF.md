@@ -9,12 +9,31 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 463**（P5-08 Canvas 战术动画几何计算引擎全量落地：`tacticalAnimations.ts` 纯数学几何特效函数 + `BATTLE_TOKENS` 集中收口战术动画色彩 Token + `BattleView.tsx` 行军虚线流光/水攻同心波纹/伏兵六角震波/火光微颤管线全挂接 + `tacticalAnimations.test.ts` 4/4 单测全绿 + 生产构建 11 个 JS 分包体积严格受控于 410KB 以内 + `verify-s463-canvas-animations` 6/6 全绿通过） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-06/P5-07a/P5-07c/P5-08/P5-11/P5-12/P5-13/P5-14/P5-15 完成 |
-| 代码最新 | Session 463 `tacticalAnimations.ts`、`canvasTokens.ts`、`BattleView.tsx`、`tacticalAnimations.test.ts`、`verify-s463-canvas-animations.mjs` 完成 |
-| 文档最新 | **Session 463 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
-| 本交接用途 | **Session 463 已交付**；P5-08 Canvas 战术动画收口；后续方向：0-B 闸门实测与 Phase 6 前端体验 / 战斗串联 / AI 深度决策 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 6 前端体验 & 三级战斗串联（S20/S21）或 P5-01~P5-03 AI 决策深化 |
+| 会话 | **Session 464**（P5-01/P5-02/P5-03 全域 AI 决策与战略协同引擎全量收官：`aiDiplomacy.ts` 弱势求盟与强邻进贡 + `aiPersonnel.ts` 同城在野武将登用与低忠赏赐维稳 + `aiMilitary.ts` 战略兵力跨路网调拔加固防线 + `negotiation.ts` 任意发起方结盟计算扩展 + `turn.ts` 月结管线闭环挂接；`turn-golden.test.ts` 3/3 金样自举与 24 个月双局确定性零 RNG 漂移通过；14/14 server 单测全绿；`verify-s464-ai-decisions` 6/6 全绿；**Phase 5 全量 15 项任务 100% 达成**） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；**Phase 5（P5-01~P5-15 共 15 大任务）全部收官 [x]** |
+| 代码最新 | Session 464 `aiDiplomacy.ts`、`aiPersonnel.ts`、`aiMilitary.ts`、`turn.ts`、`negotiation.ts`、`verify-s464-ai-decisions.mjs` 完成 |
+| 文档最新 | **Session 464 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
+| 本交接用途 | **Session 464 已交付**；Phase 5 全量收官；后续方向：0-B 闸门实测与 Phase 6 前端体验 / 三级战斗串联 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 6 前端体验 & 三级战斗串联（S20-W1~W4 / S21-W6~W9） |
+
+### Session 464 交接要点
+
+- **P5-03 AI 外交决策引擎（`server/src/engine/aiDiplomacy.ts`）**：
+  1. `assessFactionDiplomaticStance`：精准分析各势力城池数、总兵力与接壤邻邦态势，识别弱小（城池≤2、总兵力寡弱）及面临的强邻威胁；
+  2. `decideWeakFactionAlliance`：弱势势力主动寻觅有共同敌人或友好基础的势力（含玩家或 AI），出资 300 金遣使缔盟，结为同盟（`DipRelation.ALLIED`）并提升友好度；
+  3. `decideTributeToStrongNeighbor`：面对压倒性强邻且友好偏低时，主动奉金 200 两修睦进贡（若对方为玩家则玩家城池真实收金并获得起居注通报），缓和敌意；
+  4. `maintainAlliances`：同盟双方若因摩擦导致友好度暴跌至 -20 以下，盟约自动瓦解降级；
+  5. `shared/negotiation.ts`：扩展 `calculateAllianceChance(state, targetFactionId, sourceFactionId)` 兼容任意发起方。
+- **P5-01 AI 人事纳贤登用与忠诚维稳（`server/src/engine/aiPersonnel.ts`）**：
+  1. `decideAiRecruitWandering`：扫描 AI 势力城池中在野名士（`OfficerStatus.FREE`），以同城高魅力官员实施登用，相性吻合或魅力卓越者纳为心腹并初始化忠诚度；
+  2. `decideAiLoyaltyReward`：监测麾下忠诚 < 65 的将领，出资 50 金颁赐金帛维稳，忠诚度提升 +8 防止背叛；
+  3. `getAffinityDistance`：相性 0~150 环状距离准确判定。
+- **P5-02 AI 战争决策与战略兵力分配（`server/src/engine/aiMilitary.ts`）**：
+  1. `rebalanceAiGarrisons`：多城 AI 势力识别后方绝对安全城（四周无敌对邻邦，驻军 > 3500）与前线危城（四周强邻环伺，驻军匮乏）；
+  2. 沿宏观直连路网跨城调拔精兵（单次 800~2000）与辎重军粮加固防线，生成玩家可见文言军情。
+- **全栈管线集成（`server/src/engine/turn.ts`）**：
+  1. AI 内政后挂接 `runAllAiPersonnel`；军事出征前挂接 `runAllAiDiplomacy` 与 `rebalanceAiGarrisons`，确保外交关系与兵力分配直接指导军事行动；
+  2. 金样测试通过双局 24 个月同 seed 零 RNG 漂移验证。
 
 ### Session 463 交接要点
 

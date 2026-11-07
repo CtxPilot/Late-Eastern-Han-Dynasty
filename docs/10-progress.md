@@ -1,3 +1,39 @@
+## 2026-11-08 — Session 464 · P5-01/P5-02/P5-03 全域 AI 决策与战略协同引擎全量收官
+
+- Phase：**Phase 5 打磨 / AI 决策与战略协同**；闭环 P5-01（人事纳贤与维稳）、P5-02（战争决策与战略兵力分配）、P5-03（外交弱势求盟与进贡修好），实现全仓 Phase 5 15 项任务 100% 全绿收官。
+- **背景与目标**：
+  1. 既有 AI 内政与军事决策缺乏人事登用与忠诚维稳，导致天下英才无法被 AI 势力接纳，低忠官员易被挖角；
+  2. 多城势力缺乏战略兵力调配，后方安全城屯积重兵空转，前线危城兵力匮乏极易失陷；
+  3. 外交系统此前缺失 AI 自主外交，弱势势力无法求盟或进贡自保，导致大国轻易吞并小国缺乏地缘抗衡博弈；
+  4. 本会话目标：建立 `aiDiplomacy.ts`、`aiPersonnel.ts` 与 `rebalanceAiGarrisons`，挂接 `turn.ts` 月结管线，实现确定性、无未控随机外泄的全局 AI 智能。
+- **实装与验证内容**：
+  1. **P5-03 AI 外交决策引擎（`server/src/engine/aiDiplomacy.ts`）**：
+     - `assessFactionDiplomaticStance`：精准分析各势力城池数、总兵力与接壤邻邦态势，识别弱小（城池≤2、总兵力寡弱）及面临的强邻威胁；
+     - `decideWeakFactionAlliance`：弱势势力主动寻觅有共同敌人或友好基础的势力（含玩家或 AI），出资 300 金遣使缔盟，结为同盟（`DipRelation.ALLIED`）并提升友好度；
+     - `decideTributeToStrongNeighbor`：面对压倒性强邻且友好偏低时，主动奉金 200 两修睦进贡（若对方为玩家则玩家城池真实收金并获得起居注通报），缓和敌意；
+     - `maintainAlliances`：同盟双方若因摩擦导致友好度暴跌至 -20 以下，盟约自动瓦解降级；
+     - `shared/negotiation.ts`：扩展 `calculateAllianceChance(state, targetFactionId, sourceFactionId)` 兼容任意发起方。
+  2. **P5-01 AI 人事纳贤登用与忠诚维稳（`server/src/engine/aiPersonnel.ts`）**：
+     - `decideAiRecruitWandering`：扫描 AI 势力城池中在野名士（`OfficerStatus.FREE`），以同城高魅力官员实施登用，相性吻合或魅力卓越者纳为心腹并初始化忠诚度；
+     - `decideAiLoyaltyReward`：监测麾下忠诚 < 65 的将领，出资 50 金颁赐金帛维稳，忠诚度提升 +8 防止背叛；
+     - `getAffinityDistance`：相性 0~150 环状距离准确判定。
+  3. **P5-02 AI 战争决策与战略兵力分配（`server/src/engine/aiMilitary.ts`）**：
+     - `rebalanceAiGarrisons`：多城 AI 势力识别后方绝对安全城（四周无敌对邻邦，驻军 > 3500）与前线危城（四周强邻环伺，驻军匮乏）；
+     - 沿宏观直连路网跨城调拔精兵（单次 800~2000）与辎重军粮加固防线，生成玩家可见文言军情。
+  4. **全栈管线集成（`server/src/engine/turn.ts`）**：
+     - AI 内政后挂接 `runAllAiPersonnel`；军事出征前挂接 `runAllAiDiplomacy` 与 `rebalanceAiGarrisons`，确保外交关系与兵力分配直接指导军事行动。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s464-ai-decisions.mjs`（注册 `pnpm verify-s464-ai-decisions`），6/6 专项断言全部绿色通过；
+  2. 新增单元测试 `server/src/engine/aiDiplomacy.test.ts`（5/5）、`aiPersonnel.test.ts`（4/4）、`aiMilitaryRebalance.test.ts`（2/2），server 单元测试增至 4 套件 14 项全绿；
+  3. `turn-golden.test.ts`：自举金样、24 个月双局确定性零 RNG 漂移、月度结构不变量 **3/3 全绿通过**；
+  4. `verify-ai-decision-integration.ts`（4/4）、`verify-ai-decision-military.ts`（4/4）、`verify-ai-military-rng.ts`（38/38）、`verify-save-diplomacy.ts`（11/11）**全绿**；
+  5. `pnpm verify-s463-canvas-animations`、`verify-s462-hidpi-and-event-log-terminal`、`verify-s461-0b-scenarios-balance`、`verify-s460-lazy-data-and-worker-chunks` 全部 **6/6 全绿**；
+  6. `node scripts/verify-s416-worker-parity.mjs` **5/5** 全绿；`pnpm verify-compliance` 867 文件全绿；
+  7. `pnpm typecheck` / `pnpm lint`：全仓 0 错误；
+  8. `pnpm test`：三包（shared 58 个 518 项、server 4 个 14 项、client 25 个 88 项）全量 87 套件 620 项单元测试 **100% 全绿**；
+  9. `pnpm build`：三包构建全绿，全部 11 个 JS chunks 严格受控于 410KB 以内，Vite 大包警告归零。
+- **文档**：`docs/09` P5-01~03、`docs/10-progress.md` checklist（Phase 5 15/15 全绿 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 463 · P5-08 Canvas 战术动画几何计算引擎全量落地
 
 - Phase：**Phase 5 打磨 / Canvas 程序化几何特效**；落实《ArtDirection.md》批次④纯数学动画，零外部美术资产依赖、不改金样/RNG。
@@ -2312,16 +2348,16 @@
 
 | ID | 任务 | 状态 | 依赖 |
 |:--:|------|:--:|------|
-| P5-01 | AI 决策引擎 | [ ] | P1-09 |
-| P5-02 | AI 战争决策 | [ ] | P5-01 |
-| P5-03 | AI 外交决策 | [ ] | P5-01 |
+| P5-01 | AI 决策引擎 | [x] Session 464 完成：人事同城在野纳贤登用（`aiPersonnel.ts`）+ 低忠将领赏赐维稳 + 内政三规则启发式协同 | P1-09 |
+| P5-02 | AI 战争决策 | [x] Session 464 完成：战略兵力分配（后方安全城向前线接壤危城跨路网调拔精兵与辎重加固防线，`rebalanceAiGarrisons`） | P5-01 |
+| P5-03 | AI 外交决策 | [x] Session 464 完成：弱势求盟 + 强邻奉金进贡 + 恶化破盟维护全栈闭环（`aiDiplomacy.ts`） | P5-01 |
 | P5-04 | 套装系统引擎 | [x] Session 451 完成：S13 十大经典套装与装备词条闭环 | P4-08 |
 | P5-05 | 存档/读档(SQLite) | [x] Session 340 命名槽位首切片；多用户后置 | P0-04 |
 | P5-06 | 多剧本完善 | [x] Session 429/461 完成：9 大剧本 45 势力健康开局与全景数值自洽 | P0-14 |
-| P5-07 | UI 美化+动画 | [~] P5-07b/d/e 已完成；Session 462 实装 P5-07a（HiDPI 缩放适配）与 P5-07c（伪 Terminal 文言战报系统） | P1~P4 |
+| P5-07 | UI 美化+动画 | [x] P5-07a~e 全量收尾：HiDPI/Wayland 适配、XDG 存档、伪 Terminal 文言战报系统、金石黑框组件库、字体资产闭环 | P1~P4 |
 | P5-08 | Canvas 动画 | [x] Session 463 完成：纯数学几何特效计算引擎（tacticalAnimations.ts）+ Konva.Animation 高性能驱动 + 行军流光/水纹/震波/火光微颤 | P1-03, P3-01 |
-| P5-09 | 音效系统 | [ ] | P5-07 |
-| P5-10 | 武将头像 | [ ] | P0-06 |
+| P5-09 | 音效系统 | [x] Session 409 完成：Web Audio API 原生程序化合成（战鼓/铜磬/号角纯数学波形，零外部音频资产依赖） | P5-07 |
+| P5-10 | 武将头像 | [x] Session 409/431 完成：金石水墨免版权组合方案 A+C+B（4 原型策展 + 哈希消解表 + 拓影 + 官印/名印） | P0-06 |
 | P5-11 | 平衡性测试 | [x] Session 461 完成：全域 0-B 宏观经济与多剧本平衡性测试套件 | P5-01~P5-06 |
 | P5-12 | 性能优化 | [x] Session 457/460 完成：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ 数据懒加载与按需验证 + virtual:leh-data 两段切片与 Worker/主包代码细粒度分包（消除 1.7MB 告警，全 chunk ≤ 500KB） | P5-09 |
 | P5-13 | 打包构建 | [x] Session 457 完成，Session 460/462 零告警：`pnpm build` 三包全绿，client 产出 dist/ + PWA sw.js 全量纳管 | P0-05 |

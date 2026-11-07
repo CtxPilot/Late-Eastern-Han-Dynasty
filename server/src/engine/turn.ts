@@ -37,6 +37,8 @@ import {
   type TechLevels,
 } from '@leh/shared';
 import { runAllAiTurns } from './ai.js';
+import { runAllAiPersonnel } from './aiPersonnel.js';
+import { runAllAiDiplomacy } from './aiDiplomacy.js';
 import { runAiMilitary } from './aiMilitary.js';
 import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, runDelegationMilitary, tickDelegationReports } from './delegation.js';
 import { checkEndgameStatus } from './endgame.js';
@@ -340,6 +342,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     currentMonth,
     season,
   };
+  // P5-01 AI 人事管理（Session 464）：在野武将纳贤登用与低忠将领赏赐维稳
+  afterAi = runAllAiPersonnel(afterAi);
   // 委任军团（docs/42 D5/D6/D10，Session 421 S2 + S3）：D10 剪枝（空区/都督失效）→ D5 方针季度晋升 → 玩家委任区内政。
   // 剪枝置于 applyPendingPolicies 之前，保证失效区不参与当月军政；紧邻 AI 内政之后（同一顺序区），零 RNG；无委任区时原样返回，月结指纹不受影响。
   afterAi = pruneDelegationRegions(afterAi);
@@ -362,6 +366,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = runAllAiPlots(nextState, rng, rng);
   nextState = tickPlotsMonth(nextState, rng);
   nextState = tickNationalPolicies(nextState, isQuarterStart);
+  // P5-03 AI 外交决策（Session 464）：弱势求盟 + 强邻进贡 + 同盟维护；在军事出征前生效，确保外交关系直接指导军事过滤
+  nextState = runAllAiDiplomacy(nextState, rng);
   // AI 军事：外交过滤 + CampaignArmy 出征/结算；决策与结算共用权威 PRNG。
   nextState = runAiMilitary(nextState, rng, rng);
   // 委任军事（docs/42 D6 军事半，S3）：每区一次决策、region id 升序，沿用同一权威流固定位（紧邻 AI 军事之后，双流语义分流但同源）
