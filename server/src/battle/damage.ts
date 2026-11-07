@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 CtxPilot
 
-import { Weather, troopLevelInfo, type TerrainType, type UnitType } from '@leh/shared';
+import { Weather, troopLevelInfo, getUnitMatchup, type TerrainType } from '@leh/shared';
 import { TERRAIN_TABLE } from './terrain.js';
+
+export { getUnitMatchup };
 
 export interface DamageInput {
   unitAttack: number;
@@ -37,18 +39,7 @@ export interface DamageInput {
   troopExperience?: number;
 }
 
-/** 兵种克制系数：攻方克制守方 → 1.3；被克制 → 0.7；互无关系 → 1.0 */
-export function getUnitMatchup(
-  attackerType: UnitType,
-  defenderType: UnitType,
-  strongAgainst: Record<string, UnitType[]>,
-): number {
-  const strong = strongAgainst[attackerType] ?? [];
-  const weak = strongAgainst[defenderType] ?? [];
-  if (strong.includes(defenderType)) return 1.3;
-  if (weak.includes(attackerType)) return 0.7;
-  return 1.0;
-}
+
 
 /** 05 §6.1 core formula (demo-proven simplified path) */
 export function calcDamage(

@@ -4,3 +4,4 @@
 export * from './frameCount';
 export * from './meleeBackground';
 export * from './meleeStrategem';
+export * from './soldier';

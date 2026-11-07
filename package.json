@@ -205,6 +205,7 @@
     "verify-s468-territory-hull-and-pcg": "node scripts/verify-s468-territory-hull-and-pcg.mjs",
     "verify-s469-level1-campaign-performance": "node scripts/verify-s469-level1-campaign-performance.mjs",
     "verify-s470-tactical-orchestration": "node scripts/verify-s470-tactical-orchestration.mjs",
+    "verify-s471-level3-melee-stage": "node scripts/verify-s471-level3-melee-stage.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

@@ -27,6 +27,7 @@
     "tactical-grid.ts",
     "tactical-system.ts",
     "tacticalTerrain.ts",
+    "unitMatchup.ts",
     "melee-engagement.ts",
     "merit.ts",
     "items.ts",

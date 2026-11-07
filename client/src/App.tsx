@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
+import { MeleeStage } from './components/battle/MeleeStage';
 import { BattlefieldPanel } from './components/battlefield/BattlefieldPanel';
 import { BattlefieldSceneView } from './components/battlefield/BattlefieldSceneView';
 import { ScenarioSelect } from './components/scenario/ScenarioSelect';
@@ -69,7 +70,8 @@ export default function App() {
   if (!game) return <div className="h-full flex items-center justify-center bg-stone-950 text-red-300">游戏状态缺失，请重新选择剧本。</div>;
   if (screen === 'battle' || screen === 'tactical') return <div className="h-full flex flex-col"><BattleView /></div>;
   if (screen === 'battlefield' && battlefieldInstance) return <div className="h-full flex flex-col"><BattlefieldSceneView /></div>;
-  if (screen === 'battlefield' || screen === 'melee') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
+  if (screen === 'melee') return <div className="h-full flex flex-col"><MeleeStage /></div>;
+  if (screen === 'battlefield') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
 
   // 覆亡判定（P0-1 · Session 407 / HC-P2）：玩家势力灭亡即大势已去，进入终局屏。
   const playerFaction = game.factions[game.playerFactionId];

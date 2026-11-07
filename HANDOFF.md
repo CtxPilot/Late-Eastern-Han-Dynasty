@@ -9,12 +9,40 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 470**（S21-W7 二级战术串联全量落地：`shared/scenes.ts` screen 六态栈与 `gameStore.ts` `setScreen` + `shared/tacticalTerrain.ts` 7 大地貌真源 + `BattleView.tsx` 切入渐变遮罩与镜头推进 + `TacticalUnitPiece.tsx` 棋子平滑滑行动画 + hex 悬停地形情报卡片 + 邻接交战触发三级白刃转场与 HUD 双选项 + `FogLayer.tsx` 战术沙盘动态挖洞迷雾散开；单测 8/8 全绿；`verify-s470-tactical-orchestration` 6/6 全绿；全仓 100 套件 680 项测试 100% 全绿；**S21-W7 [x] 收官**） |
-| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联推进中（S21-W6 [x]、S21-W7 [x]）** |
-| 代码最新 | Session 470 `scenes.ts`、`tacticalTerrain.ts`、`TacticalUnitPiece.tsx`、`tacticalViewInteraction.test.tsx`、`BattleView.tsx`、`gameStore.ts`、`App.tsx`、`TopBar.tsx`、`verify-s470-tactical-orchestration.mjs` 完成 |
-| 文档最新 | **Session 470 双写**（`docs/10-progress.md` 日志与 S21-W7 状态 + 本文件双写同步） |
-| 本交接用途 | **Session 470 已交付**；后续方向：Phase 6 S21-W8~W9（白刃战横版微操/单挑接入） |
-| 下一步 | ①推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 30-50 图元 + 动态缩放 20-120 粒 + 纯战略指令 + 镜头推进切入 + Soldier 类移植 + 武将计特写）；②推进 **S21-W9**（单挑接入闭环）；③0-B 闸门真人游玩 120 回合实测 |
+| 会话 | **Session 471**（S21-W8 三级白刃战横版 MeleeStage 全量落地：`shared/unitMatchup.ts` 24 兵种克制与印信徽标真源 + `client/src/battle/soldier.ts` 原创小兵粒子类与动态缩放公式 + `client/src/components/battle/MeleeStage.tsx` 横版两军对垒舞台、四层视差背景、三级计谋环境粒子、四大战略指令与武将计全屏暗场特写 + `App.tsx` 与 `BattlefieldPanel.tsx` 全栈场景挂接；单测全绿；`verify-s471-level3-melee-stage` 6/6 全绿；全仓 103 套件 702 项测试 100% 全绿；**S21-W8 [x] 收官**） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联推进中（S21-W6 [x]、S21-W7 [x]、S21-W8 [x]）** |
+| 代码最新 | Session 471 `unitMatchup.ts`、`soldier.ts`、`MeleeStage.tsx`、`MeleeStage.test.tsx`、`soldier.test.ts`、`unitMatchup.test.ts`、`verify-s471-level3-melee-stage.mjs` 完成 |
+| 文档最新 | **Session 471 双写**（`docs/10-progress.md` 日志与 S21-W8 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 471 已交付**；后续方向：Phase 6 S21-W9（单挑接入闭环：白刃→单挑→回白刃） |
+| 下一步 | ①推进 **S21-W9**（单挑接入闭环：DuelStage 混合范式与状态机串接：白刃→单挑→回白刃）；②0-B 闸门真人游玩 120 回合实测 |
+
+### Session 471 交接要点
+
+- **S21-W8 兵种克制真源字典与印信徽标（`shared/unitMatchup.ts`）**：
+  1. 依据 `units.json` 建立涵盖 24 大兵种的 `DEFAULT_STRONG_AGAINST_MAP` 权威字典；
+  2. 导出纯函数 `getUnitMatchup(attacker, defender)`（克制 1.3、被克 0.7、均衡 1.0），并在服务端 `server/src/battle/damage.ts` 无缝复用；
+  3. 导出 `getUnitMatchupInfo` 与 `UNIT_MELEE_BADGES`（24 兵种单字印信、类别与几何方阵形状）；
+  4. `shared/unitMatchup.test.ts` 4/4 项测试全绿。
+- **S21-W8 原创小兵粒子类与军团演化（`client/src/battle/soldier.ts`）**：
+  1. 落实 `calculateSoldierCount` 动态缩放公式（1000 兵=20 粒，5000 兵=80 粒，上限 120 粒，保证 60 FPS 稳定流畅）；
+  2. `Soldier` 类：自主寻敌、朝向判定、软性防重叠分离斥力、近身/远程攻击冷却、受击扣血与倾斜淡出死亡动画；
+  3. 命令式 `draw(ctx, frame)`：纯几何水墨古典造型（赤缨头盔、甲胄色块、长枪/弓弩/环首刀圆盾/战马轮廓），严守免版权美术铁律；
+  4. `SoldierSwarm`：军团方阵群体管理器，实现纵深 Y 轴排序、飘字伤害（克制金/暴击红/普通白）与刀光闪烁弧；
+  5. `client/src/battle/soldier.test.ts` 9/9 项测试全绿。
+- **S21-W8 三级白刃战横版 MeleeStage 舞台（`client/src/components/battle/MeleeStage.tsx`）**：
+  1. 顶部军情旗牌卡：攻守双方主将印信方章（`【姓】`）、主帅姓名、兵力条、士气、阵型与兵种徽标；
+  2. 中央战况徽章：即时呈现 `兵种相克：克制 (×1.3)` 与计谋环境标识；
+  3. 舞台多层 Konva 架构：4 层水墨视差背景（暮色天空/青黛远山/烟岚中峰/战阵沙土）+ 三级计谋全屏环境粒子（火星升腾/斜织暴雨/伏兵幽暗）+ 大将大纛帅旗 + 军团对砍与飘字层；
+  4. 四大纯战略指令控制台：`全军突击`（移速+55%、战鼓激荡）、`鸣金收兵`（后撤大营、平滑淡出回退二级沙盘）、`发起单挑`（挑选主帅切入四级单挑）、`施放武将计`（震屏、全屏暗场、金石横幅特写与大范围暴击冲击波）；
+  5. 进战/出战 300ms 水墨全屏遮罩平滑过渡；
+  6. `client/src/components/battle/MeleeStage.test.tsx` 6/6 项测试全绿。
+- **S21-W8 全栈场景路由挂接与回退闭环**：
+  1. `App.tsx` 与 `BattlefieldPanel.tsx` 挂接 `screen === 'melee'` 渲染 `MeleeStage`；
+  2. `BattleView.tsx` 邻接交战触发镜头推进并压栈 `{ scene: 'melee' }` 切入；
+  3. `gameStore.ts` `meleeExit` 支持从白刃战安全逐层回退至 `tactical` / `battle` 战术沙盘。
+- **全栈门禁与体积审计**：
+  1. `verify-s471-level3-melee-stage` 6/6 全绿；
+  2. 全仓 103 个套件 702 项测试 100% 全绿；`pnpm build` 产物 CSS (72.75 KB)、主 JS (191.97 KB) 与全部 11 个 JS chunks 严格受控于预算内。
 
 ### Session 470 交接要点
 
