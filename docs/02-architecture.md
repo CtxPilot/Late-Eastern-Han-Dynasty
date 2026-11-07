@@ -562,7 +562,7 @@ server/src/data/loader.ts
 | `frameCount` | `client/src/battle/frameCount.ts` | 模块级共享帧计数 | S20-W3 |
 | `meleeBackground` | `client/src/battle/meleeBackground.ts` | 白刃战视差背景 PCG | S20-W3 |
 | `meleeStrategem` | `client/src/battle/meleeStrategem.ts` | 白刃战计谋全屏粒子 | S20-W3 |
-| `useAudio` | `client/src/hooks/useAudio.ts` | 原生 Web Audio API 程序化合成 | S21-W9 |
+| `sfx` | `client/src/utils/sfx.ts` | 原生 Web Audio API 程序化合成（兵刃碰撞/暴击冲击/必杀蓄力/闷哼/马蹄疾驰） | S21-W9 |
 | `inkMountains` | `shared/pcg/inkMountains.ts` | PCG 水墨山脉纯函数 | S20-W3 |
 | `naturalRiver` | `shared/pcg/naturalRiver.ts` | PCG 自然河流纯函数 | S20-W3 |
 | `terrainTiles` | `shared/pcg/terrainTiles.ts` | PCG 战术树/山/水纹绘制 | S20-W3 |

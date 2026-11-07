@@ -68,3 +68,63 @@ export const IDEAL_LABEL: Record<Ideal, string> = {
   [Ideal.CHIVALRY]: '侠义',
   [Ideal.FAME]: '名利',
 };
+
+/**
+ * 单挑 7 类出牌指令（DuelCommand）→ 中文名。
+ */
+export const DUEL_COMMAND_LABEL: Record<string, string> = {
+  fierce_attack: '猛攻',
+  restrain: '牵制',
+  finisher: '必杀',
+  parry: '格挡',
+  dodge: '闪避',
+  probe: '周旋',
+  sneak_attack: '暗袭',
+};
+
+/**
+ * 单挑 7 类出牌指令 → 克制规则说明。
+ */
+export const DUEL_COMMAND_DESC: Record<string, string> = {
+  fierce_attack: '克制【牵制】 · 被【必杀】克',
+  restrain: '克制【必杀】 · 被【猛攻】克',
+  finisher: '克制【猛攻】 · 被【牵制】克',
+  parry: '减伤反手 · 被【周旋】克',
+  dodge: '免疫猛攻与牵制 · 被【周旋】克',
+  probe: '周旋试探 · 克制【闪避与格挡】',
+  sneak_attack: '袖里暗刃 · 出其不意',
+};
+
+export interface DuelCardMatchupResult {
+  advantage: 1 | -1 | 0;
+  label: string;
+  color: string;
+}
+
+/**
+ * 单挑卡牌三向克制判定（核心三环：猛攻克牵制、牵制克必杀、必杀克猛攻）
+ */
+export function getDuelCardMatchup(cmd1: string, cmd2: string): DuelCardMatchupResult {
+  if (cmd1 === cmd2) {
+    return { advantage: 0, label: '平局', color: '#e2e8f0' };
+  }
+  if (
+    (cmd1 === 'fierce_attack' && cmd2 === 'restrain') ||
+    (cmd1 === 'restrain' && cmd2 === 'finisher') ||
+    (cmd1 === 'finisher' && cmd2 === 'fierce_attack') ||
+    (cmd1 === 'probe' && (cmd2 === 'dodge' || cmd2 === 'parry')) ||
+    (cmd1 === 'fierce_attack' && cmd2 === 'probe')
+  ) {
+    return { advantage: 1, label: '克制', color: '#f59e0b' };
+  }
+  if (
+    (cmd2 === 'fierce_attack' && cmd1 === 'restrain') ||
+    (cmd2 === 'restrain' && cmd1 === 'finisher') ||
+    (cmd2 === 'finisher' && cmd1 === 'fierce_attack') ||
+    (cmd2 === 'probe' && (cmd1 === 'dodge' || cmd1 === 'parry')) ||
+    (cmd2 === 'fierce_attack' && cmd1 === 'probe')
+  ) {
+    return { advantage: -1, label: '被克', color: '#94a3b8' };
+  }
+  return { advantage: 0, label: '均势', color: '#cbd5e1' };
+}

@@ -1,3 +1,49 @@
+## 2026-11-08 — Session 472 · S21-W9 单挑接入 DuelStage 混合范式与状态机串接全量落地（Phase 6 S21 100% 收官）
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S21 三级战斗串联**；闭环 S21-W9（`client/src/utils/sfx.ts` 5 类 Web Audio 原生程序化音效合成 + `shared/labels.ts` 单挑 7 类出牌字典与三向克制判定纯函数 + `client/src/components/battle/DuelStage.tsx` 横版对冲舞台、暮色沙盘背景、速度线、交马对冲、火花粒子与弧形发光刀光、顶部出牌卡牌对撞悬浮区与相克裁决徽标、暴击/反手/绝杀全屏暗场特写 + `client/src/components/battle/DuelPanel.tsx` 混合范式集成 + `client/src/App.tsx` 场景路由串联与一键回退），**至此 Phase 6 S21 三级战斗串联（S21-W6/W7/W8/W9）全部 4/4 100% 圆满收官**！无第三方商业依赖、零外部音频/图像素材依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 此前四级单挑（DuelPanel）为纯文本起居注与血条呈现，缺少视觉对冲张力与兵刃相击动态；
+  2. 既定规划需要落实混合范式（Hybrid Paradigm）：中央舞台采用 Canvas 2D/Konva 实时对冲演出，外层保留 DOM 叙事日志、HP 条、战报详情与交互控制；
+  3. 缺乏原创程序化音效：依据 §11.2.5 需要利用浏览器原生 Web Audio API，无需加载任何外部音频文件即可即时合成兵刃碰撞（锵）、暴击冲击波、必杀蓄力上升扫频、受伤闷哼与马蹄疾驰脉冲；
+  4. 场景状态机必须闭环：「大地图出征（L1）⇄ 六角战术战斗（L2）⇄ 横版白刃交锋（L3）⇄ 战阵单挑（L4）」四级战斗无缝串联与逐层出栈回退；
+  5. 本会话目标：实装 `sfx.ts` 原生音效合成、`labels.ts` 出牌字典与克制判定、`DuelStage.tsx` 演出舞台、改造 `DuelPanel.tsx` 混合范式、挂接 `App.tsx`，闭环 S21-W9 并达成 Phase 6 S21 (4/4) 100% 收官。
+- **实装与验证内容**：
+  1. **原生 Web Audio 程序化合成音效（`client/src/utils/sfx.ts`）**：
+     - 严格遵循 §11.2.5 免版权与免外部资源铁律，零外部音频文件加载；
+     - `playClash()`：方波 800Hz + 高通滤波 (1200Hz) + 指数快速衰减 (120ms)，合成兵刃相交金石之声；
+     - `playCritImpact()`：正弦波 90Hz 低频重击 + 250ms 衰减；
+     - `playFinisherCharge()`：锯齿波 200Hz→800Hz 上升扫频 + 低通滤波 (600Hz→2400Hz) 动态展开，合成必杀蓄力声浪；
+     - `playInjuredGroan()`：三角波 150Hz→70Hz 闷哼下滑；
+     - `playHorseGallop()`：3 连击正弦波短脉冲序列，模拟交马疾驰马蹄震击；
+     - 惰性 AudioContext 与 CI/Node.js 无头环境静默降级，确保门禁与测试 100% 稳定。
+  2. **单挑出牌指令字典与三向克制判定（`shared/labels.ts`）**：
+     - 导出 `DUEL_COMMAND_LABEL`：7 类出牌指令中文对应（猛攻/牵制/必杀/格挡/闪避/周旋/暗袭）；
+     - 导出 `DUEL_COMMAND_DESC`：权威相克规则文案提示；
+     - 导出 `getDuelCardMatchup(cmd1, cmd2)`：纯函数裁决核心三环克制（猛攻克牵制、牵制克必杀、必杀克猛攻；周旋克闪避/格挡；猛攻克周旋），返回 advantage (1/-1/0)、中文标签与主题色。
+  3. **四级单挑横版演出层（`client/src/components/battle/DuelStage.tsx`）**：
+     - 暮色沙盘背景 + 地平线水墨渐变 + 速度线（Speed Lines）疾驰效果；
+     - 双骑交马对冲演化：武将骑乘战马自左右两侧相向疾驰对冲，交马错身时触发金属火花粒子（`Spark`）与弧形发光刀光；
+     - 顶部出牌卡牌悬浮区（`duel-cards-overlay`）：直观对比攻守双方当前回合出的卡牌（如【猛攻】vs【牵制】），中间悬浮相克裁决金章（`【克制】`）；
+     - 暴击/反手/绝杀全屏特写（`duel-crit-overlay`）：暗场全屏闪烁 + 金石书法提示横幅（【反手一击】/【绝杀一击】/【重创】）；
+     - 动态支持三种播放速度模式：`full`（1.0x 完整交马）、`fast`（0.4x 极速）、`skip`（即时跳过）；
+     - `DuelStage.test.tsx` 4/4 项测试全绿。
+  4. **DuelPanel 混合范式装配与场景栈状态机闭环**：
+     - `DuelPanel.tsx`：中央舞台区域嵌入 `<DuelStage />`，完美融合现代 Canvas 对冲动画与外围古典起居注叙事；
+     - 底部「返回战场」按钮（`data-testid="btn-close-battlefield-duel"`）调用 `popSceneFrame()` 安全出栈；
+     - `App.tsx` 挂接 `screen === 'duel'` 渲染 `<DuelPanel duel={battle.duel} />`；
+     - `Vite` 构建优化：在 `vite.config.ts` 的 `manualChunks` 中独立拆分 `'battle-stage'`（68.52 KB），将主包 `index.js` 锐降至 137.15 KB，全面消除体积越界风险。
+- **验证（全绿）**：
+  1. 专项门禁 `pnpm verify-s472-level4-duel-stage` 6/6 项断言全部通过；
+  2. 单元测试 `DuelStage.test.tsx`（4/4）、`client` 全套件（40/40 套件 158/158 测试全绿）；
+  3. 全仓 104 个测试套件 706 项测试 100% 全绿（shared 60 个 534 项、server 4 个 14 项、client 40 个 158 项）；
+  4. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  5. `validate-data`（12 数据文件）、`verify-compliance`（920 文件合规）、`typecheck`、`lint` 全仓 0 错误；
+  6. 生产构建 `pnpm build` 全绿，CSS (74.33 KB / 预算 75 KB)、主 JS (133.93 KB / 预算 200 KB) 与全部 12 个 JS chunks 严格受控于预算内。
+- **里程碑达成**：
+  - **S21-W9 [x] 达成**；
+  - **Phase 6 S21 三级战斗串联（S21-W6 一级大地图 / S21-W7 二级战术六角 / S21-W8 三级白刃战 / S21-W9 四级单挑）4/4 100% 全量收官！**
+- **文档**：`docs/10-progress.md` checklist + 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 471 · S21-W8 三级白刃战横版 MeleeStage 全量落地
 
 - Phase：**Phase 6 前端体验 & 三级战斗串联 / S21 三级战斗串联**；闭环 S21-W8（`shared/unitMatchup.ts` 24 兵种克制与印信徽标真源 + `client/src/battle/soldier.ts` 原创小兵粒子类与动态缩放公式 + `client/src/components/battle/MeleeStage.tsx` 横版两军对垒舞台、四层视差背景、三级计谋环境粒子、四大战略指令与武将计全屏暗场特写 + `App.tsx` 与 `BattlefieldPanel.tsx` 全栈场景挂接），无第三方商业依赖、零外部素材依赖、不改服务端金样与权威 RNG。
@@ -2621,7 +2667,7 @@
 | S21-W6 | 一级大地图演出 | [x] | Session 469 完成：`MarchAnimationLayer.tsx` 行军虚线带羽箭头与流光 + 军旗占位与势力字 + 目标城烽火特效环与烽烟标 + `SiegeAssaultDialog.tsx` 围城五项大战略决断弹窗 + 全局挂接 |
 | S21-W7 | 二级战术串联 | [x] | Session 470 完成：`shared/scenes.ts` screen 六态栈与 setScreen + `shared/tacticalTerrain.ts` 7 大地貌真源 + `BattleView.tsx` 切入渐变遮罩与镜头推进 + `TacticalUnitPiece.tsx` 棋子平滑滑行动画 + hex 悬停地形情报卡片 + 邻接交战触发三级白刃转场 + `FogLayer.tsx` 战术迷雾散开 |
 | S21-W8 | 三级白刃战横版 | [x] | Session 471 完成：`unitMatchup.ts` 24 兵种克制与印信徽标真源 + `soldier.ts` 原创小兵粒子类与动态缩放 (1000=20, 5000=80, 封顶 120) + `MeleeStage.tsx` 横版两军对垒舞台、四层视差背景、三级计谋环境粒子、四大战略指令 (全军突击/鸣金收兵/发起单挑/施放武将计) 与武将计全屏暗场特写 + 全栈路由串联 |
-| S21-W9 | 单挑接入 | [ ] | DuelStage 混合范式（已储备）+ 状态机串接：白刃→单挑→回白刃 |
+| S21-W9 | 单挑接入 | [x] | Session 472 完成：`DuelStage.tsx` 混合范式（暮色沙盘/对冲交马/速度线/火花刀光/三向克制展示/全屏绝杀暗场）+ `sfx.ts` 5类原生 Web Audio 音效 + `labels.ts` 单挑出牌字典与克制判定 + `DuelPanel.tsx` 混合范式嵌入 + `App.tsx` 状态机串接与安全回退，至此 Phase 6 S21 三级战斗串联 4/4 100% 收官！ |
 
 ### 0-B 前置技术债（D-0B-1~13）
 

@@ -263,6 +263,9 @@ export default defineConfig({
           if (id.includes('/components/command/')) {
             return 'command-drawers';
           }
+          if (id.includes('/components/battle/') || id.includes('/battle/')) {
+            return 'battle-stage';
+          }
         },
       },
     },

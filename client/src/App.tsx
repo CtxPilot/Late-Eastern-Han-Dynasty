@@ -7,6 +7,7 @@ import { useGameStore } from './stores/gameStore';
 import { GameLayout } from './components/layout/GameLayout';
 import { BattleView } from './components/battle/BattleView';
 import { MeleeStage } from './components/battle/MeleeStage';
+import { DuelPanel } from './components/battle/DuelPanel';
 import { BattlefieldPanel } from './components/battlefield/BattlefieldPanel';
 import { BattlefieldSceneView } from './components/battlefield/BattlefieldSceneView';
 import { ScenarioSelect } from './components/scenario/ScenarioSelect';
@@ -18,6 +19,7 @@ export default function App() {
   const battlefieldInstance = useGameStore((s) => s.battlefieldInstance);
   const enterNanjunBattlefield = useGameStore((s) => s.enterNanjunBattlefield);
   const game = useGameStore((s) => s.game);
+  const battle = useGameStore((s) => s.battle);
   const loading = useGameStore((s) => s.loading);
   const error = useGameStore((s) => s.error);
   const boot = useGameStore((s) => s.boot);
@@ -71,6 +73,13 @@ export default function App() {
   if (screen === 'battle' || screen === 'tactical') return <div className="h-full flex flex-col"><BattleView /></div>;
   if (screen === 'battlefield' && battlefieldInstance) return <div className="h-full flex flex-col"><BattlefieldSceneView /></div>;
   if (screen === 'melee') return <div className="h-full flex flex-col"><MeleeStage /></div>;
+  if (screen === 'duel') {
+    return (
+      <div className="h-full flex flex-col">
+        {battle?.duel ? <DuelPanel duel={battle.duel} /> : <MeleeStage />}
+      </div>
+    );
+  }
   if (screen === 'battlefield') return <div className="h-full flex flex-col"><BattlefieldPanel /></div>;
 
   // 覆亡判定（P0-1 · Session 407 / HC-P2）：玩家势力灭亡即大势已去，进入终局屏。

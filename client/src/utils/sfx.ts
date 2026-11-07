@@ -137,3 +137,89 @@ export function playHorn(): void {
   osc.start(t);
   osc.stop(t + 0.55);
 }
+
+/** 金属碰撞"锵"：白噪声 + 带通滤波 2-4kHz + 短包络衰减 200ms（单挑交锋命中）。 */
+export function playClash(): void {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const len = Math.floor(ac.sampleRate * 0.2);
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const ch = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) {
+    ch[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ac.sampleRate * 0.04));
+  }
+  const noise = ac.createBufferSource();
+  noise.buffer = buf;
+  const filter = ac.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 3000;
+  filter.Q.value = 3.0;
+  noise.connect(filter);
+  env(filter, ac, 0.25, 0.2);
+  noise.start(t);
+}
+
+/** 暴击低频冲击：低频正弦 80Hz + 150ms 衰减（单挑暴击/重创震屏）。 */
+export function playCritImpact(): void {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(80, t);
+  osc.frequency.exponentialRampToValueAtTime(32, t + 0.15);
+  env(osc, ac, 0.35, 0.18);
+  osc.start(t);
+  osc.stop(t + 0.2);
+}
+
+/** 必杀蓄力：锯齿波上升扫频 200Hz → 800Hz（必杀技发动前特写）。 */
+export function playFinisherCharge(): void {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(200, t);
+  osc.frequency.exponentialRampToValueAtTime(800, t + 0.35);
+  const filter = ac.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(600, t);
+  filter.frequency.exponentialRampToValueAtTime(2400, t + 0.35);
+  osc.connect(filter);
+  env(filter, ac, 0.15, 0.38);
+  osc.start(t);
+  osc.stop(t + 0.4);
+}
+
+/** 受伤闷哼：三角波 150Hz + 300ms 衰减。 */
+export function playInjuredGroan(): void {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  const osc = ac.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(150, t);
+  osc.frequency.exponentialRampToValueAtTime(70, t + 0.28);
+  env(osc, ac, 0.2, 0.3);
+  osc.start(t);
+  osc.stop(t + 0.32);
+}
+
+/** 马蹄对冲：短脉冲序列（对冲疾驰）。 */
+export function playHorseGallop(): void {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
+  for (let k = 0; k < 3; k++) {
+    const pulseTime = t + k * 0.08;
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(110, pulseTime);
+    osc.frequency.exponentialRampToValueAtTime(45, pulseTime + 0.05);
+    env(osc, ac, 0.14 - k * 0.03, 0.06);
+    osc.start(pulseTime);
+    osc.stop(pulseTime + 0.07);
+  }
+}
