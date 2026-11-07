@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2026 CtxPilot
+
 /**
- * @deprecated Session 379 — MapCanvas 已迁入 legacy/，世界屏改用 StrategicWorldView。
- * 本 barrel 仅供显式调试引用；GameLayout 不再挂载。
+ * 地图相关图层与几何纯函数引擎导出
  */
 export { MapCanvas } from './legacy/MapCanvas';
+export * from './mapTerritory';
+export * from './TerritoryLayer';
+export * from './FogLayer';

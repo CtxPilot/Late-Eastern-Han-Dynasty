@@ -10,6 +10,7 @@
     "types/**/*",
     "validators/**/*",
     "data/**/*",
+    "pcg/**/*",
     "demographics.ts",
     "family-policy.ts",
     "ceiling.ts",

@@ -202,6 +202,7 @@
     "verify-s465-animated-numbers-and-log-stream": "node scripts/verify-s465-animated-numbers-and-log-stream.mjs",
     "verify-s466-faction-panel-and-radar": "node scripts/verify-s466-faction-panel-and-radar.mjs",
     "verify-s467-websocket-broadcast-and-turn-overlay": "node scripts/verify-s467-websocket-broadcast-and-turn-overlay.mjs",
+    "verify-s468-territory-hull-and-pcg": "node scripts/verify-s468-territory-hull-and-pcg.mjs",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {

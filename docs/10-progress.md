@@ -1,3 +1,36 @@
+## 2026-11-08 — Session 468 · S20-W3 势力凸包算法、FogLayer 迷雾与 PCG 水墨地形引擎全量落地
+
+- Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W3（`mapTerritory.ts` Graham Scan 凸包纯函数引擎与迷雾城过滤 + `TerritoryLayer.tsx` 闭合领土半透明多边形 + `FogLayer.tsx` globalCompositeOperation destination-out 挖洞迷雾 + `shared/pcg/` 原创水墨远山/自然水系/战术地貌/计谋视觉纯数学函数 + `client/src/battle/` 全局帧计数/视差背景/三级全屏粒子），实现 **S20 前端体验 4/4 项 100% 全量收官**。无第三方商业依赖、零外部素材依赖、不改服务端金样与权威 RNG。
+- **背景与目标**：
+  1. 势力大地图过去仅有单点标记，缺乏整体地缘领土多边形闭合与半透明渲染；
+  2. 既有迷雾仅为数据过滤或纯色遮罩，缺乏利用 `destination-out` 在探明城池视界动态挖洞羽化的物理视觉表现；
+  3. 战术六角格地貌与白刃战缺乏古典中国水墨画风的程序化山水（远山青黛、烟岚中峰、重峦叠嶂、自然蜿蜒河流、六角水墨微缩装饰、三级全屏计谋火水雾粒子）；
+  4. 本会话目标：实装 `client/src/components/map/mapTerritory.ts`、`TerritoryLayer.tsx`、`FogLayer.tsx`，建立 `shared/pcg/`（`inkMountains.ts`, `naturalRiver.ts`, `terrainTiles.ts`, `strategemVisuals.ts`）与 `client/src/battle/`（`frameCount.ts`, `meleeBackground.ts`, `meleeStrategem.ts`），达成 S20 全量收官。
+- **实装与验证内容**：
+  1. **势力领土凸包与多边形算法引擎（`client/src/components/map/mapTerritory.ts`）**：
+     - Graham Scan 纯数学 2D 点集凸包算法，支持坐标去重与退化容错；
+     - 单城势力退化为 12 边形圆形缓冲，双城势力退化为胶囊走廊缓冲多边形，三城及以上计算最小凸包并向外平滑外扩 35px 缓冲边界；
+     - 严格支持 `visibleCityIds` 迷雾白名单过滤，确保未探明迷雾城不参与领土凸包计算。
+  2. **势力领土与挖洞迷雾渲染层（`TerritoryLayer.tsx` & `FogLayer.tsx`）**：
+     - `TerritoryLayer.tsx`：Konva Line closed 领土半透明多边形（`opacity={0.18}`、`fill={faction.color}`、`listening={false}`），支持直接或 store 响应式推导；
+     - `FogLayer.tsx`：深墨遮罩覆盖（`Rect fill rgba(10, 10, 15, 0.55)`），探明城池视界以 `globalCompositeOperation="destination-out"` 动态挖洞，支持 LOD 半径缩放。
+  3. **PCG 水墨地形与程序化视觉引擎（`shared/pcg/`）**：
+     - `inkMountains.ts`：纯数学确定性生成青黛远山、烟岚中峰、近景重峦三层水墨山脊，输出 SVG path / Canvas 2D 指令；
+     - `naturalRiver.ts`：正弦多重谐波干流与自适应支流蜿蜒水系生成；
+     - `terrainTiles.ts`：战术六角格 6 大地形（平原、森林、山地、水域、沼泽、城塞）古典水墨微缩图元；
+     - `strategemVisuals.ts`：一级大地图与二级战术格火舌、水纹、伏兵幽雾程序化粒子。
+  4. **白刃战全局帧与视差背景（`client/src/battle/`）**：
+     - `frameCount.ts`：模块级集中共享全局渲染帧计数，支持跨 Stage 订阅步进；
+     - `meleeBackground.ts`：白刃战暮色天空、远山、中景、近景沙土地面 4 层视差渲染器；
+     - `meleeStrategem.ts`：三级白刃战火星升腾、斜织暴雨丝、四周幽暗遮蔽全屏环境粒子。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s468-territory-hull-and-pcg.mjs`（注册 `pnpm verify-s468-territory-hull-and-pcg`），6/6 专项断言全部通过；
+  2. 新增单元测试 `mapTerritory.test.ts`（7/7）、`TerritoryAndFogLayers.test.tsx`（5/5）、`inkMountains.test.ts`（8/8）、`meleePcg.test.ts`（3/3）；
+  3. 全仓 97 个测试套件 664 项测试 100% 全绿（shared 59 个 526 项、server 4 个 14 项、client 34 个 124 项）；
+  4. `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+  5. 生产构建 `pnpm build` 全绿，全部 11 个 JS chunks 与 CSS 严格受控于预算内。
+- **文档**：`docs/10-progress.md` checklist（S20 4/4 100% 全绿 [x]）+ 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 467 · S20-W1 WebSocket 接入与 TurnProgressOverlay 落地
 
 - Phase：**Phase 6 前端体验 & 三级战斗串联 / S20 前端体验**；闭环 S20-W1（`useBroadcast.ts` 原生 WebSocket 订阅 /ws 通道与退避重连 + 离线/Worker 自适应假进度推进 + `TurnProgressOverlay.tsx` 全屏水墨遮罩、动态文言 phase 与百分比进度条），无第三方商业依赖、不改服务端金样与权威 RNG。
@@ -2459,7 +2492,7 @@
 |:--:|------|:--:|------|
 | S20-W1 | endTurn WebSocket 接入 + TurnProgressOverlay | [x] | Session 467 完成：`useBroadcast.ts` 原生 WebSocket 订阅 /ws 通道与退避重连 + 离线/Worker 自适应假进度推进 + `TurnProgressOverlay.tsx` 全屏水墨遮罩、动态文言 phase 与百分比进度条 |
 | S20-W2 | TopBar useAnimatedNumber 数字跳动 + EventLog 流化 | [x] | Session 465 完成：rAF + easeOutCubic 缓动 Hook + TopBar 资源跳动高亮 + EventLogTerminal 平滑顶滚与淡入 |
-| S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [ ] | 凸包 graham scan；globalCompositeOperation 挖洞；layer.getContext() 命令式 |
+| S20-W3 | 势力凸包涂色 + FogLayer + konva tween + PCG 水墨地形 | [x] | Session 468 完成：`mapTerritory.ts` Graham Scan 凸包纯函数引擎 + `TerritoryLayer.tsx` 闭合领土半透明多边形 + `FogLayer.tsx` destination-out 挖洞迷雾 + `shared/pcg/` 水墨远山/自然水系/战术地貌/计谋视觉 + `client/src/battle/` 跨模块帧计数/视差背景/三级全屏粒子 |
 | S20-W4 | 派系面板 + OfficerDetail + 内政外交前端增强 | [x] | Session 466 完成：`factionInner.ts` §4.5.2 出身派系判定 + `FactionPanel.tsx` 凝聚力条与门阀展示 + `RadarChart.tsx` 纯 SVG 外交态势/武将五维双雷达图 |
 
 ### S21 — 三级战斗串联（4 Session）

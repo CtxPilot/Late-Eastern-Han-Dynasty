@@ -9,27 +9,35 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 467**（S20-W1 WebSocket 接入与 TurnProgressOverlay 落地：`useBroadcast.ts` 原生 WebSocket 订阅 /ws 通道与 1s/3s/10s 退避重连 + 离线/Worker 自适应假进度推进 + `TurnProgressOverlay.tsx` 全屏水墨推演遮罩、动态文言 phase 与百分比进度条；TurnFeedback 保持向后兼容无缝重导出；单测 4/4 全绿；`verify-s467-websocket-broadcast-and-turn-overlay` 5/5 全绿；全仓 92 套件 639 项测试 100% 全绿） |
-| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 前端体验 & 三级战斗串联推进中（S20-W1 [x]、S20-W2 [x]、S20-W4 [x]）** |
-| 代码最新 | Session 467 `useBroadcast.ts`、`useBroadcast.test.tsx`、`TurnProgressOverlay.tsx`、`TurnProgressOverlay.test.tsx`、`TurnFeedback.tsx`、`verify-s467-websocket-broadcast-and-turn-overlay.mjs` 完成 |
-| 文档最新 | **Session 467 双写**（`docs/10-progress.md` 日志与 S20-W1 状态 + 本文件双写同步） |
-| 本交接用途 | **Session 467 已交付**；后续方向：Phase 6 S20-W3（水墨地图迷雾与层级渲染/凸包涂色），或 S21-W6~W9（三级战斗串联六态栈/白刃战横版微操/单挑接入） |
-| 下一步 | ①推进 **S21-W6~W9**（六态栈状态机 `screen: 'boot'|'world'|'campaign'|'tactical'|'melee'|'duel'`、大地图军旗 Tween 演出、白刃战横版微操）；②推进 **S20-W3**（势力凸包涂色与 FogLayer）；③0-B 闸门真人游玩 120 回合实测 |
+| 会话 | **Session 468**（S20-W3 势力凸包算法、FogLayer 迷雾与 PCG 水墨地形引擎全量落地：`mapTerritory.ts` Graham Scan 凸包纯函数引擎与迷雾过滤 + `TerritoryLayer.tsx` 闭合领土半透明多边形 + `FogLayer.tsx` destination-out 挖洞迷雾 + `shared/pcg/` 水墨远山/自然水系/战术地貌/计谋视觉 + `client/src/battle/` 跨模块帧计数/视差背景/三级全屏粒子；单测 4 套 23 项全绿；`verify-s468-territory-hull-and-pcg` 6/6 全绿；全仓 97 套件 664 项测试 100% 全绿；**S20 前端体验 4/4 项 100% 全量收官 [x]**） |
+| 阶段 | Phase 0-B **数据扩容收官**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联（W6~W9）待推进** |
+| 代码最新 | Session 468 `mapTerritory.ts`、`mapTerritory.test.ts`、`TerritoryLayer.tsx`、`FogLayer.tsx`、`TerritoryAndFogLayers.test.tsx`、`shared/pcg/`（`inkMountains.ts`, `naturalRiver.ts`, `terrainTiles.ts`, `strategemVisuals.ts`, `inkMountains.test.ts`）、`client/src/battle/`（`frameCount.ts`, `meleeBackground.ts`, `meleeStrategem.ts`, `meleePcg.test.ts`）、`verify-s468-territory-hull-and-pcg.mjs` 完成 |
+| 文档最新 | **Session 468 双写**（`docs/10-progress.md` 日志与 S20-W3/S20 状态 + 本文件双写同步） |
+| 本交接用途 | **Session 468 已交付**；后续方向：Phase 6 S21-W6~W9（三级战斗串联六态栈/大地图出征演出/二级战术串联/白刃战横版微操/单挑接入） |
+| 下一步 | ①推进 **S21-W6**（一级大地图出征演出：军旗沿道路 Tween 位移 + 目标城烽火粒子 + 围城“是否攻城”弹窗 + 行军箭头）；②推进 **S21-W7**（二级战术串联：screen 六态栈 + 切入渐变 + 棋子滑行 + hex 悬停地形情报 + 邻接交战触发三级）；③推进 **S21-W8**（三级白刃战横版：MeleeStage Konva 方阵 + 纯战略指令 + Soldier 粒子类 + 武将计特写）；④推进 **S21-W9**（单挑接入闭环）；⑤0-B 闸门真人游玩 120 回合实测 |
 
-### Session 467 交接要点
+### Session 468 交接要点
 
-- **S20-W1 WebSocket 广播订阅与自适应降级（`client/src/hooks/useBroadcast.ts`）**：
-  1. 原生 WebSocket 订阅服务端 `/ws` 广播通道，响应 `turn_progress`、`turn_complete` 与 `event_triggered` 事件；
-  2. 实现 1s → 3s → 10s 指数退避重连机制与连接状态监听；
-  3. 提供离线与 Worker 模式下的平滑假进度自适应推进降级（0% → 15% → 25% → 55% → 75% → 88% 渐进悬停，月结完成瞬间封顶 100% 后平滑淡出）。
-- **S20-W1 回合推演全屏水墨遮罩（`client/src/components/layout/TurnProgressOverlay.tsx`）**：
-  1. 结合 `monthSettling` 与 `broadcast.active` 双通道触发；
-  2. 呈现典雅题签「天道流转 · 乾坤推演」、篆体年月标、动态文言 phase 徽章（`民政核算` / `军机布防` / `天下博弈` / `史官录简` 等）、实时战报文言与平滑百分比进度条；
-  3. 底部实时信道指示点（绿点实时信道 / 灰点离线推演）；
-  4. `TurnFeedback.tsx` 保持向后兼容无缝重导出。
+- **S20-W3 势力凸包与领土多边形引擎（`client/src/components/map/mapTerritory.ts`）**：
+  1. Graham Scan 纯数学 2D 点集凸包算法，支持相同点去重与多边形闭合；
+  2. 单城势力退化为 12 边形圆形缓冲，双城势力退化为胶囊走廊缓冲多边形，三城及以上计算最小凸包并向外平滑外扩 35px 缓冲边界；
+  3. 严格支持 `visibleCityIds` 迷雾白名单过滤，确保未探明迷雾城不参与领土凸包计算。
+- **S20-W3 势力领土与挖洞迷雾渲染层（`TerritoryLayer.tsx` & `FogLayer.tsx`）**：
+  1. `TerritoryLayer.tsx`：Konva Line closed 领土半透明多边形（`opacity={0.18}`、`fill={faction.color}`、`listening={false}`），支持直接或 store 响应式推导；
+  2. `FogLayer.tsx`：深墨遮罩覆盖（`Rect fill rgba(10, 10, 15, 0.55)`），探明城池视界以 `globalCompositeOperation="destination-out"` 动态挖洞，支持 LOD 半径缩放。
+- **S20-W3 PCG 水墨地形与程序化视觉引擎（`shared/pcg/`）**：
+  1. `inkMountains.ts`：纯数学确定性生成青黛远山、烟岚中峰、近景重峦三层水墨山脊，输出 SVG path / Canvas 2D 指令；
+  2. `naturalRiver.ts`：正弦多重谐波干流与自适应支流蜿蜒水系生成；
+  3. `terrainTiles.ts`：战术六角格 6 大地形（平原、森林、山地、水域、沼泽、城塞）古典水墨微缩图元；
+  4. `strategemVisuals.ts`：一级大地图与二级战术格火舌、水纹、伏兵幽雾程序化粒子。
+- **S20-W3 白刃战全局帧与视差背景（`client/src/battle/`）**：
+  1. `frameCount.ts`：模块级集中共享全局渲染帧计数，支持跨 Stage 订阅步进；
+  2. `meleeBackground.ts`：白刃战暮色天空、远山、中景、近景沙土地面 4 层视差渲染器；
+  3. `meleeStrategem.ts`：三级白刃战火星升腾、斜织暴雨丝、四周幽暗遮蔽全屏环境粒子。
 - **全栈门禁与体积审计**：
-  1. `verify-s467-websocket-broadcast-and-turn-overlay` 5/5 全绿；
-  2. 全仓 92 个套件 639 项测试 100% 全绿；`pnpm build` 产物 CSS (67.39 KB)、主 JS (159.29 KB) 严格达标。
+  1. `verify-s468-territory-hull-and-pcg` 6/6 全绿；
+  2. 全仓 97 个套件 664 项测试 100% 全绿；`pnpm build` 产物 CSS (69.68 KB)、全部 11 个 JS chunks 严格受控于预算内；
+  3. **至此 Phase 6 S20 前端体验 4/4 项全部达成 100% [x]**！
 
 ### Session 466 交接要点
 
