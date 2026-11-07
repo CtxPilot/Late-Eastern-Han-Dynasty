@@ -191,7 +191,7 @@ S10 | 战斗 | **M+/战役实装** | hex 战术设计保留 |
 | D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo。**Session 457 已清 TopBar/LeftPanel**：资源汇总与己方城池列表 `useMemo`；RightPanel 读取量小保持直算 | 0-B 扩容前 |
 | D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
 | D-0B-5 | 矢量州界 path + LOD 简化（strategic 粗 / local 细） | 0-B 引入州界时 |
-| D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序 | 0-B 扩容前 |
+| D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序。**Session 470~472 已清**：`shared/scenes.ts` 六态栈（boot/world/campaign/tactical/melee/duel）+ `pushSceneFrame`/`popSceneFrame`/`meleeExit` 场景栈状态机 + 切入切出平滑过渡时序 | 0-B 扩容前 |
 | D-0B-7 | officers.json `appearance` + `avatarGene` 字段 0-B 全量武将填写 + uniqueSkill 落库后从 uniqueSkill 派生 auraColor + avatarGene 按 officer.id 哈希派生 faceType/hairType/beardType/eyeType + 重点人物人工校对 sealText/clanTitle/officeSeal/ribbonColor 。**Session 409 已清：批次③ avatarGene 落库+消解表+三层头像重建** | 0-B 扩容前 |
 | D-0B-8 | 吕布服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血）。**Session 455 已清**：`shared/peerless.ts` + `attackUnit`/`runSimpleEnemyAi` 双路径，`verify-s455-peerless-ghost` 20/20 | S10 战斗深化时 |
 | D-0B-9 | §35 财政税收俸禄数据模型扩展（Faction 加 coinQuality/salaryArrears，City 加 taxRate，turn.ts 改产金公式，新建俸禄引擎） | 独立 Session |

@@ -390,7 +390,7 @@
 | D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo。**Session 457：TopBar/LeftPanel 已加 useMemo** | 0-B 扩容前 |
 | D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
 | D-0B-5 | 矢量州界 path + LOD 简化（strategic 粗 / local 细） | 0-B 引入州界时 |
-| D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序 | 0-B 扩容前 |
+| D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序。**Session 470~472 已清**：`shared/scenes.ts` 六态栈（boot/world/campaign/tactical/melee/duel）+ `pushSceneFrame`/`popSceneFrame`/`meleeExit` 场景栈状态机 + 切入切出平滑过渡时序 | 0-B 扩容前 |
 | D-0B-7 | officers.json appearance 字段 0-B 全量武将填写 + uniqueSkill 落库后从 uniqueSkill 派生 auraColor | 0-B 扩容前 |
 | D-0B-8 | 吕布服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血） | S10 战斗深化时 |
 | D-0B-9 | §35 财政税收俸禄数据模型扩展（Faction 加 coinQuality/salaryArrears，City 加 taxRate，turn.ts 改产金公式，新建俸禄引擎） | 独立 Session |
