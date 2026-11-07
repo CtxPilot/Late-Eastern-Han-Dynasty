@@ -9,12 +9,44 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 459**（D-0B-12 水攻与伏兵战术计谋服务端引擎与全栈实装：`castWaterTactic`/`castAmbushTactic`、气力消耗与神算冢虎减半、雨雪与水域地貌修正、减速 slow 与混乱 confusion 状态效果、AI 混乱待机、`activeStrategem` 驱动、全栈端点与 Worker 对齐、BattleView 按钮与篆体印章状态层；`verify-s459-water-ambush-tactics` 全通） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-13/P5-15 完成 |
-| 代码最新 | Session 459 battle.ts / simpleAi.ts / game.worker.ts / gameStore.ts / BattleView.tsx 全栈实装与验证完成 |
-| 文档最新 | **Session 459 双写**（`docs/10-progress.md` 日志 + `docs/09` + `docs/12` + `docs/35` + `docs/05` + `docs/08` + 本文件双写同步） |
-| 本交接用途 | **Session 459 已交付**；D-0B-12 清偿；后续方向：P5-12 数据懒加载与 Worker 分包、0-B 闸门实测 |
-| 下一步 | ①**P5-12 数据懒加载与 Worker 分包**（消除 1.7MB chunk 超 500KB 告警）；②**0-B 闸门真人游玩实测**（`41` §三，agent 不可代跑）；③**P5-11 平衡性与综合体验调优** |
+| 会话 | **Session 460**（P5-12 数据懒加载与 Worker/主包代码分包全量落地：`virtual:leh-data` 细粒度子路径拆分与 officers 两段式切片、`browser-loader.ts` 按需懒加载与记忆化 getter、Worker/主包 Rollup `manualChunks` 编排、消除 1.7MB 告警且全量 chunk 严格 ≤ 500KB、PWA `sw.js` 自动纳管；`verify-s460-lazy-data-and-worker-chunks` 6/6 全绿通过） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-12/P5-13/P5-15 完成 |
+| 代码最新 | Session 460 `client/vite.config.ts`、`browser-loader.ts`、`virtual-leh-data.d.ts`、`gameStore.ts` 分包与懒加载重构完成 |
+| 文档最新 | **Session 460 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
+| 本交接用途 | **Session 460 已交付**；P5-12 彻底收官；后续方向：0-B 闸门实测、P5-11 平衡性调优 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-zero-b-phase-gate.md` §三，agent 备好无报错运行态，由用户执行真实游玩）；②**P5-11 平衡性与综合体验调优**（针对 1001将、106城的大规模数值推演与收敛） |
+
+### Session 460 交接要点
+
+- **P5-12 数据懒加载与虚拟数据模块重构（`client/vite.config.ts`）**：
+  1. **虚拟数据两段式切片**：
+     - `virtual:leh-data/officers-part1`（1..500 将，~341KB）、`virtual:leh-data/officers-part2`（501..1001 将，~317KB）、`virtual:leh-data/officers`（`p1.concat(p2)` 聚合还原 1001 将完整阵列）；
+     - 其余静态数据独立子模块：`virtual:leh-data/cities`、`formations`、`units`、`items`、`females`、`children`、`skills`、`scenarios`、`events`、`relations`、`skill-trees`、`tactical-system-v2`；
+     - `virtual:leh-data` 聚合入口解构导出完全向下兼容。
+  2. **Worker 静态数据懒加载（`client/src/workers/browser-loader.ts`）**：
+     - 拔除顶层一次性 `const cached = loadAllStatic()` 评估执行；
+     - 引入 `createLazyStaticBundle()` 与 `lazyCache` 字典，10 大静态数据集改为按需单项 getter 校验与记忆化；
+     - `getStaticData()`、`loadAllStatic()`、`staticData`（Proxy）对外签名与调用行为 100% 兼容。
+  3. **Rollup 细粒度代码分包编排（`client/vite.config.ts`）**：
+     - **主包 `build.rollupOptions.output.manualChunks`**：拆出 `react`（~143KB）、`konva`（~295KB）、`vendor`（~46KB）、`leh-shared`（~258KB），业务主 chunk `index` 从 801KB 降至 493KB；
+     - **Worker `worker.rollupOptions.output.manualChunks`**：拆出 `data-officers-1`（~341KB）、`data-officers-2`（~317KB）、`data-core`（~406KB）、`worker-shared`（~310KB），Worker 入口 `game.worker` 从 1,750KB 锐降至 379KB；
+     - 全量 10 个 JS chunk 尺寸全部 ≤ 500KB，Vite 大包警告归零；
+     - `gameStore.ts` 中 `sfx.ts` 混用动态 import 转为静态引用，消除 Rollup 告警。
+  4. **PWA `sw.js` 预缓存自动闭环**：
+     - `lehPwaPrecache` 经 `closeBundle` 磁盘扫描自动把新切分的 10 个 JS 资产注入 `PRECACHE` 清单，离线冷启动与 Service Worker 无缝运行。
+- **全仓验证全绿**：
+  - `pnpm verify-s460-lazy-data-and-worker-chunks`：**6/6 全绿通过**（chunk 体积门禁、两段武将切片、10项静态规模真源 1001将/106城/27阵/24兵/165宝/90女/50孩/149技/9剧本/59事件、sw.js 预缓存清单、懒加载机制）；
+  - `pnpm build`：三包生产构建成功，零 Vite 大包警告；
+  - `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  - `node scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
+  - `verify-s459-water-ambush-tactics`、`verify-s458-traits-and-ceiling`：全通；
+  - `pnpm typecheck` / `pnpm lint` 全仓 0 错误；
+  - `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 850 文件通过；
+  - `pnpm test` 全仓 600+ 测试全绿通过。
+- **边界（诚实）**：
+  - officers.json 分两段静态打包入缓存，离线 PWA 冷启动预缓存仍全量包含 1001 武将数据；
+  - `dist/` 构建产物继续按规则保持 gitignore，不提交入库。
+- **文档**：`docs/09` P5-12/P5-13、`docs/10-progress.md` checklist + 本日志、本文件双写同步。
 
 ### Session 459 交接要点
 

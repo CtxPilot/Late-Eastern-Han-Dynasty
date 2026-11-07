@@ -1,3 +1,48 @@
+## 2026-11-08 — Session 460 · P5-12 数据懒加载与 Worker/主包代码分包全量落地
+
+- Phase：**Phase 5 打磨 / 性能与分包体系重构**；彻底消除 1.7MB chunk 超 500KB 告警，守住零 RNG 漂移与离线 PWA 闭环。
+- **背景与目标**：
+  1. Session 457 打包构建中，`dist/assets/game.worker-*.js` 达 1,750 kB（超 500KB 上限 3.5 倍），主包 `index-*.js` 达 801 kB；
+  2. 瓶颈根源：`virtual:leh-data` 采用单体虚拟模块一次性内联 12 个静态 JSON 数据文件（仅 officers.json 源码即 1.2MB、压缩后仍达 710KB），Rollup 无法跨模块细粒度切片；且 `browser-loader.ts` 在顶层执行 `loadAllStatic()` 全量急切校验，造成 Worker 启动高开销；
+  3. 目标：实装数据按需懒加载（Lazy Loading with Memoization）与虚拟数据模块两段式切片，打通 Worker 及主包 Rollup `manualChunks` 细粒度分包，使全量 JS chunk 严格受控于 500KB 以内，Vite 大包警告彻底清零。
+- **实装内容**：
+  1. **虚拟数据模块细粒度拆分（`client/vite.config.ts`）**：
+     - 重构 `lehDataVirtual` 插件支持子路径虚拟解析：`virtual:leh-data/officers-part1`（前 500 将，~341KB）、`virtual:leh-data/officers-part2`（后 501 将，~317KB）、`virtual:leh-data/officers`（`p1.concat(p2)` 聚合还原 1001 将完整阵列）；
+     - 各单体静态数据独立子模块：`virtual:leh-data/cities`、`formations`、`units`、`items`、`females`、`children`、`skills`、`scenarios`、`events`、`relations`、`skill-trees`、`tactical-system-v2`；
+     - `virtual:leh-data` 入口保持 100% 声明与导入兼容，对外提供完全一致的解构导出；
+     - `virtual-leh-data.d.ts` 追加 `declare module 'virtual:leh-data/*'` 通配类型支持。
+  2. **Worker 静态数据懒加载与按需记忆化（`client/src/workers/browser-loader.ts`）**：
+     - 拔除模块评估阶段急切执行的 `const cached = loadAllStatic()`；
+     - 引入 `createLazyStaticBundle()` 与 `lazyCache` 字典：为 `officers`、`cities`、`formations`、`units`、`items`、`females`、`children`、`skills`、`scenarios`、`events` 10 大数据集设置独立 getter；
+     - 仅在业务首次读取对应属性时触发 Zod 单项校验并持久记忆化，避免 Worker 冷启动遍历解析千将数据；
+     - 保持 `getStaticData()`、`loadAllStatic()`、`staticData`（Proxy 代理）对外接口与签名 100% 向下兼容。
+  3. **Rollup 细粒度代码分包编排（`client/vite.config.ts`）**：
+     - **主包 `build.rollupOptions.output.manualChunks`**：将 `react`/`react-dom`/`scheduler`（`react` ~143KB）、`konva`/`react-konva`（`konva` ~295KB）、`axios`/`zustand`（`vendor` ~46KB）、`@leh/shared`（`leh-shared` ~258KB）彻底剥离，使业务主 chunk `index` 从 801KB 大幅压降至 493KB（全部 < 500KB）；
+     - **Worker `worker.rollupOptions.output.manualChunks`**：将 `officers-part1`（`data-officers-1` ~341KB）、`officers-part2`（`data-officers-2` ~317KB）、其余静态数据（`data-core` ~406KB）、`@leh/shared`（`worker-shared` ~310KB）独立成块，Worker 入口 `game.worker` 从 1,750KB 锐降至 379KB（全部 < 410KB）；
+     - 将 `gameStore.ts` 对 `sfx.ts` 的混用 import 改为静态导入，消除 Rollup dynamic import 提示；
+     - Vite 构建日志中 `(!) Some chunks are larger than 500 kB` 告警彻底归零。
+  4. **PWA 预缓存清单自动纳管（`sw.js`）**：
+     - `lehPwaPrecache` 经 `closeBundle` 磁盘扫描自动将新拆分出的 10 个 JS 分包全量注入 `PRECACHE` 缓存清单，离线冷启动与 Service Worker 抓取无缝闭环。
+- **验证（全绿）**：
+  1. 新增专项门禁 `scripts/verify-s460-lazy-data-and-worker-chunks.mjs`（注册 `pnpm verify-s460-lazy-data-and-worker-chunks`）：
+     - 产物 JS chunks 体积上限门禁：全量 10 个 JS chunk 严格 ≤ 500 KB 通过；
+     - 核心分包架构与两段式切片存在性通过；
+     - 数据核 10 项规模真源（1001将 / 106城 / 27阵 / 24兵 / 165宝 / 90女 / 50孩 / 149技 / 9剧本 / 59事件）与首位曹操/中间吕凯王伉/末位萧建顺序 100% 匹配；
+     - PWA `sw.js` 预缓存清单（18 项资产）全覆盖通过；
+     - 数据懒加载机制与 getter 校验通过。
+  2. `pnpm build`：三包构建全绿，Vite 大包警告归零；
+  3. `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  4. `scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
+  5. `verify-s459-water-ambush-tactics`、`verify-s458-traits-and-ceiling`：全通；
+  6. `pnpm validate-data` 12 数据文件全通；`pnpm verify-compliance` 850 文件全通；
+  7. `pnpm typecheck` / `pnpm lint`：全仓 0 错误；
+  8. `pnpm test`：shared 58 套件 518 项、server 3 项、client 21 套件 74 项全部全绿。
+- **边界（诚实）**：
+  1. officers.json 分两段静态打包入缓存，首屏离线预缓存仍包含千将数据；
+  2. 运行时动态 fetch JSON 方案因离线 PWA 必须离线断网可玩，仍维持 Service Worker 静态构建预缓存；
+  3. `dist/` 构建产物继续按规则保持 gitignore，不提交入库。
+- **文档**：`docs/09` P5-12/P5-13、`docs/10-progress.md` checklist + 本日志、`HANDOFF.md` 双写同步。
+
 ## 2026-11-08 — Session 459 · D-0B-12 水攻与伏兵服务端引擎与全栈实装
 
 - Phase：**S10/S20 战斗深化 / 战术计谋全栈落地**；清偿 D-0B-12 债务，不改全局 RNG/金样。
@@ -2173,10 +2218,10 @@
 | P5-09 | 音效系统 | [ ] | P5-07 |
 | P5-10 | 武将头像 | [ ] | P0-06 |
 | P5-11 | 平衡性测试 | [ ] | P5-01~P5-06 |
-| P5-12 | 性能优化 | [~] Session 457：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ react/konva 分包；数据懒加载后置 | P5-09 |
-| P5-13 | 打包构建 | [x] Session 457：`pnpm build` 三包全绿，client 410 modules 产出 dist/ + PWA sw.js | P0-05 |
+| P5-12 | 性能优化 | [x] Session 457/460 完成：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ 数据懒加载与按需验证 + virtual:leh-data 两段切片与 Worker/主包代码细粒度分包（消除 1.7MB 告警，全 chunk ≤ 500KB） | P5-09 |
+| P5-13 | 打包构建 | [x] Session 457 完成，Session 460 告警清零：`pnpm build` 三包全绿，client 产出 dist/ + PWA sw.js 全量纳管 | P0-05 |
 | P5-14 | 部队等级系统 | [~] Session 456 0-A 战斗投影（七级表/攻防暴击/UI）；经验获取与训练写回后置 | P2-04, P3-11 |
-| P5-15 | 武将特性 + 属性天花板计算引擎 | [ ] | P2-06, P0B-06 |
+| P5-15 | 武将特性 + 属性天花板计算引擎 | [x] Session 458 完成：42项特性全量真源、天花板计算、加点门禁、服务/Worker对齐、暴击反击连击消费、UI分面 | P2-06, P0B-06 |
 
 ---
 

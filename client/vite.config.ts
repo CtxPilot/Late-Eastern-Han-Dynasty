@@ -76,24 +76,63 @@ function lehNodeShims(): Plugin {
   };
 }
 
+const VIRTUAL_LEH_DATA_PREFIX = 'virtual:leh-data/';
+const VIRTUAL_LEH_DATA_RESOLVED_PREFIX = '\0virtual:leh-data/';
+
 function lehDataVirtual(): Plugin {
   return {
     name: 'leh-data-virtual',
     resolveId(id) {
       if (id === 'virtual:leh-data') return VIRTUAL_LEH_DATA;
+      if (id.startsWith(VIRTUAL_LEH_DATA_PREFIX)) {
+        return '\0' + id;
+      }
       return null;
     },
     load(id) {
-      if (id !== VIRTUAL_LEH_DATA) return null;
+      if (!id.startsWith('\0virtual:leh-data')) return null;
       const readJson = (file: string) =>
         JSON.parse(readFileSync(resolve(REPO_ROOT, file), 'utf-8')) as unknown;
       // 文件名 kebab-case → 导出名 camelCase（如 skill-trees → skillTrees）
       const camelize = (name: string) => name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-      const lines = DATA_FILES.map(
-        (name) => `export const ${camelize(name)} = ${JSON.stringify(readJson(`server/src/data/${name}.json`))};`,
-      );
-      lines.push(`export const tacticalSystemV2 = ${JSON.stringify(readJson('shared/data/tactical-system.v2.json'))};`);
-      return lines.join('\n');
+
+      // P5-12：大型数据按半数拆分子模块（officers 1001将 split 500/501，单块<400KB）
+      if (id === '\0virtual:leh-data/officers-part1') {
+        const full = readJson('server/src/data/officers.json') as unknown[];
+        return `export default ${JSON.stringify(full.slice(0, 500))};`;
+      }
+      if (id === '\0virtual:leh-data/officers-part2') {
+        const full = readJson('server/src/data/officers.json') as unknown[];
+        return `export default ${JSON.stringify(full.slice(500))};`;
+      }
+      if (id === '\0virtual:leh-data/officers') {
+        return [
+          `import p1 from 'virtual:leh-data/officers-part1';`,
+          `import p2 from 'virtual:leh-data/officers-part2';`,
+          `export const officers = p1.concat(p2);`,
+          `export default officers;`,
+        ].join('\n');
+      }
+      if (id === '\0virtual:leh-data/tactical-system-v2') {
+        const data = readJson('shared/data/tactical-system.v2.json');
+        return `export const tacticalSystemV2 = ${JSON.stringify(data)};\nexport default tacticalSystemV2;`;
+      }
+      if (id.startsWith(VIRTUAL_LEH_DATA_RESOLVED_PREFIX)) {
+        const file = id.slice(VIRTUAL_LEH_DATA_RESOLVED_PREFIX.length);
+        const data = readJson(`server/src/data/${file}.json`);
+        const exportName = camelize(file);
+        return `export const ${exportName} = ${JSON.stringify(data)};\nexport default ${exportName};`;
+      }
+      if (id === VIRTUAL_LEH_DATA) {
+        const nonOfficers = DATA_FILES.filter((f) => f !== 'officers');
+        const reExports = [
+          `export { officers } from 'virtual:leh-data/officers';`,
+          ...nonOfficers.map((f) => `export { ${camelize(f)} } from 'virtual:leh-data/${f}';`),
+          `export { tacticalSystemV2 } from 'virtual:leh-data/tactical-system-v2';`,
+        ];
+        return reExports.join('\n');
+      }
+      return null;
     },
   };
 }
@@ -207,10 +246,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // P5-12（Session 457）：框架与 Konva 独立分包，降低首屏主 chunk 体积。
-        manualChunks: {
-          react: ['react', 'react-dom'],
-          konva: ['konva', 'react-konva'],
+        // P5-12（Session 457/460）：主包与依赖模块细粒度分包，彻底消除超 500KB 告警。
+        manualChunks(id) {
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/scheduler/')) {
+            return 'react';
+          }
+          if (id.includes('node_modules/konva/') || id.includes('node_modules/react-konva/')) {
+            return 'konva';
+          }
+          if (id.includes('node_modules/axios') || id.includes('node_modules/zustand')) {
+            return 'vendor';
+          }
+          if (id.includes('/shared/') || id.includes('@leh/shared')) {
+            return 'leh-shared';
+          }
         },
       },
     },
@@ -218,6 +267,25 @@ export default defineConfig({
   worker: {
     format: 'es',
     plugins: engineResolvePlugins,
+    rollupOptions: {
+      output: {
+        // P5-12（Session 460）：Worker 引擎与大型静态数据分包（officers 拆两半、数据核与共享库分离）
+        manualChunks(id) {
+          if (id.includes('officers-part1')) {
+            return 'data-officers-1';
+          }
+          if (id.includes('officers-part2')) {
+            return 'data-officers-2';
+          }
+          if (id.includes('virtual:leh-data')) {
+            return 'data-core';
+          }
+          if (id.includes('/shared/') || id.includes('@leh/shared')) {
+            return 'worker-shared';
+          }
+        },
+      },
+    },
   },
   server: {
     port: 5173,

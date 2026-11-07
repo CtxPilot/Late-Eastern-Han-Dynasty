@@ -45,19 +45,82 @@ function load<T>(key: Parameters<typeof validators.validateDataFile>[0], raw: un
   return result.data as T;
 }
 
-/** Load all static JSON. */
-export function loadAllStatic() {
+export interface StaticDataBundle {
+  officers: OfficerStatic[];
+  cities: CityStatic[];
+  formations: Formation[];
+  units: UnitTemplate[];
+  items: ItemStatic[];
+  females: FemaleStatic[];
+  children: ChildBirthDef[];
+  skills: SkillTemplate[];
+  scenarios: ScenarioStatic[];
+  events: EventTemplate[];
+}
+
+// P5-12：数据懒加载与记忆化（按需单项验证，消除顶层冷启动一次性全载惩罚）
+const lazyCache: Partial<StaticDataBundle> = {};
+
+function createLazyStaticBundle(): StaticDataBundle {
   return {
-    officers: load<OfficerStatic[]>('officers', officersJson),
-    cities: load<CityStatic[]>('cities', citiesJson),
-    formations: load<Formation[]>('formations', formationsJson),
-    units: load<UnitTemplate[]>('units', unitsJson),
-    items: load<ItemStatic[]>('items', itemsJson),
-    females: load<FemaleStatic[]>('females', femalesJson),
-    children: load<ChildBirthDef[]>('children', childrenJson),
-    skills: load<SkillTemplate[]>('skills', skillsJson),
-    scenarios: load<ScenarioStatic[]>('scenarios', scenariosJson),
-    events: load<EventTemplate[]>('events', eventsJson),
+    get officers() {
+      if (!lazyCache.officers) lazyCache.officers = load<OfficerStatic[]>('officers', officersJson);
+      return lazyCache.officers;
+    },
+    get cities() {
+      if (!lazyCache.cities) lazyCache.cities = load<CityStatic[]>('cities', citiesJson);
+      return lazyCache.cities;
+    },
+    get formations() {
+      if (!lazyCache.formations) lazyCache.formations = load<Formation[]>('formations', formationsJson);
+      return lazyCache.formations;
+    },
+    get units() {
+      if (!lazyCache.units) lazyCache.units = load<UnitTemplate[]>('units', unitsJson);
+      return lazyCache.units;
+    },
+    get items() {
+      if (!lazyCache.items) lazyCache.items = load<ItemStatic[]>('items', itemsJson);
+      return lazyCache.items;
+    },
+    get females() {
+      if (!lazyCache.females) lazyCache.females = load<FemaleStatic[]>('females', femalesJson);
+      return lazyCache.females;
+    },
+    get children() {
+      if (!lazyCache.children) lazyCache.children = load<ChildBirthDef[]>('children', childrenJson);
+      return lazyCache.children;
+    },
+    get skills() {
+      if (!lazyCache.skills) lazyCache.skills = load<SkillTemplate[]>('skills', skillsJson);
+      return lazyCache.skills;
+    },
+    get scenarios() {
+      if (!lazyCache.scenarios) lazyCache.scenarios = load<ScenarioStatic[]>('scenarios', scenariosJson);
+      return lazyCache.scenarios;
+    },
+    get events() {
+      if (!lazyCache.events) lazyCache.events = load<EventTemplate[]>('events', eventsJson);
+      return lazyCache.events;
+    },
+  };
+}
+
+const lazyBundle = createLazyStaticBundle();
+
+/** Load all static JSON. */
+export function loadAllStatic(): StaticDataBundle {
+  return {
+    officers: lazyBundle.officers,
+    cities: lazyBundle.cities,
+    formations: lazyBundle.formations,
+    units: lazyBundle.units,
+    items: lazyBundle.items,
+    females: lazyBundle.females,
+    children: lazyBundle.children,
+    skills: lazyBundle.skills,
+    scenarios: lazyBundle.scenarios,
+    events: lazyBundle.events,
   };
 }
 
@@ -70,15 +133,13 @@ export function loadSkillTrees() {
   return ((skillTreesJson as { trees?: unknown }).trees ?? skillTreesJson) as import('@leh/shared').SkillTreeDef[];
 }
 
-const cached = loadAllStatic();
-
-export function getStaticData() {
-  return cached;
+export function getStaticData(): StaticDataBundle {
+  return lazyBundle;
 }
 
-export const staticData = new Proxy({} as ReturnType<typeof loadAllStatic>, {
+export const staticData = new Proxy({} as StaticDataBundle, {
   get(_t, prop: string) {
-    return getStaticData()[prop as keyof ReturnType<typeof loadAllStatic>];
+    return lazyBundle[prop as keyof StaticDataBundle];
   },
 });
 

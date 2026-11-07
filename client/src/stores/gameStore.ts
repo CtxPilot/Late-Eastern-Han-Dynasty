@@ -6,6 +6,7 @@ import type { AutoBattleResult, BattleState, BattlefieldMap, CampaignArmy, Event
 import { type SceneFrame, type BattlefieldInstance, pushScene, popScene, popToScene, replaceStack, screenOf, clearStack, BOOT_SCREEN, getCommanderyLabel } from '@leh/shared';
 import { gameApi as api } from '../services/gateway';
 import { errMsg, type CampaignStartBody, type ChildCatalogEntry, type EventCatalogEntry, type ScenarioCatalogEntry, type UsableAbility } from '../services/api';
+import { playDrum } from '../utils/sfx';
 
 type Screen = 'boot' | 'scenario' | 'world' | 'battle' | 'battlefield' | 'melee' | 'tactical' | 'duel';
 
@@ -553,7 +554,7 @@ export const useGameStore = create<Store>((set, get) => ({
         monthSettling: false,
         monthReport: { year: game.currentYear, month: game.currentMonth, entries: monthEntries },
       });
-      void import('../utils/sfx').then((m) => m.playDrum()).catch(() => {}); // 批次⑤ 战鼓
+      try { playDrum(); } catch {} // 批次⑤ 战鼓
     } catch (e) {
       set({ error: errMsg(e, '结束回合失败'), loading: false, monthSettling: false });
     }

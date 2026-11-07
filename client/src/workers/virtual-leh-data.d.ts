@@ -16,3 +16,10 @@ declare module 'virtual:leh-data' {
   export const skillTrees: unknown;
   export const tacticalSystemV2: unknown;
 }
+
+declare module 'virtual:leh-data/*' {
+  const content: unknown;
+  export default content;
+  export const officers: unknown;
+  export const tacticalSystemV2: unknown;
+}

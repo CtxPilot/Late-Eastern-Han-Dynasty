@@ -508,8 +508,8 @@
 | P5-09 | 音效系统 **→ 批次⑤ Session 409 首切片完成**（战鼓/铜磬/号角 Web Audio 合成；音色打磨后置） | P5-07 |
 | P5-10 | 武将头像（**金石水墨·免版权组合方案 A+C+B**；Session 124 已有四名代表人物 C+B 简化切片，待补 A 拓片层、`avatarGene` 落库与 30 人精校；详见 `00-dev-constitution.md` §十一、`07-ui-design.md` §11.6；禁止约稿立绘）**→ 批次③ Session 409 完成**：avatarGene 落库（4 原型策展+哈希派生+消解表）+ A′拓影/C 6×10×8×7/B 印信层（清 D-0B-7；officeSeal 动态官职印后置） | P0-06 |
 | P5-11 | 平衡性测试 | P5-01~P5-06 |
-| P5-12 | 性能优化(Canvas缓存/数据懒加载) — **Session 457：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ Vite react/konva 分包完成**；数据懒加载后置 | P5-09 |
-| P5-13 | 打包构建(生产模式) — **Session 457 完成**：`pnpm build` 三包全绿，client 410 modules 产出 `dist/`（含 PWA `sw.js`）；仅剩 chunk 体积告警 | P0-05 |
+| P5-12 | 性能优化(Canvas缓存/数据懒加载/Worker分包) — **Session 457/460 完成**：Canvas 地形缓存（P2-3）+ TopBar/LeftPanel 汇总 useMemo（D-0B-3）+ 数据懒加载与按需属性加载（browser-loader lazy getter）+ virtual:leh-data 两段切片与 Worker/主包细粒度 Rollup 分包（JS chunk 全部 ≤ 500KB，彻底消除超限告警） | P5-09 |
+| P5-13 | 打包构建(生产模式) — **Session 457 完成，Session 460 零告警**：`pnpm build` 三包全绿，client 产出 `dist/`（含 PWA `sw.js` 预缓存）；所有 chunk 体积严格受控于 500KB 内 | P0-05 |
 | P5-14 | 部队等级系统(7级/经验获取/补员稀释/训练加速) — **Session 456：0-A 战斗投影 + 六角战战果经验 + 训练经验/补员稀释/建军投影 + Lv6 士气下限完成**（七级表/攻防暴击/UI/经验；Lv7 重建后置） | P2-04, P3-11 |
 | P5-15 | 武将特性 + 属性天花板引擎（42项特性全量真源、天花板计算、加点门禁、服务/Worker对齐、暴击反击连击消费、UI分面） — **Session 458 完成** | P2-06, P0B-06 |
 
