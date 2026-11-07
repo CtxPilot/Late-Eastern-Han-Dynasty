@@ -51,7 +51,7 @@ const evaluate = async (expression) => {
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 async function waitFor(expr, timeoutMs = 25000) { const s = Date.now(); while (Date.now() - s < timeoutMs) { if (await evaluate(expr)) return true; await pause(200); } return false; }
 async function shot(name) { const r = await cmd('Page.captureScreenshot', { format: 'png' }); writeFileSync(`${shotsDir}/${name}.png`, Buffer.from(r.result.data, 'base64')); }
-const dateText = () => evaluate(`return document.querySelector('[data-testid="top-bar"]')?.textContent?.match(/(-?\\d+)年\\s*\\S*?(\\d+)月/)?.[0] ?? '';`);
+const dateText = () => evaluate(`return document.querySelector('[data-testid="top-bar"]')?.textContent?.match(/(-?\\d+)年.*?(\\d+)月/)?.[0] ?? '';`);
 const btnText = () => evaluate(`return document.querySelector('[data-testid="btn-end-turn"]')?.textContent?.trim() ?? '';`);
 async function clearBlockers() {
   let acted = false;
