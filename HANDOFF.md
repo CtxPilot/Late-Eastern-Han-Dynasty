@@ -9,12 +9,39 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 460**（P5-12 数据懒加载与 Worker/主包代码分包全量落地：`virtual:leh-data` 细粒度子路径拆分与 officers 两段式切片、`browser-loader.ts` 按需懒加载与记忆化 getter、Worker/主包 Rollup `manualChunks` 编排、消除 1.7MB 告警且全量 chunk 严格 ≤ 500KB、PWA `sw.js` 自动纳管；`verify-s460-lazy-data-and-worker-chunks` 6/6 全绿通过） |
-| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-12/P5-13/P5-15 完成 |
-| 代码最新 | Session 460 `client/vite.config.ts`、`browser-loader.ts`、`virtual-leh-data.d.ts`、`gameStore.ts` 分包与懒加载重构完成 |
-| 文档最新 | **Session 460 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
-| 本交接用途 | **Session 460 已交付**；P5-12 彻底收官；后续方向：0-B 闸门实测、P5-11 平衡性调优 |
-| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-zero-b-phase-gate.md` §三，agent 备好无报错运行态，由用户执行真实游玩）；②**P5-11 平衡性与综合体验调优**（针对 1001将、106城的大规模数值推演与收敛） |
+| 会话 | **Session 461**（P5-11 全域 0-B 宏观经济与多剧本平衡性测试套件：9 大历史剧本 45 个可玩势力开局健康度全景审计、106 城池宏观指标合法性、1001 武将五维常模、剧本4群雄讨董连续 12 个月周年演进财政自洽、吕布有效武力 150 天花板与伤害乘区安全、水攻/伏兵战术状态机联动；`verify-s461-0b-scenarios-balance` 6/6 全绿通过） |
+| 阶段 | Phase 0-B **数据扩容收官**（cities 106 / formations 27 / units 24 / items 165 / females 90 / children 50 / skills 149 / scenarios 9 / events 59 / officers 1001）；系统数 **27 大**；D-0B-8/D-0B-11/D-0B-12/D-0B-3 已清，P5-04/P5-11/P5-12/P5-13/P5-15 完成 |
+| 代码最新 | Session 461 `server/src/scripts/verify-s461-0b-scenarios-balance.ts` 全域平衡性门禁全通，无报错运行态就绪 |
+| 文档最新 | **Session 461 双写**（`docs/10-progress.md` 日志 + `docs/09` + 本文件双写同步） |
+| 本交接用途 | **Session 461 已交付**；P5-11 验证与调优闭环；后续方向：0-B 闸门实测 |
+| 下一步 | ①**0-B 闸门真人游玩实测**（`docs/41-playtest-protocol.md` §三，agent 备好无报错运行态，由用户执行 120 回合真实游玩）；②继续推进 Phase 5 / Phase 6 余项 |
+
+### Session 461 交接要点
+
+- **P5-11 全域 0-B 宏观平衡性测试套件（`verify-s461-0b-scenarios-balance.ts`）**：
+  1. **全 9 剧本初始健康度全景审计**：
+     - 覆盖 9 大剧本（英雄集结、关东义兵、黄巾之乱、群雄讨董、群雄逐鹿、官渡对峙、赤壁前夜、汉中与襄樊、五丈原对峙）全部 45 个可玩势力开局；
+     - 校验势力存活、君主有效、首都归属、初始国库金粮非负无立即破产风险。
+  2. **106 座城池宏观数值域审计**：
+     - 人口 > 0（总人口超 1300 万）、农商墙防非负、民心在 [0, 100] 常模区间、驻军非负。
+  3. **1001 名武将五维常模审计**：
+     - 统/武/智/政/魅严格位于 [1, 100] 常模区间，无非法越界。
+  4. **代表剧本周年宏观演进与财政自洽**：
+     - 剧本 4（群雄讨董·曹操）连续 12 个月四季自主推进，金粮实数自洽存活，产出权威战报，零异常中断。
+  5. **极限武将战力天花板与伤害乘区安全审计**：
+     - 吕布 100+50=150 有效武力解锁 Lv5 天花板等级；极端战力（150武力 + Lv7铁军）普攻伤害有限正实数（无 NaN/无溢出）；
+     - Lv7 铁军溃灭经验保留 30%（3000→900）、普通部队溃灭经验归零；Lv6 百战部队士气下限严格锁定 50。
+  6. **战术计谋状态机联动与气力消耗校验**：
+     - 水计与伏兵释放后 energy 正常扣减，`activeStrategem` 状态置为 `'water'` / `'ambush'`，伏兵附加混乱。
+- **全仓验证全绿**：
+  - `pnpm verify-s461-0b-scenarios-balance`：**6/6 全绿通过**；
+  - `turn-golden.test.ts`：**3/3 严格匹配零漂移**；
+  - `pnpm verify-s460-lazy-data-and-worker-chunks`：**6/6** 全绿；
+  - `node scripts/verify-s416-worker-parity.mjs`：**5/5** 全绿；
+  - `pnpm validate-data` 12 数据文件通过；`pnpm verify-compliance` 851 文件通过；
+  - `pnpm typecheck` / `pnpm lint` 全仓 0 错误；
+  - `pnpm test` 全仓 600+ 测试全绿通过；`pnpm build` 三包构建全绿零告警。
+- **文档**：`docs/09` P5-04/P5-11、`docs/10-progress.md` checklist + 本日志、本文件双写同步。
 
 ### Session 460 交接要点
 
