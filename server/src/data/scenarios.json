@@ -950,11 +950,11 @@
   },
   {
     "id": 4,
-    "name": "群雄讨董（190·0-B 历史切片）",
+    "name": "群雄讨董（190·三十诸侯全割据）",
     "type": "historical",
     "noLifespan": false,
-    "description": "初平元年正月，关东州郡共推袁绍为盟主讨董卓，董卓挟天子迁都长安，焚烧洛阳。曹操追击荥阳败绩，孙坚自长沙北上，兵锋直指洛阳。",
-    "scopeNote": "技术切片：董卓、袁绍、曹操、孙坚、袁术、公孙瓒、陶谦、刘表八个指挥集团；河内、鲁阳仍以邻近节点作补给席位（沿关东义兵口径）；韩馥之冀州、孔伷之豫州未建模。与既有「关东义兵」切片并存，本剧本为多势力割据版。事件挂接留待 P0B-15。",
+    "description": "初平元年正月，关东州郡共推袁绍为盟主讨董卓，董卓挟天子迁都长安，焚烧洛阳。天下十三州郡国并起，三十诸侯逐鹿中原。",
+    "scopeNote": "全量三十诸侯版：东汉十三州 106 郡国全覆盖，包含董卓、关东联军诸部、幽燕刘虞公孙度、西凉马腾韩遂、巴蜀刘焉张鲁、岭南士燮、黑山白波等三十大独立割据势力。",
     "startYear": 190,
     "endYear": 193,
     "factionSetups": [
@@ -975,9 +975,9 @@
         "color": "#496b88",
         "rulerId": 113,
         "capitalCityId": 46,
-        "mode": "expeditionary",
-        "headquartersLabel": "勃海起兵",
-        "historicalNote": "关东盟主，车骑将军自领；冀州牧韩馥未建模，勃海为其起兵据点。",
+        "mode": "territorial",
+        "headquartersLabel": "勃海大营",
+        "historicalNote": "关东盟主，车骑将军自领，统摄河北群英。",
         "preferredKingdomName": "冀"
       },
       {
@@ -986,9 +986,9 @@
         "color": "#2e6e4e",
         "rulerId": 1,
         "capitalCityId": 7,
-        "mode": "expeditionary",
+        "mode": "territorial",
         "headquartersLabel": "陈留募兵处",
-        "historicalNote": "散家财合义兵，孤军追董卓败于荥阳。",
+        "historicalNote": "散家财合义兵，倡义讨董，孤军西向。",
         "preferredKingdomName": "魏"
       },
       {
@@ -999,7 +999,7 @@
         "capitalCityId": 64,
         "mode": "territorial",
         "headquartersLabel": "长沙郡署",
-        "historicalNote": "长沙太守北上讨卓，先登入洛、得传国玺（演义）。",
+        "historicalNote": "长沙太守北上讨卓，勇冠诸军，前锋直逼洛阳。",
         "preferredKingdomName": "吴"
       },
       {
@@ -1009,8 +1009,8 @@
         "rulerId": 181,
         "capitalCityId": 13,
         "mode": "territorial",
-        "headquartersLabel": "南阳治所",
-        "historicalNote": "后将军据南阳，资粮给盟军而观望。",
+        "headquartersLabel": "后将军府",
+        "historicalNote": "后将军据南阳大郡兼跨豫州腹地，粮赋充足。",
         "preferredKingdomName": "成"
       },
       {
@@ -1018,10 +1018,10 @@
         "name": "幽州公孙瓒",
         "color": "#4e7a9e",
         "rulerId": 106,
-        "capitalCityId": 27,
+        "capitalCityId": 97,
         "mode": "territorial",
-        "headquartersLabel": "蓟城驻所",
-        "historicalNote": "奋武将军镇幽州；赵云此时在常山郡未仕，以在野登场。",
+        "headquartersLabel": "右北平幕府",
+        "historicalNote": "降虏校尉白马义从，威震北方胡狄。",
         "preferredKingdomName": "燕"
       },
       {
@@ -1032,7 +1032,7 @@
         "capitalCityId": 9,
         "mode": "territorial",
         "headquartersLabel": "下邳治所",
-        "historicalNote": "徐州牧保境安民。",
+        "historicalNote": "徐州刺史，招抚流民，保境安民，有丹阳精兵。",
         "preferredKingdomName": "徐"
       },
       {
@@ -1043,8 +1043,250 @@
         "capitalCityId": 15,
         "mode": "territorial",
         "headquartersLabel": "襄阳州治",
-        "historicalNote": "初平元年单马入宜城，抚定荆州。",
+        "historicalNote": "单马入宜城，抚定荆州，跨蹈汉南地方数千里。",
         "preferredKingdomName": "楚"
+      },
+      {
+        "id": 9,
+        "name": "幽州牧刘虞",
+        "color": "#887050",
+        "rulerId": 359,
+        "capitalCityId": 27,
+        "mode": "territorial",
+        "headquartersLabel": "蓟城幕府",
+        "historicalNote": "汉室宗亲，大司马幽州牧，爱民抚胡，德被北方。",
+        "preferredKingdomName": "燕"
+      },
+      {
+        "id": 10,
+        "name": "辽东公孙度",
+        "color": "#556677",
+        "rulerId": 251,
+        "capitalCityId": 28,
+        "mode": "territorial",
+        "headquartersLabel": "襄平府署",
+        "historicalNote": "辽东太守，裂土自分，威服东夷高句丽诸国。",
+        "preferredKingdomName": "燕"
+      },
+      {
+        "id": 11,
+        "name": "冀州牧韩馥",
+        "color": "#778899",
+        "rulerId": 375,
+        "capitalCityId": 5,
+        "mode": "territorial",
+        "headquartersLabel": "邺城幕府",
+        "historicalNote": "冀州牧，统冀州诸府大郡，带甲十万，谷支十年。",
+        "preferredKingdomName": "冀"
+      },
+      {
+        "id": 12,
+        "name": "兖州刺史刘岱",
+        "color": "#8b4513",
+        "rulerId": 361,
+        "capitalCityId": 51,
+        "mode": "territorial",
+        "headquartersLabel": "昌邑治所",
+        "historicalNote": "汉室宗亲，兖州刺史，受诏领诸郡共讨董卓。",
+        "preferredKingdomName": "齐"
+      },
+      {
+        "id": 13,
+        "name": "东郡桥瑁",
+        "color": "#6b8e23",
+        "rulerId": 371,
+        "capitalCityId": 8,
+        "mode": "territorial",
+        "headquartersLabel": "濮阳郡署",
+        "historicalNote": "东郡太守，桥玄族子，移檄诸州郡号召讨董。",
+        "preferredKingdomName": "卫"
+      },
+      {
+        "id": 14,
+        "name": "济北相鲍信",
+        "color": "#4682b4",
+        "rulerId": 373,
+        "capitalCityId": 50,
+        "mode": "territorial",
+        "headquartersLabel": "卢县国相署",
+        "historicalNote": "济北相，泰山名门，深通兵略，与曹操莫逆相交。",
+        "preferredKingdomName": "鲁"
+      },
+      {
+        "id": 15,
+        "name": "陈留太守张邈",
+        "color": "#9370db",
+        "rulerId": 369,
+        "capitalCityId": 47,
+        "mode": "territorial",
+        "headquartersLabel": "东平驻节所",
+        "historicalNote": "八厨之一，广施财物，八方名士竞相归赴。",
+        "preferredKingdomName": "兖"
+      },
+      {
+        "id": 16,
+        "name": "广陵太守张超",
+        "color": "#ba55d3",
+        "rulerId": 370,
+        "capitalCityId": 10,
+        "mode": "territorial",
+        "headquartersLabel": "广陵郡署",
+        "historicalNote": "张邈之弟，广陵太守，共举义兵支援前线盟军。",
+        "preferredKingdomName": "吴"
+      },
+      {
+        "id": 17,
+        "name": "豫州刺史孔伷",
+        "color": "#3cb371",
+        "rulerId": 367,
+        "capitalCityId": 3,
+        "mode": "territorial",
+        "headquartersLabel": "阳翟州治",
+        "historicalNote": "豫州刺史，清谈高雅，能坐谈使枯木生花。",
+        "preferredKingdomName": "豫"
+      },
+      {
+        "id": 18,
+        "name": "北海相孔融",
+        "color": "#48d1cc",
+        "rulerId": 249,
+        "capitalCityId": 12,
+        "mode": "territorial",
+        "headquartersLabel": "剧县国相署",
+        "historicalNote": "孔子二十世孙，建安七子，好客纳贤，抗御黄巾。",
+        "preferredKingdomName": "鲁"
+      },
+      {
+        "id": 19,
+        "name": "青州刺史焦和",
+        "color": "#87ceeb",
+        "rulerId": 374,
+        "capitalCityId": 59,
+        "mode": "territorial",
+        "headquartersLabel": "临淄州治",
+        "historicalNote": "青州刺史，虽坐拥临淄雄镇而军政尚虚谈。",
+        "preferredKingdomName": "齐"
+      },
+      {
+        "id": 20,
+        "name": "平原刘备",
+        "color": "#d4af37",
+        "rulerId": 2,
+        "capitalCityId": 11,
+        "mode": "territorial",
+        "headquartersLabel": "平原县衙",
+        "historicalNote": "汉室苗裔，与关张领平原义军，仁德显著四海。",
+        "preferredKingdomName": "蜀"
+      },
+      {
+        "id": 21,
+        "name": "河内张杨",
+        "color": "#708090",
+        "rulerId": 279,
+        "capitalCityId": 31,
+        "mode": "territorial",
+        "headquartersLabel": "怀县郡署",
+        "historicalNote": "河内太守，武勇过人，控扼并州与司隶要道。",
+        "preferredKingdomName": "赵"
+      },
+      {
+        "id": 22,
+        "name": "西凉马腾",
+        "color": "#a0522d",
+        "rulerId": 173,
+        "capitalCityId": 23,
+        "mode": "territorial",
+        "headquartersLabel": "姑臧将军府",
+        "historicalNote": "伏波将军马援之后，雄霸西凉，部众骁勇善战。",
+        "preferredKingdomName": "凉"
+      },
+      {
+        "id": 23,
+        "name": "金城韩遂",
+        "color": "#b22222",
+        "rulerId": 174,
+        "capitalCityId": 79,
+        "mode": "territorial",
+        "headquartersLabel": "允吾大营",
+        "historicalNote": "凉州豪族名士，威震陇右，与马腾结为异姓兄弟。",
+        "preferredKingdomName": "凉"
+      },
+      {
+        "id": 24,
+        "name": "益州牧刘焉",
+        "color": "#2f4f4f",
+        "rulerId": 360,
+        "capitalCityId": 68,
+        "mode": "territorial",
+        "headquartersLabel": "雒县幕府",
+        "historicalNote": "汉室宗亲，首倡立州牧，据天府之国险隘割据。",
+        "preferredKingdomName": "蜀"
+      },
+      {
+        "id": 25,
+        "name": "汉中张鲁",
+        "color": "#d2691e",
+        "rulerId": 175,
+        "capitalCityId": 20,
+        "mode": "territorial",
+        "headquartersLabel": "汉中治所",
+        "historicalNote": "创五斗米道，设义舍宽政爱民，雄踞汉水险关。",
+        "preferredKingdomName": "汉"
+      },
+      {
+        "id": 26,
+        "name": "交趾士燮",
+        "color": "#556b2f",
+        "rulerId": 187,
+        "capitalCityId": 30,
+        "mode": "territorial",
+        "headquartersLabel": "龙编太守府",
+        "historicalNote": "世为南州名门，威重岭南，兄弟并领诸郡。",
+        "preferredKingdomName": "越"
+      },
+      {
+        "id": 27,
+        "name": "黑山军张燕",
+        "color": "#8b0000",
+        "rulerId": 449,
+        "capitalCityId": 6,
+        "mode": "territorial",
+        "headquartersLabel": "常山大营",
+        "historicalNote": "黑山义军首领，捷走如飞称「飞燕」，众至百万。",
+        "preferredKingdomName": "燕"
+      },
+      {
+        "id": 28,
+        "name": "白波军杨奉",
+        "color": "#800000",
+        "rulerId": 450,
+        "capitalCityId": 24,
+        "mode": "territorial",
+        "headquartersLabel": "晋阳大营",
+        "historicalNote": "白波黄巾渠帅，转战并州关中，骁将徐晃在麾下。",
+        "preferredKingdomName": "赵"
+      },
+      {
+        "id": 29,
+        "name": "吴郡太守许贡",
+        "color": "#191970",
+        "rulerId": 814,
+        "capitalCityId": 16,
+        "mode": "territorial",
+        "headquartersLabel": "吴县郡署",
+        "historicalNote": "吴郡太守，总摄江表名士与沿江重镇。",
+        "preferredKingdomName": "扬"
+      },
+      {
+        "id": 30,
+        "name": "会稽严白虎",
+        "color": "#4a0e17",
+        "rulerId": 812,
+        "capitalCityId": 66,
+        "mode": "territorial",
+        "headquartersLabel": "山阴大营",
+        "historicalNote": "江东豪帅聚众万余，依凭太湖山水称东吴德王。",
+        "preferredKingdomName": "吴"
       }
     ],
     "eventIds": [
@@ -1057,28 +1299,140 @@
     "availableOfficerIds": [
       112,
       5,
+      1049,
+      463,
+      467,
+      466,
+      933,
       177,
       178,
       179,
+      180,
       115,
+      465,
+      472,
       113,
       159,
       160,
-      156,
       157,
+      156,
+      158,
+      163,
+      162,
       1,
       9,
       120,
       101,
       121,
+      102,
+      119,
       114,
       143,
       144,
       145,
+      613,
       181,
+      182,
+      318,
+      319,
+      518,
+      522,
+      519,
       106,
+      383,
+      384,
+      385,
+      660,
       250,
-      167
+      1084,
+      110,
+      217,
+      1065,
+      283,
+      1086,
+      460,
+      167,
+      601,
+      169,
+      168,
+      170,
+      359,
+      820,
+      822,
+      386,
+      251,
+      755,
+      756,
+      375,
+      381,
+      382,
+      117,
+      161,
+      496,
+      947,
+      946,
+      361,
+      371,
+      373,
+      118,
+      369,
+      165,
+      370,
+      367,
+      249,
+      978,
+      146,
+      417,
+      419,
+      374,
+      2,
+      6,
+      7,
+      216,
+      279,
+      455,
+      173,
+      192,
+      174,
+      484,
+      483,
+      479,
+      478,
+      481,
+      476,
+      482,
+      480,
+      477,
+      360,
+      135,
+      171,
+      200,
+      938,
+      939,
+      940,
+      582,
+      1008,
+      172,
+      688,
+      1066,
+      1067,
+      175,
+      324,
+      176,
+      1006,
+      187,
+      747,
+      1060,
+      449,
+      450,
+      116,
+      451,
+      814,
+      392,
+      256,
+      257,
+      812,
+      813
     ],
     "availableFemaleIds": [
       202
@@ -1106,7 +1460,29 @@
       5,
       6,
       7,
-      8
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
     ],
     "recommendedFaction": 2,
     "startState": {
@@ -1120,7 +1496,29 @@
         5,
         6,
         7,
-        8
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
       ],
       "activeFactionIds": [
         1,
@@ -1130,23 +1528,137 @@
         5,
         6,
         7,
-        8
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
       ],
       "cityOwnership": {
         "1": 1,
         "2": 1,
+        "3": 17,
+        "4": 5,
+        "5": 11,
+        "6": 27,
         "7": 3,
+        "8": 13,
         "9": 7,
+        "10": 16,
+        "11": 20,
+        "12": 18,
         "13": 5,
+        "14": 8,
         "15": 8,
-        "23": 1,
-        "27": 6,
+        "16": 29,
+        "17": 29,
+        "18": 29,
+        "19": 24,
+        "20": 25,
+        "21": 24,
+        "22": 22,
+        "23": 22,
+        "24": 28,
+        "25": 21,
+        "26": 6,
+        "27": 9,
+        "28": 10,
+        "29": 26,
+        "30": 26,
+        "31": 21,
+        "32": 1,
         "33": 1,
+        "34": 1,
+        "35": 1,
+        "36": 5,
+        "37": 5,
+        "38": 5,
+        "39": 17,
+        "40": 11,
+        "41": 11,
+        "42": 11,
+        "43": 2,
+        "44": 2,
+        "45": 11,
         "46": 2,
+        "47": 15,
+        "48": 14,
+        "49": 14,
+        "50": 14,
+        "51": 12,
+        "52": 12,
         "53": 7,
+        "54": 7,
+        "55": 7,
+        "56": 20,
+        "57": 19,
+        "58": 18,
+        "59": 19,
+        "60": 8,
+        "61": 4,
+        "62": 4,
+        "63": 4,
         "64": 4,
-        "77": 1,
-        "79": 1
+        "65": 29,
+        "66": 30,
+        "67": 29,
+        "68": 24,
+        "69": 24,
+        "70": 24,
+        "71": 24,
+        "72": 24,
+        "73": 24,
+        "74": 24,
+        "75": 24,
+        "76": 24,
+        "77": 22,
+        "78": 22,
+        "79": 23,
+        "80": 22,
+        "81": 22,
+        "82": 23,
+        "83": 23,
+        "84": 23,
+        "85": 23,
+        "86": 23,
+        "87": 28,
+        "88": 28,
+        "89": 28,
+        "90": 28,
+        "91": 28,
+        "92": 28,
+        "93": 28,
+        "94": 9,
+        "95": 9,
+        "96": 9,
+        "97": 6,
+        "98": 6,
+        "99": 10,
+        "100": 10,
+        "101": 10,
+        "102": 26,
+        "103": 26,
+        "104": 26,
+        "105": 26,
+        "106": 26
       },
       "officerPositions": [
         {
@@ -1164,32 +1676,86 @@
           "loyalty": 85
         },
         {
-          "officerId": 177,
+          "officerId": 1049,
           "cityId": 1,
+          "factionId": 1,
+          "loyalty": 100
+        },
+        {
+          "officerId": 463,
+          "cityId": 2,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 467,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 466,
+          "cityId": 1,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 75
+        },
+        {
+          "officerId": 933,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 177,
+          "cityId": 34,
           "factionId": 1,
           "militaryPosition": "general",
           "loyalty": 85
         },
         {
           "officerId": 178,
-          "cityId": 1,
+          "cityId": 35,
           "factionId": 1,
           "militaryPosition": "general",
           "loyalty": 85
         },
         {
           "officerId": 179,
-          "cityId": 1,
+          "cityId": 32,
           "factionId": 1,
-          "militaryPosition": "general",
-          "loyalty": 85
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 180,
+          "cityId": 2,
+          "factionId": 1,
+          "militaryPosition": "captain",
+          "loyalty": 80
         },
         {
           "officerId": 115,
           "cityId": 1,
           "factionId": 1,
           "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 465,
+          "cityId": 33,
+          "factionId": 1,
+          "militaryPosition": "captain",
           "loyalty": 85
+        },
+        {
+          "officerId": 472,
+          "cityId": 1,
+          "factionId": 1,
+          "loyalty": 95
         },
         {
           "officerId": 113,
@@ -1202,27 +1768,45 @@
           "officerId": 159,
           "cityId": 46,
           "factionId": 2,
-          "militaryPosition": "captain",
-          "loyalty": 85
+          "militaryPosition": "general",
+          "loyalty": 95
         },
         {
           "officerId": 160,
           "cityId": 46,
           "factionId": 2,
-          "militaryPosition": "captain",
-          "loyalty": 85
-        },
-        {
-          "officerId": 156,
-          "cityId": 46,
-          "factionId": 2,
-          "loyalty": 85
+          "militaryPosition": "general",
+          "loyalty": 95
         },
         {
           "officerId": 157,
           "cityId": 46,
           "factionId": 2,
+          "loyalty": 90
+        },
+        {
+          "officerId": 156,
+          "cityId": 46,
+          "factionId": 2,
+          "loyalty": 88
+        },
+        {
+          "officerId": 158,
+          "cityId": 43,
+          "factionId": 2,
           "loyalty": 85
+        },
+        {
+          "officerId": 163,
+          "cityId": 46,
+          "factionId": 2,
+          "loyalty": 85
+        },
+        {
+          "officerId": 162,
+          "cityId": 44,
+          "factionId": 2,
+          "loyalty": 80
         },
         {
           "officerId": 1,
@@ -1236,24 +1820,38 @@
           "cityId": 7,
           "factionId": 3,
           "militaryPosition": "general",
-          "loyalty": 85
+          "loyalty": 98
         },
         {
           "officerId": 120,
           "cityId": 7,
           "factionId": 3,
           "militaryPosition": "general",
-          "loyalty": 85
+          "loyalty": 95
         },
         {
           "officerId": 101,
           "cityId": 7,
           "factionId": 3,
           "militaryPosition": "general",
-          "loyalty": 85
+          "loyalty": 95
         },
         {
           "officerId": 121,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 95
+        },
+        {
+          "officerId": 102,
+          "cityId": 7,
+          "factionId": 3,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 119,
           "cityId": 7,
           "factionId": 3,
           "militaryPosition": "captain",
@@ -1271,21 +1869,27 @@
           "cityId": 64,
           "factionId": 4,
           "militaryPosition": "general",
-          "loyalty": 85
+          "loyalty": 95
         },
         {
           "officerId": 144,
           "cityId": 64,
           "factionId": 4,
           "militaryPosition": "general",
-          "loyalty": 85
+          "loyalty": 95
         },
         {
           "officerId": 145,
           "cityId": 64,
           "factionId": 4,
           "militaryPosition": "captain",
-          "loyalty": 85
+          "loyalty": 90
+        },
+        {
+          "officerId": 613,
+          "cityId": 64,
+          "factionId": 4,
+          "loyalty": 90
         },
         {
           "officerId": 181,
@@ -1295,11 +1899,78 @@
           "loyalty": 100
         },
         {
+          "officerId": 182,
+          "cityId": 13,
+          "factionId": 5,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 318,
+          "cityId": 13,
+          "factionId": 5,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 319,
+          "cityId": 4,
+          "factionId": 5,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 518,
+          "cityId": 36,
+          "factionId": 5,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 522,
+          "cityId": 37,
+          "factionId": 5,
+          "loyalty": 75
+        },
+        {
+          "officerId": 519,
+          "cityId": 38,
+          "factionId": 5,
+          "militaryPosition": "captain",
+          "loyalty": 75
+        },
+        {
           "officerId": 106,
-          "cityId": 27,
+          "cityId": 97,
           "factionId": 6,
           "militaryPosition": "grandGeneral",
           "loyalty": 100
+        },
+        {
+          "officerId": 383,
+          "cityId": 97,
+          "factionId": 6,
+          "loyalty": 90
+        },
+        {
+          "officerId": 384,
+          "cityId": 26,
+          "factionId": 6,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 385,
+          "cityId": 98,
+          "factionId": 6,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 660,
+          "cityId": 97,
+          "factionId": 6,
+          "loyalty": 80
         },
         {
           "officerId": 250,
@@ -1309,11 +1980,603 @@
           "loyalty": 100
         },
         {
+          "officerId": 1084,
+          "cityId": 9,
+          "factionId": 7,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 110,
+          "cityId": 54,
+          "factionId": 7,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 217,
+          "cityId": 9,
+          "factionId": 7,
+          "loyalty": 85
+        },
+        {
+          "officerId": 1065,
+          "cityId": 53,
+          "factionId": 7,
+          "loyalty": 85
+        },
+        {
+          "officerId": 283,
+          "cityId": 53,
+          "factionId": 7,
+          "loyalty": 85
+        },
+        {
+          "officerId": 1086,
+          "cityId": 55,
+          "factionId": 7,
+          "militaryPosition": "captain",
+          "loyalty": 75
+        },
+        {
+          "officerId": 460,
+          "cityId": 54,
+          "factionId": 7,
+          "militaryPosition": "captain",
+          "loyalty": 75
+        },
+        {
           "officerId": 167,
           "cityId": 15,
           "factionId": 8,
           "militaryPosition": "grandGeneral",
           "loyalty": 100
+        },
+        {
+          "officerId": 601,
+          "cityId": 15,
+          "factionId": 8,
+          "loyalty": 95
+        },
+        {
+          "officerId": 169,
+          "cityId": 15,
+          "factionId": 8,
+          "loyalty": 95
+        },
+        {
+          "officerId": 168,
+          "cityId": 14,
+          "factionId": 8,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 170,
+          "cityId": 60,
+          "factionId": 8,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 359,
+          "cityId": 27,
+          "factionId": 9,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 820,
+          "cityId": 27,
+          "factionId": 9,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 822,
+          "cityId": 96,
+          "factionId": 9,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 386,
+          "cityId": 27,
+          "factionId": 9,
+          "loyalty": 95
+        },
+        {
+          "officerId": 251,
+          "cityId": 28,
+          "factionId": 10,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 755,
+          "cityId": 28,
+          "factionId": 10,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 756,
+          "cityId": 28,
+          "factionId": 10,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 375,
+          "cityId": 5,
+          "factionId": 11,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 381,
+          "cityId": 5,
+          "factionId": 11,
+          "loyalty": 90
+        },
+        {
+          "officerId": 382,
+          "cityId": 5,
+          "factionId": 11,
+          "loyalty": 90
+        },
+        {
+          "officerId": 117,
+          "cityId": 5,
+          "factionId": 11,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 161,
+          "cityId": 45,
+          "factionId": 11,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 496,
+          "cityId": 5,
+          "factionId": 11,
+          "militaryPosition": "general",
+          "loyalty": 75
+        },
+        {
+          "officerId": 947,
+          "cityId": 42,
+          "factionId": 11,
+          "loyalty": 80
+        },
+        {
+          "officerId": 946,
+          "cityId": 5,
+          "factionId": 11,
+          "loyalty": 80
+        },
+        {
+          "officerId": 361,
+          "cityId": 51,
+          "factionId": 12,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 371,
+          "cityId": 8,
+          "factionId": 13,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 373,
+          "cityId": 50,
+          "factionId": 14,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 118,
+          "cityId": 50,
+          "factionId": 14,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 369,
+          "cityId": 47,
+          "factionId": 15,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 165,
+          "cityId": 47,
+          "factionId": 15,
+          "loyalty": 90
+        },
+        {
+          "officerId": 370,
+          "cityId": 10,
+          "factionId": 16,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 367,
+          "cityId": 3,
+          "factionId": 17,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 249,
+          "cityId": 12,
+          "factionId": 18,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 978,
+          "cityId": 12,
+          "factionId": 18,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 146,
+          "cityId": 58,
+          "factionId": 18,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 417,
+          "cityId": 12,
+          "factionId": 18,
+          "loyalty": 88
+        },
+        {
+          "officerId": 419,
+          "cityId": 12,
+          "factionId": 18,
+          "loyalty": 85
+        },
+        {
+          "officerId": 374,
+          "cityId": 59,
+          "factionId": 19,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 2,
+          "cityId": 11,
+          "factionId": 20,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 6,
+          "cityId": 11,
+          "factionId": 20,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 7,
+          "cityId": 11,
+          "factionId": 20,
+          "militaryPosition": "general",
+          "loyalty": 100
+        },
+        {
+          "officerId": 216,
+          "cityId": 11,
+          "factionId": 20,
+          "loyalty": 90
+        },
+        {
+          "officerId": 279,
+          "cityId": 31,
+          "factionId": 21,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 455,
+          "cityId": 25,
+          "factionId": 21,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 173,
+          "cityId": 23,
+          "factionId": 22,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 192,
+          "cityId": 23,
+          "factionId": 22,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 174,
+          "cityId": 79,
+          "factionId": 23,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 484,
+          "cityId": 79,
+          "factionId": 23,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 483,
+          "cityId": 79,
+          "factionId": 23,
+          "loyalty": 90
+        },
+        {
+          "officerId": 479,
+          "cityId": 82,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 478,
+          "cityId": 83,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 481,
+          "cityId": 84,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 476,
+          "cityId": 79,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 482,
+          "cityId": 85,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 480,
+          "cityId": 86,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 477,
+          "cityId": 79,
+          "factionId": 23,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 360,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 135,
+          "cityId": 19,
+          "factionId": 24,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 171,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 200,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 938,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 939,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 940,
+          "cityId": 68,
+          "factionId": 24,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 582,
+          "cityId": 19,
+          "factionId": 24,
+          "loyalty": 85
+        },
+        {
+          "officerId": 1008,
+          "cityId": 21,
+          "factionId": 24,
+          "loyalty": 85
+        },
+        {
+          "officerId": 172,
+          "cityId": 19,
+          "factionId": 24,
+          "loyalty": 75
+        },
+        {
+          "officerId": 688,
+          "cityId": 19,
+          "factionId": 24,
+          "loyalty": 80
+        },
+        {
+          "officerId": 1066,
+          "cityId": 74,
+          "factionId": 24,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 1067,
+          "cityId": 74,
+          "factionId": 24,
+          "militaryPosition": "captain",
+          "loyalty": 80
+        },
+        {
+          "officerId": 175,
+          "cityId": 20,
+          "factionId": 25,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 324,
+          "cityId": 20,
+          "factionId": 25,
+          "militaryPosition": "general",
+          "loyalty": 90
+        },
+        {
+          "officerId": 176,
+          "cityId": 20,
+          "factionId": 25,
+          "loyalty": 90
+        },
+        {
+          "officerId": 1006,
+          "cityId": 20,
+          "factionId": 25,
+          "militaryPosition": "general",
+          "loyalty": 80
+        },
+        {
+          "officerId": 187,
+          "cityId": 30,
+          "factionId": 26,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 747,
+          "cityId": 30,
+          "factionId": 26,
+          "loyalty": 90
+        },
+        {
+          "officerId": 1060,
+          "cityId": 29,
+          "factionId": 26,
+          "loyalty": 85
+        },
+        {
+          "officerId": 449,
+          "cityId": 6,
+          "factionId": 27,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 450,
+          "cityId": 24,
+          "factionId": 28,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 116,
+          "cityId": 24,
+          "factionId": 28,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 451,
+          "cityId": 24,
+          "factionId": 28,
+          "militaryPosition": "captain",
+          "loyalty": 85
+        },
+        {
+          "officerId": 814,
+          "cityId": 16,
+          "factionId": 29,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 392,
+          "cityId": 17,
+          "factionId": 29,
+          "militaryPosition": "general",
+          "loyalty": 85
+        },
+        {
+          "officerId": 256,
+          "cityId": 16,
+          "factionId": 29,
+          "loyalty": 85
+        },
+        {
+          "officerId": 257,
+          "cityId": 67,
+          "factionId": 29,
+          "loyalty": 85
+        },
+        {
+          "officerId": 812,
+          "cityId": 66,
+          "factionId": 30,
+          "militaryPosition": "grandGeneral",
+          "loyalty": 100
+        },
+        {
+          "officerId": 813,
+          "cityId": 66,
+          "factionId": 30,
+          "militaryPosition": "captain",
+          "loyalty": 90
         }
       ],
       "femalePositions": [
@@ -1346,31 +2609,163 @@
           "factionA": 1,
           "factionB": 5,
           "relation": "war",
-          "favorability": -70
+          "favorability": -80
         },
         {
           "factionA": 1,
           "factionB": 6,
           "relation": "war",
-          "favorability": -60
+          "favorability": -80
         },
         {
           "factionA": 1,
           "factionB": 7,
           "relation": "war",
-          "favorability": -60
+          "favorability": -80
         },
         {
           "factionA": 1,
           "factionB": 8,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 11,
           "relation": "war",
-          "favorability": -60
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 12,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 13,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 14,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 15,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 16,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 17,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 18,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 19,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 20,
+          "relation": "war",
+          "favorability": -80
+        },
+        {
+          "factionA": 1,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 27,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 1,
+          "factionB": 28,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 1,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 1,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
         },
         {
           "factionA": 2,
           "factionB": 3,
           "relation": "allied",
-          "favorability": 45
+          "favorability": 40
         },
         {
           "factionA": 2,
@@ -1381,24 +2776,156 @@
         {
           "factionA": 2,
           "factionB": 5,
-          "relation": "hostile",
-          "favorability": -30
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 2,
           "factionB": 6,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 2,
           "factionB": 7,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 8,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 2,
-          "factionB": 8,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 2,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 27,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 2,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 2,
+          "factionB": 30,
           "relation": "neutral",
           "favorability": 0
         },
@@ -1406,49 +2933,181 @@
           "factionA": 3,
           "factionB": 4,
           "relation": "allied",
-          "favorability": 30
+          "favorability": 40
         },
         {
           "factionA": 3,
           "factionB": 5,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 3,
           "factionB": 6,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 3,
           "factionB": 7,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 8,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 3,
-          "factionB": 8,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 3,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 3,
+          "factionB": 30,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 4,
           "factionB": 5,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 4,
           "factionB": 6,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 4,
           "factionB": 7,
-          "relation": "neutral",
-          "favorability": 0
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 4,
@@ -1457,32 +3116,428 @@
           "favorability": 0
         },
         {
-          "factionA": 5,
-          "factionB": 6,
+          "factionA": 4,
+          "factionB": 9,
           "relation": "neutral",
           "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 4,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 4,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 6,
+          "relation": "allied",
+          "favorability": 40
         },
         {
           "factionA": 5,
           "factionB": 7,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 8,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 5,
-          "factionB": 8,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 5,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 5,
+          "factionB": 30,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 6,
           "factionB": 7,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 8,
           "relation": "neutral",
           "favorability": 0
         },
         {
           "factionA": 6,
-          "factionB": 8,
+          "factionB": 9,
+          "relation": "hostile",
+          "favorability": -30
+        },
+        {
+          "factionA": 6,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 6,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 6,
+          "factionB": 30,
           "relation": "neutral",
           "favorability": 0
         },
@@ -1491,6 +3546,1656 @@
           "factionB": 8,
           "relation": "neutral",
           "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 11,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 7,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 7,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 9,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 11,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 12,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 13,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 14,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 15,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 16,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 17,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 18,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 19,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 20,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 8,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 10,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 11,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 12,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 13,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 14,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 15,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 16,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 17,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 18,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 19,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 20,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 9,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 11,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 12,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 13,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 14,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 15,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 16,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 17,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 18,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 19,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 20,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 10,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 12,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 11,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 27,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 11,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 11,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 13,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 12,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 12,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 14,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 13,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 13,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 15,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 14,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 14,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 16,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 15,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 15,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 15,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 15,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 15,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 15,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 17,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 16,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 16,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 16,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 16,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 16,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 18,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 17,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 17,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 17,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 17,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 19,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 18,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 18,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 18,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 20,
+          "relation": "allied",
+          "favorability": 40
+        },
+        {
+          "factionA": 19,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 19,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 21,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 20,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 22,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 23,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 28,
+          "relation": "hostile",
+          "favorability": -40
+        },
+        {
+          "factionA": 21,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 21,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 23,
+          "relation": "allied",
+          "favorability": 50
+        },
+        {
+          "factionA": 22,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 22,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 24,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 25,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 23,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 24,
+          "factionB": 25,
+          "relation": "friendly",
+          "favorability": 30
+        },
+        {
+          "factionA": 24,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 24,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 24,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 24,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 24,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 25,
+          "factionB": 26,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 25,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 25,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 25,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 25,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 26,
+          "factionB": 27,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 26,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 26,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 26,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 27,
+          "factionB": 28,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 27,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 27,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 28,
+          "factionB": 29,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 28,
+          "factionB": 30,
+          "relation": "neutral",
+          "favorability": 0
+        },
+        {
+          "factionA": 29,
+          "factionB": 30,
+          "relation": "hostile",
+          "favorability": -30
         }
       ],
       "completedEvents": []
