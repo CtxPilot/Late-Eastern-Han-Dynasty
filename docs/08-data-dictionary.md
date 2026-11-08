@@ -1688,4 +1688,116 @@ export interface Coalition {
   2. `appoint_prov_governor`（锡命册封诏）：天子册封目标为所辖州牧，目标声望 +25，对朝廷友好度 +30；
   3. `summon_tribute`（天下征贡诏）：命目标诸侯岁贡朝廷，目标国库扣除 200 金 500 粮（其声望 +10），天子行在接收 200 金 500 粮。
 
+---
+
+## 三十七、天下大势与九品中正制数据模型（Phase 7-03 · Session 479）
+
+### 37.1 天下大势宏观阶段（GeneralTrendStage）
+| 枚举值 | 阶段名称 | 历史时期 | 演进规则与特征 |
+|-------|---------|---------|----------------|
+| `warlords_disorder` | 群雄割据 | 190~199 | 诸侯逐鹿中原，割据并起 |
+| `hegemony_contest` | 中原争霸 | 200~207 | 官渡对决，北方一统 |
+| `three_kingdoms_forming` | 三分鼎立 | 208~219 | 赤壁鏖兵，三国雏形确立 |
+| `three_kingdoms_rivalry` | 三国对峙 | 220~264 | 黄初改元，鼎足相持 |
+| `unification_climax` | 九州归一 | 265+ | 晋室混一，四海归一（全图独存单势力提前步入） |
+
+### 37.2 九品官人法定品模型（Officer.rankGrade）
+- 数值范围：1~9 品整数（1品极品三公宰辅，9品草创武职军候）。
+- 考评核心算法 `evaluateOfficerRankGrade`：
+  - 门阀起品：名门望族 3 品、士族 4 品、豪族将门 6 品、寒门平民 8 品；
+  - 才德五维拔擢：最高属性 $\ge 95$ -2品、$\ge 85$ -1品、$< 50$ +1品；
+  - 名士风评：德高望重/海内名士/经学大师 -1品；
+  - 朝野功绩：功绩等级 Lv16+ -3品、Lv12+ -2品、Lv6+ -1品；
+  - 门阀壁垒：寒门中低才受限 $\ge 4$ 品（上品无寒门）；士族名门底线保底 $\le 6$ 品（下品无势族）。
+- 官职品阶门槛 `minRankGrade`：四轨官职全量校验，品阶不足时拦截任命（君主豁免）。
+
+---
+
+## 三十八、战俘处置与刑赏牢狱数据模型（Phase 7-04 · Session 480）
+
+### 38.1 战俘扩展字段
+| 字段 | 宿主实体 | 类型 | 语义与规则 |
+|------|---------|------|-----------|
+| `captiveByFactionId` | `Officer` | `number?` | 羁押俘获此武将的势力 ID。仅该势力具备对其处置（招降、义释、索赎、斩决）之主权。 |
+| `imprisonedMonths` | `Officer` | `number?` | 在押被关押月数。每月月结自增 1，久羁消解锐气，越狱或获释归零。 |
+
+### 38.2 招降归顺几率模型（`calculatePrisonerSurrenderChance`）
+- 公式：基准几率 35% - 义理抵抗 (`义理*0.25`) - 前主忠诚抵抗 (`忠诚*0.20`) + 久羁消解 (`min(25, 月数*2)`) + 君主感召 (`君主魅力*0.3 + 声望/100*1.5`)。
+- 夹紧区间：`[5, 85]`。
+- 结果：命中则武将转 ACTIVE 归入新势力，初始忠诚分配，声望+5，君臣亲和提升；未命中忠诚动摇 -2。
+
+### 38.3 法定赎金估价模型（`calculatePrisonerRansomValue`）
+- 公式：基准 300 金 + 五维超额溢价 (`max(0, 五维总和-300)*1.5`) + 九品溢价 (上品+300金/中品+150金) + 功绩溢价 (`max(0, 功绩Lv-1)*20`)。
+- 夹紧区间：`[100, 1500]` 金。
+- 交割：母国金库扣除，俘方城池金库增加入账，武将获释归国。
+
+### 38.4 义释与处斩惩罚
+- 宽仁义释：送还母国首都，势力仁政声望 +15，武将对君主亲和 +30，若母国存活两国好感双向 +15。
+- 严刑处斩：武将死亡（DEAD），声望依品阶严罚 50~100 点，母国关系暴跌 -50 点，死者义兄弟/直系亲属/师徒与处斩君主结下血海深仇（亲和坠至 -100）。
+
+---
+
+## 三十九、商路贸易网络与十三州特产矩阵数据模型（Phase 7-05 · Session 481）
+
+### 39.1 商路贸易路线实体（TradeRoute）
+```ts
+export type TradeRouteStatus = 'active' | 'blockaded' | 'suspended';
+
+export interface TradeRoute {
+  id: string; // 唯一路由标识，如 "route_1_2"
+  fromCityId: number; // 起始城池 ID
+  toCityId: number; // 目标城池 ID
+  distance: number; // 拓扑距离或步数（通常 1~4）
+  isWaterWay?: boolean; // 是否经由长江/黄河水运干线（享有 x1.3 加成）
+  isCrossFaction: boolean; // 是否跨势力通商
+  factionA: number; // 城池 A 所属势力
+  factionB: number; // 城池 B 所属势力
+  status: TradeRouteStatus; // 商路状态（active 通行 / blockaded 战时禁运 / suspended 暂停）
+  assignedMerchantOfficerId?: number; // 经管大贾文官 ID
+  establishedYear: number;
+  establishedMonth: number;
+}
+```
+
+### 39.2 十三州特产静态矩阵（PROVINCE_SPECIALTIES）
+| 州部 | 代表特产与类别 | 基准价格 | 异地运销主要溢价倍率 |
+|------|---------------|:-------:|-------------------|
+| 幽州 | 战马 (horse)、人参 (herb)、貂皮 (luxury) | 40 / 80 / 60 | 运往江南 1.6x |
+| 并州 | 战马 (horse)、铁矿 (mineral) | 35 / 25 | 运往江南 1.6x |
+| 凉州 | 良马 (horse)、玉石 (luxury)、皮毛 (luxury) | 50 / 100 / 40 | 运往中原/江南 1.6x |
+| 冀州 | 铁器 (craft)、陶器 (craft)、精盐 (mineral) | 30 / 20 / 15 | 常规跨州 1.25x |
+| 司隶 | 绢帛 (craft)、漆器 (craft)、铜器 (craft) | 45 / 50 / 40 | 常规跨州 1.25x |
+| 兖州 | 布帛 (craft)、兵器 (craft) | 25 / 55 | 常规跨州 1.25x |
+| 豫州 | 铁具 (craft)、布帛 (craft) | 30 / 25 | 常规跨州 1.25x |
+| 徐州 | 海盐 (mineral)、精铁 (mineral)、丝布 (craft) | 20 / 30 / 20 | 常规跨州 1.25x |
+| 青州 | 海盐 (mineral)、鱼货 (agriculture)、紫贝 (luxury) | 18 / 15 / 30 | 常规跨州 1.25x |
+| 荆州 | 生漆 (craft)、竹器 (craft)、铜矿 (mineral) | 35 / 20 / 30 | 常规跨州 1.25x |
+| 扬州 | 茶叶 (agriculture)、瓷器 (craft)、珍珠 (luxury) | 40 / 45 / 80 | 常规跨州 1.25x |
+| **益州** | **蜀锦 (craft，绝品)**、井盐 (mineral)、丹砂 (mineral)、药材 (herb) | **120** / 25 / 70 / 50 | **运往外州 1.8x** |
+| **交州** | **珍珠 (luxury)**、**玳瑁 (luxury)**、**象牙 (luxury)**、**香料 (agriculture)** | **80 / 90 / 100 / 70** | **运往北方 1.7x** |
+
+### 39.3 异地溢价乘数计算纯函数（calculateSpecialtyPriceMultiplier）
+- 同州境内商贸：倍率 `1.0x`；
+- 益州独有蜀锦异地运销：倍率 `1.8x`；
+- 交州象牙玳瑁等南洋异珍北运：倍率 `1.7x`；
+- 北疆战马南运（幽/并/凉至荆/扬/交少马水乡）：倍率 `1.6x`；
+- 其他常规跨州物产运销：保底 `1.25x`。
+
+### 39.4 纯函数季度商税计算模型（calculateTradeRouteQuarterlyIncome）
+- 基础基数：`baseGross = max(30, floor(((commerceA + commerceB) / 200) * 80))`；
+- 水运加成：若 `isWaterWay`，`baseGross = round(baseGross * 1.3)`；
+- 特产加成：`baseGross = round(baseGross * calculateSpecialtyPriceMultiplier(...))`；
+- 经管文官加成：若指定经管文官，其才智与政理最高值大于 60 时，享有最高 +30% 的分润增益；
+- 关税分润：
+  - 同势力商路：两城各平分 50%，边关损耗为 0；
+  - 跨势力商路：边关榷场关税折损 30%（即净留 70% 纯利），两国友好度每 10 点恢复 1%（最高恢复至 80%），两城各平分净利润；
+- 战时封锁：若双方势力处于交战状态（`DipRelation.WAR`），商税收益归零，商路自动标记 `blockaded`。
+
+### 39.5 商路开辟与配额规则
+- 工本费：开辟商路法定工本费为 200 贯金钱（`TRADE_ROUTE_SETUP_COST = 200`），自发起方城池金库扣除；
+- 单城上限：每座城池最多同时接入 3 条商路（`MAX_TRADE_ROUTES_PER_CITY = 3`）；
+- 连通性：两城之间必须道路直连相邻（`areCitiesRoadAdjacent`）或具备水路干线相通；
+- 互斥性：同一对城池之间仅允许存在 1 条有效活动商路，城池禁止与自身通商；交战国城池禁止通商。
+
+
 
