@@ -192,6 +192,13 @@ Game Loop:
 
 特产贸易收入 = basePrice × (1 + distanceFactor) × tradeSkill
 
+> **实装状态（Session 481 · Phase 7-05）**：
+> - 契约与静态表：`PROVINCE_SPECIALTIES`（十三州特产矩阵）定义于 `shared/trade.ts`，导出于 `@leh/shared`；
+> - 纯函数异地溢价：`calculateSpecialtyPriceMultiplier`（蜀锦异地 1.8x、交州南洋异珍 1.7x、北马南运 1.6x、同州境内 1.0x）；
+> - 季首商税纯函数：`calculateTradeRouteQuarterlyIncome`（两城商业基数、水运干线 1.3x、跨国关税扣减 30%、友好度修复、经管文官才德增益、战时禁运清零）；
+> - 引擎生命周期：`establishTradeRoute`（开辟工本 200 贯、上限 3 条）、`cancelTradeRoute`、`tickTradeQuarter`（季首入账、文官功绩 +15、跨国友好 +1、战时自动封锁 blockaded）；
+> - 专项门禁：`verify-s481-trade-network` 54/54 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移。
+
 ### 2.8 纬度兵种造价梯度
 
 越北骑兵越便宜、水军越贵，越南反之：
@@ -1459,6 +1466,8 @@ d≤5格损耗5% → 10格12% → 15格25% → >15格40%。雨季冬季+5%。
 #### 贸易路线
 
 每城上限2~4条路线。相邻陆路= (commerceA+commerceB)/200×交通/100×技能。同河运×1.3。跨势力×0.7(关税,友好每10恢复1%)。丝绸之路(长安→敦煌→西域)×2.0。交广海路×1.6。设施：驿站(陆路+15%)/码头(水运解锁)/市集(路线上限+1)/通关口(关税+30%)。特产异地溢价30~120%。禁运对敌自动生效。劫掠路线抢当季贸易收入30%(友好-15,对方获宣战理由)。
+
+> **Phase 7-05 全栈落地（Session 481）**：商路实体 `TradeRoute`、配额与连通纯函数校验 `canEstablishTradeRoute`、开辟工本费 200 贯、季首统算入账 `tickTradeQuarter`（文官累功、两国友好增进、战时禁运 blockaded）、路由 `/trade/*` 与 Web Worker 镜像，专案门禁 `verify-s481-trade-network` 54/54 全绿。
 
 ---
 

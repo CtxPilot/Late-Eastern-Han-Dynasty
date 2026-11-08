@@ -23,6 +23,7 @@ import type {
 } from './tournament.js';
 import type { PendingFamilyTreatment } from '../hostage-families.js';
 import type { RuntimeRelation } from '../relations.js';
+import type { TradeRoute } from '../trade.js';
 
 export enum GeneralTrendStage {
   WARLORDS_DISORDER = 'warlords_disorder', // 群雄并起割据（190~199）
@@ -144,6 +145,12 @@ export interface GameState {
 
   /** 玩家攻城后待选择的家属处置；旧存档缺省表示没有待决项。 */
   pendingFamilyTreatment?: PendingFamilyTreatment | null;
+
+  /**
+   * Phase 7-05 商路贸易路线网络（Session 481）。
+   * 记录全图活跃、封锁或挂起的商路列表；旧档兼容缺省为 undefined。
+   */
+  tradeRoutes?: TradeRoute[];
 
   /**
    * 天下一统或身死国灭终局结算（HC-P2 / Session 451+）。

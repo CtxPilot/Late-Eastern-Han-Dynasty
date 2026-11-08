@@ -1,3 +1,44 @@
+## 2026-11-08 — Session 481 · 商路贸易网络、十三州特产与跨国关税经济体系全栈落地（Phase 7-05）
+
+- Phase：**Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系**；正式落地立项提案 `docs/58-trade-routes-and-specialties-proposal.md`，全面打通十三州特色产物、基于城池道路拓扑的贸易路线（`TradeRoute`）、特产异地运销溢价模型、水运干线加成、跨势力边境关税分润、战时自动封锁禁运，以及季首商税统算入账全栈体系！新增专属门禁 `verify-s481-trade-network` 54/54 项断言全绿，既有门禁 `verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 108 个套件 736 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §2.6/§2.7/§1461、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/35-phased-implementation-roadmap.md` Phase 7-05 规划，宏观治理维度亟需突破单一的「静态农商开发与税赋抽取」模型；
+  2. 三国时期经济高度依赖区域特产流通与干线商道：益州蜀锦独步天下充当国帑、西凉与北疆战马源源南下、青徐海盐与南洋异珍络绎通达；两国通好则榷场抽税互惠，兵戎相见则边关封锁商道阻绝；
+  3. 十三州特产矩阵（`PROVINCE_SPECIALTIES`）：定义十三州独有物产、基准价格与类别（战马、海盐、漆器、蜀锦、珠宝象牙等）；
+  4. 特产异地运销溢价模型（`calculateSpecialtyPriceMultiplier`）：益州蜀锦运销外州 1.8x、交州象牙玳瑁等南洋异珍 1.7x、北马南运 1.6x、常规跨州 1.25x、同州产物 1.0x；
+  5. 商路实体与配额管理（`TradeRoute` & `canEstablishTradeRoute`）：单城商路开辟上限 3 条、两城自连拦截、重复商路拦截；开辟工本费 200 贯，城池金钱不足拦截；无通路且非水路拦截；跨势力交战状态拦截；
+  6. 季首商税纯函数计算（`calculateTradeRouteQuarterlyIncome`）：基于双方商业值总和、长江/黄河水运干线加成 1.3x、跨势力关税折损 30%（两国友好每 10 点恢复 1% 减免）、经管文官才智政理加成、战时交战禁运收益清零；
+  7. 引擎层全息生命周期（`server/src/engine/trade.ts` & `turn.ts`）：`establishTradeRoute` 开辟商路并记日志、`cancelTradeRoute` 撤除商路并释放配额、`tickTradeQuarter` 季首核算入账双方城池金库；主管文官累积经商功绩（+15）；跨势力和平商路季首双边友好度改善（+1）；若交战爆发商路自动标记 `blockaded` 禁运；非季首月与无商路时严格 COW 保持原引用，零 RNG 消耗，保证金样零漂移；
+  8. 服务层、路由与离线 Web Worker 镜像打通：`doGetTradeRoutes`、`doEstablishTradeRoute`、`doCancelTradeRoute`，HTTP 端点 `/trade/routes`, `/trade/establish`, `/trade/cancel` 与 Web Worker 镜像同源运行。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `TradeRoute`, `TradeRouteStatus`, `SpecialtyItem`: 数据实体与类型定义；
+     - `PROVINCE_SPECIALTIES`: 十三州特产基准表；
+     - `calculateSpecialtyPriceMultiplier`: 纯函数异地运销溢价推导；
+     - `calculateTradeRouteQuarterlyIncome`: 纯函数季首商税与贸易收益计算；
+     - `canEstablishTradeRoute`, `getCityActiveTradeRoutes`: 商路配额校验与筛选纯函数；
+     - `GameState.tradeRoutes`: 根级字段扩充，注册入 `ROOT_KEYS`，全 Schema 引用完整性校验；
+     - `MAX_TRADE_ROUTES_PER_CITY = 3`, `TRADE_ROUTE_SETUP_COST = 200` 常量导出；
+     - 单元测试：`shared/trade.test.ts` 14/14 全绿。
+  2. **引擎层全息生命周期（`server/src/engine/trade.ts` & `turn.ts`）**：
+     - `establishTradeRoute`: 连通性、配额、交战检查，工本费扣减，生成 `route_minId_maxId` 路线实体，写入 `trade_route_established` 行动日志；
+     - `cancelTradeRoute`: 撤销路线，生成 `trade_route_cancelled` 日志；
+     - `tickTradeQuarter`: 季首（1/4/7/10月）全图结算，入账金库、文官累绩、友好度+1、交战封锁；非季首月/无商路时严格 COW 保持原引用；
+     - `turn.ts`: 月结管线接入 `tickTradeQuarter(nextState, isQuarterStart)`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 增加 `doGetTradeRoutes`, `doEstablishTradeRoute`, `doCancelTradeRoute`；
+     - `server/src/routes/game.ts`: 挂载 `GET /trade/routes`, `POST /trade/establish`, `POST /trade/cancel`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 3 大方法。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s481-trade-network.ts`，涵盖十三州特产配置与异地价格溢价推导、纯函数商路建立条件与配额上限、季首商税收益模型计算、引擎商路开辟与撤销事务闭环、季首商税结算与月度演化、24 个月全息推演闭环、服务层与 HTTP/Worker 接口完备性，全部 54/54 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 108 个套件 736 项单测 100% 通过；
+     - 全包构建 `pnpm build`、数据校验 `validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/58-trade-routes-and-specialties-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 480 · 战俘处置与刑赏牢狱体系全栈落地（Phase 7-04）
 
 - Phase：**Phase 7-04 战俘处置与刑赏牢狱体系**；正式落地立项提案 `docs/57-prisoner-justice-and-captives-proposal.md`，全面打通战场击溃生擒、牢狱羁押演进与战俘四大处置（招降归顺、宽仁义释、法定索赎、严刑处斩）政令全栈闭环，实现义理抵抗与久羁锐气消解概率模型、法定赎金五维品阶折算、国库赎金交割、处斩天下公愤与宿怨血仇建立，以及月度高智机敏越狱机制！新增专属门禁 `verify-s480-prisoner-captives` 60/60 项断言全绿，既有门禁 `verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 107 个套件 725 项单测 100% 绿灯！

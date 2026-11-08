@@ -49,6 +49,7 @@ import { runAiMilitary } from './aiMilitary.js';
 import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, runDelegationMilitary, tickDelegationReports } from './delegation.js';
 import { checkEndgameStatus } from './endgame.js';
 import { tickPrisonersMonth } from './prisoner.js';
+import { tickTradeQuarter } from './trade.js';
 import { runAllAiIntel } from './spyAi.js';
 import { tickSpyMonth } from './spy.js';
 import { tickPlotsMonth } from './plot.js';
@@ -486,6 +487,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     // S35（Session 475）：每季首月欠俸忠诚惩罚与税赋民心变动（D-0B-9）
     nextState = settleSalaryArrearsQuarterly(nextState);
     nextState = applyQuarterlyTaxMorale(nextState);
+    // Phase 7-05（Session 481）：季首商路商税与贸易收益统算入账（无商路时严格 COW 保持零漂移）
+    nextState = tickTradeQuarter(nextState, isQuarterStart);
   }
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {

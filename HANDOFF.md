@@ -9,12 +9,44 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 480**（Phase 7-04 战俘处置与刑赏牢狱体系全栈落地：数据契约与 Schema 扩展【`Officer.captiveByFactionId`, `Officer.imprisonedMonths`】；纯函数几率模型【`calculatePrisonerSurrenderChance` 结合义理/忠诚/久羁/君主德望/声誉，夹紧[5,85]；`calculatePrisonerRansomValue` 法定赎金100~1500金折算】；四大处置能力全栈闭环【招降归顺转ACTIVE改换门庭+声望5/亲和提升、宽仁义释获释归国+仁政声望15/亲和30/母国好感15、法定索赎国库交割金钱入账、严刑处斩武将死亡+依品阶严罚声望50~100/母国外交暴跌50/直系义兄弟血海深仇建立】；月度在押演进与久羁意志消解；机敏高智越狱潜逃机制；无战俘严格 COW 零分配零 RNG 保持零漂移；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s480-prisoner-captives` 60/60 全绿，既有门禁 `verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 107 个套件 725 项单测 100% 绿灯） |
-| 阶段 | **Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制与朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 480 `shared/types/officer.ts`、`shared/game-state-entity-schema.ts`、`shared/prisoner.ts`、`shared/prisoner.test.ts`、`server/src/engine/prisoner.ts`、`server/src/engine/battle.ts`、`server/src/engine/campaign.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s480-prisoner-captives.ts` 门禁 |
-| 文档最新 | **Session 480 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/57-prisoner-justice-and-captives-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 480 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、经济商路与百城地理深化 |
-| 下一步 | ①根据 roadmap 规划推进后续 Phase 7-05 深度宏观演进；②持续保障既有核心门禁与零漂移测试稳定 |
+| 会话 | **Session 481**（Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系全栈落地：数据契约与 Schema 扩展【`TradeRoute`, `SpecialtyItem`, `PROVINCE_SPECIALTIES`】；纯函数异地溢价推导【`calculateSpecialtyPriceMultiplier` 蜀锦 1.8x、交州珍奇 1.7x、凉州良马 1.6x、同州 1.0x】；季首商税与贸易收益模型【`calculateTradeRouteQuarterlyIncome` 水运干线 1.3x、跨国关税扣减 30%、友好度修复、经管文官才德增益、战时禁运清零】；配额与连通校验【`canEstablishTradeRoute` 单城上限 3 条、两城自连与重复拦截】；引擎层生命周期【`establishTradeRoute` 开辟工本 200 贯、`cancelTradeRoute` 撤除商路、`tickTradeQuarter` 季首入账/文官累功/友好度增进/交战封锁 blockaded；无商路严格 COW 零分配零 RNG 保持零漂移】；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s481-trade-network` 54/54 全绿，既有门禁 `verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 108 个套件 736 项单测 100% 绿灯，全仓构建与合规 0 错误） |
+| 阶段 | **Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 481 `shared/trade.ts`、`shared/trade.test.ts`、`shared/types/game.ts`、`shared/game-state-full-schema.ts`、`server/src/engine/trade.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s481-trade-network.ts` 门禁 |
+| 文档最新 | **Session 481 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/58-trade-routes-and-specialties-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 481 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、百城地理与后续里程碑 |
+| 下一步 | ①根据 roadmap 规划推进后续深度宏观演进与百城地理；②持续保障既有核心门禁与零漂移测试稳定 |
+
+### Session 481 交接要点
+
+- **Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系全栈落地**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `TradeRoute`, `TradeRouteStatus`, `SpecialtyItem`: 数据实体与类型定义；
+     - `PROVINCE_SPECIALTIES`: 十三州独有特产矩阵静态表；
+     - `calculateSpecialtyPriceMultiplier`: 纯函数异地运销溢价推导（益州蜀锦 1.8x、交州南洋异珍 1.7x、北马南运 1.6x、同州 1.0x）；
+     - `calculateTradeRouteQuarterlyIncome`: 季首商税与贸易收益模型计算（水运干线 1.3x、跨国关税扣减 30%、友好度修复、经管文官才德增益、战时禁运清零）；
+     - `canEstablishTradeRoute` & `getCityActiveTradeRoutes`: 商路配额校验与筛选纯函数；
+     - `GameState.tradeRoutes`: 根级字段扩充，注册入 `ROOT_KEYS`，全 Schema 引用完整性校验；
+     - 常量导出：`MAX_TRADE_ROUTES_PER_CITY = 3`, `TRADE_ROUTE_SETUP_COST = 200`；
+     - 单元测试：`shared/trade.test.ts` 14/14 项全绿。
+  2. **引擎层全息生命周期（`server/src/engine/trade.ts` & `turn.ts`）**：
+     - `establishTradeRoute`: 检查连通性、配额、交战状态，发起城池扣除 200 贯工本费，生成路线实体，登记 `trade_route_established` 日志；
+     - `cancelTradeRoute`: 废止路线并释放配额，登记 `trade_route_cancelled` 日志；
+     - `tickTradeQuarter`: 季首（1/4/7/10月）全图结算，入账金库、文官经商功绩+15、跨国和平商路双边友好度+1、交战爆发商路自动标记 `blockaded` 禁运；非季首月与无商路时严格 COW 保持原引用，零 RNG 消耗，保证金样零漂移；
+     - `turn.ts`: 月结管线挂载 `tickTradeQuarter(nextState, isQuarterStart)`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 增加 `doGetTradeRoutes`, `doEstablishTradeRoute`, `doCancelTradeRoute`；
+     - `server/src/routes/game.ts`: 挂载 `GET /trade/routes`, `POST /trade/establish`, `POST /trade/cancel`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 3 大方法。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s481-trade-network` 54/54 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s480-prisoner-captives` 60/60 项全绿；
+     - `verify-s479-political-trends-nine-ranks` 66/66 项全绿；
+     - `verify-s478-advanced-diplomacy` 69/69 项全绿；
+     - `verify-s477-official-ranks` 107/107 项全绿；
+     - `verify-d0b9-fiscal-salary` 40/40 项全绿；
+     - `turn-golden.test.ts` 3/3 项严格匹配零 RNG 漂移；
+     - 全仓 108 个套件 736 项单测 100% 通过；
+     - 全仓 `pnpm build`、`validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
 
 ### Session 480 交接要点
 

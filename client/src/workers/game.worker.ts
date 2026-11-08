@@ -202,6 +202,10 @@ import {
   executePrisoner,
 } from '../../../server/src/engine/prisoner.js';
 import {
+  establishTradeRoute,
+  cancelTradeRoute,
+} from '../../../server/src/engine/trade.js';
+import {
   getFactionPrisoners,
   calculatePrisonerRansomValue,
   calculatePrisonerSurrenderChance,
@@ -1028,6 +1032,43 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
     return withLock(() => {
       const game = getGame();
       currentGame = executePrisoner(game, prisonerId, game.playerFactionId);
+      return getClientGame();
+    });
+  },
+
+  getTradeRoutes() {
+    const game = getGame();
+    return game.tradeRoutes ?? [];
+  },
+
+  establishTradeRoute(
+    fromCityId: number,
+    toCityId: number,
+    assignedOfficerId?: number,
+    isWaterWay?: boolean,
+  ) {
+    return withLock(() => {
+      const game = getGame();
+      const result = establishTradeRoute(
+        game,
+        fromCityId,
+        toCityId,
+        assignedOfficerId,
+        isWaterWay,
+      );
+      currentGame = result.state;
+      return {
+        game: getClientGame(),
+        route: result.route,
+        message: result.message,
+      };
+    });
+  },
+
+  cancelTradeRoute(routeId: string) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = cancelTradeRoute(game, routeId);
       return getClientGame();
     });
   },

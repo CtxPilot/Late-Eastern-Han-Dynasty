@@ -83,3 +83,4 @@ export * from './pcg/index.js';
 export * from './fiscal.js';
 export * from './nine-ranks.js';
 export * from './prisoner.js';
+export * from './trade.js';

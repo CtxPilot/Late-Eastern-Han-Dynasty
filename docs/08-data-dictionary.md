@@ -1203,6 +1203,7 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 | `rankGrade` | Officer | `number?` | — | ✅ Phase 7-03 | 九品官人法定品等级（1~9品，数值越小品阶越高，1品宰辅公卿、9品草创军候；考评结合门阀世家/才德五维/朝野功绩） |
 | `captiveByFactionId` | Officer | `number?` | — | ✅ Phase 7-04 | 羁押俘获此战俘的势力 ID（战俘状态专有；归降/获释/归国/处决时清空） |
 | `imprisonedMonths` | Officer | `number?` | — | ✅ Phase 7-04 | 在押战俘已被关押累计月数（月结递增；久羁消解锐气归降率提升；越狱或获释归零） |
+| `tradeRoutes` | GameState | `TradeRoute[]?` | — | ✅ Phase 7-05 | 活跃商路贸易网络路线列表；开辟工本费200贯；每城上限3条；季首结算商税入账城池金库；战时自动禁运（blockaded） |
 
 **剧本可选配置**：`ScenarioStatic.kingRequirements?.minCities`（正整数）用于覆写相对城池门槛；
 `ScenarioFactionSetup.preferredKingdomName?` 提供王号首选。两者均已在 HC-P1-1/2 实装并由严格

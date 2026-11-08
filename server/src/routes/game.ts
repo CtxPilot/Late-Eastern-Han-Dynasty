@@ -934,6 +934,47 @@ gameRouter.post('/prisoner/execute', (req, res) => {
   }
 });
 
+gameRouter.get('/trade/routes', (_req, res) => {
+  try {
+    res.json(gameService.doGetTradeRoutes());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get trade routes failed' });
+  }
+});
+
+gameRouter.post('/trade/establish', (req, res) => {
+  try {
+    const { fromCityId, toCityId, assignedOfficerId, isWaterWay } = req.body ?? {};
+    if (typeof fromCityId !== 'number' || typeof toCityId !== 'number') {
+      res.status(400).json({ error: 'fromCityId and toCityId must be numbers' });
+      return;
+    }
+    res.json(
+      gameService.doEstablishTradeRoute(
+        fromCityId,
+        toCityId,
+        typeof assignedOfficerId === 'number' ? assignedOfficerId : undefined,
+        Boolean(isWaterWay),
+      ),
+    );
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'establish trade route failed' });
+  }
+});
+
+gameRouter.post('/trade/cancel', (req, res) => {
+  try {
+    const { routeId } = req.body ?? {};
+    if (typeof routeId !== 'string' || !routeId) {
+      res.status(400).json({ error: 'routeId must be a non-empty string' });
+      return;
+    }
+    res.json(gameService.doCancelTradeRoute(routeId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'cancel trade route failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

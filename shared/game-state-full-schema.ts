@@ -20,7 +20,7 @@ const ROOT_KEYS = [
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'runtimeRelations', 'tournament',
   'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',
-  'pendingFamilyTreatment', 'endgameResult',
+  'pendingFamilyTreatment', 'endgameResult', 'tradeRoutes',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {
@@ -271,6 +271,16 @@ export const GameStateSchema = z
         requireRef(factionIds.has(change.a), ['plots', index, 'result', 'favorChanges', changeIndex, 'a'], '计谋关系变化势力 A 不存在', ctx);
         requireRef(factionIds.has(change.b), ['plots', index, 'result', 'favorChanges', changeIndex, 'b'], '计谋关系变化势力 B 不存在', ctx);
       });
+    });
+
+    (state.tradeRoutes ?? []).forEach((route, index) => {
+      requireRef(cityIds.has(route.fromCityId), ['tradeRoutes', index, 'fromCityId'], '商路起点城市不存在', ctx);
+      requireRef(cityIds.has(route.toCityId), ['tradeRoutes', index, 'toCityId'], '商路讫点城市不存在', ctx);
+      requireRef(factionIds.has(route.factionA), ['tradeRoutes', index, 'factionA'], '商路势力 A 不存在', ctx);
+      requireRef(factionIds.has(route.factionB), ['tradeRoutes', index, 'factionB'], '商路势力 B 不存在', ctx);
+      if (route.assignedMerchantOfficerId != null) {
+        requireRef(officerIds.has(route.assignedMerchantOfficerId), ['tradeRoutes', index, 'assignedMerchantOfficerId'], '商路经管官员不存在', ctx);
+      }
     });
 
     const eventLedgers = [state.completedEvents, state.pendingEvents, state.invalidatedEvents];

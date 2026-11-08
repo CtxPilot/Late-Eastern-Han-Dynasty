@@ -59,7 +59,7 @@
 
 | S03 | 内政 | M | 已实装农/商/城即时开发+征兵/训练/施米，随机路径统一权威 `xorshift32-v1`（即时内政确定续玩 9/9）；**民屯田 Session 339 最小切片**（分配+月结产粮+季限一次）；**军屯田 Session 345**；**Session 351 接入家属处置后的城民心/叛乱倍率**；**Session 362 文化持续投入 0-A（360金/6月/+60）**；**Session 363~364 技艺门槛只读预览与进度条**；**Session 397~399 工艺/交通/卫生**持续投入；**Session 400 文化→登用成功率消费**；**Session 401 工艺→征兵士气**；**Session 402 交通→行军粮耗**；**Session 453 技艺研发五大路线（农政/工商/军备/城防/教化各 Lv1~5）纯函数权威引擎与全套消费闭环**；**Session 453 城池卫生门槛防灾、人口生育死亡乘数、时疫爆发惩罚与施米/卫生结项拔除闭环全部实装**；**委任AI复用本引擎（§39，设计完成）** |
 > **S03 Session 362~402 + Session 453**：`culture`/`craft`/`transport`/`sanitation` 复用 `activeDevelopment`；文化→登用、工艺→征兵士气、交通→行军粮耗、卫生→人口动态/时疫防灾、势力技艺研发五大路线已全套接通闭环。
-| S04 | 人口经济 | M | 四桶粮耗；城金为真源 |
+| S04 | 人口经济 | M+ | 四桶粮耗；城金为真源；**商路贸易网络与十三州特产体系（Session 481 Phase 7-05）**：数据契约扩展（`TradeRoute`, `SpecialtyItem`, `PROVINCE_SPECIALTIES`）；纯函数异地溢价推导（`calculateSpecialtyPriceMultiplier` 蜀锦 1.8x、交州珍奇 1.7x、凉州良马 1.6x、同州 1.0x）；季首商税收益模型（`calculateTradeRouteQuarterlyIncome` 水运干线 1.3x、跨国关税扣减 30%、友好度修复、经管文官才德增益、战时禁运清零）；配额与连通校验（`canEstablishTradeRoute` 单城上限 3 条、两城自连与重复拦截）；引擎层生命周期（`establishTradeRoute` 开辟工本 200 贯、`cancelTradeRoute` 撤除商路、`tickTradeQuarter` 季首入账/文官累功/友好度增进/交战封锁 blockaded；无商路严格 COW 零分配零 RNG 保持零漂移）；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s481-trade-network` 54/54 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移。 |
 | S05 | 军事 | **M+/D+** | 已实装出征占城与战役 Army 主/副将/参谋编成；**已批准待 BF-P1～P3：**跨郡入口、郡域节点行军、Encounter、撤退与战争原子回写；爵位加成未接入。**Session 456 P5-14 0-A**：`shared/troop-level.ts` 七级表 + `BattleUnit.experience` 投影 + 六角攻防/暴击等级修正 + 六角战战果经验写回 + `City.troopsExperience` 训练经验/征兵补员稀释/建军投影 + Lv6 士气下限 + Army/SideCard 等级展示；Lv7 重建后置 |
 | S06 | 迷雾 | **M+** | UI+**服务端裁剪** maskGameStateForPlayer |
 | S07 | 谍报 | M+ | 招募/训练/献美点化/任务结算接权威 PRNG；枕边风与离间流言确定续玩；**四面楚歌未实装**；失城/亡国清理 |
