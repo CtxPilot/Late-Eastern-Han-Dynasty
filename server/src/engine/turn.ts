@@ -50,6 +50,7 @@ import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, 
 import { checkEndgameStatus } from './endgame.js';
 import { tickPrisonersMonth } from './prisoner.js';
 import { tickTradeQuarter } from './trade.js';
+import { tickCasualtiesAndHospitalMonth } from './hospital.js';
 import { runAllAiIntel } from './spyAi.js';
 import { tickSpyMonth } from './spy.js';
 import { tickPlotsMonth } from './plot.js';
@@ -467,6 +468,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   }
   // Phase 7-04（Session 480）：月度战俘状态羁押演进（无战俘时 COW 零操作零 RNG 消耗保持零漂移）
   nextState = tickPrisonersMonth(nextState, rng);
+  // Phase 7-06（Session 482）：伤兵营月度回流与武将创伤康复（无伤病时 COW 零操作零 RNG 保持零漂移）
+  nextState = tickCasualtiesAndHospitalMonth(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）

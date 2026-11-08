@@ -9,12 +9,45 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 481**（Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系全栈落地：数据契约与 Schema 扩展【`TradeRoute`, `SpecialtyItem`, `PROVINCE_SPECIALTIES`】；纯函数异地溢价推导【`calculateSpecialtyPriceMultiplier` 蜀锦 1.8x、交州珍奇 1.7x、凉州良马 1.6x、同州 1.0x】；季首商税与贸易收益模型【`calculateTradeRouteQuarterlyIncome` 水运干线 1.3x、跨国关税扣减 30%、友好度修复、经管文官才德增益、战时禁运清零】；配额与连通校验【`canEstablishTradeRoute` 单城上限 3 条、两城自连与重复拦截】；引擎层生命周期【`establishTradeRoute` 开辟工本 200 贯、`cancelTradeRoute` 撤除商路、`tickTradeQuarter` 季首入账/文官累功/友好度增进/交战封锁 blockaded；无商路严格 COW 零分配零 RNG 保持零漂移】；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s481-trade-network` 54/54 全绿，既有门禁 `verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 108 个套件 736 项单测 100% 绿灯，全仓构建与合规 0 错误） |
-| 阶段 | **Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 481 `shared/trade.ts`、`shared/trade.test.ts`、`shared/types/game.ts`、`shared/game-state-full-schema.ts`、`server/src/engine/trade.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s481-trade-network.ts` 门禁 |
-| 文档最新 | **Session 481 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/58-trade-routes-and-specialties-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 481 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、百城地理与后续里程碑 |
+| 会话 | **Session 482**（Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系全栈落地：数据契约与 Schema 扩展【`Officer.injury`, `Officer.injuryMonths`, `City.woundedTroops`, `City.hospitalFundedMonths`】；纯函数战损分流模型【`calculateCasualtySplit` 40% 永久阵亡与 60% 伤兵】；武将创伤等级与战力削弱行动惩罚【`calculateInjuryCombatPenalty` 0健康/1轻伤/2中伤/3重伤/4濒死，中伤禁单挑，重伤禁行军出征，濒死全属性削减40%】；月度伤兵回流率模型【`calculateMonthlyWoundedRecoveryRate` 基准10%、医馆拨款+10%、卫生达标+5%、名医驻城+10%、药材特产+5%，夹紧[10%, 40%]】；引擎层政令闭环【`fundCityHospital` 100贯注资3个月、`cureOfficerInjury` 50~400金派医施治创伤降级、`recordBattleCasualties` 战损分流入册、`tickCasualtiesAndHospitalMonth` 月度伤兵康复回归驻军与武将创伤自然康复降级】；无伤员局严格 COW 保持原引用零开销零 RNG；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s482-casualties-hospital` 66/66 全绿，既有门禁 `verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 109 个套件 756 项单测 100% 绿灯，全仓构建与合规 0 错误） |
+| 阶段 | **Phase 7-06 战阵创伤与伤兵营医馆全量落地 [x]**；**Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 482 `shared/hospital.ts`、`shared/hospital.test.ts`、`shared/types/officer.ts`、`shared/types/city.ts`、`shared/game-state-entity-schema.ts`、`server/src/engine/hospital.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s482-casualties-hospital.ts` 门禁 |
+| 文档最新 | **Session 482 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/59-casualties-wounds-and-hospital-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 482 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、百城地理与后续里程碑 |
 | 下一步 | ①根据 roadmap 规划推进后续深度宏观演进与百城地理；②持续保障既有核心门禁与零漂移测试稳定 |
+
+### Session 482 交接要点
+
+- **Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系全栈落地**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `Officer`: 扩充 `injury?: number`（0~4级：0=健康, 1=轻伤, 2=中伤, 3=重伤, 4=濒死）与 `injuryMonths?: number`；
+     - `City`: 扩充 `woundedTroops?: number`（城池伤兵营在册伤兵数）与 `hospitalFundedMonths?: number`（官办医馆拨款时效月数）；
+     - `OfficerRuntimeSchema` 与 `CityRuntimeSchema`: 严格注册 Zod 校验；
+     - `shared/hospital.ts`:
+       - `InjuryLevel` 标准枚举；
+       - `calculateCasualtySplit`: 纯函数战损 40% 永久阵亡与 60% 伤兵分流，守恒且负数防御安全；
+       - `calculateMonthlyWoundedRecoveryRate`: 月度伤兵自然回流率纯函数（基准10%、医馆拨款+10%、卫生达标+5%、驻城名医+10%、药材特产+5%，夹紧[10%, 40%]）；
+       - `calculateInjuryCombatPenalty`: 战力衰减与行动惩罚纯函数（轻伤微削5%，中伤禁单挑，重伤禁行军出征，濒死全属性削减40%）；
+       - `getHealingMonthsRequired`: 自愈门槛周期（轻2/中4/重6/濒死12月）；
+       - `hasMedicalSkill`: 医道名医才艺检索；
+       - 常量导出：`HOSPITAL_FUNDING_COST = 100`, `HOSPITAL_FUNDING_DURATION = 3`, `CURE_COST_BY_INJURY = {1:50, 2:100, 3:200, 4:400}`；
+     - 单元测试：`shared/hospital.test.ts` 16/16 全绿。
+  2. **引擎层全息生命周期（`server/src/engine/hospital.ts` & `turn.ts`）**：
+     - `fundCityHospital`: 城池金库扣除 100 贯，注资 3 个月强化时效，登记政令日志；
+     - `cureOfficerInjury`: 消耗 50~400 金名医诊治，使武将创伤降级 1 级，痊愈时彻底清空 `injury` 与 `injuryMonths`；
+     - `recordBattleCasualties`: 战损分流纯函数调用，沉淀 60% 伤兵入城；
+     - `tickCasualtiesAndHospitalMonth`: 月度伤兵回流（保底每月 50 人防无限尾部衰减）、医馆月份消减、武将创伤满期自然降级与喜报日志；无伤员局严格 COW 保持原引用，零开销零 RNG 消耗，保证零漂移铁律；
+     - `turn.ts`: 月结统一管线接入 `tickCasualtiesAndHospitalMonth(nextState)`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 挂载 `doFundCityHospital`, `doCureOfficerInjury`, `doRecordBattleCasualties`, `doGetHospitalSummary`；
+     - `server/src/routes/game.ts`: 挂载 `/hospital/fund`, `/hospital/cure`, `/hospital/summary`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 3 大方法。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s482-casualties-hospital` 66/66 项断言 100% 绿色通过；
+     - 既有专案门禁 `verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 109 个套件 756 项单测 100% 通过；
+     - 全仓 `pnpm build`、`validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
 
 ### Session 481 交接要点
 

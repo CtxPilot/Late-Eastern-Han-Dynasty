@@ -105,6 +105,10 @@ export interface Officer extends OfficerStatic {
   captiveByFactionId?: number;
   /** 已羁押月数（影响越狱率与屈服招降几率，Phase 7-04） */
   imprisonedMonths?: number;
+  /** Phase 7-06: 创伤等级：0=健康, 1=轻伤, 2=中伤, 3=重伤, 4=濒死 */
+  injury?: number;
+  /** Phase 7-06: 负伤已累计月数 */
+  injuryMonths?: number;
   /** 霸府专属官职（docs/26 Q2 方案B，HC-P0-4 独立轨道）。非霸府势力武将该字段恒为空/none。 */
   hegemonyPosition?: HegemonyPosition;
   merit: number;

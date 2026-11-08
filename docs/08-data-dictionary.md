@@ -1799,5 +1799,51 @@ export interface TradeRoute {
 - 连通性：两城之间必须道路直连相邻（`areCitiesRoadAdjacent`）或具备水路干线相通；
 - 互斥性：同一对城池之间仅允许存在 1 条有效活动商路，城池禁止与自身通商；交战国城池禁止通商。
 
+---
+
+## 四十、战阵创伤与伤兵营收治数据模型（Phase 7-06 · Session 482）
+
+### 40.1 武将创伤契约扩展（Officer）
+| 字段 | 类型 | 校验与默认值 | 业务语义与规则约束 |
+|------|------|-------------|-------------------|
+| `injury` | `number?` | 可选枚举整数 (0~4)，默认 `0` 或 `undefined` | 0=健康 (HEALTHY)、1=轻伤 (MILD)、2=中伤 (MODERATE)、3=重伤 (SEVERE)、4=濒死 (CRITICAL)。 |
+| `injuryMonths` | `number?` | 可选非负整数，默认 `0` | 当前负伤状态持续月数。达到自然好转门槛后创伤等级自动递减 1 级并清零计时。 |
+
+### 40.2 城池伤兵营与医馆契约扩展（City）
+| 字段 | 类型 | 校验与默认值 | 业务语义与规则约束 |
+|------|------|-------------|-------------------|
+| `woundedTroops` | `number?` | 可选非负整数，默认 `undefined` | 城中伤兵营在册伤员人数。月度自然回流康复转入 `City.troops`。 |
+| `hospitalFundedMonths` | `number?` | 可选非负整数，默认 `undefined` | 官办医馆太医署注资强化有效剩余月数。期间享有 +10% 伤兵康复加速加成。 |
+
+### 40.3 纯函数战损分流与医疗回流模型
+1. **战损分流计算（`calculateCasualtySplit`）**：
+   - 阵亡永久消亡：`dead = Math.round(totalLoss * 0.4)`；
+   - 伤兵转入伤兵营：`wounded = totalLoss - dead`（60%）；
+   - 总和守恒：`dead + wounded === totalLoss`。
+2. **月度伤兵回流率计算（`calculateMonthlyWoundedRecoveryRate`）**：
+   - 基础自然康复率：`10%` / 月；
+   - 官办医馆拨款注资（`hospitalFundedMonths > 0`）：`+10%`；
+   - 城市卫生达标（`sanitation >= 80`）：`+5%`；
+   - 驻城名医才艺（武将拥有 `medicine` / `heal` / `xuanhu`）：最高 `+10%`；
+   - 药材特产或药材商路畅通（益州/幽州或直通商路）：`+5%`；
+   - 最终回流率夹紧在 `[10%, 40%]`。
+   - 保底康复：每月康复人数 `Math.min(wounded, Math.max(50, Math.floor(wounded * rate)))`，避免个位数伤兵无限几何衰减。
+3. **武将创伤战力削弱计算（`calculateInjuryCombatPenalty`）**：
+   - 健康 (Lv0)：武力统帅 1.0x，允许单挑与行军；
+   - 轻伤 (Lv1)：武力统帅 0.95x，允许单挑与行军；自然康复门槛 2 个月；
+   - 中伤 (Lv2)：武力 0.85x，统帅 0.90x，**禁止单挑**，允许行军；自然康复门槛 4 个月；
+   - 重伤 (Lv3)：全属性 0.80x，**禁止单挑且禁止行军出征**；自然康复门槛 6 个月；
+   - 濒死 (Lv4)：全属性 0.60x，**禁止单挑且禁止行军出征**；自然康复门槛 12 个月。
+
+### 40.4 医馆注资与派医施救成本规则
+- 医馆注资（`fundCityHospital`）：消耗 100 贯金钱（`HOSPITAL_FUNDING_COST = 100`），时效 3 个月（`HOSPITAL_FUNDING_DURATION = 3`）；
+- 派医施治（`cureOfficerInjury`）：
+  - 轻伤：50 金；
+  - 中伤：100 金；
+  - 重伤：200 金；
+  - 濒死：400 金；
+  - 每次诊治立即令武将创伤等级降级 1 级（濒死->重伤->中伤->轻伤->健康），降级为健康时彻底清空 `injury` 与 `injuryMonths`。
+
+
 
 

@@ -215,7 +215,8 @@
     "verify-s478-advanced-diplomacy": "pnpm --filter @leh/server exec tsx src/scripts/verify-s478-advanced-diplomacy.ts",
     "verify-s479-political-trends-nine-ranks": "pnpm --filter @leh/server exec tsx src/scripts/verify-s479-political-trends-nine-ranks.ts",
     "verify-s480-prisoner-captives": "pnpm --filter @leh/server exec tsx src/scripts/verify-s480-prisoner-captives.ts",
-    "verify-s481-trade-network": "pnpm --filter @leh/server exec tsx src/scripts/verify-s481-trade-network.ts"
+    "verify-s481-trade-network": "pnpm --filter @leh/server exec tsx src/scripts/verify-s481-trade-network.ts",
+    "verify-s482-casualties-hospital": "pnpm --filter @leh/server exec tsx src/scripts/verify-s482-casualties-hospital.ts"
   },
   "engines": {
     "node": ">=20"

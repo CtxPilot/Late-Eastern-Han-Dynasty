@@ -84,3 +84,4 @@ export * from './fiscal.js';
 export * from './nine-ranks.js';
 export * from './prisoner.js';
 export * from './trade.js';
+export * from './hospital.js';

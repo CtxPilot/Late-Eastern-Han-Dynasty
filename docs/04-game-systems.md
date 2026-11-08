@@ -2032,6 +2032,9 @@ AI 军事随机不再保留 `Math.random()` 默认源：出征/袭扰决定、�
 
 ## 二十三、伤病系统
 
+> **Session 482 实装状态（Phase 7-06 战阵创伤与杏林医馆体系）**：
+> 武将创伤等级（`InjuryLevel`：0=健康 HEALTHY、1=轻伤 MILD、2=中伤 MODERATE、3=重伤 SEVERE、4=濒死 CRITICAL）与创伤月数（`injuryMonths`）已实装入 `@leh/shared` 模型契约（`Officer.injury` & `Officer.injuryMonths`）。战力削弱纯函数（`calculateInjuryCombatPenalty`）提供各伤级武力/统帅折损、行动惩罚（中伤禁单挑、重伤与濒死禁行军出征）；月结演进（`tickCasualtiesAndHospitalMonth`）提供自然好转康复周期（轻伤 2 月、中伤 4 月、重伤 6 月、濒死 12 月自动递减降级直达痊愈）；提供官府派医诊疗政令（`cureOfficerInjury`），消耗 50~400 金即可使创伤降级 1 级。无伤员时严格遵从 COW 保持原引用，零 RNG 消耗，维持零漂移铁律。专案门禁 `verify-s482-casualties-hospital` 66/66 全绿。
+
 ### 23.1 伤情等级
 
 | Lv | 名称 | 体力损失 | 属性惩罚 | 恢复时间(基础) | 可能后果 |
@@ -2146,6 +2149,13 @@ AI 军事随机不再保留 `Math.random()` 默认源：出征/袭扰决定、�
 ---
 
 ## 二十四、伤兵系统
+
+> **Session 482 实装状态（Phase 7-06 伤兵营与医疗加速体系）**：
+> 1. **战损分流纯函数**（`calculateCasualtySplit`）：按 40% 永久阵亡、60% 负伤入营精准分流，且负数与零战损防御健全；
+> 2. **伤兵营与医馆拨款数据契约**：`City.woundedTroops` 与 `City.hospitalFundedMonths` 注册入 `CityRuntimeSchema`；
+> 3. **月度回流与医疗加速模型**（`calculateMonthlyWoundedRecoveryRate`）：基准 10%/月回流率，叠加官办医馆拨款（+10%）、城市卫生良好（sanitation >= 80, +5%）、驻城名医才艺（悬壶/医术, +10%）、药材特产或药材商路畅通（+5%），夹紧于 `[10%, 40%]`；
+> 4. **月结管线与保底回流**（`tickCasualtiesAndHospitalMonth`）：每月计算伤兵康复回归驻军，保底每月康复 50 人防无限尾部衰减；官办医馆拨款递减；无伤兵局严格 COW 保持原引用零 RNG 消耗；
+> 5. **医馆拨款政令**（`fundCityHospital`）：扣减城池 100 贯工本费，注资维持 3 个月强化时效。专案门禁 `verify-s482-casualties-hospital` 66/66 全绿。
 
 ### 24.1 战场伤亡分流
 

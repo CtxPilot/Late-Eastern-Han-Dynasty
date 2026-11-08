@@ -179,4 +179,8 @@ export interface City extends CityStatic {
   taxRate?: number;
   /** S35 豪强田产是否已被安抚/检籍；true 时豁免 15% 隐匿扣除 */
   appeasedMagnate?: boolean;
+  /** Phase 7-06: 城中伤兵营在册待愈伤兵数量 */
+  woundedTroops?: number;
+  /** Phase 7-06: 官办医馆拨款注资剩余月数（享有 +10% 恢复加速） */
+  hospitalFundedMonths?: number;
 }

@@ -975,6 +975,41 @@ gameRouter.post('/trade/cancel', (req, res) => {
   }
 });
 
+gameRouter.post('/hospital/fund', (req, res) => {
+  try {
+    const { cityId } = req.body ?? {};
+    if (typeof cityId !== 'number') {
+      res.status(400).json({ error: 'cityId must be a number' });
+      return;
+    }
+    res.json(gameService.doFundCityHospital(cityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'fund hospital failed' });
+  }
+});
+
+gameRouter.post('/hospital/cure', (req, res) => {
+  try {
+    const { officerId } = req.body ?? {};
+    if (typeof officerId !== 'number') {
+      res.status(400).json({ error: 'officerId must be a number' });
+      return;
+    }
+    res.json(gameService.doCureOfficerInjury(officerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'cure officer failed' });
+  }
+});
+
+gameRouter.get('/hospital/summary', (req, res) => {
+  try {
+    const cityId = req.query.cityId ? Number(req.query.cityId) : undefined;
+    res.json(gameService.doGetHospitalSummary(cityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get hospital summary failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

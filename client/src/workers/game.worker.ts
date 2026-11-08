@@ -206,6 +206,10 @@ import {
   cancelTradeRoute,
 } from '../../../server/src/engine/trade.js';
 import {
+  fundCityHospital,
+  cureOfficerInjury,
+} from '../../../server/src/engine/hospital.js';
+import {
   getFactionPrisoners,
   calculatePrisonerRansomValue,
   calculatePrisonerSurrenderChance,
@@ -1071,6 +1075,47 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       currentGame = cancelTradeRoute(game, routeId);
       return getClientGame();
     });
+  },
+
+  fundCityHospital(cityId: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = fundCityHospital(game, cityId);
+      return getClientGame();
+    });
+  },
+
+  cureOfficerInjury(officerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = cureOfficerInjury(game, officerId, game.playerFactionId);
+      return getClientGame();
+    });
+  },
+
+  getHospitalSummary(cityId?: number) {
+    const game = getGame();
+    const playerFactionId = game.playerFactionId;
+    const cities = Object.values(game.cities).filter(
+      (c) => (cityId != null ? c.id === cityId : c.ruler === playerFactionId),
+    );
+    const officers = Object.values(game.officers).filter(
+      (o) => o.faction === playerFactionId && (o.injury ?? 0) > 0,
+    );
+    return {
+      cities: cities.map((c) => ({
+        cityId: c.id,
+        cityName: c.name,
+        woundedTroops: c.woundedTroops ?? 0,
+        hospitalFundedMonths: c.hospitalFundedMonths ?? 0,
+      })),
+      injuredOfficers: officers.map((o) => ({
+        officerId: o.id,
+        name: o.name,
+        injury: o.injury ?? 0,
+        injuryMonths: o.injuryMonths ?? 0,
+      })),
+    };
   },
 
   establishHegemony(): GameState {

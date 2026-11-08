@@ -1,3 +1,46 @@
+## 2026-11-08 — Session 482 · 战阵创伤、伤兵营收治与杏林医馆体系全栈落地（Phase 7-06）
+
+- Phase：**Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系**；正式落地立项提案 `docs/59-casualties-wounds-and-hospital-proposal.md`，全面打通战场战损 40%/60% 阵亡与伤兵分流、城池伤兵营（`City.woundedTroops`）在册收治与月度回流驻军、武将创伤等级（`InjuryLevel`：0=健康, 1=轻伤, 2=中伤, 3=重伤, 4=濒死）与武力统帅衰减/单挑出征禁制、杏林医馆太医署官办注资（`City.hospitalFundedMonths`）、派医诊治武将创伤降级，以及月结管线自然康复全栈体系！新增专属门禁 `verify-s482-casualties-hospital` 66/66 项断言全绿，既有门禁 `verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 109 个套件 756 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §23、§24 与 `docs/08-data-dictionary.md`，此前战斗战损直接一次性永久扣减兵力，武将负伤与伤兵机制未与大地图及月结管线贯通；
+  2. 战阵创伤与伤兵收治是三国战争真实后勤与将领运用的核心支柱：大将战阵中流矢中创，需名医救治或静养数月；士卒伤残者半数可由伤兵营收治，在名医与药材调理下康复归队；
+  3. 战损 40%/60% 分流纯函数（`calculateCasualtySplit`）：战场损失兵员 40% 永久阵亡消亡，60% 沉淀为伤兵转入归属城池伤兵营；
+  4. 武将创伤等级与行动惩罚（`calculateInjuryCombatPenalty`）：
+     - 0=健康（HEALTHY）：武统 1.0x，允许单挑与行军；
+     - 1=轻伤（MILD）：武统 0.95x，允许单挑与行军，自愈门槛 2 个月；
+     - 2=中伤（MODERATE）：武力 0.85x、统帅 0.90x，**严格禁止单挑**，自愈门槛 4 个月；
+     - 3=重伤（SEVERE）：全属性 0.80x，**严格禁止单挑且禁止行军出征**，自愈门槛 6 个月；
+     - 4=濒死（CRITICAL）：全属性 0.60x，**严格禁止单挑且禁止行军出征**，自愈门槛 12 个月；
+  5. 伤兵营月度回流与医疗加速（`calculateMonthlyWoundedRecoveryRate`）：基准 10%/月回流率，官办医馆注资（+10%）、城市卫生良好（sanitation >= 80, +5%）、驻城名医才艺（悬壶/医术, +10%）、药材特产或药材商路畅通（+5%），夹紧在 `[10%, 40%]`；每月保底康复 50 人防无限尾部衰减；
+  6. 杏林医馆拨款政令（`fundCityHospital`）：消耗城池 100 贯，注资太医署 3 个月强化时效；
+  7. 派医诊治政令（`cureOfficerInjury`）：消耗 50~400 金立即令武将创伤降级 1 级，痊愈时彻底清零创伤字段；
+  8. 月结管线闭环（`tickCasualtiesAndHospitalMonth`）：无伤员局严格 COW 保持原引用，零开销零 RNG 消耗，维持零漂移铁律。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `Officer.injury?: number`, `Officer.injuryMonths?: number`: 武将创伤与伤情月数；
+     - `City.woundedTroops?: number`, `City.hospitalFundedMonths?: number`: 城池伤兵营与医馆注资月数；
+     - `OfficerRuntimeSchema` 与 `CityRuntimeSchema` Zod 校验增强；
+     - `shared/hospital.ts`: `InjuryLevel` 枚举、`calculateCasualtySplit`、`calculateMonthlyWoundedRecoveryRate`、`calculateInjuryCombatPenalty`、`getHealingMonthsRequired`、`hasMedicalSkill`、`HOSPITAL_FUNDING_COST`、`CURE_COST_BY_INJURY`；
+     - 单元测试：`shared/hospital.test.ts` 16/16 全绿。
+  2. **引擎层全息生命周期（`server/src/engine/hospital.ts` & `turn.ts`）**：
+     - `fundCityHospital`: 医馆注资拨款；
+     - `cureOfficerInjury`: 派医施治降级创伤；
+     - `recordBattleCasualties`: 战损 40%/60% 分流入册；
+     - `tickCasualtiesAndHospitalMonth`: 月度伤兵自然回流与创伤自然降级，无伤员局 COW 零分配零漂移；
+     - `turn.ts`: 接入月结统一管线。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: `doFundCityHospital`, `doCureOfficerInjury`, `doRecordBattleCasualties`, `doGetHospitalSummary`；
+     - `server/src/routes/game.ts`: 挂载 `/hospital/fund`, `/hospital/cure`, `/hospital/summary`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同能力。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s482-casualties-hospital.ts` 66/66 项断言全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 109 套件 756 项测试 100% 绿灯；
+     - 全包构建 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/59-casualties-wounds-and-hospital-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 481 · 商路贸易网络、十三州特产与跨国关税经济体系全栈落地（Phase 7-05）
 
 - Phase：**Phase 7-05 商路贸易网络、十三州特产与跨国关税经济体系**；正式落地立项提案 `docs/58-trade-routes-and-specialties-proposal.md`，全面打通十三州特色产物、基于城池道路拓扑的贸易路线（`TradeRoute`）、特产异地运销溢价模型、水运干线加成、跨势力边境关税分润、战时自动封锁禁运，以及季首商税统算入账全栈体系！新增专属门禁 `verify-s481-trade-network` 54/54 项断言全绿，既有门禁 `verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 108 个套件 736 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！

@@ -96,6 +96,8 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     rankGrade: z.number().int().min(1).max(9).optional(),
     captiveByFactionId: PositiveIdSchema.optional(),
     imprisonedMonths: z.number().int().nonnegative().optional(),
+    injury: z.number().int().min(0).max(4).optional(),
+    injuryMonths: z.number().int().nonnegative().optional(),
     hegemonyPosition: z.nativeEnum(HegemonyPosition).optional(),
     merit: z.number().int().nonnegative(),
     meritLevel: z.number().int().min(1).max(20).optional(),
@@ -244,6 +246,8 @@ export const CityRuntimeSchema: z.ZodType<City> = z
     taxPolicy: z.enum(['light', 'standard', 'heavy', 'martial']).optional(),
     taxRate: z.number().min(0.1).max(0.9).optional(),
     appeasedMagnate: z.boolean().optional(),
+    woundedTroops: z.number().int().nonnegative().optional(),
+    hospitalFundedMonths: z.number().int().nonnegative().optional(),
   })
   .strict()
   .superRefine((city, ctx) => {
