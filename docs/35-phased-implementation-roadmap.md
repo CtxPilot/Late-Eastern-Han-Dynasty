@@ -82,6 +82,7 @@
 | 朝廷官制与地方统领（Phase 7-01） | **Session 477 全量落地 [x]**：中央文官（11级）、地方官（8级）、武官阶梯（10级）；刺史州牧一州唯一（`uniqueProvince`）；城防/士气即时增益；委任都督管辖权联动（州牧10城/刺史6城）；百官年俸岁首统发闭环；门禁 `verify-s477-official-ranks` 107/107 全绿 | 达成 |
 | 深度外交体系（Phase 7-02） | **Session 478 全量落地 [x]**：多方会盟实体（`Coalition` 关东反董联军模式，全员互盟对敌宣战，盟主协同作战动员令+5驻军士气，目标覆灭大捷解散+40声望）；从属朝贡体系（强权逼降与弱国投效，每年 1 月岁首纳贡 15% 金粮，宽宥解放独立）；宣战背信严惩（-50声望/-10全城驻军士气/-100友好）与从属国联动参战；停火协议（12个月保护期与出征拦截）；天子三大诏命（讨逆诏、册封诏、征贡诏）；双端 8 大路由与离线 Web Worker 镜像支持；专案门禁 `verify-s478-advanced-diplomacy` 69/69 项全绿 | 达成 |
 | 天下大势与九品中正（Phase 7-03） | **Session 479 全量落地 [x]**：天下大势宏观五阶段（群雄割据/中原争霸/三分鼎立/三国对峙/九州归一）演进推导与月结跨阶段推进；九品官人法定品考评模型（`evaluateOfficerRankGrade`：门阀起品/才德拔擢/名士风评/功绩突破/上品无寒门/下品无势族）；四轨官职品阶门槛 `minRankGrade` 校验与 `appointOfficer` 拦截（君主豁免）；势力中正大巡查与官绅分布摘要（`conductNineRanksEvaluation` & `getNineRanksSummary`）；岁首正月定品重核；专案门禁 `verify-s479-political-trends-nine-ranks` 66/66 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移 | 达成 |
+| 战俘处置与刑赏牢狱（Phase 7-04） | **Session 480 全量落地 [x]**：战俘归属判定（`captiveByFactionId`, `imprisonedMonths`）；几率模型（`calculatePrisonerSurrenderChance` 义理/忠诚抵抗、久羁消解、君主德望感召，夹紧[5,85]；`calculatePrisonerRansomValue` 法定赎金100~1500金折算）；四大处置政令全栈闭环（招降改换门庭转ACTIVE+基线忠诚+声望亲和提升、义释还乡送还母国+仁政声望15+亲和30+母国好感15、索赎母国国库交割实收金库、处斩战俘DEAD+依品阶罚声望50~100+母国好感暴跌50+死者直系义兄弟血海深仇建立）；月度在押演进与机敏高智越狱潜逃；无战俘严格 COW 零分配零 RNG 保持零漂移；服务层/路由与离线 Web Worker 双端镜像；专案门禁 `verify-s480-prisoner-captives` 60/60 全绿 | 达成 |
 
 ## 会话纪律
 

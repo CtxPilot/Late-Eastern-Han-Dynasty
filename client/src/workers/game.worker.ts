@@ -196,6 +196,17 @@ import {
   getNineRanksSummary,
 } from '../../../server/src/engine/nineRanks.js';
 import {
+  persuadePrisonerSurrender,
+  releasePrisoner,
+  ransomPrisoner,
+  executePrisoner,
+} from '../../../server/src/engine/prisoner.js';
+import {
+  getFactionPrisoners,
+  calculatePrisonerRansomValue,
+  calculatePrisonerSurrenderChance,
+} from '@leh/shared';
+import {
   getAvailableTechResearch,
   startTechResearch,
   cancelTechResearch,
@@ -944,6 +955,81 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
 
   getNineRanksSummary() {
     return getNineRanksSummary(getGame(), getGame().playerFactionId);
+  },
+
+  getFactionPrisoners() {
+    const game = getGame();
+    const prisoners = getFactionPrisoners(game.officers, game.playerFactionId);
+    const playerFaction = game.factions[game.playerFactionId];
+    const leader = playerFaction?.rulerId ? game.officers[playerFaction.rulerId] : null;
+    const fame = playerFaction?.fame ?? 0;
+
+    return prisoners.map((p) => {
+      const ransom = calculatePrisonerRansomValue(p);
+      const ruler = leader ?? p;
+      const surrenderChance = calculatePrisonerSurrenderChance(
+        p,
+        ruler,
+        p.imprisonedMonths ?? 0,
+        fame,
+      );
+      const originalFaction = p.faction != null ? game.factions[p.faction] : undefined;
+      return {
+        prisoner: p,
+        ransomValue: ransom,
+        surrenderChance,
+        originalFactionName: originalFaction?.name ?? '未知势力',
+        originalFactionGold: originalFaction?.gold ?? 0,
+      };
+    });
+  },
+
+  persuadePrisoner(prisonerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      const result = persuadePrisonerSurrender(
+        game,
+        prisonerId,
+        game.playerFactionId,
+        runtimeRandom,
+      );
+      currentGame = result.state;
+      return {
+        game: getClientGame(),
+        success: result.success,
+        message: result.message,
+        chanceEvaluation: result.chanceEvaluation,
+      };
+    });
+  },
+
+  releasePrisoner(prisonerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = releasePrisoner(game, prisonerId, game.playerFactionId);
+      return getClientGame();
+    });
+  },
+
+  ransomPrisoner(prisonerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      const result = ransomPrisoner(game, prisonerId, game.playerFactionId);
+      currentGame = result.state;
+      return {
+        game: getClientGame(),
+        ransom: result.ransom,
+        message: result.message,
+      };
+    });
+  },
+
+  executePrisoner(prisonerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = executePrisoner(game, prisonerId, game.playerFactionId);
+      return getClientGame();
+    });
   },
 
   establishHegemony(): GameState {

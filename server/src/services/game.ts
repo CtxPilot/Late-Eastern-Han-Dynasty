@@ -127,6 +127,17 @@ import {
   getNineRanksSummary,
 } from '../engine/nineRanks.js';
 import {
+  persuadePrisonerSurrender,
+  releasePrisoner,
+  ransomPrisoner,
+  executePrisoner,
+} from '../engine/prisoner.js';
+import {
+  getFactionPrisoners,
+  calculatePrisonerRansomValue,
+  calculatePrisonerSurrenderChance,
+} from '@leh/shared';
+import {
   getAvailableTechResearch,
   startTechResearch,
   cancelTechResearch,
@@ -785,6 +796,81 @@ export function doConductNineRanksEvaluation(): GameState {
 
 export function doGetNineRanksSummary() {
   return getNineRanksSummary(getGame(), getGame().playerFactionId);
+}
+
+export function doGetFactionPrisoners() {
+  const game = getGame();
+  const prisoners = getFactionPrisoners(game.officers, game.playerFactionId);
+  const playerFaction = game.factions[game.playerFactionId];
+  const leader = playerFaction?.rulerId ? game.officers[playerFaction.rulerId] : null;
+  const fame = playerFaction?.fame ?? 0;
+
+  return prisoners.map((p) => {
+    const ransom = calculatePrisonerRansomValue(p);
+    const ruler = leader ?? p;
+    const surrenderChance = calculatePrisonerSurrenderChance(
+      p,
+      ruler,
+      p.imprisonedMonths ?? 0,
+      fame,
+    );
+    const originalFaction = p.faction != null ? game.factions[p.faction] : undefined;
+    return {
+      prisoner: p,
+      ransomValue: ransom,
+      surrenderChance,
+      originalFactionName: originalFaction?.name ?? '未知势力',
+      originalFactionGold: originalFaction?.gold ?? 0,
+    };
+  });
+}
+
+export function doPersuadePrisoner(prisonerId: number) {
+  return withLock(() => {
+    const game = getGame();
+    const result = persuadePrisonerSurrender(
+      game,
+      prisonerId,
+      game.playerFactionId,
+      runtimeRandom,
+    );
+    currentGame = result.state;
+    return {
+      game: getClientGame(),
+      success: result.success,
+      message: result.message,
+      chanceEvaluation: result.chanceEvaluation,
+    };
+  });
+}
+
+export function doReleasePrisoner(prisonerId: number) {
+  return withLock(() => {
+    const game = getGame();
+    currentGame = releasePrisoner(game, prisonerId, game.playerFactionId);
+    return getClientGame();
+  });
+}
+
+export function doRansomPrisoner(prisonerId: number) {
+  return withLock(() => {
+    const game = getGame();
+    const result = ransomPrisoner(game, prisonerId, game.playerFactionId);
+    currentGame = result.state;
+    return {
+      game: getClientGame(),
+      ransom: result.ransom,
+      message: result.message,
+    };
+  });
+}
+
+export function doExecutePrisoner(prisonerId: number) {
+  return withLock(() => {
+    const game = getGame();
+    currentGame = executePrisoner(game, prisonerId, game.playerFactionId);
+    return getClientGame();
+  });
 }
 
 export function doEstablishHegemony(): GameState {

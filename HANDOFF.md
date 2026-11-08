@@ -9,43 +9,43 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 479**（Phase 7-03 天下大势演进与九品中正制门阀政治全栈落地：天下大势 5 大历史阶段演进【群雄割据/中原争霸/三分鼎立/三国对峙/九州归一】纯函数推导与月结跨阶段流转；九品中正制中正考评算法 `evaluateOfficerRankGrade`【家世门第名门/士族/豪族/寒门起品、才德五维拔擢、海内名士经学大师声誉加成、朝野功绩突破、上品无寒门与下品无势族门阀壁垒】；四轨官职品阶门槛 `minRankGrade` 校验与 `appointOfficer` 门槛拦截/君主豁免；势力中正大巡查 `conductNineRanksEvaluation` 与百官品阶分布摘要 `getNineRanksSummary`；岁首正月百官定品重核；离线 Web Worker 镜像与客户端 AppointPanel 联动；专案门禁 `verify-s479-political-trends-nine-ranks.ts` 66/66 项全绿，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；三大包全仓构建 100% 通过） |
-| 阶段 | **Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制与朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 479 `shared/nine-ranks.ts`、`shared/nine-ranks.test.ts`、`shared/positions.ts`、`shared/game-state-schema.ts`、`shared/game-state-full-schema.ts`、`shared/types/game.ts`、`shared/types/officer.ts`、`shared/index.ts`、`server/src/engine/nineRanks.ts`、`server/src/engine/appoint.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`client/src/components/layout/AppointPanel.tsx`、`server/src/scripts/verify-s479-political-trends-nine-ranks.ts` 门禁 |
-| 文档最新 | **Session 479 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/56-political-stage-and-nine-ranks-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 479 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、经济商路与百城地理深化 |
-| 下一步 | ①根据 roadmap 规划推进后续宏观与地理沙盘深度演进；②持续保障既有核心门禁与零漂移测试稳定 |
+| 会话 | **Session 480**（Phase 7-04 战俘处置与刑赏牢狱体系全栈落地：数据契约与 Schema 扩展【`Officer.captiveByFactionId`, `Officer.imprisonedMonths`】；纯函数几率模型【`calculatePrisonerSurrenderChance` 结合义理/忠诚/久羁/君主德望/声誉，夹紧[5,85]；`calculatePrisonerRansomValue` 法定赎金100~1500金折算】；四大处置能力全栈闭环【招降归顺转ACTIVE改换门庭+声望5/亲和提升、宽仁义释获释归国+仁政声望15/亲和30/母国好感15、法定索赎国库交割金钱入账、严刑处斩武将死亡+依品阶严罚声望50~100/母国外交暴跌50/直系义兄弟血海深仇建立】；月度在押演进与久羁意志消解；机敏高智越狱潜逃机制；无战俘严格 COW 零分配零 RNG 保持零漂移；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s480-prisoner-captives` 60/60 全绿，既有门禁 `verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 107 个套件 725 项单测 100% 绿灯） |
+| 阶段 | **Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制与朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 480 `shared/types/officer.ts`、`shared/game-state-entity-schema.ts`、`shared/prisoner.ts`、`shared/prisoner.test.ts`、`server/src/engine/prisoner.ts`、`server/src/engine/battle.ts`、`server/src/engine/campaign.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s480-prisoner-captives.ts` 门禁 |
+| 文档最新 | **Session 480 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/57-prisoner-justice-and-captives-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 480 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、经济商路与百城地理深化 |
+| 下一步 | ①根据 roadmap 规划推进后续 Phase 7-05 深度宏观演进；②持续保障既有核心门禁与零漂移测试稳定 |
 
-### Session 479 交接要点
+### Session 480 交接要点
 
-- **Phase 7-03 天下大势演进与九品中正制门阀政治全栈落地**：
-  1. **天下大势演进机制（`GeneralTrendStage`）**：
-     - 五大阶段：群雄割据（190~199）、中原争霸（200~207）、三分鼎立（208~219）、三国对峙（220~264）、九州归一（265+）；
-     - 动态流转推导（`deriveTrendStage`）：存活势力 $\le 1$ 提前进入九州归一；双帝并立且 $\ge 208$ 确立三国对峙；`turn.ts` 月结推进中跨年份阶段自动更新，COW 优化保持无多余引用变动。
-  2. **九品中正考评算法（`evaluateOfficerRankGrade`）**：
-     - 家世门第：名门望族皇室起品 3 品、士族起品 4 品、豪族将门起品 6 品、寒门平民起品 8 品；
-     - 才德五维：最高属性 $\ge 95$ 拔擢 -2 品、$\ge 85$ 拔擢 -1 品、$< 50$ 降格 +1 品；
-     - 名士风评：德高望重/海内名士/经学大师 -1 品；
-     - 朝野功绩：Lv16+ -3 品、Lv12+ -2 品、Lv6+ -1 品；
-     - 门阀壁垒：寒门低才低功绩武将保底 $\ge 4$ 品（上品无寒门）；士族名门除五维极差外保底 $\le 6$ 品（下品无势族）；一品极品仅限名门士族顶级才德或盖世功勋者；
-     - 分级判断：上品 `isUpperRank(1..3)`、中品 `isMiddleRank(4..6)`、下品 `isLowerRank(7..9)`。
-  3. **四轨官职品阶门槛校验与任命拦截**：
-     - `PositionReq`: 挂载 `minRankGrade?: number`，四轨官职全量登记（丞相/尚书令/州牧/大将军需 2 品，御史中丞/六曹尚书/刺史/四方将军需 3 品，太守/将军需 5 品，都尉/偏将需 6 品，县令/校尉需 7 品，从事实马需 8 品，书吏军候需 9 品，大司马需 1 品）；
-     - `appointOfficer`: 协同校验属性、功绩及品阶门槛，品阶不足抛出明确错误拦截；君主任命豁免品阶门槛；
-     - `meetsPositionReq` 与 `formatReq` 格式化提示同步；客户端 `AppointPanel.tsx` 联动更新。
-  4. **势力中正大巡查与百官品阶摘要**：
-     - `conductNineRanksEvaluation`: 势力执行九品中正大定品，考评在任百官门阀才德并同步大势；
-     - `getNineRanksSummary`: 获取上品、中品、下品及 1~9 品分布结构；
-     - `server/src/routes/game.ts` 挂载 `/nine-ranks/evaluate`, `/nine-ranks/summary`；
-     - `client/src/workers/game.worker.ts` 全量镜像支持。
-  5. **全栈质量与门禁保障**：
-     - 专属门禁 `verify-s479-political-trends-nine-ranks` 66/66 项断言 100% 绿色通过；
+- **Phase 7-04 战俘处置与刑赏牢狱体系全栈落地**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `Officer`: 扩展 `captiveByFactionId?: number`（羁押俘获势力）与 `imprisonedMonths?: number`（已被关押月数）；
+     - `OfficerRuntimeSchema`: 严格注册 Schema 校验；
+     - `shared/prisoner.ts`: 实现纯函数几率模型与估价算法：
+       - `calculatePrisonerSurrenderChance`: 基础 35% + 义理抵抗 + 前主忠诚抵抗 + 久羁消解（每满1月+2%最高+25%）+ 君主魅力（每点+0.3%）+ 势力声望（每100点+1.5%），受 `[5, 85]` 范围严格夹紧；
+       - `calculatePrisonerRansomValue`: 基础 300 金 + 五维超额溢价（>300部分 1.5倍）+ 九品官阶（上品+300金/中品+150金）+ 功绩溢价（每级高于白身+20金），法定赎金受 `[100, 1500]` 金夹紧；
+       - `isPrisoner` 与 `getFactionPrisoners` 状态与势力在押筛选；
+     - 单元测试：`shared/prisoner.test.ts` 7/7 项全绿。
+  2. **引擎层四大处置政令全息闭环（`server/src/engine/prisoner.ts`）**：
+     - `persuadePrisonerSurrender`: 招降成功武将改换门庭转为 ACTIVE 并分配初始基线忠诚度，声望+5，君臣亲和提升；失败意志动摇忠诚-2；
+     - `releasePrisoner`: 宽仁义释送还母国首都，势力仁政声望+15，获释武将对君主亲和+30，两国好感双向增进+15；
+     - `ransomPrisoner`: 法定索赎自母国国库扣款交割至俘方金库，武将获释归国；母国金库空虚依法拦截；
+     - `executePrisoner`: 严刑处斩武将 DEAD，声望依品阶严罚 50~100 点，母国关系暴跌 -50 点，死者直系亲属/义兄弟与处斩君主结下血海深仇（亲和坠入 -100 谷底）；
+     - `tickPrisonersMonth`: 月度在押演进，无战俘时 COW 零操作零 RNG 调用确保零漂移；有战俘时月份递增、忠诚-1、机敏高智武将乘夜越狱脱枷；
+     - 战役生擒标记：`battle.ts` 与 `campaign.ts` 击溃生擒武将处，写入 `captiveByFactionId = victorFactionId` 与 `imprisonedMonths = 0`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts` 与 `server/src/routes/game.ts`: 挂载 `/prisoner/list`, `/prisoner/persuade`, `/prisoner/release`, `/prisoner/ransom`, `/prisoner/execute`；
+     - `client/src/workers/game.worker.ts`: 全量镜像提供 5 大战俘处置与列表查询接口。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s480-prisoner-captives` 60/60 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s479-political-trends-nine-ranks` 66/66 项全绿；
      - `verify-s478-advanced-diplomacy` 69/69 项全绿；
      - `verify-s477-official-ranks` 107/107 项全绿；
      - `verify-d0b9-fiscal-salary` 40/40 项全绿；
      - `turn-golden.test.ts` 3/3 项严格匹配零 RNG 漂移；
-     - 全仓 106 个测试套件 718 项单测 100% 通过；
-     - 全仓 `pnpm build` 与合规校验 0 错误通过。
+     - 全仓 107 个套件 725 项单测 100% 通过；
+     - 全仓 `pnpm build`、`validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
 
 ### Session 478 交接要点
 

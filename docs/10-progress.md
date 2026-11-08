@@ -1,3 +1,38 @@
+## 2026-11-08 — Session 480 · 战俘处置与刑赏牢狱体系全栈落地（Phase 7-04）
+
+- Phase：**Phase 7-04 战俘处置与刑赏牢狱体系**；正式落地立项提案 `docs/57-prisoner-justice-and-captives-proposal.md`，全面打通战场击溃生擒、牢狱羁押演进与战俘四大处置（招降归顺、宽仁义释、法定索赎、严刑处斩）政令全栈闭环，实现义理抵抗与久羁锐气消解概率模型、法定赎金五维品阶折算、国库赎金交割、处斩天下公愤与宿怨血仇建立，以及月度高智机敏越狱机制！新增专属门禁 `verify-s480-prisoner-captives` 60/60 项断言全绿，既有门禁 `verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 107 个套件 725 项单测 100% 绿灯！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/35-phased-implementation-roadmap.md` Phase 7-04 规划，武将被俘后长期处于简单的 `status = PRISONER` 静态状态，缺乏胜利方势力羁押归属判定，缺少主权处置能力（劝降、赎回、释放、处决），且缺少牢狱随时间推移的意志动摇与越狱机制；
+  2. 羁押归属明确化：扩展 `Officer.captiveByFactionId`（羁押俘获势力）与 `Officer.imprisonedMonths`（在押关押月数），严格限定仅关押方可对战俘下达处置政令；
+  3. 招降归顺几率模型（`calculatePrisonerSurrenderChance`）：结合战俘心志（义理、前主忠诚）、牢狱羁押心理演进（久羁消解锐气，每满1月+2%最高+25%）、君主德望与势力感召（君主魅力每点+0.3%，势力声誉每100点+1.5%），受 `[5%, 85%]` 严格夹紧；成功转为 ACTIVE 归附并分配初始忠诚与声望亲和加成；失败意志微降2点；
+  4. 宽仁义释（`releasePrisoner`）：放归还乡送还母国首都，势力声望获得仁政美誉 +15 点，获释武将对君主亲和大幅提升 +30 点，若母国存活两国好感双向增进 +15 点；
+  5. 法定索赎（`ransomPrisoner`）：结合五维超额折算、九品官阶（上品+300金/中品+150金）与功绩溢价计算法定赎金（100~1500金），自母国国库扣除交割入本势力金库，武将获释归国；
+  6. 严刑处斩（`executePrisoner`）：将战俘推出斩首（武将 DEAD），依品阶惩罚声望 50~100 点，母国关系暴跌 -50 点，死者义兄弟/直系亲属/师徒与斩决君主结下血海深仇（亲和坠至 -100）；
+  7. 月度羁押与机敏越狱（`tickPrisonersMonth`）：无战俘时遵循 COW 零分配零 RNG 调用保证零漂移；有战俘时每月关押月数递增、意志忠诚 -1；高智机敏战俘（智力>80/65）乘夜脱枷越狱潜逃；
+  8. 全栈三端闭环：服务层（`services/game.ts`）、路由（`routes/game.ts`）与离线 Web Worker（`game.worker.ts`）镜像打通。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `Officer`: 扩展 `captiveByFactionId?: number` 与 `imprisonedMonths?: number`；
+     - `OfficerRuntimeSchema`: 严格注册 Schema 校验；
+     - `shared/prisoner.ts`: 实现 `calculatePrisonerSurrenderChance`、`calculatePrisonerRansomValue`、`isPrisoner`、`getFactionPrisoners` 纯函数；
+     - 单元测试：新增 `shared/prisoner.test.ts` 7/7 全部通过。
+  2. **引擎层全息生命周期（`server/src/engine/` & `turn.ts`）**：
+     - `battle.ts` & `campaign.ts`: 击败生擒武将处，写入 `captiveByFactionId = victorFactionId` 与 `imprisonedMonths = 0`；
+     - `prisoner.ts`: 实现 `persuadePrisonerSurrender`, `releasePrisoner`, `ransomPrisoner`, `executePrisoner`, `tickPrisonersMonth`；
+     - `turn.ts`: 月结管线接入 `tickPrisonersMonth(nextState, rng)`，无战俘时严格 COW 保持原引用。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts` 与 `server/src/routes/game.ts`: 挂载 `/prisoner/list`, `/prisoner/persuade`, `/prisoner/release`, `/prisoner/ransom`, `/prisoner/execute`；
+     - `client/src/workers/game.worker.ts`: 全量提供离线 PWA 模式相同 5 大战俘方法。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s480-prisoner-captives.ts`，涵盖战俘几率与价值折算、招降归顺全栈闭环、宽仁义释全栈闭环、索赎国库交割、严刑处斩公愤与血仇建立、月度在押演进与越狱潜逃、24 个月全息推演闭环，全部 60/60 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s479-political-trends-nine-ranks` (66/66)、`verify-s478-advanced-diplomacy` (69/69)、`verify-s477-official-ranks` (107/107)、`verify-d0b9-fiscal-salary` (40/40) 全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 107 个套件 725 项单测 100% 通过；
+     - 全包构建 `pnpm build`、数据校验 `validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-04 战俘处置与刑赏牢狱体系全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/57-prisoner-justice-and-captives-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 479 · 天下大势演进与九品中正制门阀政治全栈落地（Phase 7-03）
 
 - Phase：**Phase 7-03 天下大势演进与九品中正制门阀政治**；正式落地立项提案 `docs/56-political-stage-and-nine-ranks-proposal.md`，全面打通宏观天下大势周期与魏晋九品官人法门阀政治体系，实现群雄割据/中原争霸/三分鼎立/三国对峙/九州归一五大历史阶段演进、中正定品考评算法（名门士族优势、寒门壁垒、高才功绩突破）、四轨官职品阶门槛校验拦截与君主豁免、势力九品大巡查与品阶分布摘要，以及岁首正月定品重核闭环！新增专属门禁 `verify-s479-political-trends-nine-ranks` 66/66 项断言全绿，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移！

@@ -874,6 +874,66 @@ gameRouter.get('/nine-ranks/summary', (_req, res) => {
   }
 });
 
+gameRouter.get('/prisoner/list', (_req, res) => {
+  try {
+    res.json(gameService.doGetFactionPrisoners());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get prisoner list failed' });
+  }
+});
+
+gameRouter.post('/prisoner/persuade', (req, res) => {
+  try {
+    const { prisonerId } = req.body ?? {};
+    if (typeof prisonerId !== 'number') {
+      res.status(400).json({ error: 'prisonerId must be a number' });
+      return;
+    }
+    res.json(gameService.doPersuadePrisoner(prisonerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'persuade prisoner failed' });
+  }
+});
+
+gameRouter.post('/prisoner/release', (req, res) => {
+  try {
+    const { prisonerId } = req.body ?? {};
+    if (typeof prisonerId !== 'number') {
+      res.status(400).json({ error: 'prisonerId must be a number' });
+      return;
+    }
+    res.json(gameService.doReleasePrisoner(prisonerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'release prisoner failed' });
+  }
+});
+
+gameRouter.post('/prisoner/ransom', (req, res) => {
+  try {
+    const { prisonerId } = req.body ?? {};
+    if (typeof prisonerId !== 'number') {
+      res.status(400).json({ error: 'prisonerId must be a number' });
+      return;
+    }
+    res.json(gameService.doRansomPrisoner(prisonerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'ransom prisoner failed' });
+  }
+});
+
+gameRouter.post('/prisoner/execute', (req, res) => {
+  try {
+    const { prisonerId } = req.body ?? {};
+    if (typeof prisonerId !== 'number') {
+      res.status(400).json({ error: 'prisonerId must be a number' });
+      return;
+    }
+    res.json(gameService.doExecutePrisoner(prisonerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'execute prisoner failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

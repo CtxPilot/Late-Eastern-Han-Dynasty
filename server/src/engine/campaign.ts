@@ -1565,7 +1565,15 @@ export function settleSiegeStormBattle(
       Object.entries(next.officers).map(([id, officer]) => {
         if (!capturedIds.includes(officer.id)) return [id, officer];
         names.push(officer.name);
-        return [id, { ...officer, status: OfficerStatus.PRISONER }];
+        return [
+          id,
+          {
+            ...officer,
+            status: OfficerStatus.PRISONER,
+            captiveByFactionId: primary.factionId,
+            imprisonedMonths: 0,
+          },
+        ];
       }),
     );
     // Session 440 S4c：被俘没收——被歼守方单位主将装备按件独立 30% 归攻方
@@ -2040,7 +2048,12 @@ function applyBattleResultToState(
               // Session 438 S4a：攻方胜 → 缴获被歼敌军阵亡者快捷槽消耗品
               seizeKilledConsumables(oid, primary.factionId);
             } else if (status === 'captured') {
-              officers[oid] = { ...o, status: OfficerStatus.PRISONER };
+              officers[oid] = {
+                ...o,
+                status: OfficerStatus.PRISONER,
+                captiveByFactionId: primary.factionId,
+                imprisonedMonths: 0,
+              };
               captivesByAttacker.push(oid);
               // Session 440 S4c：被俘没收——按件独立 30% 归俘获方（沿 436 口径，
               // 未中件被俘者保留，随招降/赎回另行立项）。
@@ -2111,7 +2124,12 @@ function applyBattleResultToState(
         // Session 439 S4b：攻方阵亡者余量（无论胜败）一律回原势力库存。
         returnKilledRemains(oid);
       } else if (status === 'captured') {
-        officers[oid] = { ...o, status: OfficerStatus.PRISONER };
+        officers[oid] = {
+          ...o,
+          status: OfficerStatus.PRISONER,
+          captiveByFactionId: defenderFactionId ?? undefined,
+          imprisonedMonths: 0,
+        };
         captivesByDefender.push(oid);
         // Session 440 S4c：攻方败 → 守方没收被俘攻方装备（胜者缴获败者，沿 436；
         // 攻方胜时不碰己方被俘装备，随招降/赎回另行立项）。

@@ -2649,6 +2649,8 @@ function applyDuelOutcome(
   } else if (result.outcome === 'captured' || result.outcome === 'surrendered') {
     if (loserOff) {
       loserOff.status = OfficerStatus.PRISONER;
+      loserOff.captiveByFactionId = winnerOff?.faction ?? undefined;
+      loserOff.imprisonedMonths = 0;
     }
     if (loserUnit) {
       units = units.map((u) =>

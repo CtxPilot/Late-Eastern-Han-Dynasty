@@ -94,6 +94,8 @@ export const OfficerRuntimeSchema: z.ZodType<Officer> = z
     militaryPosition: z.nativeEnum(MilitaryPosition),
     nobilityRank: z.nativeEnum(NobilityRank),
     rankGrade: z.number().int().min(1).max(9).optional(),
+    captiveByFactionId: PositiveIdSchema.optional(),
+    imprisonedMonths: z.number().int().nonnegative().optional(),
     hegemonyPosition: z.nativeEnum(HegemonyPosition).optional(),
     merit: z.number().int().nonnegative(),
     meritLevel: z.number().int().min(1).max(20).optional(),

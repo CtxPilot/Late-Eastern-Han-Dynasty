@@ -101,6 +101,10 @@ export interface Officer extends OfficerStatic {
   nobilityRank: NobilityRank;
   /** 九品中正制中正定品（Phase 7-03，1~9 品，1 品最高 9 品最低） */
   rankGrade?: number;
+  /** 羁押/关押此战俘的势力 ID（当 status === OfficerStatus.PRISONER 时生效，Phase 7-04） */
+  captiveByFactionId?: number;
+  /** 已羁押月数（影响越狱率与屈服招降几率，Phase 7-04） */
+  imprisonedMonths?: number;
   /** 霸府专属官职（docs/26 Q2 方案B，HC-P0-4 独立轨道）。非霸府势力武将该字段恒为空/none。 */
   hegemonyPosition?: HegemonyPosition;
   merit: number;

@@ -84,6 +84,7 @@
     "item-sets.ts",
     "traits.ts",
     "fiscal.ts",
-    "nine-ranks.ts"
+    "nine-ranks.ts",
+    "prisoner.ts"
   ]
 }
