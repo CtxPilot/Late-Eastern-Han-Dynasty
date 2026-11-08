@@ -218,7 +218,9 @@
     "verify-s481-trade-network": "pnpm --filter @leh/server exec tsx src/scripts/verify-s481-trade-network.ts",
     "verify-s482-casualties-hospital": "pnpm --filter @leh/server exec tsx src/scripts/verify-s482-casualties-hospital.ts",
     "verify-s483-minority-tribes": "pnpm --filter @leh/server exec tsx src/scripts/verify-s483-minority-tribes.ts",
-    "verify-s484-mountain-passes": "pnpm --filter @leh/server exec tsx src/scripts/verify-s484-mountain-passes.ts"
+    "verify-s484-mountain-passes": "pnpm --filter @leh/server exec tsx src/scripts/verify-s484-mountain-passes.ts",
+    "verify-s485-geo-strategy": "pnpm --filter @leh/server exec tsx src/scripts/verify-s485-geo-strategy.ts",
+    "verify-s485-geo-strategy-ui": "node scripts/verify-s485-geo-strategy-ui.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -87,3 +87,4 @@ export * from './trade.js';
 export * from './hospital.js';
 export * from './minority.js';
 export * from './pass.js';
+export * from './geopolitics.js';

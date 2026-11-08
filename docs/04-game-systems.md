@@ -1057,7 +1057,50 @@ hiddenCompatibility: (1-|相性差|/150)×100
 
 ---
 
+## 六-A、百城地缘战略沙盘（Phase 7-09 / Session 485）
+
+> **Session 485 实装状态（Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化）**：
+> 在不新增存档字段、不修改引擎状态、不消费 RNG 的前提下，新增纯只读地缘派生层
+> `shared/geopolitics.ts`，把 `GameState` 中的 106 城、官道、25 关、六大异族与商路聚合为战略卡片。
+
+### 6-A.1 逐城地缘画像（`CityGeoProfile`）
+
+| 字段 | 含义 |
+|------|------|
+| `tier` | 六档战略层级：`capital` 京畿重镇 / `chokepoint` 锁钥要冲 / `hub` 通衢枢纽 / `frontier` 边陲前线 / `heartland` 腹地安稳 / `remote` 偏远僻壤 |
+| `exposure` | 三档临敌态势：`safe` 安宁 / `watch` 警讯 / `frontline` 临敌 |
+| `score` | 0~100 战略评分（确定性整数，权重见 `GEO_SCORE_WEIGHTS`） |
+| `tags` | 地缘标签：敌关锁道 N / 敌踞关隘 / 雄关拱卫 / 异族劫掠 / 商路 N / 特产 |
+| `linkedPasses` | 关联关隘：控制状态、守备、城防、险阻加成、骑兵削弱、守将 |
+| `blockedRoutes` | 敌控关隘封锁的城际官道（按官道去重） |
+| `tribalThreats` | 关联州部的异族张力与威胁等级 |
+| `activeTradeRouteCount` / `blockadedTradeRouteCount` | 活跃 / 封锁商路数 |
+
+判定口径：
+
+1. 关联关隘 = `pass.blocksRoutes` 或 `pass.providesIntel` 包含该城；
+2. 关隘控制顺序：空关（驻军 ≤0）→ 己方 → 中立（`factionId <= 0`）→ 敌对；
+3. 险阻加成复用 `calculatePassDefenseModifier`：雄关 +50%、普通 +30%、破关归零；山地关隘骑兵 −40%；
+4. 战略层级优先级：京畿 → 锁钥 → 通衢 → 边陲 → 腹地 → 僻壤；
+5. 临敌态势：接壤敌对城 → 临敌；敌控关联关隘或异族劫掠/入侵 → 警讯；否则安宁。
+
+### 6-A.2 州部与天下聚合
+
+- `buildProvinceGeoSummary(game, province)`：州内城数、平均评分、战略节点、关隘数、敌控关隘数、封锁官道数、临敌城数、六档层级计数、边患、最高层级；
+- `buildRealmGeoOverview(game)`：106 城总览、十三州聚合、按评分降序的天下战略节点、关隘态势（己方/敌对/中立/空关/雄关/山地/水关/破损）、封锁官道清单、临敌/警讯/安宁城数、六大异族威胁。
+
+### 6-A.3 服务与离线镜像
+
+- `GET /api/game/geopolitics/overview` → `doGetGeopoliticsOverview()`（迷雾裁剪后客户端投影）；
+- 离线 Web Worker：`getGeopoliticsOverview()` 同源镜像。
+
+> 本层为纯只读派生，无新字段、无 Schema 变更、无 RNG 消费，`turn-golden.test.ts` 保持零漂移。
+> 专案门禁 `verify-s485-geo-strategy` 64/64；UI 冒烟 `verify-s485-geo-strategy-ui` 28/28。
+
+---
+
 ## 七、少数民族系统
+
 
 > **Session 483 实装状态（Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系）**：
 > 1. **六大少数民族实体契约**（`MinorityTribe`）：匈奴（并州北/突骑/战马）、鲜卑（幽州北/突骑/角弓）、羌族（凉州/骑兵/良马）、氐族（凉益/步兵/药材）、山越（扬州/精兵/生铜）、南蛮（益州南/藤甲兵/象牙）全量落入 `@leh/shared` 与 `GameState.minorityTribes`；

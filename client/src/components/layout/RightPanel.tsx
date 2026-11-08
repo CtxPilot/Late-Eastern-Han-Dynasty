@@ -4,11 +4,13 @@
 import { useState } from 'react';
 import {
   ensureDemographics,
+  evaluateCityGeopolitics,
   foodNeedBreakdown,
   formatEconomyForView,
   formatTroopsForView,
   getCityVisibility,
   maxConscriptable,
+  type CityGeoProfile,
 } from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { AccSection } from '../ui/AccSection';
@@ -16,6 +18,7 @@ import { EventLogTerminal } from '../common/EventLogTerminal';
 
 type RightAcc =
   | 'basic'
+  | 'geo'
   | 'population'
   | 'food'
   | 'log'
@@ -45,6 +48,7 @@ export function RightPanel() {
       ? foodNeedBreakdown(d, selected.troops, game.season)
       : null;
   const canConscript = d ? maxConscriptable(d) : 0;
+  const geo = selected ? evaluateCityGeopolitics(game, selected.id) : null;
 
   const toggle = (k: RightAcc) => setOpen((prev) => (prev === k ? null : k));
 
@@ -189,6 +193,15 @@ export function RightPanel() {
           </AccSection>
 
           <AccSection
+            title="地缘战略"
+            accent="civil"
+            open={open === 'geo'}
+            onToggle={() => toggle('geo')}
+          >
+            <GeoSection geo={geo} />
+          </AccSection>
+
+          <AccSection
             title="人口结构"
             accent="civil"
             open={open === 'population'}
@@ -265,6 +278,52 @@ export function RightPanel() {
         </div>
       )}
     </aside>
+  );
+}
+
+function GeoSection({ geo }: { geo: CityGeoProfile | null }) {
+  if (!geo) {
+    return <p className="text-xs text-stone-600 py-1 px-3 leading-snug">地缘情报不足</p>;
+  }
+  const worstTribe = geo.tribalThreats[0];
+  return (
+    <div className="px-3 space-y-0.5 text-stone-300 text-xs" data-testid="geo-profile">
+      <Row label="地缘层级" value={`${geo.tierLabel}（战略 ${geo.score}）`} />
+      <Row label="临敌态势" value={geo.exposureLabel} />
+      <Row label="地势" value={geo.terrainLabel} />
+      <Row
+        label="邻境"
+        value={`己 ${geo.friendlyNeighborCount} / 敌 ${geo.hostileNeighborCount} / 中 ${geo.neutralNeighborCount}`}
+      />
+      {geo.linkedPasses.length > 0 && (
+        <>
+          <div className="pt-1 pb-0.5 text-[11px] text-stone-500">关联关隘</div>
+          {geo.linkedPasses.map((pass) => (
+            <Row
+              key={pass.passId}
+              label={pass.name}
+              value={`${pass.controlLabel} · 守 ${pass.troops} · +${pass.defenseBonusPct}%防`}
+            />
+          ))}
+        </>
+      )}
+      {geo.blockedRoutes.length > 0 && (
+        <Row
+          label="敌关封锁"
+          value={geo.blockedRoutes.map((route) => `${route.fromName}—${route.toName}`).join('、')}
+        />
+      )}
+      {worstTribe && (
+        <Row label="边患" value={`${worstTribe.name}·${worstTribe.threatLabel}（张力 ${worstTribe.tension}）`} />
+      )}
+      <Row
+        label="商路"
+        value={`活跃 ${geo.activeTradeRouteCount} / 封锁 ${geo.blockadedTradeRouteCount}`}
+      />
+      {geo.specialties.length > 0 && (
+        <Row label="特产" value={geo.specialties.join('、')} />
+      )}
+    </div>
   );
 }
 

@@ -1120,6 +1120,14 @@ gameRouter.get('/pass/summary', (_req, res) => {
   }
 });
 
+gameRouter.get('/geopolitics/overview', (_req, res) => {
+  try {
+    res.json(gameService.doGetGeopoliticsOverview());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get geopolitics overview failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

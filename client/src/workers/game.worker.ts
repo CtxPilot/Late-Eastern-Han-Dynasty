@@ -68,6 +68,7 @@ import {
   popularWillDesertionModifier,
   popularWillRecruitModifier,
   fameLabel,
+  buildRealmGeoOverview,
 } from '@leh/shared';
 import { staticData } from './browser-loader';
 import { computeGamePatch } from '../utils/game-patch';
@@ -1244,6 +1245,10 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   getPassesSummary() {
     const game = getGame();
     return getPassesSummary(game);
+  },
+
+  getGeopoliticsOverview() {
+    return buildRealmGeoOverview(getClientGame());
   },
 
   establishHegemony(): GameState {

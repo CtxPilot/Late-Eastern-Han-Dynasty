@@ -1163,7 +1163,6 @@ Session 336：`battle/move` 审计写入 `beforeFacing`；`battle/undo` 在字�
 ### Session 279 · 阵型整合 API 规划边界
 
 本轮只完成 `29-formation-integration-development-plan.md`，**未新增或修改 API**。
-
 > **Session 290 已实装（FM-P3 动作级幂等）**：`POST /api/game/melee/round` 现接受可选
 > `commandId` 与 `expectedRound`。同一 `commandId` + 同 `expectedRound` 的重试返回首次结果，
 > 不二次扣 TP/推进；同 ID 但 `expectedRound` 过期（与缓存轮次不符）拒绝；不同 ID 各自正常执行。
@@ -1172,3 +1171,20 @@ Session 336：`battle/move` 审计写入 `beforeFacing`；`battle/undo` 在字�
 > 六角变阵若需命令入口，须在 FM-P3 评审后接入既有战斗命令编排，不另建重复阵法服务；
 > 其只能消耗/推进 `battle.ts` 自身行动或战术阶段，不得调用 `runMeleeRound` 或结算白刃回合。
 > 所有入口都必须服务端复验并保证非法请求不改状态、不扣 TP、不消费 RNG。
+
+### Session 485 · 百城地缘战略总览 API
+
+```text
+GET /api/game/geopolitics/overview
+  → RealmGeoOverview
+```
+
+- 纯只读派生，无请求体、无状态变更、无 RNG 消费；
+- 服务端 `doGetGeopoliticsOverview()` 基于 `getClientGame()` 的迷雾裁剪投影计算，
+  不回传权威全量；
+- 返回 `provinces[]`（十三州聚合）、`strategicNodes[]`（按战略评分降序的 106 城画像）、
+  `passStats`（己方/敌对/中立/空关/雄关/山地/水关/破损）、`blockedRoutes[]`（敌控关隘封锁官道去重）、
+  `frontlineCityCount / watchCityCount / safeCityCount`、`tribalThreats[]`；
+- 离线 Web Worker 镜像方法：`getGeopoliticsOverview()`，与服务端同源消费
+  `buildRealmGeoOverview(getClientGame())`；
+- 数据真源：`shared/geopolitics.ts`；无新存档字段、无 Zod Schema 变更。

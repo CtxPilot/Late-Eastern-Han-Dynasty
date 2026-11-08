@@ -9,12 +9,35 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 484**（Phase 7-08 主地图关隘要塞防御要冲体系全栈落地：数据契约与 Schema 扩展【`PassEntity`, `DEFAULT_PASSES`, `GameState.passes`】；25 座名关全量覆盖【司隶7/凉州3/益州6/荆州2/扬州3/并州2/冀州2】；纯函数模型【`calculatePassDefenseModifier` 雄关+50%/普通关隘+30%/山地削弱骑兵40%/破损归零、`isRouteBlockedByPass` 官道卡口阻绝跨关通行、`canGarrisonPass` 调防门禁与城池保底1000守军防暴乱、`calculatePassWallRepairCost` 200贯修补300耐久】；引擎层要塞生命周期与政令闭环【`initPasses`、`dispatchGarrisonToPass` 城池划拨驻军/委派守将/重伤濒死拦截、`recallGarrisonFromPass` 守军撤回后方城池、`repairPassWall` 拨款修缮关隘城防、`capturePass` 攻坚破关与要冲易手、`tickPassesMonth` 统帅>=75名将镇守士气月增+2/无守将微跌-1/空关城防风化-10】；无关隘局严格 COW 保持原引用零开销零 RNG；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s484-mountain-passes` 67/67 全绿，既有门禁 `verify-s483` (71/71)、`verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 111 个套件 767 项单测 100% 绿灯，全仓构建与合规 0 错误） |
-| 阶段 | **Phase 7-08 主地图关隘要塞防御要冲体系全量落地 [x]**；**Phase 7-07 边疆异族羁縻与朝贡讨伐全量落地 [x]**；**Phase 7-06 战阵创伤与伤兵营医馆全量落地 [x]**；**Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 484 `shared/types/pass.ts`、`shared/pass.ts`、`shared/pass.test.ts`、`shared/types/game.ts`、`shared/game-state-full-schema.ts`、`server/src/engine/pass.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s484-mountain-passes.ts` 门禁 |
-| 文档最新 | **Session 484 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/61-mountain-passes-and-fortresses-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 484 已交付**；后续方向：Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化 |
-| 下一步 | ①推进 Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化（106 郡国地缘沙盘、关隘防御联动与战略节点交互）；②持续保障既有核心门禁与零漂移测试稳定 |
+| 会话 | **Session 485**（Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化：纯只读地缘派生层 `shared/geopolitics.ts`（无新存档字段/无 Schema 变更/零 RNG）；106 城逐城地缘画像【六档战略层级：京畿重镇/锁钥要冲/通衢枢纽/边陲前线/腹地安稳/偏远僻壤；三档临敌态势：安宁/警讯/临敌；0~100 战略评分；关联关隘/敌关封锁/异族边患/商路/特产标签】；25 关防御联动【控制状态、守备、雄关+50%/普通+30%/破关归零、山地骑兵−40%、所扼官道、敌关封锁去重】；州部与天下两级聚合【`buildProvinceGeoSummary`/`buildRealmGeoOverview`】；服务层 `doGetGeopoliticsOverview` + `GET /geopolitics/overview` + 离线 Worker 镜像；世界屏「天下要冲·百城沙盘」面板、州部城卡地缘徽记与右侧「地缘战略」分面；单元测试 10/10、专案门禁 `verify-s485-geo-strategy` 64/64、UI 冒烟 28/28 全绿，既有门禁 `verify-s484` 67/67、`verify-s483` 71/71、`verify-s482` 66/66、`verify-s481` 54/54 全绿，`turn-golden.test.ts` 3/3 零漂移，全仓 112 套件 777 项单测 100% 绿灯，全仓 typecheck 0 错误） |
+| 阶段 | **Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化 [x]**；**Phase 7-08 主地图关隘要塞防御要冲体系全量落地 [x]**；**Phase 7-07 边疆异族羁縻与朝贡讨伐全量落地 [x]**；**Phase 7-06 战阵创伤与伤兵营医馆全量落地 [x]**；**Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 485 `shared/geopolitics.ts`、`shared/geopolitics.test.ts`、`shared/index.ts`、`shared/tsconfig.json`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`client/src/components/strategic/StrategicWorldView.tsx`、`client/src/components/layout/RightPanel.tsx`、`server/src/scripts/verify-s485-geo-strategy.ts`、`scripts/verify-s485-geo-strategy-ui.mjs` 门禁 |
+| 文档最新 | **Session 485 双写**（`docs/04-game-systems.md` §六-A + `docs/06-api-design.md` + `docs/07-ui-design.md` §5.2 + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/62-geo-strategy-cards-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 485 已交付**；后续方向：Phase 7-10（待用户拍板下一宏观系统） |
+| 下一步 | ①等待用户拍板 Phase 7 下一宏观系统或收视现有系统；②持续保障既有核心门禁与零漂移测试稳定 |
+
+### Session 485 交接要点
+
+- **Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化全栈落地**：
+  1. **纯只读地缘派生层（`@leh/shared`）**：
+     - `shared/geopolitics.ts`：`GeoStrategicTier` 六档（`capital` 京畿重镇 / `chokepoint` 锁钥要冲 / `hub` 通衢枢纽 / `frontier` 边陲前线 / `heartland` 腹地安稳 / `remote` 偏远僻壤）、`GeoExposure` 三档（`safe` 安宁 / `watch` 警讯 / `frontline` 临敌）、`PassControl` 四态；
+     - `CityGeoProfile`：战略层级、临敌态势、0~100 战略评分、地缘标签、邻境敌我中立计数、关联关隘 `GeoPassLink[]`、敌关封锁 `GeoBlockedRoute[]`、异族边患、活跃/封锁商路、州部特产；
+     - `GEO_SCORE_WEIGHTS`：层级 / 邻接 / 敌我邻城 / 关联关隘 / 敌控关隘 / 雄关 / 活跃商路 / 特产 / 城等 / 异族威胁；
+     - `resolveGamePasses`（旧档回落 25 座名关）、`getPassControl`、`evaluateCityGeopolitics`、`buildProvinceGeoSummary`、`buildRealmGeoOverview`；
+     - 单元测试：`shared/geopolitics.test.ts` 10/10 全绿。
+  2. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`：`doGetGeopoliticsOverview()` 基于 `getClientGame()` 迷雾裁剪投影计算；
+     - `server/src/routes/game.ts`：`GET /geopolitics/overview`；
+     - `client/src/workers/game.worker.ts`：`getGeopoliticsOverview()` 离线同源镜像。
+  3. **世界屏与郡邑详情 UI**：
+     - `StrategicWorldView`：天下形势新增 `geo-realm-summary`「天下要冲 · 百城沙盘」面板（敌踞名关 / 敌关封锁官道 / 临敌郡国+警讯 / 边患最剧四格指标 + 战略评分前 6 节点，点击直抵州部并选中城池）；州部城卡新增 `geo-card-<cityId>` 地缘徽记（层级 / 态势 / 评分 / 标签 / 关联关隘 / 敌关封锁）；
+     - `RightPanel`：新增可折叠「地缘战略」分面 `geo-profile`（层级、态势、地势、邻境敌我中立、关联关隘、敌关封锁、异族边患、商路、特产）。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s485-geo-strategy` 64/64 项断言 100% 绿色通过（真实 190 年 106 城 / 13 州 / 25 关，含敌对关隘封锁、破关归零、异族入侵与商路联动、纯只读确定性、服务/路由/Worker 完备性）；
+     - UI 冒烟 `verify-s485-geo-strategy-ui` 28/28 全绿（离线 106 城剧本真实点击：天下要冲面板→节点下钻→城卡地缘徽记→右侧地缘战略分面，console error 0）；
+     - 既有门禁 `verify-s484` 67/67、`verify-s483` 71/71、`verify-s482` 66/66、`verify-s481` 54/54 全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；全仓 shared 605 + server 14 + client 158 共 777 项单测 100% 通过；
+     - 全仓 server/client/shared typecheck 0 错误（顺带修正 Session 484 门禁脚本既有类型注解债）。
 
 ### Session 484 交接要点
 
@@ -2332,7 +2355,7 @@ S 120% · A 100% · B 80% · C 60% · NONE = 不可带队
 
 ### 5.4 近期会话索引
 
-| 会话 | 交付 |
+| 会话 | **Session 485**（Phase 7-09 百城地缘战略卡片与宏观沙盘联动深化：纯只读地缘派生层 `shared/geopolitics.ts`（无新存档字段/无 Schema 变更/零 RNG）；106 城逐城地缘画像【六档战略层级：京畿重镇/锁钥要冲/通衢枢纽/边陲前线/腹地安稳/偏远僻壤；三档临敌态势：安宁/警讯/临敌；0~100 战略评分；关联关隘/敌关封锁/异族边患/商路/特产标签】；25 关防御联动【控制状态、守备、雄关+50%/普通+30%/破关归零、山地骑兵−40%、所扼官道、敌关封锁去重】；州部与天下两级聚合【`buildProvinceGeoSummary`/`buildRealmGeoOverview`】；服务层 `doGetGeopoliticsOverview` + `GET /geopolitics/overview` + 离线 Worker 镜像；世界屏「天下要冲·百城沙盘」面板、州部城卡地缘徽记与右侧「地缘战略」分面；单元测试 10/10、专案门禁 `verify-s485-geo-strategy` 64/64、UI 冒烟 28/28 全绿，既有门禁 `verify-s484` 67/67、`verify-s483` 71/71、`verify-s482` 66/66、`verify-s481` 54/54 全绿，`turn-golden.test.ts` 3/3 零漂移，全仓 112 套件 777 项单测 100% 绿灯，全仓 typecheck 0 错误） |
 |------|------|
 | 257 | **BF-P5 年代覆写机制实装**。`seed-schema.ts` 扩展 `CountySeed`/`LandmarkSeed`/`RouteSeed`/`CommanderySeed` 支持 `validFromYear`/`validToYear`（缺省=scenarioYear）；构建器透传，自动派生 road 取两端县有效期交集；新建 `year-overrides.ts` 纯函数 `resolveBundleForYear(bundle, year)` 按年份过滤并重新 Zod 校验，无效年份或引用断裂**抛错**（无静默回退）；对过期县/地标引用自动剔除、对不存在 id 引用保留给 Zod 拦截（防手误）。新建 `year-overrides.test.ts` 12 项：190 基线、208 县析置/裁撤、自动道路交集、郡有效期截止抛错、seat 过期抛错、零 RNG 确定性、入参不变，以及 `nanjun190`/`yingchuan190` 190 回归/其他年份抛错。南郡/颍川生产数据仍为 190 单一年代（机制由测试夹具演示，不编造历史）。验证：shared 244/244、server/client typecheck、client 36/36、lint、validate-data、`verify-historical-geography` 2 郡全绿。docs/22 §7.4、08 §十五、09 BF-P5 行、12 S02、10+HANDOFF 双写） |
 | 256 | **BF-P5 郡域迷雾设计+实装**（BF-P2 Q9 视野扩张攻占效果完整落地）。新建 `shared/commandery-fog.ts`：`computeRevealedNodeIds`（揭示集 = 入口县 ∪ 郡治 ∪ 攻方 Army 所在县 ∪ 攻方已占领县，每源 + 一跳邻接）+ `maskBattlefieldInstanceForPlayer`（未揭示节点 garrison/wall/armyIds 清零、deployments 过滤，返回新实例）；`BattlefieldInstance.foggedNodeIds?: string[]` 为 **mask 投影专属**（Zod optional 不入存档）；`maskGameStateForPlayer` 集成；客户端迷雾渲染（深色/`?`/seat 未知/不可攻打）。新增 fog 单测 8/8（shared 224→232）；`verify-save-battlefield-instance` f8 14 条 → 63/63。真实 API：enter 初始 7 迷雾（含州陵）→ engage-county(华容) → 6 迷雾、州陵揭示、华容占驻 858；Headless Chrome：进场 7 `?` → 点华容 → 州陵 `?` 消失、华容「驻738」、巫仍迷雾、consoleErrors=0。全量回归绿。**0-A 边界**：守方 Army 入郡域场景揭示归属留 R6（迷雾层已就绪）；颍川通用。docs/21 §5.2.1、25 §2.6.2、09 BF-P5 待办(2)、12 S02、23 R6、10+HANDOFF 双写） |

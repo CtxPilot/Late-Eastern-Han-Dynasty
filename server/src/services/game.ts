@@ -5,6 +5,7 @@ import {
   NobilityRank,
   OfficerStatus,
   collectSiegeMergeGroup,
+  buildRealmGeoOverview,
   grantMerit,
   isHostileOrAtWar,
   maskGameStateForPlayer,
@@ -1103,6 +1104,11 @@ export function doRepairPassWall(cityId: number, passId: number) {
 export function doGetPassesSummary() {
   const game = getGame();
   return getPassesSummary(game);
+}
+
+/** Phase 7-09：天下地缘战略总览（只读、迷雾裁剪、零状态变更）。 */
+export function doGetGeopoliticsOverview() {
+  return buildRealmGeoOverview(getClientGame());
 }
 
 export function doEstablishHegemony(): GameState {

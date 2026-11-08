@@ -89,6 +89,7 @@
     "trade.ts",
     "hospital.ts",
     "minority.ts",
-    "pass.ts"
+    "pass.ts",
+    "geopolitics.ts"
   ]
 }

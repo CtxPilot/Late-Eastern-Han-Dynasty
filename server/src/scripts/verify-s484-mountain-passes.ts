@@ -35,7 +35,6 @@ import {
   repairPassWall,
   capturePass,
   tickPassesMonth,
-  getPassesSummary,
 } from '../engine/pass.js';
 import { advanceTurn } from '../engine/turn.js';
 import { createGame } from '../services/game.js';
@@ -154,7 +153,7 @@ function createMockGameState(): GameState {
     invalidatedEvents: [],
     eventChoices: {},
     actionLog: [],
-  };
+  } as unknown as GameState;
 }
 
 let passedCount = 0;

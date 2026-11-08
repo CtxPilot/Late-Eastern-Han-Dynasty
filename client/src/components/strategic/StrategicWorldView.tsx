@@ -9,7 +9,14 @@
 
 import { InkButton } from './../ui/buttons';
 import { useEffect, useMemo } from 'react';
-import { buildCommanderyWorldGraph, nanjun190 } from '@leh/shared';
+import {
+  buildCommanderyWorldGraph,
+  buildRealmGeoOverview,
+  evaluateCityGeopolitics,
+  nanjun190,
+  type CityGeoProfile,
+  type RealmGeoOverview,
+} from '@leh/shared';
 import { useGameStore } from '../../stores/gameStore';
 import { buildCityCards, buildProvinceCards } from './buildProvinceCards';
 import { ProvinceTopology } from './ProvinceTopology';
@@ -53,6 +60,18 @@ export function StrategicWorldView() {
     if (strategicView.level !== 'province' || strategicView.province !== '荆州') return null;
     return buildCommanderyWorldGraph(nanjun190);
   }, [strategicView]);
+
+  const realmGeo = useMemo(() => (game ? buildRealmGeoOverview(game) : null), [game]);
+
+  const geoByCity = useMemo(() => {
+    const map = new Map<number, CityGeoProfile>();
+    if (!game) return map;
+    for (const card of cityCards) {
+      const profile = evaluateCityGeopolitics(game, card.id);
+      if (profile) map.set(card.id, profile);
+    }
+    return map;
+  }, [game, cityCards]);
 
   if (!game) return null;
 
@@ -102,10 +121,20 @@ export function StrategicWorldView() {
 
         {/* 天下十三州网格 */}
         {isRealm ? (
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
-            data-testid="strategic-province-grid"
-          >
+          <div className="space-y-4">
+            {realmGeo && (
+              <RealmGeoPanel
+                geo={realmGeo}
+                onOpenNode={(profile) => {
+                  openStrategicProvince(profile.province);
+                  selectCity(profile.cityId);
+                }}
+              />
+            )}
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"
+              data-testid="strategic-province-grid"
+            >
             {provinceCards.map((p) => (
               <InkButton
                 key={p.province}
@@ -199,6 +228,7 @@ export function StrategicWorldView() {
                 )}
               </InkButton>
             ))}
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -271,6 +301,8 @@ export function StrategicWorldView() {
                     <span>{c.rulerName ? `执掌：${c.rulerName}` : '无主之城'}</span>
                   </div>
 
+                  <CityGeoBadges geo={geoByCity.get(c.id)} />
+
                   {/* 资源简览 */}
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-stone-400 font-song border-t border-stone-800/60 pt-2">
                     <span className="text-rose-300/80">兵 {formatCompact(c.troops)}</span>
@@ -290,6 +322,184 @@ export function StrategicWorldView() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const EXPOSURE_STYLE: Record<CityGeoProfile['exposure'], string> = {
+  safe: 'text-emerald-300 border-emerald-800 bg-emerald-950/40',
+  watch: 'text-amber-300 border-amber-800 bg-amber-950/40',
+  frontline: 'text-red-300 border-red-800 bg-red-950/50',
+};
+
+const TIER_STYLE: Record<CityGeoProfile['tier'], string> = {
+  capital: 'text-amber-200 border-amber-700 bg-amber-950/70',
+  chokepoint: 'text-amber-200 border-amber-800 bg-amber-950/50',
+  hub: 'text-sky-200 border-sky-800 bg-sky-950/40',
+  frontier: 'text-red-200 border-red-850 bg-red-950/40',
+  heartland: 'text-stone-300 border-stone-700 bg-stone-900/70',
+  remote: 'text-stone-500 border-stone-800 bg-stone-950/70',
+};
+
+/** 天下形势页：地缘大势总览 + 天下要冲战略节点。 */
+function RealmGeoPanel({
+  geo,
+  onOpenNode,
+}: {
+  geo: RealmGeoOverview;
+  onOpenNode: (profile: CityGeoProfile) => void;
+}) {
+  const topNodes = geo.strategicNodes.slice(0, 6);
+  const worstTribe = geo.tribalThreats[0];
+  return (
+    <section
+      data-testid="geo-realm-summary"
+      className="rounded border border-amber-900/60 bg-stone-900/55 p-3.5 shadow-md"
+    >
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b border-stone-800/80 pb-2">
+        <div>
+          <p className="text-xs tracking-[0.3em] text-amber-600 font-song">地缘大势</p>
+          <h2 className="text-lg text-amber-300 font-seal tracking-wider mt-0.5">
+            天下要冲 · 百城沙盘
+          </h2>
+        </div>
+        <p className="text-[11px] text-stone-500 font-song">
+          郡国 {geo.totalCityCount} · 名关 {geo.passStats.total} · 雄关 {geo.passStats.fortress}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2.5 text-xs font-song">
+        <div className="rounded border border-stone-800 bg-stone-950/60 px-2.5 py-1.5">
+          <span className="text-stone-500 block text-[10px]">敌踞名关</span>
+          <strong className="text-red-300 text-base">{geo.passStats.hostile}</strong>
+          <span className="text-stone-500"> / {geo.passStats.total}</span>
+        </div>
+        <div className="rounded border border-stone-800 bg-stone-950/60 px-2.5 py-1.5">
+          <span className="text-stone-500 block text-[10px]">敌关封锁官道</span>
+          <strong className="text-red-300 text-base">{geo.blockedRoutes.length}</strong>
+          <span className="text-stone-500"> 条</span>
+        </div>
+        <div className="rounded border border-stone-800 bg-stone-950/60 px-2.5 py-1.5">
+          <span className="text-stone-500 block text-[10px]">临敌郡国</span>
+          <strong className="text-amber-300 text-base">{geo.frontlineCityCount}</strong>
+          <span className="text-stone-500"> / 警讯 {geo.watchCityCount}</span>
+        </div>
+        <div className="rounded border border-stone-800 bg-stone-950/60 px-2.5 py-1.5">
+          <span className="text-stone-500 block text-[10px]">边患最剧</span>
+          {worstTribe ? (
+            <strong className="text-rose-300 text-sm">
+              {worstTribe.name}·{worstTribe.threatLabel}
+              <span className="text-stone-500 text-[10px] ml-1">张力 {worstTribe.tension}</span>
+            </strong>
+          ) : (
+            <strong className="text-stone-400 text-sm">四境安宁</strong>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <p className="text-[11px] text-stone-500 font-song mb-1.5">
+          天下要冲 · 点击直抵州部郡治
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {topNodes.map((node) => (
+            <InkButton
+              key={node.cityId}
+              type="button"
+              data-testid={`geo-node-${node.cityId}`}
+              className="text-left rounded border border-stone-800 bg-stone-950/70 hover:border-amber-700 hover:bg-stone-900/90 px-2.5 py-2 transition-colors w-full"
+              onClick={() => onOpenNode(node)}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-amber-200 font-song font-semibold tracking-wide">
+                  {node.name}
+                </span>
+                <span
+                  className={`text-[10px] px-1 py-0.2 rounded border font-song ${TIER_STYLE[node.tier]}`}
+                >
+                  {node.tierLabel}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 mt-1 text-[10px] text-stone-500 font-song">
+                <span>{node.province} · {node.terrainLabel}</span>
+                <span className={node.exposure === 'frontline' ? 'text-red-300' : ''}>
+                  战略 {node.score}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span
+                  className={`text-[10px] px-1 py-0.2 rounded border font-song ${EXPOSURE_STYLE[node.exposure]}`}
+                >
+                  {node.exposureLabel}
+                </span>
+                {node.linkedPasses.slice(0, 2).map((pass) => (
+                  <span
+                    key={pass.passId}
+                    className={`text-[10px] px-1 py-0.2 rounded border font-song ${
+                      pass.control === 'hostile'
+                        ? 'border-red-800 bg-red-950/40 text-red-300'
+                        : pass.control === 'friendly'
+                          ? 'border-emerald-800 bg-emerald-950/40 text-emerald-300'
+                          : 'border-stone-700 bg-stone-900/60 text-stone-400'
+                    }`}
+                  >
+                    {pass.name}
+                  </span>
+                ))}
+              </div>
+            </InkButton>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** 州部城卡：地缘层级、临敌态势、关联关隘与敌关封锁只读徽记。 */
+function CityGeoBadges({ geo }: { geo?: CityGeoProfile }) {
+  if (!geo) return null;
+  const extraTags = geo.tags.filter((tag) => tag !== geo.tierLabel).slice(0, 4);
+  return (
+    <div className="mb-2 space-y-1" data-testid={`geo-card-${geo.cityId}`}>
+      <div className="flex flex-wrap gap-1">
+        <span
+          className={`text-[11px] px-1.5 py-0.2 rounded border font-song ${TIER_STYLE[geo.tier]}`}
+        >
+          {geo.tierLabel}
+        </span>
+        <span
+          className={`text-[11px] px-1.5 py-0.2 rounded border font-song ${EXPOSURE_STYLE[geo.exposure]}`}
+        >
+          {geo.exposureLabel} · {geo.score}
+        </span>
+        {extraTags.map((tag) => (
+          <span
+            key={tag}
+            className="text-[11px] px-1.5 py-0.2 rounded border border-stone-800 bg-stone-950/70 text-stone-400 font-song"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+      {geo.linkedPasses.length > 0 && (
+        <p className="text-[11px] text-stone-500 leading-snug font-song truncate">
+          关隘：
+          {geo.linkedPasses
+            .slice(0, 2)
+            .map(
+              (pass) =>
+                `${pass.name}·${pass.controlLabel}${
+                  pass.defenseBonusPct > 0 ? ` +${pass.defenseBonusPct}%防` : ''
+                }`,
+            )
+            .join('；')}
+        </p>
+      )}
+      {geo.blockedRoutes.length > 0 && (
+        <p className="text-[11px] text-red-300/80 leading-snug font-song truncate">
+          敌关封锁：{geo.blockedRoutes.map((route) => `${route.fromName}—${route.toName}`).join('、')}
+        </p>
+      )}
     </div>
   );
 }
