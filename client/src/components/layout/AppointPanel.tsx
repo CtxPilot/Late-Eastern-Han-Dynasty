@@ -134,7 +134,7 @@ export function AppointPanel({
   const needsCity = req?.needsCity === true;
   const canMeet =
     officer != null &&
-    (position === 'none' || (req != null && meetsPositionReq(officer.stats, req, meritLevelFor(officer.merit))));
+    (position === 'none' || (req != null && meetsPositionReq(officer.stats, req, meritLevelFor(officer.merit), officer.rankGrade)));
   const atCity =
     !needsCity ||
     (officer != null && cityId != null && officer.location === cityId);
@@ -301,7 +301,7 @@ export function AppointPanel({
           if (track === 'hegemony' && (latest.factions[latest.playerFactionId]?.politicalStage ?? 'vassal') === 'vassal') {
             return '政治阶段已经变化，霸府官职目前不可任命。';
           }
-          if (position !== 'none' && (!req || !meetsPositionReq(latestOfficer.stats, req, meritLevelFor(latestOfficer.merit)))) return '目标武将已不满足该官职门槛。';
+          if (position !== 'none' && (!req || !meetsPositionReq(latestOfficer.stats, req, meritLevelFor(latestOfficer.merit), latestOfficer.rankGrade))) return '目标武将已不满足该官职门槛。';
           if (needsCity && (cityId == null || latestOfficer.location !== cityId || latest.cities[cityId]?.ruler !== latest.playerFactionId)) {
             return '任职城或武将所在地已经变化。';
           }

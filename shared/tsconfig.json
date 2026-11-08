@@ -83,6 +83,7 @@
     "troop-level.ts",
     "item-sets.ts",
     "traits.ts",
-    "fiscal.ts"
+    "fiscal.ts",
+    "nine-ranks.ts"
   ]
 }

@@ -212,7 +212,8 @@
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs",
     "verify-s476-scenario-190-thirty-warlords": "pnpm --filter @leh/server exec tsx src/scripts/verify-s476-scenario-190-thirty-warlords.ts",
     "verify-s477-official-ranks": "pnpm --filter @leh/server exec tsx src/scripts/verify-s477-official-ranks.ts",
-    "verify-s478-advanced-diplomacy": "pnpm --filter @leh/server exec tsx src/scripts/verify-s478-advanced-diplomacy.ts"
+    "verify-s478-advanced-diplomacy": "pnpm --filter @leh/server exec tsx src/scripts/verify-s478-advanced-diplomacy.ts",
+    "verify-s479-political-trends-nine-ranks": "pnpm --filter @leh/server exec tsx src/scripts/verify-s479-political-trends-nine-ranks.ts"
   },
   "engines": {
     "node": ">=20"

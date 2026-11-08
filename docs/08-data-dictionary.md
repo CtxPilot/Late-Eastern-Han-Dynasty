@@ -1196,6 +1196,11 @@ road 的有效期取两端县有效期的交集。运行时按年份取模板用
 | `activeResearch` | Faction | `ActiveResearch \| null?` | — | ✅ S03 | Session 453：当前正在研发的单例项目快照（branch/targetLevel/assignedOfficerId/totalMonths/remainingMonths/totalGoldCost/goldPaid） |
 | `tags` | Faction | `string[]?` | Q5 | ⏳ 后续 | 势力级叙事立场 tag（匡扶汉室/篡汉/割据等，与 Officer.tags 同体系） |
 | `hegemonyPosition` | Officer | `HegemonyPosition?` | Q2/K5 | ✅ HC-P0-4 + HC-P1-3 | 单值朝职轨道：霸府三职加王国六职；三职可由 hegemon/king/emperor 任命，六职仅 king/emperor；每职势力唯一，同一人物改任会覆盖旧朝职 |
+| `coalitions` | GameState | `Coalition[]?` | — | ✅ Phase 7-02 | 多方会盟列表（反董/反曹盟约等），涵盖盟主/目标势力/盟员列表/剩余月数 |
+| `vassalFactionIds` | Faction | `number[]?` | — | ✅ Phase 7-02 | 从属藩属国 ID 列表；岁首扣缴从属国15%金粮朝贡注入宗主 |
+| `overlordFactionId` | Faction | `number?` | — | ✅ Phase 7-02 | 宗主国势力 ID（从属状态绑定，解除时清空） |
+| `trendStage` | GameState | `GeneralTrendStage?` | — | ✅ Phase 7-03 | 天下大势宏观阶段（warlords_disorder / hegemony_contest / three_kingdoms_forming / three_kingdoms_rivalry / unification_climax） |
+| `rankGrade` | Officer | `number?` | — | ✅ Phase 7-03 | 九品官人法定品等级（1~9品，数值越小品阶越高，1品宰辅公卿、9品草创军候；考评结合门阀世家/才德五维/朝野功绩） |
 
 **剧本可选配置**：`ScenarioStatic.kingRequirements?.minCities`（正整数）用于覆写相对城池门槛；
 `ScenarioFactionSetup.preferredKingdomName?` 提供王号首选。两者均已在 HC-P1-1/2 实装并由严格

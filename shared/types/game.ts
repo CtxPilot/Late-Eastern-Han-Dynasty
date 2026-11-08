@@ -24,6 +24,14 @@ import type {
 import type { PendingFamilyTreatment } from '../hostage-families.js';
 import type { RuntimeRelation } from '../relations.js';
 
+export enum GeneralTrendStage {
+  WARLORDS_DISORDER = 'warlords_disorder', // 群雄并起割据（190~199）
+  HEGEMONY_CONTEST = 'hegemony_contest',   // 中原争霸逐鹿（200~207）
+  THREE_KINGDOMS_FORMING = 'three_kingdoms_forming', // 三分鼎立酝酿（208~219）
+  THREE_KINGDOMS_RIVALRY = 'three_kingdoms_rivalry', // 三国称帝对峙（220~264）
+  UNIFICATION_CLIMAX = 'unification_climax',         // 九州归一禅代（265+）
+}
+
 export interface GameAction {
   year: number;
   month: number;
@@ -67,6 +75,8 @@ export interface GameState {
   diplomacy: DiplomacyLink[];
   /** 多方会盟列表（如关东反董联军、反曹联军） */
   coalitions?: Coalition[];
+  /** 天下大势阶段（Phase 7-03，群雄割据/中原争霸/三分鼎立/三国称帝/九州归一） */
+  trendStage?: GeneralTrendStage;
   /** 谍报：侦查报告等（盟友可见性由外交实时计算） */
   intel: IntelState;
   /** 计谋 S17：进行中/已结算的计谋列表 */

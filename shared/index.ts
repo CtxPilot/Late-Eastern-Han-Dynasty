@@ -81,3 +81,4 @@ export * from './tacticalTerrain.js';
 export * from './unitMatchup.js';
 export * from './pcg/index.js';
 export * from './fiscal.js';
+export * from './nine-ranks.js';

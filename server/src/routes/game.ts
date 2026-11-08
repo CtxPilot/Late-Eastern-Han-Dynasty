@@ -858,6 +858,22 @@ gameRouter.post('/diplomacy/issue-decree', (req, res) => {
   }
 });
 
+gameRouter.post('/nine-ranks/evaluate', (_req, res) => {
+  try {
+    res.json(gameService.doConductNineRanksEvaluation());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'evaluate nine ranks failed' });
+  }
+});
+
+gameRouter.get('/nine-ranks/summary', (_req, res) => {
+  try {
+    res.json(gameService.doGetNineRanksSummary());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get nine ranks summary failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

@@ -123,6 +123,10 @@ import {
   issueImperialDecree,
 } from '../engine/diplomacy.js';
 import {
+  conductNineRanksEvaluation,
+  getNineRanksSummary,
+} from '../engine/nineRanks.js';
+import {
   getAvailableTechResearch,
   startTechResearch,
   cancelTechResearch,
@@ -770,6 +774,17 @@ export function doIssueImperialDecree(
     currentGame = issueImperialDecree(getGame(), type, targetFactionId, extraProvince);
     return getClientGame();
   });
+}
+
+export function doConductNineRanksEvaluation(): GameState {
+  return withLock(() => {
+    currentGame = conductNineRanksEvaluation(getGame(), getGame().playerFactionId);
+    return getClientGame();
+  });
+}
+
+export function doGetNineRanksSummary() {
+  return getNineRanksSummary(getGame(), getGame().playerFactionId);
 }
 
 export function doEstablishHegemony(): GameState {

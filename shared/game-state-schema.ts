@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { Season } from './enums/index.js';
-import type { EndgameMeritOfficer, EndgameResult, GameAction, GameState } from './types/game.js';
+import { GeneralTrendStage, type EndgameMeritOfficer, type EndgameResult, type GameAction, type GameState } from './types/game.js';
 import { PendingFamilyTreatmentSchema } from './hostage-families.js';
 
 export const EndgameMeritOfficerSchema: z.ZodType<EndgameMeritOfficer> = z
@@ -76,6 +76,7 @@ export const GameStateTimelineSchema: z.ZodType<
     | 'actionLog'
     | 'pendingFamilyTreatment'
     | 'endgameResult'
+    | 'trendStage'
   >
 > = z
   .object({
@@ -93,6 +94,7 @@ export const GameStateTimelineSchema: z.ZodType<
     actionLog: z.array(GameActionSchema),
     pendingFamilyTreatment: PendingFamilyTreatmentSchema.nullable().optional(),
     endgameResult: EndgameResultSchema.nullable().optional(),
+    trendStage: z.nativeEnum(GeneralTrendStage).optional(),
   })
   .strict()
   .superRefine((timeline, ctx) => {

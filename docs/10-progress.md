@@ -1,3 +1,41 @@
+## 2026-11-08 — Session 479 · 天下大势演进与九品中正制门阀政治全栈落地（Phase 7-03）
+
+- Phase：**Phase 7-03 天下大势演进与九品中正制门阀政治**；正式落地立项提案 `docs/56-political-stage-and-nine-ranks-proposal.md`，全面打通宏观天下大势周期与魏晋九品官人法门阀政治体系，实现群雄割据/中原争霸/三分鼎立/三国对峙/九州归一五大历史阶段演进、中正定品考评算法（名门士族优势、寒门壁垒、高才功绩突破）、四轨官职品阶门槛校验拦截与君主豁免、势力九品大巡查与品阶分布摘要，以及岁首正月定品重核闭环！新增专属门禁 `verify-s479-political-trends-nine-ranks` 66/66 项断言全绿，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §九/§十/§27、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/35-phased-implementation-roadmap.md` Phase 7 里程碑，东汉末年向魏晋演进的政治史核心转折点是天下宏观大势的阶段演化与曹魏陈群首创之「九品官人法」门阀政治；
+  2. 天下大势必须具备宏观编年与动态博弈双重特征：自初平元年关东并起（190~199 群雄割据），至官渡决胜（200~207 中原争霸），赤壁鼎足（208~219 三分鼎立），黄初建安称帝（220~264 三国对峙），再至西晋代魏九州混一（265+ 九州归一）；若全图仅剩单势力则提前步入九州归一，多方称帝则保底三国对峙；
+  3. 九品官人法定品考评（`evaluateOfficerRankGrade`）：真实复现魏晋门阀制度精髓。家世门第（名门望族起品 3 品、士族起品 4 品、豪族将门起品 6 品、寒门平民起品 8 品）；才德行能（属性 $\ge 95$ -2品、$\ge 85$ -1品、$< 50$ +1品）；声誉名士（德高望重/海内名士/经学大师 -1品）；朝野功绩（Lv16+ -3品、Lv12+ -2品、Lv6+ -1品）；门阀壁垒（寒门中低才受限 $\ge 4$ 品，上品无寒门；士族名门保底 $\le 6$ 品，下品无势族）；
+  4. 官职体系中正品阶门槛（`minRankGrade`）：文官轨（丞相/尚书令需2品，六曹尚书/御史中丞需3品，郡守需5品，县令需7品）、地方轨（州牧需2品，刺史需3品，太守需5品，都尉需6品）、武官轨（大将军/车骑需2品，四方需3品，四征需4品，偏将需6品）、霸府轨（大司马需1品，王国相需2品）；任命引擎（`appointOfficer`）协同校验，君主任命豁免品阶门槛；
+  5. 势力中正大巡查与摘要：提供 `conductNineRanksEvaluation` 巡查定品，提供 `getNineRanksSummary` 统计上品、中品、下品及 1~9 品分布；岁首正月百官依据最新才德与功绩自动重核；
+  6. 绝对零 RNG 漂移：严格保持 `turn-golden.test.ts` 3/3 逐字节一致匹配，COW 机制零冗余开销。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `GeneralTrendStage`: 导出天下大势 5 大阶段枚举；
+     - `GameState`: 根级扩展 `trendStage?: GeneralTrendStage`；
+     - `Officer`: 扩展中正定品评阶 `rankGrade?: number`（1~9品）；
+     - `PositionReq`: 扩展 `minRankGrade?: number`，四轨官职全量登记法定品阶要求；
+     - `meetsPositionReq`: 接入第四可选参数 `rankGrade`，`formatReq` 同步提示「需N品及以上」；
+     - Schema 契约：`OfficerRuntimeSchema`、`GameStateTimelineSchema`、`ROOT_KEYS` 全量严格同步；
+     - `shared/nine-ranks.ts`: 实现 `deriveTrendStage`、`getTrendStage`、`evaluateOfficerRankGrade`、`evaluateFactionNineRanks`、`isUpperRank`/`isMiddleRank`/`isLowerRank` 等纯函数；
+     - 单元测试：新增 `shared/nine-ranks.test.ts` 9/9 项全部通过。
+  2. **引擎层全息生命周期（`server/src/engine/` & `turn.ts`）**：
+     - `appointOfficer`: 协同校验属性、功绩及品阶门槛；非君主武将品阶不足抛出明确错误拦截；君主任命豁免品阶门槛；
+     - `nineRanks.ts`: 实现 `conductNineRanksEvaluation` 势力大巡查与 `getNineRanksSummary` 官绅分布摘要；
+     - `turn.ts`: 月结推进天下大势平稳流转；岁首正月自动对已定品武将重核品阶；COW 优化确保未变更时不产生冗余引用。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts` 与 `server/src/routes/game.ts`: 挂载 `/nine-ranks/evaluate`, `/nine-ranks/summary`；
+     - `client/src/workers/game.worker.ts`: 全量提供离线 PWA 模式相同中正定品与摘要能力；
+     - `client/src/components/layout/AppointPanel.tsx`: 任命前置复验与按钮状态接入 `officer.rankGrade`。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s479-political-trends-nine-ranks.ts`，涵盖天下大势演进推导、九品中正考评算法、官职中正品阶门槛校验拦截与君主豁免、势力中正大巡查与摘要服务、24 个月全息推演闭环跨大势演进与岁首重核，全部 66/66 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s478-advanced-diplomacy`（69/69）、`verify-s477-official-ranks`（107/107）、`verify-d0b9-fiscal-salary`（40/40）全部全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+     - 全仓 106 个测试套件 718 项单测 100% 通过；
+     - 全仓生产构建 `pnpm build` 与合规验证 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-03 天下大势演进与九品中正制门阀政治全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/56-political-stage-and-nine-ranks-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 478 · 深度外交体系全栈落地（多方盟约、从属朝贡、宣战停火与天子诏命）（Phase 7-02）
 
 - Phase：**Phase 7-02 深度外交体系（多方盟约、从属朝贡、宣战停火与天子诏命）**；正式落地立项提案 `docs/55-advanced-diplomacy-proposal.md`，彻底突破原 0-A 简陋外交原型，实现宣战毁约背信惩罚（-50声望/-10全城驻军士气/-100友好）与从属国联动参战、议和停战谈判（12个月保护期与出征拦截）、强权逼降与弱国投效（从属诸侯体系，每年 1 月岁首 15% 金粮朝贡进献）、多方会盟（关东义军全员互盟对敌宣战、盟主协同作战动员令+5驻军士气、目标灭亡全盟+40声望）、迎奉天子三大诏命（讨逆诏、册封诏、征贡诏）以及服务端路由与离线 Web Worker 双端闭环！新增专属门禁 `verify-s478-advanced-diplomacy` 69/69 项断言全绿，全仓生产构建通过，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移！

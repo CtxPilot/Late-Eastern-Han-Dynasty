@@ -166,6 +166,13 @@ export function appointOfficer(
         `${officer.name} 功绩不足（需功绩Lv${req.meritLevel}，当前Lv${officerMeritLevel}）`,
       );
     }
+    // Phase 7-03 九品官人法定品门槛：与属性、功绩门槛分开判定，文案清晰。
+    // 君主任命豁免品阶门槛；若武将已有 rankGrade 且官职设定 minRankGrade，必须满足品阶（数值越小品级越高）
+    if (!officerIsRuler && req.minRankGrade != null && officer.rankGrade != null && officer.rankGrade > req.minRankGrade) {
+      throw new Error(
+        `${officer.name} 门阀品阶不足（需${req.minRankGrade}品及以上，当前为${officer.rankGrade}品）`,
+      );
+    }
     if (req.needsCity) {
       if (cityId == null) throw new Error('该官职须指定城池');
       const city = state.cities[cityId];

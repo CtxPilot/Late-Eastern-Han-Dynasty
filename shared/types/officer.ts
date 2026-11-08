@@ -99,6 +99,8 @@ export interface Officer extends OfficerStatic {
   localPosition: LocalPosition;
   militaryPosition: MilitaryPosition;
   nobilityRank: NobilityRank;
+  /** 九品中正制中正定品（Phase 7-03，1~9 品，1 品最高 9 品最低） */
+  rankGrade?: number;
   /** 霸府专属官职（docs/26 Q2 方案B，HC-P0-4 独立轨道）。非霸府势力武将该字段恒为空/none。 */
   hegemonyPosition?: HegemonyPosition;
   merit: number;

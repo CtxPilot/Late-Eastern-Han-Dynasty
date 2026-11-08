@@ -33,6 +33,8 @@ import {
   isScorchedCity,
   TAX_POLICY_RATES,
   isMagnateOfficer,
+  deriveTrendStage,
+  evaluateOfficerRankGrade,
   type City,
   type CityDemographics,
   type GameState,
@@ -437,6 +439,30 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickCityPlagueAndSanitation(nextState);
   // Phase 7-02：深度外交月度推进（停火保护期衰减、会盟胜负/到期裁决、岁首朝贡结算）
   nextState = tickDiplomacyMonth(nextState, isYearStart);
+  // Phase 7-03：天下大势月度演进（若已初始化 trendStage 则跟随宏观政局演进）
+  if (nextState.trendStage !== undefined) {
+    const nextTrend = deriveTrendStage(currentYear, nextState);
+    if (nextState.trendStage !== nextTrend) {
+      nextState = { ...nextState, trendStage: nextTrend };
+    }
+  }
+  // Phase 7-03：岁首九品中正中正定品考评（若已有定品官员，岁首按最新才德功绩重新定品）
+  if (isYearStart) {
+    let ranksChanged = false;
+    const evaluatedOfficers = { ...nextState.officers };
+    for (const [idStr, off] of Object.entries(nextState.officers)) {
+      if (off.rankGrade !== undefined) {
+        const newGrade = evaluateOfficerRankGrade(off);
+        if (newGrade !== off.rankGrade) {
+          ranksChanged = true;
+          evaluatedOfficers[Number(idStr)] = { ...off, rankGrade: newGrade };
+        }
+      }
+    }
+    if (ranksChanged) {
+      nextState = { ...nextState, officers: evaluatedOfficers };
+    }
+  }
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）

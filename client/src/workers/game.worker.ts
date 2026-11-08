@@ -192,6 +192,10 @@ import {
   issueImperialDecree,
 } from '../../../server/src/engine/diplomacy.js';
 import {
+  conductNineRanksEvaluation,
+  getNineRanksSummary,
+} from '../../../server/src/engine/nineRanks.js';
+import {
   getAvailableTechResearch,
   startTechResearch,
   cancelTechResearch,
@@ -929,6 +933,17 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       currentGame = issueImperialDecree(getGame(), type, targetFactionId, extraProvince);
       return getClientGame();
     });
+  },
+
+  conductNineRanksEvaluation(): GameState {
+    return withLock(() => {
+      currentGame = conductNineRanksEvaluation(getGame(), getGame().playerFactionId);
+      return getClientGame();
+    });
+  },
+
+  getNineRanksSummary() {
+    return getNineRanksSummary(getGame(), getGame().playerFactionId);
   },
 
   establishHegemony(): GameState {
