@@ -16,7 +16,7 @@ const ROOT_KEYS = [
   'scenarioId', 'enabledEventLayers', 'enabledChildEventIds', 'currentYear', 'currentMonth',
   'season', 'playerFactionId', 'officers', 'cities', 'factions', 'females', 'armys',
   'campaignArmies', 'campaignNodes', 'grandStrategists', 'activeBattles',
-  'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'intel',
+  'activeBattlefield', 'activeMelee', 'activeBattlefieldInstance', 'diplomacy', 'coalitions', 'intel',
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'runtimeRelations', 'tournament',
   'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',

@@ -8,6 +8,7 @@ import type { Officer } from './types/officer.js';
 import { eloquenceAllianceModifier, eloquenceRecruitModifier } from './skill-consume.js';
 import { cultureRecruitModifier } from './culture.js';
 import { computeMandate, mandateDiplomacyModifier } from './mandate-popular.js';
+import { findDiplomacy } from './intel.js';
 
 /** R2 概率统一下限/上限；所有输入与输出均为百分点。 */
 export const NEGOTIATION_CHANCE_MIN = 5;
@@ -235,5 +236,161 @@ export function calculateAllianceChance(
     hegemonyModifier,
     eloquenceModifier,
     mandateModifier,
+  };
+}
+
+export interface TruceChanceBreakdown {
+  chance: number;
+  envoyId: number;
+  envoyCharisma: number;
+  militaryRatio: number;
+  multiWarBonus: number;
+}
+
+/**
+ * 停战协商成功率计算（docs/04 §5.1 #2 停战）
+ */
+export function calculateTruceChance(
+  state: GameState,
+  targetFactionId: number,
+  sourceFactionId: number = state.playerFactionId,
+): TruceChanceBreakdown {
+  const envoy = selectAllianceEnvoy(state, sourceFactionId);
+  const sourceFaction = state.factions[sourceFactionId];
+  const targetFaction = state.factions[targetFactionId];
+  if (!sourceFaction || !targetFaction) {
+    return {
+      chance: 0,
+      envoyId: envoy?.id ?? 0,
+      envoyCharisma: envoy?.stats.charisma ?? 0,
+      militaryRatio: 1,
+      multiWarBonus: 0,
+    };
+  }
+
+  // 双方总驻军兵力对比
+  const sourceTroops = sourceFaction.cityIds.reduce(
+    (sum, cid) => sum + (state.cities[cid]?.troops ?? 0),
+    0,
+  );
+  const targetTroops = targetFaction.cityIds.reduce(
+    (sum, cid) => sum + (state.cities[cid]?.troops ?? 0),
+    0,
+  );
+  const militaryRatio = targetTroops > 0 ? sourceTroops / targetTroops : 2.0;
+
+  // 对方是否陷入多线作战（与 ≥ 2 势力开战）
+  const targetWars = state.diplomacy.filter((l) => {
+    if (l.factionA !== targetFactionId && l.factionB !== targetFactionId) return false;
+    const r = l.relation as string;
+    return r === DipRelation.WAR || r === 'war';
+  }).length;
+  const multiWarBonus = targetWars >= 2 ? 25 : 0;
+
+  // 军力优势加成
+  const militaryBonus =
+    militaryRatio >= 1.5 ? 20 : militaryRatio >= 1.0 ? 10 : -10;
+
+  // 使者魅力加成
+  const charismaBonus = (envoy?.stats.charisma ?? 50) * 0.2;
+
+  // 既有友好度修正
+  const link = findDiplomacy(state.diplomacy, sourceFactionId, targetFactionId);
+  const favorBonus = (link?.favorability ?? -50) * 0.2;
+
+  const rawChance = 40 + militaryBonus + multiWarBonus + charismaBonus + favorBonus;
+  const chance = clampNegotiationChance(rawChance);
+
+  return {
+    chance,
+    envoyId: envoy.id,
+    envoyCharisma: envoy.stats.charisma,
+    militaryRatio,
+    multiWarBonus,
+  };
+}
+
+export interface VassalChanceBreakdown {
+  chance: number;
+  envoyId: number;
+  sourceCities: number;
+  targetCities: number;
+  sourceTroops: number;
+  targetTroops: number;
+}
+
+/**
+ * 迫使从属/称臣臣服成功率计算（docs/04 §5.1 #5 从属）
+ */
+export function calculateVassalChance(
+  state: GameState,
+  targetFactionId: number,
+  sourceFactionId: number = state.playerFactionId,
+): VassalChanceBreakdown {
+  const envoy = selectAllianceEnvoy(state, sourceFactionId);
+  const sourceFaction = state.factions[sourceFactionId];
+  const targetFaction = state.factions[targetFactionId];
+  if (!sourceFaction || !targetFaction) {
+    return {
+      chance: 0,
+      envoyId: envoy?.id ?? 0,
+      sourceCities: 0,
+      targetCities: 0,
+      sourceTroops: 0,
+      targetTroops: 0,
+    };
+  }
+
+  const sourceCities = sourceFaction.cityIds.length;
+  const targetCities = targetFaction.cityIds.length;
+  const sourceTroops = sourceFaction.cityIds.reduce(
+    (sum, cid) => sum + (state.cities[cid]?.troops ?? 0),
+    0,
+  );
+  const targetTroops = targetFaction.cityIds.reduce(
+    (sum, cid) => sum + (state.cities[cid]?.troops ?? 0),
+    0,
+  );
+
+  // 迫使其臣属门槛：宗主方城池 ≥ 2倍 且 兵力 ≥ 3倍，或者目标仅余 ≤ 1 城且兵力不足 5000
+  const isOverwhelming =
+    (sourceCities >= targetCities * 2 && sourceTroops >= targetTroops * 3) ||
+    (targetCities <= 1 && targetTroops <= 5000 && sourceTroops >= 15000);
+
+  if (!isOverwhelming) {
+    return {
+      chance: 0,
+      envoyId: envoy.id,
+      sourceCities,
+      targetCities,
+      sourceTroops,
+      targetTroops,
+    };
+  }
+
+  const link = findDiplomacy(state.diplomacy, sourceFactionId, targetFactionId);
+  const fav = link?.favorability ?? 0;
+  if (fav < -40) {
+    return {
+      chance: 5,
+      envoyId: envoy.id,
+      sourceCities,
+      targetCities,
+      sourceTroops,
+      targetTroops,
+    };
+  }
+
+  const fameBonus = ((sourceFaction.fame ?? 0) - (targetFaction.fame ?? 0)) / 20;
+  const rawChance = 50 + fav * 0.3 + (envoy.stats.charisma ?? 50) * 0.2 + fameBonus;
+  const chance = clampNegotiationChance(rawChance);
+
+  return {
+    chance,
+    envoyId: envoy.id,
+    sourceCities,
+    targetCities,
+    sourceTroops,
+    targetTroops,
   };
 }

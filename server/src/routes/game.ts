@@ -770,6 +770,94 @@ gameRouter.post('/diplomacy/alliance', (req, res) => {
   }
 });
 
+gameRouter.post('/diplomacy/declare-war', (req, res) => {
+  try {
+    const body = z.object({ targetFactionId: PositiveInt }).strict().parse(req.body);
+    res.json(gameService.doDeclareWar(body.targetFactionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'declare war failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/propose-truce', (req, res) => {
+  try {
+    const body = z.object({ targetFactionId: PositiveInt }).strict().parse(req.body);
+    res.json(gameService.doProposeTruce(body.targetFactionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'propose truce failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/demand-vassal', (req, res) => {
+  try {
+    const body = z.object({ targetFactionId: PositiveInt }).strict().parse(req.body);
+    res.json(gameService.doDemandVassal(body.targetFactionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'demand vassal failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/submit-vassal', (req, res) => {
+  try {
+    const body = z.object({ overlordFactionId: PositiveInt }).strict().parse(req.body);
+    res.json(gameService.doSubmitVassal(body.overlordFactionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'submit vassal failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/release-vassal', (req, res) => {
+  try {
+    const body = z.object({ targetFactionId: PositiveInt }).strict().parse(req.body);
+    res.json(gameService.doReleaseVassal(body.targetFactionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'release vassal failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/form-coalition', (req, res) => {
+  try {
+    const body = z.object({
+      coalitionId: z.string().min(1),
+      name: z.string().min(1),
+      targetFactionId: PositiveInt,
+      memberFactionIds: z.array(PositiveInt).min(1),
+      durationMonths: PositiveInt.optional(),
+    }).strict().parse(req.body);
+    res.json(gameService.doFormCoalition(
+      body.coalitionId,
+      body.name,
+      body.targetFactionId,
+      body.memberFactionIds,
+      body.durationMonths,
+    ));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'form coalition failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/call-joint-war', (req, res) => {
+  try {
+    const body = z.object({ coalitionId: z.string().min(1) }).strict().parse(req.body);
+    res.json(gameService.doCallJointWar(body.coalitionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'call joint war failed' });
+  }
+});
+
+gameRouter.post('/diplomacy/issue-decree', (req, res) => {
+  try {
+    const body = z.object({
+      type: z.enum(['denounce_traitor', 'appoint_prov_governor', 'summon_tribute']),
+      targetFactionId: PositiveInt,
+      extraProvince: z.string().optional(),
+    }).strict().parse(req.body);
+    res.json(gameService.doIssueImperialDecree(body.type, body.targetFactionId, body.extraProvince));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'issue decree failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

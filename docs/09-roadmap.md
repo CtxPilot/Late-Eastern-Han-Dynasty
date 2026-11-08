@@ -520,6 +520,7 @@
 | ID | 任务 | 依赖 |
 |:--:|------|------|
 | P7-01 | 朝廷官制深化与地方州牧刺史统领体系 — **Session 477 完成**：中央文官（11级）、地方官（8级）、武官阶梯（10级）全量深化实装；一州唯一 `uniqueProvince` 同州互斥与城防/士气即时增益；委任都督管辖权联动（州牧10城/刺史6城/太守1城/尚书令6城/车骑6城）；百官年俸岁首统发闭环；专项门禁 `verify-s477-official-ranks` 107/107 全绿 | P0B-14, D-0B-9 |
+| P7-02 | 深度外交体系（多方盟约、从属朝贡、宣战停火与天子诏命） — **Session 478 完成**：数据模型契约扩展（Coalition 实体、truceMonths、overlordFactionId、vassalFactionIds）；纯函数几率模型（calculateTruceChance, calculateVassalChance, isHostileOrAtWar 停火拦截）；引擎层宣战背信严惩（-50声望/-10全城士气/-100好感）与从属参战联动；停战议和保护期；强权逼降与从属臣服，每年正月岁首 15% 金粮朝贡结算；多方会盟组建、盟主协同作战与覆灭大捷解散；天子三大明诏（讨逆诏、册封诏、征贡诏）；Web Worker/路由服务全栈接线；专案门禁 `verify-s478-advanced-diplomacy` 69/69 项全绿 | P7-01 |
 
 ---
 

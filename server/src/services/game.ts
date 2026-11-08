@@ -109,7 +109,19 @@ import {
   searchTalent,
 } from '../engine/personnel.js';
 import { grantBattleIntel } from '../engine/intel.js';
-import { formAlliance, transferCourtNetwork, tributeGold } from '../engine/diplomacy.js';
+import {
+  formAlliance,
+  transferCourtNetwork,
+  tributeGold,
+  declareWar,
+  proposeTruce,
+  demandVassal,
+  submitVassal,
+  releaseVassal,
+  formCoalition,
+  callJointWar,
+  issueImperialDecree,
+} from '../engine/diplomacy.js';
 import {
   getAvailableTechResearch,
   startTechResearch,
@@ -690,6 +702,72 @@ export function doTransferCourtNetwork(targetFactionId: number, amount?: number)
 export function doAlliance(targetFactionId: number): GameState {
   return withLock(() => {
     currentGame = formAlliance(getGame(), targetFactionId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+export function doDeclareWar(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = declareWar(getGame(), targetFactionId);
+    return getClientGame();
+  });
+}
+
+export function doProposeTruce(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = proposeTruce(getGame(), targetFactionId, getGame().playerFactionId, 12, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+export function doDemandVassal(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = demandVassal(getGame(), targetFactionId, getGame().playerFactionId, runtimeRandom);
+    return getClientGame();
+  });
+}
+
+export function doSubmitVassal(overlordFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = submitVassal(getGame(), overlordFactionId);
+    return getClientGame();
+  });
+}
+
+export function doReleaseVassal(targetFactionId: number): GameState {
+  return withLock(() => {
+    currentGame = releaseVassal(getGame(), targetFactionId);
+    return getClientGame();
+  });
+}
+
+export function doFormCoalition(
+  coalitionId: string,
+  name: string,
+  targetFactionId: number,
+  memberFactionIds: number[],
+  durationMonths?: number,
+): GameState {
+  return withLock(() => {
+    currentGame = formCoalition(getGame(), coalitionId, name, targetFactionId, memberFactionIds, durationMonths);
+    return getClientGame();
+  });
+}
+
+export function doCallJointWar(coalitionId: string): GameState {
+  return withLock(() => {
+    currentGame = callJointWar(getGame(), coalitionId);
+    return getClientGame();
+  });
+}
+
+export function doIssueImperialDecree(
+  type: 'denounce_traitor' | 'appoint_prov_governor' | 'summon_tribute',
+  targetFactionId: number,
+  extraProvince?: string,
+): GameState {
+  return withLock(() => {
+    currentGame = issueImperialDecree(getGame(), type, targetFactionId, extraProvince);
     return getClientGame();
   });
 }

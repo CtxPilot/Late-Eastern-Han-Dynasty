@@ -9,12 +9,40 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 477**（Phase 7-01 朝廷官制深化与地方州牧刺史统领体系全栈落地：中央文官11级、地方官8级、武官10级全轨分立；一州唯一 `uniqueProvince` 同州互斥；都尉城防+20/驻军士气+2，太守士气+3，刺史全州士气+2/驻军+1，州牧全州士气+3/驻军+3，尚书令士气+2，车骑将军驻军士气+2；委任都督管辖权联动州牧10城/刺史6城/太守1城；全量官职岁首年俸对照表对接与24月全息推演闭环；`verify-s477-official-ranks.ts` 107/107 项断言全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移；三大包全仓构建全通） |
-| 阶段 | **Phase 7-01 朝廷官制与地方统领全量落地 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 477 `shared/enums/index.ts`、`shared/positions.ts`、`shared/fiscal.ts`、`shared/merit.ts`、`shared/delegation.ts`、`server/src/engine/appoint.ts`、`client/src/components/layout/AppointPanel.tsx`、`server/src/scripts/verify-s477-official-ranks.ts` 门禁 |
-| 文档最新 | **Session 477 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/54-court-official-rank-expansion-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 477 已交付**；后续方向：Phase 7-02 多方盟约/臣属朝贡/天下大势与外交深度系统 |
-| 下一步 | ①推进 Phase 7-02 深度外交（多方结盟公约、臣属朝贡体系、汉室朝廷天下大势天子诏命）；②依规持续推进全栈质量保障与全量门禁覆盖 |
+| 会话 | **Session 478**（Phase 7-02 深度外交体系全栈落地：多方会盟实体 `Coalition` 关东义军模式、盟主协同作战动员令+5驻军士气、目标覆灭大捷解散+40声望；从属诸侯体系 `overlordFactionId` 与强权逼降/弱国投效，每年 1 月岁首纳贡 15% 金粮进献宗主国，宽宥解放独立；宣战毁约背信惩罚【-50声望/-10全城驻军士气/-100友好】与从属国联动参战；停火议和保护期 `truceMonths=12` 与出征拦截；天子三大诏命【讨逆诏、册封诏、征贡诏】；服务端路由与离线 Web Worker 镜像双端打通；专案门禁 `verify-s478-advanced-diplomacy.ts` 69/69 项全绿，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；三大包全仓构建 100% 通过） |
+| 阶段 | **Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 478 `shared/types/diplomacy.ts`、`shared/types/faction.ts`、`shared/types/game.ts`、`shared/game-state-diplomacy-schema.ts`、`shared/game-state-entity-schema.ts`、`shared/game-state-full-schema.ts`、`shared/intel.ts`、`shared/negotiation.ts`、`server/src/engine/diplomacy.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s478-advanced-diplomacy.ts` 门禁 |
+| 文档最新 | **Session 478 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/55-advanced-diplomacy-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 478 已交付**；后续方向：Phase 7-03 天下大势与政治阶段演进（割据称雄→开府霸业→王霸之略→受禅登极与门阀政治联动） |
+| 下一步 | ①推进 Phase 7-03 天下大势与政治阶段演进；②持续推进全栈质量保障与全量门禁覆盖 |
+
+### Session 478 交接要点
+
+- **Phase 7-02 深度外交体系（多方盟约、从属朝贡、宣战停火与天子诏命）全栈落地**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `DiplomacyLink`: 扩展 `truceMonths?: number`（停战停火期剩余月数）、`coalitionId?: string`（归属会盟 ID）；
+     - `Faction`: 扩展 `overlordFactionId?: number`（宗主国势力 ID）、`vassalFactionIds?: number[]`（从属诸侯 ID 列表）、`coalitionId?: string`；
+     - `Coalition`: 导出多方会盟实体类型（`id, name, targetFactionId, memberFactionIds, leaderFactionId, remainingMonths, jointWarActive`）；
+     - `GameState`: 根级登记 `coalitions?: Coalition[]`；
+     - Schema 注册：`DiplomacyLinkRuntimeSchema`, `FactionRuntimeSchema`, `CoalitionRuntimeSchema` 及 `ROOT_KEYS` 严格对齐；
+     - 纯函数模型：`calculateTruceChance`（兵力比与多线受敌加成）、`calculateVassalChance`（压倒性门槛与世仇抵抗）、`isHostileOrAtWar` 严格拦截停火期出征。
+  2. **引擎层全息生命周期（`server/src/engine/diplomacy.ts` & `turn.ts`）**：
+     - `declareWar`: 常规宣战置 WAR（友好 -80）；停战期撕毁和约或同盟期背信宣战触发背信严惩（-50 声望、所属全城驻军士气 -10、友好 -100）；从属国遭宣战宗主国自动参战；
+     - `proposeTruce`: 双方转 NEUTRAL，友好置 0，确立 12 个月停火保护期；
+     - `demandVassal` / `submitVassal` / `releaseVassal`: 确立/解除从属羁绊，宗主声望变动（+30/+15），友好度更新；
+     - `formCoalition` / `callJointWar`: 关东反董联军模式建立，全员互盟对敌宣战，动员令全盟城池驻军士气 +5；
+     - `issueImperialDecree`: 迎奉汉帝特权，讨逆诏削弱逆贼天命人心且忠良憎恶，册封诏赐州牧声望与好感，征贡诏岁纳贡金粮；
+     - `tickDiplomacyMonth`: 月度推进停火期衰减、会盟到期与胜负裁决；每年 1 月岁首扣缴从属国全境 15% 金粮进献宗主国；严格 COW 零冗余分配。
+  3. **服务路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts` 与 `server/src/routes/game.ts`: 挂载 8 大外交指令接口；
+     - `client/src/workers/game.worker.ts`: 提供同名方法，保持离线 PWA 模式与在线服务端一致。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s478-advanced-diplomacy` 69/69 项断言 100% 绿色通过；
+     - `verify-s477-official-ranks` 107/107 项全绿；
+     - `verify-d0b9-fiscal-salary` 40/40 项全绿；
+     - `turn-golden.test.ts` 3/3 项严格匹配零 RNG 漂移；
+     - 全仓 141 个测试套件 832 项单测 100% 通过；
+     - 全仓 `pnpm build` 0 错误通过。
 
 ### Session 477 交接要点
 

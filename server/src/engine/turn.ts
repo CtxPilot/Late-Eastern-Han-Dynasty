@@ -42,6 +42,7 @@ import {
 import { runAllAiTurns } from './ai.js';
 import { runAllAiPersonnel } from './aiPersonnel.js';
 import { runAllAiDiplomacy } from './aiDiplomacy.js';
+import { tickDiplomacyMonth } from './diplomacy.js';
 import { runAiMilitary } from './aiMilitary.js';
 import { applyPendingPolicies, pruneDelegationRegions, runDelegationCivilTurns, runDelegationMilitary, tickDelegationReports } from './delegation.js';
 import { checkEndgameStatus } from './endgame.js';
@@ -434,6 +435,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickTechResearch(nextState);
   // S03 城池卫生与疫病月度推进
   nextState = tickCityPlagueAndSanitation(nextState);
+  // Phase 7-02：深度外交月度推进（停火保护期衰减、会盟胜负/到期裁决、岁首朝贡结算）
+  nextState = tickDiplomacyMonth(nextState, isYearStart);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）

@@ -1,3 +1,43 @@
+## 2026-11-08 — Session 478 · 深度外交体系全栈落地（多方盟约、从属朝贡、宣战停火与天子诏命）（Phase 7-02）
+
+- Phase：**Phase 7-02 深度外交体系（多方盟约、从属朝贡、宣战停火与天子诏命）**；正式落地立项提案 `docs/55-advanced-diplomacy-proposal.md`，彻底突破原 0-A 简陋外交原型，实现宣战毁约背信惩罚（-50声望/-10全城驻军士气/-100友好）与从属国联动参战、议和停战谈判（12个月保护期与出征拦截）、强权逼降与弱国投效（从属诸侯体系，每年 1 月岁首 15% 金粮朝贡进献）、多方会盟（关东义军全员互盟对敌宣战、盟主协同作战动员令+5驻军士气、目标灭亡全盟+40声望）、迎奉天子三大诏命（讨逆诏、册封诏、征贡诏）以及服务端路由与离线 Web Worker 双端闭环！新增专属门禁 `verify-s478-advanced-diplomacy` 69/69 项断言全绿，全仓生产构建通过，`turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §五（16 类外交行动）、`docs/08-data-dictionary.md` §五、`docs/35-phased-implementation-roadmap.md` Phase 7 里程碑规划，原系统仅支持点对点简单进贡与双边结盟，缺少宣战代价、停战期约束、多方会盟实体、从属朝贡与挟天子令诸侯的战略博弈；
+  2. 宣战机制必须具备历史厚重感：停战期撕毁和约或同盟期背信宣战必须遭受严厉惩罚（声望 -50、全城驻军士气 -10、友好 -100），从属国遭宣战宗主国必须自动入战；
+  3. 停战机制必须具备保护期（`truceMonths = 12`），停火期间 `isHostileOrAtWar` 严格返回 false 拦截出征，彻底避免“当月停战下月偷袭”的荒谬现象；
+  4. 称臣从属与岁首朝贡：大国可通过压倒性军力城池威逼小国称臣（或小国主动求庇护），从属国每年 1 月岁首必须进缴全境 15% 金粮贡赋至宗主国国库；宗主亦可宽宥解放从属恢复独立主权；
+  5. 多方会盟（`Coalition`）：真实复现初平元年关东反董联军模式，盟内全员互盟、全员对讨伐目标宣战，盟主发布动员令全盟城池驻军士气 +5，目标覆灭大捷解散盟员声望 +40；
+  6. 挟天子明诏：迎奉汉帝势力（`controlsEmperor`）可行假托天子诏命特权，颁布讨逆诏削弱逆贼天命人心、锡命册封诏赐封州牧声望、天下征贡诏岁纳贡金粮；
+  7. 保证 COW 零多余分配，确保 `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `DiplomacyLink`: 扩展 `truceMonths?: number`（停火保护期剩余月数）、`coalitionId?: string`（会盟 ID）；
+     - `Faction`: 扩展 `overlordFactionId?: number`（宗主势力 ID）、`vassalFactionIds?: number[]`（从属诸侯列表）、`coalitionId?: string`；
+     - `Coalition`: 导出多方会盟实体接口（`id, name, targetFactionId, memberFactionIds, leaderFactionId, remainingMonths, jointWarActive`）；
+     - `GameState`: 根级扩展 `coalitions?: Coalition[]`；
+     - Zod Runtime Schema：`DiplomacyLinkRuntimeSchema`, `FactionRuntimeSchema`, `CoalitionRuntimeSchema` 及 `ROOT_KEYS` 全量严格同步；
+     - 纯函数几率模型：`calculateTruceChance`（军力比与多线受敌几率）、`calculateVassalChance`（压倒性门槛与世仇誓死抵抗判定）；
+     - 出征保护拦截：`isHostileOrAtWar` 在 `truceMonths > 0` 严格返回 false。
+  2. **引擎层全息生命周期（`server/src/engine/diplomacy.ts` & `turn.ts`）**：
+     - `declareWar`: 常规宣战置 WAR（-80 友好）；毁约背信扣 50 声望、所属城扣 10 驻军士气、友好度跌入 -100；从属国联动宗主入战；
+     - `proposeTruce`: 双方转 NEUTRAL，友好置 0，设立 12 个月 `truceMonths`；
+     - `demandVassal` / `submitVassal` / `releaseVassal`: 建立/解除从属绑定，宗主声望获取（+30/+15），友好度调整；
+     - `formCoalition` / `callJointWar`: 建立多方联盟，全员互盟对敌宣战，动员令全盟驻军士气 +5；
+     - `issueImperialDecree`: 占领天子行在专属，讨逆诏（天命-10/人心-10）、册封诏（声望+25/友好+30）、征贡诏（目标进纳 200 金 500 粮）；
+     - `tickDiplomacyMonth`: 月度推进停火期衰减、会盟胜负与到期裁决；每年 1 月岁首扣缴从属国 15% 金粮进献宗主国；COW 设计确保无多余属性注入。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts` 与 `server/src/routes/game.ts`: 挂载 `/diplomacy/declare-war`, `/propose-truce`, `/demand-vassal`, `/submit-vassal`, `/release-vassal`, `/form-coalition`, `/call-joint-war`, `/issue-decree`；
+     - `client/src/workers/game.worker.ts`: 全量提供离线 PWA 模式相同 8 大外交指令处理。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s478-advanced-diplomacy.ts`，涵盖数据模型、纯函数模型、宣战背信惩罚、停火保护期出征拦截、从属纳贡、多方会盟胜利与到期、天子三大诏命以及 24 个月全息演进零崩溃零 NaN，全部 69/69 项断言 100% 绿色通过；
+     - 既有门禁 `verify-s477-official-ranks`（107/107）、`verify-d0b9-fiscal-salary`（40/40）全部全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移；
+     - 全仓 141 个测试套件 832 项单测 100% 通过；
+     - 全仓 `pnpm build` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-02 深度外交体系（多方盟约、从属朝贡、宣战停火与天子诏命） [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/55-advanced-diplomacy-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 477 · 朝廷官制深化与地方州牧刺史统领体系全栈落地（Phase 7-01）
 
 - Phase：**Phase 7-01 政治体制与朝廷官制深度拓展 / 地方州牧刺史统领体系**；正式落地立项提案 `docs/54-court-official-rank-expansion-proposal.md`，全面打破 0-A 简陋官职模型，将中央文官（11 级）、地方官（8 级）、武官阶梯（10 级）全量深化实装，实现东汉十三州州牧刺史统领、一州唯一互斥（`uniqueProvince`）、地方官即时增益、委任军团都督管辖权联动与百官岁首年俸统发全栈闭环！新增专属门禁 `verify-s477-official-ranks` 107/107 项断言全绿，全仓生产构建 0 错误通过！

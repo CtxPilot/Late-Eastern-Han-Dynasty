@@ -8,7 +8,7 @@ import type { BattlefieldInstance } from './battlefield-instance.js';
 import type { BattlefieldMap, MeleeState } from './battlefield.js';
 import type { CampaignArmy, CampaignNode, GrandStrategist } from './campaign.js';
 import type { City } from './city.js';
-import type { DiplomacyLink } from './diplomacy.js';
+import type { Coalition, DiplomacyLink } from './diplomacy.js';
 import type { FemaleCharacter } from './female.js';
 import type { Faction } from './faction.js';
 import type { Officer } from './officer.js';
@@ -65,6 +65,8 @@ export interface GameState {
    */
   activeBattlefieldInstance?: BattlefieldInstance | null;
   diplomacy: DiplomacyLink[];
+  /** 多方会盟列表（如关东反董联军、反曹联军） */
+  coalitions?: Coalition[];
   /** 谍报：侦查报告等（盟友可见性由外交实时计算） */
   intel: IntelState;
   /** 计谋 S17：进行中/已结算的计谋列表 */

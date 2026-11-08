@@ -17,6 +17,7 @@
 10. [events.json — 历史事件](#十eventsjson--历史事件)
 11. [itemsets.json — 套装定义](#十一itemsetsjson--套装定义)
 12. [郡县历史地理模板（规划）](#十五郡县历史地理模板规划)
+13. [深度外交体系数据模型与实体契约（Phase 7-02）](#三十六深度外交体系数据模型与实体契约phase-7-02--session-478)
 
 ---
 
@@ -1628,4 +1629,55 @@ Session 371 在不新增字段/API/RNG 的前提下落地骑兵冲锋最小切�
   - Rank 2 (+1000)：`subGeneral`、`colonel`
   - Rank 1 (+500)：`major`、`captain`
 - 势力唯一约束：`grandGeneral`、`chariotCavalryGeneral`、`seniorGeneral`、`quatGeneral`。
+
+---
+
+## 三十六、深度外交体系数据模型与实体契约（Phase 7-02 · Session 478）
+
+### 36.1 外交关系链接扩展（DiplomacyLink）
+| 字段 | 类型 | 校验与默认值 | 业务语义与规则约束 |
+|------|------|-------------|-------------------|
+| `truceMonths` | `number?` | 可选非负整数，默认 `undefined` | 停战停火保护期剩余月数。`truceMonths > 0` 期间禁止出征交战（`isHostileOrAtWar` 严格返回 false）。停火期撕毁和约宣战触发毁约背信惩罚（-50声望、直属全城驻军士气-10、友好跌入-100）。 |
+| `coalitionId` | `string?` | 可选字符串，默认 `undefined` | 归属的多方会盟实体 ID。同联盟成员间自动确立 `ALLIED`（友好度 70），对盟约共同目标自动确立 `WAR`（友好度 -100）。 |
+
+### 36.2 势力实体扩展（Faction）
+| 字段 | 类型 | 校验与默认值 | 业务语义与规则约束 |
+|------|------|-------------|-------------------|
+| `overlordFactionId` | `number?` | 可选正整数，默认 `undefined` | 宗主国势力 ID。标记自身为从属诸侯，岁首正月必须向宗主国上缴 15% 金粮贡赋；被外部宣战时宗主国自动联动入战。 |
+| `vassalFactionIds` | `number[]?` | 可选正整数数组，默认 `undefined` | 所辖从属诸侯势力 ID 列表。确立强权逼降从属时宗主声望 +30；宽宥解放独立时宗主声望 +15。 |
+| `coalitionId` | `string?` | 可选字符串，默认 `undefined` | 当前参与的多方会盟实体 ID。 |
+
+### 36.3 多方会盟实体契约（Coalition）
+```ts
+export interface Coalition {
+  id: string; // 唯一会盟标识符（如 'guandong_coalition_190'）
+  name: string; // 会盟全称（如 '关东义军讨董联盟'）
+  targetFactionId: number; // 共同讨伐目标势力 ID
+  memberFactionIds: number[]; // 参盟诸侯势力 ID 列表
+  leaderFactionId: number; // 盟主势力 ID（具备发布共同作战动员令特权）
+  remainingMonths: number; // 盟约剩余有效期（月），期满自然解散
+  jointWarActive?: boolean; // 是否已发布联合进军动员令
+}
+```
+
+### 36.4 谈判几率模型与纯函数契约
+1. **停战谈判几率（`calculateTruceChance`）**：
+   - 基础几率 40% + 军力对比加成（己方/对方最高 +25%，极端劣势 -20%）+ 目标多线受敌加成（目标敌人每多 1 家 +10%，封顶 +30%）+ 使节魅力加成（最高 +15%）+ 友好度修正（`fav * 0.2`）。
+   - 结果夹紧至 `[5%, 95%]`。议和成功耗金 500，设立 12 个月 `truceMonths`，关系置为 `NEUTRAL`，友好度置 0。
+2. **称臣从属几率（`calculateVassalChance`）**：
+   - 门槛检定：宗主城池 ≥ 2倍且兵力 ≥ 3倍，或目标仅余 ≤ 1 城且兵力 ≤ 5000。未满足门槛逼降几率严格为 0。
+   - 誓死抵抗惩罚：若双方处于世仇血战（`fav < -40`），对方誓死不降，几率锁死保底 5%。
+   - 正常威逼几率：基础 50% + 友好度修正 (`fav * 0.3`) + 使节魅力加成 + 声望差加成，结果夹紧至 `[5%, 90%]`。
+
+### 36.5 岁首从属朝贡机制（每年 1 月）
+- 触发时机：`tickDiplomacyMonth(state, isYearStart)`，仅在 `isYearStart === true` 结算。
+- 进献比例：从属国扣减其自身全境金粮的 15%（优先扣除其主城/首都金粮），全额注入宗主国首都城池，并由 `syncFactionResources` 统一刷新。
+
+### 36.6 挟天子明诏三大诏令（`issueImperialDecree`）
+- **执掌前置门槛**：`controlsEmperor(state, state.playerFactionId) === true`（占领汉帝所在城池，如洛阳城 `city.ruler === playerFactionId`）。未迎奉天子抛出拦截异常。
+- **诏命类型**：
+  1. `denounce_traitor`（讨逆明诏）：诏告天下目标为国贼，目标天命 -10、人心 -10，天下忠汉诸侯对其好感 -20；
+  2. `appoint_prov_governor`（锡命册封诏）：天子册封目标为所辖州牧，目标声望 +25，对朝廷友好度 +30；
+  3. `summon_tribute`（天下征贡诏）：命目标诸侯岁贡朝廷，目标国库扣除 200 金 500 粮（其声望 +10），天子行在接收 200 金 500 粮。
+
 

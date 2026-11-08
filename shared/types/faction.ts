@@ -107,4 +107,10 @@ export interface Faction {
   coinQuality?: number;
   /** S35 累计欠俸季数；每季首月检定忠诚惩罚，足额发放年俸后归零 */
   salaryArrears?: number;
+  /** 宗主势力 ID（若为称臣附庸国；岁首向宗主国缴纳朝贡税） */
+  overlordFactionId?: number;
+  /** 从属势力 ID 列表（若为宗主国；岁首收取朝贡，承担军事保护义务） */
+  vassalFactionIds?: number[];
+  /** 所属多方会盟 ID（如 "anti_dong_coalition"） */
+  coalitionId?: string;
 }

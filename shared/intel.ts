@@ -92,7 +92,11 @@ export function isHostileOrAtWar(
   a: FactionId,
   b: FactionId,
 ): boolean {
-  const relation = findDiplomacy(links, a, b)?.relation as string | undefined;
+  const link = findDiplomacy(links, a, b);
+  if (!link) return false;
+  // 停火协议期内禁止交火
+  if ((link.truceMonths ?? 0) > 0) return false;
+  const relation = link.relation as string | undefined;
   return relation === DipRelation.HOSTILE || relation === DipRelation.WAR;
 }
 

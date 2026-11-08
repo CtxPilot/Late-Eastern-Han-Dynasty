@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { DipRelation } from './enums/index.js';
-import type { DiplomacyLink } from './types/diplomacy.js';
+import type { Coalition, DiplomacyLink } from './types/diplomacy.js';
 import type { GameState } from './types/game.js';
 
 const PositiveIdSchema = z.number().int().positive();
@@ -15,6 +15,8 @@ export const DiplomacyLinkRuntimeSchema: z.ZodType<DiplomacyLink> = z
     relation: z.nativeEnum(DipRelation),
     favorability: z.number().min(-100).max(100),
     marriageBond: z.boolean().optional(),
+    truceMonths: z.number().int().nonnegative().optional(),
+    coalitionId: z.string().optional(),
   })
   .strict()
   .superRefine((link, ctx) => {
@@ -26,6 +28,21 @@ export const DiplomacyLinkRuntimeSchema: z.ZodType<DiplomacyLink> = z
       });
     }
   });
+
+export const CoalitionRuntimeSchema: z.ZodType<Coalition> = z
+  .object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    leaderFactionId: PositiveIdSchema,
+    targetFactionId: PositiveIdSchema,
+    memberFactionIds: z.array(PositiveIdSchema).min(1),
+    startYear: z.number().int(),
+    startMonth: z.number().int().min(1).max(12),
+    durationMonths: z.number().int().positive(),
+    remainingMonths: z.number().int().nonnegative(),
+    jointWarActive: z.boolean().optional(),
+  })
+  .strict();
 
 type GameStateDiplomacySlice = Pick<GameState, 'diplomacy'>;
 

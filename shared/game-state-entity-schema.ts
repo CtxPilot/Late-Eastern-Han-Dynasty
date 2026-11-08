@@ -357,6 +357,9 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
       .optional(),
     coinQuality: z.number().min(0.5).max(1.0).optional(),
     salaryArrears: z.number().int().nonnegative().optional(),
+    overlordFactionId: PositiveIdSchema.optional(),
+    vassalFactionIds: z.array(PositiveIdSchema).optional(),
+    coalitionId: z.string().optional(),
   })
   .strict();
 

@@ -178,7 +178,19 @@ import {
 import { marryFemale, recruitOfficer, searchTalent } from '../../../server/src/engine/personnel.js';
 import { appointMentorship, swearBrotherhood } from '../../../server/src/engine/relationDepth.js';
 import { grantBattleIntel } from '../../../server/src/engine/intel.js';
-import { formAlliance, transferCourtNetwork, tributeGold } from '../../../server/src/engine/diplomacy.js';
+import {
+  formAlliance,
+  transferCourtNetwork,
+  tributeGold,
+  declareWar,
+  proposeTruce,
+  demandVassal,
+  submitVassal,
+  releaseVassal,
+  formCoalition,
+  callJointWar,
+  issueImperialDecree,
+} from '../../../server/src/engine/diplomacy.js';
 import {
   getAvailableTechResearch,
   startTechResearch,
@@ -849,6 +861,72 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
   alliance(targetFactionId: number): GameState {
     return withLock(() => {
       currentGame = formAlliance(getGame(), targetFactionId, runtimeRandom);
+      return getClientGame();
+    });
+  },
+
+  declareWar(targetFactionId: number): GameState {
+    return withLock(() => {
+      currentGame = declareWar(getGame(), targetFactionId);
+      return getClientGame();
+    });
+  },
+
+  proposeTruce(targetFactionId: number): GameState {
+    return withLock(() => {
+      currentGame = proposeTruce(getGame(), targetFactionId, getGame().playerFactionId, 12, runtimeRandom);
+      return getClientGame();
+    });
+  },
+
+  demandVassal(targetFactionId: number): GameState {
+    return withLock(() => {
+      currentGame = demandVassal(getGame(), targetFactionId, getGame().playerFactionId, runtimeRandom);
+      return getClientGame();
+    });
+  },
+
+  submitVassal(overlordFactionId: number): GameState {
+    return withLock(() => {
+      currentGame = submitVassal(getGame(), overlordFactionId);
+      return getClientGame();
+    });
+  },
+
+  releaseVassal(targetFactionId: number): GameState {
+    return withLock(() => {
+      currentGame = releaseVassal(getGame(), targetFactionId);
+      return getClientGame();
+    });
+  },
+
+  formCoalition(
+    coalitionId: string,
+    name: string,
+    targetFactionId: number,
+    memberFactionIds: number[],
+    durationMonths?: number,
+  ): GameState {
+    return withLock(() => {
+      currentGame = formCoalition(getGame(), coalitionId, name, targetFactionId, memberFactionIds, durationMonths);
+      return getClientGame();
+    });
+  },
+
+  callJointWar(coalitionId: string): GameState {
+    return withLock(() => {
+      currentGame = callJointWar(getGame(), coalitionId);
+      return getClientGame();
+    });
+  },
+
+  issueImperialDecree(
+    type: 'denounce_traitor' | 'appoint_prov_governor' | 'summon_tribute',
+    targetFactionId: number,
+    extraProvince?: string,
+  ): GameState {
+    return withLock(() => {
+      currentGame = issueImperialDecree(getGame(), type, targetFactionId, extraProvince);
       return getClientGame();
     });
   },
