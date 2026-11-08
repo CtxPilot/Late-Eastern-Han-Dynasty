@@ -1596,11 +1596,36 @@ Session 371 在不新增字段/API/RNG 的前提下落地骑兵冲锋最小切�
   - `inspectCensus`：耗金 200，`appeasedMagnate = true`，城内豪族武将忠诚扣减 15 点。
 
 ### 34.3 百官年俸与欠俸惩罚链（Faction.salaryArrears）
-- **岁首统发（每年 1 月）**：
-  - 丞相 800、都督/大将军 500、太守/将军 180、县令/校尉 60、书吏/军候 20、君主 0、无职 0。多重官职取最高俸禄。
+- **岁首统发（每年 1 月，Session 477 Phase 7-01 全量官职年俸对照表）**：
+  - 丞相 800、尚书令 700、都督/大将军/州牧/车骑将军 500、御史中丞/九卿 400、四方将军 350、刺史/六曹尚书 300、四征四镇 250、太守/将军 180、偏将军 120、都尉/侍郎 100、县令/校尉 60、军司马 40、书吏/从事/军候 20、君主 0、无职 0。多重官职取最高俸禄（`getOfficerAnnualSalary`）。
   - 国库充足足额统发，`salaryArrears = 0`；资金不足扣尽现有资金，`salaryArrears + 1` 季。
 - **季首惩罚（1/4/7/10 月）**：
   - 欠俸 1 季：所属在职武将忠诚 -2
   - 欠俸 2 季：所属在职武将忠诚 -5
   - 欠俸 3 季及以上：所属在职武将忠诚 -10（君主豁免）。
+
+---
+
+## 三十五、官制与统领体系真源（Phase 7-01 · Session 477）
+
+### 35.1 中央文官轨（CivilPosition）
+- 枚举值与年俸：`chancellor` (800)、`shangshuChief` (700)、`governor` (500)、`censorChief` (400)、`nineMinisters` (400)、`secretaryMinister` (300)、`prefect` (180)、`gentleman` (100)、`magistrate` (60)、`clerk` (20)、`none` (0)。
+- 势力唯一约束：`chancellor`、`shangshuChief`、`governor`、`censorChief`。
+
+### 35.2 地方官制轨（LocalPosition）
+- 枚举值与年俸：`provGovernor` (500)、`provInspector` (300)、`prefect` (180)、`commandant` (100)、`countyMagistrate` (60)、`advisor` (20)、`intendant` (20)、`none` (0)。
+- 互斥约束：
+  - **一州唯一（`uniqueProvince`）**：`provGovernor`（州牧）、`provInspector`（刺史）。
+  - **一城唯一（`uniqueCity`）**：`prefect`（太守）、`commandant`（都尉）、`countyMagistrate`（县令）。
+  - **势力唯一（`uniqueFaction`）**：`advisor`（军师）。
+- 统辖代管上限（`governorCityCap`）：州牧 10 城、刺史 6 城、太守 1 城。
+
+### 35.3 武官品阶轨（MilitaryPosition）
+- 枚举值与年俸：`grandGeneral` (500)、`chariotCavalryGeneral` (500)、`seniorGeneral` (350)、`quatGeneral` (250)、`general` (180)、`subGeneral` (120)、`colonel` (60)、`major` (40)、`captain` (20)、`none` (0)。
+- 带兵加成 Rank（`militaryPositionRank`）：
+  - Rank 4 (+2000)：`grandGeneral`、`chariotCavalryGeneral`、`seniorGeneral`
+  - Rank 3 (+1500)：`quatGeneral`、`general`
+  - Rank 2 (+1000)：`subGeneral`、`colonel`
+  - Rank 1 (+500)：`major`、`captain`
+- 势力唯一约束：`grandGeneral`、`chariotCavalryGeneral`、`seniorGeneral`、`quatGeneral`。
 

@@ -27,6 +27,8 @@ export interface PositionReq {
   uniqueFaction?: boolean;
   /** 一城唯一（需 cityId） */
   uniqueCity?: boolean;
+  /** 一州唯一（需 cityId，同州互斥） */
+  uniqueProvince?: boolean;
   /** 任命时必须指定城 */
   needsCity?: boolean;
 }
@@ -34,24 +36,38 @@ export interface PositionReq {
 export const CIVIL_LABELS: Record<CivilPosition, string> = {
   [CivilPosition.NONE]: '无',
   [CivilPosition.CLERK]: '书吏',
+  [CivilPosition.GENTLEMAN]: '侍郎/议郎',
   [CivilPosition.MAGISTRATE]: '县令',
   [CivilPosition.PREFECT]: '郡守',
+  [CivilPosition.SECRETARY_MINISTER]: '六曹尚书',
+  [CivilPosition.CENSOR_CHIEF]: '御史中丞',
+  [CivilPosition.NINE_MINISTERS]: '九卿',
+  [CivilPosition.SHANGSHU_CHIEF]: '尚书令',
   [CivilPosition.GOVERNOR]: '都督',
   [CivilPosition.CHANCELLOR]: '丞相',
 };
 
 export const LOCAL_LABELS: Record<LocalPosition, string> = {
   [LocalPosition.NONE]: '无',
-  [LocalPosition.ADVISOR]: '军师',
+  [LocalPosition.COUNTY_MAGISTRATE]: '县令',
   [LocalPosition.INTENDANT]: '从事',
+  [LocalPosition.COMMANDERY_COMMANDANT]: '都尉',
   [LocalPosition.PREFECT]: '太守',
+  [LocalPosition.ADVISOR]: '军师',
+  [LocalPosition.PROV_INSPECTOR]: '刺史',
+  [LocalPosition.PROV_GOVERNOR]: '州牧',
 };
 
 export const MILITARY_LABELS: Record<MilitaryPosition, string> = {
   [MilitaryPosition.NONE]: '无',
   [MilitaryPosition.CAPTAIN]: '军候',
+  [MilitaryPosition.MAJOR]: '军司马',
   [MilitaryPosition.COLONEL]: '校尉',
+  [MilitaryPosition.SUB_GENERAL]: '偏将军/裨将',
   [MilitaryPosition.GENERAL]: '将军',
+  [MilitaryPosition.QUAT_GENERAL]: '四征四镇',
+  [MilitaryPosition.SENIOR_GENERAL]: '四方将军',
+  [MilitaryPosition.CHARIOT_CAVALRY_GENERAL]: '车骑/骠骑/卫将军',
   [MilitaryPosition.GRAND_GENERAL]: '大将军',
 };
 
@@ -70,8 +86,23 @@ export const HEGEMONY_LABELS: Record<HegemonyPosition, string> = {
 
 export const CIVIL_REQ: Partial<Record<CivilPosition, PositionReq>> = {
   [CivilPosition.CLERK]: { politics: 30 },
+  [CivilPosition.GENTLEMAN]: { politics: 50, intelligence: 55, meritLevel: 2 },
   [CivilPosition.MAGISTRATE]: { politics: 50, intelligence: 40, meritLevel: 2 },
   [CivilPosition.PREFECT]: { politics: 60, leadership: 50, meritLevel: 3 },
+  [CivilPosition.SECRETARY_MINISTER]: { politics: 75, intelligence: 70, meritLevel: 4 },
+  [CivilPosition.CENSOR_CHIEF]: {
+    politics: 80,
+    intelligence: 80,
+    meritLevel: 5,
+    uniqueFaction: true,
+  },
+  [CivilPosition.NINE_MINISTERS]: { politics: 80, intelligence: 75, meritLevel: 5 },
+  [CivilPosition.SHANGSHU_CHIEF]: {
+    politics: 85,
+    intelligence: 80,
+    meritLevel: 6,
+    uniqueFaction: true,
+  },
   [CivilPosition.GOVERNOR]: {
     leadership: 90,
     intelligence: 80,
@@ -87,11 +118,19 @@ export const CIVIL_REQ: Partial<Record<CivilPosition, PositionReq>> = {
 };
 
 export const LOCAL_REQ: Partial<Record<LocalPosition, PositionReq>> = {
+  [LocalPosition.COUNTY_MAGISTRATE]: {
+    politics: 40,
+    leadership: 30,
+    needsCity: true,
+    uniqueCity: true,
+  },
   [LocalPosition.INTENDANT]: { politics: 40, needsCity: true },
-  [LocalPosition.ADVISOR]: {
-    intelligence: 90,
-    meritLevel: 4,
-    uniqueFaction: true,
+  [LocalPosition.COMMANDERY_COMMANDANT]: {
+    leadership: 60,
+    war: 55,
+    meritLevel: 2,
+    needsCity: true,
+    uniqueCity: true,
   },
   [LocalPosition.PREFECT]: {
     leadership: 70,
@@ -100,12 +139,53 @@ export const LOCAL_REQ: Partial<Record<LocalPosition, PositionReq>> = {
     needsCity: true,
     uniqueCity: true,
   },
+  [LocalPosition.ADVISOR]: {
+    intelligence: 90,
+    meritLevel: 4,
+    uniqueFaction: true,
+  },
+  [LocalPosition.PROV_INSPECTOR]: {
+    leadership: 70,
+    politics: 75,
+    intelligence: 70,
+    meritLevel: 4,
+    needsCity: true,
+    uniqueProvince: true,
+  },
+  [LocalPosition.PROV_GOVERNOR]: {
+    leadership: 80,
+    politics: 80,
+    intelligence: 75,
+    meritLevel: 5,
+    needsCity: true,
+    uniqueProvince: true,
+  },
 };
 
 export const MILITARY_REQ: Partial<Record<MilitaryPosition, PositionReq>> = {
   [MilitaryPosition.CAPTAIN]: { leadership: 30, war: 30 },
+  [MilitaryPosition.MAJOR]: { leadership: 45, war: 45, meritLevel: 2 },
   [MilitaryPosition.COLONEL]: { leadership: 50, war: 50, meritLevel: 2 },
+  [MilitaryPosition.SUB_GENERAL]: { leadership: 60, war: 60, meritLevel: 3 },
   [MilitaryPosition.GENERAL]: { leadership: 70, war: 60, meritLevel: 3 },
+  [MilitaryPosition.QUAT_GENERAL]: {
+    leadership: 75,
+    war: 75,
+    meritLevel: 4,
+    uniqueFaction: true,
+  },
+  [MilitaryPosition.SENIOR_GENERAL]: {
+    leadership: 80,
+    war: 75,
+    meritLevel: 5,
+    uniqueFaction: true,
+  },
+  [MilitaryPosition.CHARIOT_CAVALRY_GENERAL]: {
+    leadership: 85,
+    war: 80,
+    meritLevel: 6,
+    uniqueFaction: true,
+  },
   [MilitaryPosition.GRAND_GENERAL]: {
     leadership: 85,
     war: 80,
@@ -183,6 +263,44 @@ export const KINGDOM_POSITIONS = [
   HegemonyPosition.KINGDOM_GENTLEMAN_STEWARD,
   HegemonyPosition.KINGDOM_AGRICULTURE_MINISTER,
   HegemonyPosition.KINGDOM_COACH_MINISTER,
+] as const;
+
+export const CIVIL_POSITIONS = [
+  CivilPosition.CLERK,
+  CivilPosition.GENTLEMAN,
+  CivilPosition.MAGISTRATE,
+  CivilPosition.PREFECT,
+  CivilPosition.SECRETARY_MINISTER,
+  CivilPosition.NINE_MINISTERS,
+  CivilPosition.CENSOR_CHIEF,
+  CivilPosition.SHANGSHU_CHIEF,
+  CivilPosition.GOVERNOR,
+  CivilPosition.CHANCELLOR,
+  CivilPosition.NONE,
+] as const;
+
+export const LOCAL_POSITIONS = [
+  LocalPosition.COUNTY_MAGISTRATE,
+  LocalPosition.INTENDANT,
+  LocalPosition.COMMANDERY_COMMANDANT,
+  LocalPosition.PREFECT,
+  LocalPosition.ADVISOR,
+  LocalPosition.PROV_INSPECTOR,
+  LocalPosition.PROV_GOVERNOR,
+  LocalPosition.NONE,
+] as const;
+
+export const MILITARY_POSITIONS = [
+  MilitaryPosition.CAPTAIN,
+  MilitaryPosition.MAJOR,
+  MilitaryPosition.COLONEL,
+  MilitaryPosition.SUB_GENERAL,
+  MilitaryPosition.GENERAL,
+  MilitaryPosition.QUAT_GENERAL,
+  MilitaryPosition.SENIOR_GENERAL,
+  MilitaryPosition.CHARIOT_CAVALRY_GENERAL,
+  MilitaryPosition.GRAND_GENERAL,
+  MilitaryPosition.NONE,
 ] as const;
 
 export function isKingdomPosition(position: string): position is HegemonyPosition {

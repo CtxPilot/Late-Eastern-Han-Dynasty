@@ -269,24 +269,38 @@ export enum EthnicGroup {
 export enum CivilPosition {
   NONE = 'none',
   CLERK = 'clerk',
+  GENTLEMAN = 'gentleman',
   MAGISTRATE = 'magistrate',
   PREFECT = 'prefect',
+  SECRETARY_MINISTER = 'secretaryMinister',
+  CENSOR_CHIEF = 'censorChief',
+  NINE_MINISTERS = 'nineMinisters',
+  SHANGSHU_CHIEF = 'shangshuChief',
   GOVERNOR = 'governor',
   CHANCELLOR = 'chancellor',
 }
 
 export enum LocalPosition {
   NONE = 'none',
-  ADVISOR = 'advisor',
+  COUNTY_MAGISTRATE = 'countyMagistrate',
   INTENDANT = 'intendant',
+  COMMANDERY_COMMANDANT = 'commandant',
   PREFECT = 'prefect',
+  ADVISOR = 'advisor',
+  PROV_INSPECTOR = 'provInspector',
+  PROV_GOVERNOR = 'provGovernor',
 }
 
 export enum MilitaryPosition {
   NONE = 'none',
   CAPTAIN = 'captain',
+  MAJOR = 'major',
   COLONEL = 'colonel',
+  SUB_GENERAL = 'subGeneral',
   GENERAL = 'general',
+  QUAT_GENERAL = 'quatGeneral',
+  SENIOR_GENERAL = 'seniorGeneral',
+  CHARIOT_CAVALRY_GENERAL = 'chariotCavalryGeneral',
   GRAND_GENERAL = 'grandGeneral',
 }
 

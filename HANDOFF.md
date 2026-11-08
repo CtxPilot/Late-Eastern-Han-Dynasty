@@ -9,14 +9,37 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 476**（190 年「群雄讨董」剧本 4 三十诸侯全割据开局全量落地：全 106 郡国城池 100% 完整覆盖，136 在世文武名臣，435 对完整外交矩阵；`verify-s476-scenario-190-thirty-warlords.ts` 51/51 项断言全绿，`verify-s461-0b-scenarios-balance` 6/6 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移；三大包构建全通） |
-| 阶段 | Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 476 `server/src/data/scenarios.json` 扩容更新，`scripts/gen-190-thirty-warlords.mjs`，`server/src/scripts/verify-s476-scenario-190-thirty-warlords.ts` 门禁 |
-| 文档最新 | **Session 476 双写**（`docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/53-scenario-190-warlords-expansion-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 476 已交付**；后续方向：Phase 7+ 朝廷官制与深度系统推进 |
-| 下一步 | ①推进 Phase 7+ 深度系统（朝廷官制、中央三省六曹与地方州牧都督统领体系、外交多方盟约与天下大势）；②依规持续推进全栈质量保障与全量门禁覆盖 |
+| 会话 | **Session 477**（Phase 7-01 朝廷官制深化与地方州牧刺史统领体系全栈落地：中央文官11级、地方官8级、武官10级全轨分立；一州唯一 `uniqueProvince` 同州互斥；都尉城防+20/驻军士气+2，太守士气+3，刺史全州士气+2/驻军+1，州牧全州士气+3/驻军+3，尚书令士气+2，车骑将军驻军士气+2；委任都督管辖权联动州牧10城/刺史6城/太守1城；全量官职岁首年俸对照表对接与24月全息推演闭环；`verify-s477-official-ranks.ts` 107/107 项断言全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移；三大包全仓构建全通） |
+| 阶段 | **Phase 7-01 朝廷官制与地方统领全量落地 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 477 `shared/enums/index.ts`、`shared/positions.ts`、`shared/fiscal.ts`、`shared/merit.ts`、`shared/delegation.ts`、`server/src/engine/appoint.ts`、`client/src/components/layout/AppointPanel.tsx`、`server/src/scripts/verify-s477-official-ranks.ts` 门禁 |
+| 文档最新 | **Session 477 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/54-court-official-rank-expansion-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 477 已交付**；后续方向：Phase 7-02 多方盟约/臣属朝贡/天下大势与外交深度系统 |
+| 下一步 | ①推进 Phase 7-02 深度外交（多方结盟公约、臣属朝贡体系、汉室朝廷天下大势天子诏命）；②依规持续推进全栈质量保障与全量门禁覆盖 |
 
-### Session 476 交接要点
+### Session 477 交接要点
+
+- **Phase 7-01 朝廷官制深化与地方州牧刺史统领体系全栈落地**：
+  1. **中央与地方三轨官职全量分立（`@leh/shared`）**：
+     - 中央文官轨（11级）：书吏 (20)、侍郎/议郎 (100)、县令 (60)、郡守 (180)、六曹尚书 (300)、御史中丞 (400, 势力唯一)、九卿 (400)、尚书令 (700, 势力唯一)、都督 (500, 势力唯一)、丞相 (800, 势力唯一)；
+     - 地方官制轨（8级）：县令 (60, 一城唯一)、从事 (20)、都尉 (100, 一城唯一)、太守 (180, 一城唯一)、军师 (20, 势力唯一)、刺史 (300, 一州唯一)、州牧 (500, 一州唯一)；
+     - 武官阶梯（10级）：军候 (20, Rank 1)、军司马 (40, Rank 1)、校尉 (60, Rank 2)、偏将军/裨将 (120, Rank 2)、将军 (180, Rank 3)、四征四镇 (250, Rank 3, 势力唯一)、四方将军 (350, Rank 4, 势力唯一)、车骑/骠骑/卫将军 (500, Rank 4, 势力唯一)、大将军 (500, Rank 4, 势力唯一)。
+  2. **一州唯一互斥（`uniqueProvince`）与即时增益引擎**：
+     - 刺史与州牧任命时根据任职城池与官员所在城池的 `province` 校验，同州互斥自动免除前任；
+     - 都尉即时城防 +20、驻军士气 +2；县令士气 +2；太守士气 +3；刺史全州士气 +2、驻军士气 +1；州牧全州士气 +3、驻军士气 +3；尚书令全国各城士气 +2；车骑将军全国各城驻军士气 +2。
+  3. **委任军团都督管辖权联动（`delegation.ts`）**：
+     - `governorCityCap`: 州牧上限 10 城、丞相/大将军 8 城、刺史/尚书令/车骑将军 6 城、太守 1 城；
+     - `governorPositionQualified`: 地方官轨刺史与州牧天然具备出任军团都督资格。
+  4. **全量接入 D-0B-9 岁首年俸统发体系（`fiscal.ts`）**：
+     - `OFFICER_SALARY_TABLE` 注册全阶梯官职，多官职自动取最高年俸（君主恒为 0）；
+     - 岁首 1 月足额统发或欠俸惩罚链 100% 覆盖所有在职官员，彻底杜绝孤立字段。
+  5. **全栈质量与门禁保障**：
+     - 专项门禁 `verify-s477-official-ranks` 107/107 项断言全绿；
+     - `verify-d0b9-fiscal-salary` 40/40 项全绿；
+     - `verify-s420-delegation-crud` 36/36 项全绿；
+     - `verify-merit` 25/25 项全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 105 个套件 712+ 项单测 100% 全绿；
+     - 全仓生产模式构建 `pnpm build` 0 错误通过。
 
 - **190 年群雄讨董三十诸侯全割据开局全量落地**：
   1. **十三州 106 郡国城池 100% 完整覆盖**：

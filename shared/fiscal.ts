@@ -42,14 +42,34 @@ export const TAX_POLICY_DESCRIPTIONS: Record<TaxPolicy, string> = {
 
 /** 官职年俸真源对照表（docs/04 §35.3，金/年）。君主为 0。 */
 export const OFFICER_SALARY_TABLE: Record<string, number> = {
+  // 宰辅与尚书台首脑
   [CivilPosition.CHANCELLOR]: 800,
+  [CivilPosition.SHANGSHU_CHIEF]: 700,
+  // 军政领袖与州牧都督
   [CivilPosition.GOVERNOR]: 500,
   [MilitaryPosition.GRAND_GENERAL]: 500,
+  [MilitaryPosition.CHARIOT_CAVALRY_GENERAL]: 500,
+  [LocalPosition.PROV_GOVERNOR]: 500,
   [LocalPosition.INTENDANT]: 500,
+  // 宪台、九卿与方镇
+  [CivilPosition.CENSOR_CHIEF]: 400,
+  [CivilPosition.NINE_MINISTERS]: 400,
+  [MilitaryPosition.SENIOR_GENERAL]: 350,
+  [CivilPosition.SECRETARY_MINISTER]: 300,
+  [LocalPosition.PROV_INSPECTOR]: 300,
+  [MilitaryPosition.QUAT_GENERAL]: 250,
+  // 二千石郡守大将与太守
   [CivilPosition.PREFECT]: 180,
   [MilitaryPosition.GENERAL]: 180,
+  [MilitaryPosition.SUB_GENERAL]: 120,
+  // 郡佐与校尉都尉
+  [CivilPosition.GENTLEMAN]: 100,
+  [LocalPosition.COMMANDERY_COMMANDANT]: 100,
   [CivilPosition.MAGISTRATE]: 60,
+  [LocalPosition.COUNTY_MAGISTRATE]: 60,
   [MilitaryPosition.COLONEL]: 60,
+  // 基层将吏
+  [MilitaryPosition.MAJOR]: 40,
   [CivilPosition.CLERK]: 20,
   [MilitaryPosition.CAPTAIN]: 20,
   [LocalPosition.ADVISOR]: 20,

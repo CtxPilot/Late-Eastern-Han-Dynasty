@@ -67,31 +67,43 @@ function isValidPosition(track: PositionTrack, position: string): boolean {
 }
 
 function clearExclusive(
+  state: GameState,
   officers: GameState['officers'],
   factionId: number,
   track: PositionTrack,
   position: string,
   cityId: number | undefined,
   exceptOfficerId: number,
+  req: PositionReq | null,
 ): GameState['officers'] {
   const next = { ...officers };
+  const targetCity = cityId != null ? state.cities[cityId] : undefined;
   for (const o of Object.values(officers)) {
     if (o.id === exceptOfficerId) continue;
     if (o.faction !== factionId) continue;
     if (o.status !== OfficerStatus.ACTIVE) continue;
 
     if (track === 'civil' && o.civilPosition === position) {
-      next[o.id] = { ...o, civilPosition: CivilPosition.NONE };
+      if (req?.uniqueFaction) {
+        next[o.id] = { ...o, civilPosition: CivilPosition.NONE };
+      }
     } else if (track === 'military' && o.militaryPosition === position) {
-      next[o.id] = { ...o, militaryPosition: MilitaryPosition.NONE };
+      if (req?.uniqueFaction) {
+        next[o.id] = { ...o, militaryPosition: MilitaryPosition.NONE };
+      }
     } else if (track === 'hegemony' && o.hegemonyPosition === position) {
       next[o.id] = { ...o, hegemonyPosition: HegemonyPosition.NONE };
     } else if (track === 'local' && o.localPosition === position) {
-      if (position === LocalPosition.PREFECT) {
+      if (req?.uniqueCity) {
         if (cityId != null && o.location === cityId) {
           next[o.id] = { ...o, localPosition: LocalPosition.NONE };
         }
-      } else {
+      } else if (req?.uniqueProvince) {
+        const officerCity = o.location != null ? state.cities[o.location] : undefined;
+        if (targetCity && officerCity && targetCity.province === officerCity.province) {
+          next[o.id] = { ...o, localPosition: LocalPosition.NONE };
+        }
+      } else if (req?.uniqueFaction) {
         next[o.id] = { ...o, localPosition: LocalPosition.NONE };
       }
     }
@@ -169,14 +181,16 @@ export function appointOfficer(
   let officers = { ...state.officers };
 
   if (!isDismiss && req) {
-    if (req.uniqueFaction || req.uniqueCity) {
+    if (req.uniqueFaction || req.uniqueCity || req.uniqueProvince) {
       officers = clearExclusive(
+        state,
         officers,
         state.playerFactionId,
         track,
         position,
         cityId,
         officerId,
+        req,
       );
     }
   }
@@ -222,34 +236,129 @@ export function appointOfficer(
   updated = syncMerit(updated);
   officers[officerId] = updated;
 
-  // Demo 效果：太守 → 城士气 +3；大将军 → 己方各城士气 +1
+  // 官职即时效果与民心/士气/城防增益
   let cities = state.cities;
-  if (!isDismiss && track === 'local' && position === LocalPosition.PREFECT && cityId != null) {
-    const c = cities[cityId];
-    if (c) {
-      cities = {
-        ...cities,
-        [cityId]: {
-          ...c,
-          stats: {
-            ...c.stats,
-            morale: Math.min(100, c.stats.morale + 3),
-          },
-        },
-      };
-    }
-  }
-  if (!isDismiss && track === 'military' && position === MilitaryPosition.GRAND_GENERAL) {
-    cities = { ...cities };
-    for (const c of Object.values(cities)) {
-      if (c.ruler === state.playerFactionId) {
-        cities[c.id] = {
-          ...c,
-          stats: {
-            ...c.stats,
-            morale: Math.min(100, c.stats.morale + 1),
-          },
-        };
+  if (!isDismiss) {
+    if (track === 'local' && cityId != null) {
+      const c = cities[cityId];
+      if (c) {
+        if (position === LocalPosition.PREFECT) {
+          // 太守 → 任命城士气 +3
+          cities = {
+            ...cities,
+            [cityId]: {
+              ...c,
+              stats: {
+                ...c.stats,
+                morale: Math.min(100, c.stats.morale + 3),
+              },
+            },
+          };
+        } else if (position === LocalPosition.COMMANDERY_COMMANDANT) {
+          // 都尉 → 任命城城墙 +20，驻军士气 +2
+          cities = {
+            ...cities,
+            [cityId]: {
+              ...c,
+              troopsMorale: Math.min(100, c.troopsMorale + 2),
+              stats: {
+                ...c.stats,
+                wall: Math.min(999, c.stats.wall + 20),
+              },
+            },
+          };
+        } else if (position === LocalPosition.COUNTY_MAGISTRATE) {
+          // 县令 → 任命城士气 +2
+          cities = {
+            ...cities,
+            [cityId]: {
+              ...c,
+              stats: {
+                ...c.stats,
+                morale: Math.min(100, c.stats.morale + 2),
+              },
+            },
+          };
+        } else if (position === LocalPosition.PROV_INSPECTOR) {
+          // 刺史 → 所在州己方全城士气 +2，驻军士气 +1
+          const targetProv = c.province;
+          cities = { ...cities };
+          for (const item of Object.values(cities)) {
+            if (item.ruler === state.playerFactionId && item.province === targetProv) {
+              cities[item.id] = {
+                ...item,
+                troopsMorale: Math.min(100, item.troopsMorale + 1),
+                stats: {
+                  ...item.stats,
+                  morale: Math.min(100, item.stats.morale + 2),
+                },
+              };
+            }
+          }
+        } else if (position === LocalPosition.PROV_GOVERNOR) {
+          // 州牧 → 所在州己方全城士气 +3，驻军士气 +3
+          const targetProv = c.province;
+          cities = { ...cities };
+          for (const item of Object.values(cities)) {
+            if (item.ruler === state.playerFactionId && item.province === targetProv) {
+              cities[item.id] = {
+                ...item,
+                troopsMorale: Math.min(100, item.troopsMorale + 3),
+                stats: {
+                  ...item.stats,
+                  morale: Math.min(100, item.stats.morale + 3),
+                },
+              };
+            }
+          }
+        }
+      }
+    } else if (track === 'military') {
+      if (position === MilitaryPosition.GRAND_GENERAL) {
+        // 大将军 → 己方各城士气 +1
+        cities = { ...cities };
+        for (const item of Object.values(cities)) {
+          if (item.ruler === state.playerFactionId) {
+            cities[item.id] = {
+              ...item,
+              stats: {
+                ...item.stats,
+                morale: Math.min(100, item.stats.morale + 1),
+              },
+            };
+          }
+        }
+      } else if (position === MilitaryPosition.CHARIOT_CAVALRY_GENERAL) {
+        // 车骑/骠骑/卫将军 → 己方各城驻军士气 +2
+        cities = { ...cities };
+        for (const item of Object.values(cities)) {
+          if (item.ruler === state.playerFactionId) {
+            cities[item.id] = {
+              ...item,
+              troopsMorale: Math.min(100, item.troopsMorale + 2),
+              stats: {
+                ...item.stats,
+                morale: Math.min(100, item.stats.morale + 2),
+              },
+            };
+          }
+        }
+      }
+    } else if (track === 'civil') {
+      if (position === CivilPosition.SHANGSHU_CHIEF) {
+        // 尚书令 → 全国各城士气 +2
+        cities = { ...cities };
+        for (const item of Object.values(cities)) {
+          if (item.ruler === state.playerFactionId) {
+            cities[item.id] = {
+              ...item,
+              stats: {
+                ...item.stats,
+                morale: Math.min(100, item.stats.morale + 2),
+              },
+            };
+          }
+        }
       }
     }
   }

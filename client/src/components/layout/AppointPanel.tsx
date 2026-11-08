@@ -18,6 +18,9 @@ import {
   CIVIL_REQ,
   LOCAL_REQ,
   MILITARY_REQ,
+  CIVIL_POSITIONS,
+  LOCAL_POSITIONS,
+  MILITARY_POSITIONS,
   formatReq,
   meetsPositionReq,
   meritLevelFor,
@@ -27,27 +30,9 @@ import {
 import { useGameStore } from '../../stores/gameStore';
 import { CommandConfirmDialog } from '../ui/CommandConfirmDialog';
 
-const CIVIL_OPTS = [
-  CivilPosition.CLERK,
-  CivilPosition.MAGISTRATE,
-  CivilPosition.PREFECT,
-  CivilPosition.GOVERNOR,
-  CivilPosition.CHANCELLOR,
-  CivilPosition.NONE,
-];
-const LOCAL_OPTS = [
-  LocalPosition.INTENDANT,
-  LocalPosition.ADVISOR,
-  LocalPosition.PREFECT,
-  LocalPosition.NONE,
-];
-const MIL_OPTS = [
-  MilitaryPosition.CAPTAIN,
-  MilitaryPosition.COLONEL,
-  MilitaryPosition.GENERAL,
-  MilitaryPosition.GRAND_GENERAL,
-  MilitaryPosition.NONE,
-];
+const CIVIL_OPTS = [...CIVIL_POSITIONS];
+const LOCAL_OPTS = [...LOCAL_POSITIONS];
+const MIL_OPTS = [...MILITARY_POSITIONS];
 const HEG_OPTS = [
   HegemonyPosition.GRAND_COMMANDER,
   HegemonyPosition.REGENT_SECRETARY,
@@ -273,7 +258,9 @@ export function AppointPanel({
       {needsCity && (
         <div className="text-xs text-stone-500 px-0.5">
           目标城：
-          {cityId != null ? game.cities[cityId]?.name : '—'}
+          {cityId != null
+            ? `${game.cities[cityId]?.name ?? ''}${game.cities[cityId]?.province ? `（${game.cities[cityId]?.province}）` : ''}`
+            : '—'}
           （地图点选己方城）
           {officer && cityId != null && officer.location !== cityId && (
             <span className="text-rose-400/90"> · 武将须在该城</span>

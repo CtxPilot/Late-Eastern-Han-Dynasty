@@ -9,6 +9,7 @@
 import {
   CivilPosition,
   DelegationPolicy,
+  LocalPosition,
   MilitaryPosition,
   NobilityRank,
 } from './enums/index.js';
@@ -49,28 +50,60 @@ export function maxDelegationRegions(rulerRank: string, ownCityCount: number): n
   return base + Math.floor(ownCityCount / 5);
 }
 
-/** D2（docs/42 §39.3）：文/武两轨官职各自可管辖的城数上限，取高者。 */
-export function governorCityCap(civilPosition: string, militaryPosition: string): number {
+/** D2（docs/42 §39.3）：中央文武与地方官职各自可管辖的城数上限，取最高者。 */
+export function governorCityCap(
+  civilPosition: string,
+  militaryPosition: string,
+  localPosition?: string,
+): number {
   const civilCap =
     civilPosition === CivilPosition.CHANCELLOR
       ? 8
-      : civilPosition === CivilPosition.GOVERNOR
-        ? 4
-        : civilPosition === CivilPosition.PREFECT
-          ? 1
-          : 0;
+      : civilPosition === CivilPosition.SHANGSHU_CHIEF
+        ? 6
+        : civilPosition === CivilPosition.GOVERNOR
+          ? 4
+          : civilPosition === CivilPosition.NINE_MINISTERS
+            ? 3
+            : civilPosition === CivilPosition.SECRETARY_MINISTER
+              ? 2
+              : civilPosition === CivilPosition.PREFECT
+                ? 1
+                : 0;
   const militaryCap =
     militaryPosition === MilitaryPosition.GRAND_GENERAL
       ? 6
-      : militaryPosition === MilitaryPosition.GENERAL
-        ? 4
-        : 0;
-  return Math.max(civilCap, militaryCap);
+      : militaryPosition === MilitaryPosition.CHARIOT_CAVALRY_GENERAL
+        ? 6
+        : militaryPosition === MilitaryPosition.SENIOR_GENERAL
+          ? 5
+          : militaryPosition === MilitaryPosition.QUAT_GENERAL
+            ? 4
+            : militaryPosition === MilitaryPosition.GENERAL
+              ? 4
+              : militaryPosition === MilitaryPosition.SUB_GENERAL
+                ? 2
+                : 0;
+  const localCap =
+    localPosition === LocalPosition.PROV_GOVERNOR
+      ? 10
+      : localPosition === LocalPosition.PROV_INSPECTOR
+        ? 6
+        : localPosition === LocalPosition.PREFECT
+          ? 1
+          : 0;
+  return Math.max(civilCap, militaryCap, localCap);
 }
 
-/** D2：官职是否足以出任都督（prefect 或 general 及以上）。 */
-export function governorPositionQualified(officer: Pick<Officer, 'civilPosition' | 'militaryPosition'>): boolean {
-  return governorCityCap(String(officer.civilPosition), String(officer.militaryPosition)) >= 1;
+/** D2：官职是否足以出任都督（太守、州牧、刺史、校尉以上或将军）。 */
+export function governorPositionQualified(
+  officer: Pick<Officer, 'civilPosition' | 'militaryPosition'> & { localPosition?: LocalPosition },
+): boolean {
+  return governorCityCap(
+    String(officer.civilPosition),
+    String(officer.militaryPosition),
+    officer.localPosition != null ? String(officer.localPosition) : undefined,
+  ) >= 1;
 }
 
 /** D4：委任效率 = 0.6 + 统/1000 + 政/1000 + 方针系数（docs/04 §39.5）。 */

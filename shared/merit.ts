@@ -248,14 +248,24 @@ export function meritEffects(level: number, path: MeritPath = 'neutral'): MeritE
   };
 }
 
-/** 武官等级 rank（0-A 四级简化：军候 1 / 校尉 2 / 将军 3 / 大将军 4，无=0） */
+/** 武官等级 rank（军候/司马 1 / 校尉/裨将 2 / 将军/征镇 3 / 四方/车骑/大将军 4，无=0） */
 export function militaryPositionRank(position: MilitaryPosition): number {
   switch (position) {
-    case MilitaryPosition.CAPTAIN: return 1;
-    case MilitaryPosition.COLONEL: return 2;
-    case MilitaryPosition.GENERAL: return 3;
-    case MilitaryPosition.GRAND_GENERAL: return 4;
-    default: return 0;
+    case MilitaryPosition.CAPTAIN:
+    case MilitaryPosition.MAJOR:
+      return 1;
+    case MilitaryPosition.COLONEL:
+    case MilitaryPosition.SUB_GENERAL:
+      return 2;
+    case MilitaryPosition.GENERAL:
+    case MilitaryPosition.QUAT_GENERAL:
+      return 3;
+    case MilitaryPosition.SENIOR_GENERAL:
+    case MilitaryPosition.CHARIOT_CAVALRY_GENERAL:
+    case MilitaryPosition.GRAND_GENERAL:
+      return 4;
+    default:
+      return 0;
   }
 }
 

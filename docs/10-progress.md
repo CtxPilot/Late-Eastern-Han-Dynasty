@@ -1,3 +1,37 @@
+## 2026-11-08 — Session 477 · 朝廷官制深化与地方州牧刺史统领体系全栈落地（Phase 7-01）
+
+- Phase：**Phase 7-01 政治体制与朝廷官制深度拓展 / 地方州牧刺史统领体系**；正式落地立项提案 `docs/54-court-official-rank-expansion-proposal.md`，全面打破 0-A 简陋官职模型，将中央文官（11 级）、地方官（8 级）、武官阶梯（10 级）全量深化实装，实现东汉十三州州牧刺史统领、一州唯一互斥（`uniqueProvince`）、地方官即时增益、委任军团都督管辖权联动与百官岁首年俸统发全栈闭环！新增专属门禁 `verify-s477-official-ranks` 107/107 项断言全绿，全仓生产构建 0 错误通过！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §九与 §3.4、`docs/08-data-dictionary.md`，此前官职仅保留 Demo 阶段简陋子集，缺失东汉刘焉首倡并重塑天下格局的「州牧」与「刺史」，缺失都尉、县令，中央缺少尚书令、六曹尚书、御史中丞、九卿，武官缺少军司马、偏将、四征四镇、四方将军、车骑将军等经典阶梯；
+  2. 地方官轨严重缺乏地域统属约束：刺史州牧应当一州唯一（`uniqueProvince`），且同州异城新任自动免除前任；
+  3. 官职必须与委任军团都督管辖权限（`governorCityCap`）深度挂钩（州牧10城、刺史6城、太守1城等）；
+  4. 官职年俸必须 100% 接入 Session 475 的 D-0B-9 岁首年俸统发体系（`OFFICER_SALARY_TABLE`），彻底消灭孤立字段；
+  5. 保持向下兼容与 `turn-golden.test.ts` 3/3 严格匹配零 RNG 漂移。
+- **实装与验证内容**：
+  1. **数据模型与枚举扩展（`@leh/shared`）**：
+     - `CivilPosition`: 新增 `GENTLEMAN = 'gentleman'`, `SECRETARY_MINISTER = 'secretaryMinister'`, `CENSOR_CHIEF = 'censorChief'`, `NINE_MINISTERS = 'nineMinisters'`, `SHANGSHU_CHIEF = 'shangshuChief'`；
+     - `LocalPosition`: 新增 `COUNTY_MAGISTRATE = 'countyMagistrate'`, `COMMANDERY_COMMANDANT = 'commandant'`, `PROV_INSPECTOR = 'provInspector'`, `PROV_GOVERNOR = 'provGovernor'`；
+     - `MilitaryPosition`: 新增 `MAJOR = 'major'`, `SUB_GENERAL = 'subGeneral'`, `QUAT_GENERAL = 'quatGeneral'`, `SENIOR_GENERAL = 'seniorGeneral'`, `CHARIOT_CAVALRY_GENERAL = 'chariotCavalryGeneral'`；
+     - `shared/positions.ts`: 更新全部 Label 与任命门槛，支持 `uniqueProvince?: boolean`；
+     - `shared/fiscal.ts`: `OFFICER_SALARY_TABLE` 注册全量官职岁首年俸对照（丞相 800、尚书令 700、都督/大将军/州牧/车骑 500、御史中丞/九卿 400、刺史/六曹尚书 300、太守/将军 180、都尉 100 等）；
+     - `shared/merit.ts`: 武官 Rank 1~4 映射，严格对应出征带兵上限（+500 ~ +2000）；
+     - `shared/delegation.ts`: `governorCityCap` 州牧 10 城、刺史 6 城、太守 1 城联动。
+  2. **引擎层任命与互斥管线（`server/src/engine/appoint.ts`）**：
+     - `clearExclusive`: 支持 `uniqueProvince`（检查目标城与武将驻地城池的 `province` 是否相同，同州自动解职前任）；
+     - 即时属性效果：都尉任命城墙+20/驻军士气+2，县令士气+2，太守士气+3，刺史全州士气+2/驻军士气+1，州牧全州士气+3/驻军士气+3，尚书令各城士气+2，车骑将军各城驻军士气+2。
+  3. **前端交互与展示适配（`client/src/components/layout/AppointPanel.tsx`）**：
+     - 消费全量三轨官职常量，任职城池下拉展示所在州名称（如 `目标城：南皮（冀州）`）。
+  4. **门禁与全息月结回归（`server/src/scripts/verify-s477-official-ranks.ts`）**：
+     - 涵盖枚举契约、年俸对照表、武官带兵 Rank、委任权限、190 剧本属性/功绩拦截、一州唯一互斥、即时效果与 24 个月全息推演，全部 107 项断言 100% 一次性通过；
+     - `verify-d0b9-fiscal-salary` 40/40 项全绿；
+     - `verify-s420-delegation-crud` 36/36 项全绿；
+     - `verify-merit` 25/25 项全绿；
+     - `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 105 个套件 712+ 项单测全绿，全仓 `pnpm build` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-01 朝廷官制深化与地方州牧刺史统领体系 [x] 全量达成**。
+- **文档**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/54-court-official-rank-expansion-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 476 · 190 年群雄讨董全割据开局（三十诸侯全割据）全量落地（东汉十三州 106 郡国 100% 全覆盖）
 
 - Phase：**Phase 0-B 剧本全割据深度扩容 / 宏观战略全域点亮**；正式落地立项提案 `docs/53-scenario-190-warlords-expansion-proposal.md`，将剧本 4（群雄讨董）全量扩容升级为涵盖东汉十三州、三十大独立历史割据势力的全景式群雄剧本！东汉十三州 106 郡国城池 100% 完整覆盖（0 孤立、0 冲突重叠），部署 136 名时代成年名臣武将，生成 435 对完整外交矩阵（反董联盟 16 诸侯互盟且对董卓全战），新增专属门禁 `verify-s476-scenario-190-thirty-warlords` 51/51 项断言全绿，全仓生产构建通过！

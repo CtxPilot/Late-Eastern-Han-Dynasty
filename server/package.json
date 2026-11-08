@@ -123,7 +123,8 @@
     "verify-s458-traits-and-ceiling": "tsx src/scripts/verify-s458-traits-and-ceiling.ts",
     "verify-s459-water-ambush-tactics": "tsx src/scripts/verify-s459-water-ambush-tactics.ts",
     "verify-d0b9-fiscal-salary": "tsx src/scripts/verify-d0b9-fiscal-salary.ts",
-    "verify-s476-scenario-190-thirty-warlords": "tsx src/scripts/verify-s476-scenario-190-thirty-warlords.ts"
+    "verify-s476-scenario-190-thirty-warlords": "tsx src/scripts/verify-s476-scenario-190-thirty-warlords.ts",
+    "verify-s477-official-ranks": "tsx src/scripts/verify-s477-official-ranks.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",
