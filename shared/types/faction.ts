@@ -103,4 +103,8 @@ export interface Faction {
   techLevels?: TechLevels;
   /** S03 正在进行的技艺研发项目（单例）。旧档缺失表示无研发。 */
   activeResearch?: ActiveResearch | null;
+  /** S35 货币成色（0.50~1.00）：魏 1.00，蜀 0.70，吴 0.50，群雄 0.80~1.00，默认 1.00 */
+  coinQuality?: number;
+  /** S35 累计欠俸季数；每季首月检定忠诚惩罚，足额发放年俸后归零 */
+  salaryArrears?: number;
 }

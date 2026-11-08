@@ -238,6 +238,9 @@ export const CityRuntimeSchema: z.ZodType<City> = z
       .strict()
       .nullable()
       .optional(),
+    taxPolicy: z.enum(['light', 'standard', 'heavy', 'martial']).optional(),
+    taxRate: z.number().min(0.1).max(0.9).optional(),
+    appeasedMagnate: z.boolean().optional(),
   })
   .strict()
   .superRefine((city, ctx) => {
@@ -352,6 +355,8 @@ export const FactionRuntimeSchema: z.ZodType<Faction> = z
       .strict()
       .nullable()
       .optional(),
+    coinQuality: z.number().min(0.5).max(1.0).optional(),
+    salaryArrears: z.number().int().nonnegative().optional(),
   })
   .strict();
 

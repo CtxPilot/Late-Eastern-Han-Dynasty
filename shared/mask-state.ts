@@ -87,6 +87,9 @@ function maskCity(state: GameState, city: City, vis: CityVisibility): City {
   if (vis.kind === 'scouted' && vis.intelDepth === 'detailed') {
     return {
       ...city,
+      taxPolicy: undefined,
+      taxRate: undefined,
+      appeasedMagnate: undefined,
       gold: round100(city.gold),
       food: round100(city.food),
       population: round100(city.population),
@@ -157,6 +160,7 @@ function maskFaction(f: Faction, playerId: number, alliedIds: Set<number>): Fact
       food: 0,
       courtNetwork: 0,
       officerIds: [],
+      salaryArrears: 0,
     };
   }
   return {
@@ -165,6 +169,7 @@ function maskFaction(f: Faction, playerId: number, alliedIds: Set<number>): Fact
     food: 0,
     courtNetwork: 0,
     officerIds: [],
+    salaryArrears: 0,
     capitalCityId: f.capitalCityId,
   };
 }

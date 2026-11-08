@@ -213,6 +213,31 @@ export async function resolveFamilyTreatment(mode: FamilyTreatmentMode): Promise
   return data;
 }
 
+export async function setCityTaxPolicy(cityId: number, policy: import('@leh/shared').TaxPolicy, customRate?: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/tax-policy', { cityId, policy, customRate });
+  return data;
+}
+
+export async function appeaseMagnates(cityId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/appease-magnates', { cityId });
+  return data;
+}
+
+export async function inspectCensus(cityId: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/inspect-census', { cityId });
+  return data;
+}
+
+export async function reformCoinage(factionId?: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/reform-coinage', { factionId });
+  return data;
+}
+
+export async function debaseCoinage(factionId?: number): Promise<GameState> {
+  const { data } = await http.post<GameState>('/civil/debase-coinage', { factionId });
+  return data;
+}
+
 export async function setNationalPolicy(type: string, targetCityId?: number): Promise<GameState> {
   const { data } = await http.post<GameState>('/policy/set', { type, targetCityId });
   return data;

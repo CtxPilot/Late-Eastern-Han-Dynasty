@@ -137,6 +137,21 @@ export function relocateGarrisonFamilies(fromCityId: number, toCityId: number): 
 export function resolveFamilyTreatment(mode: FamilyTreatmentMode): Promise<GameState> {
   return call('resolveFamilyTreatment', [mode]);
 }
+export function setCityTaxPolicy(cityId: number, policy: import('@leh/shared').TaxPolicy, customRate?: number): Promise<GameState> {
+  return call('setCityTaxPolicy', [cityId, policy, customRate]);
+}
+export function appeaseMagnates(cityId: number): Promise<GameState> {
+  return call('appeaseMagnates', [cityId]);
+}
+export function inspectCensus(cityId: number): Promise<GameState> {
+  return call('inspectCensus', [cityId]);
+}
+export function reformCoinage(factionId?: number): Promise<GameState> {
+  return call('reformCoinage', [factionId]);
+}
+export function debaseCoinage(factionId?: number): Promise<GameState> {
+  return call('debaseCoinage', [factionId]);
+}
 export function createDelegationRegion(input: {
   name?: string;
   cityIds: number[];

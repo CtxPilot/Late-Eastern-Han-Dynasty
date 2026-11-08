@@ -35,6 +35,14 @@ import {
   type DevelopKind,
 } from '../engine/civil.js';
 import { buyArms, patrolCity, reclaimLand, resolveImpeachment } from '../engine/factionPolitics.js';
+import {
+  setCityTaxPolicy,
+  appeaseMagnates,
+  inspectCensus,
+  reformCoinage,
+  debaseCoinage,
+} from '../engine/fiscal.js';
+import { type TaxPolicy } from '@leh/shared';
 import { resolveFamilyTreatment } from '../engine/hostageFamilies.js';
 import {
   assignDelegationCity,
@@ -351,6 +359,43 @@ export function doSetMilitaryFarming(cityId: number, enabled: boolean): GameStat
 export function doRelocateGarrisonFamilies(fromCityId: number, toCityId: number): GameState {
   return withLock(() => {
     currentGame = relocateGarrisonFamilies(getGame(), fromCityId, toCityId);
+    return getClientGame();
+  });
+}
+
+export function doSetCityTaxPolicy(cityId: number, policy: TaxPolicy, customRate?: number): GameState {
+  return withLock(() => {
+    currentGame = setCityTaxPolicy(getGame(), cityId, policy, customRate);
+    return getClientGame();
+  });
+}
+
+export function doAppeaseMagnates(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = appeaseMagnates(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doInspectCensus(cityId: number): GameState {
+  return withLock(() => {
+    currentGame = inspectCensus(getGame(), cityId);
+    return getClientGame();
+  });
+}
+
+export function doReformCoinage(factionId?: number): GameState {
+  return withLock(() => {
+    const fid = factionId ?? getGame().playerFactionId;
+    currentGame = reformCoinage(getGame(), fid);
+    return getClientGame();
+  });
+}
+
+export function doDebaseCoinage(factionId?: number): GameState {
+  return withLock(() => {
+    const fid = factionId ?? getGame().playerFactionId;
+    currentGame = debaseCoinage(getGame(), fid);
     return getClientGame();
   });
 }

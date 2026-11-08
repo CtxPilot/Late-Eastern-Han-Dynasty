@@ -238,6 +238,56 @@ gameRouter.post('/civil/family-treatment', (req, res) => {
   }
 });
 
+gameRouter.post('/civil/tax-policy', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    const policy = String(req.body.policy) as import('@leh/shared').TaxPolicy;
+    const customRate = req.body.customRate != null ? Number(req.body.customRate) : undefined;
+    if (!Number.isInteger(cityId)) throw new Error('无效城池');
+    res.json(gameService.doSetCityTaxPolicy(cityId, policy, customRate));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'tax policy failed' });
+  }
+});
+
+gameRouter.post('/civil/appease-magnates', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    if (!Number.isInteger(cityId)) throw new Error('无效城池');
+    res.json(gameService.doAppeaseMagnates(cityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'appease magnates failed' });
+  }
+});
+
+gameRouter.post('/civil/inspect-census', (req, res) => {
+  try {
+    const cityId = Number(req.body.cityId);
+    if (!Number.isInteger(cityId)) throw new Error('无效城池');
+    res.json(gameService.doInspectCensus(cityId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'inspect census failed' });
+  }
+});
+
+gameRouter.post('/civil/reform-coinage', (req, res) => {
+  try {
+    const factionId = req.body.factionId != null ? Number(req.body.factionId) : undefined;
+    res.json(gameService.doReformCoinage(factionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'reform coinage failed' });
+  }
+});
+
+gameRouter.post('/civil/debase-coinage', (req, res) => {
+  try {
+    const factionId = req.body.factionId != null ? Number(req.body.factionId) : undefined;
+    res.json(gameService.doDebaseCoinage(factionId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'debase coinage failed' });
+  }
+});
+
 // ====== 委任军团（docs/04 §39 + docs/42） ======
 
 gameRouter.post('/delegation/create', (req, res) => {

@@ -385,17 +385,17 @@
 
 | ID | 债务 | 触发时机 |
 |:--:|------|------|
-| D-0B-1 | Zustand store 拆 slice（cities/officers/factions/intel 独立）+ 局部 patch + 细粒度 selector | 0-B 扩容前 |
-| D-0B-2 | LOD 拖拽冻结（debounce / 拖拽中复用上一次 layout） | 0-B 扩容前 |
+| D-0B-1 | **Session 416/418 已清**：随 P2-4 差分补丁通道与 `game-patch.ts` + `patchOnly` v2 COW 合并落地，全局深拷贝性能隐患彻底解除。 | 0-B 扩容前 |
+| D-0B-2 | **Session 379/380 已清**：`MapCanvas` 连续大地图退役，改用层级战略卡片拓扑 `StrategicWorldView`（天下总览/各州卡片），天然消解拖拽重排与连续 LOD 性能瓶颈。 | 0-B 扩容前 |
 | D-0B-3 | TopBar/RightPanel/LeftPanel 内联遍历加 useMemo。**Session 457：TopBar/LeftPanel 已加 useMemo** | 0-B 扩容前 |
 | D-0B-4 | viewport culling（屏外城点不画） | 500+ 城时 |
 | D-0B-5 | 矢量州界 path + LOD 简化（strategic 粗 / local 细） | 0-B 引入州界时 |
 | D-0B-6 | screen 状态机栈式管理 + 切入切出动画时序。**Session 470~472 已清**：`shared/scenes.ts` 六态栈（boot/world/campaign/tactical/melee/duel）+ `pushSceneFrame`/`popSceneFrame`/`meleeExit` 场景栈状态机 + 切入切出平滑过渡时序 | 0-B 扩容前 |
-| D-0B-7 | officers.json appearance 字段 0-B 全量武将填写 + uniqueSkill 落库后从 uniqueSkill 派生 auraColor | 0-B 扩容前 |
-| D-0B-8 | 吕布服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血） | S10 战斗深化时 |
-| D-0B-9 | §35 财政税收俸禄数据模型扩展（Faction 加 coinQuality/salaryArrears，City 加 taxRate，turn.ts 改产金公式，新建俸禄引擎） | 独立 Session |
+| D-0B-7 | officers.json appearance 字段 0-B 全量武将填写 + uniqueSkill 落库后从 uniqueSkill 派生 auraColor。**Session 409 已清**：批次③ avatarGene 落库+消解表+三层头像重建 | 0-B 扩容前 |
+| D-0B-8 | 吕布服务端无双乱舞范围攻击 + 心理震慑 debuff + 鬼神数值效果（防御翻倍+吸血）。**Session 455 已清**：`shared/peerless.ts` + `attackUnit`/`runSimpleEnemyAi` 双路径，`verify-s455-peerless-ghost` 20/20 | S10 战斗深化时 |
+| D-0B-9 | **Session 475 已清**：§35 财政税收俸禄数据模型扩展与引擎全栈落地（`shared/fiscal.ts` 纯函数解析器 + `server/src/engine/fiscal.ts` 五大引擎方法与岁首季首月结 + 四档税收/货币成色/豪强隐匿/百官年俸/欠俸惩罚链 + 5端点/Worker对齐 + 门禁 `verify-d0b9-fiscal-salary` 40/40 全绿） | 独立 Session |
 | D-0B-10 | PCG 水墨底图若 0-B 要替换 geo-basemap.png，需重做 MapCanvas 底图层 + 算法参数调优 | 0-B 视觉升级时（可选） |
-| D-0B-11 | BattleState.activeStrategem 字段 + 服务端火计引擎设置该字段 | S20/S21 实装时 |
+| D-0B-11 | BattleState.activeStrategem 字段 + 服务端火计引擎设置该字段。**Session 456 已清**：`BattleState.activeStrategem?` + 火计成功写 `'fire'` + HUD `battle-strategem` | S20/S21 实装时 |
 | D-0B-12 | 水攻/伏兵战术计谋服务端引擎与全栈实装（castWaterTactic/castAmbushTactic、气力/天气/地貌/特性修正、减速与混乱状态、端点/Worker对齐、BattleView按钮） — **Session 459 完成** | S10/S17 |
 | D-0B-13 | ✅ Session 102 已实装：字体白名单升级为"工程资产闭环"——`@font-face` 工程内部别名 `HanDynastySerif`/`HanDynastySeal`（思源宋体 SC + 马善政体，均 SIL OFL 1.1）+ woff2 本地打包 + FontBarrier + .editorconfig/.gitattributes/CI 编码门禁。**剩余 P5-07a~e**：HiDPI / XDG 存档 / 伪 Terminal 战报 / 金石组件库 / 字重扩展 | P5-07 剩余 UI 适配 |
 

@@ -35,6 +35,7 @@ import {
   type Faction,
   type Officer,
   type ScenarioStatic,
+  getFactionCoinQuality,
 } from '@leh/shared';
 import { staticData } from '../data/loader.js';
 import { advanceTurn, tickBattlefieldInstance } from './turn.js';
@@ -113,6 +114,9 @@ export function buildGameState(
       ruler,
       facilities: c.facilities ?? [],
       policy: c.policy ?? null,
+      taxPolicy: 'standard',
+      taxRate: 0.30,
+      appeasedMagnate: false,
       developmentProgress: c.developmentProgress ?? { farm: 0, commerce: 0, wall: 0 },
       cityFactions: deriveCityFactions(c.id),
     };
@@ -148,6 +152,13 @@ export function buildGameState(
       isAlive: true,
       fame: 100,
       politicalStage: 'vassal',
+      coinQuality: getFactionCoinQuality({
+        id: fid,
+        name: setup.name,
+        rulerId: setup.rulerId,
+        kingdomName: setup.preferredKingdomName,
+      }),
+      salaryArrears: 0,
     };
   }
 

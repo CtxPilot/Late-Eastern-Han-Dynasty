@@ -9,12 +9,43 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 474**（FM-P5 阵型联动系统集成回归、独特性、经典体验、IP 与文档总验收通过：`server/src/scripts/verify-fm5-integration-and-balance.ts` 23/23 全绿，六大基础阵型独特性与对称校验、组织度五档衰减律、免商业版权与确定性总验收通过；**S10-FM 阵型联动 0-A 子路线（FM-P0~P5）100% 全量收官 [x]**） |
-| 阶段 | Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 474 `verify-fm5-integration-and-balance.ts` 新增与 `package.json` 注册完成 |
-| 文档最新 | **Session 474 双写**（`docs/09-roadmap.md` FM-P5 勾除 + `docs/29-formation-integration-development-plan.md` + `docs/10-progress.md` 日志 + 本文件双写同步） |
-| 本交接用途 | **Session 474 已交付**；后续方向：Phase 7+ 规划与后续演进 |
-| 下一步 | ①推进 **D-0B 前置技术债清理**（D-0B-1 Zustand store 拆 slice / D-0B-2 LOD 拖拽冻结等）；②依规推进 Phase 7+ 规划与 0-B 剧本深度扩容 |
+| 会话 | **Session 475**（D-0B-9 §35 财政税收俸禄数据模型扩展与引擎全栈落地：`server/src/scripts/verify-d0b9-fiscal-salary.ts` 40/40 全绿，四档税率/货币成色/豪强隐匿/百官年俸/欠俸惩罚链，`turn-golden.test.ts` 3/3 严格匹配零漂移；收口 D-0B-1/D-0B-2 文档闭环；**0-B 前置技术债非条件触发项全部清偿完毕 [x]**） |
+| 阶段 | Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 475 `shared/fiscal.ts`, `server/src/engine/fiscal.ts`, `verify-d0b9-fiscal-salary.ts` 新增与月结/端点/Worker/API 贯通完成 |
+| 文档最新 | **Session 475 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + 本文件双写同步） |
+| 本交接用途 | **Session 475 已交付**；后续方向：Phase 7+ 规划与 190 年剧本全势力深度扩展 |
+| 下一步 | ①推进 Phase 7+ 深度系统（朝廷官制、外交同盟、天下大势等）与 190 年剧本开局全势力（约 30 诸侯）深度化扩展；②依规持续推进全栈质量保障与全量门禁覆盖 |
+
+### Session 475 交接要点
+
+- **D-0B-9 §35 财政税收俸禄数据模型扩展与引擎全栈落地**：
+  1. **数据模型与 Zod Schema 扩展**：
+     - `shared/types/city.ts`: 导出 `TaxPolicy = 'light' | 'standard' | 'heavy' | 'martial'`；在 `City` 中追加 `taxPolicy`、`taxRate`、`appeasedMagnate`；
+     - `shared/types/faction.ts`: 在 `Faction` 中追加 `coinQuality`、`salaryArrears`；
+     - `shared/game-state-entity-schema.ts`: `CityRuntimeSchema` 与 `FactionRuntimeSchema` 严格注册新字段，保持 `.strict()` 契约通过；
+     - `shared/mask-state.ts`: 敌方势力脱敏 `salaryArrears = 0`，非己方城池脱敏税率与豪强状态。
+  2. **纯函数财政核心解析器（`shared/fiscal.ts`）**：
+     - 四档税率：轻徭薄赋 20%、标准 30%、重税 50%、战时征敛 70%；
+     - 货币成色：曹魏 1.00（五铢钱）、蜀汉 0.70（直百五铢）、东吴 0.50（大泉当千）、群雄 1.00；
+     - 官位年俸对照表：丞相 800、都督/大将军 500、太守/将军 180、县令/校尉 60、书吏/军候 20，多官位取最高，君主为 0；
+     - `calculateCityTaxRevenue`：支持豪强 15% 隐匿扣除、成色购买力折算 `goldProduced = floor(actualTax * coinQuality)`；
+     - 欠俸惩罚阶梯：1 季 -2、2 季 -5、3 季及以上 -10。
+  3. **引擎层与月结管线（`server/src/engine/fiscal.ts` & `turn.ts`）**：
+     - 五大指令：`setCityTaxPolicy`、`appeaseMagnates` (300金)、`inspectCensus` (200金, 豪族武将忠诚 -15)、`reformCoinage` (300金, 成色+0.10)、`debaseCoinage` (成色-0.10, 应急款 300金)；
+     - 岁首统发：每年 1 月岁首统发百官年俸，国库不足扣除全部现有资金且 `salaryArrears + 1`；
+     - 季首检定：1/4/7/10 月季首检定欠俸扣减武将忠诚；检定税收政策民心变动（light +3, heavy -5, martial -10）。
+  4. **服务层、端点与离线 Web Worker 贯通**：
+     - 服务端路由：`POST /civil/tax-policy`、`/civil/appease-magnates`、`/civil/inspect-census`、`/civil/reform-coinage`、`/civil/debase-coinage`；
+     - 离线 Worker 与前端 API 全量对齐，离线 PWA 零网络回退。
+  5. **D-0B-1 / D-0B-2 技术债收口闭环**：
+     - D-0B-1（Store 细粒度更新）随 P2-4 差分补丁通道与 `patchOnly` v2 COW 合并已彻底解除；
+     - D-0B-2（LOD 拖拽冻结）随 `StrategicWorldView` 静态卡片拓扑已天然消解。
+  6. **全栈门禁与确定性零漂移**：
+     - 专属门禁 `pnpm verify-d0b9-fiscal-salary` 40/40 项全绿；
+     - `turn-golden.test.ts` 自举金样 3/3 项全绿（双局 24 回合零 RNG 漂移严格确定性守护通过）；
+     - 全仓 105 个套件 712 项单测全绿；
+     - `validate-data`、`verify-compliance`、全仓 `pnpm build` 0 错误通过。
+  7. **D-0B-9 [x] 达成，0-B 前置技术债（D-0B-1~13 中非条件触发项）全面清偿完毕！**
 
 ### Session 474 交接要点
 

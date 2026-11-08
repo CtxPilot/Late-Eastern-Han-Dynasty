@@ -31,10 +31,13 @@ import {
   POLICY_HIGH_WALLS_FOOD_MUL,
   factionHasActivePolicy,
   isScorchedCity,
+  TAX_POLICY_RATES,
+  isMagnateOfficer,
   type City,
   type CityDemographics,
   type GameState,
   type TechLevels,
+  type Officer,
 } from '@leh/shared';
 import { runAllAiTurns } from './ai.js';
 import { runAllAiPersonnel } from './aiPersonnel.js';
@@ -61,6 +64,11 @@ import { runAnnualTournament } from './tournament.js';
 import { tickFamilyTreatment } from './hostageFamilies.js';
 import { tickTechResearch } from './techResearch.js';
 import { tickCityPlagueAndSanitation } from './plague.js';
+import {
+  settleAnnualSalaries,
+  settleSalaryArrearsQuarterly,
+  applyQuarterlyTaxMorale,
+} from './fiscal.js';
 
 export function monthToSeason(month: number): Season {
   return Math.floor((month - 1) / 3) as Season;
@@ -143,7 +151,13 @@ function applyFamineDeaths(d: CityDemographics, deaths: number): CityDemographic
 export function settleCityMonthDetailed(
   city: City,
   season: Season,
-  opts?: { foodMulExtra?: number; zeroFoodProd?: boolean; techLevels?: TechLevels },
+  opts?: {
+    foodMulExtra?: number;
+    zeroFoodProd?: boolean;
+    techLevels?: TechLevels;
+    coinQuality?: number;
+    officersInCity?: Officer[];
+  },
 ): {
   city: City;
   famineNote?: string;
@@ -206,9 +220,21 @@ export function settleCityMonthDetailed(
   const commerceTechMul = commerceTech >= 3 ? 1.3 : commerceTech >= 2 ? 1.2 : commerceTech >= 1 ? 1.1 : 1.0;
   const taxExtraMul = commerceTech >= 5 ? 1.3 : commerceTech >= 3 ? 1.1 : 1.0;
 
-  const goldProduced = Math.floor(
+  const grossIncome = Math.floor(
     (city.stats.commerce / 9) * (0.7 + adultShare) * goldMul * merchantMod * commerceTechMul * taxExtraMul,
   );
+
+  const policy = city.taxPolicy ?? 'standard';
+  const taxRate = city.taxRate ?? (TAX_POLICY_RATES[policy] ?? 0.30);
+  const officersInCity = opts?.officersInCity ?? [];
+  const hasMagnate = officersInCity.some(isMagnateOfficer);
+  const hasUnappeasedMagnate = hasMagnate && !(city.appeasedMagnate ?? false);
+
+  const rateScalar = taxRate / 0.30;
+  const baseTax = Math.floor(grossIncome * rateScalar);
+  const actualTax = hasUnappeasedMagnate ? Math.floor(baseTax * 0.85) : baseTax;
+  const coinQuality = opts?.coinQuality ?? 1.0;
+  const goldProduced = Math.floor(actualTax * coinQuality);
 
   let need = cityFoodNeed({ ...city, demographics: d, troops: city.troops }, season);
   // Lv4+ 农政：领内全城与部队月度粮耗 -10%
@@ -296,10 +322,14 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
         ? POLICY_HIGH_WALLS_FOOD_MUL
         : 1;
     const techLevels = city.ruler != null ? state.factions[city.ruler]?.techLevels : undefined;
+    const coinQuality = city.ruler != null ? state.factions[city.ruler]?.coinQuality ?? 1.0 : 1.0;
+    const officersInCity = (city.officers ?? []).map((id) => state.officers[id]).filter(Boolean) as Officer[];
     let result = settleCityMonthDetailed(projectResult.city, season, {
       foodMulExtra,
       zeroFoodProd: isScorchedCity(state, city.id),
       techLevels,
+      coinQuality,
+      officersInCity,
     });
     // 军屯每季首月扣驻军士气（docs/05 §5.8.1；组织度−2 随 0-B Army 层延后）
     if (isQuarterStart && (result.city.militaryFarming ?? false)) {
@@ -394,6 +424,10 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   if (isYearStart) {
     nextState = tickMentorshipAnnual(nextState);
   }
+  // S35（Session 475）：每年正月岁首百官年俸统发（D-0B-9）
+  if (isYearStart) {
+    nextState = settleAnnualSalaries(nextState);
+  }
   // 事件 S14：自动触发无选项事件
   nextState = tickEvents(nextState);
   // S03 技艺与制度研发月度推进
@@ -417,6 +451,9 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
     nextState = tickSameCityRelations(nextState, loadStaticRelations());
     // S24（Session 454）：季度宿敌同城共处忠诚惩罚（零 RNG；无运行时关系时零操作）
     nextState = tickNemesisCoexistenceQuarter(nextState);
+    // S35（Session 475）：每季首月欠俸忠诚惩罚与税赋民心变动（D-0B-9）
+    nextState = settleSalaryArrearsQuarterly(nextState);
+    nextState = applyQuarterlyTaxMorale(nextState);
   }
   // 行动次数月度重置（Session 186）：独立于体力，每月回满上限（默认 1，未来加成来源实装后改为各自上限）。
   nextState = {

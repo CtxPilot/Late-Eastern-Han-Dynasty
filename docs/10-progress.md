@@ -1,3 +1,42 @@
+## 2026-11-08 — Session 475 · D-0B-9 §35 财政税收俸禄数据模型扩展与引擎全栈落地（前置技术债全面清偿）
+
+- Phase：**Phase 0-B 数据扩容与深化 / 前置技术债清偿**；全面清偿 **D-0B-9**（`shared/fiscal.ts` 纯函数财政解析器 + `server/src/engine/fiscal.ts` 引擎层五大方法与岁首年俸/季首欠俸月结管线 + `City/Faction` Schema 契约扩展 + 5 大端点与离线 Web Worker/API 贯通 + 门禁 `verify-d0b9-fiscal-salary` 40/40 全绿），并正式收口 **D-0B-1 / D-0B-2** 文档闭环。至此 0-B 前置技术债（D-0B-1~13 中除 500+ 城与州界触发项外）全部清偿完毕！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §35 与 `docs/08-data-dictionary.md` §三十四，经济系统需实装货币成色（五铢/直百/大泉当千）、四档税赋（轻徭薄赋/标准/重税/战时征敛）、豪强隐匿 15% 与安抚检籍清田、百官岁首年俸统发与三档欠俸忠诚惩罚链；
+  2. 既有宏观经济产金公式需平滑映射，以 30% 标准税为 1.0x 锚定基线，保障各势力财政稳健与历史策略纵深；
+  3. D-0B-1（Store 细粒度更新）随 P2-4 差分补丁通道与 `patchOnly` v2 COW 合并已彻底解除；D-0B-2（LOD 拖拽冻结）随 `StrategicWorldView` 静态卡片拓扑已天然消解；
+  4. 需通过 `turn-golden.test.ts` 双局 24 回合零 RNG 漂移验证，确保确定性与离线 PWA 完全一致。
+- **实装与验证内容**：
+  1. **数据模型与 Zod Schema 扩展**：
+     - `City`: `taxPolicy?: TaxPolicy`、`taxRate?: number`、`appeasedMagnate?: boolean`；
+     - `Faction`: `coinQuality?: number`、`salaryArrears?: number`；
+     - `CityRuntimeSchema` 与 `FactionRuntimeSchema` 注册新字段，`.strict()` 校验通过；
+     - `maskState`: 己方/同盟保留内部财政指标，敌方脱敏 `salaryArrears = 0`，迷雾城池脱敏税率与豪强安抚状态。
+  2. **共享纯函数财政核心（`shared/fiscal.ts`）**：
+     - 税率表：light (0.20), standard (0.30), heavy (0.50), martial (0.70)；
+     - 官位年俸对照表：丞相 800、都督/大将军 500、太守/将军 180、县令/校尉 60、军候/书吏 20，多官职取最高，君主为 0；
+     - 货币成色：曹魏 1.00，蜀汉 0.70，东吴 0.50，群雄 1.00；
+     - `calculateCityTaxRevenue`：支持豪强 15% 隐匿扣除、成色购买力折算 `goldProduced = floor(actualTax * coinQuality)`；
+     - 欠俸惩罚阶梯：1 季 -2、2 季 -5、3 季及以上 -10；
+     - 单元测试：`shared/fiscal.test.ts` 6/6 全绿。
+  3. **引擎层与月结管线（`server/src/engine/fiscal.ts` & `turn.ts`）**：
+     - 指令方法：`setCityTaxPolicy`、`appeaseMagnates` (300金)、`inspectCensus` (200金, 豪强武将忠诚 -15)、`reformCoinage` (300金, 成色+0.10)、`debaseCoinage` (成色-0.10, 急救300金)；
+     - 岁首统发：每年 1 月统发百官年俸，国库不足扣除全部金钱且 `salaryArrears + 1`；
+     - 季首检定：1/4/7/10 月检定欠俸扣减武将忠诚；检定税收政策民心变动（light +3, heavy -5, martial -10）。
+  4. **全栈端点与离线 Web Worker 贯通**：
+     - 服务端路由：`POST /civil/tax-policy`、`/civil/appease-magnates`、`/civil/inspect-census`、`/civil/reform-coinage`、`/civil/debase-coinage`；
+     - 离线 Worker 与前端 API 全量对齐，离线 PWA 零网络回退。
+- **验证（全绿）**：
+  1. 新增专属门禁 `pnpm verify-d0b9-fiscal-salary` 40/40 项断言全绿；
+  2. `turn-golden.test.ts` 3/3 项全绿（双局 24 回合零 RNG 漂移验证通过）；
+  3. 全仓 105 个套件 712 项测试 100% 全绿；
+  4. `validate-data`、`verify-compliance`、全仓 `pnpm build` 0 错误通过。
+- **里程碑达成**：
+  - **D-0B-9 [x] 达成**；
+  - **D-0B-1 [x] / D-0B-2 [x] 收口闭环**；
+  - **0-B 前置技术债（D-0B-1~13 中非条件触发项）全面清偿完毕！**
+- **文档**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 474 · FM-P5 阵型联动系统集成回归、独特性、经典体验、IP 与文档总验收通过
 
 - Phase：**Phase 3 战斗系统 / S10-FM 阵型联动子路线**；闭环 FM-P5（`server/src/scripts/verify-fm5-integration-and-balance.ts` 全链集成回归、六大基础阵型独特性与对称校验、组织度五档衰减律、免商业版权与确定性总验收通过，注册 `pnpm verify-fm5-integration-and-balance` 23/23 全绿），**标志着 S10-FM 阵型联动 0-A 子路线（FM-P0~P5）全部圆满收官！**

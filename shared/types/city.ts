@@ -72,6 +72,8 @@ export interface CityDemographics {
   elder: number;
 }
 
+export type TaxPolicy = 'light' | 'standard' | 'heavy' | 'martial';
+
 export interface CityPlague {
   remainingMonths: number;
   severity: 'mild' | 'severe';
@@ -171,4 +173,10 @@ export interface City extends CityStatic {
   familyTreatment?: import('../hostage-families.js').FamilyTreatmentState;
   /** S03 瘟疫状态：旧存档缺失表示无疫病。 */
   plague?: CityPlague | null;
+  /** S35 财政税收政策：light(20%)/standard(30%)/heavy(50%)/martial(70%)；默认 standard */
+  taxPolicy?: TaxPolicy;
+  /** S35 城市税率（0.20~0.70）；若未指定则依 taxPolicy 默认 */
+  taxRate?: number;
+  /** S35 豪强田产是否已被安抚/检籍；true 时豁免 15% 隐匿扣除 */
+  appeasedMagnate?: boolean;
 }

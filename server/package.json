@@ -121,7 +121,8 @@
     "verify-s455-peerless-ghost": "tsx src/scripts/verify-s455-peerless-ghost.ts",
     "verify-s456-troop-level": "tsx src/scripts/verify-s456-troop-level.ts",
     "verify-s458-traits-and-ceiling": "tsx src/scripts/verify-s458-traits-and-ceiling.ts",
-    "verify-s459-water-ambush-tactics": "tsx src/scripts/verify-s459-water-ambush-tactics.ts"
+    "verify-s459-water-ambush-tactics": "tsx src/scripts/verify-s459-water-ambush-tactics.ts",
+    "verify-d0b9-fiscal-salary": "tsx src/scripts/verify-d0b9-fiscal-salary.ts"
   },
   "dependencies": {
     "@leh/shared": "workspace:*",

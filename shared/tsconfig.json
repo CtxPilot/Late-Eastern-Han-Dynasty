@@ -82,6 +82,7 @@
     "peerless.ts",
     "troop-level.ts",
     "item-sets.ts",
-    "traits.ts"
+    "traits.ts",
+    "fiscal.ts"
   ]
 }

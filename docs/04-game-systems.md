@@ -3715,7 +3715,7 @@ interface Faction {
 
 ## 三十五、货币·税收·俸禄
 
-> **⚠️ 实装状态：纯设计，零代码实装**（Session 84 文档设计完成）。`Faction` 接口无 `coinQuality`/`salaryArrears`，`City` 无 `taxRate`，`turn.ts` 用旧产金公式，无俸禄发放引擎。记技术债 **D-0B-9**，独立 Session 实装（破坏性改动需先扩类型 + Zod + 全量 JSON + mask-state）。
+> **✅ 实装状态：Session 475 全量落地（D-0B-9 清偿）**。`Faction.coinQuality`（0.50~1.00）与 `salaryArrears`、`City.taxPolicy`（轻/标/重/战）与 `taxRate`（0.20~0.70）、`City.appeasedMagnate` 均已进入类型、Zod 与脱敏网关；`shared/fiscal.ts` 纯函数解析器与 `server/src/engine/fiscal.ts` 服务端/Worker 引擎落地；每年1月岁首统发百官年俸、季首欠俸惩罚链与民心波动贯通；`verify-d0b9-fiscal-salary` 40/40 项全绿。
 
 ### 35.1 货币成色
 

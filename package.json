@@ -208,6 +208,7 @@
     "verify-s471-level3-melee-stage": "node scripts/verify-s471-level3-melee-stage.mjs",
     "verify-s472-level4-duel-stage": "node scripts/verify-s472-level4-duel-stage.mjs",
     "verify-fm5-integration-and-balance": "pnpm --filter @leh/server exec tsx src/scripts/verify-fm5-integration-and-balance.ts",
+    "verify-d0b9-fiscal-salary": "pnpm --filter @leh/server exec tsx src/scripts/verify-d0b9-fiscal-salary.ts",
     "verify-0b-scenario-soak": "node scripts/verify-0b-scenario-soak.mjs"
   },
   "engines": {
