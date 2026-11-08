@@ -9,12 +9,46 @@
 
 | 项 | 状态 |
 |----|------|
-| 会话 | **Session 482**（Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系全栈落地：数据契约与 Schema 扩展【`Officer.injury`, `Officer.injuryMonths`, `City.woundedTroops`, `City.hospitalFundedMonths`】；纯函数战损分流模型【`calculateCasualtySplit` 40% 永久阵亡与 60% 伤兵】；武将创伤等级与战力削弱行动惩罚【`calculateInjuryCombatPenalty` 0健康/1轻伤/2中伤/3重伤/4濒死，中伤禁单挑，重伤禁行军出征，濒死全属性削减40%】；月度伤兵回流率模型【`calculateMonthlyWoundedRecoveryRate` 基准10%、医馆拨款+10%、卫生达标+5%、名医驻城+10%、药材特产+5%，夹紧[10%, 40%]】；引擎层政令闭环【`fundCityHospital` 100贯注资3个月、`cureOfficerInjury` 50~400金派医施治创伤降级、`recordBattleCasualties` 战损分流入册、`tickCasualtiesAndHospitalMonth` 月度伤兵康复回归驻军与武将创伤自然康复降级】；无伤员局严格 COW 保持原引用零开销零 RNG；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s482-casualties-hospital` 66/66 全绿，既有门禁 `verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 109 个套件 756 项单测 100% 绿灯，全仓构建与合规 0 错误） |
-| 阶段 | **Phase 7-06 战阵创伤与伤兵营医馆全量落地 [x]**；**Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
-| 代码最新 | Session 482 `shared/hospital.ts`、`shared/hospital.test.ts`、`shared/types/officer.ts`、`shared/types/city.ts`、`shared/game-state-entity-schema.ts`、`server/src/engine/hospital.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s482-casualties-hospital.ts` 门禁 |
-| 文档最新 | **Session 482 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/59-casualties-wounds-and-hospital-proposal.md` + 本文件双写同步） |
-| 本交接用途 | **Session 482 已交付**；后续方向：根据 roadmap 规划推进深度宏观治理、百城地理与后续里程碑 |
-| 下一步 | ①根据 roadmap 规划推进后续深度宏观演进与百城地理；②持续保障既有核心门禁与零漂移测试稳定 |
+| 会话 | **Session 483**（Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系全栈落地：数据契约与 Schema 扩展【`MinorityTribe`, `MinorityTribeId`, `DEFAULT_MINORITY_TRIBES`, `GameState.minorityTribes`】；纯函数模型【`TribeThreatLevel` 4档威胁枚举、`getTribeThreatLevel` 夹紧映射、`isBorderWarden` 统武宿将判定、`calculateTribeTensionDelta` 季节/宿将/驻军/互市综合张力偏移、`canRecruitTribeTroops`、`canLeadTribeSubjugation`】；引擎层政令与演化闭环【`initMinorityTribes`、`pacifyMinorityTribe` 消耗300贯抚慰平抑张力、`subjugateMinorityTribe` 统武名将发兵大捷清空紧张度并确立24月威慑期与战利品、`recruitMinorityTroops` 顺服边郡招募500精锐异族特种兵、`tickMinorityTribesMonth` 月度张力演化、威慑衰减、边备空虚寇边袭掠损兵耗财、正月岁首顺服朝贡纳物】；无异族局严格 COW 保持原引用零开销零 RNG；服务层、路由与离线 Web Worker 镜像打通；专案门禁 `verify-s483-minority-tribes` 71/71 全绿，既有门禁 `verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 110 个套件 763 项单测 100% 绿灯，全仓构建与合规 0 错误） |
+| 阶段 | **Phase 7-07 边疆异族羁縻与朝贡讨伐全量落地 [x]**；**Phase 7-06 战阵创伤与伤兵营医馆全量落地 [x]**；**Phase 7-05 商路贸易网络与十三州特产全量落地 [x]**；**Phase 7-04 战俘处置与刑赏牢狱全量落地 [x]**；**Phase 7-03 天下大势与九品中正全量落地 [x]**；**Phase 7-02 深度外交体系全量落地 [x]**；**Phase 7-01 朝廷官制与地方统领全量落地 [x]**；**Phase 7 深度政治体制、经济贸易与宏观朝廷官制深度拓展里程碑达成 [x]**；Phase 0-B **数据扩容收官 + 120 回合闸门实测达成 [x]**；**前置技术债 D-0B-1~13 非条件项全面清偿 [x]**；**190 年三十诸侯全割据开局全面落地 [x]**；**Phase 5 100% 收官 [x]**；**Phase 6 S20 前端体验 4/4 100% 收官 [x]**；**Phase 6 S21 三级战斗串联 4/4 100% 收官 [x]**；**S10-FM 阵型联动子路线 100% 收官 [x]** |
+| 代码最新 | Session 483 `shared/types/minority.ts`、`shared/minority.ts`、`shared/minority.test.ts`、`shared/types/game.ts`、`shared/game-state-full-schema.ts`、`server/src/engine/minority.ts`、`server/src/engine/turn.ts`、`server/src/services/game.ts`、`server/src/routes/game.ts`、`client/src/workers/game.worker.ts`、`server/src/scripts/verify-s483-minority-tribes.ts` 门禁 |
+| 文档最新 | **Session 483 双写**（`docs/04-game-systems.md` + `docs/08-data-dictionary.md` + `docs/09-roadmap.md` + `docs/10-progress.md` 日志 + `docs/12-system-map.md` + `docs/35-phased-implementation-roadmap.md` + `docs/60-minority-tribes-and-border-pacification-proposal.md` + 本文件双写同步） |
+| 本交接用途 | **Session 483 已交付**；后续方向：Phase 7-08 主地图关隘要塞防御要冲体系全栈落地 |
+| 下一步 | ①推进 Phase 7-08 主地图关隘要塞防御要冲体系全栈落地（25座关隘险隘、驻防阻绝、攻坚易损、过所通关与战术要冲）；②持续保障既有核心门禁与零漂移测试稳定 |
+
+### Session 483 交接要点
+
+- **Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系全栈落地**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `MinorityTribeId`（`xiongnu`, `xianbei`, `qiang`, `di`, `shanyue`, `nanman`）；
+     - `TribeThreatLevel`（0=PACIFIED 顺服, 1=UNSETTLED 骚动, 2=RAIDING 劫掠, 3=INVASION 寇边入侵）；
+     - `MinorityTribe` 接口（`id, name, regionName, relatedProvinces, tension, specialUnitName, specialtyTribute, isSubdued, subduedMonths, tributeCooldown`）；
+     - `DEFAULT_MINORITY_TRIBES`: 六大族基础地缘与特产兵种字典；
+     - `GameState.minorityTribes`: 根级字段扩充，注册入 `ROOT_KEYS` 与全 Schema 校验；
+     - `shared/minority.ts`:
+       - `getTribeThreatLevel`: 依据紧张度 `[0, 100]` 夹紧并映射至 4 档威胁等级；
+       - `isBorderWarden`: 统帅≥80且武力≥75的宿将镇边判定；
+       - `calculateTribeTensionDelta`: 综合季节偏转、宿将镇抚（-3）、重兵慑边（-2）、边备空虚（+3）、通商互市（-2）、威慑平静期（归零）纯函数；
+       - `canRecruitTribeTroops`: 边郡且顺服且金钱充足招募校验；
+       - `canLeadTribeSubjugation`: 征讨大将统武资质校验；
+     - 单元测试：`shared/minority.test.ts` 7/7 项全绿。
+  2. **引擎层全息生命周期（`server/src/engine/minority.ts` & `turn.ts`）**：
+     - `initMinorityTribes`: 初始化或深拷贝全图异族数据实体；
+     - `pacifyMinorityTribe`: 扣除发起城池 300 贯，平抑紧张度 25 点，生成宣抚公文日志；
+     - `subjugateMinorityTribe`: 派遣统帅或武力≥75名将领兵深入讨平，紧张度清零，赋予 24 个月威慑平静期，缴获战马与异邦珍宝入库，主将累功 +50，势力声望 +15；
+     - `recruitMinorityTroops`: 在顺服态（tension < 30）边郡消耗 500 金招募 500 名异族特种兵加入守军，微增 5 点紧张度；
+     - `tickMinorityTribesMonth`: 月度自然演化，威慑月数衰减，张力动态结算，高张力（>=80）自动触发边郡寇边袭掠（扣减驻军、金库与士气），岁首正月顺服态进奉良马珍宝朝贡入库；无异族局严格 COW 保持原引用，零开销零 RNG 消耗，保证零漂移铁律；
+     - `turn.ts`: 月结统一管线接入 `tickMinorityTribesMonth(nextState, season)`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 挂载 `doInitMinorityTribes`, `doPacifyMinorityTribe`, `doSubjugateMinorityTribe`, `doRecruitMinorityTroops`, `doGetMinorityTribesSummary`；
+     - `server/src/routes/game.ts`: 挂载 `/minority/init`, `/minority/pacify`, `/minority/subjugate`, `/minority/recruit`, `/minority/summary`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 5 大方法。
+  4. **全栈质量与门禁保障**：
+     - 专属门禁 `verify-s483-minority-tribes` 71/71 项断言 100% 绿色通过；
+     - 既有专案门禁 `verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-d0b9` (40/40) 全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 110 个套件 763 项单测 100% 通过；
+     - 全仓 `pnpm build`、`validate-data` 与合规校验 `verify-compliance.mjs` 0 错误通过。
 
 ### Session 482 交接要点
 

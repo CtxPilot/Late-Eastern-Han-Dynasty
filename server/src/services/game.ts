@@ -142,6 +142,17 @@ import {
   recordBattleCasualties,
 } from '../engine/hospital.js';
 import {
+  initMinorityTribes,
+  pacifyMinorityTribe,
+  subjugateMinorityTribe,
+  recruitMinorityTroops,
+} from '../engine/minority.js';
+import {
+  DEFAULT_MINORITY_TRIBES,
+  type MinorityTribeId,
+  getTribeThreatLevel,
+} from '@leh/shared';
+import {
   getFactionPrisoners,
   calculatePrisonerRansomValue,
   calculatePrisonerSurrenderChance,
@@ -966,6 +977,70 @@ export function doGetHospitalSummary(cityId?: number) {
       injuryMonths: o.injuryMonths ?? 0,
     })),
   };
+}
+
+export function doInitMinorityTribes() {
+  return withLock(() => {
+    const game = getGame();
+    currentGame = initMinorityTribes(game);
+    return getClientGame();
+  });
+}
+
+export function doPacifyMinorityTribe(cityId: number, tribeId: MinorityTribeId) {
+  return withLock(() => {
+    const game = getGame();
+    const result = pacifyMinorityTribe(game, game.playerFactionId, cityId, tribeId);
+    currentGame = result.state;
+    return {
+      gameState: getClientGame(),
+      message: result.message,
+      tension: result.tension,
+    };
+  });
+}
+
+export function doSubjugateMinorityTribe(cityId: number, tribeId: MinorityTribeId, generalOfficerId: number) {
+  return withLock(() => {
+    const game = getGame();
+    const result = subjugateMinorityTribe(game, game.playerFactionId, cityId, tribeId, generalOfficerId);
+    currentGame = result.state;
+    return {
+      gameState: getClientGame(),
+      message: result.message,
+      spoils: result.spoils,
+    };
+  });
+}
+
+export function doRecruitMinorityTroops(cityId: number, tribeId: MinorityTribeId) {
+  return withLock(() => {
+    const game = getGame();
+    const result = recruitMinorityTroops(game, game.playerFactionId, cityId, tribeId);
+    currentGame = result.state;
+    return {
+      gameState: getClientGame(),
+      message: result.message,
+      troopsRecruited: result.troopsRecruited,
+    };
+  });
+}
+
+export function doGetMinorityTribesSummary() {
+  const game = getGame();
+  const tribes = game.minorityTribes ?? DEFAULT_MINORITY_TRIBES;
+  return Object.values(tribes).map((t) => ({
+    id: t.id,
+    name: t.name,
+    regionName: t.regionName,
+    relatedProvinces: t.relatedProvinces,
+    tension: t.tension,
+    threatLevel: getTribeThreatLevel(t.tension),
+    specialUnitName: t.specialUnitName,
+    specialtyTribute: t.specialtyTribute,
+    isSubdued: Boolean(t.isSubdued),
+    subduedMonths: t.subduedMonths ?? 0,
+  }));
 }
 
 export function doEstablishHegemony(): GameState {

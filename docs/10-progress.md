@@ -1,3 +1,52 @@
+## 2026-11-08 — Session 483 · 边疆异族羁縻、朝贡互市与寇边讨伐体系全栈落地（Phase 7-07）
+
+- Phase：**Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系**；正式落地立项提案 `docs/60-minority-tribes-and-border-pacification-proposal.md`，全面打通汉末六大边疆少数民族（匈奴、鲜卑、羌族、氐族、山越、南蛮）地缘布局、四档威胁等级（顺服/骚动/劫掠/入侵）、纯函数月度张力动态演化（季节活跃偏转、重兵慑边、宿将镇守、互市商贸平抑）、三大边疆治理政令（宣抚羁縻、深入讨平、借募异族精锐特种兵），以及月结管线威慑期消减、高张力寇边劫掠与岁首正月低张力朝贡进献全栈体系！新增专属门禁 `verify-s483-minority-tribes` 71/71 项断言全绿，既有门禁 `verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 110 个套件 763 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §7（少数民族系统）、§4.1（边地出身标签）、`docs/08-data-dictionary.md`，三国时代边疆治理是影响中原割据格局的重大地缘要素；
+  2. 六大少数民族实体契约（`MinorityTribe`）：匈奴（并州北/突骑/战马/冬季）、鲜卑（幽州北/突骑/角弓/春季）、羌族（凉州/骑兵/良马/夏季）、氐族（凉益/步兵/药材/秋季）、山越（扬州山地/精兵/生铜/全年）、南蛮（益州南/藤甲兵/象牙/夏季）挂载入 `GameState.minorityTribes`；
+  3. 四档威胁等级（`getTribeThreatLevel`）：PACIFIED（0~29 顺服，解锁借兵、岁首朝贡）、UNSETTLED（30~59 骚动，禁借兵）、RAIDING（60~79 劫掠，洗劫边卡）、INVASION（80~100 寇边，袭掠边城守军与金钱）；
+  4. 月度张力纯函数模型（`calculateTribeTensionDelta`）：
+     - 基础自然增长 +1 点/月；
+     - 季节活跃偏转 +2 点；
+     - 宿将出镇边塞（统>=80武>=75）提供 -2 点强力压制；
+     - 重兵慑边（驻军>=15000）-1 点；边防空虚（驻军<4000）+2 点；
+     - 互市商贸（商业>=400）-1 点；
+     - 讨平威慑期内张力变化严格为 0；
+  5. 三大治理政令全栈闭环：
+     - 宣抚羁縻（`pacifyMinorityTribe`）：消耗城池 300 贯，降低 25 点张力；
+     - 深入讨平（`subjugateMinorityTribe`）：遣名将深入扫荡，击破蛮夷，张力归零，确立 24 个月威慑平静期，缴获战马与金帛入库，主将累功 +50，势力声望 +15；
+     - 羁縻借兵（`recruitMinorityTroops`）：在顺服状态（<30）边郡城池消耗 500 金扩编 500 名异族特色精锐（匈奴突骑/鲜卑突骑/羌骑/氐步/山越精兵/藤甲兵），消耗 5 点张力；
+  6. 月结管线闭环（`tickMinorityTribesMonth`）：无异族字典局严格遵循 COW 保持原引用，零开销零 RNG 消耗，保证零漂移铁律。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `MinorityTribe`, `MinorityTribeId`, `TribeThreatLevel`: 实体契约与类型定义；
+     - `DEFAULT_MINORITY_TRIBES`: 六大异族基准表；
+     - `getTribeThreatLevel`: 威胁等级划分纯函数；
+     - `isBorderWarden`: 镇边宿将资质检定；
+     - `calculateTribeTensionDelta`: 月度张力演化纯函数；
+     - `canRecruitTribeTroops` & `canLeadTribeSubjugation`: 借兵与领兵资质防御纯函数；
+     - `GameState.minorityTribes`: 根级字段扩充，注册入 `ROOT_KEYS` 与全 Schema 校验；
+     - 单元测试：`shared/minority.test.ts` 7/7 全绿。
+  2. **引擎层全息生命周期（`server/src/engine/minority.ts` & `turn.ts`）**：
+     - `initMinorityTribes`: 初始化异族字典；
+     - `pacifyMinorityTribe`: 宣抚政令扣费与降张力；
+     - `subjugateMinorityTribe`: 深入讨平大捷、清空张力、24 个月威慑期、战利品入库、主将累功与势力声望；
+     - `recruitMinorityTroops`: 边郡借募异族精锐特种兵；
+     - `tickMinorityTribesMonth`: 月度自然演化、威慑消减、高张力寇边劫掠与岁首朝贡入账；
+     - `turn.ts`: 月结管线挂载 `tickMinorityTribesMonth(nextState, season)`。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 挂载 `doInitMinorityTribes`, `doPacifyMinorityTribe`, `doSubjugateMinorityTribe`, `doRecruitMinorityTroops`, `doGetMinorityTribesSummary`；
+     - `server/src/routes/game.ts`: 挂载 `/minority/init`, `/minority/pacify`, `/minority/subjugate`, `/minority/recruit`, `/minority/summary`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 5 大方法。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s483-minority-tribes.ts` 71/71 项断言全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 110 套件 763 项测试 100% 绿灯；
+     - 全包构建 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/60-minority-tribes-and-border-pacification-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 482 · 战阵创伤、伤兵营收治与杏林医馆体系全栈落地（Phase 7-06）
 
 - Phase：**Phase 7-06 战阵创伤、伤兵营收治与杏林医馆体系**；正式落地立项提案 `docs/59-casualties-wounds-and-hospital-proposal.md`，全面打通战场战损 40%/60% 阵亡与伤兵分流、城池伤兵营（`City.woundedTroops`）在册收治与月度回流驻军、武将创伤等级（`InjuryLevel`：0=健康, 1=轻伤, 2=中伤, 3=重伤, 4=濒死）与武力统帅衰减/单挑出征禁制、杏林医馆太医署官办注资（`City.hospitalFundedMonths`）、派医诊治武将创伤降级，以及月结管线自然康复全栈体系！新增专属门禁 `verify-s482-casualties-hospital` 66/66 项断言全绿，既有门禁 `verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 109 个套件 756 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！

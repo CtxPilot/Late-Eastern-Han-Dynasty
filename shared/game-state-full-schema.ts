@@ -20,7 +20,7 @@ const ROOT_KEYS = [
   'plots', 'nationalPolicies', 'completedEvents', 'pendingEvents', 'invalidatedEvents', 'eventChoices',
   'actionLog', 'emperorLocation', 'relationAffinities', 'runtimeRelations', 'tournament',
   'tournamentPreferredMode', 'tournamentPlayerEntryIds', 'tournamentChampionBet',
-  'pendingFamilyTreatment', 'endgameResult', 'tradeRoutes',
+  'pendingFamilyTreatment', 'endgameResult', 'tradeRoutes', 'minorityTribes',
 ] as const satisfies readonly (keyof GameState)[];
 
 const RootShape = Object.fromEntries(ROOT_KEYS.map((key) => [key, z.unknown()])) as {

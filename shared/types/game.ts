@@ -24,6 +24,7 @@ import type {
 import type { PendingFamilyTreatment } from '../hostage-families.js';
 import type { RuntimeRelation } from '../relations.js';
 import type { TradeRoute } from '../trade.js';
+import type { MinorityTribe } from './minority.js';
 
 export enum GeneralTrendStage {
   WARLORDS_DISORDER = 'warlords_disorder', // 群雄并起割据（190~199）
@@ -151,6 +152,12 @@ export interface GameState {
    * 记录全图活跃、封锁或挂起的商路列表；旧档兼容缺省为 undefined。
    */
   tradeRoutes?: TradeRoute[];
+
+  /**
+   * Phase 7-07 边疆六大少数民族羁縻与张力字典（Session 483）。
+   * 记录匈奴、鲜卑、羌、氐、山越、南蛮的状态与张力；旧档兼容缺省为 undefined。
+   */
+  minorityTribes?: Record<string, MinorityTribe>;
 
   /**
    * 天下一统或身死国灭终局结算（HC-P2 / Session 451+）。

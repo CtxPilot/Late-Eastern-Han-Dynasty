@@ -1010,6 +1010,61 @@ gameRouter.get('/hospital/summary', (req, res) => {
   }
 });
 
+gameRouter.post('/minority/init', (_req, res) => {
+  try {
+    res.json(gameService.doInitMinorityTribes());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'init minority tribes failed' });
+  }
+});
+
+gameRouter.post('/minority/pacify', (req, res) => {
+  try {
+    const { cityId, tribeId } = req.body ?? {};
+    if (typeof cityId !== 'number' || typeof tribeId !== 'string') {
+      res.status(400).json({ error: 'cityId (number) and tribeId (string) are required' });
+      return;
+    }
+    res.json(gameService.doPacifyMinorityTribe(cityId, tribeId as any));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'pacify minority tribe failed' });
+  }
+});
+
+gameRouter.post('/minority/subjugate', (req, res) => {
+  try {
+    const { cityId, tribeId, generalOfficerId } = req.body ?? {};
+    if (typeof cityId !== 'number' || typeof tribeId !== 'string' || typeof generalOfficerId !== 'number') {
+      res.status(400).json({ error: 'cityId, tribeId, and generalOfficerId are required' });
+      return;
+    }
+    res.json(gameService.doSubjugateMinorityTribe(cityId, tribeId as any, generalOfficerId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'subjugate minority tribe failed' });
+  }
+});
+
+gameRouter.post('/minority/recruit', (req, res) => {
+  try {
+    const { cityId, tribeId } = req.body ?? {};
+    if (typeof cityId !== 'number' || typeof tribeId !== 'string') {
+      res.status(400).json({ error: 'cityId and tribeId are required' });
+      return;
+    }
+    res.json(gameService.doRecruitMinorityTroops(cityId, tribeId as any));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'recruit minority troops failed' });
+  }
+});
+
+gameRouter.get('/minority/summary', (_req, res) => {
+  try {
+    res.json(gameService.doGetMinorityTribesSummary());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get minority tribes summary failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

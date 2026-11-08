@@ -87,6 +87,7 @@
     "nine-ranks.ts",
     "prisoner.ts",
     "trade.ts",
-    "hospital.ts"
+    "hospital.ts",
+    "minority.ts"
   ]
 }

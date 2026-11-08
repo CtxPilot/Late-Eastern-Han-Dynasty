@@ -1044,6 +1044,15 @@ hiddenCompatibility: (1-|相性差|/150)×100
 
 ## 七、少数民族系统
 
+> **Session 483 实装状态（Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系）**：
+> 1. **六大少数民族实体契约**（`MinorityTribe`）：匈奴（并州北/突骑/战马）、鲜卑（幽州北/突骑/角弓）、羌族（凉州/骑兵/良马）、氐族（凉益/步兵/药材）、山越（扬州/精兵/生铜）、南蛮（益州南/藤甲兵/象牙）全量落入 `@leh/shared` 与 `GameState.minorityTribes`；
+> 2. **威胁等级与张力模型**（`getTribeThreatLevel` & `calculateTribeTensionDelta`）：4 档分级（PACIFIED 顺服、UNSETTLED 骚动、RAIDING 劫掠、INVASION 寇边入侵）；综合季节偏转、重兵慑边（>=15000）、边防空虚（<4000）、宿将镇边（统>=80武>=75）与互市商贸（>=400）；
+> 3. **三大治理政令全栈闭环**：
+>    - 宣抚羁縻（`pacifyMinorityTribe`）：耗费 300 贯，降低 25 点张力；
+>    - 深入讨平（`subjugateMinorityTribe`）：遣名将统重兵破敌，张力归零，确立 24 个月威慑平静期，缴获战马与金银入库，主将累功 +50，声望 +15；
+>    - 羁縻借兵（`recruitMinorityTroops`）：顺服状态（<30）边郡耗费 500 金扩编 500 名异族精锐，消耗 5 点张力；
+> 4. **月结管线与零漂移保证**：`tickMinorityTribesMonth` 月度演化，威慑月数衰减，高张力（>=80）寇边劫掠损耗边城守军与士气，岁首正月低张力触发边夷朝贡进献特产入账；无异族字典局严格遵循 COW 保持原引用零 RNG 消耗，保证零漂移铁律。专案门禁 `verify-s483-minority-tribes` 71/71 全绿。
+
 ### 6.1 六大民族
 
 | 民族 | 活跃区域 | 特有兵种 | 最活跃 |

@@ -210,6 +210,17 @@ import {
   cureOfficerInjury,
 } from '../../../server/src/engine/hospital.js';
 import {
+  initMinorityTribes,
+  pacifyMinorityTribe,
+  subjugateMinorityTribe,
+  recruitMinorityTroops,
+} from '../../../server/src/engine/minority.js';
+import {
+  DEFAULT_MINORITY_TRIBES,
+  type MinorityTribeId,
+  getTribeThreatLevel,
+} from '@leh/shared';
+import {
   getFactionPrisoners,
   calculatePrisonerRansomValue,
   calculatePrisonerSurrenderChance,
@@ -1116,6 +1127,70 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
         injuryMonths: o.injuryMonths ?? 0,
       })),
     };
+  },
+
+  initMinorityTribes() {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = initMinorityTribes(game);
+      return getClientGame();
+    });
+  },
+
+  pacifyMinorityTribe(cityId: number, tribeId: MinorityTribeId) {
+    return withLock(() => {
+      const game = getGame();
+      const result = pacifyMinorityTribe(game, game.playerFactionId, cityId, tribeId);
+      currentGame = result.state;
+      return {
+        gameState: getClientGame(),
+        message: result.message,
+        tension: result.tension,
+      };
+    });
+  },
+
+  subjugateMinorityTribe(cityId: number, tribeId: MinorityTribeId, generalOfficerId: number) {
+    return withLock(() => {
+      const game = getGame();
+      const result = subjugateMinorityTribe(game, game.playerFactionId, cityId, tribeId, generalOfficerId);
+      currentGame = result.state;
+      return {
+        gameState: getClientGame(),
+        message: result.message,
+        spoils: result.spoils,
+      };
+    });
+  },
+
+  recruitMinorityTroops(cityId: number, tribeId: MinorityTribeId) {
+    return withLock(() => {
+      const game = getGame();
+      const result = recruitMinorityTroops(game, game.playerFactionId, cityId, tribeId);
+      currentGame = result.state;
+      return {
+        gameState: getClientGame(),
+        message: result.message,
+        troopsRecruited: result.troopsRecruited,
+      };
+    });
+  },
+
+  getMinorityTribesSummary() {
+    const game = getGame();
+    const tribes = game.minorityTribes ?? DEFAULT_MINORITY_TRIBES;
+    return Object.values(tribes).map((t) => ({
+      id: t.id,
+      name: t.name,
+      regionName: t.regionName,
+      relatedProvinces: t.relatedProvinces,
+      tension: t.tension,
+      threatLevel: getTribeThreatLevel(t.tension),
+      specialUnitName: t.specialUnitName,
+      specialtyTribute: t.specialtyTribute,
+      isSubdued: Boolean(t.isSubdued),
+      subduedMonths: t.subduedMonths ?? 0,
+    }));
   },
 
   establishHegemony(): GameState {

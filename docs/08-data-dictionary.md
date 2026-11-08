@@ -1844,6 +1844,45 @@ export interface TradeRoute {
   - 濒死：400 金；
   - 每次诊治立即令武将创伤等级降级 1 级（濒死->重伤->中伤->轻伤->健康），降级为健康时彻底清空 `injury` 与 `injuryMonths`。
 
+---
+
+## 四十一、边疆异族羁縻与寇边讨伐数据模型（Phase 7-07 · Session 483）
+
+### 41.1 边疆异族实体契约（MinorityTribe）
+| 字段 | 类型 | 校验与默认值 | 业务语义与规则约束 |
+|------|------|-------------|-------------------|
+| `id` | `MinorityTribeId` | 枚举：`xiongnu`, `xianbei`, `qiang`, `di`, `shanyue`, `nanman` | 六大边疆少数民族唯一标识符。 |
+| `name` | `string` | 字符非空 | 民族名称（匈奴、鲜卑、羌族、氐族、山越、南蛮）。 |
+| `regionName` | `string` | 字符非空 | 活跃地缘（并州北、幽州北、凉州、凉益交界、扬州山地、益州南部）。 |
+| `relatedProvinces` | `string[]` | 州部字符串数组 | 关联的汉地边郡州部列表。 |
+| `tension` | `number` | 非负整数，[0, 100] | 边防紧张度（0=极度顺服亲善，100=剑拔弩张大举寇边）。 |
+| `specialUnitName` | `string` | 字符非空 | 特色兵种（匈奴突骑、鲜卑突骑、羌兵、氐族步兵、山越兵、藤甲兵）。 |
+| `specialtyTribute` | `string` | 字符非空 | 朝贡特产（战马、角弓、良马、药材、生铜、象牙）。 |
+| `activeSeason` | `string?` | 可选枚举字符 | 最活跃季节偏转（winter, spring, summer, autumn, all）。 |
+| `isSubdued` | `boolean?` | 可选布尔值 | 是否处于大捷讨平威慑期。 |
+| `subduedMonths` | `number?` | 可选非负整数 | 威慑期剩余月数（大捷后置 24 个月，期间张力锁定为 0 不敢寇边）。 |
+
+### 41.2 威胁等级四档划分（getTribeThreatLevel）
+- **PACIFIED（0~29，羁縻顺服）**：安居互市，解锁羁縻借兵，岁首正月进献特产入账边城；
+- **UNSETTLED（30~59，暗流骚动）**：风声鹤唳，偶有轻微袭扰，禁止借兵；
+- **RAIDING（60~79，寇边劫掠）**：洗劫边境关津，损耗商税；
+- **INVASION（80~100，大举入侵）**：大举犯境袭掠边城，损耗边城守军、金钱与士气。
+
+### 41.3 边疆治理三大政令规则与成本
+1. **宣抚羁縻（`pacifyMinorityTribe`）**：
+   - 工本费：消耗城池 300 贯金钱（`TRIBAL_PACIFY_COST_GOLD = 300`）；
+   - 效果：降低目标异族紧张度 25 点（`TRIBAL_PACIFY_TENSION_REDUCTION = 25`）；
+2. **深入讨平（`subjugateMinorityTribe`）**：
+   - 将领资质：统帅或武力必须≥70，且不得处于重伤或濒死；
+   - 城池工本：出征城池必须兵力≥1000 且军费≥200 贯（消耗 500 兵力与 200 军费）；
+   - 大捷收益：紧张度清零，确立 24 个月威慑平静期（`TRIBAL_SUBDUE_MONTHS = 24`），缴获战马与金帛入库，主将累功 +50，势力声望 +15；
+3. **羁縻借兵（`recruitMinorityTroops`）**：
+   - 准入条件：异族处于顺服状态（`tension < 30`），且城池属于该族关联边郡；
+   - 军饷：消耗 500 贯金钱（`TRIBAL_LEVY_COST_GOLD = 500`）；
+   - 扩编：驻军直接增加 500 名精锐特种兵（`TRIBAL_LEVY_BATCH_SIZE = 500`）；
+   - 消耗：异族紧张度微升 5 点（`TRIBAL_LEVY_TENSION_COST = 5`）。
+
+
 
 
 
