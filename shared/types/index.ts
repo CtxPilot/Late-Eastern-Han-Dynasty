@@ -30,3 +30,4 @@ export * from './battlefield-instance.js';
 export * from './game.js';
 export * from './skill-tree.js';
 export * from './minority.js';
+export * from './pass.js';

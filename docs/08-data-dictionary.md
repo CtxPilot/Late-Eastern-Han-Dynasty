@@ -946,7 +946,10 @@ Phase 4 — 特殊人物审核
 
 ## 十一、passes.json — 关隘数据
 
-共 25 条。
+共 25 条（Session 484 已全量落入 `@leh/shared/pass.ts` 之 `DEFAULT_PASSES` 与运行时 `GameState.passes` 实体契约 `PassEntity`）。
+涵盖司隶 7 关、凉州 3 关、益州 6 关、荆州 2 关、扬州 3 关、并州 2 关、冀州 2 关。
+常数约定：`PASS_WALL_REPAIR_GOLD = 200`、`PASS_WALL_REPAIR_GAIN = 300`、`MIN_CITY_TROOPS_RESERVE = 1000`。
+雄关防御加成 +50%，普通关隘防御加成 +30%，山地关隘骑兵攻击惩罚 40%。
 
 ### 字段说明
 

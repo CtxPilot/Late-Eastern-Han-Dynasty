@@ -86,3 +86,4 @@ export * from './prisoner.js';
 export * from './trade.js';
 export * from './hospital.js';
 export * from './minority.js';
+export * from './pass.js';

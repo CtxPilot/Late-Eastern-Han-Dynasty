@@ -52,6 +52,7 @@ import { tickPrisonersMonth } from './prisoner.js';
 import { tickTradeQuarter } from './trade.js';
 import { tickCasualtiesAndHospitalMonth } from './hospital.js';
 import { tickMinorityTribesMonth } from './minority.js';
+import { tickPassesMonth } from './pass.js';
 import { runAllAiIntel } from './spyAi.js';
 import { tickSpyMonth } from './spy.js';
 import { tickPlotsMonth } from './plot.js';
@@ -473,6 +474,8 @@ export function advanceTurn(state: GameState, rng: () => number): GameState {
   nextState = tickCasualtiesAndHospitalMonth(nextState);
   // Phase 7-07（Session 483）：边疆异族羁縻与张力演变（无异族时 COW 零操作零 RNG 保持零漂移）
   nextState = tickMinorityTribesMonth(nextState, season);
+  // Phase 7-08（Session 484）：主地图关隘要塞月度演进（无关隘时 COW 零操作零 RNG 保持零漂移）
+  nextState = tickPassesMonth(nextState);
   // 月度系统可能扣城金/粮 → 回合末再同步势力缓存
   nextState = syncFactionResources(nextState);
   // 季度：皇权增长（HC-P0-6）；功绩衰减（S12，docs/04 §十 6.3）

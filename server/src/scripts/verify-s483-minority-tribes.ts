@@ -18,7 +18,6 @@
 import assert from 'node:assert';
 import {
   DEFAULT_MINORITY_TRIBES,
-  MinorityTribeId,
   TribeThreatLevel,
   calculateTribeTensionDelta,
   canRecruitTribeTroops,

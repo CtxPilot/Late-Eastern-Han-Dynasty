@@ -1,3 +1,47 @@
+## 2026-11-08 — Session 484 · 主地图关隘要塞防御要冲体系全栈落地（Phase 7-08）
+
+- Phase：**Phase 7-08 主地图关隘要塞防御要冲体系**；正式落地立项提案 `docs/61-mountain-passes-and-fortresses-proposal.md`，全面打通汉末 25 座历史名关（司隶7、凉州3、益州6、荆州2、扬州3、并州2、冀州2）地缘要冲、关隘与普通城市差异化运转机制（无民政人口、不可本地募兵、仅修缮城防）、纯函数险阻防御加成（雄关 +50%、普通关隘 +30%、山地削弱骑兵 40%）、官道卡口阻绝（`isRouteBlockedByPass` 封锁跨关通行）、驻军调拨门禁（城池保底 1000 守军防暴乱）、五大核心政令（初始化、驻防调兵、撤军归城、修缮险防、破关易手）及月结管线演化（名将镇关士气月增 +2、空关城防风化）全栈体系！新增专属门禁 `verify-s484-mountain-passes` 67/67 项断言全绿，既有门禁 `verify-s483` (71/71)、`verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 111 个套件 767 项单测 100% 绿灯！全仓 `pnpm -r build`、`validate-data` 与 `verify-compliance.mjs` 0 错误通过！
+- **背景与目标**：
+  1. 依据 `docs/04-game-systems.md` §6（关隘系统）与 `docs/08-data-dictionary.md` §十一（passes.json），名关险隘是控扼咽喉、以弱胜强的战略命脉；
+  2. 25 座名关实体契约（`PassEntity` & `DEFAULT_PASSES`）：涵盖司隶 7 关（虎牢关、汜水关、函谷关、武关、孟津、大谷关、旋门关）、凉州 3 关（大散关、萧关、陇关）、益州 6 关（阳平关、剑阁、白水关、葭萌关、江关、绵竹关）、荆州 2 关（夏口、夷陵）、扬州 3 关（濡须口、合肥、牛渚）、并州 2 关（壶关、雁门关）、冀州 2 关（界桥、井陉关），注入 `GameState.passes`；
+  3. 险阻防御修饰纯函数（`calculatePassDefenseModifier`）：雄关（`isFortressPass`）守方 +50% 防御减免，普通关隘 +30% 防御；山地关隘（`isMountainPass`）对骑兵攻城削弱 40% 攻击力；城防为 0 时防御加成全数失效；
+  4. 官道阻绝模型（`isRouteBlockedByPass`）：敌对或中立非己方势力控制且驻有守军（troops > 0）的关隘，封锁特定城际官道（如虎牢关封锁洛阳—陈留，函谷关封锁洛阳—长安），非己方军旅无法通行；
+  5. 驻防调兵门禁（`canGarrisonPass`）：城池向关隘调拨驻军时，必须至少保留 1000 名保底守军维持治安，调拨后关隘驻军不得超过 `maxGarrison`（3000~5000）；
+  6. 城防修葺工本（`calculatePassWallRepairCost`）：标准消耗 200 贯，修补 +300 耐久（上限 `maxWall`）；
+  7. 五大要塞政令闭环（`initPasses`, `dispatchGarrisonToPass`, `recallGarrisonFromPass`, `repairPassWall`, `capturePass`）；
+  8. 月结管线闭环（`tickPassesMonth`）：无关隘字典局严格 COW 保持原引用零 RNG 消耗；统帅>=75 名将镇关士气月增 +2（上限 100），无守将微跌 -1（下限 50），空关城防风化 -10（下限 500）；全程零 RNG 维持核心金样零漂移。
+- **实装与验证内容**：
+  1. **数据模型与契约扩充（`@leh/shared`）**：
+     - `PassEntity`, `PassSummaryItem`: 实体与摘要类型；
+     - `DEFAULT_PASSES`: 25 座历史关隘静态基准配置表；
+     - `calculatePassDefenseModifier`: 险阻防御纯函数；
+     - `isRouteBlockedByPass`: 路线阻绝检查纯函数；
+     - `canGarrisonPass`: 驻军调拨门禁纯函数；
+     - `calculatePassWallRepairCost`: 城防修缮工本纯函数；
+     - `GameState.passes`: 根级字段扩充，注册入 `ROOT_KEYS` 与全 Schema 校验；
+     - 单元测试：`shared/pass.test.ts` 5/5 全绿。
+  2. **引擎层全息生命周期（`server/src/engine/pass.ts` & `turn.ts`）**：
+     - `initPasses`: 初始化关隘字典；
+     - `dispatchGarrisonToPass`: 调拨守备兵力与委派守将；
+     - `recallGarrisonFromPass`: 关隘守军安全撤回后方城池；
+     - `repairPassWall`: 拨款修缮关隘城防；
+     - `capturePass`: 攻坚破关与易手占领；
+     - `tickPassesMonth`: 月度自然演化、士气与城防维护；
+     - `turn.ts`: 接入月结统一管线。
+  3. **服务层、路由与离线 Web Worker 镜像**：
+     - `server/src/services/game.ts`: 挂载 `doInitPasses`, `doDispatchGarrisonToPass`, `doRecallGarrisonFromPass`, `doRepairPassWall`, `doGetPassesSummary`；
+     - `server/src/routes/game.ts`: 挂载 `/pass/init`, `/pass/dispatch`, `/pass/recall`, `/pass/repair`, `/pass/summary`；
+     - `client/src/workers/game.worker.ts`: 镜像提供离线 Web Worker 相同 5 大方法。
+  4. **门禁与自动化验证**：
+     - 新增专案门禁 `server/src/scripts/verify-s484-mountain-passes.ts` 67/67 项断言全绿；
+     - 既有门禁 `verify-s483` (71/71)、`verify-s482` (66/66) 全绿；
+     - 核心金样 `turn-golden.test.ts` 3/3 严格匹配零漂移；
+     - 全仓 111 套件 767 项测试 100% 绿灯；
+     - 全仓 `pnpm -r build`、`validate-data` 与 `verify-compliance.mjs` 0 错误通过。
+- **里程碑达成**：
+  - **Phase 7-08 主地图关隘要塞防御要冲体系全栈落地 [x] 全量达成**。
+- **文档多写**：`docs/04-game-systems.md`、`docs/08-data-dictionary.md`、`docs/09-roadmap.md`、`docs/10-progress.md`、`docs/12-system-map.md`、`docs/35-phased-implementation-roadmap.md`、`docs/61-mountain-passes-and-fortresses-proposal.md`、`HANDOFF.md` 全量同步。
+
 ## 2026-11-08 — Session 483 · 边疆异族羁縻、朝贡互市与寇边讨伐体系全栈落地（Phase 7-07）
 
 - Phase：**Phase 7-07 边疆异族羁縻、朝贡互市与寇边讨伐体系**；正式落地立项提案 `docs/60-minority-tribes-and-border-pacification-proposal.md`，全面打通汉末六大边疆少数民族（匈奴、鲜卑、羌族、氐族、山越、南蛮）地缘布局、四档威胁等级（顺服/骚动/劫掠/入侵）、纯函数月度张力动态演化（季节活跃偏转、重兵慑边、宿将镇守、互市商贸平抑）、三大边疆治理政令（宣抚羁縻、深入讨平、借募异族精锐特种兵），以及月结管线威慑期消减、高张力寇边劫掠与岁首正月低张力朝贡进献全栈体系！新增专属门禁 `verify-s483-minority-tribes` 71/71 项断言全绿，既有门禁 `verify-s482` (66/66)、`verify-s481` (54/54)、`verify-s480` (60/60)、`verify-s479` (66/66)、`verify-s478` (69/69)、`verify-s477` (107/107)、`verify-d0b9` (40/40) 全绿，`turn-golden.test.ts` 3/3 严格匹配零漂移，全仓 110 个套件 763 项单测 100% 绿灯！全仓 `pnpm build` 与 `verify-compliance.mjs` 0 错误通过！

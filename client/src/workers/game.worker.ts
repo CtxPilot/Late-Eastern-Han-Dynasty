@@ -216,6 +216,13 @@ import {
   recruitMinorityTroops,
 } from '../../../server/src/engine/minority.js';
 import {
+  initPasses,
+  dispatchGarrisonToPass,
+  recallGarrisonFromPass,
+  repairPassWall,
+  getPassesSummary,
+} from '../../../server/src/engine/pass.js';
+import {
   DEFAULT_MINORITY_TRIBES,
   type MinorityTribeId,
   getTribeThreatLevel,
@@ -1191,6 +1198,52 @@ const handlers: Record<string, (...args: never[]) => unknown> = {
       isSubdued: Boolean(t.isSubdued),
       subduedMonths: t.subduedMonths ?? 0,
     }));
+  },
+
+  initPasses() {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = initPasses(game);
+      return getClientGame();
+    });
+  },
+
+  dispatchGarrisonToPass(cityId: number, passId: number, troops: number, commanderId?: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = dispatchGarrisonToPass(game, cityId, passId, troops, commanderId);
+      return {
+        gameState: getClientGame(),
+        pass: currentGame.passes?.[passId],
+      };
+    });
+  },
+
+  recallGarrisonFromPass(passId: number, cityId: number, troops: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = recallGarrisonFromPass(game, passId, cityId, troops);
+      return {
+        gameState: getClientGame(),
+        pass: currentGame.passes?.[passId],
+      };
+    });
+  },
+
+  repairPassWall(cityId: number, passId: number) {
+    return withLock(() => {
+      const game = getGame();
+      currentGame = repairPassWall(game, cityId, passId);
+      return {
+        gameState: getClientGame(),
+        pass: currentGame.passes?.[passId],
+      };
+    });
+  },
+
+  getPassesSummary() {
+    const game = getGame();
+    return getPassesSummary(game);
   },
 
   establishHegemony(): GameState {

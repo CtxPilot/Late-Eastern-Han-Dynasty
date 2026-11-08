@@ -1065,6 +1065,61 @@ gameRouter.get('/minority/summary', (_req, res) => {
   }
 });
 
+gameRouter.post('/pass/init', (_req, res) => {
+  try {
+    res.json(gameService.doInitPasses());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'init passes failed' });
+  }
+});
+
+gameRouter.post('/pass/dispatch', (req, res) => {
+  try {
+    const { cityId, passId, troops, commanderId } = req.body ?? {};
+    if (typeof cityId !== 'number' || typeof passId !== 'number' || typeof troops !== 'number') {
+      res.status(400).json({ error: 'cityId, passId, and troops are required' });
+      return;
+    }
+    res.json(gameService.doDispatchGarrisonToPass(cityId, passId, troops, commanderId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'dispatch garrison to pass failed' });
+  }
+});
+
+gameRouter.post('/pass/recall', (req, res) => {
+  try {
+    const { passId, cityId, troops } = req.body ?? {};
+    if (typeof passId !== 'number' || typeof cityId !== 'number' || typeof troops !== 'number') {
+      res.status(400).json({ error: 'passId, cityId, and troops are required' });
+      return;
+    }
+    res.json(gameService.doRecallGarrisonFromPass(passId, cityId, troops));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'recall garrison from pass failed' });
+  }
+});
+
+gameRouter.post('/pass/repair', (req, res) => {
+  try {
+    const { cityId, passId } = req.body ?? {};
+    if (typeof cityId !== 'number' || typeof passId !== 'number') {
+      res.status(400).json({ error: 'cityId and passId are required' });
+      return;
+    }
+    res.json(gameService.doRepairPassWall(cityId, passId));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'repair pass wall failed' });
+  }
+});
+
+gameRouter.get('/pass/summary', (_req, res) => {
+  try {
+    res.json(gameService.doGetPassesSummary());
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : 'get passes summary failed' });
+  }
+});
+
 gameRouter.post('/hegemony/establish', (_req, res) => {
   try {
     res.json(gameService.doEstablishHegemony());

@@ -25,6 +25,7 @@ import type { PendingFamilyTreatment } from '../hostage-families.js';
 import type { RuntimeRelation } from '../relations.js';
 import type { TradeRoute } from '../trade.js';
 import type { MinorityTribe } from './minority.js';
+import type { PassEntity } from './pass.js';
 
 export enum GeneralTrendStage {
   WARLORDS_DISORDER = 'warlords_disorder', // 群雄并起割据（190~199）
@@ -158,6 +159,12 @@ export interface GameState {
    * 记录匈奴、鲜卑、羌、氐、山越、南蛮的状态与张力；旧档兼容缺省为 undefined。
    */
   minorityTribes?: Record<string, MinorityTribe>;
+
+  /**
+   * Phase 7-08 主地图关隘要塞防御要冲体系字典（Session 484）。
+   * 记录虎牢关、函谷关、剑阁等 25 座名关险隘守备与城防；旧档兼容缺省为 undefined。
+   */
+  passes?: Record<number, PassEntity>;
 
   /**
    * 天下一统或身死国灭终局结算（HC-P2 / Session 451+）。
